@@ -88,13 +88,13 @@ public class ContentDisposition {
 
         type = reader.nextToken();
 
-        final Map<String, String> paramsOrNull = reader.hasNext() ?
-                HttpHeaderReader.readParameters(reader, fileNameFix) :
-                null;
+        final Map<String, String> paramsOrNull = reader.hasNext()
+                ? HttpHeaderReader.readParameters(reader, fileNameFix)
+                : null;
 
-        parameters = paramsOrNull == null ?
-                Collections.<String, String>emptyMap() :
-                Collections.unmodifiableMap(paramsOrNull);
+        parameters = paramsOrNull == null
+                ? Collections.<String, String>emptyMap()
+                : Collections.unmodifiableMap(paramsOrNull);
 
         createParameters();
     }

@@ -96,7 +96,8 @@ public class ExceptionViewProcessorTest extends JerseyTest {
             // Relative.
             if (exception.getResponse().getStatus() == 406) {
                 return Response.status(406).entity(
-                        new Viewable("/org/glassfish/jersey/tests/e2e/server/mvc/ExceptionViewProcessorTest/WebAppExceptionMapper/406",
+                        new Viewable(
+                                "/org/glassfish/jersey/tests/e2e/server/mvc/ExceptionViewProcessorTest/WebAppExceptionMapper/406",
                                 "406")).build();
             }
 

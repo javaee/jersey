@@ -98,6 +98,7 @@ import com.sun.research.ws.wadl.Response;
 public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
 
     private static interface NameCallbackSetter {
+
         public void setName(QName name);
     }
 
@@ -112,15 +113,13 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
         NameCallbackSetter nameCallbackSetter;
     }
 
-
     private static final Logger LOGGER = Logger.getLogger(WadlGeneratorJAXBGrammarGenerator.class.getName());
     private static final java.util.Set<Class> SPECIAL_GENERIC_TYPES =
             new HashSet<Class>() {{
                 // TODO - J2 - we do not have JResponse but we should support GenericEntity
-//                    add(JResponse.class);
+                //                    add(JResponse.class);
                 add(List.class);
             }};
-
 
     // The generator we are decorating
     private WadlGenerator wadlGeneratorDelegate;
@@ -146,7 +145,6 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
         return wadlGeneratorDelegate.getRequiredJaxbContextPath();
     }
 
-
     public void init() throws Exception {
         wadlGeneratorDelegate.init();
         //
@@ -158,7 +156,6 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
     }
 
     // =============== Application Creation ================================
-
 
     /**
      * @return application
@@ -229,7 +226,9 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
      * org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
      */
     public Representation createRequestRepresentation(
-            final org.glassfish.jersey.server.model.Resource ar, final org.glassfish.jersey.server.model.ResourceMethod arm, final MediaType mt) {
+            final org.glassfish.jersey.server.model.Resource ar,
+            final org.glassfish.jersey.server.model.ResourceMethod arm,
+            final MediaType mt) {
 
         final Representation rt = wadlGeneratorDelegate.createRequestRepresentation(ar, arm, mt);
 
@@ -399,7 +398,6 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
 
             introspector = context.createJAXBIntrospector();
 
-
         } catch (final JAXBException e) {
             LOGGER.log(Level.SEVERE, "Failed to generate the schema for the JAX-B elements", e);
         } catch (final IOException e) {
@@ -459,7 +457,6 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
 
         if (introspector != null) {
 
-
             for (final TypeCallbackPair pair : nameCallbacks) {
 
                 // There is a method on the RI version that works with just
@@ -471,8 +468,8 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
                 if (SPECIAL_GENERIC_TYPES.contains(parameterClass)) {
                     final Type type = pair.genericType.getType();
 
-                    if (ParameterizedType.class.isAssignableFrom(type.getClass()) &&
-                            Class.class.isAssignableFrom(((ParameterizedType) type).getActualTypeArguments()[0].getClass())) {
+                    if (ParameterizedType.class.isAssignableFrom(type.getClass())
+                            && Class.class.isAssignableFrom(((ParameterizedType) type).getActualTypeArguments()[0].getClass())) {
                         parameterClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[0];
                     } else {
                         // Works around JERSEY-830

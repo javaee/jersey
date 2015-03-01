@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,10 +61,10 @@ public class MultipleLinksResource {
         URI test1 = URI.create(uriInfo.getAbsolutePath().toString() + "test1");
         URI test2 = URI.create(uriInfo.getAbsolutePath().toString() + "test2");
 
-        return Response.ok().
-                link("http://oracle.com", "parent").
-                link(new URI("http://jersey.java.net"), "framework").
-                links(
+        return Response.ok()
+                .link("http://oracle.com", "parent")
+                .link(new URI("http://jersey.java.net"), "framework")
+                .links(
                         Link.fromUri(uriInfo.relativize(test1)).rel("test1").build(),
                         Link.fromUri(test2).rel("test2").build(),
                         Link.fromUri(uriInfo.relativize(URI.create("links/test3"))).rel("test3").build()

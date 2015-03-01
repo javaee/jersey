@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -107,19 +107,22 @@ class WadlGeneratorLoader {
 
     static WadlGenerator loadWadlGeneratorDescriptions(ServiceLocator serviceLocator,
                                                        WadlGeneratorDescription... wadlGeneratorDescriptions) throws Exception {
-        final List<WadlGeneratorDescription> list = wadlGeneratorDescriptions != null ? Arrays.asList(wadlGeneratorDescriptions) : null;
+        final List<WadlGeneratorDescription> list = wadlGeneratorDescriptions != null
+                ? Arrays.asList(wadlGeneratorDescriptions) : null;
         return loadWadlGeneratorDescriptions(serviceLocator, list);
     }
 
     static WadlGenerator loadWadlGeneratorDescriptions(ServiceLocator serviceLocator,
-                                                       List<WadlGeneratorDescription> wadlGeneratorDescriptions) throws Exception {
+                                                       List<WadlGeneratorDescription> wadlGeneratorDescriptions)
+            throws Exception {
         WadlGenerator wadlGenerator = new WadlGeneratorJAXBGrammarGenerator();
 
         final CallbackList callbacks = new CallbackList();
         try {
             if (wadlGeneratorDescriptions != null && !wadlGeneratorDescriptions.isEmpty()) {
                 for (WadlGeneratorDescription wadlGeneratorDescription : wadlGeneratorDescriptions) {
-                    final WadlGeneratorControl control = loadWadlGenerator(serviceLocator, wadlGeneratorDescription, wadlGenerator);
+                    final WadlGeneratorControl control = loadWadlGenerator(serviceLocator, wadlGeneratorDescription,
+                            wadlGenerator);
                     wadlGenerator = control.wadlGenerator;
                     callbacks.add(control.callback);
                 }
@@ -134,8 +137,8 @@ class WadlGeneratorLoader {
     }
 
     private static WadlGeneratorControl loadWadlGenerator(ServiceLocator serviceLocator,
-            WadlGeneratorDescription wadlGeneratorDescription,
-            WadlGenerator wadlGeneratorDelegate) throws Exception {
+                                                          WadlGeneratorDescription wadlGeneratorDescription,
+                                                          WadlGenerator wadlGeneratorDelegate) throws Exception {
         LOGGER.info("Loading wadlGenerator " + wadlGeneratorDescription.getGeneratorClass().getName());
         final WadlGenerator generator = Injections.getOrCreate(serviceLocator, wadlGeneratorDescription.getGeneratorClass());
         generator.setWadlGeneratorDelegate(wadlGeneratorDelegate);
@@ -146,7 +149,8 @@ class WadlGeneratorLoader {
             final Properties wadlGeneratorProperties = wadlGeneratorDescription.getProperties();
             Class<?> osgiConfiguratorClass = wadlGeneratorDescription.getConfiguratorClass();
             for (Entry<Object, Object> entry : wadlGeneratorProperties.entrySet()) {
-                final Callback callback = setProperty(generator, entry.getKey().toString(), entry.getValue(), osgiConfiguratorClass);
+                final Callback callback = setProperty(generator, entry.getKey().toString(), entry.getValue(),
+                        osgiConfiguratorClass);
                 callbacks.add(callback);
             }
         }
@@ -162,15 +166,18 @@ class WadlGeneratorLoader {
      * @return a {@link Callback} object that must be called later, or null if no callback is required.
      * @throws Exception if s.th. goes wrong
      */
-    private static Callback setProperty(final Object generator, final String propertyName, final Object propertyValue, final Class<?> osgiConfigClass)
-            throws Exception {
-
+    private static Callback setProperty(final Object generator,
+                                        final String propertyName,
+                                        final Object propertyValue,
+                                        final Class<?> osgiConfigClass) throws Exception {
         Callback result = null;
 
         final String methodName = "set" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
         final Method method = getMethodByName(methodName, generator.getClass());
         if (method.getParameterTypes().length != 1) {
-            throw new RuntimeException("Method " + methodName + " is no setter, it does not expect exactly one parameter, but " + method.getParameterTypes().length);
+            throw new RuntimeException(
+                    "Method " + methodName + " is no setter, it does not expect exactly one parameter, but "
+                            + method.getParameterTypes().length);
         }
         final Class<?> paramClazz = method.getParameterTypes()[0];
         if (paramClazz.isAssignableFrom(propertyValue.getClass())) {
@@ -269,7 +276,7 @@ class WadlGeneratorLoader {
          * @param callback the callback, can be null
          */
         public WadlGeneratorControl(WadlGenerator wadlGenerator,
-                Callback callback) {
+                                    Callback callback) {
             this.wadlGenerator = wadlGenerator;
             this.callback = callback;
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -83,6 +83,7 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class InMemoryConnector implements Connector {
+
     private static final Logger LOGGER = Logger.getLogger(InMemoryConnector.class.getName());
 
     private final URI baseUri;
@@ -92,6 +93,7 @@ class InMemoryConnector implements Connector {
      * In-memory client connector provider.
      */
     static class Provider implements ConnectorProvider {
+
         private final URI baseUri;
         private final ApplicationHandler appHandler;
 
@@ -127,11 +129,11 @@ class InMemoryConnector implements Connector {
      * In memory container response writer.
      */
     public static class InMemoryResponseWriter implements ContainerResponseWriter {
+
         private MultivaluedMap<String, String> headers;
         private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         private boolean committed;
         private Response.StatusType statusInfo;
-
 
         @Override
         public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext) {
@@ -201,7 +203,6 @@ class InMemoryConnector implements Connector {
         }
     }
 
-
     /**
      * {@inheritDoc}
      * <p/>
@@ -244,7 +245,6 @@ class InMemoryConnector implements Connector {
         }
 
         containerRequest.setEntityStream(new ByteArrayInputStream(clientOutput.toByteArray()));
-
 
         boolean followRedirects = ClientProperties.getValue(clientRequest.getConfiguration().getProperties(),
                 ClientProperties.FOLLOW_REDIRECTS, true);
@@ -303,7 +303,6 @@ class InMemoryConnector implements Connector {
         // do nothing
     }
 
-
     private ClientResponse createClientResponse(final ClientRequest clientRequest,
                                                 final InMemoryResponseWriter responseWriter) {
         final ClientResponse clientResponse = new ClientResponse(responseWriter.getStatusInfo(), clientRequest);
@@ -319,16 +318,13 @@ class InMemoryConnector implements Connector {
         }
 
         while (true) {
-            boolean useGetMethod = false;
             switch (response.getStatus()) {
                 case 303:
-                    useGetMethod = true;
-                    // intentionally no break
                 case 302:
                 case 307:
                     request = new ClientRequest(request);
                     request.setUri(response.getLocation());
-                    if (useGetMethod) {
+                    if (response.getStatus() == 303) {
                         request.setMethod("GET");
                     }
                     response = apply(request);

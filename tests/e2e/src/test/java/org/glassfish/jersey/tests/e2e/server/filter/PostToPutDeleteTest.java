@@ -67,17 +67,26 @@ public class PostToPutDeleteTest extends JerseyTest {
 
     @Path("/")
     public static class Resource {
+
         @GET
-        public String get(@QueryParam("a") String a) { return "GET: " + a; }
+        public String get(@QueryParam("a") String a) {
+            return "GET: " + a;
+        }
 
         @PUT
-        public String put() { return "PUT"; }
+        public String put() {
+            return "PUT";
+        }
 
         @DELETE
-        public String delete() { return "DELETE"; }
+        public String delete() {
+            return "DELETE";
+        }
 
         @POST
-        public String post() { return "POST"; }
+        public String post() {
+            return "POST";
+        }
     }
 
     @Override

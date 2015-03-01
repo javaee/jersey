@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -165,15 +165,15 @@ public class EventSource implements EventListener {
     /**
      * Event source internal state.
      */
-    private final AtomicReference<State> state = new AtomicReference<State>(State.READY);
+    private final AtomicReference<State> state = new AtomicReference<>(State.READY);
     /**
      * List of all listeners not bound to receive only events of a particular name.
      */
-    private final List<EventListener> unboundListeners = new CopyOnWriteArrayList<EventListener>();
+    private final List<EventListener> unboundListeners = new CopyOnWriteArrayList<>();
     /**
      * A map of listeners bound to receive only events of a particular name.
      */
-    private final ConcurrentMap<String, List<EventListener>> boundListeners = new ConcurrentHashMap<String, List<EventListener>>();
+    private final ConcurrentMap<String, List<EventListener>> boundListeners = new ConcurrentHashMap<>();
 
     /**
      * Jersey {@link EventSource} builder class.
@@ -193,6 +193,7 @@ public class EventSource implements EventListener {
      * @since 2.3
      */
     public static class Builder {
+
         private final WebTarget endpoint;
 
         private long reconnect = EventSource.RECONNECT_DEFAULT;
@@ -463,7 +464,7 @@ public class EventSource implements EventListener {
 
     private void addBoundListener(final String name, final EventListener listener) {
         List<EventListener> listeners = boundListeners.putIfAbsent(name,
-                new CopyOnWriteArrayList<EventListener>(Collections.singleton(listener)));
+                new CopyOnWriteArrayList<>(Collections.singleton(listener)));
         if (listeners != null) {
             // alas, new listener collection registration conflict:
             // need to add the new listener to the existing listener collection
@@ -551,6 +552,7 @@ public class EventSource implements EventListener {
      * incoming SSE events as well as handling any connection issues.
      */
     private class EventProcessor implements Runnable, EventListener {
+
         /**
          * Open connection response arrival synchronization latch.
          */

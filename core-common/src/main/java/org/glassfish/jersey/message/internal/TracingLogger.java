@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -178,7 +178,8 @@ public abstract class TracingLogger {
      * Try to log event according to event level and request context threshold level setting.
      *
      * @param event event type to be logged
-     * @param args  message arguments (in relation to {@link org.glassfish.jersey.message.internal.TracingLogger.Event#messageFormat()}
+     * @param args  message arguments (in relation to {@link org.glassfish.jersey.message.internal.TracingLogger
+     * .Event#messageFormat()}
      */
     public abstract void log(Event event, Object... args);
 
@@ -191,7 +192,8 @@ public abstract class TracingLogger {
      *
      * @param event         event type to be logged
      * @param fromTimestamp logged event is running from the timestamp in nanos. {@code -1} in case event has no duration
-     * @param args          message arguments (in relation to {@link org.glassfish.jersey.message.internal.TracingLogger.Event#messageFormat()}
+     * @param args          message arguments (in relation to {@link org.glassfish.jersey.message.internal.TracingLogger
+     * .Event#messageFormat()}
      */
     public abstract void logDuration(Event event, long fromTimestamp, Object... args);
 
@@ -356,8 +358,8 @@ public abstract class TracingLogger {
          * @param textSB   Formatted info will be appended to {@code StringBuilder}
          */
         private static void formatInstance(final Object instance, final StringBuilder textSB) {
-            textSB.append(instance.getClass().getName()).append(" @").
-                    append(Integer.toHexString(System.identityHashCode(instance)));
+            textSB.append(instance.getClass().getName()).append(" @")
+                    .append(Integer.toHexString(System.identityHashCode(instance)));
         }
 
         /**
@@ -381,7 +383,6 @@ public abstract class TracingLogger {
         }
     }
 
-
     /**
      * Level of tracing message.
      */
@@ -404,6 +405,7 @@ public abstract class TracingLogger {
      * Type of event.
      */
     public static interface Event {
+
         /**
          * Name of event, should be unique.
          * Is logged by JDK logger.

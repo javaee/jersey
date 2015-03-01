@@ -81,7 +81,6 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 public class ModelProcessorTest extends JerseyTest {
 
-
     public static class ModelProcessorFeature implements Feature {
 
         @Override
@@ -135,16 +134,16 @@ public class ModelProcessorTest extends JerseyTest {
                         sb.append(path == null ? "<no-path>" : path + ",");
 
                         for (ResourceMethod resourceMethod : sortResourceMethods(resource.getResourceMethods())) {
-                            sb.append(resourceMethod.getHttpMethod() + "=" +
-                                    "" + resourceMethod.getInvocable().getHandlingMethod().getName() + "|");
+                            sb.append(resourceMethod.getHttpMethod()).append("=").append("")
+                                    .append(resourceMethod.getInvocable().getHandlingMethod().getName()).append("|");
                         }
                         return sb.toString();
                     }
                 };
 
                 resBuilder.addChildResource("my-resource")
-                        .addMethod("GET").produces
-                        (MediaType.TEXT_PLAIN_TYPE)
+                        .addMethod("GET")
+                        .produces(MediaType.TEXT_PLAIN_TYPE)
                         .handledBy(inflector).build();
 
                 return resBuilder.build();
@@ -157,9 +156,9 @@ public class ModelProcessorTest extends JerseyTest {
             }
         }
 
-
         @Path("model")
         public static class ModelResource {
+
             @Context
             ExtendedResourceContext resourceContext;
 
@@ -199,6 +198,7 @@ public class ModelProcessorTest extends JerseyTest {
 
     @Path("a")
     public static class ResourceA {
+
         @GET
         public String getFromA() {
             return "a-get";
@@ -222,6 +222,7 @@ public class ModelProcessorTest extends JerseyTest {
     }
 
     public static class SubResource {
+
         @GET
         public String getFromSubResource() {
             return "sub-get";
@@ -230,6 +231,7 @@ public class ModelProcessorTest extends JerseyTest {
 
     @Path("b")
     public static class ResourceB {
+
         @GET
         public String getFromB() {
             return "b-get";
@@ -245,7 +247,6 @@ public class ModelProcessorTest extends JerseyTest {
             return new SubResource();
         }
     }
-
 
     @Override
     protected Application configure() {
@@ -299,7 +300,6 @@ public class ModelProcessorTest extends JerseyTest {
         assertEquals("sub-get", entity);
     }
 
-
     @Test
     public void testResourceALocatorOptions() {
         Response response = target("/a/locator").request().options();
@@ -308,7 +308,6 @@ public class ModelProcessorTest extends JerseyTest {
         assertEquals(200, response.getStatus());
         assertEquals("", entity);
     }
-
 
     @Test
     public void testResourceBGet() {
@@ -336,7 +335,6 @@ public class ModelProcessorTest extends JerseyTest {
         assertEquals(200, response.getStatus());
         assertEquals("sub-get", entity);
     }
-
 
     @Test
     public void testResourceBLocatorOptions() {
@@ -382,6 +380,5 @@ public class ModelProcessorTest extends JerseyTest {
         assertEquals(200, response.getStatus());
         assertEquals("a|b|model|", entity);
     }
-
 
 }

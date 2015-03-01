@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,7 +75,7 @@ public interface ScopeProvider {
      * This scope is created for an {@link EntityGraph entity graph} if no other entity-filtering / security annotation is present
      * on a class.
      */
-    public final static String DEFAULT_SCOPE = EntityFiltering.class.getName();
+    public static final String DEFAULT_SCOPE = EntityFiltering.class.getName();
 
     /**
      * Get entity-filtering scopes to be used to process an entity.

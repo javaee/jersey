@@ -82,9 +82,9 @@ public class BookmarkResource {
         this.em = em;
         bookmarkEntity = em.find(BookmarkEntity.class, new BookmarkEntityPK(bmid, userEntity.getUserid()));
         if (null == bookmarkEntity) {
-            throw new ExtendedNotFoundException("bookmark with userid=" +
-                    userEntity.getUserid() + " and bmid=" +
-                    bmid + " not found\n");
+            throw new ExtendedNotFoundException("bookmark with userid="
+                    + userEntity.getUserid() + " and bmid="
+                    + bmid + " not found\n");
         }
         bookmarkEntity.setUserEntity(userEntity);
     }
@@ -124,11 +124,10 @@ public class BookmarkResource {
 
     public JSONObject asJson() {
         try {
-            return new JSONObject().
-                    put("userid", bookmarkEntity.getBookmarkEntityPK().getUserid()).
-                    put("sdesc", bookmarkEntity.getSdesc()).
-                    put("ldesc", bookmarkEntity.getLdesc()).
-                    put("uri", bookmarkEntity.getUri());
+            return new JSONObject().put("userid", bookmarkEntity.getBookmarkEntityPK().getUserid())
+                    .put("sdesc", bookmarkEntity.getSdesc())
+                    .put("ldesc", bookmarkEntity.getLdesc())
+                    .put("uri", bookmarkEntity.getUri());
         } catch (JSONException je) {
             return null;
         }

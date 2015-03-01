@@ -116,8 +116,8 @@ public class JettisonJaxbElementProvider extends AbstractJaxbElementProvider {
                                             InputStream entityStream) throws JAXBException {
         final Charset c = getCharset(mediaType);
 
-        return JettisonJaxbContext.getJSONUnmarshaller(u).
-                unmarshalJAXBElementFromJSON(new InputStreamReader(entityStream, c), type);
+        return JettisonJaxbContext.getJSONUnmarshaller(u)
+                .unmarshalJAXBElementFromJSON(new InputStreamReader(entityStream, c), type);
     }
 
     @Override

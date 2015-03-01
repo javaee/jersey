@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -113,7 +113,7 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
      * On TYPE.
      */
 
-    public static abstract class ValidateExecutableOnType {
+    public abstract static class ValidateExecutableOnType {
 
         @POST
         @Min(0)
@@ -174,7 +174,7 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
      * GETTERS.
      */
 
-    public static abstract class ValidateGetterExecutable {
+    public abstract static class ValidateGetterExecutable {
 
         @GET
         @Path("sanity")

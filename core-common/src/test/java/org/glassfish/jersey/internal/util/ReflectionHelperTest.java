@@ -107,8 +107,8 @@ public class ReflectionHelperTest {
         final ClassLoader loader = ReflectionHelper.class.getClassLoader();
 
         AccessController.doPrivileged(ReflectionHelper.setContextClassLoaderPA(loader));
-        fail("It should not be possible to set context class loader even from privileged block via Jersey ReflectionHelper " +
-                "utility");
+        fail("It should not be possible to set context class loader even from privileged block via Jersey ReflectionHelper "
+                + "utility");
     }
 
     public static class FromStringClass {

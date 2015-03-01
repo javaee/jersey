@@ -66,17 +66,17 @@ import org.glassfish.jersey.server.mvc.Template;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Bookstore {
 
-    private final Map<String, Item> items = new TreeMap<String, Item>();
+    private final Map<String, Item> items = new TreeMap<>();
     private String name;
 
     public Bookstore() {
         setName("Czech Bookstore");
         getItems().put("1", new Book("Svejk", "Jaroslav Hasek"));
         getItems().put("2", new Book("Krakatit", "Karel Capek"));
-        getItems().put("3", new CD("Ma Vlast 1", "Bedrich Smetana", new Track[]{
-            new Track("Vysehrad",180),
-            new Track("Vltava",172),
-            new Track("Sarka",32)}));
+        getItems().put("3", new CD("Ma Vlast 1", "Bedrich Smetana", new Track[] {
+                new Track("Vysehrad", 180),
+                new Track("Vltava", 172),
+                new Track("Sarka", 32)}));
     }
 
     @Path("items/{itemid}/")

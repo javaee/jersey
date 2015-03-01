@@ -67,7 +67,7 @@ final class ResponseStatisticsImpl implements ResponseStatistics {
             lastResponseCode = responseCode;
             Long currentValue = responseCodes.get(responseCode);
             if (currentValue == null) {
-                currentValue = 0l;
+                currentValue = 0L;
             }
             responseCodes.put(responseCode, currentValue + 1);
         }

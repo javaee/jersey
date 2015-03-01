@@ -136,7 +136,8 @@ public class ManagedAsyncResourceTest extends JerseyTest {
                             while (true) {
                                 attemptCounter++;
                                 try {
-                                    final String response = resourceTarget.queryParam("id", requestId).request().get(String.class);
+                                    final String response = resourceTarget.queryParam("id", requestId).request()
+                                            .get(String.class);
                                     getResponses.put(requestId, response);
                                     break;
                                 } catch (Throwable t) {

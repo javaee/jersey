@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,6 +64,7 @@ public class PathParamAsStringTest extends AbstractTest {
 
     @Path("/{arg1}/{arg2}/{arg3}")
     public static class Resource {
+
         @GET
         public String doGet(@PathParam("arg1") String arg1,
                             @PathParam("arg2") String arg2, @PathParam("arg3") String arg3) {
@@ -97,9 +98,9 @@ public class PathParamAsStringTest extends AbstractTest {
         initiateWebApplication(Resource.class);
 
         final ContainerResponse response = apply(
-                RequestContextBuilder.from("/a/b/c", "POST").
-                        entity("content").
-                        build()
+                RequestContextBuilder.from("/a/b/c", "POST")
+                        .entity("content")
+                        .build()
         );
 
         assertEquals("content", response.getEntity());
@@ -107,6 +108,7 @@ public class PathParamAsStringTest extends AbstractTest {
 
     @Path("/{id}")
     public static class Duplicate {
+
         @GET
         public String get(@PathParam("id") String id) {
             return id;
@@ -129,6 +131,7 @@ public class PathParamAsStringTest extends AbstractTest {
 
     @Path("/{id}")
     public static class DuplicateList {
+
         @GET
         public String get(@PathParam("id") String id) {
             return id;

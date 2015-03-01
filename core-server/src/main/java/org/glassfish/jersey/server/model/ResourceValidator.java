@@ -45,8 +45,8 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
  * Validator ensuring that resource are correct (for example that root resources contains path, etc.).
- * @author Miroslav Fuksa
  *
+ * @author Miroslav Fuksa
  */
 class ResourceValidator extends AbstractResourceModelVisitor {
 
@@ -61,9 +61,10 @@ class ResourceValidator extends AbstractResourceModelVisitor {
                     resource.getPath()));
         }
 
-        if (resource.getPath() != null && resource.getResourceMethods().isEmpty() && resource.getChildResources()
-                .isEmpty() &&
-                resource.getResourceLocator() == null) {
+        if (resource.getPath() != null
+                && resource.getResourceMethods().isEmpty()
+                && resource.getChildResources().isEmpty()
+                && resource.getResourceLocator() == null) {
             Errors.warning(resource, LocalizationMessages.RESOURCE_EMPTY(resource, resource.getPath()));
         }
 

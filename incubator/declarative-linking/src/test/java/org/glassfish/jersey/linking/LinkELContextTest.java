@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,17 +42,17 @@ package org.glassfish.jersey.linking;
 
 import javax.el.ExpressionFactory;
 import javax.el.ValueExpression;
+
 import org.junit.Test;
-
-import static org.junit.Assert.*;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-public class LinkELContextTest{
+public class LinkELContextTest {
 
     @Test
     public void testExpressionFactory() {
@@ -72,9 +72,11 @@ public class LinkELContextTest{
         assertEquals(3, value);
     }
 
-    public final static String ID = "10";
-    public final static String NAME = "TheName";
+    public static final String ID = "10";
+    public static final String NAME = "TheName";
+
     public static class EntityBean {
+
         private String id = ID;
         private String name = NAME;
 
@@ -106,7 +108,7 @@ public class LinkELContextTest{
         ValueExpression expr = factory.createValueExpression(context,
                 "foo/${entity.id}/bar", String.class);
         Object value = expr.getValue(context);
-        assertEquals("foo/"+ID+"/bar", value);
+        assertEquals("foo/" + ID + "/bar", value);
     }
 
     @Test
@@ -117,10 +119,11 @@ public class LinkELContextTest{
         ValueExpression expr = factory.createValueExpression(context,
                 "foo/${entity.id}/bar/${entity.name}", String.class);
         Object value = expr.getValue(context);
-        assertEquals("foo/"+ID+"/bar/"+NAME, value);
+        assertEquals("foo/" + ID + "/bar/" + NAME, value);
     }
 
     public static class OuterEntityBean {
+
         private EntityBean inner = new EntityBean();
 
         public EntityBean getInner() {

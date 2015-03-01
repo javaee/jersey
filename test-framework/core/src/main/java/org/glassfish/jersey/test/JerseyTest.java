@@ -482,7 +482,7 @@ public abstract class JerseyTest {
             if (factoryClassName != null) {
                 LOGGER.log(Level.CONFIG,
                         "Loading test container factory '{0}' specified in the '{1}' system property.",
-                        new Object[]{factoryClassName, TestProperties.CONTAINER_FACTORY});
+                        new Object[] {factoryClassName, TestProperties.CONTAINER_FACTORY});
 
                 defaultTestContainerFactoryClass = loadFactoryClass(factoryClassName);
             } else {
@@ -881,7 +881,8 @@ public abstract class JerseyTest {
         if (property != null) {
             multi = Integer.valueOf(property);
             if (multi <= 0) {
-                throw new NumberFormatException("Property " + TestProperties.ASYNC_TIMEOUT_MULTIPLIER + " must be a number greater than 0.");
+                throw new NumberFormatException(
+                        "Property " + TestProperties.ASYNC_TIMEOUT_MULTIPLIER + " must be a number greater than 0.");
             }
         }
         return multi;

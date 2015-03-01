@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,9 +48,8 @@ import javax.ws.rs.core.Response;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test for exception mapper injection.
@@ -62,11 +61,11 @@ public class ExceptionMappersTest extends CdiTest {
 
     @Parameterized.Parameters
     public static List<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
-            {"app-field-injected"}
-            ,{"app-ctor-injected"}
-            ,{"request-field-injected"}
-            ,{"request-ctor-injected"}
+        return Arrays.asList(new Object[][] {
+                {"app-field-injected"},
+                {"app-ctor-injected"},
+                {"request-field-injected"},
+                {"request-ctor-injected"}
         });
     }
 

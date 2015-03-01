@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,6 +66,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceString {
+
         @GET
         public String doGet(
                 @HeaderParam("arg1") BigDecimal arg1,
@@ -80,6 +81,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringList {
+
         @GET
         public String doGetString(@HeaderParam("args") List<BigDecimal> args) {
             assertEquals("3.145", args.get(0).toString());
@@ -91,6 +93,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListEmpty {
+
         @GET
         public String doGetString(@HeaderParam("args") List<BigDecimal> args) {
             assertEquals(3, args.size());
@@ -103,6 +106,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringNullDefault {
+
         @GET
         public String doGet(
                 @HeaderParam("arg1") BigDecimal arg1) {
@@ -113,6 +117,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringDefault {
+
         @GET
         public String doGet(
                 @HeaderParam("arg1") @DefaultValue("3.145") BigDecimal arg1) {
@@ -123,6 +128,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringDefaultOverride {
+
         @GET
         public String doGet(
                 @HeaderParam("arg1") @DefaultValue("3.145") BigDecimal arg1) {
@@ -133,6 +139,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListEmptyDefault {
+
         @GET
         public String doGetString(@HeaderParam("args") List<BigDecimal> args) {
             assertEquals(0, args.size());
@@ -142,6 +149,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListDefault {
+
         @GET
         public String doGetString(
                 @HeaderParam("args") @DefaultValue("3.145") List<BigDecimal> args) {
@@ -152,6 +160,7 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListDefaultOverride {
+
         @GET
         public String doGetString(
                 @HeaderParam("args") @DefaultValue("3.145") List<BigDecimal> args) {
@@ -165,11 +174,11 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        header("arg1", "3.145").
-                        header("arg2", "3145").
-                        header("arg3", "http://test").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .header("arg1", "3.145")
+                        .header("arg2", "3145")
+                        .header("arg3", "http://test")
+                        .build()
         ).getEntity());
     }
 
@@ -178,12 +187,12 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceStringList.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/stringlist").
-                        header("args", "3.145").
-                        header("args", "2.718").
-                        header("args", "1.618").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/stringlist")
+                        .header("args", "3.145")
+                        .header("args", "2.718")
+                        .header("args", "1.618")
+                        .build()
         ).getEntity());
     }
 
@@ -192,12 +201,12 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmpty.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/stringlist").
-                        header("args", "").
-                        header("args", "").
-                        header("args", "").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/stringlist")
+                        .header("args", "")
+                        .header("args", "")
+                        .header("args", "")
+                        .build()
         ).getEntity());
     }
 
@@ -220,9 +229,9 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceStringDefault.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        header("args", "2.718").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .header("args", "2.718")
+                        .build()
         ).getEntity());
     }
 
@@ -245,9 +254,9 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefaultOverride.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        header("args", "2.718").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .header("args", "2.718")
+                        .build()
         ).getEntity());
     }
 
@@ -256,11 +265,11 @@ public class HeaderParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/", "GET").
-                        header("arg1", "ABCDEF").
-                        header("arg2", "3145").
-                        header("arg3", "http://test").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .header("arg1", "ABCDEF")
+                        .header("arg2", "3145")
+                        .header("arg3", "http://test")
+                        .build()
         );
 
         assertEquals(400, responseContext.getStatus());

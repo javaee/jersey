@@ -76,8 +76,8 @@ public class App {
                     ServletProperties.JAXRS_APPLICATION_CLASS,
                     MyApplication.class.getName());
 
-            initParams.put(ServerProperties.WADL_GENERATOR_CONFIG, "org.glassfish.jersey.examples.extendedwadl" +
-                    ".SampleWadlGeneratorConfig");
+            initParams.put(ServerProperties.WADL_GENERATOR_CONFIG, "org.glassfish.jersey.examples.extendedwadl"
+                    + ".SampleWadlGeneratorConfig");
 
             final HttpServer server = GrizzlyWebContainerFactory.create(BASE_URI, ServletContainer.class, initParams);
 

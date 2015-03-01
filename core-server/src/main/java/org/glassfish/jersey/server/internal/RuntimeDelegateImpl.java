@@ -65,7 +65,8 @@ public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
     }
 
     @Override
-    public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
+    public <T> T createEndpoint(Application application, Class<T> endpointType)
+            throws IllegalArgumentException, UnsupportedOperationException {
         if (application == null) {
             throw new IllegalArgumentException("application is null.");
         }

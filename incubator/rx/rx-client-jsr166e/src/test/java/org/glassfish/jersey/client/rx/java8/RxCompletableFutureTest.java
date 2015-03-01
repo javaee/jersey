@@ -49,8 +49,8 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.rx.RxClient;
 import org.glassfish.jersey.client.rx.RxWebTarget;
-import org.glassfish.jersey.client.rx.jsr166e.RxCompletableFutureInvoker;
 import org.glassfish.jersey.client.rx.jsr166e.RxCompletableFuture;
+import org.glassfish.jersey.client.rx.jsr166e.RxCompletableFutureInvoker;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 
 import org.hamcrest.Matcher;
@@ -117,7 +117,8 @@ public class RxCompletableFutureTest {
         testTarget(RxCompletableFuture.from(client.target("http://jersey.java.net"), executor), true);
     }
 
-    private void testClient(final RxClient<RxCompletableFutureInvoker> rxClient, final boolean testDedicatedThread) throws Exception {
+    private void testClient(final RxClient<RxCompletableFutureInvoker> rxClient, final boolean testDedicatedThread)
+            throws Exception {
         testTarget(rxClient.target("http://jersey.java.net"), testDedicatedThread);
     }
 

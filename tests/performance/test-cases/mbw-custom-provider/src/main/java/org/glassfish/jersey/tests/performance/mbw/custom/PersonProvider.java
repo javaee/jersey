@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.tests.performance.mbw.custom;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,7 +75,13 @@ public class PersonProvider implements MessageBodyWriter<Person>, MessageBodyRea
     }
 
     @Override
-    public void writeTo(Person t, Class<?> type, Type type1, Annotation[] antns, MediaType mt, MultivaluedMap<String, Object> mm, OutputStream out) throws IOException, WebApplicationException {
+    public void writeTo(Person t,
+                        Class<?> type,
+                        Type type1,
+                        Annotation[] antns,
+                        MediaType mt,
+                        MultivaluedMap<String, Object> mm,
+                        OutputStream out) throws IOException, WebApplicationException {
         out.write(getByteRepresentation(t));
     }
 
@@ -86,7 +91,12 @@ public class PersonProvider implements MessageBodyWriter<Person>, MessageBodyRea
     }
 
     @Override
-    public Person readFrom(Class<Person> type, Type type1, Annotation[] antns, MediaType mt, MultivaluedMap<String, String> mm, InputStream in) throws IOException, WebApplicationException {
+    public Person readFrom(Class<Person> type,
+                           Type type1,
+                           Annotation[] antns,
+                           MediaType mt,
+                           MultivaluedMap<String, String> mm,
+                           InputStream in) throws IOException, WebApplicationException {
         Person result = new Person();
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));

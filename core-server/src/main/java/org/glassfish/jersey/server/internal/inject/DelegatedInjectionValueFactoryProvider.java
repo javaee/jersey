@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -125,17 +125,17 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
      * We do not want to create a new descriptor instance for every and each method invocation.
      */
     static final Cache<Parameter, ActiveDescriptor> descriptorCache =
-            new Cache<Parameter, ActiveDescriptor>(new Computable<Parameter, ActiveDescriptor>(){
+            new Cache<>(new Computable<Parameter, ActiveDescriptor>() {
 
-        @Override
-        public ActiveDescriptor compute(Parameter parameter) {
-            Class<?> rawType = parameter.getRawType();
-                if (rawType.isInterface() && ! (parameter.getType() instanceof ParameterizedType)) {
-                    return createDescriptor(rawType);
+                @Override
+                public ActiveDescriptor compute(Parameter parameter) {
+                    Class<?> rawType = parameter.getRawType();
+                    if (rawType.isInterface() && !(parameter.getType() instanceof ParameterizedType)) {
+                        return createDescriptor(rawType);
+                    }
+                    return null;
                 }
-            return null;
-        }
-    });
+            });
 
     private static Injectee getInjectee(final Parameter parameter) {
         return new InjecteeImpl() {

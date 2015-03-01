@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.json;
 
 import java.io.IOException;
@@ -74,25 +75,24 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
- * Common functionality for JSON tests that are using multiple JSON providers (e.g. MOXy, Jackson, Jettison).
- *
+ * Common functionality for JSON tests that are using multiple JSON providers (e.g. MOXy, Jackson, Jettison)
+ .*
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public abstract class AbstractJsonTest extends JerseyTest {
 
     private static final String PKG_NAME = "org/glassfish/jersey/tests/e2e/json/entity/";
 
-
     /**
      * Helper class representing configuration for one test case.
      */
-    protected final static class JsonTestSetup {
+    protected static final class JsonTestSetup {
 
         private final JsonTestProvider jsonProvider;
         private final Class<?>[] testClasses;
 
         protected JsonTestSetup(final Class<?> testClass, final JsonTestProvider jsonProvider) {
-            this(new Class<?>[]{testClass}, jsonProvider);
+            this(new Class<?>[] {testClass}, jsonProvider);
         }
 
         protected JsonTestSetup(final Class<?>[] testClasses, final JsonTestProvider jsonProvider) {
@@ -122,7 +122,7 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     @Provider
-    private final static class JAXBContextResolver implements ContextResolver<JAXBContext> {
+    private static final class JAXBContextResolver implements ContextResolver<JAXBContext> {
 
         private final JAXBContext context;
         private final Set<Class<?>> types;
@@ -134,8 +134,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
             if (jsonConfiguration != null) {
                 this.context = new JettisonJaxbContext(jsonConfiguration, classes);
             } else {
-                this.context = forMoxyProvider ?
-                        JAXBContextFactory.createContext(classes, new HashMap()) : JAXBContext.newInstance(classes);
+                this.context = forMoxyProvider
+                        ? JAXBContextFactory.createContext(classes, new HashMap()) : JAXBContext.newInstance(classes);
             }
         }
 
@@ -161,12 +161,12 @@ public abstract class AbstractJsonTest extends JerseyTest {
         final String providerName = getProviderPathPart(jsonTestSetup);
         final String testName = getEntityPathPart(jsonTestSetup);
 
-        resourceBuilder.
-                path("/" + providerName + "/" + testName).
-                addMethod("POST").
-                consumes(MediaType.APPLICATION_JSON_TYPE).
-                produces(MediaType.APPLICATION_JSON_TYPE).
-                handledBy(new Inflector<ContainerRequestContext, Response>() {
+        resourceBuilder
+                .path("/" + providerName + "/" + testName)
+                .addMethod("POST")
+                .consumes(MediaType.APPLICATION_JSON_TYPE)
+                .produces(MediaType.APPLICATION_JSON_TYPE)
+                .handledBy(new Inflector<ContainerRequestContext, Response>() {
 
                     @Override
                     public Response apply(final ContainerRequestContext containerRequestContext) {
@@ -176,7 +176,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
                         containerRequest.bufferEntity();
                         try {
                             String json = JsonTestHelper.getResourceAsString(PKG_NAME,
-                                    providerName + "_" + testName + (moxyJaxbProvider() || runningOnJdk7AndLater() ? "_MOXy" : "") + ".json");
+                                    providerName + "_" + testName + (moxyJaxbProvider() || runningOnJdk7AndLater() ? "_MOXy" : "")
+                                            + ".json");
 
                             final InputStream entityStream = containerRequest.getEntityStream();
                             String retrievedJson = JsonTestHelper.getEntityAsString(entityStream);
@@ -204,9 +205,9 @@ public abstract class AbstractJsonTest extends JerseyTest {
 
                 });
 
-        final ResourceConfig resourceConfig = new ResourceConfig().
-                registerResources(resourceBuilder.build()).
-                register(jsonTestSetup.getJsonProvider().getFeature());
+        final ResourceConfig resourceConfig = new ResourceConfig()
+                .registerResources(resourceBuilder.build())
+                .register(jsonTestSetup.getJsonProvider().getFeature());
 
         resourceConfig.registerInstances(getJaxbContextResolver(jsonTestSetup));
 
@@ -238,14 +239,13 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     /**
-     * Returns entity path part for given {@link JsonTestSetup} (based on the name of the entity).
-     *
+     * Returns entity path part for given {@link JsonTestSetup} (based on the name of the entity)
+     .*
      * @return entity path part.
      */
     protected static String getEntityPathPart(final JsonTestSetup jsonTestSetup) {
         return jsonTestSetup.getEntityClass().getSimpleName();
     }
-
 
     /**
      * Creates new {@link ContextResolver} of {@link JAXBContext} instance for given {@link JsonTestProvider} and an entity class.
@@ -257,7 +257,7 @@ public abstract class AbstractJsonTest extends JerseyTest {
      */
     protected static JAXBContextResolver createJaxbContextResolver(final JsonTestProvider jsonProvider,
                                                                    final Class<?> clazz) throws Exception {
-        return createJaxbContextResolver(jsonProvider, new Class<?>[]{clazz});
+        return createJaxbContextResolver(jsonProvider, new Class<?>[] {clazz});
     }
 
     /**
@@ -284,8 +284,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     /**
-     * Returns entity path part for current test case (based on the name of the entity).
-     *
+     * Returns entity path part for current test case (based on the name of the entity)
+     .*
      * @return entity path part.
      */
     protected String getEntityPathPart() {
@@ -293,8 +293,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     /**
-     * Returns provider path part for current test case (based on the name of the {@link JsonTestProvider}).
-     *
+     * Returns provider path part for current test case (based on the name of the {@link JsonTestProvider})
+     .*
      * @return provider path part.
      */
     protected String getProviderPathPart() {
@@ -302,8 +302,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     /**
-     * Returns provider path part for given {@link JsonTestSetup} (based on the name of the {@link JsonTestProvider}).
-     *
+     * Returns provider path part for given {@link JsonTestSetup} (based on the name of the {@link JsonTestProvider})
+     .*
      * @return provider path part.
      */
     protected static String getProviderPathPart(final JsonTestSetup jsonTestSetup) {
@@ -332,11 +332,11 @@ public abstract class AbstractJsonTest extends JerseyTest {
     public void test() throws Exception {
         final Object entity = getJsonTestSetup().getTestEntity();
 
-        final Object receivedEntity = target().
-                path(getProviderPathPart()).
-                path(getEntityPathPart()).
-                request("application/json; charset=UTF-8").
-                post(Entity.entity(entity, "application/json; charset=UTF-8"), getJsonTestSetup().getEntityClass());
+        final Object receivedEntity = target()
+                .path(getProviderPathPart())
+                .path(getEntityPathPart())
+                .request("application/json; charset=UTF-8")
+                .post(Entity.entity(entity, "application/json; charset=UTF-8"), getJsonTestSetup().getEntityClass());
 
         // Print out configuration for this test case as there is no way to rename generated JUnit tests at the moment.
         // TODO remove once JUnit supports parameterized tests with custom names

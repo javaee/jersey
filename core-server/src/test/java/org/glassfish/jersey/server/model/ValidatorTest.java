@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -119,8 +119,8 @@ public class ValidatorTest {
 
     @Test
     public void testRootResourceNonAmbigConstructors() throws Exception {
-        LOGGER.info("No issue should be reported if more public ctors exists with the same number of params, " +
-                "but another just one is presented with more params at a root resource:");
+        LOGGER.info("No issue should be reported if more public ctors exists with the same number of params, "
+                + "but another just one is presented with more params at a root resource:");
         Resource resource = Resource.builder(TestRootResourceNonAmbigCtors.class).build();
         ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
         validator.validate(resource);
@@ -244,8 +244,8 @@ public class ValidatorTest {
 
     @Test
     public void testProviderFieldsInjection() throws Exception {
-        LOGGER.info("An issue should be reported if injection is required for a class which is provider and " +
-                "therefore singleton:");
+        LOGGER.info("An issue should be reported if injection is required for a class which is provider and "
+                + "therefore singleton:");
         List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectFieldsForProvider.class);
         assertTrue(!issues.isEmpty());
         assertEquals(7, issues.size());
@@ -518,8 +518,8 @@ public class ValidatorTest {
 
     @Test
     public void testMultipleHttpMethodDesignatorsRM() throws Exception {
-        LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a resource " +
-                "method:");
+        LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a resource "
+                + "method:");
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsRM.class).build();
         ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
         validator.validate(resource);
@@ -539,8 +539,8 @@ public class ValidatorTest {
 
     @Test
     public void testMultipleHttpMethodDesignatorsSRM() throws Exception {
-        LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a sub-resource " +
-                "method:");
+        LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a sub-resource "
+                + "method:");
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsSRM.class).build();
         ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
         validator.validate(resource);
@@ -569,8 +569,8 @@ public class ValidatorTest {
     public static class TestNonConflictingHttpMethodDelete {
 
         static String html_content =
-                "<html>" + "<head><title>Delete text/html</title></head>" +
-                        "<body>Delete text/html</body></html>";
+                "<html>" + "<head><title>Delete text/html</title></head>"
+                        + "<body>Delete text/html</body></html>";
 
         @DELETE
         @Produces(value = "text/plain")
@@ -892,8 +892,8 @@ public class ValidatorTest {
 
     @Test
     public void testLocatorAndMethodValidation() throws Exception {
-        LOGGER.info("Should report warning during validation as Resource cannot have resource method and sub " +
-                "resource locators on the same path.");
+        LOGGER.info("Should report warning during validation as Resource cannot have resource method and sub "
+                + "resource locators on the same path.");
         List<ResourceModelIssue> issues = testResourceValidation(MethodAndLocatorResource.class);
         assertEquals(1, issues.size());
         assertNotEquals(Severity.FATAL, issues.get(0).getSeverity());
@@ -921,8 +921,8 @@ public class ValidatorTest {
 
     @Test
     public void testLocatorAndMethod2Validation() throws Exception {
-        LOGGER.info("Should report warning during validation as Resource cannot have resource method and sub " +
-                "resource locators on the same path.");
+        LOGGER.info("Should report warning during validation as Resource cannot have resource method and sub "
+                + "resource locators on the same path.");
         List<ResourceModelIssue> issues = testResourceValidation(MethodAndLocatorResource2.class);
         assertEquals(1, issues.size());
         assertNotEquals(Severity.FATAL, issues.get(0).getSeverity());
@@ -1004,8 +1004,8 @@ public class ValidatorTest {
 
     @Test
     public void testEmptyResourcel() throws Exception {
-        LOGGER.info("Should report warning during validation as Resource cannot have resource method and sub " +
-                "resource locators on the same path.");
+        LOGGER.info("Should report warning during validation as Resource cannot have resource method and sub "
+                + "resource locators on the same path.");
         List<ResourceModelIssue> issues = testResourceValidation(EmptyResource.class);
         assertEquals(1, issues.size());
         assertFalse(issues.get(0).getSeverity() == Severity.FATAL);
@@ -1040,8 +1040,8 @@ public class ValidatorTest {
 
     @Test
     public void testAmbiguousResources() throws Exception {
-        LOGGER.info("Should report warning during validation error as resource path patterns are ambiguous ({abc} and {def} " +
-                "results into same path pattern).");
+        LOGGER.info("Should report warning during validation error as resource path patterns are ambiguous ({abc} and {def} "
+                + "results into same path pattern).");
         List<ResourceModelIssue> issues = testResourceValidation(AmbiguousResource1.class, AmbiguousResource2.class,
                 UniqueResource.class);
         assertEquals(1, issues.size());
@@ -1067,8 +1067,8 @@ public class ValidatorTest {
 
     @Test
     public void testAmbiguousResourceLocators() throws Exception {
-        LOGGER.info("Should report warning during validation error as resource path patterns are ambiguous ({abc} and {def} " +
-                "results into same path pattern).");
+        LOGGER.info("Should report warning during validation error as resource path patterns are ambiguous ({abc} and {def} "
+                + "results into same path pattern).");
         List<ResourceModelIssue> issues = testResourceValidation(AmbiguousLocatorResource1.class,
                 AmbiguousLocatorResource2.class);
         assertEquals(1, issues.size());

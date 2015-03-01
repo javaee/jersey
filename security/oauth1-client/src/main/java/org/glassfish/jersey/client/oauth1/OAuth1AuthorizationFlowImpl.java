@@ -68,7 +68,7 @@ import org.glassfish.jersey.oauth1.signature.OAuth1Secrets;
  */
 class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
 
-    private final static Logger LOGGER = Logger.getLogger(OAuth1AuthorizationFlowImpl.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(OAuth1AuthorizationFlowImpl.class.getName());
 
     /**
      * OAuth1AuthorizationFlowImpl builder.
@@ -86,7 +86,6 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
 
         private boolean enableLogging;
 
-
         /**
          * Create a new builder.
          * @param params Pre-configured oauth parameters.
@@ -95,7 +94,10 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
          * @param accessTokenUri Access token uri.
          * @param authorizationUri Authorization uri.
          */
-        public Builder(final OAuth1Parameters params, final OAuth1Secrets secrets, final String requestTokenUri, final String accessTokenUri,
+        public Builder(final OAuth1Parameters params,
+                       final OAuth1Secrets secrets,
+                       final String requestTokenUri,
+                       final String accessTokenUri,
                        final String authorizationUri) {
             this.params = params;
             this.secrets = secrets;
@@ -129,7 +131,6 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
         }
     }
 
-
     /** The OAuth parameters to be used in generating signature. */
     private final OAuth1Parameters parameters;
 
@@ -152,7 +153,6 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
         }
     };
 
-
     private OAuth1AuthorizationFlowImpl(final OAuth1Parameters params, final OAuth1Secrets secrets, final String requestTokenUri,
                                         final String accessTokenUri, final String authorizationUri, final String callbackUri,
                                         final Client client, final boolean enableLogging) {
@@ -161,7 +161,6 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
         this.requestTokenUri = requestTokenUri;
         this.accessTokenUri = accessTokenUri;
         this.authorizationUri = authorizationUri;
-
 
         if (client != null) {
             this.client = client;
@@ -187,13 +186,11 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
         }
     }
 
-
     private Invocation.Builder addProperties(final Invocation.Builder invocationBuilder) {
         return invocationBuilder
                 .property(OAuth1ClientSupport.OAUTH_PROPERTY_OAUTH_PARAMETERS, parameters)
                 .property(OAuth1ClientSupport.OAUTH_PROPERTY_OAUTH_SECRETS, secrets);
     }
-
 
     public String start() {
         final Response response = addProperties(client.target(requestTokenUri).request())

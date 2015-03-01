@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,14 +40,15 @@
 
 package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.linking.InjectLink.Style;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.glassfish.jersey.linking.InjectLink.Style;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
 /**
- * Utility class for working with {@link LinkHeader} annotations
- * 
+ * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
@@ -55,11 +56,11 @@ class LinkHeaderDescriptor implements InjectLinkDescriptor {
 
     private InjectLink linkHeader;
     private Map<String, String> bindings;
-    
+
     LinkHeaderDescriptor(InjectLink linkHeader) {
         this.linkHeader = linkHeader;
         bindings = new HashMap<String, String>();
-        for (Binding binding: linkHeader.bindings()) {
+        for (Binding binding : linkHeader.bindings()) {
             bindings.put(binding.name(), binding.value());
         }
     }

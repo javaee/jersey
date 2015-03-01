@@ -49,15 +49,11 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.jboss.weld.environment.se.Weld;
-
-import org.junit.Test;
-
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -117,7 +113,6 @@ public class RequestScopedResourceTest extends JerseyTest {
         };
     }
 
-
     @BeforeClass
     public static void before() throws Exception {
         weld = new Weld();
@@ -133,12 +128,12 @@ public class RequestScopedResourceTest extends JerseyTest {
     public void tearDown() throws Exception {
         super.tearDown();
         System.out.printf("SYNC: %d, ASYNC: %d, STRAIGHT: %d%n",
-        parameterizedCounter.intValue(), parameterizedAsyncCounter.intValue(), straightCounter.intValue());
+                parameterizedCounter.intValue(), parameterizedAsyncCounter.intValue(), straightCounter.intValue());
     }
 
     @Override
     protected ResourceConfig configure() {
-//        enable(TestProperties.LOG_TRAFFIC);
+        //        enable(TestProperties.LOG_TRAFFIC);
         return App.createJaxRsApp();
     }
 
@@ -155,9 +150,19 @@ public class RequestScopedResourceTest extends JerseyTest {
 
         // select one of the three resource methods available
         switch (RANDOMIZER.nextInt(3)) {
-            case 0 : path = "req/parameterized"; parameterizedCounter.incrementAndGet(); break;
-            case 1 : path = "req/parameterized-async"; parameterizedAsyncCounter.incrementAndGet(); break;
-            default : path = "req/straight"; expected = String.format("straight: %s", param); straightCounter.incrementAndGet(); break;
+            case 0:
+                path = "req/parameterized";
+                parameterizedCounter.incrementAndGet();
+                break;
+            case 1:
+                path = "req/parameterized-async";
+                parameterizedAsyncCounter.incrementAndGet();
+                break;
+            default:
+                path = "req/straight";
+                expected = String.format("straight: %s", param);
+                straightCounter.incrementAndGet();
+                break;
         }
 
         final Response response = target().path(path).queryParam("q", param).request("text/plain").get();

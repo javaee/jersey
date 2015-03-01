@@ -90,9 +90,9 @@ public class MultiPartResource {
     @Produces("multipart/mixed")
     public Response two() {
         // Exercise builder pattern with default content type
-        return Response.ok(new MultiPart().
-                             bodyPart("This is the first segment", new MediaType("text", "plain")).
-                             bodyPart("<outer><inner>value</inner></outer>", new MediaType("text", "xml"))).build();
+        return Response.ok(new MultiPart()
+                .bodyPart("This is the first segment", new MediaType("text", "plain"))
+                .bodyPart("<outer><inner>value</inner></outer>", new MediaType("text", "xml"))).build();
     }
 
     @Path("three")
@@ -101,10 +101,10 @@ public class MultiPartResource {
     public Response three() {
         // Exercise builder pattern with explicit content type
         MultiPartBean bean = new MultiPartBean("myname", "myvalue");
-        return Response.ok(new MultiPart().
-                             type(new MediaType("multipart", "mixed")).
-                             bodyPart("This is the first segment", new MediaType("text", "plain")).
-                             bodyPart(bean, new MediaType("x-application", "x-format"))).build();
+        return Response.ok(new MultiPart()
+                .type(new MediaType("multipart", "mixed"))
+                .bodyPart("This is the first segment", new MediaType("text", "plain"))
+                .bodyPart(bean, new MediaType("x-application", "x-format"))).build();
     }
 
     @Path("four")
@@ -160,8 +160,8 @@ public class MultiPartResource {
     @Produces("text/plain")
     public Response six(MultiPart multiPart) {
         String response = "All OK";
-        if (!"multipart".equals(multiPart.getMediaType().getType()) ||
-            !"mixed".equals(multiPart.getMediaType().getSubtype())) {
+        if (!"multipart".equals(multiPart.getMediaType().getType())
+                || !"mixed".equals(multiPart.getMediaType().getSubtype())) {
             response = "MultiPart media type is " + multiPart.getMediaType().toString();
         } else if (multiPart.getBodyParts().size() != 0) {
             response = "Got " + multiPart.getBodyParts().size() + " body parts instead of zero";
@@ -177,7 +177,8 @@ public class MultiPartResource {
         if (!(mp.getBodyParts().size() == 2)) {
             return Response.ok("FAILED:  Body part count is " + mp.getBodyParts().size() + " instead of 2").build();
         } else if (!(mp.getBodyParts().get(1).getEntity() instanceof BodyPartEntity)) {
-            return Response.ok("FAILED:  Second body part is " + mp.getBodyParts().get(1).getClass().getName() + " instead of BodyPartEntity").build();
+            return Response.ok("FAILED:  Second body part is " + mp.getBodyParts().get(1).getClass().getName()
+                    + " instead of BodyPartEntity").build();
         }
         BodyPartEntity bpe = (BodyPartEntity) mp.getBodyParts().get(1).getEntity();
         try {
@@ -219,10 +220,9 @@ public class MultiPartResource {
             }
             sb.append(buffer, 0, n);
         }
-        return Response.ok(new MultiPart().bodyPart(sb.toString(), MediaType.TEXT_PLAIN_TYPE)).
-                type(new MediaType("multipart", "mixed")).build();
+        return Response.ok(new MultiPart().bodyPart(sb.toString(), MediaType.TEXT_PLAIN_TYPE))
+                .type(new MediaType("multipart", "mixed")).build();
     }
-
 
     // Echo back the multipart that was sent
     @Path("twelve")

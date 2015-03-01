@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,11 +53,10 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import jersey.repackaged.com.google.common.collect.Sets;
-
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Context resolvers factory unit test.
@@ -143,11 +142,14 @@ public class ContextResolverFactoryTest {
         assertEquals(CustomStringResolver.VALUE, crf.resolve(String.class, MediaType.WILDCARD_TYPE).getContext(String.class));
         assertEquals(CustomStringResolver.VALUE, crf.resolve(String.class, MediaType.TEXT_PLAIN_TYPE).getContext(String.class));
 
-        assertEquals(CustomIntegerResolverA.VALUE, crf.resolve(Integer.class, MediaType.APPLICATION_XML_TYPE).getContext(Integer.class));
-        assertEquals(CustomIntegerResolverA.VALUE, crf.resolve(Integer.class, MediaType.valueOf("application/*")).getContext(Integer.class));
+        assertEquals(CustomIntegerResolverA.VALUE,
+                crf.resolve(Integer.class, MediaType.APPLICATION_XML_TYPE).getContext(Integer.class));
+        assertEquals(CustomIntegerResolverA.VALUE,
+                crf.resolve(Integer.class, MediaType.valueOf("application/*")).getContext(Integer.class));
 
         // Test that resolver "B" is shadowed by a custom resolver "C"
-        assertEquals(CustomIntegerResolverC.VALUE, crf.resolve(Integer.class, MediaType.APPLICATION_JSON_TYPE).getContext(Integer.class));
+        assertEquals(CustomIntegerResolverC.VALUE,
+                crf.resolve(Integer.class, MediaType.APPLICATION_JSON_TYPE).getContext(Integer.class));
 
         // Test that there is no matching provider
         assertNull(crf.resolve(Integer.class, MediaType.TEXT_PLAIN_TYPE));

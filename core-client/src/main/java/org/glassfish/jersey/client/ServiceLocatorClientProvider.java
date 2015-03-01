@@ -77,7 +77,8 @@ public class ServiceLocatorClientProvider extends ServiceLocatorProvider {
     public static ServiceLocator getServiceLocator(ClientRequestContext clientRequestContext) {
         if (!(clientRequestContext instanceof ServiceLocatorSupplier)) {
             throw new IllegalArgumentException(
-                    LocalizationMessages.ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_REQUEST(clientRequestContext.getClass().getName()));
+                    LocalizationMessages
+                            .ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_REQUEST(clientRequestContext.getClass().getName()));
         }
         return ((ServiceLocatorSupplier) clientRequestContext).getServiceLocator();
     }
@@ -98,11 +99,11 @@ public class ServiceLocatorClientProvider extends ServiceLocatorProvider {
     public static ServiceLocator getServiceLocator(ClientResponseContext clientResponseContext) {
         if (!(clientResponseContext instanceof ServiceLocatorSupplier)) {
             throw new IllegalArgumentException(
-                    LocalizationMessages.ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_RESPONSE(clientResponseContext.getClass().getName()));
+                    LocalizationMessages
+                            .ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_RESPONSE(clientResponseContext.getClass().getName()));
         }
         return ((ServiceLocatorSupplier) clientResponseContext).getServiceLocator();
     }
-
 
 }
 

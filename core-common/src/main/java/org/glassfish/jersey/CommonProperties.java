@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -300,8 +300,11 @@ public final class CommonProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(final Map<String, ?> properties, final RuntimeType runtime, final String propertyName, final T defaultValue) {
-        return PropertiesHelper.getValue(properties, runtime, propertyName, defaultValue,CommonProperties.LEGACY_FALLBACK_MAP);
+    public static <T> T getValue(final Map<String, ?> properties,
+                                 final RuntimeType runtime,
+                                 final String propertyName,
+                                 final T defaultValue) {
+        return PropertiesHelper.getValue(properties, runtime, propertyName, defaultValue, CommonProperties.LEGACY_FALLBACK_MAP);
     }
 
     /**
@@ -322,7 +325,10 @@ public final class CommonProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(final Map<String, ?> properties, final RuntimeType runtime, final String propertyName, final T defaultValue,
+    public static <T> T getValue(final Map<String, ?> properties,
+                                 final RuntimeType runtime,
+                                 final String propertyName,
+                                 final T defaultValue,
                                  final Class<T> type) {
         return PropertiesHelper.getValue(properties, runtime, propertyName, defaultValue, type,
                 CommonProperties.LEGACY_FALLBACK_MAP);
@@ -345,7 +351,10 @@ public final class CommonProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(final Map<String, ?> properties, final RuntimeType runtime, final String propertyName, final Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties,
+                                 final RuntimeType runtime,
+                                 final String propertyName,
+                                 final Class<T> type) {
         return PropertiesHelper.getValue(properties, runtime, propertyName, type, CommonProperties.LEGACY_FALLBACK_MAP);
     }
 }

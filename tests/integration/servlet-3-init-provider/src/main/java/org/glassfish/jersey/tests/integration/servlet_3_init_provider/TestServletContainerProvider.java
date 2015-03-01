@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -80,8 +80,8 @@ public class TestServletContainerProvider implements ServletContainerProvider {
     public void onRegister(final ServletContext servletContext, final Set<String> servletNames) throws ServletException {
         TestServletContainerProvider.setServletNames(servletNames);
 
-        servletContext.addFilter(TEST_FILTER, TestFilter.class).
-                addMappingForServletNames(EnumSet.allOf(DispatcherType.class), false,
+        servletContext.addFilter(TEST_FILTER, TestFilter.class)
+                .addMappingForServletNames(EnumSet.allOf(DispatcherType.class), false,
                         servletNames.toArray(new String[servletNames.size()]));
     }
 

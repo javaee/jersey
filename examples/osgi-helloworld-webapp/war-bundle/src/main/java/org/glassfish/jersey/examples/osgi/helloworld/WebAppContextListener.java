@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,8 +41,10 @@
 package org.glassfish.jersey.examples.osgi.helloworld;
 
 import java.util.HashMap;
+
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -62,11 +64,11 @@ public class WebAppContextListener implements BundleActivator, ServletContextLis
     BundleContext bc;
     ServiceReference eaRef;
 
-    synchronized static EventAdmin getEa() {
+    static synchronized EventAdmin getEa() {
         return ea;
     }
 
-    synchronized static void setEa(EventAdmin ea) {
+    static synchronized void setEa(EventAdmin ea) {
         WebAppContextListener.ea = ea;
     }
 
@@ -74,15 +76,18 @@ public class WebAppContextListener implements BundleActivator, ServletContextLis
     public void contextInitialized(final ServletContextEvent sce) {
         if (getEa() != null) {
             final String contextPath = sce.getServletContext().getContextPath();
-            getEa().sendEvent(new Event("jersey/test/DEPLOYED",new HashMap<String, String>(){{
-                put("context-path", contextPath);}}));
+            getEa().sendEvent(new Event("jersey/test/DEPLOYED", new HashMap<String, String>() {{
+                put("context-path", contextPath);
+            }}));
         }
     }
 
     @Override
     public void contextDestroyed(final ServletContextEvent sce) {
         if (getEa() != null) {
-            getEa().sendEvent(new Event("jersey/test/UNDEPLOYED",new HashMap<String, String>(){{put("context-path", sce.getServletContext().getContextPath());}}));
+            getEa().sendEvent(new Event("jersey/test/UNDEPLOYED", new HashMap<String, String>() {{
+                put("context-path", sce.getServletContext().getContextPath());
+            }}));
         }
     }
 
@@ -91,7 +96,7 @@ public class WebAppContextListener implements BundleActivator, ServletContextLis
         bc = context;
         eaRef = bc.getServiceReference(EventAdmin.class.getName());
         if (eaRef != null) {
-            setEa((EventAdmin)bc.getService(eaRef));
+            setEa((EventAdmin) bc.getService(eaRef));
         }
     }
 

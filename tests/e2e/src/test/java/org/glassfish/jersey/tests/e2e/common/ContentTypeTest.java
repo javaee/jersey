@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -122,6 +122,7 @@ public class ContentTypeTest extends JerseyTest {
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.TYPE, ElementType.METHOD})
     @interface CtFix {
+
         Class<? super ContentTypeFixProvider> value();
     }
 
@@ -197,9 +198,9 @@ public class ContentTypeTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
         enable(TestProperties.LOG_TRAFFIC);
 
-        return new ResourceConfig().
-                registerClasses(ContentTypeResource.class, ContentTypeFixFeature.class, FooBarStringWriter.class).
-                registerInstances(new LoggingFilter(LOGGER, true));
+        return new ResourceConfig()
+                .registerClasses(ContentTypeResource.class, ContentTypeFixFeature.class, FooBarStringWriter.class)
+                .registerInstances(new LoggingFilter(LOGGER, true));
     }
 
     @Test

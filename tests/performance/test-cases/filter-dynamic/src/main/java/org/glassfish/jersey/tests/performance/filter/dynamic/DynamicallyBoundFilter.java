@@ -61,7 +61,8 @@ public class DynamicallyBoundFilter implements ContainerRequestFilter, Container
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         if (requestContext.hasEntity()) {
-            requestContext.setEntityStream(new SequenceInputStream(new ByteArrayInputStream("DYN_MATCH_IN".getBytes()), requestContext.getEntityStream()));
+            requestContext.setEntityStream(new SequenceInputStream(new ByteArrayInputStream("DYN_MATCH_IN".getBytes()),
+                    requestContext.getEntityStream()));
         }
     }
 

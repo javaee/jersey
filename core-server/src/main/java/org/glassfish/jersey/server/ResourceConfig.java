@@ -132,7 +132,6 @@ public class ResourceConfig extends Application implements Configurable<Resource
             this.classLoader = classLoader;
         }
 
-
         public void setApplicationName(final String applicationName) {
             this.applicationName = applicationName;
         }
@@ -150,8 +149,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
             return new Inflector<ContractProvider.Builder, ContractProvider>() {
                 @Override
                 public ContractProvider apply(final ContractProvider.Builder builder) {
-                    if (builder.getScope() == null && builder.getContracts().isEmpty() &&
-                            Resource.getPath(componentClass) != null) {
+                    if (builder.getScope() == null && builder.getContracts().isEmpty()
+                            && Resource.getPath(componentClass) != null) {
                         builder.scope(RequestScoped.class);
                     }
 
@@ -217,6 +216,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     private static final class ImmutableState extends State {
+
         private ImmutableState(final State original) {
             super(original);
         }
@@ -312,8 +312,9 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @return ResourceConfig instance for the supplied application.
      */
     public static ResourceConfig forApplication(final Application application) {
-        return (application instanceof ResourceConfig) ? ((ResourceConfig) application) : new WrappingResourceConfig
-                (application, null, null);
+        return application instanceof ResourceConfig
+                ? ((ResourceConfig) application)
+                : new WrappingResourceConfig(application, null, null);
     }
 
     /**
@@ -1023,6 +1024,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     private static class WrappingResourceConfig extends ResourceConfig {
+
         private Application application;
         private Class<? extends Application> applicationClass;
         private final Set<Class<?>> defaultClasses = Sets.newHashSet();
@@ -1153,11 +1155,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @return initialized run-time resource config.
      */
     static ResourceConfig createRuntimeConfig(final Application application) {
-        return (application instanceof ResourceConfig) ?
-                new RuntimeConfig((ResourceConfig) application) : new RuntimeConfig(application);
+        return (application instanceof ResourceConfig)
+                ? new RuntimeConfig((ResourceConfig) application) : new RuntimeConfig(application);
     }
 
     private static class RuntimeConfig extends ResourceConfig {
+
         private final Set<Class<?>> originalRegistrations;
         private final Application application;
 
@@ -1259,7 +1262,6 @@ public class ResourceConfig extends Application implements Configurable<Resource
         Set<Class<?>> getRegisteredClasses() {
             return originalRegistrations;
         }
-
 
         @Override
         Application _getApplication() {

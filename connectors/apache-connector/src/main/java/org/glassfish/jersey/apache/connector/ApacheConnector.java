@@ -279,7 +279,6 @@ class ApacheConnector implements Connector {
                 .get(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION);
         this.preemptiveBasicAuth = (preemptiveBasicAuthProperty != null) ? preemptiveBasicAuthProperty : false;
 
-
         if (reqConfig != null) {
             final RequestConfig.Builder reqConfigBuilder = RequestConfig.copy((RequestConfig) reqConfig);
             if (connectTimeout > 0) {
@@ -453,12 +452,11 @@ class ApacheConnector implements Connector {
                 context.setAuthCache(authCache);
             }
             response = client.execute(getHost(request), request, context);
-            HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, clientRequest.getHeaders(),
-                    this.getClass().getName());
+            HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, clientRequest.getHeaders(), this.getClass().getName());
 
-            final Response.StatusType status = response.getStatusLine().getReasonPhrase() == null ?
-                    Statuses.from(response.getStatusLine().getStatusCode()) :
-                    Statuses.from(response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase());
+            final Response.StatusType status = response.getStatusLine().getReasonPhrase() == null
+                    ? Statuses.from(response.getStatusLine().getStatusCode())
+                    : Statuses.from(response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase());
 
             final ClientResponse responseContext = new ClientResponse(status, clientRequest);
             final List<URI> redirectLocations = context.getRedirectLocations();
@@ -490,7 +488,6 @@ class ApacheConnector implements Connector {
                     headers.add(HttpHeaders.CONTENT_ENCODING, contentEncoding.getValue());
                 }
             }
-
 
             try {
                 responseContext.setEntityStream(new HttpClientResponseInputStream(getInputStream(response)));
@@ -555,7 +552,6 @@ class ApacheConnector implements Connector {
                 .build();
     }
 
-
     private HttpEntity getHttpEntity(final ClientRequest clientRequest, final boolean bufferingEnabled) {
         final Object entity = clientRequest.getEntity();
 
@@ -613,7 +609,8 @@ class ApacheConnector implements Connector {
         }
     }
 
-    private static Map<String, String> writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final HttpUriRequest request) {
+    private static Map<String, String> writeOutBoundHeaders(final MultivaluedMap<String, Object> headers,
+                                                            final HttpUriRequest request) {
         final Map<String, String> stringHeaders = HeaderUtils.asStringHeadersSingleValue(headers);
 
         for (final Map.Entry<String, String> e : stringHeaders.entrySet()) {

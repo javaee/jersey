@@ -217,7 +217,7 @@ public class ResourcePushingTest {
 
     @Test
     public void testSubResourceLocatorRecursive2() throws ExecutionException, InterruptedException {
-        _test("/locator-test/sublocator/sub/sub/subget", "/subget;<no-path>;/sub;<no-path>;/sub;<no-path>;/sublocator;" +
-                "/locator\\-test");
+        _test("/locator-test/sublocator/sub/sub/subget", "/subget;<no-path>;/sub;<no-path>;/sub;<no-path>;/sublocator;"
+                + "/locator\\-test");
     }
 }

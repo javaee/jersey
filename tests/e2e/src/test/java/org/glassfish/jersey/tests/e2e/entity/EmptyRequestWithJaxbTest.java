@@ -154,13 +154,13 @@ public class EmptyRequestWithJaxbTest {
     }
 
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
-    public static abstract class CR implements ContextResolver<JAXBContext> {
+    public abstract static class CR implements ContextResolver<JAXBContext> {
 
         private final JAXBContext context;
 
         private final Class[] classes = {JaxbBean.class, JaxbBeanType.class};
 
-        private final Set<Class> types = new HashSet<Class>(Arrays.asList(classes));
+        private final Set<Class> types = new HashSet<>(Arrays.asList(classes));
 
         public CR() {
             try {

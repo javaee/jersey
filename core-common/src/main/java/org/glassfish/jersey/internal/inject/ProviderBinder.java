@@ -81,6 +81,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class ProviderBinder {
+
     private final ServiceLocator locator;
 
     /**
@@ -106,7 +107,6 @@ public class ProviderBinder {
         }
         dc.commit();
     }
-
 
     /**
      * Register/bind custom provider classes. Registered providers will be handled
@@ -202,9 +202,8 @@ public class ProviderBinder {
             final Object providerInstance, final ContractProvider model, final DynamicConfiguration dc) {
 
         for (final Class contract : model.getContracts()) {
-            final ScopedBindingBuilder bindingBuilder = Injections.
-                    newBinder(providerInstance).
-                    qualifiedBy(new CustomAnnotationImpl());
+            final ScopedBindingBuilder bindingBuilder = Injections
+                    .newBinder(providerInstance).qualifiedBy(new CustomAnnotationImpl());
 
             //noinspection unchecked
             bindingBuilder.to(contract);
@@ -317,7 +316,10 @@ public class ProviderBinder {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void bindClass(final Class<T> clazz, final ServiceLocator locator, final DynamicConfiguration dc, final boolean isResource) {
+    private <T> void bindClass(final Class<T> clazz,
+                               final ServiceLocator locator,
+                               final DynamicConfiguration dc,
+                               final boolean isResource) {
         final Class<? extends Annotation> scope = getProviderScope(clazz);
 
         if (isResource) {

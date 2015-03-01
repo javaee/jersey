@@ -97,7 +97,7 @@ public class OptionsTest {
     }
 
     @Path("/")
-    static public class ResourceNoOptions {
+    public static class ResourceNoOptions {
 
         @GET
         public String get() {
@@ -150,13 +150,13 @@ public class OptionsTest {
     }
 
     @Path("/")
-    static public class ResourceWithOptions {
+    public static class ResourceWithOptions {
 
         @OPTIONS
         public Response options() {
-            return Response.ok("OPTIONS").
-                    header("Allow", "OPTIONS, GET, PUT, POST, DELETE, PATCH").
-                    header("X-TEST", "OVERRIDE").build();
+            return Response.ok("OPTIONS")
+                    .header("Allow", "OPTIONS, GET, PUT, POST, DELETE, PATCH")
+                    .header("X-TEST", "OVERRIDE").build();
         }
 
         @GET
@@ -203,9 +203,9 @@ public class OptionsTest {
         assertEquals("OVERRIDE", response.getHeaderString("X-TEST"));
     }
 
-
     @Path("resource")
     public static class WadlResource {
+
         @GET
         public String get() {
             return "get";
@@ -280,6 +280,7 @@ public class OptionsTest {
 
     @Path("no-get")
     private static class ResourceWithoutGetMethod {
+
         @POST
         public String post(String entity) {
             return entity;
@@ -301,7 +302,6 @@ public class OptionsTest {
         Assert.assertFalse(((String) response.getEntity()).contains("HEAD"));
     }
 
-
     @Test
     public void testNoHeadWildcard() throws ExecutionException, InterruptedException {
         final ResourceConfig resourceConfig = new ResourceConfig(ResourceWithoutGetMethod.class);
@@ -319,7 +319,8 @@ public class OptionsTest {
         }
     }
 
-    private ContainerResponse testOptions(MediaType requestType, ApplicationHandler application, String path) throws InterruptedException, ExecutionException {
+    private ContainerResponse testOptions(MediaType requestType, ApplicationHandler application, String path)
+            throws InterruptedException, ExecutionException {
         final ContainerRequest request = RequestContextBuilder.from(path, "OPTIONS").accept(requestType)
                 .build();
         final ContainerResponse response = application.apply(request).get();

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,15 +61,16 @@ import org.glassfish.jersey.internal.util.JdkVersion;
  * @since 2.3
  */
 public final class DataStructures {
-    private final static Class<?> LTQ_CLASS;
+
+    private static final Class<?> LTQ_CLASS;
 
     static {
         String className = null;
 
         Class<?> c;
         try {
-            JdkVersion jdkVersion = JdkVersion.getJdkVersion();
-            JdkVersion minimumVersion = JdkVersion.parseVersion("1.7.0");
+            final JdkVersion jdkVersion = JdkVersion.getJdkVersion();
+            final JdkVersion minimumVersion = JdkVersion.parseVersion("1.7.0");
 
             className = (minimumVersion.compareTo(jdkVersion) <= 0)
                     ? "java.util.concurrent.LinkedTransferQueue"
@@ -77,10 +78,10 @@ public final class DataStructures {
 
             c = getAndVerify(className);
             Logger.getLogger(DataStructures.class.getName()).log(Level.FINE, "USING LTQ class:{0}", c);
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             Logger.getLogger(DataStructures.class.getName()).log(Level.FINE,
-                    "failed loading data structure class:" + className +
-                            " fallback to embedded one", t);
+                    "failed loading data structure class:" + className
+                            + " fallback to embedded one", t);
 
             c = LinkedBlockingQueue.class; // fallback to LinkedBlockingQueue
         }
@@ -93,7 +94,7 @@ public final class DataStructures {
      */
     public static final int DEFAULT_CONCURENCY_LEVEL = ceilingNextPowerOfTwo(Runtime.getRuntime().availableProcessors());
 
-    private static int ceilingNextPowerOfTwo(int x) {
+    private static int ceilingNextPowerOfTwo(final int x) {
         // Hacker's Delight, Chapter 3, Harry S. Warren Jr.
         return 1 << (Integer.SIZE - Integer.numberOfLeadingZeros(x - 1));
     }
@@ -106,7 +107,7 @@ public final class DataStructures {
                     return DataStructures.class.getClassLoader().loadClass(cn).newInstance().getClass();
                 }
             });
-        } catch (PrivilegedActionException ex) {
+        } catch (final PrivilegedActionException ex) {
             throw ex.getCause();
         }
     }
@@ -132,7 +133,7 @@ public final class DataStructures {
                     return (BlockingQueue<E>) LTQ_CLASS.newInstance();
                 }
             });
-        } catch (PrivilegedActionException ex) {
+        } catch (final PrivilegedActionException ex) {
             final Throwable cause = ex.getCause();
             if (cause instanceof RuntimeException) {
                 throw (RuntimeException) cause;
@@ -157,9 +158,9 @@ public final class DataStructures {
      * @return the map.
      */
     public static <K, V> ConcurrentMap<K, V> createConcurrentMap() {
-        return JdkVersion.getJdkVersion().isUnsafeSupported() ?
-                new ConcurrentHashMapV8<K, V>() :
-                new ConcurrentHashMap<K, V>();
+        return JdkVersion.getJdkVersion().isUnsafeSupported()
+                ? new ConcurrentHashMapV8<K, V>()
+                : new ConcurrentHashMap<K, V>();
     }
 
     /**
@@ -177,9 +178,9 @@ public final class DataStructures {
      */
     public static <K, V> ConcurrentMap<K, V> createConcurrentMap(
             final Map<? extends K, ? extends V> map) {
-        return JdkVersion.getJdkVersion().isUnsafeSupported() ?
-                new ConcurrentHashMapV8<K, V>(map) :
-                new ConcurrentHashMap<K, V>(map);
+        return JdkVersion.getJdkVersion().isUnsafeSupported()
+                ? new ConcurrentHashMapV8<K, V>(map)
+                : new ConcurrentHashMap<K, V>(map);
     }
 
     /**
@@ -201,9 +202,9 @@ public final class DataStructures {
      */
     public static <K, V> ConcurrentMap<K, V> createConcurrentMap(
             final int initialCapacity) {
-        return JdkVersion.getJdkVersion().isUnsafeSupported() ?
-                new ConcurrentHashMapV8<K, V>(initialCapacity) :
-                new ConcurrentHashMap<K, V>(initialCapacity);
+        return JdkVersion.getJdkVersion().isUnsafeSupported()
+                ? new ConcurrentHashMapV8<K, V>(initialCapacity)
+                : new ConcurrentHashMap<K, V>(initialCapacity);
     }
 
     /**
@@ -234,8 +235,8 @@ public final class DataStructures {
     public static <K, V> ConcurrentMap<K, V> createConcurrentMap(
             final int initialCapacity, final float loadFactor,
             final int concurrencyLevel) {
-        return JdkVersion.getJdkVersion().isUnsafeSupported() ?
-                new ConcurrentHashMapV8<K, V>(initialCapacity, loadFactor, concurrencyLevel) :
-                new ConcurrentHashMap<K, V>(initialCapacity, loadFactor, concurrencyLevel);
+        return JdkVersion.getJdkVersion().isUnsafeSupported()
+                ? new ConcurrentHashMapV8<K, V>(initialCapacity, loadFactor, concurrencyLevel)
+                : new ConcurrentHashMap<K, V>(initialCapacity, loadFactor, concurrencyLevel);
     }
 }

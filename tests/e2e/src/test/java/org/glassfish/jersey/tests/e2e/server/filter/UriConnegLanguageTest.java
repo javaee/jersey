@@ -71,16 +71,17 @@ public class UriConnegLanguageTest extends JerseyTest {
 
     @Path("/abc")
     public static class LanguageVariantResource {
+
         @GET
         public Response doGet(@Context Request request, @Context HttpHeaders headers) {
 
             assertEquals(1, headers.getAcceptableLanguages().size());
 
-            List<Variant> vs = Variant.VariantListBuilder.newInstance().
-                    languages(new Locale("zh")).
-                    languages(new Locale("fr")).
-                    languages(new Locale("en")).add().
-                    build();
+            List<Variant> vs = Variant.VariantListBuilder.newInstance()
+                    .languages(new Locale("zh"))
+                    .languages(new Locale("fr"))
+                    .languages(new Locale("en")).add()
+                    .build();
 
             Variant v = request.selectVariant(vs);
             if (v == null) {

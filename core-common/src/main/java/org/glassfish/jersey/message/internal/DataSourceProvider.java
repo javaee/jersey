@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,6 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.activation.DataSource;
 
-
 /**
  * Provider for marshalling/un-marshalling of {@code application/octet-stream}
  * entity type to/from a {@link DataSource} instance.
@@ -80,9 +79,10 @@ public class DataSourceProvider extends AbstractMessageReaderWriterProvider<Data
      */
     public static class ByteArrayDataSource implements DataSource {
 
+        private final String type;
+
         private byte[] data;
         private int len = -1;
-        private String type;
         private String name = "";
 
         static class DSByteArrayOutputStream extends ByteArrayOutputStream {
@@ -96,8 +96,8 @@ public class DataSourceProvider extends AbstractMessageReaderWriterProvider<Data
             }
         }
 
-        public ByteArrayDataSource(InputStream is, String type) throws IOException {
-            DSByteArrayOutputStream os = new DSByteArrayOutputStream();
+        public ByteArrayDataSource(final InputStream is, final String type) throws IOException {
+            final DSByteArrayOutputStream os = new DSByteArrayOutputStream();
             ReaderWriter.writeTo(is, os);
             this.data = os.getBuf();
             this.len = os.getCount();
@@ -111,7 +111,7 @@ public class DataSourceProvider extends AbstractMessageReaderWriterProvider<Data
              */
             if (this.data.length - this.len > 256 * 1024) {
                 this.data = os.toByteArray();
-                this.len = this.data.length;	// should be the same
+                this.len = this.data.length;    // should be the same
             }
             this.type = type;
         }
@@ -142,44 +142,48 @@ public class DataSourceProvider extends AbstractMessageReaderWriterProvider<Data
             return name;
         }
 
-        public void setName(String name) {
+        public void setName(final String name) {
             this.name = name;
         }
     }
 
     @Override
-    public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isReadable(final Class<?> type,
+                              final Type genericType,
+                              final Annotation[] annotations,
+                              final MediaType mediaType) {
         return DataSource.class == type;
     }
 
     @Override
     public DataSource readFrom(
-            Class<DataSource> type,
-            Type genericType,
-            Annotation annotations[],
-            MediaType mediaType,
-            MultivaluedMap<String, String> httpHeaders,
-            InputStream entityStream) throws IOException {
-        ByteArrayDataSource ds = new ByteArrayDataSource(entityStream,
-                (mediaType == null) ? null : mediaType.toString());
-        return ds;
+            final Class<DataSource> type,
+            final Type genericType,
+            final Annotation[] annotations,
+            final MediaType mediaType,
+            final MultivaluedMap<String, String> httpHeaders,
+            final InputStream entityStream) throws IOException {
+        return new ByteArrayDataSource(entityStream, (mediaType == null) ? null : mediaType.toString());
     }
 
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isWriteable(final Class<?> type,
+                               final Type genericType,
+                               final Annotation[] annotations,
+                               final MediaType mediaType) {
         return DataSource.class.isAssignableFrom(type);
     }
 
     @Override
     public void writeTo(
-            DataSource t,
-            Class<?> type,
-            Type genericType,
-            Annotation annotations[],
-            MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders,
-            OutputStream entityStream) throws IOException {
-        InputStream in = t.getInputStream();
+            final DataSource t,
+            final Class<?> type,
+            final Type genericType,
+            final Annotation[] annotations,
+            final MediaType mediaType,
+            final MultivaluedMap<String, Object> httpHeaders,
+            final OutputStream entityStream) throws IOException {
+        final InputStream in = t.getInputStream();
         try {
             writeTo(in, entityStream);
         } finally {

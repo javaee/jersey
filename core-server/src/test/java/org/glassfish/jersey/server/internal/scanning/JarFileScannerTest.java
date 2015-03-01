@@ -63,6 +63,7 @@ import static org.junit.Assert.fail;
  */
 @RunWith(Theories.class)
 public class JarFileScannerTest {
+
     @DataPoint
     public static final boolean RECURSIVE = true;
     @DataPoint
@@ -112,14 +113,16 @@ public class JarFileScannerTest {
     public void testRecursiveClassEnumerationWithOptionalTrailingSlash() throws IOException {
         final int scannedEntriesWithoutSlash = countJarEntriesUsingScanner("javax/ws/rs", true);
         final int scannedEntriesWithSlash = countJarEntriesUsingScanner("javax/ws/rs/", true);
-        assertThat("Adding a trailing slash incorrectly affects recursive scanning", scannedEntriesWithSlash, equalTo(scannedEntriesWithoutSlash));
+        assertThat("Adding a trailing slash incorrectly affects recursive scanning", scannedEntriesWithSlash,
+                equalTo(scannedEntriesWithoutSlash));
     }
 
     @Test
     public void testNonRecursiveClassEnumerationWithOptionalTrailingSlash() throws IOException {
         final int scannedEntriesWithoutSlash = countJarEntriesUsingScanner("javax/ws/rs", false);
         final int scannedEntriesWithSlash = countJarEntriesUsingScanner("javax/ws/rs/", false);
-        assertThat("Adding a trailing slash incorrectly affects recursive scanning", scannedEntriesWithSlash, equalTo(scannedEntriesWithoutSlash));
+        assertThat("Adding a trailing slash incorrectly affects recursive scanning", scannedEntriesWithSlash,
+                equalTo(scannedEntriesWithoutSlash));
     }
 
     private int countJarEntriesByPattern(final Pattern pattern) throws IOException {

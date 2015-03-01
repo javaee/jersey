@@ -177,8 +177,8 @@ public class AsyncServletResourceTest extends JerseyTest {
 
         final StringBuilder messageBuilder = new StringBuilder();
         for (final Map.Entry<Integer, ResponseRecord> getResponseEntry : getResponses.entrySet()) {
-            messageBuilder.append("GET response for message ").append(getResponseEntry.getKey()).append(": ").append
-                    (getResponseEntry.getValue().toString()).append('\n');
+            messageBuilder.append("GET response for message ").append(getResponseEntry.getKey()).append(": ")
+                    .append(getResponseEntry.getValue().toString()).append('\n');
         }
         LOGGER.info(messageBuilder.toString());
 
@@ -290,13 +290,13 @@ public class AsyncServletResourceTest extends JerseyTest {
 
         final StringBuilder messageBuilder = new StringBuilder();
         for (final Map.Entry<Integer, String> postResponseEntry : postResponses.entrySet()) {
-            messageBuilder.append("POST response for message ").append(postResponseEntry.getKey()).append(": ").append
-                    (postResponseEntry.getValue()).append('\n');
+            messageBuilder.append("POST response for message ").append(postResponseEntry.getKey()).append(": ")
+                    .append(postResponseEntry.getValue()).append('\n');
         }
         messageBuilder.append('\n');
         for (final Map.Entry<Integer, String> getResponseEntry : getResponses.entrySet()) {
-            messageBuilder.append("GET response for message ").append(getResponseEntry.getKey()).append(": ").append
-                    (getResponseEntry.getValue()).append('\n');
+            messageBuilder.append("GET response for message ").append(getResponseEntry.getKey()).append(": ")
+                    .append(getResponseEntry.getValue()).append('\n');
         }
         LOGGER.info(messageBuilder.toString());
 

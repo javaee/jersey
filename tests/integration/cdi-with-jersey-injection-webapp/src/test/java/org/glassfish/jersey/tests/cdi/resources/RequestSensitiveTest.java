@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,21 +58,21 @@ public class RequestSensitiveTest extends CdiTest {
 
     @Parameterized.Parameters
     public static List<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
-            {"app-field-injected", "alpha", "App: alpha"}
-            ,{"app-field-injected", "gogol", "App: gogol"}
-            ,{"app-field-injected", "elcaro", "App: elcaro"}
-            ,{"app-ctor-injected", "alpha", "App: alpha"}
-            ,{"app-ctor-injected", "gogol", "App: gogol"}
-            ,{"app-ctor-injected", "elcaro", "App: elcaro"}
-            ,{"request-field-injected", "alpha", "Request: alpha"}
-            ,{"request-field-injected", "gogol", "Request: gogol"}
-            ,{"request-field-injected", "oracle", "Request: oracle"}
-            ,{"request-ctor-injected", "alpha", "Request: alpha"}
-            ,{"request-ctor-injected", "gogol", "Request: gogol"}
-            ,{"request-ctor-injected", "oracle", "Request: oracle"}
+        return Arrays.asList(new Object[][] {
+                {"app-field-injected", "alpha", "App: alpha"},
+                {"app-field-injected", "gogol", "App: gogol"},
+                {"app-field-injected", "elcaro", "App: elcaro"},
+                {"app-ctor-injected", "alpha", "App: alpha"},
+                {"app-ctor-injected", "gogol", "App: gogol"},
+                {"app-ctor-injected", "elcaro", "App: elcaro"},
+                {"request-field-injected", "alpha", "Request: alpha"},
+                {"request-field-injected", "gogol", "Request: gogol"},
+                {"request-field-injected", "oracle", "Request: oracle"},
+                {"request-ctor-injected", "alpha", "Request: alpha"},
+                {"request-ctor-injected", "gogol", "Request: gogol"},
+                {"request-ctor-injected", "oracle", "Request: oracle"}
         });
-    };
+    }
 
     final String resource, straight, echoed;
 

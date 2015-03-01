@@ -205,8 +205,8 @@ public class JerseyApp {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("<executable>", options);
         System.out.println("The deployed application contains three methods:");
-        System.out.println("GET: return entity media type defined by the --type parameter. The entity is generated but you" +
-                " can specify --file <file> from which the data will be loaded.");
+        System.out.println("GET: return entity media type defined by the --type parameter. The entity is generated but you"
+                + " can specify --file <file> from which the data will be loaded.");
         System.out.println("POST: reads entity and writes the same entity back to the wire.");
         System.out.println("PUT: reads entity and returns 204.");
         System.out.println("\nexample: java <java params> JerseyApp -t application/json -p org.glassfish.jersey.moxy.json.MoxyJsonFeature --name MyCustomMoxyTest -u http://localhost:9998");

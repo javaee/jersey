@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -74,8 +74,10 @@ class ClientFilteringStages {
      *         locator.
      */
     static ChainableStage<ClientRequest> createRequestFilteringStage(final ServiceLocator locator) {
-        final RankedComparator<ClientRequestFilter> comparator = new RankedComparator<ClientRequestFilter>(RankedComparator.Order.ASCENDING);
-        final Iterable<ClientRequestFilter> requestFilters = Providers.getAllProviders(locator, ClientRequestFilter.class, comparator);
+        final RankedComparator<ClientRequestFilter> comparator = new RankedComparator<ClientRequestFilter>(
+                RankedComparator.Order.ASCENDING);
+        final Iterable<ClientRequestFilter> requestFilters = Providers
+                .getAllProviders(locator, ClientRequestFilter.class, comparator);
 
         return requestFilters.iterator().hasNext() ? new RequestFilteringStage(requestFilters) : null;
     }
@@ -89,19 +91,21 @@ class ClientFilteringStages {
      *         locator.
      */
     static ChainableStage<ClientResponse> createResponseFilteringStage(final ServiceLocator locator) {
-        final RankedComparator<ClientResponseFilter> comparator = new RankedComparator<ClientResponseFilter>(RankedComparator.Order.DESCENDING);
-        final Iterable<ClientResponseFilter> responseFilters = Providers.getAllProviders(locator, ClientResponseFilter.class, comparator);
+        final RankedComparator<ClientResponseFilter> comparator = new RankedComparator<ClientResponseFilter>(
+                RankedComparator.Order.DESCENDING);
+        final Iterable<ClientResponseFilter> responseFilters = Providers
+                .getAllProviders(locator, ClientResponseFilter.class, comparator);
 
         return responseFilters.iterator().hasNext() ? new ResponseFilterStage(responseFilters) : null;
     }
 
     private static final class RequestFilteringStage extends AbstractChainableStage<ClientRequest> {
+
         private final Iterable<ClientRequestFilter> requestFilters;
 
         private RequestFilteringStage(final Iterable<ClientRequestFilter> requestFilters) {
             this.requestFilters = requestFilters;
         }
-
 
         @Override
         public Continuation<ClientRequest> apply(ClientRequest requestContext) {
@@ -121,6 +125,7 @@ class ClientFilteringStages {
     }
 
     private static class ResponseFilterStage extends AbstractChainableStage<ClientResponse> {
+
         private final Iterable<ClientResponseFilter> filters;
 
         private ResponseFilterStage(Iterable<ClientResponseFilter> filters) {

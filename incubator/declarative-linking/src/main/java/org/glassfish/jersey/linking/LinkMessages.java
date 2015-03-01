@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,34 +40,33 @@
 
 package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.internal.l10n.LocalizableMessage;
-import org.glassfish.jersey.internal.l10n.LocalizableMessageFactory;
 import org.glassfish.jersey.internal.l10n.Localizable;
+import org.glassfish.jersey.internal.l10n.LocalizableMessageFactory;
 import org.glassfish.jersey.internal.l10n.Localizer;
- 
+
 /**
  * Message for declarative linking
- * 
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 
 class LinkMessages {
- 
-    private final static LocalizableMessageFactory messageFactory = new LocalizableMessageFactory("org.glassfish.jersey.media.linking.internal");
-    private final static Localizer localizer = new Localizer();
-    
+
+    private static final LocalizableMessageFactory messageFactory = new LocalizableMessageFactory(
+            "org.glassfish.jersey.media.linking.internal");
+    private static final Localizer localizer = new Localizer();
+
     public static Localizable localizableWARNING_LINKFILTER_PROCESSING(Object arg0) {
         return messageFactory.getMessage("warning.linkfilter.processing", arg0);
     }
 
     /**
      * LinkFilter cannot process class {0}, exception occurred during processing. Class will be ignored in the LinkFilter.
-     * 
+     *
      */
     public static String WARNING_LINKFILTER_PROCESSING(Object arg0) {
         return localizer.localize(localizableWARNING_LINKFILTER_PROCESSING(arg0));
     }
-    
-    
+
 }

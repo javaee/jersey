@@ -90,7 +90,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
  */
 public final class WebResourceFactory implements InvocationHandler {
 
-    static private final String[] EMPTY = {};
+    private static final String[] EMPTY = {};
 
     private final WebTarget target;
     private final MultivaluedMap<String, Object> headers;
@@ -143,7 +143,7 @@ public final class WebResourceFactory implements InvocationHandler {
                                     final Form form) {
 
         return (C) Proxy.newProxyInstance(AccessController.doPrivileged(ReflectionHelper.getClassLoaderPA(resourceInterface)),
-                new Class[]{resourceInterface},
+                new Class[] {resourceInterface},
                 new WebResourceFactory(ignoreResourcePath ? target : addPathFromAnnotation(resourceInterface, target),
                         headers, cookies, form));
     }

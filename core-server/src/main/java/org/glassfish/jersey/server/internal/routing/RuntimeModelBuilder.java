@@ -298,8 +298,8 @@ final class RuntimeModelBuilder {
 
             final UriTemplate template = resource.getPathPattern().getTemplate();
 
-            final PushMatchedTemplateRouter templateRouter = parentResource == null ?
-                    getTemplateRouter(subResourceMode, template, null)
+            final PushMatchedTemplateRouter templateRouter = parentResource == null
+                    ? getTemplateRouter(subResourceMode, template, null)
                     : getTemplateRouter(subResourceMode, parentResource.getPathPattern().getTemplate(), template);
 
             for (final ResourceMethod resourceMethod : resource.getResourceMethods()) {
@@ -313,7 +313,7 @@ final class RuntimeModelBuilder {
     }
 
     private PathToRouterBuilder startNextRoute(final PathMatchingRouterBuilder currentRouterBuilder, PathPattern routingPattern) {
-        return currentRouterBuilder == null ?
-                PathMatchingRouterBuilder.newRoute(routingPattern) : currentRouterBuilder.route(routingPattern);
+        return currentRouterBuilder == null
+                ? PathMatchingRouterBuilder.newRoute(routingPattern) : currentRouterBuilder.route(routingPattern);
     }
 }

@@ -40,26 +40,24 @@
 
 package org.glassfish.jersey.linking;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
+
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
-import org.glassfish.jersey.server.ExtendedUriInfo;
 
 /**
- * Utility class that can inject links into {@link com.sun.jersey.server.linking.Link} annotated fields in
+ * Utility class that can inject links into {@link javax.ws.rs.core.Link} annotated fields in
  * an entity.
  *
  * @author Mark Hadley
@@ -75,9 +73,10 @@ class FieldProcessor<T> {
     }
 
     /**
-     * Inject any {@link com.sun.jersey.server.linking.Link} annotated fields in the supplied entity and
+     * Inject any {@link javax.ws.rs.core.Link} annotated fields in the supplied entity and
      * recursively process its fields.
-     * @param entity the entity object returned by the resource method
+     *
+     * @param entity  the entity object returned by the resource method
      * @param uriInfo the uriInfo for the request
      */
     public void processLinks(T entity, UriInfo uriInfo, ResourceMappingContext rmc) {
@@ -87,11 +86,12 @@ class FieldProcessor<T> {
     }
 
     /**
-     * Inject any {@link com.sun.jersey.server.linking.Link} annotated fields in the supplied instance. Called
+     * Inject any {@link javax.ws.rs.core.Link} annotated fields in the supplied instance. Called
      * once for the entity and then recursively for each member and field.
+     *
      * @param entity
      * @param processed a list of already processed objects, used to break
-     * recursion when processing circular references.
+     *                  recursion when processing circular references.
      * @param uriInfo
      */
     private void processLinks(Object entity, Object resource, Object instance,
@@ -99,10 +99,12 @@ class FieldProcessor<T> {
                               ResourceMappingContext rmc) {
 
         try {
-            if (instance == null || processed.contains(instance))
+            if (instance == null || processed.contains(instance)) {
                 return; // ignore null properties and defeat circular references
-            if (instance.getClass().getPackage().getName().equals("java.lang"))
+            }
+            if (instance.getClass().getPackage().getName().equals("java.lang")) {
                 return;
+            }
             processed.add(instance);
         } catch (RuntimeException e) {
             // fix for JERSEY-1656
@@ -113,8 +115,7 @@ class FieldProcessor<T> {
         for (FieldDescriptor field : instanceDescriptor.getLinkFields()) {
 
             // TODO replace with properly poly-morphic code
-            if (field instanceof InjectLinkFieldDescriptor)
-            {
+            if (field instanceof InjectLinkFieldDescriptor) {
                 InjectLinkFieldDescriptor linkField = (InjectLinkFieldDescriptor) field;
                 if (ELLinkBuilder.evaluateCondition(linkField.getCondition(), entity, resource, instance)) {
                     URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo, rmc);
@@ -124,12 +125,11 @@ class FieldProcessor<T> {
 
                 InjectLinksFieldDescriptor linksField = (InjectLinksFieldDescriptor) field;
                 List<Link> list = new ArrayList<Link>();
-                for (InjectLinkFieldDescriptor linkField : linksField.getLinksToInject())
-                {
+                for (InjectLinkFieldDescriptor linkField : linksField.getLinksToInject()) {
                     if (ELLinkBuilder.evaluateCondition(linkField.getCondition(), entity, resource, instance)) {
-                       URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo, rmc);
-                       Link link = linkField.getLink(uri);
-                       list.add(link);
+                        URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo, rmc);
+                        Link link = linkField.getLink(uri);
+                        list.add(link);
                     }
                 }
 
@@ -142,20 +142,20 @@ class FieldProcessor<T> {
         if (instanceClass.isArray() && Object[].class.isAssignableFrom(instanceClass)) {
             Object array[] = (Object[]) instance;
             for (Object member : array) {
-                processMember(entity, resource, member, processed, uriInfo,rmc);
+                processMember(entity, resource, member, processed, uriInfo, rmc);
             }
         } else if (instance instanceof Iterable) {
             Iterable iterable = (Iterable) instance;
             for (Object member : iterable) {
-                processMember(entity, resource, member, processed, uriInfo,rmc);
+                processMember(entity, resource, member, processed, uriInfo, rmc);
             }
-        } 
+        }
 
         // Recursively process all member fields
         for (FieldDescriptor member : instanceDescriptor.getNonLinkFields()) {
 
             if (fieldSuitableForIntrospection(member)) {
-                processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo,rmc);
+                processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo, rmc);
             }
         }
 
@@ -164,15 +164,15 @@ class FieldProcessor<T> {
     private boolean fieldSuitableForIntrospection(FieldDescriptor member) {
         return member.field == null
                 || (!member.field.isSynthetic()
-                    && !Modifier.isTransient(member.field.getModifiers())
-                    && !member.field.getType().isPrimitive()
-                    && member.field.getType() != String.class
-                    && !member.field.isAnnotationPresent(InjectLinkNoFollow.class)
-                    && !member.field.isAnnotationPresent(XmlTransient.class));
+                            && !Modifier.isTransient(member.field.getModifiers())
+                            && !member.field.getType().isPrimitive()
+                            && member.field.getType() != String.class
+                            && !member.field.isAnnotationPresent(InjectLinkNoFollow.class)
+                            && !member.field.isAnnotationPresent(XmlTransient.class));
     }
 
     private void processMember(Object entity, Object resource, Object member, Set<Object> processed, UriInfo uriInfo,
-      ResourceMappingContext rmc) {
+                               ResourceMappingContext rmc) {
         if (member != null) {
             FieldProcessor proc = new FieldProcessor(member.getClass());
             proc.processLinks(entity, resource, member, processed, uriInfo, rmc);

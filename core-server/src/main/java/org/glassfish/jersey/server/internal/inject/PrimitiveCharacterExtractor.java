@@ -76,13 +76,13 @@ class PrimitiveCharacterExtractor implements MultivaluedParameterExtractor<Objec
     public Object extract(MultivaluedMap<String, String> parameters) {
         String v = parameters.getFirst(parameter);
         if (v != null && !v.trim().isEmpty()) {
-            if(v.length() == 1) {
+            if (v.length() == 1) {
                 return v.charAt(0);
             } else {
                 throw new ExtractorException(LocalizationMessages.ERROR_PARAMETER_INVALID_CHAR_VALUE(v));
             }
         } else if (defaultStringValue != null && !defaultStringValue.trim().isEmpty()) {
-            if(defaultStringValue.length() == 1) {
+            if (defaultStringValue.length() == 1) {
                 return defaultStringValue.charAt(0);
             } else {
                 throw new ExtractorException(LocalizationMessages.ERROR_PARAMETER_INVALID_CHAR_VALUE(defaultStringValue));

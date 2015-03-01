@@ -60,9 +60,9 @@ public class ProjectsResource {
     private static final List<Project> projects;
 
     static {
-        final Project project = new Project(1l, "foo", "bar");
-        final User user = new User(1l, "foo", "foo@bar.baz");
-        final Task task = new Task(1l, "foo", "bar");
+        final Project project = new Project(1L, "foo", "bar");
+        final User user = new User(1L, "foo", "foo@bar.baz");
+        final Task task = new Task(1L, "foo", "bar");
 
         project.setUsers(Arrays.asList(user));
         project.setTasks(Arrays.asList(task, task));

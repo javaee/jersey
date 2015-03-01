@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,15 +63,16 @@ import org.glassfish.jersey.message.MessageUtils;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
+
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     // encoding does not matter (lower ASCII characters)
-    private static final byte[] COMMENT_LEAD= ": ".getBytes(UTF8);
-    private static final byte[] NAME_LEAD= "event: ".getBytes(UTF8);
-    private static final byte[] ID_LEAD= "id: ".getBytes(UTF8);
-    private static final byte[] RETRY_LEAD= "retry: ".getBytes(UTF8);
-    private static final byte[] DATA_LEAD= "data: ".getBytes(UTF8);
-    private static final byte[] EOL= {'\n'};
+    private static final byte[] COMMENT_LEAD = ": ".getBytes(UTF8);
+    private static final byte[] NAME_LEAD = "event: ".getBytes(UTF8);
+    private static final byte[] ID_LEAD = "id: ".getBytes(UTF8);
+    private static final byte[] RETRY_LEAD = "retry: ".getBytes(UTF8);
+    private static final byte[] DATA_LEAD = "data: ".getBytes(UTF8);
+    private static final byte[] EOL = {'\n'};
 
     @Inject
     private Provider<MessageBodyWorkers> workersProvider;

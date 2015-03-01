@@ -63,9 +63,9 @@ import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.glassfish.hk2.api.Factory;
-
 import org.glassfish.jersey.message.internal.EntityInputStream;
+
+import org.glassfish.hk2.api.Factory;
 
 /**
  * Base XML-based message body reader for JAXB beans.
@@ -165,8 +165,8 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
         }
 
         try {
-            return getUnmarshaller(type, mediaType).
-                    unmarshal(getSAXSource(spf.provide(), entityStream));
+            return getUnmarshaller(type, mediaType)
+                    .unmarshal(getSAXSource(spf.provide(), entityStream));
         } catch (UnmarshalException ex) {
             throw new BadRequestException(ex);
         } catch (JAXBException ex) {

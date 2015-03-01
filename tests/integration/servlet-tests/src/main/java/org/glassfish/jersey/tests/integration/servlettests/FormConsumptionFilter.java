@@ -53,12 +53,14 @@ import javax.servlet.ServletResponse;
  * @author Martin Matula
  */
 public class FormConsumptionFilter implements Filter {
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
     }
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
         // consume entity
         servletRequest.getParameter("text");
         filterChain.doFilter(servletRequest, servletResponse);

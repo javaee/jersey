@@ -65,11 +65,11 @@ import jersey.repackaged.com.google.common.collect.Maps;
  * @author Miroslav Fuksa
  */
 public class ExecutionStatisticsDynamicBean implements DynamicMBean {
+
     private volatile ExecutionStatistics executionStatistics;
     private final Map<String, Value<Object>> attributeValues = Maps.newHashMap();
 
     private final MBeanInfo mBeanInfo;
-
 
     private MBeanInfo initMBeanInfo(final ExecutionStatistics initialStatistics) {
         final Map<Long, TimeWindowStatistics> statsMap = initialStatistics.getTimeWindowStatistics();
@@ -112,7 +112,6 @@ public class ExecutionStatisticsDynamicBean implements DynamicMBean {
                 }
             });
 
-
             name = "RequestRate[requestsPerSeconds]_" + postfix;
             attrs[i++] = new MBeanAttributeInfo(name, "double", "Average requests per second in last "
                     + postfix + ".", true, false, false);
@@ -123,7 +122,6 @@ public class ExecutionStatisticsDynamicBean implements DynamicMBean {
                     return executionStatistics.getTimeWindowStatistics().get(interval).getRequestsPerSecond();
                 }
             });
-
 
             name = "RequestCount_" + postfix;
             attrs[i++] = new MBeanAttributeInfo(name, "double", "Request count in last "
@@ -162,10 +160,8 @@ public class ExecutionStatisticsDynamicBean implements DynamicMBean {
             sb.setLength(sb.length() - 1);
         }
 
-
         return sb.toString();
     }
-
 
     /**
      * Create a new MXBean and register it into the mbean server using {@code mBeanExposer}.
@@ -190,14 +186,14 @@ public class ExecutionStatisticsDynamicBean implements DynamicMBean {
         this.executionStatistics = executionStatistics;
     }
 
-
     @Override
     public Object getAttribute(String attribute) throws AttributeNotFoundException, MBeanException, ReflectionException {
         return attributeValues.get(attribute).get();
     }
 
     @Override
-    public void setAttribute(Attribute attribute) throws AttributeNotFoundException, InvalidAttributeValueException, MBeanException, ReflectionException {
+    public void setAttribute(Attribute attribute)
+            throws AttributeNotFoundException, InvalidAttributeValueException, MBeanException, ReflectionException {
     }
 
     @Override

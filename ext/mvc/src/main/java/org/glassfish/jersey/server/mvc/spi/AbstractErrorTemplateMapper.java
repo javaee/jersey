@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -94,8 +94,8 @@ public abstract class AbstractErrorTemplateMapper<T extends Throwable> implement
             if (errorTemplate == null) {
                 Class<?> handlerClass = invocable.getHandler().getHandlerClass();
 
-                if (invocable.isInflector() && TemplateInflector.class.isAssignableFrom(invocable.getHandler().getHandlerClass
-                        ())) {
+                if (invocable.isInflector() && TemplateInflector.class
+                        .isAssignableFrom(invocable.getHandler().getHandlerClass())) {
 
                     handlerClass = ((TemplateInflector) invocable.getHandler().getInstance(null)).getModelClass();
                 }

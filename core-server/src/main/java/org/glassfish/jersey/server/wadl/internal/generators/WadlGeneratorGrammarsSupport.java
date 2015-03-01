@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -119,24 +119,24 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
 
     public void setGrammarsFile(File grammarsFile) {
         if (_grammarsStream != null) {
-            throw new IllegalStateException("The grammarsStream property is already set," +
-                    " therefore you cannot set the grammarsFile property. Only one of both can be set at a time.");
+            throw new IllegalStateException("The grammarsStream property is already set,"
+                    + " therefore you cannot set the grammarsFile property. Only one of both can be set at a time.");
         }
         _grammarsFile = grammarsFile;
     }
 
     public void setGrammarsStream(InputStream grammarsStream) {
         if (_grammarsFile != null) {
-            throw new IllegalStateException("The grammarsFile property is already set," +
-                    " therefore you cannot set the grammarsStream property. Only one of both can be set at a time.");
+            throw new IllegalStateException("The grammarsFile property is already set,"
+                    + " therefore you cannot set the grammarsStream property. Only one of both can be set at a time.");
         }
         _grammarsStream = grammarsStream;
     }
 
     public void init() throws Exception {
         if (_grammarsFile == null && _grammarsStream == null) {
-            throw new IllegalStateException("Neither the grammarsFile nor the grammarsStream" +
-                    " is set, one of both is required.");
+            throw new IllegalStateException("Neither the grammarsFile nor the grammarsStream"
+                    + " is set, one of both is required.");
         }
         _delegate.init();
         _grammars = WadlUtils.unmarshall(_grammarsFile != null ? new FileInputStream(_grammarsFile) : _grammarsStream,
@@ -150,8 +150,8 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
     public Application createApplication() {
         final Application result = _delegate.createApplication();
         if (result.getGrammars() != null && !overrideGrammars) {
-            LOG.info("The wadl application created by the delegate (" + _delegate + ") already contains a grammars element," +
-                    " we're adding elements of the provided grammars file.");
+            LOG.info("The wadl application created by the delegate (" + _delegate + ") already contains a grammars element,"
+                    + " we're adding elements of the provided grammars file.");
             if (!_grammars.getAny().isEmpty()) {
                 result.getGrammars().getAny().addAll(_grammars.getAny());
             }

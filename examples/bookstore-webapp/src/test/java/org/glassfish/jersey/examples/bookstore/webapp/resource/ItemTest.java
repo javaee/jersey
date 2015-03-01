@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,7 +62,7 @@ public class ItemTest extends TestSupport {
     public void testResourceAsXml() throws Exception {
         final String text = item1resource().request("application/xml").get(String.class);
         System.out.println("Item XML is: " + text);
-        
+
         final Book response = item1resource().request("application/xml").get(Book.class);
         assertNotNull("Should have returned an item!", response);
         assertEquals("item title", "Svejk", response.getTitle());
@@ -88,6 +88,5 @@ public class ItemTest extends TestSupport {
     protected WebTarget item1resource() {
         return target("bookstore-webapp").path("/items/1");
     }
-
 
 }

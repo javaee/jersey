@@ -76,10 +76,12 @@ import static org.junit.Assert.assertTrue;
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public class HttpHeadersTest extends JerseyTest {
+
     private static final Logger LOGGER = Logger.getLogger(HttpHeadersTest.class.getName());
 
     @Path("/test")
     public static class HttpMethodResource {
+
         @POST
         public String post(
                 @HeaderParam("Transfer-Encoding") String transferEncoding,
@@ -87,8 +89,9 @@ public class HttpHeadersTest extends JerseyTest {
                 @HeaderParam("X-WRITER") String xWriter,
                 String entity) {
             assertEquals("client", xClient);
-            if (transferEncoding == null || !transferEncoding.equals("chunked"))
+            if (transferEncoding == null || !transferEncoding.equals("chunked")) {
                 assertEquals("writer", xWriter);
+            }
             return entity;
         }
     }
@@ -105,7 +108,13 @@ public class HttpHeadersTest extends JerseyTest {
             return -1;
         }
 
-        public void writeTo(String t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(String t,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
             httpHeaders.add("X-WRITER", "writer");
             entityStream.write(t.getBytes());
         }

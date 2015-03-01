@@ -40,13 +40,15 @@
 package org.glassfish.jersey.tests.performance.runners.jersey2grizzly;
 
 import java.net.URI;
+
 import javax.ws.rs.core.Application;
+
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.nio.transport.TCPNIOTransport;
 import org.glassfish.grizzly.threadpool.ThreadPoolConfig;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
 
 /**
  * Application class to start performance test web service at http://localhost:8080/ if the base URI
@@ -60,25 +62,27 @@ public class Jersey2GrizzlyRunner {
     private static final int DEFAULT_WORKERS = 8;
 
     public static void main(String[] args) throws Exception {
-            System.out.println("Jersey performance test web service application");
+        System.out.println("Jersey performance test web service application");
 
-            final String jaxRsApp = args.length > 0 ? args[0] : null;
-            final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass((Class<? extends Application>) Class.forName(jaxRsApp));
-            URI baseUri = args.length > 1 ? URI.create(args[1]) : BASE_URI;
-            int selectors = args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_SELECTORS;
-            int workers = args.length > 3 ? Integer.parseInt(args[3]) : DEFAULT_WORKERS;
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
-            final TCPNIOTransport transport = server.getListener("grizzly").getTransport();
-            transport.setSelectorRunnersCount(selectors);
-            transport.setWorkerThreadPoolConfig(ThreadPoolConfig.defaultConfig().setCorePoolSize(workers).setMaxPoolSize(workers));
+        final String jaxRsApp = args.length > 0 ? args[0] : null;
+        //noinspection unchecked
+        final ResourceConfig resourceConfig = ResourceConfig
+                .forApplicationClass((Class<? extends Application>) Class.forName(jaxRsApp));
+        URI baseUri = args.length > 1 ? URI.create(args[1]) : BASE_URI;
+        int selectors = args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_SELECTORS;
+        int workers = args.length > 3 ? Integer.parseInt(args[3]) : DEFAULT_WORKERS;
+        final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig, false);
+        final TCPNIOTransport transport = server.getListener("grizzly").getTransport();
+        transport.setSelectorRunnersCount(selectors);
+        transport.setWorkerThreadPoolConfig(ThreadPoolConfig.defaultConfig().setCorePoolSize(workers).setMaxPoolSize(workers));
 
-            server.start();
+        server.start();
 
-            System.out.println(String.format("Application started.\nTry out %s\nHit Ctrl-C to stop it...",
-                    baseUri));
+        System.out.println(String.format("Application started.\nTry out %s\nHit Ctrl-C to stop it...",
+                baseUri));
 
-            while (server.isStarted()) {
-                Thread.sleep(600000);
-            }
+        while (server.isStarted()) {
+            Thread.sleep(600000);
+        }
     }
 }

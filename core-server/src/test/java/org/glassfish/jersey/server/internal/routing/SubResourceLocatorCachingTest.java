@@ -72,12 +72,12 @@ import static org.junit.Assert.assertThat;
  */
 public class SubResourceLocatorCachingTest {
 
-    private final static int INVOCATION_COUNT = 3;
+    private static final int INVOCATION_COUNT = 3;
 
     @Path("root")
     public static class RootResource {
 
-        private final static Resource RESOURCE = createResource();
+        private static final Resource RESOURCE = createResource();
 
         private static Resource createResource() {
             final Resource.Builder builder = Resource.builder();

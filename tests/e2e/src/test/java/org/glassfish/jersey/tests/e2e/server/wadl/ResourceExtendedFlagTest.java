@@ -85,7 +85,6 @@ import static org.junit.Assert.assertEquals;
 
 import jersey.repackaged.com.google.common.collect.Maps;
 
-
 /**
  * Test verifies functionality of {@link org.glassfish.jersey.server.model.Resource#isExtended()} and its
  * influence on WADL.
@@ -99,9 +98,9 @@ public class ResourceExtendedFlagTest extends JerseyTest {
         return new ResourceConfig(MyResource.class, AllExtended.class, LoggingFilter.class);
     }
 
-
     @Path("all-extended")
     public static class AllExtended {
+
         @GET
         @ExtendedResource
         public String allExtendedGet() {
@@ -123,15 +122,16 @@ public class ResourceExtendedFlagTest extends JerseyTest {
     }
 
     public static class SubResourceLocator {
+
         @GET
         public String get() {
             return "get";
         }
     }
 
-
     @Path("resource")
     public static class MyResource {
+
         @Context
         private ExtendedResourceContext extendedResourceContext;
 
@@ -160,7 +160,6 @@ public class ResourceExtendedFlagTest extends JerseyTest {
         public String resourceVisiblePost() {
             return "visiblepost";
         }
-
 
         private String validateModel() {
             Map<String, Boolean> extendedMethods = Maps.newHashMap();
@@ -235,12 +234,12 @@ public class ResourceExtendedFlagTest extends JerseyTest {
             }
 
             if (allExtended != resource.isExtended()) {
-                return "Resource " + resource + "Resource.extended = " + resource.isExtended() + " and allExtended=" + allExtended;
+                return "Resource " + resource + "Resource.extended = " + resource.isExtended() + " and allExtended="
+                        + allExtended;
             }
             return null;
         }
     }
-
 
     /**
      * Invokes resource method which goes trough the {@link org.glassfish.jersey.server.model.ResourceModel}
@@ -264,7 +263,8 @@ public class ResourceExtendedFlagTest extends JerseyTest {
     @Test
     public void testDetailedWadl() throws ParserConfigurationException, XPathExpressionException, IOException,
             SAXException {
-        Response response = target("/application.wadl").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL_TYPE).get();
+        Response response = target("/application.wadl").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
+                .request(MediaTypes.WADL_TYPE).get();
         assertEquals(200, response.getStatus());
         File tmpFile = response.readEntity(File.class);
         DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
@@ -299,7 +299,6 @@ public class ResourceExtendedFlagTest extends JerseyTest {
         val = (String) xp.evaluate("count(//jersey:extended)", d, XPathConstants.STRING);
         assertEquals("31", val);
     }
-
 
     /**
      * Tests limited wadl with only user resources.
@@ -348,7 +347,6 @@ public class ResourceExtendedFlagTest extends JerseyTest {
         assertEquals("0", val);
     }
 
-
     public static void printSource(Source source) {
         try {
             System.out.println("---------------------");
@@ -363,6 +361,5 @@ public class ResourceExtendedFlagTest extends JerseyTest {
             e.printStackTrace();
         }
     }
-
 
 }

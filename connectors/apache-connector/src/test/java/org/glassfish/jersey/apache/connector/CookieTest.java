@@ -72,12 +72,13 @@ public class CookieTest extends JerseyTest {
 
     @Path("/")
     public static class CookieResource {
+
         @GET
         public Response get(@Context HttpHeaders h) {
             Cookie c = h.getCookies().get("name");
             String e = (c == null) ? "NO-COOKIE" : c.getValue();
-            return Response.ok(e).
-                    cookie(new NewCookie("name", "value")).build();
+            return Response.ok(e)
+                    .cookie(new NewCookie("name", "value")).build();
         }
     }
 
@@ -92,7 +93,6 @@ public class CookieTest extends JerseyTest {
         cc.connectorProvider(new ApacheConnectorProvider());
         Client client = ClientBuilder.newClient(cc);
         WebTarget r = client.target(getBaseUri());
-
 
         assertEquals("NO-COOKIE", r.request().get(String.class));
         assertEquals("value", r.request().get(String.class));

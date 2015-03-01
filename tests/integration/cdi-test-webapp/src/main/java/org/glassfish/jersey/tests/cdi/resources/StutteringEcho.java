@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import javax.enterprise.context.ApplicationScoped;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -48,6 +46,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import javax.enterprise.context.ApplicationScoped;
 
 /**
  * Echo implementation to stutter given input n-times.
@@ -66,7 +66,7 @@ public class StutteringEcho implements EchoService {
     @Override
     public String echo(String s) {
         StringBuilder result = new StringBuilder();
-        for (int i=0; i<factor; i++) {
+        for (int i = 0; i < factor; i++) {
             result.append(s);
         }
         return result.toString();

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,7 +51,7 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * The documentation type for methods.<br>
  * Created on: Jun 12, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -59,16 +59,16 @@ import javax.xml.bind.annotation.XmlType;
 
 })
 public class MethodDocType {
-    
+
     private String methodName;
 
     protected String commentText;
 
     /**
      * Gets the value of the commentText property.
-     * 
+     *
      * @return the commentText
-     *     
+     *
      */
     public String getCommentText() {
         return commentText;
@@ -76,14 +76,14 @@ public class MethodDocType {
 
     /**
      * Sets the value of the commentText property.
-     * 
+     *
      * @param value the commentText
-     *     
+     *
      */
     public void setCommentText(String value) {
         this.commentText = value;
     }
-    
+
     private String returnDoc;
     private String returnTypeExample;
 
@@ -102,7 +102,7 @@ public class MethodDocType {
 
     @XmlAnyElement(lax = true)
     private List<Object> any;
-    
+
     public List<Object> getAny() {
         if (any == null) {
             any = new ArrayList<Object>();
@@ -120,7 +120,7 @@ public class MethodDocType {
     /**
      * @param methodName the className to set
      */
-    public void setMethodName( String methodName ) {
+    public void setMethodName(String methodName) {
         this.methodName = methodName;
     }
 
@@ -134,7 +134,7 @@ public class MethodDocType {
     /**
      * @param returnDoc the returnDoc to set
      */
-    public void setReturnDoc( String returnDoc ) {
+    public void setReturnDoc(String returnDoc) {
         this.returnDoc = returnDoc;
     }
 
@@ -148,7 +148,7 @@ public class MethodDocType {
     /**
      * @param returnTypeExample the returnTypeExample to set
      */
-    public void setReturnTypeExample( String returnTypeExample ) {
+    public void setReturnTypeExample(String returnTypeExample) {
         this.returnTypeExample = returnTypeExample;
     }
 
@@ -162,7 +162,7 @@ public class MethodDocType {
     /**
      * @param requestDoc the requestDoc to set
      */
-    public void setRequestDoc( RequestDocType requestDoc ) {
+    public void setRequestDoc(RequestDocType requestDoc) {
         this.requestDoc = requestDoc;
     }
 
@@ -176,8 +176,8 @@ public class MethodDocType {
     /**
      * @param responseDoc the responseDoc to set
      */
-    public void setResponseDoc( ResponseDocType responseDoc ) {
+    public void setResponseDoc(ResponseDocType responseDoc) {
         this.responseDoc = responseDoc;
     }
-    
+
 }

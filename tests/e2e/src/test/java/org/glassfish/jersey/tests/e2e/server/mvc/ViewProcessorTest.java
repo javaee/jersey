@@ -256,7 +256,8 @@ public class ViewProcessorTest extends JerseyTest {
 
         Properties p = new Properties();
         p.load(target.request("text/plain").get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ViewProcessorTest/ImplicitWithSubResourceGetTemplate/sub.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ViewProcessorTest/ImplicitWithSubResourceGetTemplate/sub.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitWithSubResourceGetTemplate", p.getProperty("model"));
 
         assertEquals("ImplicitWithSubResourceGetTemplate", target.request("application/foo").get(String.class));

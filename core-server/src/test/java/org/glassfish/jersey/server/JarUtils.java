@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,7 +76,8 @@ public final class JarUtils {
         return createJarFile(s, base, entriesMap);
     }
 
-    public static File createJarFile(final String name, final Suffix s, final String base, final String... entries) throws IOException {
+    public static File createJarFile(final String name, final Suffix s, final String base, final String... entries)
+            throws IOException {
         final Map<String, String> entriesMap = new HashMap<String, String>();
         for (final String entry : entries) {
             entriesMap.put(entry, entry);
@@ -88,7 +89,8 @@ public final class JarUtils {
         return createJarFile("test", s, base, entries);
     }
 
-    public static File createJarFile(final String name, final Suffix s, final String base, final Map<String, String> entries) throws IOException {
+    public static File createJarFile(final String name, final Suffix s, final String base, final Map<String, String> entries)
+            throws IOException {
         final File tempJar = File.createTempFile(name, "." + s);
         tempJar.deleteOnExit();
         final JarOutputStream jos = new JarOutputStream(
@@ -98,8 +100,9 @@ public final class JarUtils {
         final Set<String> usedSegments = new HashSet<String>();
         for (final Map.Entry<String, String> entry : entries.entrySet()) {
             for (final String path : getPaths(entry.getValue())) {
-                if (usedSegments.contains(path))
+                if (usedSegments.contains(path)) {
                     continue;
+                }
 
                 usedSegments.add(path);
                 final JarEntry e = new JarEntry(path);
@@ -114,7 +117,7 @@ public final class JarUtils {
                     new FileInputStream(base + entry.getKey()));
             final byte[] buf = new byte[1024];
             int read = 1024;
-            while ((read = f.read(buf, 0, read)) != -1 ) {
+            while ((read = f.read(buf, 0, read)) != -1) {
                 jos.write(buf, 0, read);
             }
             jos.closeEntry();
@@ -128,8 +131,9 @@ public final class JarUtils {
         final String[] segments = entry.split("/");
         final String[] paths = new String[segments.length - 1];
 
-        if (paths.length == 0)
+        if (paths.length == 0) {
             return paths;
+        }
 
         paths[0] = segments[0] + "/";
         for (int i = 1; i < paths.length; i++) {

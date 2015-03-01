@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -156,7 +156,8 @@ public final class RsaSha1Method implements OAuth1SignatureMethod {
      * @throws InvalidSecretException if the supplied secret is not valid.
      */
     @Override
-    public boolean verify(final String elements, final OAuth1Secrets secrets, final String signature) throws InvalidSecretException {
+    public boolean verify(final String elements, final OAuth1Secrets secrets, final String signature)
+            throws InvalidSecretException {
 
         final Signature sig;
 

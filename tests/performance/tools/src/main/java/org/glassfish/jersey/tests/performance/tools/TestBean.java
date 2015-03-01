@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,6 +55,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 public class TestBean {
+
     /* primitives */
     @GenerateForTest
     public byte bt;
@@ -99,13 +100,13 @@ public class TestBean {
     public Date date;
 
     /* 1D - collections */
-    @XmlElementWrapper(name="StringElements")
-    @XmlElement(name="StringElement")
+    @XmlElementWrapper(name = "StringElements")
+    @XmlElement(name = "StringElement")
     @GenerateForTest(collectionMemberType = String.class, implementingClass = ArrayList.class, length = 10)
     public List<String> stringList;
 
-    @XmlElementWrapper(name="IntegerElements")
-    @XmlElement(name="IntegerElement")
+    @XmlElementWrapper(name = "IntegerElements")
+    @XmlElement(name = "IntegerElement")
     @GenerateForTest(collectionMemberType = Integer.class, length = 5)
     public HashSet<Integer> integerSet;
 
@@ -122,9 +123,9 @@ public class TestBean {
     public TestBean nextBean;
 
     /* and what about those? */
-//    CharSequence cs;
-//    Object o;
-//    Map<String, String> map;
+    // CharSequence cs;
+    // Object o;
+    // Map<String, String> map;
 
     @Override
     public String toString() {
@@ -137,28 +138,35 @@ public class TestBean {
         buf.append(pad + "# TestBean[level=" + level + "]@" + Integer.toHexString(hashCode())).append("\n");
 
         buf.append(pad + "# Primitives").append("\n");
-        buf.append(pad + "[" + bt + ", " + sh + ", " + i + ", " + l + ", " + f + ", " + d + ", " + bl + ", " + c + "]").append("\n");;
+        buf.append(pad + "[" + bt + ", " + sh + ", " + i + ", " + l + ", " + f + ", " + d + ", " + bl + ", " + c + "]")
+                .append("\n");
 
         buf.append(pad + "# Primitives wrappers").append("\n");
-        buf.append(pad + "[" + wrapBt + ", " + wrapSh + ", " + wrapI + ", " + wrapL + ", " + wrapF + ", " + wrapD + ", " +
-                wrapBl + ", " + wrapC + "]").append("\n");;
+        buf.append(pad + "[" + wrapBt + ", " + wrapSh + ", " + wrapI + ", " + wrapL + ", " + wrapF + ", " + wrapD + ", "
+                + wrapBl + ", " + wrapC + "]").append("\n");
 
         buf.append(pad + "# Arrays").append("\n");
         if (array != null) {
             buf.append(pad + "array: ");
-            for (Integer i : array) buf.append(i + ", ");
+            for (Integer i : array) {
+                buf.append(i + ", ");
+            }
             buf.append("\n");
         }
 
         buf.append(pad + "# Collections").append("\n");
         if (stringList != null) {
             buf.append(pad + "stringList: ");
-            for (String s : stringList) buf.append(s + ", ");
+            for (String s : stringList) {
+                buf.append(s + ", ");
+            }
             buf.append("\n");
         }
         if (integerSet != null) {
             buf.append(pad + "integerSet: ");
-            for (Integer i : integerSet) buf.append(i + ", ");
+            for (Integer i : integerSet) {
+                buf.append(i + ", ");
+            }
             buf.append("\n");
         }
 
@@ -167,7 +175,9 @@ public class TestBean {
         }
 
         buf.append(pad + "# Enums").append("\n");
-        if (en != null) buf.append(pad + "en=" + en).append("\n");
+        if (en != null) {
+            buf.append(pad + "en=" + en).append("\n");
+        }
         buf.append(pad + "# Inner bean").append("\n");
         if (inner != null) {
             buf.append(inner.printContent(level + 1));

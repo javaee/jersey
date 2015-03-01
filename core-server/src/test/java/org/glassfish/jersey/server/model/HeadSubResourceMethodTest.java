@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,7 +68,7 @@ public class HeadSubResourceMethodTest {
     }
 
     @Path("/")
-    static public class ResourceGetNoHead {
+    public static class ResourceGetNoHead {
 
         @Path("sub")
         @GET
@@ -89,7 +89,7 @@ public class HeadSubResourceMethodTest {
     }
 
     @Path("/")
-    static public class ResourceGetWithHead {
+    public static class ResourceGetWithHead {
 
         @Path("sub")
         @HEAD
@@ -115,7 +115,7 @@ public class HeadSubResourceMethodTest {
     }
 
     @Path("/")
-    static public class ResourceGetWithProduceNoHead {
+    public static class ResourceGetWithProduceNoHead {
 
         @Path("sub")
         @GET
@@ -150,7 +150,7 @@ public class HeadSubResourceMethodTest {
     }
 
     @Path("/")
-    static public class ResourceGetWithProduceWithHead {
+    public static class ResourceGetWithProduceWithHead {
 
         @Path("sub")
         @HEAD
@@ -201,7 +201,7 @@ public class HeadSubResourceMethodTest {
     }
 
     @Path("/")
-    static public class ResourceGetWithProduceNoHeadDifferentSub {
+    public static class ResourceGetWithProduceNoHeadDifferentSub {
 
         @Path("sub1")
         @GET

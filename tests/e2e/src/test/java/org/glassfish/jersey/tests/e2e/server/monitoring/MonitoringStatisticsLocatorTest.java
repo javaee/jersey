@@ -87,6 +87,7 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
 
     @Path("resource")
     public static class StatisticsResource {
+
         @Context
         Provider<MonitoringStatistics> statistics;
 
@@ -153,13 +154,15 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
         @GET
         @Path("resourceClassStatisticsGenericOptionsTest")
         public String getResourceClassStatisticsGenericOptionsTest() {
-            return getResourceClassStatisticsTest("org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor$GenericOptionsInflector");
+            return getResourceClassStatisticsTest(
+                    "org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor$GenericOptionsInflector");
         }
 
         @GET
         @Path("resourceClassStatisticsPlainTextOptionsTest")
         public String getResourceClassStatisticsPlainTestOptionsTest() {
-            return getResourceClassStatisticsTest("org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor$PlainTextOptionsInflector");
+            return getResourceClassStatisticsTest(
+                    "org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor$PlainTextOptionsInflector");
         }
 
         private String getResourceClassStatisticsTest(String resourceClassName) {
@@ -168,7 +171,8 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
             boolean resourceHelloOptions = false;
             boolean anotherHelloOptions = false;
             boolean anotherXmlOptions = false;
-            for (final Map.Entry<ResourceMethod, ResourceMethodStatistics> entry : resourceMethodStatistics.getResourceMethodStatistics().entrySet()) {
+            for (final Map.Entry<ResourceMethod, ResourceMethodStatistics> entry : resourceMethodStatistics
+                    .getResourceMethodStatistics().entrySet()) {
                 final ResourceMethod resourceMethod = entry.getKey();
                 final String fullPath = getFullPath(resourceMethod);
                 if ("/resource/hello".equals(fullPath)) {
@@ -182,8 +186,8 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
             if (resourceHelloOptions && anotherHelloOptions && anotherXmlOptions) {
                 return "OK";
             } else {
-                return "FAIL: /resource/hello=" + resourceHelloOptions + "; /another/hello=" + anotherHelloOptions +
-                        "; /another/xml=" + anotherXmlOptions;
+                return "FAIL: /resource/hello=" + resourceHelloOptions + "; /another/hello=" + anotherHelloOptions
+                        + "; /another/xml=" + anotherXmlOptions;
             }
         }
 
@@ -210,7 +214,8 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
             boolean wadlOptions = false;
             boolean genericOptions = false;
             final ResourceStatistics resourceStatistics = statistics.get().getUriStatistics().get(uri);
-            for (Map.Entry<ResourceMethod, ResourceMethodStatistics> entry : resourceStatistics.getResourceMethodStatistics().entrySet()) {
+            for (Map.Entry<ResourceMethod, ResourceMethodStatistics> entry : resourceStatistics.getResourceMethodStatistics()
+                    .entrySet()) {
                 if (entry.getKey().getHttpMethod().equals("OPTIONS")) {
                     final ResourceMethod resourceMethod = entry.getKey();
                     final String producedTypes = resourceMethod.getProducedTypes().toString();
@@ -226,13 +231,15 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
             if (plainTextOptions && wadlOptions && genericOptions) {
                 return "OK";
             } else {
-                return "FAIL: [text/plain]=" + plainTextOptions + "; [application/vnd.sun.wadl+xml]=" + wadlOptions +
-                        "; [*/*]=" + genericOptions;
+                return "FAIL: [text/plain]=" + plainTextOptions + "; [application/vnd.sun.wadl+xml]=" + wadlOptions
+                        + "; [*/*]=" + genericOptions;
             }
         }
 
-        private ResourceStatistics findResourceClassStatistics(MonitoringStatistics monitoringStatistics, String resourceClassName) {
-            for (final Map.Entry<Class<?>, ResourceStatistics> entry : monitoringStatistics.getResourceClassStatistics().entrySet()) {
+        private ResourceStatistics findResourceClassStatistics(MonitoringStatistics monitoringStatistics,
+                                                               String resourceClassName) {
+            for (final Map.Entry<Class<?>, ResourceStatistics> entry : monitoringStatistics.getResourceClassStatistics()
+                    .entrySet()) {
                 final Class<?> key = entry.getKey();
                 final String clazz = key.getName();
 
@@ -265,6 +272,7 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
     }
 
     public static class SubResource {
+
         @GET
         public String get() {
             return "get";
@@ -279,6 +287,7 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
 
     @Path("/another")
     public static class AnotherResource {
+
         @Path("hello")
         @GET
         @Produces("text/plain")

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,8 +42,10 @@ package org.glassfish.jersey.examples.xmlmoxy.beans;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+
 import org.eclipse.persistence.oxm.annotations.XmlPath;
 
 /**
@@ -51,7 +53,7 @@ import org.eclipse.persistence.oxm.annotations.XmlPath;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @XmlRootElement
-@XmlType(propOrder={"name", "address", "phoneNumbers"})
+@XmlType(propOrder = {"name", "address", "phoneNumbers"})
 public class Customer {
 
     private String name;
@@ -104,7 +106,8 @@ public class Customer {
         if (this.address != other.address && (this.address == null || !this.address.equals(other.address))) {
             return false;
         }
-        if (this.phoneNumbers != other.phoneNumbers && (this.phoneNumbers == null || !this.phoneNumbers.equals(other.phoneNumbers))) {
+        if (this.phoneNumbers != other.phoneNumbers && (this.phoneNumbers == null || !this.phoneNumbers
+                .equals(other.phoneNumbers))) {
             return false;
         }
         return true;

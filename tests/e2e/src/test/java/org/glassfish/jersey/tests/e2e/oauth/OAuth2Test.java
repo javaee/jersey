@@ -87,6 +87,7 @@ import static org.junit.Assert.assertThat;
  * @author Miroslav Fuksa
  */
 public class OAuth2Test extends JerseyTest {
+
     private static final String STATE = "4564dsf54654fsda654af";
     private static final String CODE = "code-xyz";
     private static final String CLIENT_PUBLIC = "clientPublic";
@@ -94,11 +95,13 @@ public class OAuth2Test extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(MoxyJsonFeature.class, AuthorizationResource.class).register(new LoggingFilter(Logger.getAnonymousLogger(), true));
+        return new ResourceConfig(MoxyJsonFeature.class, AuthorizationResource.class)
+                .register(new LoggingFilter(Logger.getAnonymousLogger(), true));
     }
 
     @Path("oauth")
     public static class AuthorizationResource {
+
         @POST
         @Path("access-token")
         @Produces(MediaType.APPLICATION_JSON)
@@ -144,7 +147,6 @@ public class OAuth2Test extends JerseyTest {
             return CODE;
         }
 
-
         @POST
         @Path("refresh-token")
         @Produces(MediaType.APPLICATION_JSON)
@@ -159,12 +161,11 @@ public class OAuth2Test extends JerseyTest {
                 throw new BadRequestException(Response.status(400).entity(e.getMessage()).build());
             }
 
-            return isArray ?
-                    "{\"access_token\":[\"access-token-new\"],\"expires_in\":\"3600\",\"token_type\":\"access-token\"}" :
-                    "{\"access_token\":\"access-token-new\",\"expires_in\":\"3600\",\"token_type\":\"access-token\"}";
+            return isArray
+                    ? "{\"access_token\":[\"access-token-new\"],\"expires_in\":\"3600\",\"token_type\":\"access-token\"}"
+                    : "{\"access_token\":\"access-token-new\",\"expires_in\":\"3600\",\"token_type\":\"access-token\"}";
         }
     }
-
 
     @Test
     public void testFlow() {
@@ -227,7 +228,6 @@ public class OAuth2Test extends JerseyTest {
             assertThat(array, hasItem("access-token-new"));
         }
     }
-
 
     @XmlRootElement
     public static class MyTokenResult {

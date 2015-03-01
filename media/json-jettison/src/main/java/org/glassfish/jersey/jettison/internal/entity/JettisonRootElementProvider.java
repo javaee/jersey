@@ -117,8 +117,8 @@ public class JettisonRootElementProvider extends AbstractRootElementJaxbProvider
                                     InputStream entityStream) throws JAXBException {
         final Charset c = getCharset(mediaType);
 
-        return JettisonJaxbContext.getJSONUnmarshaller(u).
-                unmarshalFromJSON(new InputStreamReader(entityStream, c), type);
+        return JettisonJaxbContext.getJSONUnmarshaller(u)
+                .unmarshalFromJSON(new InputStreamReader(entityStream, c), type);
     }
 
     @Override

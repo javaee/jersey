@@ -240,10 +240,10 @@ public class BeanParamTest extends JerseyTest {
 
         @Override
         public String toString() {
-            return "SmallBean{" +
-                    "headerParam='" + headerParam + '\'' +
-                    ", pathParam='" + pathParam + '\'' +
-                    '}';
+            return "SmallBean{"
+                    + "headerParam='" + headerParam + '\''
+                    + ", pathParam='" + pathParam + '\''
+                    + '}';
         }
     }
 
@@ -267,10 +267,10 @@ public class BeanParamTest extends JerseyTest {
 
         @Override
         public String toString() {
-            return "EncodedBean{" +
-                    "matrixParam='" + matrixParam + '\'' +
-                    ", queryParam='" + queryParam + '\'' +
-                    '}';
+            return "EncodedBean{"
+                    + "matrixParam='" + matrixParam + '\''
+                    + ", queryParam='" + queryParam + '\''
+                    + '}';
         }
     }
 
@@ -376,15 +376,15 @@ public class BeanParamTest extends JerseyTest {
 
         @Override
         public String toString() {
-            return "Bean{" +
-                    "cookie='" + cookie + '\'' +
-                    ", formParam='" + formParam + '\'' +
-                    ", headerParam='" + headerParam + '\'' +
-                    ", matrixParam='" + matrixParam + '\'' +
-                    ", pathParam='" + pathParam + '\'' +
-                    ", queryParam='" + queryParam + '\'' +
-                    ", request='" + requestToString() + "'" +
-                    '}';
+            return "Bean{"
+                    + "cookie='" + cookie + '\''
+                    + ", formParam='" + formParam + '\''
+                    + ", headerParam='" + headerParam + '\''
+                    + ", matrixParam='" + matrixParam + '\''
+                    + ", pathParam='" + pathParam + '\''
+                    + ", queryParam='" + queryParam + '\''
+                    + ", request='" + requestToString() + "'"
+                    + '}';
         }
     }
 
@@ -488,15 +488,15 @@ public class BeanParamTest extends JerseyTest {
 
         @Override
         public String toString() {
-            return "Bean{" +
-                    "cookie='" + cookie + '\'' +
-                    ", formParam='" + formParam + '\'' +
-                    ", headerParam='" + headerParam + '\'' +
-                    ", matrixParam='" + matrixParam + '\'' +
-                    ", pathParam='" + pathParam + '\'' +
-                    ", queryParam='" + queryParam + '\'' +
-                    ", request='" + requestToString() + "'" +
-                    '}';
+            return "Bean{"
+                    + "cookie='" + cookie + '\''
+                    + ", formParam='" + formParam + '\''
+                    + ", headerParam='" + headerParam + '\''
+                    + ", matrixParam='" + matrixParam + '\''
+                    + ", pathParam='" + pathParam + '\''
+                    + ", queryParam='" + queryParam + '\''
+                    + ", request='" + requestToString() + "'"
+                    + '}';
         }
     }
 

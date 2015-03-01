@@ -69,6 +69,7 @@ import static org.junit.Assert.assertEquals;
  * @author Miroslav Fuksa
  */
 public class SingletonResourceTest extends JerseyTest {
+
     @Override
     protected ResourceConfig configure() {
         final ResourceConfig resourceConfig = new ResourceConfig(
@@ -93,13 +94,13 @@ public class SingletonResourceTest extends JerseyTest {
         resourceConfig.registerResources(resourceBuilder1.build());
 
         final Resource.Builder resourceBuilder2 = Resource.builder();
-        resourceBuilder2.name("resource-programmatic/singleton/").path("programmatic/singleton/").addMethod("GET").handledBy
-                (SingletonProgrammatic.class);
+        resourceBuilder2.name("resource-programmatic/singleton/").path("programmatic/singleton/").addMethod("GET")
+                .handledBy(SingletonProgrammatic.class);
         resourceConfig.registerResources(resourceBuilder2.build());
 
         final Resource.Builder resourceBuilder3 = Resource.builder();
-        resourceBuilder3.name("resource-programmatic/reused-singleton/").path("programmatic/reused-singleton/").addMethod
-                ("GET").handledBy(SubResourceSingleton.class);
+        resourceBuilder3.name("resource-programmatic/reused-singleton/").path("programmatic/reused-singleton/").addMethod("GET")
+                .handledBy(SubResourceSingleton.class);
         resourceConfig.registerResources(resourceBuilder3.build());
 
         final Resource.Builder resourceBuilder4 = Resource.builder();
@@ -109,7 +110,6 @@ public class SingletonResourceTest extends JerseyTest {
 
         return resourceConfig;
     }
-
 
     @Test
     public void singletonResourceTest() {
@@ -129,7 +129,6 @@ public class SingletonResourceTest extends JerseyTest {
         str = target().path("singleton/sub").request().get().readEntity(String.class);
         assertEquals("sub:2", str);
 
-
         str = target().path("singleton/sub-not-singleton").request().get().readEntity(String.class);
         assertEquals("not-singleton:1", str);
 
@@ -145,7 +144,6 @@ public class SingletonResourceTest extends JerseyTest {
         str = target().path("singleton/sub").request().get().readEntity(String.class);
         assertEquals("sub:3", str);
 
-
         // one instance
         str = target().path("programmatic").path("instance").request().get().readEntity(String.class);
         assertEquals("prg-instance:1", str);
@@ -160,11 +158,9 @@ public class SingletonResourceTest extends JerseyTest {
         str = target().path("programmatic").path("singleton").request().get().readEntity(String.class);
         assertEquals("prg-singleton:2", str);
 
-
         // request to the SubResourceSingleton (same class as sub resource on path "singleton/sub")
         str = target().path("programmatic").path("reused-singleton").request().get().readEntity(String.class);
         assertEquals("reused-singleton:4", str);
-
 
         // not singleton
         str = target().path("programmatic").path("not-singleton").request().get().readEntity(String.class);
@@ -220,6 +216,7 @@ public class SingletonResourceTest extends JerseyTest {
 
     @Path("test-requestScope")
     public static class RequestScopeResource {
+
         public String get() {
             return "get";
         }
@@ -228,6 +225,7 @@ public class SingletonResourceTest extends JerseyTest {
     @Path("test-perlookupScope")
     @PerLookup
     public static class PerLookupScopeResource {
+
         public String get() {
             return "get";
         }
@@ -236,6 +234,7 @@ public class SingletonResourceTest extends JerseyTest {
     @Path("test-singletonScope")
     @Singleton
     public static class SingletonScopeResource {
+
         public String get() {
             return "get";
         }
@@ -243,6 +242,7 @@ public class SingletonResourceTest extends JerseyTest {
 
     @Path("testScope")
     public static class TestResource {
+
         @Inject
         ServiceLocator locator;
 
@@ -271,7 +271,6 @@ public class SingletonResourceTest extends JerseyTest {
         }
     }
 
-
     @Singleton
     public static class Parent {
 
@@ -279,6 +278,7 @@ public class SingletonResourceTest extends JerseyTest {
 
     @Path("inherit")
     public static class ChildInheritsParentAnnotation extends Parent {
+
         private int counter = 1;
 
         @GET
@@ -293,6 +293,7 @@ public class SingletonResourceTest extends JerseyTest {
 
     @Path("interface")
     public static class ChildImplementsInterfaceAnnotation implements AnnotatedBySingleton {
+
         private int counter = 1;
 
         @GET
@@ -301,9 +302,9 @@ public class SingletonResourceTest extends JerseyTest {
         }
     }
 
-
     @Singleton
     public static class SingletonProgrammatic implements Inflector<Request, Response> {
+
         private int counter = 1;
 
         @Override
@@ -314,6 +315,7 @@ public class SingletonResourceTest extends JerseyTest {
     }
 
     public static class NotSingletonProgrammatic implements Inflector<Request, Response> {
+
         private int counter = 1;
 
         @Override
@@ -326,6 +328,7 @@ public class SingletonResourceTest extends JerseyTest {
     @Singleton
     @Path("singleton")
     public static class SingletonResource {
+
         private int counter = 1;
 
         @GET
@@ -355,11 +358,11 @@ public class SingletonResourceTest extends JerseyTest {
             return "filter:" + counter;
         }
 
-
     }
 
     @Singleton
     public static class SubResourceSingleton implements Inflector<Request, Response> {
+
         private int counter = 1;
 
         @GET
@@ -367,15 +370,14 @@ public class SingletonResourceTest extends JerseyTest {
             return "sub:" + (counter++);
         }
 
-
         @Override
         public Response apply(Request request) {
             return Response.ok("reused-singleton:" + counter++).build();
         }
     }
 
-
     public static class SubResource {
+
         private int counter = 1;
 
         @GET

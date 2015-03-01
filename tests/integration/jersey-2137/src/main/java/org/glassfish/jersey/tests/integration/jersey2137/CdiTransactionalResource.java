@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,11 +39,6 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2137;
 
-import javax.enterprise.context.RequestScoped;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.transaction.Transactional;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -52,6 +47,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+
+import javax.enterprise.context.RequestScoped;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.transaction.Transactional;
 
 /**
  * Request scoped transactional CDI bean registered as JAX-RS resource class.
@@ -74,7 +74,8 @@ public class CdiTransactionalResource {
     public String getBalance(@PathParam("a") long a) {
         final Account account = entityManager.find(Account.class, a);
         if (account == null) {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity(String.format("Account %d not found", a)).build());
+            throw new WebApplicationException(
+                    Response.status(Response.Status.BAD_REQUEST).entity(String.format("Account %d not found", a)).build());
         } else {
             return String.format("%d", account.getBalance());
         }
@@ -116,11 +117,13 @@ public class CdiTransactionalResource {
                 if (e instanceof WebApplicationException) {
                     throw (WebApplicationException) e;
                 } else {
-                    throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Something bad happened.").build());
+                    throw new WebApplicationException(
+                            Response.status(Response.Status.BAD_REQUEST).entity("Something bad happened.").build());
                 }
             }
         } else {
-            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST).entity("Target account not found.").build());
+            throw new WebApplicationException(
+                    Response.status(Response.Status.BAD_REQUEST).entity("Target account not found.").build());
         }
     }
 }

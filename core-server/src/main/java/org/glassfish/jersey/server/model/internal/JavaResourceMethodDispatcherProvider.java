@@ -108,7 +108,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         return serviceLocator;
     }
 
-    private static abstract class AbstractMethodParamInvoker extends AbstractJavaResourceMethodDispatcher {
+    private abstract static class AbstractMethodParamInvoker extends AbstractJavaResourceMethodDispatcher {
 
         private final List<Factory<?>> valueProviders;
 

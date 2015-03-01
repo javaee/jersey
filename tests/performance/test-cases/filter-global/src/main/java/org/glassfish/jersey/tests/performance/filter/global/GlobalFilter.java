@@ -62,7 +62,8 @@ public class GlobalFilter implements ContainerRequestFilter, ContainerResponseFi
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         if (requestContext.hasEntity()) {
-            requestContext.setEntityStream(new SequenceInputStream(new ByteArrayInputStream("PRE_MATCH_IN".getBytes()), requestContext.getEntityStream()));
+            requestContext.setEntityStream(new SequenceInputStream(new ByteArrayInputStream("PRE_MATCH_IN".getBytes()),
+                    requestContext.getEntityStream()));
         }
     }
 

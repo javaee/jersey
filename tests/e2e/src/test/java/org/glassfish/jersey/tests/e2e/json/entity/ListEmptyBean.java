@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,10 +56,10 @@ import org.glassfish.jersey.tests.e2e.json.JsonTestHelper;
 public class ListEmptyBean {
 
     private List<String> empty;
-    
+
     public static Object createTestInstance() {
         ListEmptyBean instance = new ListEmptyBean();
-        instance.empty = new LinkedList<String>();
+        instance.empty = new LinkedList<>();
         return instance;
     }
 
@@ -81,8 +81,8 @@ public class ListEmptyBean {
         }
         final ListEmptyBean other = (ListEmptyBean) obj;
         return this.empty == other.empty
-                    || (JsonTestHelper.isCollectionEmpty(this.empty) && JsonTestHelper.isCollectionEmpty(other.empty))
-                    || (this.empty != null && this.empty.equals(other.empty));
+                || (JsonTestHelper.isCollectionEmpty(this.empty) && JsonTestHelper.isCollectionEmpty(other.empty))
+                || (this.empty != null && this.empty.equals(other.empty));
     }
 
     @Override
@@ -91,9 +91,9 @@ public class ListEmptyBean {
         hash = 31 * hash + (this.empty != null ? this.empty.hashCode() : 0);
         return hash;
     }
-    
+
     @Override
     public String toString() {
-        return (new Formatter()).format("LwNB(n=%d,isNull:%s)", (empty != null) ? empty.size() : 0, (empty==null)).toString();
+        return (new Formatter()).format("LwNB(n=%d,isNull:%s)", (empty != null) ? empty.size() : 0, (empty == null)).toString();
     }
 }

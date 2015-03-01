@@ -63,9 +63,11 @@ public class JCDIBeanExceptionMapper implements ExceptionMapper<JDCIBeanExceptio
 
     private static final Logger LOGGER = Logger.getLogger(JCDIBeanExceptionMapper.class.getName());
 
-    private @Context UriInfo uiFieldInject;
+    @Context
+    private UriInfo uiFieldInject;
 
-    private @Context ResourceContext rc;
+    @Context
+    private ResourceContext rc;
 
     private UriInfo uiMethodInject;
 

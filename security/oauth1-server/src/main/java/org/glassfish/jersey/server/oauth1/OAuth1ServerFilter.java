@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,7 +66,6 @@ import org.glassfish.jersey.oauth1.signature.OAuth1SignatureException;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.oauth1.internal.OAuthServerRequest;
 
-
 /**
  * OAuth request filter that filters all requests indicating in the Authorization
  * header they use OAuth. Checks if the incoming requests are properly authenticated
@@ -101,7 +100,6 @@ class OAuth1ServerFilter implements ContainerRequestFilter {
     @Inject
     private Provider<ExtendedUriInfo> uriInfo;
 
-
     private final boolean optional;
 
     /**
@@ -122,8 +120,9 @@ class OAuth1ServerFilter implements ContainerRequestFilter {
         int maxAge = OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.MAX_AGE, 300000);
         /* Average requests to process between nonce garbage collection passes. */
         int gcPeriod = OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.GC_PERIOD, 100);
-        ignorePathPattern = pattern(OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.IGNORE_PATH_PATTERN,
-                null, String.class)); // no pattern
+        ignorePathPattern = pattern(
+                OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.IGNORE_PATH_PATTERN,
+                        null, String.class)); // no pattern
         optional = PropertiesHelper.isProperty(rc.getProperties(), OAuth1ServerProperties.NO_FAIL);
 
         final String timeUnitStr = OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.TIMESTAMP_UNIT,
@@ -138,7 +137,6 @@ class OAuth1ServerFilter implements ContainerRequestFilter {
         // www-authenticate header for the life of the object
         wwwAuthenticateHeader = "OAuth realm=\"" + realm + "\"";
     }
-
 
     @Override
     public void filter(ContainerRequestContext request) throws IOException {
@@ -173,7 +171,6 @@ class OAuth1ServerFilter implements ContainerRequestFilter {
 
         request.setSecurityContext(sc);
     }
-
 
     private OAuth1SecurityContext getSecurityContext(ContainerRequestContext request) throws OAuth1Exception {
         OAuthServerRequest osr = new OAuthServerRequest(request);

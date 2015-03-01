@@ -39,14 +39,13 @@
  */
 package org.glassfish.jersey.tests.performance.param.srl;
 
-
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.GET;
 import javax.ws.rs.MatrixParam;
+import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Test resource.
@@ -76,7 +75,8 @@ public class SrlResource {
         return new SubResource(p);
     }
 
-    @GET @Path("srm/{p}")
+    @GET
+    @Path("srm/{p}")
     @Produces(MediaType.TEXT_PLAIN)
     public String get(@PathParam("p") final String p, @MatrixParam("m") final String m, @QueryParam("q") final String q) {
         return String.format("p=%s, m=%s, q=%s", p, m, q);

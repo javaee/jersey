@@ -265,9 +265,9 @@ class JettyConnector implements Connector {
             HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
                     JettyConnector.this.getClass().getName());
 
-            final javax.ws.rs.core.Response.StatusType status = jettyResponse.getReason() == null ?
-                    Statuses.from(jettyResponse.getStatus()) :
-                    Statuses.from(jettyResponse.getStatus(), jettyResponse.getReason());
+            final javax.ws.rs.core.Response.StatusType status = jettyResponse.getReason() == null
+                    ? Statuses.from(jettyResponse.getStatus())
+                    : Statuses.from(jettyResponse.getStatus(), jettyResponse.getReason());
 
             final ClientResponse jerseyResponse = new ClientResponse(status, jerseyRequest);
             processResponseHeaders(jettyResponse.getHeaders(), jerseyResponse);
@@ -297,6 +297,7 @@ class JettyConnector implements Connector {
     }
 
     private static final class HttpClientResponseInputStream extends FilterInputStream {
+
         HttpClientResponseInputStream(final ContentResponse jettyResponse) throws IOException {
             super(getInputStream(jettyResponse));
         }
@@ -412,10 +413,11 @@ class JettyConnector implements Connector {
                     HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
                             JettyConnector.this.getClass().getName());
 
-                    if (responseFuture.isDone())
+                    if (responseFuture.isDone()) {
                         if (!callbackInvoked.compareAndSet(false, true)) {
                             return;
                         }
+                    }
                     final ClientResponse response = translateResponse(jerseyRequest, jettyResponse, entityStream);
                     jerseyResponse.set(response);
                     callback.response(response);

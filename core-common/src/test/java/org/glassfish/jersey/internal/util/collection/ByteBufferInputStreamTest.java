@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -130,7 +130,6 @@ public class ByteBufferInputStreamTest {
             System.out.println("Waiting for the task to finish has timed out.");
         }
     }
-
 
     /**
      * Test for non blocking byte buffer based read of the stream.
@@ -489,7 +488,8 @@ public class ByteBufferInputStreamTest {
 
     }
 
-    private static abstract class Task {
+    private abstract static class Task {
+
         private final ByteBufferInputStream bbis;
 
         protected Task(ByteBufferInputStream bbis) {

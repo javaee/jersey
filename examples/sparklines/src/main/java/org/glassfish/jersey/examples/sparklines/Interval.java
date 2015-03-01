@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,18 +42,22 @@ package org.glassfish.jersey.examples.sparklines;
 
 import java.util.Collections;
 import java.util.List;
+
 import javax.ws.rs.WebApplicationException;
 
 /**
  * @author Paul Sandoz
  */
 public class Interval extends IntegerList {
+
     public Interval(String s) {
         super(s);
-        if (size() != 2)
+        if (size() != 2) {
             throw new WebApplicationException(400);
-        if (upper() < lower())
+        }
+        if (upper() < lower()) {
             throw new WebApplicationException(400);
+        }
     }
 
     public int lower() {
@@ -69,10 +73,11 @@ public class Interval extends IntegerList {
     }
 
     public boolean contains(List<Integer> data) {
-        if (Collections.min(data) < lower() ||
-                Collections.max(data) > upper()) {
+        if (Collections.min(data) < lower()
+                || Collections.max(data) > upper()) {
             return false;
-        } else
+        } else {
             return true;
+        }
     }
 }

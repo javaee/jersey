@@ -60,7 +60,7 @@ import org.glassfish.jersey.moxy.json.internal.FilteringMoxyJsonProvider;
  */
 public class MoxyJsonFeature implements Feature {
 
-    private final static String JSON_FEATURE = MoxyJsonFeature.class.getSimpleName();
+    private static final String JSON_FEATURE = MoxyJsonFeature.class.getSimpleName();
 
     @Override
     public boolean configure(final FeatureContext context) {

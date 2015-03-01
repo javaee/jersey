@@ -131,8 +131,8 @@ public class OAuth1ServerFeature implements Feature {
         final Boolean propertyResourceEnabled = OAuth1ServerProperties.getValue(properties,
                 OAuth1ServerProperties.ENABLE_TOKEN_RESOURCES, null, Boolean.class);
 
-        boolean registerResources = propertyResourceEnabled != null ?
-                propertyResourceEnabled : requestTokenUri != null & accessTokenUri != null;
+        boolean registerResources = propertyResourceEnabled != null
+                ? propertyResourceEnabled : requestTokenUri != null & accessTokenUri != null;
 
         if (registerResources) {
             String requestUri = OAuth1ServerProperties.getValue(properties, OAuth1ServerProperties.REQUEST_TOKEN_URI,

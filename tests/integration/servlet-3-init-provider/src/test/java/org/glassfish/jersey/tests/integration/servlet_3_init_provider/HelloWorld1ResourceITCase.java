@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,10 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
+import javax.ws.rs.client.WebTarget;
+
 import org.junit.Assert;
 import org.junit.Test;
-
-import javax.ws.rs.client.WebTarget;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
@@ -60,7 +60,7 @@ public class HelloWorld1ResourceITCase extends AbstractHelloWorldResourceTest {
     @Test
     public void testRegisteredServletNames() throws Exception {
         WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("servlets");
-        Assert.assertEquals(AbstractHelloWorldResource.NUMBER_OF_APPLICATIONS, (int)target.request().get(Integer.TYPE));
+        Assert.assertEquals(AbstractHelloWorldResource.NUMBER_OF_APPLICATIONS, (int) target.request().get(Integer.TYPE));
 
         target = target.path("{name}");
         testRegisteredServletNames(target, "org.glassfish.jersey.tests.integration.servlet_3_init_provider.Application1");

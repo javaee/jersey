@@ -69,7 +69,9 @@ final class VoidVoidDispatcherProvider implements ResourceMethodDispatcher.Provi
 
     private static class VoidToVoidDispatcher extends AbstractJavaResourceMethodDispatcher {
 
-        private VoidToVoidDispatcher(final Invocable resourceMethod, final InvocationHandler handler, final ConfiguredValidator validator) {
+        private VoidToVoidDispatcher(final Invocable resourceMethod,
+                                     final InvocationHandler handler,
+                                     final ConfiguredValidator validator) {
             super(resourceMethod, handler, validator);
         }
 
@@ -81,7 +83,9 @@ final class VoidVoidDispatcherProvider implements ResourceMethodDispatcher.Provi
     }
 
     @Override
-    public ResourceMethodDispatcher create(final Invocable resourceMethod, final InvocationHandler handler, final ConfiguredValidator validator) {
+    public ResourceMethodDispatcher create(final Invocable resourceMethod,
+                                           final InvocationHandler handler,
+                                           final ConfiguredValidator validator) {
         if (resourceMethod.getHandlingMethod().getReturnType() != void.class || !resourceMethod.getParameters().isEmpty()) {
             return null;
         }

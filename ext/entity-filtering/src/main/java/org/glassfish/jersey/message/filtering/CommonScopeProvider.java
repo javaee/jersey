@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,7 +75,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
 @Singleton
 class CommonScopeProvider implements ScopeProvider {
 
-    private final static Logger LOGGER = Logger.getLogger(CommonScopeProvider.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CommonScopeProvider.class.getName());
 
     private final List<ScopeResolver> resolvers;
     private final Configuration config;
@@ -147,7 +147,7 @@ class CommonScopeProvider implements ScopeProvider {
         Set<String> filteringScopes = Collections.emptySet();
         if (property != null) {
             if (property instanceof Annotation) {
-                filteringScopes = getFilteringScopes(new Annotation[]{(Annotation) property});
+                filteringScopes = getFilteringScopes(new Annotation[] {(Annotation) property});
             } else if (property instanceof Annotation[]) {
                 filteringScopes = getFilteringScopes((Annotation[]) property);
             } else {

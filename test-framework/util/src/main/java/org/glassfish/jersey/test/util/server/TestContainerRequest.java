@@ -70,7 +70,7 @@ import org.glassfish.jersey.server.ContainerRequest;
  */
 final class TestContainerRequest extends ContainerRequest {
 
-    private final static Logger LOGGER = Logger.getLogger(TestContainerRequest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(TestContainerRequest.class.getName());
 
     TestContainerRequest(final URI baseUri,
                          final URI requestUri,

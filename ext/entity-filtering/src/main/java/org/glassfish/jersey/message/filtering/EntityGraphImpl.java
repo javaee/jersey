@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -118,7 +118,7 @@ final class EntityGraphImpl implements EntityGraph {
 
     @Override
     public EntityGraphImpl addSubgraph(final String fieldName, final Class<?> fieldClass, final String... filteringScopes) {
-       return addSubgraph(fieldName, fieldClass, Sets.newHashSet(filteringScopes));
+        return addSubgraph(fieldName, fieldClass, Sets.newHashSet(filteringScopes));
     }
 
     @Override
@@ -138,14 +138,14 @@ final class EntityGraphImpl implements EntityGraph {
 
     @Override
     public Set<String> getFields(final String filteringScope) {
-        return fields.containsKey(filteringScope) ?
-                Collections.unmodifiableSet(fields.get(filteringScope)) : Collections.<String>emptySet();
+        return fields.containsKey(filteringScope)
+                ? Collections.unmodifiableSet(fields.get(filteringScope)) : Collections.<String>emptySet();
     }
 
     @Override
     public Set<String> getFields(final String... filteringScopes) {
-        return filteringScopes.length == 0 ? Collections.<String>emptySet() :
-                (filteringScopes.length == 1 ? getFields(filteringScopes[0]) : getFields(Sets.newHashSet(filteringScopes)));
+        return filteringScopes.length == 0 ? Collections.<String>emptySet()
+                : (filteringScopes.length == 1 ? getFields(filteringScopes[0]) : getFields(Sets.newHashSet(filteringScopes)));
     }
 
     @Override
@@ -171,14 +171,17 @@ final class EntityGraphImpl implements EntityGraph {
 
     @Override
     public Map<String, Class<?>> getSubgraphs(final String filteringScope) {
-        return subgraphs.containsRow(filteringScope) ?
-                Collections.unmodifiableMap(subgraphs.row(filteringScope)) : Collections.<String, Class<?>>emptyMap();
+        return subgraphs.containsRow(filteringScope)
+                ? Collections.unmodifiableMap(subgraphs.row(filteringScope)) : Collections.<String, Class<?>>emptyMap();
     }
 
     @Override
     public Map<String, Class<?>> getSubgraphs(final String... filteringScopes) {
-        return filteringScopes.length == 0 ? Collections.<String, Class<?>>emptyMap() :
-                (filteringScopes.length == 1 ? getSubgraphs(filteringScopes[0]) : getSubgraphs(Sets.newHashSet(filteringScopes)));
+        return filteringScopes.length == 0
+                ? Collections.<String, Class<?>>emptyMap()
+                : (filteringScopes.length == 1
+                           ? getSubgraphs(filteringScopes[0])
+                           : getSubgraphs(Sets.newHashSet(filteringScopes)));
     }
 
     @Override

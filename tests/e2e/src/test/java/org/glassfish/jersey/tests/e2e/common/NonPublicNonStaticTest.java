@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,12 +59,12 @@ import javax.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests deployment of non-standard or invalid resources and providers.
@@ -99,6 +99,7 @@ public class NonPublicNonStaticTest {
 
     @Path("/non-static")
     public class NonStaticResource {
+
         public String get() {
             return "Hi";
         }
@@ -106,6 +107,7 @@ public class NonPublicNonStaticTest {
 
     @Path("/non-static-sub")
     public static class NonStaticResourceSubResource {
+
         @Path("class")
         public Class<NonStaticResource> getClazz() {
             return NonStaticResource.class;
@@ -114,6 +116,7 @@ public class NonPublicNonStaticTest {
 
     @Path("/non-public")
     static class NonPublicResource {
+
         @GET
         public String get() {
             return "hi";
@@ -122,6 +125,7 @@ public class NonPublicNonStaticTest {
 
     @Path("/non-public-sub")
     public static class NonPublicResourceSubResource {
+
         @Path("class")
         public Class<NonPublicResource> getClazz() {
             return NonPublicResource.class;
@@ -130,6 +134,7 @@ public class NonPublicNonStaticTest {
 
     @Path("/abstract")
     public abstract static class AbstractResource {
+
         @GET
         public String get() {
             return "Hi!";
@@ -138,6 +143,7 @@ public class NonPublicNonStaticTest {
 
     @Path("/abstract-sub")
     public static class AbstractResourceSubResource {
+
         @Path("class")
         public Class<AbstractResource> getClazz() {
             return AbstractResource.class;
@@ -150,6 +156,7 @@ public class NonPublicNonStaticTest {
 
     @Path("interface-sub")
     public static class InterfaceResourceSubResource {
+
         @Path("class")
         public Class<InterfaceResource> getClazz() {
             return InterfaceResource.class;
@@ -158,6 +165,7 @@ public class NonPublicNonStaticTest {
 
     @Path("non-public-with-constructor")
     static class NonPublicResourceWithConstructor {
+
         public NonPublicResourceWithConstructor() {
         }
 
@@ -169,6 +177,7 @@ public class NonPublicNonStaticTest {
 
     @Path("non-public-sub-with-constructor")
     public static class NonPublicResourceSubResourceWithConstructor {
+
         @Path("class")
         public Class<NonPublicResourceWithConstructor> getClazz() {
             return NonPublicResourceWithConstructor.class;
@@ -177,6 +186,7 @@ public class NonPublicNonStaticTest {
 
     @Path("public-with-private-constructor")
     public static class PublicResourceWithPrivateConstructor {
+
         private PublicResourceWithPrivateConstructor() {
         }
 
@@ -188,6 +198,7 @@ public class NonPublicNonStaticTest {
 
     @Path("provider-resource")
     public static class ProviderResource {
+
         @GET
         public String get() {
             return "Hi!";
@@ -219,6 +230,7 @@ public class NonPublicNonStaticTest {
 
     @Provider
     static class NonPublicProvider implements MessageBodyWriter<String> {
+
         @Override
         public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
                                    final MediaType mediaType) {
@@ -242,6 +254,7 @@ public class NonPublicNonStaticTest {
 
     @Provider
     static class PublicProviderWithPrivateConstructor implements MessageBodyWriter<String> {
+
         private PublicProviderWithPrivateConstructor() {
         }
 
@@ -267,6 +280,7 @@ public class NonPublicNonStaticTest {
 
     @Provider
     public abstract static class AbstractProvider implements MessageBodyWriter<String> {
+
         @Override
         public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
                                    final MediaType mediaType) {
@@ -290,6 +304,7 @@ public class NonPublicNonStaticTest {
     // Inner test classes - each needed resource config variation has its own inner class
 
     public static class NonStaticResourceTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             set(TestProperties.RECORD_LOG_LEVEL, Level.WARNING.intValue());
@@ -304,7 +319,7 @@ public class NonPublicNonStaticTest {
             for (LogRecord record : loggedRecords) {
                 if (record.getMessage().contains("cannot be instantiated and will be ignored")) {
                     firstFound = true;
-                } else if(record.getMessage().contains("is empty. It has no resource")) {
+                } else if (record.getMessage().contains("is empty. It has no resource")) {
                     secondFound = true;
                 }
                 if (firstFound && secondFound) {
@@ -317,6 +332,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class NonStaticResourceSubResourceTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             return new ResourceConfig(NonStaticResourceSubResource.class);
@@ -329,6 +345,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class NonPublicResourceTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             return new ResourceConfig(NonPublicResource.class);
@@ -341,6 +358,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class NonPublicResourceSubResourceTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             return new ResourceConfig(NonPublicResourceSubResource.class);
@@ -353,6 +371,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class AbstractResourceTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             set(TestProperties.RECORD_LOG_LEVEL, Level.WARNING.intValue());
@@ -374,6 +393,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class AbstractResourceSubResourceTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             return new ResourceConfig(AbstractResourceSubResource.class);
@@ -386,6 +406,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class InterfaceResourceTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             set(TestProperties.RECORD_LOG_LEVEL, Level.WARNING.intValue());
@@ -400,7 +421,7 @@ public class NonPublicNonStaticTest {
             for (LogRecord record : loggedRecords) {
                 if (record.getMessage().contains("cannot be instantiated and will be ignored")) {
                     firstFound = true;
-                } else if(record.getMessage().contains("is empty. It has no resource")) {
+                } else if (record.getMessage().contains("is empty. It has no resource")) {
                     secondFound = true;
                 }
                 if (firstFound && secondFound) {
@@ -413,6 +434,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class InterfaceResourceSubResourceTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             return new ResourceConfig(InterfaceResourceSubResource.class);
@@ -425,6 +447,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class NonPublicResourceWithConstructorTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             return new ResourceConfig(NonPublicResourceWithConstructor.class);
@@ -437,6 +460,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class NonPublicResourceSubresourceWithConstructorTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             return new ResourceConfig(NonPublicResourceSubResourceWithConstructor.class);
@@ -449,6 +473,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class PublicResourceWithPrivateConstructorTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             set(TestProperties.RECORD_LOG_LEVEL, Level.WARNING.intValue());
@@ -462,6 +487,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class NonStaticProviderTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             set(TestProperties.RECORD_LOG_LEVEL, Level.WARNING.intValue());
@@ -483,6 +509,7 @@ public class NonPublicNonStaticTest {
     }
 
     public static class NonPublicProviderTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             return new ResourceConfig(ProviderResource.class, NonPublicProvider.class);
@@ -499,6 +526,7 @@ public class NonPublicNonStaticTest {
     // w/o constructor
 
     public static class PublicProviderWithPrivateConstructorTest extends JerseyTest {
+
         @Override
         public ResourceConfig configure() {
             set(TestProperties.RECORD_LOG_LEVEL, Level.WARNING.intValue());
@@ -521,6 +549,5 @@ public class NonPublicNonStaticTest {
 
     // abstract provider - throws MultiException after calling configure(), but before running the @Test method
     // the same for interface provider test
-
 
 }

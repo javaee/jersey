@@ -152,7 +152,6 @@ public class WadlGeneratorLoaderTest {
 
     public static class MyWadlGenerator2 implements WadlGenerator {
 
-
         private File _testFile;
         private InputStream _testStream;
         private File _testStreamContent;
@@ -200,13 +199,13 @@ public class WadlGeneratorLoaderTest {
                     while ((bytes_read = _testStream.read(buffer)) != -1) {
                         to.write(buffer, 0, bytes_read);
                     }
-                }
-                // Always close the streams, even if exceptions were thrown
-                finally {
-                    if (to != null) try {
-                        to.close();
-                    } catch (IOException e) {
-                        ;
+                } finally {
+                    // Always close the streams, even if exceptions were thrown
+                    if (to != null) {
+                        try {
+                            to.close();
+                        } catch (IOException e) {
+                        }
                     }
                 }
             }

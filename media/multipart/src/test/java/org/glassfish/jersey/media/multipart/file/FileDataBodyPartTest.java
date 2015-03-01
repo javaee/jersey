@@ -110,7 +110,6 @@ public class FileDataBodyPartTest extends BodyPartTest {
         fdbp.setFileEntity(file, expectedType);
         checkEntityAttributes(name, fdbp, file, expectedType);
 
-
         file = new File("pom.png");
         name = "png";
         fdbp = new FileDataBodyPart("png", file);
@@ -133,8 +132,7 @@ public class FileDataBodyPartTest extends BodyPartTest {
         if (name != null) {
             assertEquals(name, fdbp.getName());
             assertEquals(name, fdbp.getFormDataContentDisposition().getName());
-            assertEquals(file.getName(), fdbp.getContentDisposition().
-                    getFileName());
+            assertEquals(file.getName(), fdbp.getContentDisposition().getFileName());
             if (file.exists()) {
                 assertEquals(file.length(), fdbp.getContentDisposition().getSize());
                 assertEquals(file.lastModified(), fdbp.getContentDisposition().getModificationDate().getTime());

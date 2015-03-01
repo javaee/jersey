@@ -73,6 +73,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Miroslav Fuksa
  */
 class ResourceMethodValidator extends AbstractResourceModelVisitor {
+
     private final ServiceLocator locator;
 
     /**
@@ -83,7 +84,6 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
     public ResourceMethodValidator(ServiceLocator locator) {
         this.locator = locator;
     }
-
 
     @Override
     public void visitResourceMethod(final ResourceMethod method) {
@@ -142,8 +142,9 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
 
         final Type responseType = invocable.getResponseType();
         if (!isConcreteType(responseType)) {
-            Errors.warning(invocable.getHandlingMethod(), LocalizationMessages.TYPE_OF_METHOD_NOT_RESOLVABLE_TO_CONCRETE_TYPE
-                    (responseType, invocable.getHandlingMethod().toGenericString()));
+            Errors.warning(invocable.getHandlingMethod(),
+                    LocalizationMessages.TYPE_OF_METHOD_NOT_RESOLVABLE_TO_CONCRETE_TYPE(responseType,
+                            invocable.getHandlingMethod().toGenericString()));
         }
 
         final Path pathAnnotation = invocable.getHandlingMethod().getAnnotation(Path.class);
@@ -199,7 +200,6 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
             }
         }
     }
-
 
     private static final Set<Class> PARAM_ANNOTATION_SET = createParamAnnotationSet();
 

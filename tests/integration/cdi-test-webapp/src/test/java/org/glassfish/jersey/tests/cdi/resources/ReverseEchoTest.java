@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,14 +41,14 @@ package org.glassfish.jersey.tests.cdi.resources;
 
 import java.util.Arrays;
 import java.util.List;
+
 import javax.ws.rs.client.WebTarget;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test for qualified injection.
@@ -60,12 +60,12 @@ public class ReverseEchoTest extends CdiTest {
 
     @Parameterized.Parameters
     public static List<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
-            {"alpha", "ahpla"}
-            ,{"gogol", "logog"}
-            ,{"elcaro", "oracle"}
+        return Arrays.asList(new Object[][] {
+                {"alpha", "ahpla"},
+                {"gogol", "logog"},
+                {"elcaro", "oracle"}
         });
-    };
+    }
 
     final String in, out;
 

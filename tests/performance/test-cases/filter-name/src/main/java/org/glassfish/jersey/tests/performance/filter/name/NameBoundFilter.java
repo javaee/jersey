@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.performance.filter.name;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.SequenceInputStream;
+
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -61,7 +62,8 @@ public class NameBoundFilter implements ContainerRequestFilter, ContainerRespons
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         if (requestContext.hasEntity()) {
-            requestContext.setEntityStream(new SequenceInputStream(new ByteArrayInputStream("NAM_MATCH_IN".getBytes()), requestContext.getEntityStream()));
+            requestContext.setEntityStream(new SequenceInputStream(new ByteArrayInputStream("NAM_MATCH_IN".getBytes()),
+                    requestContext.getEntityStream()));
         }
     }
 

@@ -76,7 +76,7 @@ import jersey.repackaged.com.google.common.cache.LoadingCache;
  */
 final class RuntimeLocatorModelBuilder {
 
-    private final static Logger LOGGER = Logger.getLogger(RuntimeLocatorModelBuilder.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RuntimeLocatorModelBuilder.class.getName());
 
     private final ServiceLocator locator;
     private final Configuration config;

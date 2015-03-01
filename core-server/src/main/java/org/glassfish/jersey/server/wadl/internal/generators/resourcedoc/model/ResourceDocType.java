@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,15 +51,15 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * The documentation type for resources.<br>
  * Created on: Jun 11, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 
-@XmlAccessorType( XmlAccessType.FIELD )
-@XmlType( name = "resourceDoc", propOrder = {
-    "classDoc"
-} )
-@XmlRootElement( name = "resourceDoc" )
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "resourceDoc", propOrder = {
+        "classDoc"
+})
+@XmlRootElement(name = "resourceDoc")
 public class ResourceDocType {
 
     @XmlElementWrapper(name = "classDocs")
@@ -71,5 +71,5 @@ public class ResourceDocType {
         }
         return this.classDoc;
     }
-    
+
 }

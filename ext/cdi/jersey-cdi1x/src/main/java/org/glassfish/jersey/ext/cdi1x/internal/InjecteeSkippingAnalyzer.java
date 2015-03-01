@@ -65,7 +65,9 @@ public final class InjecteeSkippingAnalyzer implements ClassAnalyzer {
     private final Map<Class<?>, Set<Method>> methodsToSkip;
     private final Map<Class<?>, Set<Field>> fieldsToSkip;
 
-    public InjecteeSkippingAnalyzer(ClassAnalyzer defaultAnalyzer, Map<Class<?>, Set<Method>> methodsToSkip, Map<Class<?>, Set<Field>> fieldsToSkip) {
+    public InjecteeSkippingAnalyzer(ClassAnalyzer defaultAnalyzer,
+                                    Map<Class<?>, Set<Method>> methodsToSkip,
+                                    Map<Class<?>, Set<Field>> fieldsToSkip) {
         this.defaultAnalyzer = defaultAnalyzer;
         this.methodsToSkip = methodsToSkip;
         this.fieldsToSkip = fieldsToSkip;

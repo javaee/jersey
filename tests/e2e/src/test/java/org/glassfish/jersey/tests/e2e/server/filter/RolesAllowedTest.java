@@ -72,15 +72,18 @@ import static org.junit.Assert.assertEquals;
  * @author Martin Matula
  */
 public class RolesAllowedTest extends JerseyTest {
+
     @PreMatching
     @Priority(Priorities.AUTHENTICATION)
     public static class SecurityFilter implements ContainerRequestFilter {
+
         public void filter(ContainerRequestContext request) {
             String user = request.getHeaders().getFirst("X-USER");
             request.setSecurityContext(new Authenticator(user));
         }
 
         private static class Authenticator implements SecurityContext {
+
             private Principal p;
 
             Authenticator(final String name) {
@@ -112,13 +115,18 @@ public class RolesAllowedTest extends JerseyTest {
     @Path("/")
     @PermitAll
     public static class Resource {
+
         @RolesAllowed("user")
         @GET
-        public String get() { return "GET"; }
+        public String get() {
+            return "GET";
+        }
 
         @RolesAllowed("admin")
         @POST
-        public String post(String content) { return content; }
+        public String post(String content) {
+            return content;
+        }
 
         @Path("sub")
         public SubResource getSubResource() {
@@ -128,6 +136,7 @@ public class RolesAllowedTest extends JerseyTest {
 
     @RolesAllowed("admin")
     public static class SubResource {
+
         @Path("deny-all")
         @DenyAll
         @GET

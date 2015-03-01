@@ -58,12 +58,14 @@ import org.glassfish.jersey.message.internal.MessagingBinders;
  * @author Martin Matula
  */
 public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
+
     public RuntimeDelegateImpl() {
         super(Injections.createLocator("jersey-common-rd-locator", new MessagingBinders.HeaderDelegateProviders()));
     }
 
     @Override
-    public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
+    public <T> T createEndpoint(Application application, Class<T> endpointType)
+            throws IllegalArgumentException, UnsupportedOperationException {
         throw new UnsupportedOperationException(LocalizationMessages.NO_CONTAINER_AVAILABLE());
     }
 }

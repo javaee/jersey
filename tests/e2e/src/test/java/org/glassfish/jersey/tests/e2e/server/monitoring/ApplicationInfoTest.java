@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,20 +40,9 @@
 
 package org.glassfish.jersey.tests.e2e.server.monitoring;
 
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
-import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.monitoring.ApplicationInfo;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import java.util.Arrays;
+import java.util.List;
 
-import javax.annotation.Priority;
-import javax.inject.Provider;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -62,8 +51,22 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.List;
+
+import javax.annotation.Priority;
+import javax.inject.Provider;
+
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
+import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.monitoring.ApplicationInfo;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * The test uses server properties {@link ServerProperties#MONITORING_STATISTICS_MBEANS_ENABLED},
@@ -84,22 +87,22 @@ public class ApplicationInfoTest extends JerseyTest {
 
     @Parameterized.Parameters
     public static List<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
-                  //force, 3x AutoDiscoverable, 3x ResourceConfig,   response
+        return Arrays.asList(new Object[][] {
+                //force, 3x AutoDiscoverable, 3x ResourceConfig,   response
                 // no property set => 500
-                  { false, false, false, false, null,  null,  null,  500 }
+                {false, false, false, false, null, null, null, 500},
                 // property set by ForcedAutoDiscoverable => 200
-                , { false, true,  false, false, null,  null,  null,  200 }
-                , { false, false, true,  false, null,  null,  null,  200 }
-                , { false, false, false, true,  null,  null,  null,  200 }
+                {false, true, false, false, null, null, null, 200},
+                {false, false, true, false, null, null, null, 200},
+                {false, false, false, true, null, null, null, 200},
                 // property disable by ResourceConfig => 500
-                , { false, true,  false, false, false, false, false, 500 }
-                , { false, false, true,  false, false, false, false, 500 }
-                , { false, false, false, true,  false, false, false, 500 }
+                {false, true, false, false, false, false, false, 500},
+                {false, false, true, false, false, false, false, 500},
+                {false, false, false, true, false, false, false, 500},
                 // property disable by ResourceConfig but forced by ForcedAutoDiscoverable => 200
-                , { true,  true,  false, false, false, false, false, 200 }
-                , { true,  false, true,  false, false, false, false, 200 }
-                , { true,  false, false, true,  false, false, false, 200 }
+                {true, true, false, false, false, false, false, 200},
+                {true, false, true, false, false, false, false, 200},
+                {true, false, false, true, false, false, false, 200}
         });
     }
 
@@ -154,9 +157,9 @@ public class ApplicationInfoTest extends JerseyTest {
         }
     }
 
-
     @Path("resource")
     public static class Resource {
+
         @Context
         Provider<ApplicationInfo> applicationInfoProvider;
 

@@ -45,17 +45,17 @@ import java.util.Map;
 import javax.ws.rs.RuntimeType;
 
 import org.junit.Test;
-
-import jersey.repackaged.com.google.common.collect.Maps;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+
+import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * @author Miroslav Fuksa
  *
  */
 public class PropertiesHelperTest {
+
     @Test
     public void testGetValueWithType() {
         Map<String, String> properties = Maps.newHashMap();
@@ -67,7 +67,6 @@ public class PropertiesHelperTest {
         assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, key, Long.class, null));
     }
 
-
     @Test
     public void testGetValueWithTypeAndDefaultValue() {
         Map<String, String> properties = Maps.newHashMap();
@@ -76,9 +75,8 @@ public class PropertiesHelperTest {
 
         assertEquals("15", PropertiesHelper.getValue(properties, key, "80", String.class, null));
         assertEquals(Integer.valueOf(30), PropertiesHelper.getValue(properties, "non.existing", 30, Integer.class, null));
-        assertEquals(Long.valueOf(20), PropertiesHelper.getValue(properties, "non.existing", 20l, Long.class, null));
+        assertEquals(Long.valueOf(20), PropertiesHelper.getValue(properties, "non.existing", 20L, Long.class, null));
     }
-
 
     @Test
     public void testGetValueWithDefaultValue() {
@@ -88,7 +86,7 @@ public class PropertiesHelperTest {
 
         assertEquals("15", PropertiesHelper.getValue(properties, key, "80", null));
         assertEquals(Integer.valueOf(30), PropertiesHelper.getValue(properties, "non.existing", 30, null));
-        assertEquals(Long.valueOf(20), PropertiesHelper.getValue(properties, "non.existing", 20l, null));
+        assertEquals(Long.valueOf(20), PropertiesHelper.getValue(properties, "non.existing", 20L, null));
     }
 
     @Test
@@ -113,14 +111,13 @@ public class PropertiesHelperTest {
 
         assertEquals("999", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, String.class, null));
         assertEquals(Integer.valueOf(999), PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, Integer.class,
-         null));
+                null));
         assertEquals(Long.valueOf(1), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, Long.class, null));
 
         assertEquals("15", PropertiesHelper.getValue(properties, key, String.class, null));
         assertEquals(Integer.valueOf(15), PropertiesHelper.getValue(properties, key, Integer.class, null));
         assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, key, Long.class, null));
     }
-
 
     @Test
     public void testGetValueByRuntime2() {
@@ -131,9 +128,9 @@ public class PropertiesHelperTest {
 
         assertEquals("999", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, String.class, null));
         assertEquals(Integer.valueOf(999), PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, Integer.class,
-         null));
+                null));
         assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, Long.class, null));
-        assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, 800l, Long.class,
+        assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, 800L, Long.class,
                 null));
 
         assertEquals("15", PropertiesHelper.getValue(properties, key, String.class, null));

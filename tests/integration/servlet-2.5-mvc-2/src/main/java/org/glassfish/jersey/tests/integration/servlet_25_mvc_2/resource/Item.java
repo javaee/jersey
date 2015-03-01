@@ -84,9 +84,9 @@ public class Item {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(Item.class).
-                add("title", title).
-                add("author", author).
-                toString();
+        return Objects.toStringHelper(Item.class)
+                .add("title", title)
+                .add("author", author)
+                .toString();
     }
 }

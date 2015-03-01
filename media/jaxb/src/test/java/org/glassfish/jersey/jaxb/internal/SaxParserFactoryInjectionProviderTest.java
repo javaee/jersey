@@ -169,9 +169,9 @@ public class SaxParserFactoryInjectionProviderTest {
                     }
                 }).to(Configuration.class);
 
-                bindFactory(SaxParserFactoryInjectionProvider.class, Singleton.class).
-                        to(SAXParserFactory.class).
-                        in(PerThread.class);
+                bindFactory(SaxParserFactoryInjectionProvider.class, Singleton.class)
+                        .to(SAXParserFactory.class)
+                        .in(PerThread.class);
                 bindAsContract(MySPFProvider.class).in(Singleton.class);
             }
         };

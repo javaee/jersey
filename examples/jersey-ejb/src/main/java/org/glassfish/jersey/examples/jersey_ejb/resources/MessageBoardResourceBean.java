@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,8 +69,10 @@ import org.glassfish.jersey.examples.jersey_ejb.exceptions.CustomNotFoundExcepti
 @Stateless
 public class MessageBoardResourceBean {
 
-    @Context private UriInfo ui;
-    @EJB MessageHolderSingletonBean singleton;
+    @Context
+    private UriInfo ui;
+    @EJB
+    MessageHolderSingletonBean singleton;
 
     /**
      * Returns a list of all messages stored in the internal message holder.
@@ -94,7 +96,7 @@ public class MessageBoardResourceBean {
     public Message getMessage(@PathParam("msgNum") int msgNum) {
         Message m = singleton.getMessage(msgNum);
 
-        if(m == null) {
+        if (m == null) {
             // This exception will be passed through to the JAX-RS runtime
             // No other runtime exception will behave this way unless the
             // exception is annotated with javax.ejb.ApplicationException
@@ -110,7 +112,7 @@ public class MessageBoardResourceBean {
     public void deleteMessage(@PathParam("msgNum") int msgNum) throws CustomNotFoundException {
         boolean deleted = singleton.deleteMessage(msgNum);
 
-        if(!deleted) {
+        if (!deleted) {
             // This exception will be mapped to a 404 response
             throw new CustomNotFoundException();
         }

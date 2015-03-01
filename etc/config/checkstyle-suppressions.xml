@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,17 @@
 <suppressions>
     <!-- Suppress all checks on all WADL generated files. -->
     <suppress files="com[\\/]sun[\\/]research[\\/]ws[\\/]wadl" checks=".*"/>
-    <!-- Suppress all checks on test classes. -->
-    <suppress files="org[\\/]glassfish[\\/]jersey[\\/]tests" checks=".*"/>
+    <!-- Suppress all checks on all JMH generated files. -->
+    <suppress files="org[\\/]openjdk[\\/]jmh" checks=".*"/>
+    <suppress files="generated" checks=".*"/>
+
+    <!-- Suppress all checks for all Jersey repackaged libraries. -->
+    <suppress files="jersey[\\/]repackaged" checks=".*"/>
+
+    <!-- Suppress all checks for specific classes. -->
+    <suppress files="LocalizationMessages" checks=".*"/>
+    <suppress files="ConcurrentHashMapV8" checks=".*"/>
+    <suppress files="LinkedTransferQueue" checks=".*"/>
+    <suppress files="TransferQueue" checks=".*"/>
+    <suppress files="ThreadLocalRandom" checks=".*"/>
 </suppressions>

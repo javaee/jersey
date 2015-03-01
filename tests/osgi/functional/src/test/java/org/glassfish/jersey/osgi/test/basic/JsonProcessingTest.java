@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -78,10 +78,10 @@ public class JsonProcessingTest {
 
     private static final String CONTEXT = "/jersey";
 
-    private static final URI baseUri = UriBuilder.
-            fromUri("http://localhost").
-            port(Helper.getPort()).
-            path(CONTEXT).build();
+    private static final URI baseUri = UriBuilder
+            .fromUri("http://localhost")
+            .port(Helper.getPort())
+            .path(CONTEXT).build();
 
     @Configuration
     public static Option[] configuration() {
@@ -91,7 +91,8 @@ public class JsonProcessingTest {
                 // vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
 
                 // JSON processing.
-                mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-json-processing").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-json-processing")
+                        .versionAsInProject(),
                 mavenBundle().groupId("org.glassfish").artifactId("javax.json").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish").artifactId("jsonp-jaxrs").versionAsInProject()
         ));
@@ -116,10 +117,10 @@ public class JsonProcessingTest {
         final JsonObject jsonObject = Json.createObjectBuilder().add("foo", "bar").build();
 
         final Client client = ClientBuilder.newClient();
-        final JsonObject entity = client.
-                target(baseUri).
-                request(MediaType.APPLICATION_JSON_TYPE).
-                post(Entity.json(jsonObject), JsonObject.class);
+        final JsonObject entity = client
+                .target(baseUri)
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .post(Entity.json(jsonObject), JsonObject.class);
 
         System.out.println("RESULT = " + entity);
         assertEquals(jsonObject, entity);

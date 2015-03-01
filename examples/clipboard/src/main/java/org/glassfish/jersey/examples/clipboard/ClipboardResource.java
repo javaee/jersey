@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.examples.clipboard;
 
-
 import java.util.LinkedList;
 import java.util.List;
 
@@ -56,7 +55,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
-
 /**
  * Very basic resource example showcases CRUD functionality
  * implemented via HTTP POST, GET, PUT and DELETE methods.
@@ -69,16 +67,17 @@ import javax.ws.rs.core.Variant;
 @Path("clipboard")
 public class ClipboardResource {
 
-    final static List<Variant> supportedVariants =
-                                    Variant.mediaTypes(
-                                        MediaType.APPLICATION_JSON_TYPE,
-                                        MediaType.TEXT_PLAIN_TYPE).add().build();
+    static final List<Variant> supportedVariants =
+            Variant.mediaTypes(
+                    MediaType.APPLICATION_JSON_TYPE,
+                    MediaType.TEXT_PLAIN_TYPE).add().build();
 
     private static final List<String> history = new LinkedList<String>();
 
     private static ClipboardData content = new ClipboardData("");
 
-    @Context Request request;
+    @Context
+    Request request;
 
     @GET
     public Response content() {
@@ -121,13 +120,15 @@ public class ClipboardResource {
         content.clear();
     }
 
-    @GET @Path("history")
+    @GET
+    @Path("history")
     @Produces({"text/plain", "application/json"})
     public List<String> getHistory() {
         return history;
     }
 
-    @DELETE @Path("history")
+    @DELETE
+    @Path("history")
     public void clearHistory() {
         history.clear();
     }

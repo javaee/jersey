@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,7 +64,7 @@ import static org.junit.Assert.assertEquals;
  * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class ConsumeProduceSimpleTest  {
+public class ConsumeProduceSimpleTest {
 
     private ApplicationHandler createApplication(Class<?>... classes) {
         return new ApplicationHandler(new ResourceConfig(classes));
@@ -156,8 +156,10 @@ public class ConsumeProduceSimpleTest  {
     public void testConsumeSimpleBean() throws Exception {
         ApplicationHandler app = createApplication(ConsumeSimpleBean.class);
 
-        assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/html").build()).get().getEntity());
-        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/xhtml").build()).get().getEntity());
+        assertEquals("HTML",
+                app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/html").build()).get().getEntity());
+        assertEquals("XHTML",
+                app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/xhtml").build()).get().getEntity());
     }
 
     @Test
@@ -165,17 +167,23 @@ public class ConsumeProduceSimpleTest  {
         ApplicationHandler app = createApplication(ProduceSimpleBean.class);
 
         assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "GET").accept("text/html").build()).get().getEntity());
-        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "GET").accept("text/xhtml").build()).get().getEntity());
+        assertEquals("XHTML",
+                app.apply(RequestContextBuilder.from("/a/b", "GET").accept("text/xhtml").build()).get().getEntity());
     }
 
     @Test
     public void testConsumeProduceSimpleBean() throws Exception {
         ApplicationHandler app = createApplication(ConsumeProduceSimpleBean.class);
 
-        assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/html").accept("text/html").build()).get().getEntity());
-        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/xhtml").accept("text/xhtml").build()).get().getEntity());
+        assertEquals("HTML",
+                app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/html").accept("text/html").build())
+                        .get().getEntity());
+        assertEquals("XHTML",
+                app.apply(RequestContextBuilder.from("/a/b", "POST").entity("").type("text/xhtml").accept("text/xhtml").build())
+                        .get().getEntity());
         assertEquals("HTML", app.apply(RequestContextBuilder.from("/a/b", "GET").accept("text/html").build()).get().getEntity());
-        assertEquals("XHTML", app.apply(RequestContextBuilder.from("/a/b", "GET").accept("text/xhtml").build()).get().getEntity());
+        assertEquals("XHTML",
+                app.apply(RequestContextBuilder.from("/a/b", "GET").accept("text/xhtml").build()).get().getEntity());
     }
 
     @Path("/")
@@ -183,7 +191,8 @@ public class ConsumeProduceSimpleTest  {
     @Produces("text/plain")
     public static class ConsumeProduceWithParameters {
 
-        @Context HttpHeaders h;
+        @Context
+        HttpHeaders h;
 
         @POST
         @SuppressWarnings("UnusedParameters")
@@ -196,7 +205,9 @@ public class ConsumeProduceSimpleTest  {
     public void testProduceWithParameters() throws Exception {
         ApplicationHandler app = createApplication(ConsumeProduceWithParameters.class);
 
-        assertEquals("{a=b, c=d}", app.apply(RequestContextBuilder.from("/", "POST").entity("<html>content</html>").type("text/html;a=b;c=d").build()).get().getEntity());
+        assertEquals("{a=b, c=d}", app.apply(
+                RequestContextBuilder.from("/", "POST").entity("<html>content</html>").type("text/html;a=b;c=d").build()).get()
+                .getEntity());
     }
 
     @Path("/")
@@ -217,8 +228,8 @@ public class ConsumeProduceSimpleTest  {
     @Test
     public void testImplicitProduces() throws Exception {
         final ApplicationHandler application = createApplication(ImplicitProducesResource.class);
-        final ContainerResponse response = application.
-                apply(RequestContextBuilder.from("/", "GET").accept(MediaType.TEXT_PLAIN_TYPE).build()).get();
+        final ContainerResponse response = application
+                .apply(RequestContextBuilder.from("/", "GET").accept(MediaType.TEXT_PLAIN_TYPE).build()).get();
 
         assertEquals("text/plain", response.getEntity());
         assertEquals("text-plain", response.getHeaderString("HEAD"));

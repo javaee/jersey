@@ -60,25 +60,19 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- *
- *
  * @author Miroslav Fuksa
  */
 public class SecurityDigestAuthenticationITCase extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        ResourceConfig resourceConfig = new ResourceConfig(MyApplication.class);
-//        resourceConfig.register(new LoggingFilter(Logger.getLogger(SecurityDigestAuthenticationITCase.class.getName()),
-//                false));
-        return resourceConfig;
+        return new ResourceConfig(MyApplication.class);
     }
 
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
         return new ExternalTestContainerFactory();
     }
-
 
     @Override
     protected void configureClient(ClientConfig config) {
@@ -90,7 +84,8 @@ public class SecurityDigestAuthenticationITCase extends JerseyTest {
         _testResourceGet(HttpAuthenticationFeature.digest("homer", "Homer"));
         _testResourceGet(HttpAuthenticationFeature.universal("homer", "Homer"));
         _testResourceGet(HttpAuthenticationFeature.universalBuilder().credentialsForDigest("homer", "Homer").build());
-        _testResourceGet(HttpAuthenticationFeature.universalBuilder().credentialsForDigest("homer", "Homer").credentialsForBasic("aaa", "bbb").build());
+        _testResourceGet(HttpAuthenticationFeature.universalBuilder().credentialsForDigest("homer", "Homer")
+                .credentialsForBasic("aaa", "bbb").build());
     }
 
     public void _testResourceGet(HttpAuthenticationFeature feature) {
@@ -114,7 +109,6 @@ public class SecurityDigestAuthenticationITCase extends JerseyTest {
         Assert.assertEquals(401, response.getStatus());
     }
 
-
     @Test
     public void testResourcePost() {
         _testResourcePost(HttpAuthenticationFeature.digest("homer", "Homer"));
@@ -130,13 +124,11 @@ public class SecurityDigestAuthenticationITCase extends JerseyTest {
         Assert.assertEquals("post-helloworld-homer/scheme:DIGEST", response.readEntity(String.class));
     }
 
-
     @Test
     public void testResourceSubGet403() {
         _testResourceSubGet403(HttpAuthenticationFeature.digest("homer", "Homer"));
         _testResourceSubGet403(HttpAuthenticationFeature.universal("homer", "Homer"));
     }
-
 
     public void _testResourceSubGet403(HttpAuthenticationFeature feature) {
         final Response response = target().path("rest/resource/sub")
@@ -188,7 +180,6 @@ public class SecurityDigestAuthenticationITCase extends JerseyTest {
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("homer/scheme:DIGEST", response.readEntity(String.class));
 
-
         response = target.request().get();
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("homer/scheme:DIGEST", response.readEntity(String.class));
@@ -204,6 +195,5 @@ public class SecurityDigestAuthenticationITCase extends JerseyTest {
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("locator-homer/scheme:DIGEST", response.readEntity(String.class));
     }
-
 
 }

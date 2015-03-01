@@ -69,6 +69,7 @@ import static org.junit.Assert.fail;
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 public class AsyncResourceTest extends JerseyTest {
+
     private static final Logger LOGGER = Logger.getLogger(AsyncResourceTest.class.getName());
 
     @Override
@@ -82,7 +83,8 @@ public class AsyncResourceTest extends JerseyTest {
 
     @Test
     public void testFireAndForgetChatResource() throws InterruptedException {
-        executeChatTest(target().path(App.ASYNC_MESSAGING_FIRE_N_FORGET_PATH), FireAndForgetChatResource.POST_NOTIFICATION_RESPONSE);
+        executeChatTest(target().path(App.ASYNC_MESSAGING_FIRE_N_FORGET_PATH),
+                FireAndForgetChatResource.POST_NOTIFICATION_RESPONSE);
     }
 
     @Test
@@ -327,7 +329,8 @@ public class AsyncResourceTest extends JerseyTest {
                         return o1.getKey().compareTo(o2.getKey());
                     }
                 });
-        StringBuilder messageBuilder = new StringBuilder("GET responses received: ").append(responseEntryList.size()).append("\n");
+        StringBuilder messageBuilder = new StringBuilder("GET responses received: ").append(responseEntryList.size())
+                .append("\n");
         for (Map.Entry<Integer, String> getResponseEntry : responseEntryList) {
             messageBuilder.append(String.format("GET response for message %02d: ", getResponseEntry.getKey()))
                     .append(getResponseEntry.getValue()).append('\n');
@@ -341,6 +344,5 @@ public class AsyncResourceTest extends JerseyTest {
         }
         assertEquals(MAX_MESSAGES, getResponses.size());
     }
-
 
 }

@@ -432,8 +432,8 @@ public class ApplicationHandlerTest {
 
         @Override
         public boolean configure(final FeatureContext context) {
-            final String property = context.getConfiguration().getProperty("foo") != null ?
-                    (String) context.getConfiguration().getProperty("foo") : "baz";
+            final String property = context.getConfiguration().getProperty("foo") != null
+                    ? (String) context.getConfiguration().getProperty("foo") : "baz";
 
             context.register(new ReaderInterceptor() {
                 @Override
@@ -513,8 +513,9 @@ public class ApplicationHandlerTest {
 
         @Override
         public Response toResponse(final Throwable exception) {
-            if ((exception instanceof InternalServerErrorException && exception.getCause() instanceof
-                    MessageBodyProviderNotFoundException) || (exception instanceof WebApplicationException)) {
+            if ((exception instanceof InternalServerErrorException
+                         && exception.getCause() instanceof MessageBodyProviderNotFoundException)
+                    || (exception instanceof WebApplicationException)) {
                 return Response.ok().entity("bar").build();
             } else if (exception instanceof MappableException || exception instanceof RuntimeException) {
                 return Response.ok().entity(new ResponseErrorEntity("bar")).type("foo/bar").build();

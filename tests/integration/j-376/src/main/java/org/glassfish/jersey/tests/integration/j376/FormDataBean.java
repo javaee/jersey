@@ -39,27 +39,27 @@
  */
 package org.glassfish.jersey.tests.integration.j376;
 
+import javax.ws.rs.FormParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.Size;
-import javax.ws.rs.FormParam;
-
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
-
+import javax.validation.constraints.Size;
 
 /**
  * Test bean containingboth JAX-RS and CDI injection points.
  */
 @RequestScoped
 public class FormDataBean {
+
     private String injectedPath = null;
 
     @NotNull
-    @Size(min=4)
+    @Size(min = 4)
     @FormParam("name")
     private String name;
 

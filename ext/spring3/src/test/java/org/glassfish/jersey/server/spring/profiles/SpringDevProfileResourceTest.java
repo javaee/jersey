@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,9 +45,9 @@ import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
 import org.glassfish.jersey.test.JerseyTest;
+
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 public class SpringDevProfileResourceTest extends JerseyTest {
@@ -55,7 +55,8 @@ public class SpringDevProfileResourceTest extends JerseyTest {
     @Override
     protected Application configure() {
         System.setProperty("spring.profiles.active", "dev");
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("org.glassfish.jersey.server.spring.profiles");
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
+                "org.glassfish.jersey.server.spring.profiles");
         return new ResourceConfig()
                 .register(RequestContextFilter.class)
                 .register(LoggingFilter.class)

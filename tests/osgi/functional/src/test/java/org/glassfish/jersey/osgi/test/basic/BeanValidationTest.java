@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -78,17 +78,17 @@ public class BeanValidationTest {
 
     private static final String CONTEXT = "/jersey";
 
-    private static final URI baseUri = UriBuilder.
-            fromUri("http://localhost").
-            port(Helper.getPort()).
-            path(CONTEXT).build();
+    private static final URI baseUri = UriBuilder.fromUri("http://localhost")
+            .port(Helper.getPort())
+            .path(CONTEXT).build();
 
     @Configuration
     public static Option[] configuration() {
         List<Option> options = Helper.getCommonOsgiOptions();
 
         options.addAll(Helper.expandedList(
-//                PaxRunnerOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"), //for debug purposes
+                // for debug purposes
+                // PaxRunnerOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
 
                 // validation
                 mavenBundle().groupId("org.glassfish.jersey.ext").artifactId("jersey-bean-validation").versionAsInProject(),
@@ -123,7 +123,9 @@ public class BeanValidationTest {
         _test(400, false, true);
     }
 
-    protected void _test(final int expectedResponseCode, final boolean registerFeature, final boolean disableMetainfServicesLookup) {
+    protected void _test(final int expectedResponseCode,
+                         final boolean registerFeature,
+                         final boolean disableMetainfServicesLookup) {
         final ResourceConfig resourceConfig = new ResourceConfig(BeanValidationResource.class);
         if (registerFeature) {
             resourceConfig.register(ValidationFeature.class);
@@ -141,19 +143,17 @@ public class BeanValidationTest {
         form.asMap().add("formParam", formValue);
 
         final Client client = ClientBuilder.newClient();
-        final String entity = client.
-                target(baseUri).
-                path("/bean-validation").
-                request().
-                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
+        final String entity = client.target(baseUri)
+                .path("/bean-validation")
+                .request()
+                .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
 
         assertEquals(formValue, entity);
 
-        final Response response = client.
-                target(baseUri).
-                path("/bean-validation").
-                request().
-                post(Entity.entity(new Form(), MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        final Response response = client.target(baseUri)
+                .path("/bean-validation")
+                .request()
+                .post(Entity.entity(new Form(), MediaType.APPLICATION_FORM_URLENCODED_TYPE));
 
         assertEquals(expectedResponseCode, response.getStatus());
 

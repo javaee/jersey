@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -73,7 +73,7 @@ public class UriInfoMatchedUrisTest {
         @GET
         @Path("bar")
         public String getRootBar(@Context UriInfo uriInfo) {
-            assertMatchedUris(uriInfo, "bar","");
+            assertMatchedUris(uriInfo, "bar", "");
             return "rootbar";
         }
 
@@ -188,35 +188,47 @@ public class UriInfoMatchedUrisTest {
         ApplicationHandler app = createApplication(Resource.class, RootPathResource.class);
 
         ContainerResponse responseContext;
-        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/", "GET").build()).get();
+        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/", "GET").build())
+                .get();
         assertEquals(200, responseContext.getStatus());
         assertEquals("root", responseContext.getEntity());
 
-        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/bar", "GET").build()).get();
+        responseContext = app
+                .apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/bar", "GET").build()).get();
         assertEquals(200, responseContext.getStatus());
         assertEquals("rootbar", responseContext.getEntity());
 
-        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/baz", "GET").build()).get();
+        responseContext = app
+                .apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/baz", "GET").build()).get();
         assertEquals(200, responseContext.getStatus());
         assertEquals("rootbaz", responseContext.getEntity());
 
-        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/baz/bar", "GET").build()).get();
+        responseContext = app
+                .apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/baz/bar", "GET").build())
+                .get();
         assertEquals(200, responseContext.getStatus());
         assertEquals("rootbazbar", responseContext.getEntity());
 
-        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo", "GET").build()).get();
+        responseContext = app
+                .apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo", "GET").build()).get();
         assertEquals(200, responseContext.getStatus());
         assertEquals("foo", responseContext.getEntity());
 
-        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo/bar", "GET").build()).get();
+        responseContext = app
+                .apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo/bar", "GET").build())
+                .get();
         assertEquals(200, responseContext.getStatus());
         assertEquals("foobar", responseContext.getEntity());
 
-        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo/baz", "GET").build()).get();
+        responseContext = app
+                .apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo/baz", "GET").build())
+                .get();
         assertEquals(200, responseContext.getStatus());
         assertEquals("foobaz", responseContext.getEntity());
 
-        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo/baz/bar", "GET").build()).get();
+        responseContext = app
+                .apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo/baz/bar", "GET").build())
+                .get();
         assertEquals(200, responseContext.getStatus());
         assertEquals("foobazbar", responseContext.getEntity());
     }

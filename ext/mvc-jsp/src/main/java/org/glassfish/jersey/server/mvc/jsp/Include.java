@@ -106,8 +106,8 @@ public class Include extends SimpleTagSupport {
 
     public void doTag() throws JspException, IOException {
         final JspContext jspContext = getJspContext();
-        final Class<?> resolvingClass = (Class<?>) jspContext.getAttribute(RequestDispatcherWrapper.RESOLVING_CLASS_ATTRIBUTE_NAME,
-                PageContext.REQUEST_SCOPE);
+        final Class<?> resolvingClass = (Class<?>) jspContext
+                .getAttribute(RequestDispatcherWrapper.RESOLVING_CLASS_ATTRIBUTE_NAME, PageContext.REQUEST_SCOPE);
         final String basePath = (String) jspContext.getAttribute(RequestDispatcherWrapper.BASE_PATH_ATTRIBUTE_NAME,
                 PageContext.REQUEST_SCOPE);
 
@@ -127,7 +127,7 @@ public class Include extends SimpleTagSupport {
                         final HttpServletResponse response = (HttpServletResponse) getPageObject(PageContext.RESPONSE);
 
                         dispatcher.include(request,
-                                new Wrapper(response,  new PrintWriter(jspContext.getOut())));
+                                new Wrapper(response, new PrintWriter(jspContext.getOut())));
                     } catch (ServletException e) {
                         throw new JspException(e);
                     }
@@ -138,18 +138,18 @@ public class Include extends SimpleTagSupport {
 
         throw new JspException(LocalizationMessages.UNABLE_TO_FIND_PAGE_FOR_RESOLVING_CLASS(page, resolvingClass));
     }
-}
 
-class Wrapper extends HttpServletResponseWrapper {
+    class Wrapper extends HttpServletResponseWrapper {
 
-    private final PrintWriter writer;
+        private final PrintWriter writer;
 
-    Wrapper(HttpServletResponse httpServletResponse, PrintWriter w) {
-        super(httpServletResponse);
-        this.writer = w;
-    }
+        Wrapper(HttpServletResponse httpServletResponse, PrintWriter w) {
+            super(httpServletResponse);
+            this.writer = w;
+        }
 
-    public PrintWriter getWriter() throws IOException {
-        return writer;
+        public PrintWriter getWriter() throws IOException {
+            return writer;
+        }
     }
 }

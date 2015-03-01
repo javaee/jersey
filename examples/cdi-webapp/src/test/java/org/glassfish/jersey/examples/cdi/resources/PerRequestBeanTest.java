@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,13 +45,11 @@ import java.util.List;
 import javax.ws.rs.client.WebTarget;
 
 import org.junit.Test;
-
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.startsWith;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test for the request scoped managed bean resource.
@@ -63,15 +61,15 @@ public class PerRequestBeanTest extends CdiTest {
 
     @Parameterized.Parameters
     public static List<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
-            {"gamma", "delta"}
-            ,{"CC C", "D DD"}
-            ,{"d", "c"}
-            ,{"@^&", "?!:"}
+        return Arrays.asList(new Object[][] {
+                {"gamma", "delta"},
+                {"CC C", "D DD"},
+                {"d", "c"},
+                {"@^&", "?!:"}
         });
-    };
+    }
 
-    final String c,d;
+    final String c, d;
 
     /**
      * Create a new test case based on the above defined parameters.

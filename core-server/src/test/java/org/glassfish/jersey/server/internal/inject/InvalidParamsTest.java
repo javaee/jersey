@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,6 +66,7 @@ public class InvalidParamsTest {
     }
 
     public static class ParamEntity {
+
         public static ParamEntity fromString(String arg) {
             return new ParamEntity();
         }
@@ -101,21 +102,23 @@ public class InvalidParamsTest {
         }
     }
 
-
     @Test
     public void testInvalidPathParam() throws Exception {
-        ContainerResponse responseContext = createApplication(ResourceInvalidParams.class).apply(RequestContextBuilder.from("/invalid/path/param", "GET").build()).get();
+        ContainerResponse responseContext = createApplication(ResourceInvalidParams.class)
+                .apply(RequestContextBuilder.from("/invalid/path/param", "GET").build()).get();
         // returned param is null -> 204 NO CONTENT
         assertEquals(204, responseContext.getStatus());
     }
 
     public static class FaultyParamEntityWAE {
+
         public static FaultyParamEntityWAE fromString(String arg) {
             throw new WebApplicationException(500);
         }
     }
 
     public static class WebApplicationExceptionMapper implements ExceptionMapper<WebApplicationException> {
+
         @Override
         public Response toResponse(WebApplicationException exception) {
             return Response.status(500).entity("caught").build();
@@ -135,7 +138,8 @@ public class InvalidParamsTest {
 
     @Test
     public void testInvalidQueryParamParamWAE() throws Exception {
-        ContainerResponse responseContext = createApplication(ResourceWithFaultyParamEntityParamWAE.class, WebApplicationExceptionMapper.class)
+        ContainerResponse responseContext = createApplication(ResourceWithFaultyParamEntityParamWAE.class,
+                WebApplicationExceptionMapper.class)
                 .apply(RequestContextBuilder.from("/invalid/path/param?arg4=test", "GET").build()).get();
 
         assertEquals(500, responseContext.getStatus());
@@ -158,7 +162,8 @@ public class InvalidParamsTest {
 
     @Test
     public void testInvalidQueryParamFieldWAE() throws Exception {
-        ContainerResponse responseContext = createApplication(ResourceWithFaultyParamEntityFieldWAE.class, WebApplicationExceptionMapper.class)
+        ContainerResponse responseContext = createApplication(ResourceWithFaultyParamEntityFieldWAE.class,
+                WebApplicationExceptionMapper.class)
                 .apply(RequestContextBuilder.from("/invalid/path/param?arg4=test", "GET").build()).get();
 
         assertEquals(500, responseContext.getStatus());
@@ -166,6 +171,7 @@ public class InvalidParamsTest {
     }
 
     public static class FaultyParamEntityISE {
+
         public static FaultyParamEntityISE fromString(String arg) {
             throw new IllegalStateException("error");
         }

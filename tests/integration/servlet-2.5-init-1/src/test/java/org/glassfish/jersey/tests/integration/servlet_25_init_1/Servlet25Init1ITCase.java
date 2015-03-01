@@ -85,7 +85,10 @@ public class Servlet25Init1ITCase extends JerseyTest {
     @Test
     public void testHelloWorldAtWrongPath() {
         Response r = target().path("application_path/helloworld").request().get();
-        assertTrue("Request to application_path/helloworld should have failed, but did not. That means two applications are registered.", r.getStatus() >= 400);
+        assertTrue(
+                "Request to application_path/helloworld should have failed, but did not. That means two applications are "
+                        + "registered.",
+                r.getStatus() >= 400);
     }
 
     @Test

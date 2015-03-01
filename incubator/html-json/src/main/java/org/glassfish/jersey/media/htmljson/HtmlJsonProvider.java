@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,19 +48,18 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.client.WebTarget;
-import net.java.html.BrwsrCtx;
 
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.util.lookup.ServiceProviders;
 
+import net.java.html.BrwsrCtx;
 import net.java.html.json.Model;
 import net.java.html.json.Models;
 import net.java.html.json.Property;
@@ -105,10 +104,7 @@ import net.java.html.json.Property;
         @ServiceProvider(service = MessageBodyWriter.class),
         @ServiceProvider(service = MessageBodyReader.class)
 })
-public final class HtmlJsonProvider
-implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
-
-    private static final Logger LOG = Logger.getLogger(HtmlJsonProvider.class.getName());
+public final class HtmlJsonProvider implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
 
     @Override
     public boolean isWriteable(Class clazz, Type type, Annotation[] antns, MediaType mt) {
@@ -137,12 +133,13 @@ implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
 
     @Override
     public void writeTo(Object t, Class type, Type type1, Annotation[] antns, MediaType mt, MultivaluedMap mm, OutputStream out)
-    throws IOException, WebApplicationException {
+            throws IOException, WebApplicationException {
         dump(t, out);
     }
+
     private void dump(Object t, OutputStream out) throws IOException {
         if (t instanceof Object[]) {
-            Object[] arr = (Object[])t;
+            Object[] arr = (Object[]) t;
             out.write('[');
             for (int i = 0; i < arr.length; i++) {
                 if (i > 0) {
@@ -168,20 +165,18 @@ implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
                            InputStream in) throws IOException, WebApplicationException {
         BrwsrCtx def = BrwsrCtx.findDefault(HtmlJsonProvider.class);
         if (clazz.isArray()) {
-            List<Object> res = new ArrayList<Object>();
+            List<Object> res = new ArrayList<>();
             final Class<?> cmp = clazz.getComponentType();
             Models.parse(def, cmp, in, res);
             Object[] arr = (Object[]) Array.newInstance(cmp, res.size());
             return res.toArray(arr);
         }
-        if (
-            clazz.isAssignableFrom(java.util.List.class) &&
-            type instanceof ParameterizedType &&
-            ((ParameterizedType)type).getActualTypeArguments().length == 1 &&
-            ((ParameterizedType)type).getActualTypeArguments()[0] instanceof Class
-        ) {
-            List<Object> res = new ArrayList<Object>();
-            final Class<?> cmp = (Class<?>) ((ParameterizedType)type).getActualTypeArguments()[0];
+        if (clazz.isAssignableFrom(java.util.List.class)
+                && type instanceof ParameterizedType
+                && ((ParameterizedType) type).getActualTypeArguments().length == 1
+                && ((ParameterizedType) type).getActualTypeArguments()[0] instanceof Class) {
+            List<Object> res = new ArrayList<>();
+            final Class<?> cmp = (Class<?>) ((ParameterizedType) type).getActualTypeArguments()[0];
             Models.parse(def, cmp, in, res);
             return res;
         }

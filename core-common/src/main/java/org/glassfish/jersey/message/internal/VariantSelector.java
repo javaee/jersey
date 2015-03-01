@@ -111,17 +111,17 @@ public final class VariantSelector {
             new DimensionChecker<AcceptableMediaType, MediaType>() {
 
                 @Override
-                public MediaType getDimension(VariantHolder v) {
+                public MediaType getDimension(final VariantHolder v) {
                     return v.v.getMediaType();
                 }
 
                 @Override
-                public boolean isCompatible(AcceptableMediaType t, MediaType u) {
+                public boolean isCompatible(final AcceptableMediaType t, final MediaType u) {
                     return t.isCompatible(u);
                 }
 
                 @Override
-                public int getQualitySource(VariantHolder v, MediaType u) {
+                public int getQualitySource(final VariantHolder v, final MediaType u) {
                     return v.mediaTypeQs;
                 }
 
@@ -134,17 +134,17 @@ public final class VariantSelector {
             new DimensionChecker<AcceptableLanguageTag, Locale>() {
 
                 @Override
-                public Locale getDimension(VariantHolder v) {
+                public Locale getDimension(final VariantHolder v) {
                     return v.v.getLanguage();
                 }
 
                 @Override
-                public boolean isCompatible(AcceptableLanguageTag t, Locale u) {
+                public boolean isCompatible(final AcceptableLanguageTag t, final Locale u) {
                     return t.isCompatible(u);
                 }
 
                 @Override
-                public int getQualitySource(VariantHolder qsv, Locale u) {
+                public int getQualitySource(final VariantHolder qsv, final Locale u) {
                     return Quality.MINIMUM;
                 }
 
@@ -157,18 +157,18 @@ public final class VariantSelector {
             new DimensionChecker<AcceptableToken, String>() {
 
                 @Override
-                public String getDimension(VariantHolder v) {
-                    MediaType m = v.v.getMediaType();
+                public String getDimension(final VariantHolder v) {
+                    final MediaType m = v.v.getMediaType();
                     return (m != null) ? m.getParameters().get("charset") : null;
                 }
 
                 @Override
-                public boolean isCompatible(AcceptableToken t, String u) {
+                public boolean isCompatible(final AcceptableToken t, final String u) {
                     return t.isCompatible(u);
                 }
 
                 @Override
-                public int getQualitySource(VariantHolder qsv, String u) {
+                public int getQualitySource(final VariantHolder qsv, final String u) {
                     return Quality.MINIMUM;
                 }
 
@@ -181,17 +181,17 @@ public final class VariantSelector {
             new DimensionChecker<AcceptableToken, String>() {
 
                 @Override
-                public String getDimension(VariantHolder v) {
+                public String getDimension(final VariantHolder v) {
                     return v.v.getEncoding();
                 }
 
                 @Override
-                public boolean isCompatible(AcceptableToken t, String u) {
+                public boolean isCompatible(final AcceptableToken t, final String u) {
                     return t.isCompatible(u);
                 }
 
                 @Override
-                public int getQualitySource(VariantHolder qsv, String u) {
+                public int getQualitySource(final VariantHolder qsv, final String u) {
                     return Quality.MINIMUM;
                 }
 
@@ -212,10 +212,10 @@ public final class VariantSelector {
      * @param vary             output list of generated vary headers.
      */
     private static <T extends Qualified, U> LinkedList<VariantHolder> selectVariants(
-            List<VariantHolder> variantHolders,
-            List<T> acceptableValues,
-            DimensionChecker<T, U> dimensionChecker,
-            Set<String> vary) {
+            final List<VariantHolder> variantHolders,
+            final List<T> acceptableValues,
+            final DimensionChecker<T, U> dimensionChecker,
+            final Set<String> vary) {
         int cq = Quality.MINIMUM;
         int cqs = Quality.MINIMUM;
 
@@ -262,7 +262,7 @@ public final class VariantSelector {
 
         // Add all variants that are not compatible with this dimension
         // to the end
-        for (VariantHolder v : variantHolders) {
+        for (final VariantHolder v : variantHolders) {
             if (dimensionChecker.getDimension(v) == null) {
                 selected.add(v);
             }
@@ -275,11 +275,11 @@ public final class VariantSelector {
         private final Variant v;
         private final int mediaTypeQs;
 
-        public VariantHolder(Variant v) {
+        public VariantHolder(final Variant v) {
             this(v, Quality.DEFAULT);
         }
 
-        public VariantHolder(Variant v, int mediaTypeQs) {
+        public VariantHolder(final Variant v, final int mediaTypeQs) {
             this.v = v;
             this.mediaTypeQs = mediaTypeQs;
         }
@@ -287,12 +287,12 @@ public final class VariantSelector {
 
     private static LinkedList<VariantHolder> getVariantHolderList(final List<Variant> variants) {
         final LinkedList<VariantHolder> l = new LinkedList<VariantHolder>();
-        for (Variant v : variants) {
+        for (final Variant v : variants) {
             final MediaType mt = v.getMediaType();
             if (mt != null) {
-                if (mt instanceof QualitySourceMediaType || mt.getParameters().
-                        containsKey(Quality.QUALITY_SOURCE_PARAMETER_NAME)) {
-                    int qs = QualitySourceMediaType.getQualitySource(mt);
+                if (mt instanceof QualitySourceMediaType || mt.getParameters()
+                        .containsKey(Quality.QUALITY_SOURCE_PARAMETER_NAME)) {
+                    final int qs = QualitySourceMediaType.getQualitySource(mt);
                     l.add(new VariantHolder(v, qs));
                 } else {
                     l.add(new VariantHolder(v));
@@ -315,7 +315,9 @@ public final class VariantSelector {
      *                         into the response Vary header.
      * @return selected variant.
      */
-    public static Variant selectVariant(InboundMessageContext context, List<Variant> variants, Ref<String> varyHeaderValue) {
+    public static Variant selectVariant(final InboundMessageContext context,
+                                        final List<Variant> variants,
+                                        final Ref<String> varyHeaderValue) {
         final List<Variant> selectedVariants = selectVariants(context, variants, varyHeaderValue);
         return selectedVariants.isEmpty() ? null : selectedVariants.get(0);
     }
@@ -328,10 +330,12 @@ public final class VariantSelector {
      * @param varyHeaderValue an output reference of vary header value that should be put into the response Vary header.
      * @return possible variants.
      */
-    public static List<Variant> selectVariants(InboundMessageContext context, List<Variant> variants, Ref<String> varyHeaderValue) {
+    public static List<Variant> selectVariants(final InboundMessageContext context,
+                                               final List<Variant> variants,
+                                               final Ref<String> varyHeaderValue) {
         LinkedList<VariantHolder> vhs = getVariantHolderList(variants);
 
-        Set<String> vary = new HashSet<String>();
+        final Set<String> vary = new HashSet<String>();
         vhs = selectVariants(vhs, context.getQualifiedAcceptableMediaTypes(), MEDIA_TYPE_DC, vary);
         vhs = selectVariants(vhs, context.getQualifiedAcceptableLanguages(), LANGUAGE_TAG_DC, vary);
         vhs = selectVariants(vhs, context.getQualifiedAcceptCharset(), CHARSET_DC, vary);
@@ -340,14 +344,14 @@ public final class VariantSelector {
         if (vhs.isEmpty()) {
             return Collections.emptyList();
         } else {
-            StringBuilder varyHeader = new StringBuilder();
-            for (String v : vary) {
+            final StringBuilder varyHeader = new StringBuilder();
+            for (final String v : vary) {
                 if (varyHeader.length() > 0) {
                     varyHeader.append(',');
                 }
                 varyHeader.append(v);
             }
-            String varyValue = varyHeader.toString();
+            final String varyValue = varyHeader.toString();
             if (!varyValue.isEmpty()) {
                 varyHeaderValue.set(varyValue);
             }

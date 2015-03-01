@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,73 +63,73 @@ import org.junit.Test;
  */
 public class NonSuccessfulResponseTest extends JerseyTest {
 
-	  @Override
-	    protected Application configure() {
-	        return new ResourceConfig(TestResource.class);
-	    }
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(TestResource.class);
+    }
 
-	    @Path("resource")
-	    public static class TestResource {
+    @Path("resource")
+    public static class TestResource {
 
-	        @GET
-	        @Path("/{status}")
-	        public Response getXXX(@PathParam("status") int status) {
-	            return Response.status(status).entity("get").build();
-	        }
+        @GET
+        @Path("/{status}")
+        public Response getXXX(@PathParam("status") int status) {
+            return Response.status(status).entity("get").build();
+        }
 
-	        @POST
-	        @Path("/{status}")
-	        public Response postXXX(@PathParam("status") int status, String post) {
-	            return Response.status(status).entity(post).build();
-	        }
+        @POST
+        @Path("/{status}")
+        public Response postXXX(@PathParam("status") int status, String post) {
+            return Response.status(status).entity(post).build();
+        }
 
-	    }
+    }
 
-	    @Test
-	    public void testGet3XX() {
-			generalTestGet(302);
-	    }
+    @Test
+    public void testGet3XX() {
+        generalTestGet(302);
+    }
 
-	    @Test
-	    public void testPost3XX() {
-	        generalTestPost(302);
-	    }
+    @Test
+    public void testPost3XX() {
+        generalTestPost(302);
+    }
 
-	    @Test
-	    public void testGet4XX() {
-			generalTestGet(401);
-	    }
+    @Test
+    public void testGet4XX() {
+        generalTestGet(401);
+    }
 
-	    @Test
-	    public void testPost4XX() {
-	        generalTestPost(401);
-	    }
+    @Test
+    public void testPost4XX() {
+        generalTestPost(401);
+    }
 
-	    @Test
-	    public void testGet5XX() {
-			generalTestGet(500);
-	    }
+    @Test
+    public void testGet5XX() {
+        generalTestGet(500);
+    }
 
-	    @Test
-	    public void testPost5XX() {
-	        generalTestPost(500);
-	    }
+    @Test
+    public void testPost5XX() {
+        generalTestPost(500);
+    }
 
-	    private void generalTestGet(int status) {
-	    	WebTarget target = target("resource").path(Integer.toString(status));
-	    	SyncInvoker sync = target.request();
-	    	Response response = sync.get(Response.class);
-	    	Assert.assertEquals(status, response.getStatus());
-	    	Assert.assertEquals("get", response.readEntity(String.class));
-	    }
+    private void generalTestGet(int status) {
+        WebTarget target = target("resource").path(Integer.toString(status));
+        SyncInvoker sync = target.request();
+        Response response = sync.get(Response.class);
+        Assert.assertEquals(status, response.getStatus());
+        Assert.assertEquals("get", response.readEntity(String.class));
+    }
 
-		private void generalTestPost(int status) {
-			Entity<String> entity = Entity.entity("entity", MediaType.WILDCARD_TYPE);
-	        WebTarget target = target("resource").path(Integer.toString(status));
-	        SyncInvoker sync = target.request();
-	        Response response = sync.post(entity, Response.class);
-	        Assert.assertEquals(status, response.getStatus());
-	        Assert.assertEquals("entity", response.readEntity(String.class));
-		}
+    private void generalTestPost(int status) {
+        Entity<String> entity = Entity.entity("entity", MediaType.WILDCARD_TYPE);
+        WebTarget target = target("resource").path(Integer.toString(status));
+        SyncInvoker sync = target.request();
+        Response response = sync.post(entity, Response.class);
+        Assert.assertEquals(status, response.getStatus());
+        Assert.assertEquals("entity", response.readEntity(String.class));
+    }
 
 }

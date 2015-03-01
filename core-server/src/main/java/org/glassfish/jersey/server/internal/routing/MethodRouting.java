@@ -76,6 +76,6 @@ final class MethodRouting {
 
     @Override
     public String toString() {
-        return "{" + method + " -> " + routers +'}';
+        return "{" + method + " -> " + routers + '}';
     }
 }

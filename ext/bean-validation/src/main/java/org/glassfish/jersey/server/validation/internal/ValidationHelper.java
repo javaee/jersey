@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,16 +75,16 @@ public final class ValidationHelper {
         return Lists.transform(Lists.newArrayList(violation.getConstraintViolations()),
                 new Function<ConstraintViolation<?>, ValidationError>() {
 
-            @Override
-            public ValidationError apply(final ConstraintViolation<?> violation) {
-                return new ValidationError(
-                        violation.getMessage(),
-                        violation.getMessageTemplate(),
-                        getViolationPath(violation),
-                        getViolationInvalidValue(violation.getInvalidValue())
-                );
-            }
-        });
+                    @Override
+                    public ValidationError apply(final ConstraintViolation<?> violation) {
+                        return new ValidationError(
+                                violation.getMessage(),
+                                violation.getMessageTemplate(),
+                                getViolationPath(violation),
+                                getViolationInvalidValue(violation.getInvalidValue())
+                        );
+                    }
+                });
     }
 
     /**
@@ -100,23 +100,23 @@ public final class ValidationHelper {
 
         if (invalidValue.getClass().isArray()) {
             if (invalidValue instanceof Object[]) {
-                return Arrays.toString((Object[]) invalidValue);                
+                return Arrays.toString((Object[]) invalidValue);
             } else if (invalidValue instanceof boolean[]) {
-                return Arrays.toString((boolean[]) invalidValue);               
+                return Arrays.toString((boolean[]) invalidValue);
             } else if (invalidValue instanceof byte[]) {
-                return Arrays.toString((byte[]) invalidValue);              
+                return Arrays.toString((byte[]) invalidValue);
             } else if (invalidValue instanceof char[]) {
-                return Arrays.toString((char[]) invalidValue);              
+                return Arrays.toString((char[]) invalidValue);
             } else if (invalidValue instanceof double[]) {
-                return Arrays.toString((double[]) invalidValue);                
+                return Arrays.toString((double[]) invalidValue);
             } else if (invalidValue instanceof float[]) {
-                return Arrays.toString((float[]) invalidValue);             
+                return Arrays.toString((float[]) invalidValue);
             } else if (invalidValue instanceof int[]) {
-                return Arrays.toString((int[]) invalidValue);               
+                return Arrays.toString((int[]) invalidValue);
             } else if (invalidValue instanceof long[]) {
-                return Arrays.toString((long[]) invalidValue);              
+                return Arrays.toString((long[]) invalidValue);
             } else if (invalidValue instanceof short[]) {
-                return Arrays.toString((short[]) invalidValue);             
+                return Arrays.toString((short[]) invalidValue);
             }
         }
 

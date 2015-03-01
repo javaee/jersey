@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,6 +66,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceString {
+
         @GET
         public String doGet(@MatrixParam("arg1") String arg1,
                             @MatrixParam("arg2") String arg2, @MatrixParam("arg3") String arg3) {
@@ -89,6 +90,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringEmpty {
+
         @GET
         public String doGet(@MatrixParam("arg1") String arg1) {
             assertEquals("", arg1);
@@ -98,6 +100,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringAbsent {
+
         @GET
         public String doGet(@MatrixParam("arg1") String arg1) {
             assertEquals(null, arg1);
@@ -107,6 +110,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringList {
+
         @GET
         @Produces("application/stringlist")
         public String doGetString(@MatrixParam("args") List<String> args) {
@@ -131,6 +135,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListEmpty {
+
         @GET
         @Produces("application/stringlist")
         public String doGetString(@MatrixParam("args") List<String> args) {
@@ -144,6 +149,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringNullDefault {
+
         @GET
         public String doGet(@MatrixParam("arg1") String arg1,
                             @MatrixParam("arg2") String arg2, @MatrixParam("arg3") String arg3) {
@@ -156,6 +162,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringDefault {
+
         @GET
         public String doGet(
                 @MatrixParam("arg1") @DefaultValue("a") String arg1,
@@ -170,6 +177,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringDefaultOverride {
+
         @GET
         public String doGet(
                 @MatrixParam("arg1") @DefaultValue("a") String arg1,
@@ -184,6 +192,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListEmptyDefault {
+
         @GET
         @Produces("application/stringlist")
         public String doGetString(
@@ -203,6 +212,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListDefault {
+
         @GET
         @Produces("application/stringlist")
         public String doGetString(
@@ -223,6 +233,7 @@ public class MatrixParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListDefaultOverride {
+
         @GET
         @Produces("application/stringlist")
         public String doGetString(
@@ -269,9 +280,9 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/;arg1=a;arg2=b;arg3=c", "POST").
-                        entity("content").
-                        build()
+                RequestContextBuilder.from("/;arg1=a;arg2=b;arg3=c", "POST")
+                        .entity("content")
+                        .build()
         );
 
         assertEquals("content", responseContext.getEntity());
@@ -282,9 +293,9 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringList.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/;args=a;args=b;args=c", "GET").
-                        entity("content").
-                        build()
+                RequestContextBuilder.from("/;args=a;args=b;args=c", "GET")
+                        .entity("content")
+                        .build()
         ).getEntity());
     }
 
@@ -293,9 +304,9 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmpty.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/;args;args;args", "GET").
-                        accept("application/stringlist").
-                        build()
+                RequestContextBuilder.from("/;args;args;args", "GET")
+                        .accept("application/stringlist")
+                        .build()
         ).getEntity());
     }
 
@@ -304,9 +315,9 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringList.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/;args=a;args=b;args=c", "GET").
-                        accept("application/list").
-                        build()
+                RequestContextBuilder.from("/;args=a;args=b;args=c", "GET")
+                        .accept("application/list")
+                        .build()
         ).getEntity());
     }
 
@@ -329,8 +340,8 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringDefaultOverride.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/;arg1=d;arg2=e;arg3=f", "GET").
-                        build()
+                RequestContextBuilder.from("/;arg1=d;arg2=e;arg3=f", "GET")
+                        .build()
         ).getEntity());
     }
 
@@ -339,9 +350,9 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmptyDefault.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/stringlist").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/stringlist")
+                        .build()
         ).getEntity());
     }
 
@@ -350,9 +361,9 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmptyDefault.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/list").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/list")
+                        .build()
         ).getEntity());
     }
 
@@ -361,9 +372,9 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefault.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/stringlist").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/stringlist")
+                        .build()
         ).getEntity());
     }
 
@@ -372,9 +383,9 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefault.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/list").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/list")
+                        .build()
         ).getEntity());
     }
 
@@ -383,9 +394,9 @@ public class MatrixParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefaultOverride.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/;args=b", "GET").
-                        accept("application/list").
-                        build()
+                RequestContextBuilder.from("/;args=b", "GET")
+                        .accept("application/list")
+                        .build()
         ).getEntity());
     }
 }

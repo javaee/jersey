@@ -107,16 +107,17 @@ public class ExtendedWadlWebappOsgiTest {
     @Inject
     BundleContext bundleContext;
 
-    private final static Logger LOGGER = Logger.getLogger(ExtendedWadlWebappOsgiTest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ExtendedWadlWebappOsgiTest.class.getName());
 
     // we want to re-use the port number as set for Jersey test container to avoid CT port number clashes
     private static final String testContainerPort = System.getProperty(TestProperties.CONTAINER_PORT);
-    private static final int testPort = testContainerPort == null ? TestProperties.DEFAULT_CONTAINER_PORT : Integer.parseInt(testContainerPort);
+    private static final int testPort = testContainerPort == null
+            ? TestProperties.DEFAULT_CONTAINER_PORT : Integer.parseInt(testContainerPort);
 
-    private static final URI baseUri = UriBuilder.
-            fromUri("http://localhost").
-            port(testPort).
-            path("extended-wadl-webapp").build();
+    private static final URI baseUri = UriBuilder
+            .fromUri("http://localhost")
+            .port(testPort)
+            .path("extended-wadl-webapp").build();
 
     @Configuration
     public static Option[] configuration() {
@@ -184,16 +185,18 @@ public class ExtendedWadlWebappOsgiTest {
                                 .add(Items.class)
                                 .add(ObjectFactory.class)
                                 .add("application-doc.xml", ClassLoader.getSystemResourceAsStream("application-doc.xml"))
-                                .add("application-grammars.xml", ClassLoader.getSystemResourceAsStream("application-grammars.xml"))
+                                .add("application-grammars.xml",
+                                        ClassLoader.getSystemResourceAsStream("application-grammars.xml"))
                                 .add("resourcedoc.xml", ClassLoader.getSystemResourceAsStream("resourcedoc.xml"))
-                                .set("Export-Package", MyApplication.class.getPackage().getName() + "," + SampleWadlGeneratorConfig.class.getPackage().getName())
+                                .set("Export-Package",
+                                        MyApplication.class.getPackage().getName() + "," + SampleWadlGeneratorConfig.class
+                                                .getPackage().getName())
                                 .set("DynamicImport-Package", "*")
                                 .set("Bundle-SymbolicName", "webapp").build())
-        )
-        );
+        ));
         final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
         if (localRepository != null) {
-            options = new ArrayList<Option>(options);
+            options = new ArrayList<>(options);
             options.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository));
         }
         return options.toArray(new Option[options.size()]);
@@ -223,7 +226,8 @@ public class ExtendedWadlWebappOsgiTest {
 
         for (Bundle bundle : bundleContext.getBundles()) {
             if ("webapp".equals(bundle.getSymbolicName())) {
-                myClassLoader = bundle.loadClass("org.glassfish.jersey.examples.extendedwadl.resources.MyApplication").getClassLoader();
+                myClassLoader = bundle.loadClass("org.glassfish.jersey.examples.extendedwadl.resources.MyApplication")
+                        .getClassLoader();
                 break;
             }
         }
@@ -252,7 +256,8 @@ public class ExtendedWadlWebappOsgiTest {
         final ResourceConfig resourceConfig = createResourceConfig();
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
         final Client client = ClientBuilder.newClient();
-        final Response response = client.target(baseUri).path("application.wadl").request(MediaTypes.WADL_TYPE).buildGet().invoke();
+        final Response response = client.target(baseUri).path("application.wadl").request(MediaTypes.WADL_TYPE).buildGet()
+                .invoke();
 
         String wadl = response.readEntity(String.class);
         LOGGER.info("RESULT = " + wadl);
@@ -274,7 +279,8 @@ public class ExtendedWadlWebappOsgiTest {
         ClassLoader myClassLoader = this.getClass().getClassLoader();
         for (Bundle bundle : bundleContext.getBundles()) {
             if ("webapp".equals(bundle.getSymbolicName())) {
-                myClassLoader = bundle.loadClass("org.glassfish.jersey.examples.extendedwadl.resources.MyApplication").getClassLoader();
+                myClassLoader = bundle.loadClass("org.glassfish.jersey.examples.extendedwadl.resources.MyApplication")
+                        .getClassLoader();
                 break;
             }
         }
@@ -303,9 +309,6 @@ public class ExtendedWadlWebappOsgiTest {
         DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
         bf.setNamespaceAware(true);
         bf.setValidating(false);
-//        if (!SaxHelper.isXdkDocumentBuilderFactory(bf)) {
-//            bf.setXIncludeAware(false);
-//        }
         DocumentBuilder b = bf.newDocumentBuilder();
         Document document = b.parse(new ByteArrayInputStream(wadl.getBytes(Charset.forName("UTF-8"))));
         XPath xp = XPathFactory.newInstance().newXPath();

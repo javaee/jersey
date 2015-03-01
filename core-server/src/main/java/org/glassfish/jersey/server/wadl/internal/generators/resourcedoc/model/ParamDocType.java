@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,7 +51,7 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * The documentation type for params: method params, path params on a class etc.<br>
  * Created on: Jun 12, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -59,34 +59,34 @@ import javax.xml.bind.annotation.XmlType;
 
 })
 public class ParamDocType {
-    
+
     private String paramName;
     private String commentText;
 
     public ParamDocType() {
     }
-    
+
     public ParamDocType(String paramName, String commentText) {
         this.paramName = paramName;
         this.commentText = commentText;
     }
-    
+
     @XmlElementWrapper(name = "annotationDocs")
     protected List<AnnotationDocType> annotationDoc;
 
     public List<AnnotationDocType> getAnnotationDocs() {
         if (annotationDoc == null) {
-            annotationDoc = new ArrayList<AnnotationDocType>();
+            annotationDoc = new ArrayList<>();
         }
         return this.annotationDoc;
     }
 
     @XmlAnyElement(lax = true)
     private List<Object> any;
-    
+
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }
@@ -101,7 +101,7 @@ public class ParamDocType {
     /**
      * @param commentText the commentText to set
      */
-    public void setCommentText( String commentText ) {
+    public void setCommentText(String commentText) {
         this.commentText = commentText;
     }
 
@@ -115,7 +115,7 @@ public class ParamDocType {
     /**
      * @param paramName the className to set
      */
-    public void setParamName( String paramName ) {
+    public void setParamName(String paramName) {
         this.paramName = paramName;
     }
 }

@@ -138,7 +138,7 @@ public class JerseyInvocationTest {
             fail("ProcessingException expected.");
         } catch (final ProcessingException ex) {
             assertThat(ex.getCause().getClass(), anyOf(CoreMatchers.<Class<?>>equalTo(ProtocolException.class),
-                            CoreMatchers.<Class<?>>equalTo(ConnectException.class)));
+                    CoreMatchers.<Class<?>>equalTo(ConnectException.class)));
         }
 
         final Client c2 = ClientBuilder.newClient();
@@ -212,7 +212,7 @@ public class JerseyInvocationTest {
         final WebTarget target = client.target("http://localhost:8080/mypath");
 
         final Class<Response> responseType = null;
-        final String[] methods = new String[]{"GET", "PUT", "POST", "DELETE", "OPTIONS"};
+        final String[] methods = new String[] {"GET", "PUT", "POST", "DELETE", "OPTIONS"};
 
         for (final String method : methods) {
             final Invocation.Builder request = target.request();
@@ -343,7 +343,8 @@ public class JerseyInvocationTest {
 
         assertThat(callback.getThrowable(), CoreMatchers.instanceOf(ProcessingException.class));
         assertThat(callback.getThrowable().getCause(), CoreMatchers.instanceOf(IllegalArgumentException.class));
-        assertThat(callback.getThrowable().getCause().getMessage(), CoreMatchers.allOf(CoreMatchers.containsString
-                (MyUnboundCallback.class.getName()), CoreMatchers.containsString(InvocationCallback.class.getName())));
+        assertThat(callback.getThrowable().getCause().getMessage(), CoreMatchers
+                .allOf(CoreMatchers.containsString(MyUnboundCallback.class.getName()),
+                        CoreMatchers.containsString(InvocationCallback.class.getName())));
     }
 }

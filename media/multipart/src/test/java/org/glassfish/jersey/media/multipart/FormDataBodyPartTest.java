@@ -139,7 +139,7 @@ public class FormDataBodyPartTest extends BodyPartTest {
             fdbp = new FormDataBodyPart();
             fdbp.setName(null);
             fail("Name should be null settable!");
-        } catch(IllegalArgumentException argumentException) {
+        } catch (IllegalArgumentException argumentException) {
             // Expected result.
         }
     }

@@ -214,8 +214,8 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
             final Map<Class<?>, ResourceStatistics> classStats = Collections.unmodifiableMap(
                     Maps.transformValues(resourceClassStatistics, BUILDING_FUNCTION));
 
-            final ExecutionStatistics requestStats = requestStatisticsBuilder == null ?
-                    ExecutionStatisticsImpl.EMPTY : requestStatisticsBuilder.build();
+            final ExecutionStatistics requestStats = requestStatisticsBuilder == null
+                    ? ExecutionStatisticsImpl.EMPTY : requestStatisticsBuilder.build();
 
             return new MonitoringStatisticsImpl(
                     uriStats, classStats, requestStats,

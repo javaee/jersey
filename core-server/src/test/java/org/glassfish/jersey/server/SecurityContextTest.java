@@ -111,8 +111,8 @@ public class SecurityContextTest {
 
                         @Override
                         public boolean equals(Object obj) {
-                            return (obj instanceof Principal) &&
-                                    PRINCIPAL_NAME.equals(((Principal) obj).getName());
+                            return (obj instanceof Principal)
+                                    && PRINCIPAL_NAME.equals(((Principal) obj).getName());
                         }
 
                         @Override
@@ -193,8 +193,8 @@ public class SecurityContextTest {
 
                         @Override
                         public boolean equals(Object obj) {
-                            return (obj instanceof Principal) &&
-                                    PRINCIPAL_NAME_SECOND.equals(((Principal) obj).getName());
+                            return (obj instanceof Principal)
+                                    && PRINCIPAL_NAME_SECOND.equals(((Principal) obj).getName());
                         }
 
                         @Override

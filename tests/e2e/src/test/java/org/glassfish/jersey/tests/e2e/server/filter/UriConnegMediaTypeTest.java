@@ -90,7 +90,7 @@ public class UriConnegMediaTypeTest extends JerseyTest {
         return rc;
     }
 
-    public static abstract class Base {
+    public abstract static class Base {
         @GET
         @Produces("application/foo")
         public String doGetFoo(@Context HttpHeaders headers) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,7 +65,6 @@ public class PhotosResource {
     @Inject
     private OAuth1Signature oAuth1Signature;
 
-
     @GET
     @Produces("text/plain")
     public String handle(
@@ -75,8 +74,8 @@ public class PhotosResource {
 
         OAuthServerRequest osr = new OAuthServerRequest(request);
 
-        OAuth1Secrets secrets = new OAuth1Secrets().
-                consumerSecret("kd94hf93k423kf44").tokenSecret("pfkkdhi9sl3r4s00");
+        OAuth1Secrets secrets = new OAuth1Secrets()
+                .consumerSecret("kd94hf93k423kf44").tokenSecret("pfkkdhi9sl3r4s00");
 
         OAuth1Parameters params = new OAuth1Parameters().readRequest(osr);
 

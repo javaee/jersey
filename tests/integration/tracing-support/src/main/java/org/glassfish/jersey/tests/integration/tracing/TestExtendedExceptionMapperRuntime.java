@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,31 +39,29 @@
  */
 package org.glassfish.jersey.tests.integration.tracing;
 
-import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-@Priority(Priorities.USER+2)
+@Priority(Priorities.USER + 2)
 @Provider
 public class TestExtendedExceptionMapperRuntime implements ExtendedExceptionMapper<Throwable> {
 
     @Override
     public Response toResponse(Throwable throwable) {
-        //System.out.println("*** TestExtendedExceptionMapperRuntime.toResponse: " + throwable);
         return Response.status(500).build();
     }
 
     @Override
     public boolean isMappable(Throwable throwable) {
-        //System.out.println("*** TestExtendedExceptionMapperRuntime.isMappable");
-//        return (throwable instanceof RuntimeException); //too general check
         return (throwable instanceof RuntimeException) && !(throwable instanceof WebApplicationException);
     }
 }

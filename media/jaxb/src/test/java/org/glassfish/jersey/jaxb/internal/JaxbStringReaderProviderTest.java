@@ -65,11 +65,13 @@ import org.glassfish.jersey.model.internal.ComponentBag;
 import org.junit.Test;
 
 public class JaxbStringReaderProviderTest {
+
     @Test
     public void stringReaderDoesNotReadExternalDtds() {
 
         Provider<SAXParserFactory> saxParserFactoryProvider = new Provider<SAXParserFactory>() {
-            final SaxParserFactoryInjectionProvider spf = new SaxParserFactoryInjectionProvider(new CommonConfig(RuntimeType.SERVER, ComponentBag.INCLUDE_ALL));
+            final SaxParserFactoryInjectionProvider spf = new SaxParserFactoryInjectionProvider(
+                    new CommonConfig(RuntimeType.SERVER, ComponentBag.INCLUDE_ALL));
 
             @Override
             public SAXParserFactory get() {
@@ -77,14 +79,21 @@ public class JaxbStringReaderProviderTest {
             }
         };
 
-        JaxbStringReaderProvider.RootElementProvider provider = new JaxbStringReaderProvider.RootElementProvider(saxParserFactoryProvider, new Providers() {
+        JaxbStringReaderProvider.RootElementProvider provider = new JaxbStringReaderProvider.RootElementProvider(
+                saxParserFactoryProvider, new Providers() {
             @Override
-            public <T> MessageBodyReader<T> getMessageBodyReader(Class<T> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            public <T> MessageBodyReader<T> getMessageBodyReader(Class<T> type,
+                                                                 Type genericType,
+                                                                 Annotation[] annotations,
+                                                                 MediaType mediaType) {
                 return null;
             }
 
             @Override
-            public <T> MessageBodyWriter<T> getMessageBodyWriter(Class<T> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            public <T> MessageBodyWriter<T> getMessageBodyWriter(Class<T> type,
+                                                                 Type genericType,
+                                                                 Annotation[] annotations,
+                                                                 MediaType mediaType) {
                 return null;
             }
 

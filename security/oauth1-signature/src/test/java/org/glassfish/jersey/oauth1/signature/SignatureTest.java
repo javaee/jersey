@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,102 +67,102 @@ public class SignatureTest {
     private static final String SIGNATURE = "tR3+Ty81lMeYAr/Fid0kMTYa/WM=";
 
     private static final String RSA_PRIVKEY =
-            "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALRiMLAh9iimur8V" +
-                    "A7qVvdqxevEuUkW4K+2KdMXmnQbG9Aa7k7eBjK1S+0LYmVjPKlJGNXHDGuy5Fw/d" +
-                    "7rjVJ0BLB+ubPK8iA/Tw3hLQgXMRRGRXXCn8ikfuQfjUS1uZSatdLB81mydBETlJ" +
-                    "hI6GH4twrbDJCR2Bwy/XWXgqgGRzAgMBAAECgYBYWVtleUzavkbrPjy0T5FMou8H" +
-                    "X9u2AC2ry8vD/l7cqedtwMPp9k7TubgNFo+NGvKsl2ynyprOZR1xjQ7WgrgVB+mm" +
-                    "uScOM/5HVceFuGRDhYTCObE+y1kxRloNYXnx3ei1zbeYLPCHdhxRYW7T0qcynNmw" +
-                    "rn05/KO2RLjgQNalsQJBANeA3Q4Nugqy4QBUCEC09SqylT2K9FrrItqL2QKc9v0Z" +
-                    "zO2uwllCbg0dwpVuYPYXYvikNHHg+aCWF+VXsb9rpPsCQQDWR9TT4ORdzoj+Nccn" +
-                    "qkMsDmzt0EfNaAOwHOmVJ2RVBspPcxt5iN4HI7HNeG6U5YsFBb+/GZbgfBT3kpNG" +
-                    "WPTpAkBI+gFhjfJvRw38n3g/+UeAkwMI2TJQS4n8+hid0uus3/zOjDySH3XHCUno" +
-                    "cn1xOJAyZODBo47E+67R4jV1/gzbAkEAklJaspRPXP877NssM5nAZMU0/O/NGCZ+" +
-                    "3jPgDUno6WbJn5cqm8MqWhW1xGkImgRk+fkDBquiq4gPiT898jusgQJAd5Zrr6Q8" +
-                    "AO/0isr/3aa6O6NLQxISLKcPDk2NOccAfS/xOtfOz4sJYM3+Bs4Io9+dZGSDCA54" +
-                    "Lw03eHTNQghS0A==";
+            "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBALRiMLAh9iimur8V"
+                    + "A7qVvdqxevEuUkW4K+2KdMXmnQbG9Aa7k7eBjK1S+0LYmVjPKlJGNXHDGuy5Fw/d"
+                    + "7rjVJ0BLB+ubPK8iA/Tw3hLQgXMRRGRXXCn8ikfuQfjUS1uZSatdLB81mydBETlJ"
+                    + "hI6GH4twrbDJCR2Bwy/XWXgqgGRzAgMBAAECgYBYWVtleUzavkbrPjy0T5FMou8H"
+                    + "X9u2AC2ry8vD/l7cqedtwMPp9k7TubgNFo+NGvKsl2ynyprOZR1xjQ7WgrgVB+mm"
+                    + "uScOM/5HVceFuGRDhYTCObE+y1kxRloNYXnx3ei1zbeYLPCHdhxRYW7T0qcynNmw"
+                    + "rn05/KO2RLjgQNalsQJBANeA3Q4Nugqy4QBUCEC09SqylT2K9FrrItqL2QKc9v0Z"
+                    + "zO2uwllCbg0dwpVuYPYXYvikNHHg+aCWF+VXsb9rpPsCQQDWR9TT4ORdzoj+Nccn"
+                    + "qkMsDmzt0EfNaAOwHOmVJ2RVBspPcxt5iN4HI7HNeG6U5YsFBb+/GZbgfBT3kpNG"
+                    + "WPTpAkBI+gFhjfJvRw38n3g/+UeAkwMI2TJQS4n8+hid0uus3/zOjDySH3XHCUno"
+                    + "cn1xOJAyZODBo47E+67R4jV1/gzbAkEAklJaspRPXP877NssM5nAZMU0/O/NGCZ+"
+                    + "3jPgDUno6WbJn5cqm8MqWhW1xGkImgRk+fkDBquiq4gPiT898jusgQJAd5Zrr6Q8"
+                    + "AO/0isr/3aa6O6NLQxISLKcPDk2NOccAfS/xOtfOz4sJYM3+Bs4Io9+dZGSDCA54"
+                    + "Lw03eHTNQghS0A==";
     private static final String RSA_CERTIFICATE =
-            "-----BEGIN CERTIFICATE-----\n" +
-                    "MIIBpjCCAQ+gAwIBAgIBATANBgkqhkiG9w0BAQUFADAZMRcwFQYDVQQDDA5UZXN0\n" +
-                    "IFByaW5jaXBhbDAeFw03MDAxMDEwODAwMDBaFw0zODEyMzEwODAwMDBaMBkxFzAV\n" +
-                    "BgNVBAMMDlRlc3QgUHJpbmNpcGFsMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKB\n" +
-                    "gQC0YjCwIfYoprq/FQO6lb3asXrxLlJFuCvtinTF5p0GxvQGu5O3gYytUvtC2JlY\n" +
-                    "zypSRjVxwxrsuRcP3e641SdASwfrmzyvIgP08N4S0IFzEURkV1wp/IpH7kH41Etb\n" +
-                    "mUmrXSwfNZsnQRE5SYSOhh+LcK2wyQkdgcMv11l4KoBkcwIDAQABMA0GCSqGSIb3\n" +
-                    "DQEBBQUAA4GBAGZLPEuJ5SiJ2ryq+CmEGOXfvlTtEL2nuGtr9PewxkgnOjZpUy+d\n" +
-                    "4TvuXJbNQc8f4AMWL/tO9w0Fk80rWKp9ea8/df4qMq5qlFWlx6yOLQxumNOmECKb\n" +
-                    "WpkUQDIDJEoFUzKMVuJf4KO/FJ345+BNLGgbJ6WujreoM1X/gYfdnJ/J\n" +
-                    "-----END CERTIFICATE-----";
-    private static final String RSA_SIGNATURE = "jvTp/wX1TYtByB1m+Pbyo0lnCOLI" +
-            "syGCH7wke8AUs3BpnwZJtAuEJkvQL2/9n4s5wUmUl4aCI4BwpraNx4RtEXMe5qg5" +
-            "T1LVTGliMRpKasKsW//e+RinhejgCuzoH26dyF8iY2ZZ/5D1ilgeijhV/vBka5tw" +
-            "t399mXwaYdCwFYE=";
+            "-----BEGIN CERTIFICATE-----\n"
+                    + "MIIBpjCCAQ+gAwIBAgIBATANBgkqhkiG9w0BAQUFADAZMRcwFQYDVQQDDA5UZXN0\n"
+                    + "IFByaW5jaXBhbDAeFw03MDAxMDEwODAwMDBaFw0zODEyMzEwODAwMDBaMBkxFzAV\n"
+                    + "BgNVBAMMDlRlc3QgUHJpbmNpcGFsMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKB\n"
+                    + "gQC0YjCwIfYoprq/FQO6lb3asXrxLlJFuCvtinTF5p0GxvQGu5O3gYytUvtC2JlY\n"
+                    + "zypSRjVxwxrsuRcP3e641SdASwfrmzyvIgP08N4S0IFzEURkV1wp/IpH7kH41Etb\n"
+                    + "mUmrXSwfNZsnQRE5SYSOhh+LcK2wyQkdgcMv11l4KoBkcwIDAQABMA0GCSqGSIb3\n"
+                    + "DQEBBQUAA4GBAGZLPEuJ5SiJ2ryq+CmEGOXfvlTtEL2nuGtr9PewxkgnOjZpUy+d\n"
+                    + "4TvuXJbNQc8f4AMWL/tO9w0Fk80rWKp9ea8/df4qMq5qlFWlx6yOLQxumNOmECKb\n"
+                    + "WpkUQDIDJEoFUzKMVuJf4KO/FJ345+BNLGgbJ6WujreoM1X/gYfdnJ/J\n"
+                    + "-----END CERTIFICATE-----";
+    private static final String RSA_SIGNATURE = "jvTp/wX1TYtByB1m+Pbyo0lnCOLI"
+            + "syGCH7wke8AUs3BpnwZJtAuEJkvQL2/9n4s5wUmUl4aCI4BwpraNx4RtEXMe5qg5"
+            + "T1LVTGliMRpKasKsW//e+RinhejgCuzoH26dyF8iY2ZZ/5D1ilgeijhV/vBka5tw"
+            + "t399mXwaYdCwFYE=";
     private static final String RSA_SIGNATURE_ENCODED =
-            "jvTp%2FwX1TYtByB1m%2BPbyo0lnCOLIsyGCH7wke8AUs3BpnwZJtAuEJkvQL2%2" +
-                    "F9n4s5wUmUl4aCI4BwpraNx4RtEXMe5qg5T1LVTGliMRpKasKsW%2F%2Fe%2BRin" +
-                    "hejgCuzoH26dyF8iY2ZZ%2F5D1ilgeijhV%2FvBka5twt399mXwaYdCwFYE%3D";
+            "jvTp%2FwX1TYtByB1m%2BPbyo0lnCOLIsyGCH7wke8AUs3BpnwZJtAuEJkvQL2%2"
+                    + "F9n4s5wUmUl4aCI4BwpraNx4RtEXMe5qg5T1LVTGliMRpKasKsW%2F%2Fe%2BRin"
+                    + "hejgCuzoH26dyF8iY2ZZ%2F5D1ilgeijhV%2FvBka5twt399mXwaYdCwFYE%3D";
 
     private static final String RSA_DOCS_PRIVKEY =
-            "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCdiSpLJm3uMcZv" +
-                    "T3jUn3SThIb0SxFZTg+Iw5IlLR2B5xHprAni3SEhY0fvpXUEl/oWDIlk++0ni/wt" +
-                    "uJ2fdjeB1mT35kNdaKBojmyLMHwTc1zv1zaldXAACkhEraA0tUFSmudExDJ9pngB" +
-                    "ZuIkF/7fs6jhWnqoHGERvV9a+/imwoRKgYUrrN+tNO4CU68hJqReDKwDWS0hTrDV" +
-                    "wjECBcSHeZ92FrlBp5C+JFL56QvjdYdpN4QWBWVKD+t3YISdUiObl9f6zbGYeMcd" +
-                    "omNLlY0Yz9+yMRJhGZJJIx6ftQbg/Y9rWtsgKvHPgjSS+SCRBp8llZt8QZwAAEHP" +
-                    "qZeU4jBVAgMBAAECggEBAIXDNP0weUE6VHKpOUDY0CR98BU4NFfu9zO6U7prT1XA" +
-                    "vS37XT2bY4k1ApzSkcS/wqK8LGFppBnjO9IaowQGXeVKBNuVUffbYfDFlhatqXze" +
-                    "hLhFtenSCLKQCIMAJjr6+KdKTjrOmMyl79nI4RWiplCN/US0Ddf2mNl2QaRAtQXq" +
-                    "aTps02qMn0DrebMg3u8Fb7VGCaZ60LKafhDkeLrh9cdbMYZGy0sqZXxkQp/ygjE0" +
-                    "lc19fil6qPVF8s45+/BjeBHYFH3hvYRsPYoADsR63rkhP81ALqHZ1AMomvYP0d4w" +
-                    "d9KUfEgzcDRiv42Y7dZQB6acImJPl+nWppPQxJaJ61UCgYEAzqrxyxtRr8psILWZ" +
-                    "BeaEk6btEIM6t995hHHq6XYsRDmhg30r5V/lJ7u2rrKRWJaiaMPJUmK2autDAZkI" +
-                    "/HuhyOaOKMU8FJz+LIfWQD+UCDAdF737ywBctwGzq9nypi0xKj1OYQCTzxT1haTP" +
-                    "GVaDvcgHhwaqzT5ru+ITcTFuJIsCgYEAwyPdaQ2gwp5eOcCE791PyuCoRKDSPxzg" +
-                    "aL7vplFs9KW+oyKldIdsGA6GI4/23YdbYTbMSc1cjnQre/MffkHiqZk1ixiYICYj" +
-                    "yhMCVLz9m53fXmUTOO6w5WU77Ej9+gL02MPxbC0k/0dT07DVakiq2Vk7STqR/8kZ" +
-                    "ae6s3EPWOp8CgYA+VzByvP3qEhyFzWGodv288FiIZ515w66LNjXPULdPqTbATCzG" +
-                    "lyOv1Z7ombLgTygUhCKheGdgXzEqNTiRuNV3nZx6TeyupyDA3ATUApmr0p+j/soK" +
-                    "VUSia6AAEdFxMSaogC+5cQwlJkRdmPZjxUYeJE2o/GjfWpny5eJJfcikuwKBgALO" +
-                    "CyqtZXgmqpgN6ltARRtXa1PBNARwN9GJnQw482X40+qoXtRz9dvKqabtNNEuVuPo" +
-                    "07rj1sa9aLqZXgSEket6Jkjfi6A6rB0FdO0e4k5QUJucvE//Lk+9ysS0r+HeFQLg" +
-                    "niG97GA2+D98tTSX4szI+Y8t5ldU3qalJZrs5rFlAoGBAMZNURtw6Cx+X4zGxiLp" +
-                    "wfovxxBkWNjQcssjYpInke/rLDHMQ2dwDTv/DSe9SFXYMh7+pDAppCoKRIFoXmfL" +
-                    "50CBFi0ZaL/1EqDFOyVQyLdOPVLv665JcoKWeZj8b+7H25NGCo7nDA6GwVOWq2Ej" +
-                    "d3RqXk6nnaeEMcKMBsZQXPqS";
+            "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCdiSpLJm3uMcZv"
+                    + "T3jUn3SThIb0SxFZTg+Iw5IlLR2B5xHprAni3SEhY0fvpXUEl/oWDIlk++0ni/wt"
+                    + "uJ2fdjeB1mT35kNdaKBojmyLMHwTc1zv1zaldXAACkhEraA0tUFSmudExDJ9pngB"
+                    + "ZuIkF/7fs6jhWnqoHGERvV9a+/imwoRKgYUrrN+tNO4CU68hJqReDKwDWS0hTrDV"
+                    + "wjECBcSHeZ92FrlBp5C+JFL56QvjdYdpN4QWBWVKD+t3YISdUiObl9f6zbGYeMcd"
+                    + "omNLlY0Yz9+yMRJhGZJJIx6ftQbg/Y9rWtsgKvHPgjSS+SCRBp8llZt8QZwAAEHP"
+                    + "qZeU4jBVAgMBAAECggEBAIXDNP0weUE6VHKpOUDY0CR98BU4NFfu9zO6U7prT1XA"
+                    + "vS37XT2bY4k1ApzSkcS/wqK8LGFppBnjO9IaowQGXeVKBNuVUffbYfDFlhatqXze"
+                    + "hLhFtenSCLKQCIMAJjr6+KdKTjrOmMyl79nI4RWiplCN/US0Ddf2mNl2QaRAtQXq"
+                    + "aTps02qMn0DrebMg3u8Fb7VGCaZ60LKafhDkeLrh9cdbMYZGy0sqZXxkQp/ygjE0"
+                    + "lc19fil6qPVF8s45+/BjeBHYFH3hvYRsPYoADsR63rkhP81ALqHZ1AMomvYP0d4w"
+                    + "d9KUfEgzcDRiv42Y7dZQB6acImJPl+nWppPQxJaJ61UCgYEAzqrxyxtRr8psILWZ"
+                    + "BeaEk6btEIM6t995hHHq6XYsRDmhg30r5V/lJ7u2rrKRWJaiaMPJUmK2autDAZkI"
+                    + "/HuhyOaOKMU8FJz+LIfWQD+UCDAdF737ywBctwGzq9nypi0xKj1OYQCTzxT1haTP"
+                    + "GVaDvcgHhwaqzT5ru+ITcTFuJIsCgYEAwyPdaQ2gwp5eOcCE791PyuCoRKDSPxzg"
+                    + "aL7vplFs9KW+oyKldIdsGA6GI4/23YdbYTbMSc1cjnQre/MffkHiqZk1ixiYICYj"
+                    + "yhMCVLz9m53fXmUTOO6w5WU77Ej9+gL02MPxbC0k/0dT07DVakiq2Vk7STqR/8kZ"
+                    + "ae6s3EPWOp8CgYA+VzByvP3qEhyFzWGodv288FiIZ515w66LNjXPULdPqTbATCzG"
+                    + "lyOv1Z7ombLgTygUhCKheGdgXzEqNTiRuNV3nZx6TeyupyDA3ATUApmr0p+j/soK"
+                    + "VUSia6AAEdFxMSaogC+5cQwlJkRdmPZjxUYeJE2o/GjfWpny5eJJfcikuwKBgALO"
+                    + "CyqtZXgmqpgN6ltARRtXa1PBNARwN9GJnQw482X40+qoXtRz9dvKqabtNNEuVuPo"
+                    + "07rj1sa9aLqZXgSEket6Jkjfi6A6rB0FdO0e4k5QUJucvE//Lk+9ysS0r+HeFQLg"
+                    + "niG97GA2+D98tTSX4szI+Y8t5ldU3qalJZrs5rFlAoGBAMZNURtw6Cx+X4zGxiLp"
+                    + "wfovxxBkWNjQcssjYpInke/rLDHMQ2dwDTv/DSe9SFXYMh7+pDAppCoKRIFoXmfL"
+                    + "50CBFi0ZaL/1EqDFOyVQyLdOPVLv665JcoKWeZj8b+7H25NGCo7nDA6GwVOWq2Ej"
+                    + "d3RqXk6nnaeEMcKMBsZQXPqS";
     private static final String RSA_DOCS_CERTIFICATE =
-            "-----BEGIN CERTIFICATE-----\n" +
-                    "MIIDBjCCAe4CCQDqb5RRJpQJ7DANBgkqhkiG9w0BAQUFADBFMQswCQYDVQQGEwJB\n" +
-                    "VTETMBEGA1UECBMKU29tZS1TdGF0ZTEhMB8GA1UEChMYSW50ZXJuZXQgV2lkZ2l0\n" +
-                    "cyBQdHkgTHRkMB4XDTE0MDMwNTE0MDAyNVoXDTI0MDMwMjE0MDAyNVowRTELMAkG\n" +
-                    "A1UEBhMCQVUxEzARBgNVBAgTClNvbWUtU3RhdGUxITAfBgNVBAoTGEludGVybmV0\n" +
-                    "IFdpZGdpdHMgUHR5IEx0ZDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB\n" +
-                    "AJ2JKksmbe4xxm9PeNSfdJOEhvRLEVlOD4jDkiUtHYHnEemsCeLdISFjR++ldQSX\n" +
-                    "+hYMiWT77SeL/C24nZ92N4HWZPfmQ11ooGiObIswfBNzXO/XNqV1cAAKSEStoDS1\n" +
-                    "QVKa50TEMn2meAFm4iQX/t+zqOFaeqgcYRG9X1r7+KbChEqBhSus36007gJTryEm\n" +
-                    "pF4MrANZLSFOsNXCMQIFxId5n3YWuUGnkL4kUvnpC+N1h2k3hBYFZUoP63dghJ1S\n" +
-                    "I5uX1/rNsZh4xx2iY0uVjRjP37IxEmEZkkkjHp+1BuD9j2ta2yAq8c+CNJL5IJEG\n" +
-                    "nyWVm3xBnAAAQc+pl5TiMFUCAwEAATANBgkqhkiG9w0BAQUFAAOCAQEAW0d3FHgy\n" +
-                    "qS06BS3DXYoBZZPwgKUiiGDkTYaaDJtvMOojCE5k5ZRYii1odNEI27vqVtiMWxr0\n" +
-                    "Qn5v1jGRVs15bEPFGIZveqKmetCmZZf6ImIDD1CJjyXT4ZSCwsNqvb11UaOSyzh/\n" +
-                    "lCY/GGU8w6RbdPruqflco2UyWldbiKKBtsZS4oOxqmBtdJQyRzOkrmQOyEGaG3m/\n" +
-                    "dvU1+rql60QQ3GQww5SOJpMJSooJKB/4ozgHkRCEkZrPTeWTlNj/Gr06mMl5seSS\n" +
-                    "ROrHz7//kqgiWnMmo4MWAlycF/Qd7mXLitssk/9utQDWrUYfk7AGgsQ5kHJfvYEE\n" +
-                    "n9fmFaDvq29IxA==\n" +
-                    "-----END CERTIFICATE-----";
+            "-----BEGIN CERTIFICATE-----\n"
+                    + "MIIDBjCCAe4CCQDqb5RRJpQJ7DANBgkqhkiG9w0BAQUFADBFMQswCQYDVQQGEwJB\n"
+                    + "VTETMBEGA1UECBMKU29tZS1TdGF0ZTEhMB8GA1UEChMYSW50ZXJuZXQgV2lkZ2l0\n"
+                    + "cyBQdHkgTHRkMB4XDTE0MDMwNTE0MDAyNVoXDTI0MDMwMjE0MDAyNVowRTELMAkG\n"
+                    + "A1UEBhMCQVUxEzARBgNVBAgTClNvbWUtU3RhdGUxITAfBgNVBAoTGEludGVybmV0\n"
+                    + "IFdpZGdpdHMgUHR5IEx0ZDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB\n"
+                    + "AJ2JKksmbe4xxm9PeNSfdJOEhvRLEVlOD4jDkiUtHYHnEemsCeLdISFjR++ldQSX\n"
+                    + "+hYMiWT77SeL/C24nZ92N4HWZPfmQ11ooGiObIswfBNzXO/XNqV1cAAKSEStoDS1\n"
+                    + "QVKa50TEMn2meAFm4iQX/t+zqOFaeqgcYRG9X1r7+KbChEqBhSus36007gJTryEm\n"
+                    + "pF4MrANZLSFOsNXCMQIFxId5n3YWuUGnkL4kUvnpC+N1h2k3hBYFZUoP63dghJ1S\n"
+                    + "I5uX1/rNsZh4xx2iY0uVjRjP37IxEmEZkkkjHp+1BuD9j2ta2yAq8c+CNJL5IJEG\n"
+                    + "nyWVm3xBnAAAQc+pl5TiMFUCAwEAATANBgkqhkiG9w0BAQUFAAOCAQEAW0d3FHgy\n"
+                    + "qS06BS3DXYoBZZPwgKUiiGDkTYaaDJtvMOojCE5k5ZRYii1odNEI27vqVtiMWxr0\n"
+                    + "Qn5v1jGRVs15bEPFGIZveqKmetCmZZf6ImIDD1CJjyXT4ZSCwsNqvb11UaOSyzh/\n"
+                    + "lCY/GGU8w6RbdPruqflco2UyWldbiKKBtsZS4oOxqmBtdJQyRzOkrmQOyEGaG3m/\n"
+                    + "dvU1+rql60QQ3GQww5SOJpMJSooJKB/4ozgHkRCEkZrPTeWTlNj/Gr06mMl5seSS\n"
+                    + "ROrHz7//kqgiWnMmo4MWAlycF/Qd7mXLitssk/9utQDWrUYfk7AGgsQ5kHJfvYEE\n"
+                    + "n9fmFaDvq29IxA==\n"
+                    + "-----END CERTIFICATE-----";
     private static final String RSA_DOCS_SIGNATURE =
-            "XqS+Jn/xkY61CwqGtqjkWbaGq5Bdpza5pUgYPOFSmKRAmw2DSF3xofGsy4tUm7S851i91IdMMi" +
-                    "G1/1QiKvei5r7j85hsJeZDT7ZtbvmsCbDqclevvfGNm5go5pQnGxP9wkTyiFrAxPQX" +
-                    "moVmVEuC+yq1XI/hgSobqCnQTcCPVKMomNNoYC2s+13S9DqGs7JyDBnoo0kKcLoiA/" +
-                    "r24a2g11Hmp0n9sSU49lWVpcFi5UX/iu+9M2QL1qz50Sl722j8r/uOfMAB1XBP4LPz" +
-                    "G97OFHPKmLHvNo3ppEJmQah0pn43E9Mn9t4jhAXXwKuBgI9A/q5Xx/W27/p7i1CuHc" +
-                    "uYQw==";
+            "XqS+Jn/xkY61CwqGtqjkWbaGq5Bdpza5pUgYPOFSmKRAmw2DSF3xofGsy4tUm7S851i91IdMMi"
+                    + "G1/1QiKvei5r7j85hsJeZDT7ZtbvmsCbDqclevvfGNm5go5pQnGxP9wkTyiFrAxPQX"
+                    + "moVmVEuC+yq1XI/hgSobqCnQTcCPVKMomNNoYC2s+13S9DqGs7JyDBnoo0kKcLoiA/"
+                    + "r24a2g11Hmp0n9sSU49lWVpcFi5UX/iu+9M2QL1qz50Sl722j8r/uOfMAB1XBP4LPz"
+                    + "G97OFHPKmLHvNo3ppEJmQah0pn43E9Mn9t4jhAXXwKuBgI9A/q5Xx/W27/p7i1CuHc"
+                    + "uYQw==";
     private static final String RSA_DOCS_SIGNATURE_ENCODED =
-            "XqS%2BJn%2FxkY61CwqGtqjkWbaGq5Bdpza5pUgYPOFSmKRAmw2DSF3xofGsy4tUm7S851i91I" +
-                    "dMMiG1%2F1QiKvei5r7j85hsJeZDT7ZtbvmsCbDqclevvfGNm5go5pQnGxP9wkTyiF" +
-                    "rAxPQXmoVmVEuC%2Byq1XI%2FhgSobqCnQTcCPVKMomNNoYC2s%2B13S9DqGs7JyDB" +
-                    "noo0kKcLoiA%2Fr24a2g11Hmp0n9sSU49lWVpcFi5UX%2Fiu%2B9M2QL1qz50Sl722" +
-                    "j8r%2FuOfMAB1XBP4LPzG97OFHPKmLHvNo3ppEJmQah0pn43E9Mn9t4jhAXXwKuBgI" +
-                    "9A%2Fq5Xx%2FW27%2Fp7i1CuHcuYQw%3D%3D";
+            "XqS%2BJn%2FxkY61CwqGtqjkWbaGq5Bdpza5pUgYPOFSmKRAmw2DSF3xofGsy4tUm7S851i91I"
+                    + "dMMiG1%2F1QiKvei5r7j85hsJeZDT7ZtbvmsCbDqclevvfGNm5go5pQnGxP9wkTyiF"
+                    + "rAxPQXmoVmVEuC%2Byq1XI%2FhgSobqCnQTcCPVKMomNNoYC2s%2B13S9DqGs7JyDB"
+                    + "noo0kKcLoiA%2Fr24a2g11Hmp0n9sSU49lWVpcFi5UX%2Fiu%2B9M2QL1qz50Sl722"
+                    + "j8r%2FuOfMAB1XBP4LPzG97OFHPKmLHvNo3ppEJmQah0pn43E9Mn9t4jhAXXwKuBgI"
+                    + "9A%2Fq5Xx%2FW27%2Fp7i1CuHcuYQw%3D%3D";
 
     private static final String RSA_SIGNATURE_METHOD = RsaSha1Method.NAME;
     private static final String RSA_NONCE = "13917289812797014437";
@@ -175,17 +175,17 @@ public class SignatureTest {
     public void testHMACSHA1() {
         final OAuth1Signature oauth1Signature = getoAuthSignature();
 
-        DummyRequest request = new DummyRequest().requestMethod("GET").
-                requestURL("http://photos.example.net/photos").
-                parameterValue("file", "vacation.jpg").parameterValue("size", "original");
+        DummyRequest request = new DummyRequest().requestMethod("GET")
+                .requestURL("http://photos.example.net/photos")
+                .parameterValue("file", "vacation.jpg").parameterValue("size", "original");
 
-        OAuth1Parameters params = new OAuth1Parameters().realm(REALM).
-                consumerKey(CONSUMER_KEY).token(ACCESS_TOKEN).
-                signatureMethod(SIGNATURE_METHOD).timestamp(TIMESTAMP).
-                nonce(NONCE).version(VERSION);
+        OAuth1Parameters params = new OAuth1Parameters().realm(REALM)
+                .consumerKey(CONSUMER_KEY).token(ACCESS_TOKEN)
+                .signatureMethod(SIGNATURE_METHOD).timestamp(TIMESTAMP)
+                .nonce(NONCE).version(VERSION);
 
-        OAuth1Secrets secrets = new OAuth1Secrets().consumerSecret("kd94hf93k423kf44").
-                tokenSecret("pfkkdhi9sl3r4s00");
+        OAuth1Secrets secrets = new OAuth1Secrets().consumerSecret("kd94hf93k423kf44")
+                .tokenSecret("pfkkdhi9sl3r4s00");
 
         // generate digital signature; ensure it matches the OAuth spec
         String signature = null;
@@ -238,7 +238,7 @@ public class SignatureTest {
     }
 
     @Test
-     public void testRSASHA1() {
+    public void testRSASHA1() {
         testRSASHA1(RSA_PRIVKEY, RSA_CERTIFICATE, RSA_SIGNATURE, RSA_SIGNATURE_ENCODED);
     }
 
@@ -251,14 +251,14 @@ public class SignatureTest {
                             final String rsaSignature, final String rsaSignatureEncoded) {
 
         final OAuth1Signature oauth1Signature = getoAuthSignature();
-        DummyRequest request = new DummyRequest().requestMethod("GET").
-                requestURL("http://photos.example.net/photos").
-                parameterValue("file", "vacaction.jpg").parameterValue("size", "original");
+        DummyRequest request = new DummyRequest().requestMethod("GET")
+                .requestURL("http://photos.example.net/photos")
+                .parameterValue("file", "vacaction.jpg").parameterValue("size", "original");
 
-        OAuth1Parameters params = new OAuth1Parameters().realm(REALM).
-                consumerKey(CONSUMER_KEY).
-                signatureMethod(RSA_SIGNATURE_METHOD).timestamp(RSA_TIMESTAMP).
-                nonce(RSA_NONCE).version(VERSION);
+        OAuth1Parameters params = new OAuth1Parameters().realm(REALM)
+                .consumerKey(CONSUMER_KEY)
+                .signatureMethod(RSA_SIGNATURE_METHOD).timestamp(RSA_TIMESTAMP)
+                .nonce(RSA_NONCE).version(VERSION);
 
         OAuth1Secrets secrets = new OAuth1Secrets().consumerSecret(rsaPrivKey);
 
@@ -309,7 +309,6 @@ public class SignatureTest {
         }
     }
 
-
     /**
      * Test a Twitter status update.
      *
@@ -324,18 +323,18 @@ public class SignatureTest {
         final String TWITTERTEST_SIGNATURE_ENC =
                 "yfrn%2Fp%2F4Hnp%2BXcwUBVfW0cSgc%2Bo%3D";
 
-        DummyRequest request = new DummyRequest().requestMethod("POST").
-                requestURL("http://twitter.com/statuses/update.json").
-                parameterValue("status", "Hello Twitter World");
+        DummyRequest request = new DummyRequest().requestMethod("POST")
+                .requestURL("http://twitter.com/statuses/update.json")
+                .parameterValue("status", "Hello Twitter World");
 
-        OAuth1Parameters params = new OAuth1Parameters().
-                consumerKey(CONSUMER_KEY).token(ACCESS_TOKEN).
-                signatureMethod(SIGNATURE_METHOD).timestamp(TIMESTAMP).
-                nonce(NONCE).version(VERSION);
+        OAuth1Parameters params = new OAuth1Parameters()
+                .consumerKey(CONSUMER_KEY).token(ACCESS_TOKEN)
+                .signatureMethod(SIGNATURE_METHOD).timestamp(TIMESTAMP)
+                .nonce(NONCE).version(VERSION);
 
         OAuth1Secrets secrets =
-                new OAuth1Secrets().consumerSecret("kd94hf93k423kf44").
-                        tokenSecret("pfkkdhi9sl3r4s00");
+                new OAuth1Secrets().consumerSecret("kd94hf93k423kf44")
+                        .tokenSecret("pfkkdhi9sl3r4s00");
 
         // generate digital signature; ensure it matches the OAuth spec
         String signature = null;
@@ -348,7 +347,6 @@ public class SignatureTest {
         }
 
         assertEquals(signature, TWITTERTEST_SIGNATURE);
-
 
         OAuth1Parameters saved = (OAuth1Parameters) params.clone();
 

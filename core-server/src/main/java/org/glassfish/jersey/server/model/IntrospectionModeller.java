@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -170,28 +170,28 @@ final class IntrospectionModeller {
         final MethodList allDeclaredMethods = new MethodList(getAllDeclaredMethods(handlerClass));
 
         // non-public resource methods
-        for (AnnotatedMethod m : allDeclaredMethods.withMetaAnnotation(HttpMethod.class).
-                withoutAnnotation(Path.class).isNotPublic()) {
+        for (AnnotatedMethod m : allDeclaredMethods.withMetaAnnotation(HttpMethod.class)
+                .withoutAnnotation(Path.class).isNotPublic()) {
             Errors.warning(handlerClass, LocalizationMessages.NON_PUB_RES_METHOD(m.getMethod().toGenericString()));
         }
         // non-public subres methods
-        for (AnnotatedMethod m : allDeclaredMethods.withMetaAnnotation(HttpMethod.class).
-                withAnnotation(Path.class).isNotPublic()) {
+        for (AnnotatedMethod m : allDeclaredMethods.withMetaAnnotation(HttpMethod.class)
+                .withAnnotation(Path.class).isNotPublic()) {
             Errors.warning(handlerClass, LocalizationMessages.NON_PUB_SUB_RES_METHOD(m.getMethod().toGenericString()));
         }
         // non-public subres locators
-        for (AnnotatedMethod m : allDeclaredMethods.withoutMetaAnnotation(HttpMethod.class).
-                withAnnotation(Path.class).isNotPublic()) {
+        for (AnnotatedMethod m : allDeclaredMethods.withoutMetaAnnotation(HttpMethod.class)
+                .withAnnotation(Path.class).isNotPublic()) {
             Errors.warning(handlerClass, LocalizationMessages.NON_PUB_SUB_RES_LOC(m.getMethod().toGenericString()));
         }
     }
 
     private void checkResourceClassSetters(final MethodList methodList, final boolean encodedFlag) {
-        for (AnnotatedMethod method : methodList.withoutMetaAnnotation(HttpMethod.class).
-                withoutAnnotation(Path.class).
-                hasNumParams(1).
-                hasReturnType(void.class).
-                nameStartsWith("set")) {
+        for (AnnotatedMethod method : methodList.withoutMetaAnnotation(HttpMethod.class)
+                .withoutAnnotation(Path.class)
+                .hasNumParams(1)
+                .hasReturnType(void.class)
+                .nameStartsWith("set")) {
             Parameter p = Parameter.create(
                     handlerClass,
                     method.getMethod().getDeclaringClass(),
@@ -320,8 +320,6 @@ final class IntrospectionModeller {
                             .handlingMethod(am.getDeclaredMethod())
                             .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
 
-
-
             introspectAsyncFeatures(am, methodBuilder);
         }
     }
@@ -349,7 +347,6 @@ final class IntrospectionModeller {
                             .handledBy(handlerClass, am.getMethod())
                             .handlingMethod(am.getDeclaredMethod())
                             .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
-
 
             introspectAsyncFeatures(am, methodBuilder);
         }

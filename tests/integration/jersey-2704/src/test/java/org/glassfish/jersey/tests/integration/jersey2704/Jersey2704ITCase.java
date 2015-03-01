@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,61 +61,61 @@ import org.junit.Test;
  * is to give users possibility to register main {@link ServiceLocator} in the servlet context, so
  * it can be later used by Jersey. This creates the opportunity to wire Jersey-specific classes with
  * the services created outside the Jersey context.
- * 
+ *
  * @author Bartosz Firyn (bartoszfiryn at gmail.com)
  */
 public class Jersey2704ITCase extends JerseyTest {
 
-	@Override
-	protected Application configure() {
-		return new TestApplication();
-	}
+    @Override
+    protected Application configure() {
+        return new TestApplication();
+    }
 
-	@Override
-	protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
-		return new ExternalTestContainerFactory();
-	}
+    @Override
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
+    }
 
-	/**
-	 * Invokes REST endpoint to check whether specific class service is registered in the
-	 * {@link ServiceLocator}.
-	 * 
-	 * @param service the service class
-	 * @return HTTP status code, 200 when service is available and 600 otherwise
-	 * @throws IOException in case of problems with HTTP communication
-	 */
-	private int test(Class<?> service) throws IOException {
+    /**
+     * Invokes REST endpoint to check whether specific class service is registered in the
+     * {@link ServiceLocator}.
+     *
+     * @param service the service class
+     * @return HTTP status code, 200 when service is available and 600 otherwise
+     * @throws IOException in case of problems with HTTP communication
+     */
+    private int test(Class<?> service) throws IOException {
 
-		String name = service.getCanonicalName();
-		String path = getBaseUri().toString() + "test/" + name;
+        String name = service.getCanonicalName();
+        String path = getBaseUri().toString() + "test/" + name;
 
-		HttpURLConnection connection = (HttpURLConnection) new URL(path).openConnection();
-		connection.setRequestMethod("GET");
-		connection.connect();
-		connection.disconnect();
+        HttpURLConnection connection = (HttpURLConnection) new URL(path).openConnection();
+        connection.setRequestMethod("GET");
+        connection.connect();
+        connection.disconnect();
 
-		return connection.getResponseCode();
-	}
+        return connection.getResponseCode();
+    }
 
-	/**
-	 * Test to cover sunny day scenario, i.e. specific service has been registered in the parent
-	 * {@link ServiceLocator} so it will be available in the one that is used in Jersey context.
-	 * 
-	 * @throws IOException
-	 */
-	@Test
-	public void testCorrectInjection() throws IOException {
-		Assert.assertEquals(200, test(HappyService.class));
-	}
+    /**
+     * Test to cover sunny day scenario, i.e. specific service has been registered in the parent
+     * {@link ServiceLocator} so it will be available in the one that is used in Jersey context.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testCorrectInjection() throws IOException {
+        Assert.assertEquals(200, test(HappyService.class));
+    }
 
-	/**
-	 * Test to cover rainy day scenario, i.e. specific service has <b>not</b> been registered in the
-	 * parent {@link ServiceLocator} so it cannot be used to wire Jersey classes.
-	 * 
-	 * @throws IOException
-	 */
-	@Test
-	public void testMisingInjection() throws IOException {
-		Assert.assertEquals(600, test(SadService.class));
-	}
+    /**
+     * Test to cover rainy day scenario, i.e. specific service has <b>not</b> been registered in the
+     * parent {@link ServiceLocator} so it cannot be used to wire Jersey classes.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testMisingInjection() throws IOException {
+        Assert.assertEquals(600, test(SadService.class));
+    }
 }

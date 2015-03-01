@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,8 +76,9 @@ final class ELLinkBuilder {
                                      Object resource,
                                      Object instance) {
 
-        if (condition == null || condition.isEmpty())
+        if (condition == null || condition.isEmpty()) {
             return true;
+        }
         LinkELContext context = new LinkELContext(entity, resource, instance);
         ValueExpression expr = expressionFactory.createValueExpression(context, condition, boolean.class);
 
@@ -128,7 +129,9 @@ final class ELLinkBuilder {
         return ub;
     }
 
-    private static Map<String, Object> getParameterValues(List<String> parameterNames, InjectLinkDescriptor linkField, LinkELContext context) {
+    private static Map<String, Object> getParameterValues(List<String> parameterNames,
+                                                          InjectLinkDescriptor linkField,
+                                                          LinkELContext context) {
         Map<String, Object> values = new HashMap<>();
         for (String name : parameterNames) {
             String elExpression = getEL(name, linkField);

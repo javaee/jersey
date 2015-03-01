@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -132,11 +132,11 @@ public class CustomConfigValidationTest extends JerseyTest {
 
     @Test
     public void testPositive() throws Exception {
-        final Response response = target("customconfigvalidation").
-                path("ok").
-                request().
-                header("myHeader", "12345").
-                post(Entity.entity(new CustomBean(), MediaType.APPLICATION_XML_TYPE));
+        final Response response = target("customconfigvalidation")
+                .path("ok")
+                .request()
+                .header("myHeader", "12345")
+                .post(Entity.entity(new CustomBean(), MediaType.APPLICATION_XML_TYPE));
 
         assertEquals(200, response.getStatus());
         assertEquals("ok", response.readEntity(CustomBean.class).getPath());
@@ -144,11 +144,11 @@ public class CustomConfigValidationTest extends JerseyTest {
 
     @Test
     public void testParameterNameWithInterpolator() throws Exception {
-        final Response response = target("customconfigvalidation").
-                path("ok").
-                request().
-                header("myHeader", "1234").
-                post(Entity.entity(new CustomBean(), MediaType.APPLICATION_XML_TYPE));
+        final Response response = target("customconfigvalidation")
+                .path("ok")
+                .request()
+                .header("myHeader", "1234")
+                .post(Entity.entity(new CustomBean(), MediaType.APPLICATION_XML_TYPE));
 
         assertEquals(400, response.getStatus());
 
@@ -162,10 +162,10 @@ public class CustomConfigValidationTest extends JerseyTest {
 
     @Test
     public void testTraversableResolver() throws Exception {
-        final Response response = target("customconfigvalidation/").
-                request().
-                header("myHeader", "12345").
-                post(Entity.entity(new CustomBean(), MediaType.APPLICATION_XML_TYPE));
+        final Response response = target("customconfigvalidation/")
+                .request()
+                .header("myHeader", "12345")
+                .post(Entity.entity(new CustomBean(), MediaType.APPLICATION_XML_TYPE));
 
         assertEquals(200, response.getStatus());
         // return value passed validation because of "corrupted" traversableresolver

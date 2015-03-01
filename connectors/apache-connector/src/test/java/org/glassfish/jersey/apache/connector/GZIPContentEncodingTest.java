@@ -74,6 +74,7 @@ public class GZIPContentEncodingTest extends JerseyTest {
 
     @Path("/")
     public static class Resource {
+
         @POST
         public byte[] post(byte[] content) {
             return content;
@@ -88,7 +89,8 @@ public class GZIPContentEncodingTest extends JerseyTest {
         WebTarget r = client.target(getBaseUri());
 
         byte[] content = new byte[1024 * 1024];
-        assertTrue(Arrays.equals(content, r.request().post(Entity.entity(content, MediaType.APPLICATION_OCTET_STREAM_TYPE)).readEntity(byte[].class)));
+        assertTrue(Arrays.equals(content,
+                r.request().post(Entity.entity(content, MediaType.APPLICATION_OCTET_STREAM_TYPE)).readEntity(byte[].class)));
 
         Response cr = r.request().post(Entity.entity(content, MediaType.APPLICATION_OCTET_STREAM_TYPE));
         assertTrue(cr.hasEntity());
@@ -105,7 +107,8 @@ public class GZIPContentEncodingTest extends JerseyTest {
         WebTarget r = client.target(getBaseUri());
 
         byte[] content = new byte[1024 * 1024];
-        assertTrue(Arrays.equals(content, r.request().post(Entity.entity(content, MediaType.APPLICATION_OCTET_STREAM_TYPE)).readEntity(byte[].class)));
+        assertTrue(Arrays.equals(content,
+                r.request().post(Entity.entity(content, MediaType.APPLICATION_OCTET_STREAM_TYPE)).readEntity(byte[].class)));
 
         Response cr = r.request().post(Entity.text("POST"));
         assertTrue(cr.hasEntity());

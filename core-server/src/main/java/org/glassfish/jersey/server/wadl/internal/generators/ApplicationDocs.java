@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,24 +53,24 @@ import com.sun.research.ws.wadl.Doc;
 /**
  * The wrapper root document for multiple {@link Doc} elements.
  * Created on: Jun 10, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "applicationDocs", propOrder = {
-    "docs"
+        "docs"
 })
 @XmlRootElement(name = "applicationDocs")
 public class ApplicationDocs {
 
-    @XmlElement(name = "doc" )
+    @XmlElement(name = "doc")
     protected List<Doc> docs;
 
     public List<Doc> getDocs() {
         if (docs == null) {
-            docs = new ArrayList<Doc>();
+            docs = new ArrayList<>();
         }
         return this.docs;
     }
-    
+
 }

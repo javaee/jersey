@@ -101,7 +101,9 @@ public interface ResourceMethodDispatcher {
          * @return the resource method dispatcher, or {@code null} if it could not be
          *         created for the given resource method.
          */
-        public ResourceMethodDispatcher create(final Invocable method, final InvocationHandler handler, final ConfiguredValidator validator);
+        public ResourceMethodDispatcher create(final Invocable method,
+                                               final InvocationHandler handler,
+                                               final ConfiguredValidator validator);
     }
 
     /**

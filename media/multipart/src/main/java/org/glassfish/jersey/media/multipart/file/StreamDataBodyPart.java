@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -145,8 +145,7 @@ public class StreamDataBodyPart extends FormDataBodyPart {
         if (name == null || streamEntity == null) {
             MessageFormat msg = new MessageFormat(
                     "Neither the \"name\" nor \"streamEntity\" can be null. Passed values: \"{0}\" \"{1}\"");
-            throw new IllegalArgumentException(msg.format(new Object[] { name,
-                    streamEntity }));
+            throw new IllegalArgumentException(msg.format(new Object[] {name, streamEntity}));
         }
 
         setFilename(filename);

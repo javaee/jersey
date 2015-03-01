@@ -91,6 +91,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
     @Provider
     @SuppressWarnings("UnusedDeclaration")
     public static class ListIntegerWriter implements MessageBodyReader<List<Integer>>, MessageBodyWriter<List<Integer>> {
+
         private final Type t;
 
         public ListIntegerWriter() {
@@ -113,7 +114,9 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
                             final OutputStream out) throws IOException, WebApplicationException {
             final StringBuilder sb = new StringBuilder();
             for (final Integer i : l) {
-                if (sb.length() > 0) sb.append(", ");
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
                 sb.append(i);
             }
             out.write(sb.toString().getBytes());
@@ -152,6 +155,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
 
     @Path("ListResource")
     public static class ListResource extends GenericListResource<Integer> {
+
         @GET
         @Path("type")
         public List<Integer> type() {
@@ -270,7 +274,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
 
     @Provider
     public static class MapStringReader implements MessageBodyReader<Map<String, String>>,
-            MessageBodyWriter<Map<String, String>> {
+                                                   MessageBodyWriter<Map<String, String>> {
 
         private final Type mapStringType;
 
@@ -340,7 +344,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
 
     @Provider
     public static class MapListStringReader implements MessageBodyReader<Map<String, List<String>>>,
-            MessageBodyWriter<Map<String, List<String>>> {
+                                                       MessageBodyWriter<Map<String, List<String>>> {
 
         private final Type mapListStringType;
 

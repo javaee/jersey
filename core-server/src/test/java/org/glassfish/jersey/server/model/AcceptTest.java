@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,6 +69,7 @@ public class AcceptTest {
 
     @Path("/")
     public static class Resource {
+
         @Produces("application/foo")
         @GET
         public String doGetFoo() {
@@ -104,15 +105,18 @@ public class AcceptTest {
         s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.1").build()).get().getEntity();
         assertEquals("foo", s);
 
-        s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo", "application/bar;q=0.4", "application/baz;q=0.2").build())
+        s = (String) app.apply(RequestContextBuilder.from("/", "GET")
+                .accept("application/foo", "application/bar;q=0.4", "application/baz;q=0.2").build())
                 .get().getEntity();
         assertEquals("foo", s);
 
-        s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.4", "application/bar", "application/baz;q=0.2").build())
+        s = (String) app.apply(RequestContextBuilder.from("/", "GET")
+                .accept("application/foo;q=0.4", "application/bar", "application/baz;q=0.2").build())
                 .get().getEntity();
         assertEquals("bar", s);
 
-        s = (String) app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.4", "application/bar;q=0.2", "application/baz").build())
+        s = (String) app.apply(RequestContextBuilder.from("/", "GET")
+                .accept("application/foo;q=0.4", "application/bar;q=0.2", "application/baz").build())
                 .get().getEntity();
         assertEquals("baz", s);
     }
@@ -121,8 +125,9 @@ public class AcceptTest {
     public void testAcceptGetWildCard() throws Exception {
         ApplicationHandler app = createApplication(Resource.class);
 
-        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/wildcard", "application/foo;q=0.6",
-                "application/bar;q=0.4", "application/baz;q=0.2").build()).get();
+        ContainerResponse response = app
+                .apply(RequestContextBuilder.from("/", "GET").accept("application/wildcard", "application/foo;q=0.6",
+                        "application/bar;q=0.4", "application/baz;q=0.2").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
 
         String s = (String) response.getEntity();
@@ -133,7 +138,8 @@ public class AcceptTest {
     public void testQualityErrorGreaterThanOne() throws Exception {
         ApplicationHandler app = createApplication(Resource.class);
 
-        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=1.1").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=1.1").build())
+                .get();
         assertEquals(400, response.getStatus());
     }
 
@@ -141,12 +147,14 @@ public class AcceptTest {
     public void testQualityErrorMoreThanThreeDigits() throws Exception {
         ApplicationHandler app = createApplication(Resource.class);
 
-        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.1234").build()).get();
+        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.1234").build())
+                .get();
         assertEquals(400, response.getStatus());
     }
 
     @Path("/")
     public static class MultipleResource {
+
         @Produces({"application/foo", "application/bar"})
         @GET
         public String get() {
@@ -181,12 +189,15 @@ public class AcceptTest {
         assertEquals("GET", response.getEntity());
         assertEquals(foo, response.getMediaType());
 
-        response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.1", "application/bar").build()).get();
+        response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.1", "application/bar").build())
+                .get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.getEntity());
         assertEquals(bar, response.getMediaType());
 
-        response = app.apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.5", "application/bar;q=0.1").build()).get();
+        response = app
+                .apply(RequestContextBuilder.from("/", "GET").accept("application/foo;q=0.5", "application/bar;q=0.1").build())
+                .get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.getEntity());
         assertEquals(foo, response.getMediaType());
@@ -208,6 +219,7 @@ public class AcceptTest {
 
     @Path("/")
     public static class SubTypeResource {
+
         @Produces("text/*")
         @GET
         public String get() {
@@ -242,6 +254,7 @@ public class AcceptTest {
 
     @Path("/")
     public static class NoProducesResource {
+
         @GET
         public String get() {
             return "GET";
@@ -253,7 +266,8 @@ public class AcceptTest {
         ApplicationHandler app = createApplication(NoProducesResource.class);
 
         // media type order in the accept header does not impose output media type!
-        ContainerResponse response = app.apply(RequestContextBuilder.from("/", "GET").accept("image/png, text/plain;q=0.9").build()).get();
+        ContainerResponse response = app
+                .apply(RequestContextBuilder.from("/", "GET").accept("image/png, text/plain;q=0.9").build()).get();
         assertTrue("Status: " + response.getStatus(), response.getStatus() < 300);
         assertEquals("GET", response.getEntity());
         assertEquals(MediaType.valueOf("image/png"), response.getMediaType());
@@ -266,6 +280,7 @@ public class AcceptTest {
 
     @Path("/")
     public static class ProducesOneMethodFooBarResource {
+
         @GET
         @Produces({"application/foo", "application/bar"})
         public String get() {
@@ -280,6 +295,7 @@ public class AcceptTest {
 
     @Path("/")
     public static class ProducesTwoMethodsFooBarResource {
+
         @GET
         @Produces("application/foo")
         public String getFoo() {
@@ -300,6 +316,7 @@ public class AcceptTest {
 
     @Path("/")
     public static class ProducesTwoMethodsBarFooResource {
+
         @GET
         @Produces("application/bar")
         public String getBar() {

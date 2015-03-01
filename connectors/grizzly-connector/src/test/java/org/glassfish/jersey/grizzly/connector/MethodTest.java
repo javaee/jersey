@@ -68,6 +68,7 @@ public class MethodTest extends JerseyTest {
 
     @Path("/test")
     public static class HttpMethodResource {
+
         @GET
         public String get() {
             return "GET";
@@ -107,7 +108,7 @@ public class MethodTest extends JerseyTest {
 
     @Test
     public void testPost() {
-        Response response = target(PATH).request().post(Entity.entity("POST",MediaType.TEXT_PLAIN));
+        Response response = target(PATH).request().post(Entity.entity("POST", MediaType.TEXT_PLAIN));
         assertEquals("POST", response.readEntity(String.class));
     }
 

@@ -46,7 +46,7 @@ import javax.xml.bind.annotation.XmlType;
  *
  * @author Paul Sandoz
  */
-@XmlType(name="dada")
+@XmlType(name = "dada")
 public class JaxbBeanType {
 
     public String value;

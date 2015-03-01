@@ -89,13 +89,17 @@ public class JaxRsInjectablesTest extends AbstractTest {
     @Path("/")
     public static class PerRequestContextResource {
 
-        @Context UriInfo ui;
+        @Context
+        UriInfo ui;
 
-        @Context HttpHeaders hs;
+        @Context
+        HttpHeaders hs;
 
-        @Context Request r;
+        @Context
+        Request r;
 
-        @Context SecurityContext sc;
+        @Context
+        SecurityContext sc;
 
         @GET
         public String get() {
@@ -109,6 +113,7 @@ public class JaxRsInjectablesTest extends AbstractTest {
 
     @Path("/")
     public static class PerRequestContextConstructorParameterResource {
+
         public PerRequestContextConstructorParameterResource(
                 @Context UriInfo ui,
                 @Context HttpHeaders hs,
@@ -121,11 +126,14 @@ public class JaxRsInjectablesTest extends AbstractTest {
         }
 
         @GET
-        public String get() { return "GET"; }
+        public String get() {
+            return "GET";
+        }
     }
 
     @Path("/")
     public static class PerRequestContextMethodParameterResource {
+
         @GET
         public String get(
                 @Context UriInfo ui,
@@ -144,13 +152,17 @@ public class JaxRsInjectablesTest extends AbstractTest {
     @Singleton
     public static class SingletonContextResource {
 
-        @Context UriInfo ui;
+        @Context
+        UriInfo ui;
 
-        @Context HttpHeaders hs;
+        @Context
+        HttpHeaders hs;
 
-        @Context Request r;
+        @Context
+        Request r;
 
-        @Context SecurityContext sc;
+        @Context
+        SecurityContext sc;
 
         @GET
         public String get() {
@@ -165,6 +177,7 @@ public class JaxRsInjectablesTest extends AbstractTest {
     @Path("/")
     @Singleton
     public static class SingletonContextConstructorParameterResource {
+
         public SingletonContextConstructorParameterResource(
                 @Context UriInfo ui,
                 @Context HttpHeaders hs,
@@ -177,7 +190,9 @@ public class JaxRsInjectablesTest extends AbstractTest {
         }
 
         @GET
-        public String get() { return "GET"; }
+        public String get() {
+            return "GET";
+        }
     }
 
     @Test
@@ -217,14 +232,18 @@ public class JaxRsInjectablesTest extends AbstractTest {
 
     @Path("/")
     public static class StringWriterResource {
+
         @GET
-        public String get() { return "GET"; }
+        public String get() {
+            return "GET";
+        }
     }
 
     @Provider
     @Consumes({"text/plain", "*/*"})
     @Produces({"text/plain", "*/*"})
     public static class StringWriterField implements MessageBodyWriter<String> {
+
         public StringWriterField() {
             int i = 0;
         }
@@ -240,7 +259,13 @@ public class JaxRsInjectablesTest extends AbstractTest {
         }
 
         @Override
-        public void writeTo(String arg0, Class<?> arg1, Type arg2, Annotation[] arg3, MediaType arg4, MultivaluedMap<String, Object> arg5, OutputStream arg6) throws IOException, WebApplicationException {
+        public void writeTo(String arg0,
+                            Class<?> arg1,
+                            Type arg2,
+                            Annotation[] arg3,
+                            MediaType arg4,
+                            MultivaluedMap<String, Object> arg5,
+                            OutputStream arg6) throws IOException, WebApplicationException {
             assertNotNull(ui);
             assertNotNull(hs);
             assertNotNull(r);
@@ -248,25 +273,30 @@ public class JaxRsInjectablesTest extends AbstractTest {
             arg6.write(arg0.getBytes());
         }
 
-        @Context UriInfo ui;
+        @Context
+        UriInfo ui;
 
-        @Context HttpHeaders hs;
+        @Context
+        HttpHeaders hs;
 
-        @Context Request r;
+        @Context
+        Request r;
 
-        @Context SecurityContext sc;
+        @Context
+        SecurityContext sc;
     }
 
     @Provider
     @Consumes({"text/plain", "*/*"})
     @Produces({"text/plain", "*/*"})
     public static class StringWriterConstructor implements MessageBodyWriter<String> {
+
         public StringWriterConstructor(
                 @Context UriInfo ui,
                 @Context HttpHeaders hs,
                 @Context Request r,
                 @Context SecurityContext sc
-                ) {
+        ) {
             assertNotNull(ui);
             assertNotNull(hs);
             assertNotNull(r);
@@ -284,7 +314,13 @@ public class JaxRsInjectablesTest extends AbstractTest {
         }
 
         @Override
-        public void writeTo(String arg0, Class<?> arg1, Type arg2, Annotation[] arg3, MediaType arg4, MultivaluedMap<String, Object> arg5, OutputStream arg6) throws IOException, WebApplicationException {
+        public void writeTo(String arg0,
+                            Class<?> arg1,
+                            Type arg2,
+                            Annotation[] arg3,
+                            MediaType arg4,
+                            MultivaluedMap<String, Object> arg5,
+                            OutputStream arg6) throws IOException, WebApplicationException {
             arg6.write(arg0.getBytes());
         }
     }
@@ -293,12 +329,13 @@ public class JaxRsInjectablesTest extends AbstractTest {
     @Consumes({"text/plain", "*/*"})
     @Produces({"text/plain", "*/*"})
     public static class StringWriterMutlipleConstructor implements MessageBodyWriter<String> {
+
         public StringWriterMutlipleConstructor(
                 @Context UriInfo ui,
                 @Context HttpHeaders hs,
                 @Context Request r,
                 @Context SecurityContext sc
-                ) {
+        ) {
             assertNotNull(ui);
             assertNotNull(hs);
             assertNotNull(r);
@@ -320,7 +357,13 @@ public class JaxRsInjectablesTest extends AbstractTest {
         }
 
         @Override
-        public void writeTo(String arg0, Class<?> arg1, Type arg2, Annotation[] arg3, MediaType arg4, MultivaluedMap<String, Object> arg5, OutputStream arg6) throws IOException, WebApplicationException {
+        public void writeTo(String arg0,
+                            Class<?> arg1,
+                            Type arg2,
+                            Annotation[] arg3,
+                            MediaType arg4,
+                            MultivaluedMap<String, Object> arg5,
+                            OutputStream arg6) throws IOException, WebApplicationException {
             arg6.write(arg0.getBytes());
         }
     }
@@ -329,12 +372,13 @@ public class JaxRsInjectablesTest extends AbstractTest {
     @Consumes({"text/plain", "*/*"})
     @Produces({"text/plain", "*/*"})
     public static class StringWriterMutliplePartialConstructor implements MessageBodyWriter<String> {
+
         public StringWriterMutliplePartialConstructor(
                 @Context UriInfo ui,
                 @Context HttpHeaders hs,
                 @Context Request r,
                 @Context SecurityContext sc
-                        ) {
+        ) {
             assertNotNull(ui);
             assertNotNull(hs);
             assertNotNull(r);
@@ -360,7 +404,13 @@ public class JaxRsInjectablesTest extends AbstractTest {
         }
 
         @Override
-        public void writeTo(String arg0, Class<?> arg1, Type arg2, Annotation[] arg3, MediaType arg4, MultivaluedMap<String, Object> arg5, OutputStream arg6) throws IOException, WebApplicationException {
+        public void writeTo(String arg0,
+                            Class<?> arg1,
+                            Type arg2,
+                            Annotation[] arg3,
+                            MediaType arg4,
+                            MultivaluedMap<String, Object> arg5,
+                            OutputStream arg6) throws IOException, WebApplicationException {
             arg6.write(arg0.getBytes());
         }
     }
@@ -404,13 +454,16 @@ public class JaxRsInjectablesTest extends AbstractTest {
 
     @Path("/{p}")
     public static class PerRequestFieldResource {
-        @PathParam("p") String p;
 
-        @QueryParam("q") String q;
+        @PathParam("p")
+        String p;
+
+        @QueryParam("q")
+        String q;
 
         @GET
         public String get() {
-            return p+q;
+            return p + q;
         }
     }
 
@@ -420,7 +473,6 @@ public class JaxRsInjectablesTest extends AbstractTest {
 
         assertEquals("foobar", resource("/foo?q=bar").getEntity());
     }
-
 
     @Provider
     @Produces("text/plain")
@@ -434,7 +486,7 @@ public class JaxRsInjectablesTest extends AbstractTest {
                 @Context HttpHeaders hs,
                 @Context Request r,
                 @Context SecurityContext sc
-                        ) {
+        ) {
 
             try {
                 ui.getAbsolutePath();
@@ -480,7 +532,13 @@ public class JaxRsInjectablesTest extends AbstractTest {
         }
 
         @Override
-        public void writeTo(String arg0, Class<?> arg1, Type arg2, Annotation[] arg3, MediaType arg4, MultivaluedMap<String, Object> arg5, OutputStream os) throws IOException, WebApplicationException {
+        public void writeTo(String arg0,
+                            Class<?> arg1,
+                            Type arg2,
+                            Annotation[] arg3,
+                            MediaType arg4,
+                            MultivaluedMap<String, Object> arg5,
+                            OutputStream os) throws IOException, WebApplicationException {
             String s = illegalStateExceptionCount + " " + runtimeExceptionCount + " " + arg0;
             os.write(s.getBytes());
         }
@@ -488,10 +546,12 @@ public class JaxRsInjectablesTest extends AbstractTest {
 
     @Path("/")
     public static class StringWriterParamConstructorResource {
+
         @GET
         @Produces("text/plain")
         public String get() {
-            return StringWriterParamConstructor.illegalStateExceptionCount + " " + StringWriterParamConstructor.runtimeExceptionCount + " GET";
+            return StringWriterParamConstructor.illegalStateExceptionCount + " "
+                    + StringWriterParamConstructor.runtimeExceptionCount + " GET";
         }
     }
 

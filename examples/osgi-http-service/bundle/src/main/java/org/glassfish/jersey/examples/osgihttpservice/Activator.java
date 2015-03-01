@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 import javax.servlet.ServletException;
 
 import org.glassfish.jersey.servlet.ServletContainer;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -72,14 +73,14 @@ public class Activator implements BundleActivator {
 
         this.tracker = new ServiceTracker(this.bc, HttpService.class.getName(), null) {
 
-          @Override
-          public Object addingService(ServiceReference serviceRef) {
-             httpService = (HttpService)super.addingService(serviceRef);
-             registerServlets();
-             return httpService;
-          }
+            @Override
+            public Object addingService(ServiceReference serviceRef) {
+                httpService = (HttpService) super.addingService(serviceRef);
+                registerServlets();
+                return httpService;
+            }
 
-          @Override
+            @Override
             public void removedService(ServiceReference ref, Object service) {
                 if (httpService == service) {
                     unregisterServlets();
@@ -94,7 +95,6 @@ public class Activator implements BundleActivator {
         logger.info("HTTP SERVICE BUNDLE STARTED");
     }
 
-
     @Override
     public synchronized void stop(BundleContext bundleContext) throws Exception {
         this.tracker.close();
@@ -103,12 +103,8 @@ public class Activator implements BundleActivator {
     private void registerServlets() {
         try {
             rawRegisterServlets();
-        } catch (InterruptedException ie) {
+        } catch (InterruptedException | NamespaceException | ServletException ie) {
             throw new RuntimeException(ie);
-        } catch (ServletException se) {
-            throw new RuntimeException(se);
-        } catch (NamespaceException se) {
-            throw new RuntimeException(se);
         }
     }
 
@@ -157,7 +153,7 @@ public class Activator implements BundleActivator {
 
     @SuppressWarnings("UseOfObsoleteCollectionType")
     private Dictionary<String, String> getJerseyServletParams() {
-        Dictionary<String, String> jerseyServletParams = new Hashtable<String, String>();
+        Dictionary<String, String> jerseyServletParams = new Hashtable<>();
         jerseyServletParams.put("javax.ws.rs.Application", JerseyApplication.class.getName());
         return jerseyServletParams;
     }

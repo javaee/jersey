@@ -114,7 +114,8 @@ public class TransactionalExceptionInterceptorProvider implements ComponentProvi
     private void bindWaeRestoringExceptionMapper() {
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
         final ServiceBindingBuilder bindingBuilder =
-                Injections.newFactoryBinder(new CdiBeanHk2Factory(TransactionalExceptionMapper.class, locator, beanManager, true));
+                Injections.newFactoryBinder(
+                        new CdiBeanHk2Factory(TransactionalExceptionMapper.class, locator, beanManager, true));
         bindingBuilder.to(ExceptionMapper.class);
         Injections.addBinding(bindingBuilder, dc);
         dc.commit();

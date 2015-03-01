@@ -71,22 +71,30 @@ import static org.junit.Assert.assertEquals;
  * @author Paul Sandoz
  */
 public class InjectedProviderTest extends AbstractTypeTester {
+
     public static class Bean implements Serializable {
+
         private String string;
 
-        public Bean() { }
+        public Bean() {
+        }
 
         public Bean(String string) {
             this.string = string;
         }
 
-        public String getString() { return string; }
+        public String getString() {
+            return string;
+        }
 
-        public void setString(String string) { this.string = string; }
+        public void setString(String string) {
+            this.string = string;
+        }
     }
 
     @Provider
     public static class BeanReader implements MessageBodyReader<Bean> {
+
         @Override
         public boolean isReadable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
             return type == Bean.class;
@@ -102,7 +110,7 @@ public class InjectedProviderTest extends AbstractTypeTester {
                 InputStream entityStream) throws IOException {
             ObjectInputStream oin = new ObjectInputStream(entityStream);
             try {
-                return (Bean)oin.readObject();
+                return (Bean) oin.readObject();
             } catch (ClassNotFoundException cause) {
                 throw new IOException(cause);
             }
@@ -143,6 +151,7 @@ public class InjectedProviderTest extends AbstractTypeTester {
 
     @Path("/one/two/{id}")
     public static class BeanResource {
+
         @GET
         public Bean get() {
             return new Bean("");
@@ -156,19 +165,20 @@ public class InjectedProviderTest extends AbstractTypeTester {
 
     @Test
     public void testBean() throws Exception {
-
         Bean bean3 = target("one/two/three").request().get(Bean.class);
         Bean bean4 = target("one/two/four").request().get(Bean.class);
 
-        final Map<String, String> map3 =
-                new HashMap<String, String>(){{put("id", "three");}};
-        final Map<String, String> map4 =
-                new HashMap<String, String>(){{put("id", "four");}};
+        final Map<String, String> map3 = new HashMap<String, String>() {{
+            put("id", "three");
+        }};
+        final Map<String, String> map4 = new HashMap<String, String>() {{
+            put("id", "four");
+        }};
 
-        String requestUri3 = target().getUriBuilder().
-                path(BeanResource.class).buildFromMap(map3).toString();
-        String requestUri4 = target().getUriBuilder().
-                path(BeanResource.class).buildFromMap(map4).toString();
+        String requestUri3 = target().getUriBuilder()
+                .path(BeanResource.class).buildFromMap(map3).toString();
+        String requestUri4 = target().getUriBuilder()
+                .path(BeanResource.class).buildFromMap(map4).toString();
 
         assertEquals(requestUri3, bean3.getString());
         assertEquals(requestUri4, bean4.getString());

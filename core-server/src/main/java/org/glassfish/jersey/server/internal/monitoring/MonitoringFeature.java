@@ -120,9 +120,11 @@ public final class MonitoringFeature implements Feature {
 
         if (statisticsEnabledProperty != null && !statisticsEnabledProperty) {
             if (mbeansEnabledProperty != null && mBeansEnabled) {
-                LOGGER.log(Level.WARNING, LocalizationMessages.WARNING_MONITORING_FEATURE_ENABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
+                LOGGER.log(Level.WARNING,
+                        LocalizationMessages.WARNING_MONITORING_FEATURE_ENABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
             } else {
-                LOGGER.log(Level.WARNING, LocalizationMessages.WARNING_MONITORING_FEATURE_DISABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
+                LOGGER.log(Level.WARNING,
+                        LocalizationMessages.WARNING_MONITORING_FEATURE_DISABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
             }
         }
 
@@ -216,6 +218,7 @@ public final class MonitoringFeature implements Feature {
     }
 
     private static class StatisticsListener implements MonitoringStatisticsListener {
+
         @Inject
         Provider<Ref<MonitoringStatistics>> statisticsFactory;
 

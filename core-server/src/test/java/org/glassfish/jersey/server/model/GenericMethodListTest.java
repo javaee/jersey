@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,12 +55,14 @@ import static org.junit.Assert.assertTrue;
  * @author Paul Sandoz
  */
 public class GenericMethodListTest {
-    public static abstract class AFoo<T, V> {
+
+    public abstract static class AFoo<T, V> {
+
         @POST
         public abstract T create(T newObject, @Context String s, @Context V v);
     }
 
-    public static abstract class ABar extends AFoo<String, Integer> {
+    public abstract static class ABar extends AFoo<String, Integer> {
     }
 
     public class AResource extends ABar {
@@ -85,6 +87,7 @@ public class GenericMethodListTest {
     }
 
     public static interface IFoo<T, V> {
+
         @POST
         public T create(T newObject, @Context String s, @Context V v);
     }

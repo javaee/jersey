@@ -171,7 +171,11 @@ public interface OAuth2CodeGrantFlow {
          */
         ACCESS_TOKEN_REQUEST {
             @Override
-            public void property(String key, String value, Map<String, String> authorizationProps, Map<String, String> accessTokenProps, Map<String, String> refreshTokenProps) {
+            public void property(String key,
+                                 String value,
+                                 Map<String, String> authorizationProps,
+                                 Map<String, String> accessTokenProps,
+                                 Map<String, String> refreshTokenProps) {
                 nonNullProperty(key, value, accessTokenProps);
             }
         },
@@ -180,7 +184,11 @@ public interface OAuth2CodeGrantFlow {
          */
         REFRESH_ACCESS_TOKEN {
             @Override
-            public void property(String key, String value, Map<String, String> authorizationProps, Map<String, String> accessTokenProps, Map<String, String> refreshTokenProps) {
+            public void property(String key,
+                                 String value,
+                                 Map<String, String> authorizationProps,
+                                 Map<String, String> accessTokenProps,
+                                 Map<String, String> refreshTokenProps) {
                 nonNullProperty(key, value, refreshTokenProps);
             }
         },
@@ -189,7 +197,11 @@ public interface OAuth2CodeGrantFlow {
          */
         ALL {
             @Override
-            public void property(String key, String value, Map<String, String> authorizationProps, Map<String, String> accessTokenProps, Map<String, String> refreshTokenProps) {
+            public void property(String key,
+                                 String value,
+                                 Map<String, String> authorizationProps,
+                                 Map<String, String> accessTokenProps,
+                                 Map<String, String> refreshTokenProps) {
                 nonNullProperty(key, value, authorizationProps);
                 nonNullProperty(key, value, accessTokenProps);
                 nonNullProperty(key, value, refreshTokenProps);
@@ -220,7 +232,6 @@ public interface OAuth2CodeGrantFlow {
 
     }
 
-
     /**
      * The builder of {@link OAuth2CodeGrantFlow}.
      *
@@ -229,6 +240,7 @@ public interface OAuth2CodeGrantFlow {
      *           their own specific type instead of type defined by this interface only).
      */
     public interface Builder<T extends Builder> {
+
         /**
          * Set the access token URI on which the access token can be requested. The URI points to the
          * authorization server and is defined by the Service Provider.

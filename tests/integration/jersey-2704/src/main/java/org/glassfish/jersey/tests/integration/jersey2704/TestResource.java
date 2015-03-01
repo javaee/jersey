@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,7 +50,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 
 
 /**
- * This resource is used to test if specific service class instance is available in the 
+ * This resource is used to test if specific service class instance is available in the
  * {@link ServiceLocator} that comes from Jersey context.
  *
  * @author Bartosz Firyn (bartoszfiryn at gmail.com)
@@ -58,32 +58,32 @@ import org.glassfish.hk2.api.ServiceLocator;
 @Path("test")
 public class TestResource {
 
-	ServiceLocator locator;
+    ServiceLocator locator;
 
-	/**
-	 * Inject {@link ServiceLocator} from Jersey context.
-	 *
-	 * @param locator the {@link ServiceLocator}
-	 */
-	@Inject
-	public TestResource(ServiceLocator locator) {
-		this.locator = locator;
-	}
+    /**
+     * Inject {@link ServiceLocator} from Jersey context.
+     *
+     * @param locator the {@link ServiceLocator}
+     */
+    @Inject
+    public TestResource(ServiceLocator locator) {
+        this.locator = locator;
+    }
 
-	/**
-	 * This method will test given class by checking if it is available in {@link ServiceLocator}
-	 * that has been injected from the Jersey context.
-	 * 
-	 * @param clazz the service class name to check
-	 * @return {@link Response} with status code 200 if service is available, 600 otherwise
-	 * @throws Exception in case when there are any error (e.g. class not exist)
-	 */
-	@GET
-	@Path("{clazz}")
-	@Produces("text/plain")
-	public Response test(@PathParam("clazz") String clazz) throws Exception {
-		return Response
-			.status(locator.getService(Class.forName(clazz)) != null ? 200 : 600)
-			.build();
-	}
+    /**
+     * This method will test given class by checking if it is available in {@link ServiceLocator}
+     * that has been injected from the Jersey context.
+     *
+     * @param clazz the service class name to check
+     * @return {@link Response} with status code 200 if service is available, 600 otherwise
+     * @throws Exception in case when there are any error (e.g. class not exist)
+     */
+    @GET
+    @Path("{clazz}")
+    @Produces("text/plain")
+    public Response test(@PathParam("clazz") String clazz) throws Exception {
+        return Response
+            .status(locator.getService(Class.forName(clazz)) != null ? 200 : 600)
+            .build();
+    }
 }

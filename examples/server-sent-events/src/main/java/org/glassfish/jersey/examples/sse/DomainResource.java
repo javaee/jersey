@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,6 +69,7 @@ import org.glassfish.jersey.server.ChunkedOutput;
  */
 @Path("domain")
 public class DomainResource {
+
     private static final Map<Integer, Process> processes = new ConcurrentHashMap<Integer, Process>();
 
     @Path("start")
@@ -87,7 +88,7 @@ public class DomainResource {
     @Produces(SseFeature.SERVER_SENT_EVENTS)
     @GET
     public EventOutput getProgress(@PathParam("id") int id,
-                                    @DefaultValue("false") @QueryParam("testSource") boolean testSource) {
+                                   @DefaultValue("false") @QueryParam("testSource") boolean testSource) {
         final Process process = processes.get(id);
 
         if (process != null) {
@@ -144,7 +145,9 @@ public class DomainResource {
                     latch.await(5, TimeUnit.SECONDS);
                 }
 
-                broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "starting domain " + id + " ...").build());
+                broadcaster.broadcast(
+                        new OutboundEvent.Builder().name("domain-progress").data(String.class, "starting domain " + id + " ...")
+                                .build());
                 broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "50%").build());
                 broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "60%").build());
                 broadcaster.broadcast(new OutboundEvent.Builder().name("domain-progress").data(String.class, "70%").build());

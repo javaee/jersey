@@ -80,7 +80,7 @@ public class SubResourceTest extends JerseyTest {
             return new SubResource();
         }
 
-        final static String GET = "get";
+        static final String GET = "get";
 
         @Path("some/path")
         @GET

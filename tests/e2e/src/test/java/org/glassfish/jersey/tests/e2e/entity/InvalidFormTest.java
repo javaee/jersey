@@ -56,13 +56,16 @@ import static org.junit.Assert.assertEquals;
  * @author Paul Sandoz
  */
 public class InvalidFormTest extends AbstractTypeTester {
-    public static abstract class Resource<T> {
+
+    public abstract static class Resource<T> {
+
         @POST
-        public void post(T t) { }
+        public void post(T t) {
+        }
     }
 
     @Path("multivaluedmap")
-    public static class FormMultivaluedMapResource extends Resource<MultivaluedMap<String, String>> { }
+    public static class FormMultivaluedMapResource extends Resource<MultivaluedMap<String, String>> {}
 
     @Test
     public void testFormMultivaluedMapRepresentation() {
@@ -70,7 +73,7 @@ public class InvalidFormTest extends AbstractTypeTester {
     }
 
     @Path("form")
-    public static class FormResource extends Resource<Form> { }
+    public static class FormResource extends Resource<Form> {}
 
     @Test
     public void testRepresentation() {

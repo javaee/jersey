@@ -103,12 +103,13 @@ final class ResourceMethodStatisticsImpl implements ResourceMethodStatistics {
                 return cached;
             }
 
-            final ExecutionStatistics methodStats = resourceMethodExecutionStatisticsBuilder == null ?
-                    ExecutionStatisticsImpl.EMPTY : resourceMethodExecutionStatisticsBuilder.build();
-            final ExecutionStatistics requestStats = requestExecutionStatisticsBuilder == null ?
-                    ExecutionStatisticsImpl.EMPTY : requestExecutionStatisticsBuilder.build();
+            final ExecutionStatistics methodStats = resourceMethodExecutionStatisticsBuilder == null
+                    ? ExecutionStatisticsImpl.EMPTY : resourceMethodExecutionStatisticsBuilder.build();
+            final ExecutionStatistics requestStats = requestExecutionStatisticsBuilder == null
+                    ? ExecutionStatisticsImpl.EMPTY : requestExecutionStatisticsBuilder.build();
 
-            final ResourceMethodStatisticsImpl stats = new ResourceMethodStatisticsImpl(resourceMethod, methodStats, requestStats);
+            final ResourceMethodStatisticsImpl stats = new ResourceMethodStatisticsImpl(resourceMethod, methodStats,
+                    requestStats);
 
             if (MonitoringUtils.isCacheable(methodStats)) {
                 cached = stats;

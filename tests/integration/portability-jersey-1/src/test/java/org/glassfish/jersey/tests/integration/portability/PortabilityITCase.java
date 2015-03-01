@@ -41,7 +41,6 @@
 package org.glassfish.jersey.tests.integration.portability;
 
 import com.sun.jersey.api.client.ClientResponse;
-
 import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.WebAppDescriptor;
@@ -50,7 +49,6 @@ import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -70,7 +68,7 @@ public class PortabilityITCase extends JerseyTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        String s = resource().path("helloworld").get(String.class);;
+        String s = resource().path("helloworld").get(String.class);
         assertEquals("Hello World!", s);
     }
 
@@ -96,8 +94,8 @@ public class PortabilityITCase extends JerseyTest {
             try {
                 return Integer.parseInt(port);
             } catch (NumberFormatException e) {
-                throw new TestContainerException("jersey.config.test.container.port with a " +
-                        "value of \"" + port +"\" is not a valid integer.", e);
+                throw new TestContainerException("jersey.config.test.container.port with a "
+                        + "value of \"" + port + "\" is not a valid integer.", e);
             }
         }
 
@@ -106,8 +104,8 @@ public class PortabilityITCase extends JerseyTest {
             try {
                 return Integer.parseInt(port);
             } catch (NumberFormatException e) {
-                throw new TestContainerException("JERSEY_TEST_PORT with a " +
-                        "value of \"" + port +"\" is not a valid integer.", e);
+                throw new TestContainerException("JERSEY_TEST_PORT with a "
+                        + "value of \"" + port + "\" is not a valid integer.", e);
             }
         }
         return defaultPort;

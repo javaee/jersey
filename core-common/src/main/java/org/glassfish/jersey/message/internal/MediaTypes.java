@@ -67,7 +67,6 @@ public final class MediaTypes {
      */
     public static final MediaType WADL_TYPE = MediaType.valueOf("application/vnd.sun.wadl+xml");
 
-
     /**
      * A comparator for media types, that implements the "partial order" defined in the resource matching algorithm
      * section of the JAX-RS specification, except that this comparator is "inverted" so that it allows for natural
@@ -159,8 +158,8 @@ public final class MediaTypes {
     private static final Predicate<String> QUALITY_PARAM_FILTERING_PREDICATE = new Predicate<String>() {
         @Override
         public boolean apply(String input) {
-            return !Quality.QUALITY_SOURCE_PARAMETER_NAME.equals(input) &&
-                    !Quality.QUALITY_PARAMETER_NAME.equals(input);
+            return !Quality.QUALITY_SOURCE_PARAMETER_NAME.equals(input)
+                    && !Quality.QUALITY_PARAMETER_NAME.equals(input);
         }
     };
 
@@ -358,16 +357,15 @@ public final class MediaTypes {
      */
     public static MediaType stripQualityParams(MediaType mediaType) {
         final Map<String, String> oldParameters = mediaType.getParameters();
-        if (oldParameters.isEmpty() ||
-                (!oldParameters.containsKey(Quality.QUALITY_SOURCE_PARAMETER_NAME) &&
-                        !oldParameters.containsKey(Quality.QUALITY_PARAMETER_NAME))) {
+        if (oldParameters.isEmpty()
+                || (!oldParameters.containsKey(Quality.QUALITY_SOURCE_PARAMETER_NAME)
+                            && !oldParameters.containsKey(Quality.QUALITY_PARAMETER_NAME))) {
             return mediaType;
         }
 
         return new MediaType(mediaType.getType(), mediaType.getSubtype(),
                 Maps.filterKeys(oldParameters, QUALITY_PARAM_FILTERING_PREDICATE));
     }
-
 
     /**
      * Returns MediaType with wildcard in subtype.

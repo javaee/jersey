@@ -268,14 +268,14 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
             final long diff = currentTime - startTime;
             if (interval == 0) {
                 if (diff < MINIMUM_UNIT_SIZE) {
-                    return TimeWindowStatisticsImpl.EMPTY.get(0l);
+                    return TimeWindowStatisticsImpl.EMPTY.get(0L);
                 } else {
                     final double requestsPerSecond = (double) (1000 * lastUnitCount) / diff;
                     final long avg = lastUnitCount == 0 ? -1 : lastUnitDuration / lastUnitCount;
 
-                    return lastUnitCount == 0 ?
-                            TimeWindowStatisticsImpl.EMPTY.get(0l) :
-                            new TimeWindowStatisticsImpl(0, requestsPerSecond, lastUnitMin, lastUnitMax, avg, lastUnitCount);
+                    return lastUnitCount == 0
+                            ? TimeWindowStatisticsImpl.EMPTY.get(0L)
+                            : new TimeWindowStatisticsImpl(0, requestsPerSecond, lastUnitMin, lastUnitMax, avg, lastUnitCount);
                 }
             }
 
@@ -344,10 +344,10 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
         }
     }
 
-    private final static ConcurrentHashMap<Long, TimeWindowStatisticsImpl> EMPTY = new ConcurrentHashMap<>(6);
+    private static final ConcurrentHashMap<Long, TimeWindowStatisticsImpl> EMPTY = new ConcurrentHashMap<>(6);
 
     static {
-        EMPTY.putIfAbsent(0l, new TimeWindowStatisticsImpl(0, 0, 0, 0, 0, 0));
+        EMPTY.putIfAbsent(0L, new TimeWindowStatisticsImpl(0, 0, 0, 0, 0, 0));
     }
 
     private final long interval;

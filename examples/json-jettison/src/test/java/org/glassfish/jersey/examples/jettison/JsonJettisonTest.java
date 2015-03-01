@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -109,8 +109,8 @@ public class JsonJettisonTest extends JerseyTest {
     @Test
     public void testPutOnFlightsJSONFormat() {
         // get the initial representation
-        Flights flights = target().path("flights").
-                request("application/json").get(Flights.class);
+        Flights flights = target().path("flights")
+                .request("application/json").get(Flights.class);
         // check that there are two flight entries
         assertEquals("Expected number of initial entries not found", 2, flights.getFlight().size());
 

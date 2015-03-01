@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -74,7 +74,7 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
      *
      * @param delegate the underlying MultivaluedMap
      */
-    public ImmutableMultivaluedMap(MultivaluedMap<K, V> delegate) {
+    public ImmutableMultivaluedMap(final MultivaluedMap<K, V> delegate) {
         if (delegate == null) {
             throw new NullPointerException("ImmutableMultivaluedMap delegate must not be 'null'.");
         }
@@ -82,37 +82,37 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
     }
 
     @Override
-    public boolean equalsIgnoreValueOrder(MultivaluedMap<K, V> otherMap) {
+    public boolean equalsIgnoreValueOrder(final MultivaluedMap<K, V> otherMap) {
         return delegate.equalsIgnoreValueOrder(otherMap);
     }
 
     @Override
-    public void putSingle(K key, V value) {
+    public void putSingle(final K key, final V value) {
         throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
-    public void add(K key, V value) {
+    public void add(final K key, final V value) {
         throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
-    public V getFirst(K key) {
+    public V getFirst(final K key) {
         return delegate.getFirst(key);
     }
 
     @Override
-    public void addAll(K key, V... newValues) {
+    public void addAll(final K key, final V... newValues) {
         throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
-    public void addAll(K key, List<V> valueList) {
+    public void addAll(final K key, final List<V> valueList) {
         throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
-    public void addFirst(K key, V value) {
+    public void addFirst(final K key, final V value) {
         throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
@@ -127,32 +127,32 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
     }
 
     @Override
-    public boolean containsKey(Object key) {
+    public boolean containsKey(final Object key) {
         return delegate.containsKey(key);
     }
 
     @Override
-    public boolean containsValue(Object value) {
+    public boolean containsValue(final Object value) {
         return delegate.containsValue(value);
     }
 
     @Override
-    public List<V> get(Object key) {
+    public List<V> get(final Object key) {
         return delegate.get(key);
     }
 
     @Override
-    public List<V> put(K key, List<V> value) {
+    public List<V> put(final K key, final List<V> value) {
         throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
-    public List<V> remove(Object key) {
+    public List<V> remove(final Object key) {
         throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends List<V>> m) {
+    public void putAll(final Map<? extends K, ? extends List<V>> m) {
         throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
@@ -182,13 +182,19 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ImmutableMultivaluedMap)) return false;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ImmutableMultivaluedMap)) {
+            return false;
+        }
 
-        ImmutableMultivaluedMap that = (ImmutableMultivaluedMap) o;
+        final ImmutableMultivaluedMap that = (ImmutableMultivaluedMap) o;
 
-        if (!delegate.equals(that.delegate)) return false;
+        if (!delegate.equals(that.delegate)) {
+            return false;
+        }
 
         return true;
     }

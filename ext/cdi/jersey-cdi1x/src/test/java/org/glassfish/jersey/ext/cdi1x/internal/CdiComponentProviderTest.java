@@ -75,7 +75,12 @@ public class CdiComponentProviderTest {
         }
 
         @Override
-        public Object readFrom(Class type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+        public Object readFrom(Class type,
+                               Type genericType,
+                               Annotation[] annotations,
+                               MediaType mediaType,
+                               MultivaluedMap httpHeaders,
+                               InputStream entityStream) throws IOException, WebApplicationException {
             return new Object();
         }
     }

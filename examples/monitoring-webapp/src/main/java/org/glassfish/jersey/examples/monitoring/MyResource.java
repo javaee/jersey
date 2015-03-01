@@ -68,7 +68,7 @@ public class MyResource {
     @Path("sub")
     public String testSubGet() {
         try {
-            Thread.sleep(500 + ((int)(Math.random() * 1000)));
+            Thread.sleep(500 + ((int) (Math.random() * 1000)));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ProcessingException(e);

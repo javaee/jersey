@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,21 +39,21 @@
  */
 package org.glassfish.jersey.tests.e2e.client.connector;
 
-import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.HttpUrlConnectorProvider;
-import org.glassfish.jersey.client.spi.ConnectorProvider;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
-import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
-import javax.annotation.Priority;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -71,25 +71,27 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
-import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
+import javax.annotation.Priority;
+
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
+import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -100,7 +102,7 @@ import static org.junit.Assert.assertThat;
 @RunWith(Parameterized.class)
 public class RequestHeaderModificationsTest extends JerseyTest {
 
-    private static final Logger LOGGER = Logger.getLogger(JerseyTest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RequestHeaderModificationsTest.class.getName());
     private static final boolean GZIP = false; // change to true when JERSEY-2341 fixed
     private static final boolean DUMP_ENTITY = false; // I have troubles to dump entity with async jetty!
 
@@ -119,7 +121,7 @@ public class RequestHeaderModificationsTest extends JerseyTest {
 
     @Parameterized.Parameters(name = "{index}: {0} / modificationSupported= {1} / addHeader= {2}")
     public static List<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
+        return Arrays.asList(new Object[][] {
                 {HttpUrlConnectorProvider.class, true, false},
                 {GrizzlyConnectorProvider.class, false, false}, // change to true when JERSEY-2341 fixed
                 {JettyConnectorProvider.class, false, false}, // change to true when JERSEY-2341 fixed
@@ -176,14 +178,12 @@ public class RequestHeaderModificationsTest extends JerseyTest {
         assertResponse(response);
     }
 
-
     private Invocation.Builder requestBuilder() {
         return target(PATH)
                 .request()
                 .header(REQUEST_HEADER_NAME_CLIENT, REQUEST_HEADER_VALUE_CLIENT)
                 .header(REQUEST_HEADER_MODIFICATION_SUPPORTED, modificationSupported && addHeader)
-                .header("hello", "double").header("hello", "value")
-                ;
+                .header("hello", "double").header("hello", "value");
     }
 
     private Entity<MyEntity> requestEntity() {
@@ -216,10 +216,9 @@ public class RequestHeaderModificationsTest extends JerseyTest {
         return null;
     }
 
-
-
     @Path(PATH)
     public static class TestResource {
+
         @POST
         public String handle(InputStream questionStream,
                              @HeaderParam(REQUEST_HEADER_NAME_CLIENT) String client,
@@ -240,6 +239,7 @@ public class RequestHeaderModificationsTest extends JerseyTest {
     }
 
     public static class MyWriterInterceptor implements WriterInterceptor {
+
         private final boolean addHeader;
 
         public MyWriterInterceptor(boolean addHeader) {
@@ -259,6 +259,7 @@ public class RequestHeaderModificationsTest extends JerseyTest {
     }
 
     public static class MyClientRequestFilter implements ClientRequestFilter {
+
         @Override
         public void filter(ClientRequestContext requestContext) throws IOException {
             requestContext.getHeaders().add(REQUEST_HEADER_NAME_FILTER, REQUEST_HEADER_VALUE_FILTER);
@@ -267,6 +268,7 @@ public class RequestHeaderModificationsTest extends JerseyTest {
 
     @Priority(Priorities.ENTITY_CODER)
     public static class MyMessageBodyWriter implements MessageBodyWriter<MyEntity> {
+
         private final boolean addHeader;
 
         public MyMessageBodyWriter(boolean addHeader) {
@@ -295,6 +297,7 @@ public class RequestHeaderModificationsTest extends JerseyTest {
     }
 
     public static class MyEntity {
+
         private String value;
 
         public MyEntity() {

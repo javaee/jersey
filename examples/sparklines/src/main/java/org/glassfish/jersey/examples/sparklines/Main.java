@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,18 +39,20 @@
  */
 package org.glassfish.jersey.examples.sparklines;
 
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.ext.RuntimeDelegate;
+
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer;
+import org.glassfish.jersey.server.ResourceConfig;
+
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.ext.RuntimeDelegate;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author Paul Sandoz
@@ -86,14 +88,13 @@ public class Main {
         return server;
     }
 
-
     public static void main(String[] args) {
 
         try {
             final HttpServer server = startServer(args.length >= 1 ? args[0] : null);
-            System.out.println(String.format("Application started.\n" +
-                    "Access it at %s\n" +
-                    "Hit enter to stop it...",
+            System.out.println(String.format("Application started.\n"
+                            + "Access it at %s\n"
+                            + "Hit enter to stop it...",
                     getAppUri()));
             System.in.read();
             server.shutdownNow();

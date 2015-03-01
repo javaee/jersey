@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,54 +39,60 @@
  */
 package org.glassfish.jersey.media.htmljson;
 
-
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import net.java.html.json.ComputedProperty;
-import net.java.html.json.Model;
-import net.java.html.json.Property;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+
+import net.java.html.json.ComputedProperty;
+import net.java.html.json.Model;
+import net.java.html.json.Property;
 
 /** Can use the same code on server as well as client.
  *
  * @author Jaroslav Tulach
  */
 @Model(className = "Person", properties = {
-    @Property(name = "firstName", type = String.class),
-    @Property(name = "lastName", type = String.class)
+        @Property(name = "firstName", type = String.class),
+        @Property(name = "lastName", type = String.class)
 })
 public class ComputedPropertyTest extends AbstractTypeTester {
-    @ComputedProperty static String fullName(String firstName, String lastName) {
+
+    @ComputedProperty
+    static String fullName(String firstName, String lastName) {
         return firstName + " " + lastName;
     }
-    
+
     //
     // server side
     //
     @Path("empty")
     public static class TestResource {
-        @PUT @Path("fullName") public String myBean(Person p) {
+
+        @PUT
+        @Path("fullName")
+        public String myBean(Person p) {
             return p.getFullName();
         }
     }
-    
+
     //
     // Client using the model to connect to server
     //
 
-    @Test public void askForFullName() {
+    @Test
+    public void askForFullName() {
         WebTarget target = target("empty/fullName");
-        
+
         Person p = new Person();
         p.setFirstName("Jaroslav");
         p.setLastName("Tulach");
-        
+
         final Response response = target.request().put(Entity.entity(p, MediaType.APPLICATION_JSON_TYPE));
 
         assertEquals(200, response.getStatus());

@@ -117,7 +117,8 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
     }
 
-    private static final class PathParamListPathSegmentValueFactory extends AbstractContainerRequestValueFactory<List<PathSegment>> {
+    private static final class PathParamListPathSegmentValueFactory
+            extends AbstractContainerRequestValueFactory<List<PathSegment>> {
 
         private final String name;
         private final boolean decode;

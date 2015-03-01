@@ -92,6 +92,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class CommonConfig implements FeatureContext, ExtendedConfig {
+
     private static final Logger LOGGER = Logger.getLogger(CommonConfig.class.getName());
     private static final Function<Object, Binder> CAST_TO_BINDER = new Function<Object, Binder>() {
         @Override
@@ -508,9 +509,9 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         final ContractProvider model = componentBag.getModel(componentClass);
         if (model.getContracts().contains(Feature.class)) {
             @SuppressWarnings("unchecked")
-            final FeatureRegistration registration = (component != null) ?
-                    new FeatureRegistration((Feature) component) :
-                    new FeatureRegistration((Class<? extends Feature>) componentClass);
+            final FeatureRegistration registration = (component != null)
+                    ? new FeatureRegistration((Feature) component)
+                    : new FeatureRegistration((Class<? extends Feature>) componentClass);
             newFeatureRegistrations.add(registration);
         }
     }
@@ -602,7 +603,8 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
             // Forced (always invoked).
             final List<ForcedAutoDiscoverable> forcedAutoDiscroverables = new LinkedList<ForcedAutoDiscoverable>();
-            for (Class<ForcedAutoDiscoverable> forcedADType : ServiceFinder.find(ForcedAutoDiscoverable.class, true).toClassArray()) {
+            for (Class<ForcedAutoDiscoverable> forcedADType : ServiceFinder.find(ForcedAutoDiscoverable.class, true)
+                    .toClassArray()) {
                 forcedAutoDiscroverables.add(locator.createAndInitialize(forcedADType));
             }
             providers.addAll(forcedAutoDiscroverables);

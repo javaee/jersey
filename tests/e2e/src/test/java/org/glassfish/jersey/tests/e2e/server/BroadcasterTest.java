@@ -161,8 +161,8 @@ public class BroadcasterTest extends JerseyTest {
         for (InputStream is : inputStreams) {
             int bytesRead = 0;
             int previous = 0;
-            while ((bytesRead += is.read(entity, bytesRead, entity.length - bytesRead)) < entity.length &&
-                    previous != bytesRead) {
+            while ((bytesRead += is.read(entity, bytesRead, entity.length - bytesRead)) < entity.length
+                    && previous != bytesRead) {
                 previous = bytesRead;
             }
             assertEquals(golden, new String(entity));

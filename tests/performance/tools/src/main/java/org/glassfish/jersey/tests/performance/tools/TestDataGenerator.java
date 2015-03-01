@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,7 @@ import java.lang.reflect.InvocationTargetException;
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public class TestDataGenerator {
+
     /**
      *
      * @param bean bean to be populated
@@ -58,7 +59,7 @@ public class TestDataGenerator {
      * @throws InvocationTargetException
      * @throws InstantiationException
      */
-    public static <T> void  populateBeanByAnnotations(T bean) throws ClassNotFoundException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+    public static <T> void populateBeanByAnnotations(T bean) throws ReflectiveOperationException {
         Field[] fields = bean.getClass().getDeclaredFields();
         TestValueGenerator generator = TestValueGeneratorFactory.getGenerator(TestDataGenerationStrategy.RANDOM);
         for (Field field : fields) {

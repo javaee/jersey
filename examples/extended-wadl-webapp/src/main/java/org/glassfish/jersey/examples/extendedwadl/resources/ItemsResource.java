@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -79,8 +79,8 @@ public class ItemsResource {
     public ItemResource getItem(@PathParam("id") final Integer id) {
         final Item item = _repository.get(id);
         if (item == null) {
-            throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Item with id " + id + " does not " +
-                    "exist!").build());
+            throw new NotFoundException(Response.status(Response.Status.NOT_FOUND).entity("Item with id " + id + " does not "
+                    + "exist!").build());
         }
 
         return new ItemResource(item);

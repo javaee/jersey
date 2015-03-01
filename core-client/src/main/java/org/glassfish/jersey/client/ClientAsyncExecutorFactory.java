@@ -62,6 +62,7 @@ import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class ClientAsyncExecutorFactory extends RequestExecutorFactory {
+
     private static final Logger LOGGER = Logger.getLogger(ClientAsyncExecutorFactory.class.getName());
 
     /**
@@ -86,7 +87,7 @@ class ClientAsyncExecutorFactory extends RequestExecutorFactory {
             public ExecutorService getRequestingExecutor() {
                 int poolSize = 0;
                 if (initArgs != null && initArgs.length > 0 && initArgs[0] instanceof Integer) {
-                    poolSize = (Integer)initArgs[0];
+                    poolSize = (Integer) initArgs[0];
                     if (poolSize <= 0) {
                         LOGGER.config(LocalizationMessages.IGNORED_ASYNC_THREADPOOL_SIZE(poolSize));
                     }

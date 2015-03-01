@@ -69,8 +69,7 @@ public class NullOutputStream extends OutputStream {
         checkClosed();
         if (b == null) {
             throw new NullPointerException();
-        } else if ((off < 0) || (off > b.length) || (len < 0) ||
-                ((off + len) > b.length) || ((off + len) < 0)) {
+        } else if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) > b.length) || ((off + len) < 0)) {
             throw new IndexOutOfBoundsException();
         }
     }

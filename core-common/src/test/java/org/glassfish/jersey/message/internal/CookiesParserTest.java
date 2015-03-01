@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class CookiesParserTest {
 
-    private final static SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 
     @Test
     public void testCaseInsensitiveNewCookieParams() throws Exception {
@@ -68,15 +68,15 @@ public class CookiesParserTest {
                                                      final String domain, final String comment, final String version,
                                                      final String secure, final String httpOnly) throws Exception {
 
-        final String header = "foo=bar;" +
-                expires + "=Tue, 15 Jan 2013 21:47:38 GMT;" +
-                maxAge + "=42;" +
-                path + "=/;" +
-                domain + "=.example.com;" +
-                comment + "=Testing;" +
-                version + "=1;" +
-                secure + ";" +
-                httpOnly;
+        final String header = "foo=bar;"
+                + expires + "=Tue, 15 Jan 2013 21:47:38 GMT;"
+                + maxAge + "=42;"
+                + path + "=/;"
+                + domain + "=.example.com;"
+                + comment + "=Testing;"
+                + version + "=1;"
+                + secure + ";"
+                + httpOnly;
 
         final NewCookie cookie = CookiesParser.parseNewCookie(header);
 

@@ -115,7 +115,8 @@ public class RxListenableFutureTest {
         testTarget(RxListenableFuture.from(client.target("http://jersey.java.net"), executor), true);
     }
 
-    private void testClient(final RxClient<RxListenableFutureInvoker> rxClient, final boolean testDedicatedThread) throws Exception {
+    private void testClient(final RxClient<RxListenableFutureInvoker> rxClient, final boolean testDedicatedThread)
+            throws Exception {
         testTarget(rxClient.target("http://jersey.java.net"), testDedicatedThread);
     }
 

@@ -47,7 +47,6 @@ import org.glassfish.jersey.message.internal.HttpHeaderReader;
 import org.glassfish.jersey.message.internal.QualitySourceMediaType;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -55,6 +54,7 @@ import static org.junit.Assert.assertTrue;
  * @author unknown
  */
 public class QualitySourceMediaTypeProviderTest {
+
     @Test
     public void testOneMediaType() throws Exception {
         final String header = "application/xml";
@@ -175,7 +175,8 @@ public class QualitySourceMediaTypeProviderTest {
 
     @Test
     public void testFirefoxAcceptHeader() throws Exception {
-        final String header = "text/xml,application/xml,application/xhtml+xml,text/html;qs=0.9,text/plain;qs=0.8,image/png,*/*;qs=0.5";
+        final String header = "text/xml,application/xml,application/xhtml+xml,text/html;qs=0.9,text/plain;qs=0.8,image/png,*/*;"
+                + "qs=0.5";
         final List<QualitySourceMediaType> l = HttpHeaderReader.readQualitySourceMediaType(header);
 
         assertEquals(7, l.size());

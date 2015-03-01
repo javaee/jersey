@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -153,17 +153,18 @@ public class EntityFilteringServerTest {
         public void testConfiguration() throws Exception {
             final String fields = target("configuration").request().get(String.class);
 
-            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities" +
-                    ".property");
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2,"
+                    + "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities"
+                    + ".property");
         }
 
         @Test
         public void testConfigurationOverResource() throws Exception {
             final String fields = target("configurationOverResource").request().get(String.class);
 
-            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property");
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2,"
+                    + "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities"
+                    + ".property");
         }
     }
 
@@ -199,16 +200,18 @@ public class EntityFilteringServerTest {
         public void testAnnotations() throws Exception {
             final String fields = target("annotations").request().get(String.class);
 
-            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property");
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2,"
+                    + "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities"
+                    + ".property");
         }
 
         @Test
         public void testAnnotationsOverResource() throws Exception {
             final String fields = target("annotationsOverResource").request().get(String.class);
 
-            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property");
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2,"
+                    + "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities"
+                    + ".property");
         }
     }
 
@@ -228,16 +231,18 @@ public class EntityFilteringServerTest {
         public void testAnnotationsOverConfiguration() throws Exception {
             final String fields = target("annotationsOverConfiguration").request().get(String.class);
 
-            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property");
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2,"
+                    + "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities"
+                    + ".property");
         }
 
         @Test
         public void testAnnotationsOverConfigurationOverResource() throws Exception {
             final String fields = target("annotationsOverConfigurationOverResource").request().get(String.class);
 
-            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property");
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2,"
+                    + "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities"
+                    + ".property");
         }
     }
 }

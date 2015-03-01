@@ -53,7 +53,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
 
-import freemarker.template.Configuration;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ContainerException;
@@ -64,6 +63,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 
 import org.jvnet.hk2.annotations.Optional;
 
+import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
@@ -91,17 +91,19 @@ final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> 
                                    @Optional final ServletContext servletContext) {
         super(config, servletContext, "freemarker", "ftl");
 
-        this.factory = getTemplateObjectFactory(serviceLocator, FreemarkerConfigurationFactory.class, new Value<FreemarkerConfigurationFactory>() {
-            @Override
-            public FreemarkerConfigurationFactory get() {
-                Configuration configuration = getTemplateObjectFactory(serviceLocator, Configuration.class, Values.<Configuration>empty());
-                if (configuration == null) {
-                    return new FreemarkerDefaultConfigurationFactory(servletContext);
-                } else {
-                    return new FreemarkerSuppliedConfigurationFactory(configuration);
-                }
-            }
-        });
+        this.factory = getTemplateObjectFactory(serviceLocator, FreemarkerConfigurationFactory.class,
+                new Value<FreemarkerConfigurationFactory>() {
+                    @Override
+                    public FreemarkerConfigurationFactory get() {
+                        Configuration configuration = getTemplateObjectFactory(serviceLocator, Configuration.class,
+                                Values.<Configuration>empty());
+                        if (configuration == null) {
+                            return new FreemarkerDefaultConfigurationFactory(servletContext);
+                        } else {
+                            return new FreemarkerSuppliedConfigurationFactory(configuration);
+                        }
+                    }
+                });
 
     }
 

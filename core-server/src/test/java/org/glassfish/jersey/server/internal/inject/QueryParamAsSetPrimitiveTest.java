@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -71,9 +71,9 @@ public class QueryParamAsSetPrimitiveTest extends AbstractTest {
         );
     }
 
-
     @Path("/Set")
     public static class ResourceQueryPrimitiveSet {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@QueryParam("boolean") Set<Boolean> v) {
@@ -84,14 +84,14 @@ public class QueryParamAsSetPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/byte")
         public String doGetByte(@QueryParam("byte") Set<Byte> v) {
-            assertTrue(v.contains((byte)127));
+            assertTrue(v.contains((byte) 127));
             return "content";
         }
 
         @GET
         @Produces("application/short")
         public String doGetShort(@QueryParam("short") Set<Short> v) {
-            assertTrue(v.contains((short)32767));
+            assertTrue(v.contains((short) 32767));
             return "content";
         }
 
@@ -126,6 +126,7 @@ public class QueryParamAsSetPrimitiveTest extends AbstractTest {
 
     @Path("/Set/default/null")
     public static class ResourceQueryPrimitiveSetDefaultEmpty {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@QueryParam("boolean") Set<Boolean> v) {
@@ -178,6 +179,7 @@ public class QueryParamAsSetPrimitiveTest extends AbstractTest {
 
     @Path("/Set/default")
     public static class ResourceQueryPrimitiveSetDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@QueryParam("boolean") @DefaultValue("true") Set<Boolean> v) {
@@ -188,14 +190,14 @@ public class QueryParamAsSetPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/byte")
         public String doGetByte(@QueryParam("byte") @DefaultValue("127") Set<Byte> v) {
-            assertTrue(v.contains((byte)127));
+            assertTrue(v.contains((byte) 127));
             return "content";
         }
 
         @GET
         @Produces("application/short")
         public String doGetShort(@QueryParam("short") @DefaultValue("32767") Set<Short> v) {
-            assertTrue(v.contains((short)32767));
+            assertTrue(v.contains((short) 32767));
             return "content";
         }
 
@@ -230,6 +232,7 @@ public class QueryParamAsSetPrimitiveTest extends AbstractTest {
 
     @Path("/Set/default/override")
     public static class ResourceQueryPrimitiveSetDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@QueryParam("boolean") @DefaultValue("false") Set<Boolean> v) {
@@ -240,14 +243,14 @@ public class QueryParamAsSetPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/byte")
         public String doGetByte(@QueryParam("byte") @DefaultValue("0") Set<Byte> v) {
-            assertTrue(v.contains((byte)127));
+            assertTrue(v.contains((byte) 127));
             return "content";
         }
 
         @GET
         @Produces("application/short")
         public String doGetShort(@QueryParam("short") @DefaultValue("0") Set<Short> v) {
-            assertTrue(v.contains((short)32767));
+            assertTrue(v.contains((short) 32767));
             return "content";
         }
 

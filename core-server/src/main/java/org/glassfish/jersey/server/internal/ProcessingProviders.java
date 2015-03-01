@@ -71,14 +71,19 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * @author Miroslav Fuksa
  */
 public class ProcessingProviders {
+
     private final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters;
     private final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters;
     private final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors;
     private final MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors;
-    private final MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>> nameBoundRequestFiltersInverse;
-    private final MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>> nameBoundResponseFiltersInverse;
-    private final MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>> nameBoundReaderInterceptorsInverse;
-    private final MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>> nameBoundWriterInterceptorsInverse;
+    private final MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>>
+            nameBoundRequestFiltersInverse;
+    private final MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>>
+            nameBoundResponseFiltersInverse;
+    private final MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>>
+            nameBoundReaderInterceptorsInverse;
+    private final MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>>
+            nameBoundWriterInterceptorsInverse;
     private final Iterable<RankedProvider<ContainerRequestFilter>> globalRequestFilters;
     private final Iterable<ContainerRequestFilter> sortedGlobalRequestFilters;
     private final List<RankedProvider<ContainerRequestFilter>> preMatchFilters;
@@ -90,7 +95,6 @@ public class ProcessingProviders {
     private final Iterable<RankedProvider<WriterInterceptor>> globalWriterInterceptors;
     private final Iterable<WriterInterceptor> sortedGlobalWriterInterceptors;
     private final Iterable<DynamicFeature> dynamicFeatures;
-
 
     /**
      * Creates new instance of the processing providers.
@@ -168,7 +172,8 @@ public class ProcessingProviders {
      * @return Name bound {@link ContainerRequestFilter request filter} map. Keys are request filters and
      *         values are {@link javax.ws.rs.NameBinding name bound annotations} attached to these filters.
      */
-    public MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>> getNameBoundRequestFiltersInverse() {
+    public
+    MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>> getNameBoundRequestFiltersInverse() {
         return nameBoundRequestFiltersInverse;
     }
 
@@ -188,7 +193,8 @@ public class ProcessingProviders {
      * @return Name bound {@link ContainerRequestFilter response filter} map. Keys are response filters and
      *         values are {@link javax.ws.rs.NameBinding name bound annotations} attached to these filters.
      */
-    public MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>> getNameBoundResponseFiltersInverse() {
+    public
+    MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>> getNameBoundResponseFiltersInverse() {
         return nameBoundResponseFiltersInverse;
     }
 
@@ -208,7 +214,8 @@ public class ProcessingProviders {
      * @return Name bound {@link ReaderInterceptor reader interceptor} map. Keys are reader interceptors and
      *         values are {@link javax.ws.rs.NameBinding name bound annotations} attached to these interceptors.
      */
-    public MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>> getNameBoundReaderInterceptorsInverse() {
+    public
+    MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>> getNameBoundReaderInterceptorsInverse() {
         return nameBoundReaderInterceptorsInverse;
     }
 
@@ -228,7 +235,8 @@ public class ProcessingProviders {
      * @return Name bound {@link WriterInterceptor writer interceptor} map. Keys are reader interceptors and
      *         values are {@link javax.ws.rs.NameBinding name bound annotations} attached to these interceptors.
      */
-    public MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>> getNameBoundWriterInterceptorsInverse() {
+    public
+    MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>> getNameBoundWriterInterceptorsInverse() {
         return nameBoundWriterInterceptorsInverse;
     }
 
@@ -325,6 +333,7 @@ public class ProcessingProviders {
      * Processing provider binder.
      */
     public static class Binder extends AbstractBinder {
+
         @Override
         protected void configure() {
 
@@ -335,6 +344,7 @@ public class ProcessingProviders {
         }
 
         private static class ProcessingProvidersReferencingFactory extends ReferencingFactory<ProcessingProviders> {
+
             @Inject
             public ProcessingProvidersReferencingFactory(Provider<Ref<ProcessingProviders>> referenceFactory) {
                 super(referenceFactory);

@@ -164,6 +164,7 @@ public class WebComponent {
 
     @SuppressWarnings("JavaDoc")
     private static class HttpServletRequestReferencingFactory extends ReferencingFactory<HttpServletRequest> {
+
         @Inject
         public HttpServletRequestReferencingFactory(final Provider<Ref<HttpServletRequest>> referenceFactory) {
             super(referenceFactory);
@@ -172,6 +173,7 @@ public class WebComponent {
 
     @SuppressWarnings("JavaDoc")
     private static class HttpServletResponseReferencingFactory extends ReferencingFactory<HttpServletResponse> {
+
         @Inject
         public HttpServletResponseReferencingFactory(final Provider<Ref<HttpServletResponse>> referenceFactory) {
             super(referenceFactory);
@@ -573,7 +575,8 @@ public class WebComponent {
             final Enumeration parameterNames = servletRequest.getParameterNames();
 
             final String queryString = servletRequest.getQueryString();
-            final List<String> queryParams = queryString != null ? getDecodedQueryParamList(queryString) : Collections.<String>emptyList();
+            final List<String> queryParams = queryString != null ? getDecodedQueryParamList(queryString)
+                    : Collections.<String>emptyList();
 
             final boolean keepQueryParams = queryParamsAsFormParams || queryParams.isEmpty();
             final MultivaluedMap<String, String> formMap = form.asMap();

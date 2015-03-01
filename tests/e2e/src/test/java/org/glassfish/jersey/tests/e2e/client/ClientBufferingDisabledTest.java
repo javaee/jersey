@@ -74,7 +74,7 @@ import org.junit.Test;
  */
 public class ClientBufferingDisabledTest extends JerseyTest {
 
-    private static final long LENGTH = 200000000l;
+    private static final long LENGTH = 200000000L;
     private static final int CHUNK = 2048;
     private static CountDownLatch postLatch = new CountDownLatch(1);
 

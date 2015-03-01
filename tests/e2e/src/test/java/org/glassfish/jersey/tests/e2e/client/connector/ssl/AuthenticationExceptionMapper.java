@@ -56,18 +56,18 @@ public class AuthenticationExceptionMapper implements ExceptionMapper<Authentica
     @Override
     public Response toResponse(AuthenticationException e) {
         if (e.getRealm() != null) {
-            return Response.
-                    status(Status.UNAUTHORIZED).
-                    header("WWW-Authenticate", "Basic realm=\"" + e.getRealm() + "\"").
-                    type("text/plain").
-                    entity(e.getMessage()).
-                    build();
+            return Response
+                    .status(Status.UNAUTHORIZED)
+                    .header("WWW-Authenticate", "Basic realm=\"" + e.getRealm() + "\"")
+                    .type("text/plain")
+                    .entity(e.getMessage())
+                    .build();
         } else {
-            return Response.
-                    status(Status.UNAUTHORIZED).
-                    type("text/plain").
-                    entity(e.getMessage()).
-                    build();
+            return Response
+                    .status(Status.UNAUTHORIZED)
+                    .type("text/plain")
+                    .entity(e.getMessage())
+                    .build();
         }
     }
 }

@@ -75,9 +75,11 @@ import static org.junit.Assert.assertEquals;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public abstract class AbstractTypeTester extends JerseyTest {
+
     protected static byte[] requestEntity;
 
-    public static abstract class AResource<T> {
+    public abstract static class AResource<T> {
+
         @POST
         public T post(T t) {
             return t;
@@ -85,6 +87,7 @@ public abstract class AbstractTypeTester extends JerseyTest {
     }
 
     public static class RequestEntityInterceptor implements WriterInterceptor {
+
         @Override
         public void aroundWriteTo(WriterInterceptorContext writerInterceptorContext) throws IOException, WebApplicationException {
             OutputStream original = writerInterceptorContext.getOutputStream();

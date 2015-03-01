@@ -66,8 +66,8 @@ import static org.junit.Assert.fail;
 
 /**
  * Unit tests for {@link org.glassfish.jersey.media.multipart.internal.MultiPartReaderClientSide} (in the client) and
- * {@link org.glassfish.jersey.media.multipart.internal.MultiPartWriter} (in the server).
- */
+ * {@link org.glassfish.jersey.media.multipart.internal.MultiPartWriter} (in the server)
+ .*/
 public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
 
     private static Path TMP_DIRECTORY;
@@ -198,9 +198,9 @@ public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
         final WebTarget target = target().path("multipart/four");
 
         final MultiPartBean bean = new MultiPartBean("myname", "myvalue");
-        final MultiPart entity = new MultiPart().
-                bodyPart("This is the first segment", new MediaType("text", "plain")).
-                bodyPart(bean, new MediaType("x-application", "x-format"));
+        final MultiPart entity = new MultiPart()
+                .bodyPart("This is the first segment", new MediaType("text", "plain"))
+                .bodyPart(bean, new MediaType("x-application", "x-format"));
         final String response = target.request("text/plain").put(Entity.entity(entity, "multipart/mixed"), String.class);
         if (!response.startsWith("SUCCESS:")) {
             fail("Response is '" + response + "'");
@@ -212,11 +212,11 @@ public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
         final WebTarget target = target().path("multipart/four");
 
         final MultiPartBean bean = new MultiPartBean("myname", "myvalue");
-        final MultiPart entity = new MultiPart().
-                bodyPart("This is the first segment", new MediaType("text", "plain")).
-                bodyPart(bean, new MediaType("x-application", "x-format"));
-        final String response = target.request("text/plain").header("Content-Type", "multipart/mixed").
-                put(Entity.entity(entity, "multipart/mixed"), String.class);
+        final MultiPart entity = new MultiPart()
+                .bodyPart("This is the first segment", new MediaType("text", "plain"))
+                .bodyPart(bean, new MediaType("x-application", "x-format"));
+        final String response = target.request("text/plain").header("Content-Type", "multipart/mixed")
+                .put(Entity.entity(entity, "multipart/mixed"), String.class);
         if (!response.startsWith("SUCCESS:")) {
             fail("Response is '" + response + "'");
         }
@@ -243,9 +243,9 @@ public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
         final WebTarget target = target().path("multipart/ten");
 
         final MultiPartBean bean = new MultiPartBean("myname", "myvalue");
-        final MultiPart entity = new MultiPart().
-                bodyPart(bean, new MediaType("x-application", "x-format")).
-                bodyPart("", MediaType.APPLICATION_OCTET_STREAM_TYPE);
+        final MultiPart entity = new MultiPart()
+                .bodyPart(bean, new MediaType("x-application", "x-format"))
+                .bodyPart("", MediaType.APPLICATION_OCTET_STREAM_TYPE);
         final String response = target.request("text/plain").put(Entity.entity(entity, "multipart/mixed"), String.class);
 
         if (!response.startsWith("SUCCESS:")) {
@@ -276,7 +276,8 @@ public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
         final WebTarget target = target().path("multipart/twelve");
 
         final MultiPart entity = new MultiPart().bodyPart("CONTENT", MediaType.TEXT_PLAIN_TYPE);
-        final MultiPart response = target.request("multipart/mixed").put(Entity.entity(entity, "multipart/mixed"), MultiPart.class);
+        final MultiPart response = target.request("multipart/mixed")
+                .put(Entity.entity(entity, "multipart/mixed"), MultiPart.class);
         final String actual = response.getBodyParts().get(0).getEntityAs(String.class);
         assertEquals("CONTENT", actual);
         response.cleanup();
@@ -289,8 +290,8 @@ public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
     public void testThirteen() {
         final WebTarget target = target().path("multipart/thirteen");
 
-        final MultiPart entity = new MultiPart().
-                bodyPart("CONTENT", MediaType.TEXT_PLAIN_TYPE);
+        final MultiPart entity = new MultiPart()
+                .bodyPart("CONTENT", MediaType.TEXT_PLAIN_TYPE);
         final String response = target.request("multipart/mixed").put(Entity.entity(entity, "multipart/mixed"), String.class);
         assertEquals("cleanup", response);
     }
@@ -332,7 +333,8 @@ public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
         final WebTarget target = target().path("multipart/eleven");
 
         final MultiPart entity = new MultiPart().bodyPart(expected, MediaType.TEXT_PLAIN_TYPE);
-        final MultiPart response = target.request("multipart/mixed").put(Entity.entity(entity, "multipart/mixed"), MultiPart.class);
+        final MultiPart response = target.request("multipart/mixed")
+                .put(Entity.entity(entity, "multipart/mixed"), MultiPart.class);
         final String actual = response.getBodyParts().get(0).getEntityAs(String.class);
         assertEquals("Length for multiplier " + multiplier, expected.length(), actual.length());
         assertEquals("Content for multiplier " + multiplier, expected, actual);

@@ -93,6 +93,7 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
     public static final String PROVIDER = "provider";
 
     public static class TestRuntimeException extends RuntimeException {
+
         public TestRuntimeException(String message) {
             super(message);
         }
@@ -108,6 +109,7 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
     }
 
     public static class TestWebAppException extends WebApplicationException {
+
         public TestWebAppException(String message, Response response) {
             super(message, response);
         }
@@ -130,6 +132,7 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
     }
 
     public static class UniversalThrowableMapper implements ExceptionMapper<Throwable> {
+
         @Override
         public Response toResponse(Throwable exception) {
             return Response.ok().entity(exception.getClass().getSimpleName() + MAPPED + exception.getMessage()).build();
@@ -167,7 +170,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
         return exceptionType != null && currentClass.getSimpleName().equals(provider);
     }
 
-
     @Path("exception")
     public static class ExceptionResource {
 
@@ -191,6 +193,7 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
     }
 
     public static class SubResourceLocator {
+
         @POST
         public String post(@HeaderParam(EXCEPTION_TYPE) String exceptionType,
                            @HeaderParam(PROVIDER) String provider, String entity) throws Throwable {
@@ -198,7 +201,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
             return "sub-get";
         }
     }
-
 
     public static class TestResponseFilter implements ContainerResponseFilter {
 
@@ -211,7 +213,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
         }
     }
 
-
     public static class TestRequestFilter implements ContainerRequestFilter {
 
         @Override
@@ -222,7 +223,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
             throwRuntimeExceptionAndIO(exceptionType, this.getClass(), provider);
         }
     }
-
 
     @Consumes(MediaType.TEXT_PLAIN)
     public static class TestMBR implements MessageBodyReader<String> {
@@ -248,7 +248,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
             return new String(baos.toByteArray());
         }
     }
-
 
     public static class TestMBW implements MessageBodyWriter<String> {
 
@@ -300,7 +299,8 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
         }
     }
 
-    private static void throwRuntimeExceptionAndIO(String exceptionType, Class<?> providerClass, String provider) throws IOException {
+    private static void throwRuntimeExceptionAndIO(String exceptionType, Class<?> providerClass, String provider)
+            throws IOException {
         if (shouldThrow(exceptionType, provider, providerClass)) {
             if (exceptionType.equals(TestRuntimeException.class.getSimpleName())) {
                 throw new TestRuntimeException(providerClass.getSimpleName());
@@ -320,7 +320,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
         _test(TestCheckedException.class, ExceptionResource.class);
     }
 
-
     @Test
     public void testRuntimeExceptionInResource() {
         _test(TestRuntimeException.class, ExceptionResource.class);
@@ -335,7 +334,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
     public void testProcessingExceptionInResource() {
         _test(ProcessingException.class, ExceptionResource.class);
     }
-
 
     // Sub resource
     @Test
@@ -358,7 +356,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
         _test(ProcessingException.class, ExceptionResource.class, "exception/sub");
     }
 
-
     @Test
     public void testCheckedExceptionInSubResource() {
         _test(TestCheckedException.class, SubResourceLocator.class, "exception/sub");
@@ -378,7 +375,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
     public void testProcessingExceptionInSubResource() {
         _test(ProcessingException.class, SubResourceLocator.class, "exception/sub");
     }
-
 
     // response filters
     @Test
@@ -400,7 +396,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
     public void testProcessingExceptionInResponseFilter() {
         _test(ProcessingException.class, TestResponseFilter.class);
     }
-
 
     // response filters
     @Test
@@ -444,7 +439,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
         _test(ProcessingException.class, TestMBW.class);
     }
 
-
     @Test
     public void testRuntimeExceptionInMBR() {
         _test(TestRuntimeException.class, TestMBR.class);
@@ -464,7 +458,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
     public void testProcessingExceptionInMBR() {
         _test(ProcessingException.class, TestMBR.class);
     }
-
 
     // interceptors
     @Test
@@ -486,7 +479,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
     public void testProcessingExceptionInReaderInterceptor() {
         _test(ProcessingException.class, TestReaderInterceptor.class);
     }
-
 
     @Test
     public void testRuntimeExceptionInWriterInterceptor() {
@@ -516,7 +508,6 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
         assertEquals(exceptionClass.getSimpleName() + MAPPED + providerClass.getSimpleName(), response.readEntity(String.class));
     }
 
-
     private void _testWae(Class<?> providerClass) {
         final String path = "exception/general";
         _testWae(providerClass, path);
@@ -529,7 +520,8 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
                 .header(EXCEPTION_TYPE, exceptionClass.getSimpleName()).header(PROVIDER, providerClass.getSimpleName())
                 .post(Entity.entity("post", MediaType.TEXT_PLAIN_TYPE));
         assertEquals(200, response.getStatus());
-        assertEquals(exceptionClass.getSimpleName() + MAPPED_WAE + providerClass.getSimpleName(), response.readEntity(String.class));
+        assertEquals(exceptionClass.getSimpleName() + MAPPED_WAE + providerClass.getSimpleName(),
+                response.readEntity(String.class));
     }
 
     private void _test(Class<?> exceptionClass, Class<?> providerClass) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,9 +39,7 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
+import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -56,8 +54,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import java.util.logging.Logger;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -84,6 +84,7 @@ public class MessageBodyProvidersExceptionsTest extends JerseyTest {
 
     @Path("resource")
     public static class Resource {
+
         @GET
         @Path("write")
         @Produces(MediaType.TEXT_PLAIN)
@@ -102,11 +103,13 @@ public class MessageBodyProvidersExceptionsTest extends JerseyTest {
 
     @Provider
     public static class WebAppExceptionMapper implements ExceptionMapper<WebApplicationException> {
+
         @Override
         public Response toResponse(WebApplicationException exception) {
             LOGGER.fine("ExceptionMapper was invoked.");
             // return the exception class name as an entity for further comparison
-            return Response.status(200).header("writer-exception", "after-first-byte").entity(exception.getClass().getName()).build();
+            return Response.status(200).header("writer-exception", "after-first-byte").entity(exception.getClass().getName())
+                    .build();
         }
     }
 
@@ -119,7 +122,8 @@ public class MessageBodyProvidersExceptionsTest extends JerseyTest {
         assertEquals("javax.ws.rs.InternalServerErrorException", resString);
     }
 
-    @Test public void testWriterThrowsCorrectException() {
+    @Test
+    public void testWriterThrowsCorrectException() {
         Response response = target().path("resource/read").request().post(Entity.entity("Hello, world", "text/plain"));
         assertEquals(200, response.getStatus());
         String resString = response.readEntity(String.class);

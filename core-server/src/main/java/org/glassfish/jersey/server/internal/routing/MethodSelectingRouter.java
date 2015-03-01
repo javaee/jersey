@@ -133,7 +133,6 @@ final class MethodSelectingRouter implements Router {
                 }
             };
 
-
     private final MessageBodyWorkers workers;
 
     private final Map<String, List<ConsumesProducesAcceptor>> consumesProducesAcceptors;
@@ -319,8 +318,8 @@ final class MethodSelectingRouter implements Router {
             }
             RequestSpecificConsumesProducesAcceptor other = (RequestSpecificConsumesProducesAcceptor) o;
             final int consumedComparison = CombinedMediaType.COMPARATOR.compare(consumes, other.consumes);
-            return (consumedComparison != 0) ?
-                    consumedComparison : CombinedMediaType.COMPARATOR.compare(produces, other.produces);
+            return (consumedComparison != 0)
+                    ? consumedComparison : CombinedMediaType.COMPARATOR.compare(produces, other.produces);
         }
     }
 
@@ -356,7 +355,6 @@ final class MethodSelectingRouter implements Router {
             return sameFitnessAcceptors;
         }
     }
-
 
     private Router createInternalRouter() {
         return new Router() {
@@ -492,7 +490,8 @@ final class MethodSelectingRouter implements Router {
             final RequestSpecificConsumesProducesAcceptor selected = methodSelector.selected;
 
             if (methodSelector.sameFitnessAcceptors != null) {
-                reportMethodSelectionAmbiguity(acceptableMediaTypes, methodSelector.selected, methodSelector.sameFitnessAcceptors);
+                reportMethodSelectionAmbiguity(acceptableMediaTypes, methodSelector.selected,
+                        methodSelector.sameFitnessAcceptors);
             }
 
             context.push(new Function<ContainerResponse, ContainerResponse>() {
@@ -501,8 +500,8 @@ final class MethodSelectingRouter implements Router {
                     // we only need to compute and set the effective media type if:
                     // - it hasn't been set already, and
                     // - either there is an entity, or we are responding to a HEAD request
-                    if (responseContext.getMediaType() == null &&
-                            ((responseContext.hasEntity() || HttpMethod.HEAD.equals(request.getMethod())))) {
+                    if (responseContext.getMediaType() == null
+                            && ((responseContext.hasEntity() || HttpMethod.HEAD.equals(request.getMethod())))) {
 
                         MediaType effectiveResponseType = determineResponseMediaType(
                                 responseContext.getEntityClass(),
@@ -559,8 +558,8 @@ final class MethodSelectingRouter implements Router {
         final Method handlingMethod = invocable.getHandlingMethod();
 
         // Media types producible by method.
-        final List<MediaType> methodProducesTypes = !resourceMethod.getProducedTypes().isEmpty() ?
-                resourceMethod.getProducedTypes() : Lists.newArrayList(MediaType.WILDCARD_TYPE);
+        final List<MediaType> methodProducesTypes = !resourceMethod.getProducedTypes().isEmpty()
+                ? resourceMethod.getProducedTypes() : Lists.newArrayList(MediaType.WILDCARD_TYPE);
         // Applicable entity providers
         final List<WriterModel> writersForEntityType = workers.getWritersModelsForType(responseEntityClass);
 
@@ -575,8 +574,8 @@ final class MethodSelectingRouter implements Router {
                 // Use writers suitable for entity class to determine the media type.
                 for (final WriterModel model : writersForEntityType) {
                     for (final MediaType writerProduces : model.declaredTypes()) {
-                        if (!writerProduces.isCompatible(acceptableMediaType) ||
-                                !methodProducesType.isCompatible(writerProduces)) {
+                        if (!writerProduces.isCompatible(acceptableMediaType)
+                                || !methodProducesType.isCompatible(writerProduces)) {
                             continue;
                         }
 
@@ -639,8 +638,8 @@ final class MethodSelectingRouter implements Router {
 
         final Type genericType = invocable.getRoutingResponseType();
 
-        final Type genericReturnType = genericType instanceof GenericType ?
-                ((GenericType) genericType).getType() : genericType;
+        final Type genericReturnType = genericType instanceof GenericType
+                ? ((GenericType) genericType).getType() : genericType;
 
         for (final WriterModel model : workers.getWritersModelsForType(responseType)) {
             if (model.isWriteable(

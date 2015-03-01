@@ -81,11 +81,13 @@ import static org.junit.Assert.assertEquals;
  *
  */
 public class InterceptorGzipTest extends JerseyTest {
+
     private static final String FROM_RESOURCE = "-from_resource";
 
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig(TestResource.class, GZIPWriterTestInterceptor.class, GZIPReaderTestInterceptor.class);// GZIPInterceptor.class
+        return new ResourceConfig(TestResource.class, GZIPWriterTestInterceptor.class,
+                GZIPReaderTestInterceptor.class); // GZIPInterceptor.class
     }
 
     @Test
@@ -125,7 +127,7 @@ public class InterceptorGzipTest extends JerseyTest {
 
     @Provider
     @Priority(200)
-    public static class CustomWriterInterceptor<T> implements WriterInterceptor {
+    public static class CustomWriterInterceptor implements WriterInterceptor {
 
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
@@ -153,14 +155,15 @@ public class InterceptorGzipTest extends JerseyTest {
     @Provider
     @Priority(200)
     public static class GZIPWriterTestInterceptor implements WriterInterceptor {
+
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
             OutputStream old = context.getOutputStream();
             GZIPOutputStream newStream = new GZIPOutputStream(old);
             context.setOutputStream(newStream);
             if (context.getHeaders().containsKey(HttpHeaders.CONTENT_LENGTH)) {
-                List<Object> clen = new ArrayList<Object>();
-                clen.add(Long.valueOf(-1));
+                List<Object> clen = new ArrayList<>();
+                clen.add(-1L);
                 context.getHeaders().put(HttpHeaders.CONTENT_LENGTH, clen);
             }
             try {
@@ -175,6 +178,7 @@ public class InterceptorGzipTest extends JerseyTest {
     @Provider
     @Priority(200)
     public static class GZIPReaderTestInterceptor implements ReaderInterceptor {
+
         @Override
         public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {
             InputStream old = context.getInputStream();

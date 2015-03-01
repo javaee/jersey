@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,7 @@ import javax.xml.namespace.QName;
 /**
  * The documentation type for representations.<br>
  * Created on: Jun 16, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -65,66 +65,75 @@ public class RepresentationDocType {
     @XmlAttribute
     private String mediaType;
     private String doc;
-    
+
     /**
      * @return the element
      */
     public QName getElement() {
         return element;
     }
+
     /**
      * @param element the element to set
      */
-    public void setElement( QName element ) {
+    public void setElement(QName element) {
         this.element = element;
     }
+
     /**
      * @return the example
      */
     public String getExample() {
         return example;
     }
+
     /**
      * @param example the example to set
      */
-    public void setExample( String example ) {
+    public void setExample(String example) {
         this.example = example;
     }
+
     /**
      * @return the status
      */
     public Long getStatus() {
         return status;
     }
+
     /**
      * @param status the status to set
      */
-    public void setStatus( Long status ) {
+    public void setStatus(Long status) {
         this.status = status;
     }
+
     /**
      * @return the mediaType
      */
     public String getMediaType() {
         return mediaType;
     }
+
     /**
      * @param mediaType the mediaType to set
      */
-    public void setMediaType( String mediaType ) {
+    public void setMediaType(String mediaType) {
         this.mediaType = mediaType;
     }
+
     /**
      * @return the doc
      */
     public String getDoc() {
         return doc;
     }
+
     /**
      * @param doc the doc to set
      */
-    public void setDoc( String doc ) {
+    public void setDoc(String doc) {
         this.doc = doc;
     }
-    
+
 }

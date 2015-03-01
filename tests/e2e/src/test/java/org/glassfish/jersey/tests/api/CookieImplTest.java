@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,6 @@ import javax.ws.rs.core.NewCookie;
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -55,6 +54,7 @@ import static org.junit.Assert.assertTrue;
  * @author Marc Hadley
  */
 public class CookieImplTest {
+
     @Test
     public void testCookieToString() {
         Cookie cookie = new Cookie("fred", "flintstone");
@@ -181,7 +181,7 @@ public class CookieImplTest {
         expResult = "fred=flintstone;Version=1;Max-Age=60";
         assertEquals(expResult, cookie.toString());
 
-        cookie = new NewCookie("fred", "flintstone", null, null,"a modern stonage family", 60, false);
+        cookie = new NewCookie("fred", "flintstone", null, null, "a modern stonage family", 60, false);
         expResult = "fred=flintstone;Version=1;Comment=\"a modern stonage family\";Max-Age=60";
         assertEquals(expResult, cookie.toString());
     }
@@ -207,7 +207,5 @@ public class CookieImplTest {
         assertEquals(60, cookie.getMaxAge());
         assertTrue(cookie.isSecure());
     }
-
-
 
 }

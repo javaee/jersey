@@ -74,6 +74,7 @@ public class ContextResolverMediaTypeTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class TextPlainContextResolver implements ContextResolver<String> {
+
         public String getContext(Class<?> objectType) {
             return "text/plain";
         }
@@ -83,6 +84,7 @@ public class ContextResolverMediaTypeTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class TextContextResolver implements ContextResolver<String> {
+
         public String getContext(Class<?> objectType) {
             return "text/*";
         }
@@ -92,6 +94,7 @@ public class ContextResolverMediaTypeTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class WildcardContextResolver implements ContextResolver<String> {
+
         public String getContext(Class<?> objectType) {
             return "*/*";
         }
@@ -101,6 +104,7 @@ public class ContextResolverMediaTypeTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class TextPlainHtmlContextResolver implements ContextResolver<String> {
+
         public String getContext(Class<?> objectType) {
             return "text/plain/html";
         }
@@ -111,6 +115,7 @@ public class ContextResolverMediaTypeTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class TextHtmlContextResolver implements ContextResolver<String> {
+
         public String getContext(Class<?> objectType) {
             return "text/html";
         }
@@ -120,6 +125,7 @@ public class ContextResolverMediaTypeTest {
     @Path("/")
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class ContextResource {
+
         @Context
         Providers p;
 
@@ -135,14 +141,16 @@ public class ContextResolverMediaTypeTest {
             ContextResolver<String> cachedCr = p.getContextResolver(String.class, m);
             assertEquals(cr, cachedCr);
 
-            if (cr == null)
+            if (cr == null) {
                 return "NULL";
-            else
+            } else {
                 return cr.getContext(null);
+            }
         }
     }
 
     public static class ProduceTest extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(ContextResource.class,
@@ -168,6 +176,7 @@ public class ContextResolverMediaTypeTest {
     }
 
     public static class ProducesTest extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(ContextResource.class,
@@ -193,6 +202,7 @@ public class ContextResolverMediaTypeTest {
     }
 
     public static class ProducesSeparateTest extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(ContextResource.class,
@@ -219,6 +229,7 @@ public class ContextResolverMediaTypeTest {
     }
 
     public static class ProducesXXXTest extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(ContextResource.class,

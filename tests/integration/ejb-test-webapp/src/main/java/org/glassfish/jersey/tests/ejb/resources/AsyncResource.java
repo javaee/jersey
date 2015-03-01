@@ -40,13 +40,12 @@
 
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.logging.Logger;
-
-import javax.ejb.EJB;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
+
+import javax.ejb.EJB;
 
 /**
  * @author Jan Algermissen
@@ -54,20 +53,19 @@ import javax.ws.rs.container.Suspended;
  */
 @Path("async-test")
 public class AsyncResource {
-	private static Logger LOG = Logger.getLogger(AsyncResource.class.getName());
 
-	@EJB
+    @EJB
     AsyncService asyncService;
 
-	@GET
-	@Path("sync")
-	public String synchronousGet() {
-		return "sync";
-	}
+    @GET
+    @Path("sync")
+    public String synchronousGet() {
+        return "sync";
+    }
 
-	@GET
-	@Path("async")
-	public void asynchronousGet(@Suspended AsyncResponse ar) {
-		asyncService.getAsync(ar);
-	}
+    @GET
+    @Path("async")
+    public void asynchronousGet(@Suspended AsyncResponse ar) {
+        asyncService.getAsync(ar);
+    }
 }

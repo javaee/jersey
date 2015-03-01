@@ -100,7 +100,8 @@ final class MonitoringStatisticsProcessor {
         this.scheduler = serviceLocator.getService(ScheduledExecutorService.class,
                 new RuntimeExecutorsBinder.BackgroundSchedulerLiteral());
         this.interval = PropertiesHelper.getValue(serviceLocator.getService(Configuration.class).getProperties(),
-                ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL, DEFAULT_INTERVAL, Collections.<String, String>emptyMap());
+                ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL, DEFAULT_INTERVAL,
+                Collections.<String, String>emptyMap());
     }
 
     /**

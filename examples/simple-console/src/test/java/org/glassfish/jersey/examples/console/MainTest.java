@@ -162,7 +162,8 @@ public class MainTest extends JerseyTest {
 
         // with the query param "match" value "re"
         jsonArray = target("form/colours").queryParam("match", "re").request(MediaType.APPLICATION_JSON).get(JSONArray.class);
-        assertEquals("Returned JSONArray doesn't have expected number of entries with the query param 'match=re'", 2, jsonArray.length());
+        assertEquals("Returned JSONArray doesn't have expected number of entries with the query param 'match=re'", 2,
+                jsonArray.length());
     }
 
 }

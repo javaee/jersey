@@ -135,17 +135,17 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
 
     @Override
     protected final XMLStreamReader getXMLStreamReader(Class<?> elementType,
-            MediaType mediaType,
-            Unmarshaller u,
-            InputStream entityStream)
+                                                       MediaType mediaType,
+                                                       Unmarshaller u,
+                                                       InputStream entityStream)
             throws XMLStreamException {
         return xif.provide().createXMLStreamReader(entityStream);
     }
 
     @Override
     public final void writeList(Class<?> elementType, Collection<?> t,
-            MediaType mediaType, Charset c,
-            Marshaller m, OutputStream entityStream)
+                                MediaType mediaType, Charset c,
+                                Marshaller m, OutputStream entityStream)
             throws JAXBException, IOException {
         final String rootElement = getRootElementName(elementType);
         final String cName = c.name();
@@ -165,8 +165,10 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
             } catch (PropertyException ex) {
                 // other jaxb implementation
                 header = null;
-                Logger.getLogger(XmlCollectionJaxbProvider.class.getName()).log(
-                        Level.WARNING, "@XmlHeader annotation is not supported with this JAXB implementation. Please use JAXB RI if you need this feature.");
+                Logger.getLogger(XmlCollectionJaxbProvider.class.getName())
+                        .log(Level.WARNING,
+                                "@XmlHeader annotation is not supported with this JAXB implementation. Please use JAXB RI if "
+                                        + "you need this feature.");
             }
         }
         if (header != null) {

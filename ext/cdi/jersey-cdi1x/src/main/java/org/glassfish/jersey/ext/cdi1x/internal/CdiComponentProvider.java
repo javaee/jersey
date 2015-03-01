@@ -193,16 +193,15 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             }
         };
 
-        static final Set<Class<? extends Annotation>> JAX_RS_STRING_PARAM_ANNOTATIONS = new HashSet<Class<? extends Annotation>>() {
-            {
-                add(javax.ws.rs.PathParam.class);
-                add(javax.ws.rs.QueryParam.class);
-                add(javax.ws.rs.CookieParam.class);
-                add(javax.ws.rs.HeaderParam.class);
-                add(javax.ws.rs.MatrixParam.class);
-                add(javax.ws.rs.FormParam.class);
-            }
-        };
+        static final Set<Class<? extends Annotation>> JAX_RS_STRING_PARAM_ANNOTATIONS =
+                new HashSet<Class<? extends Annotation>>() {{
+                    add(javax.ws.rs.PathParam.class);
+                    add(javax.ws.rs.QueryParam.class);
+                    add(javax.ws.rs.CookieParam.class);
+                    add(javax.ws.rs.HeaderParam.class);
+                    add(javax.ws.rs.MatrixParam.class);
+                    add(javax.ws.rs.FormParam.class);
+                }};
 
         /**
          * Internal cache to store CDI {@link InjectionPoint} to Jersey {@link Parameter} mapping.
@@ -244,19 +243,16 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         @javax.enterprise.inject.Produces
         @JaxRsParamQualifier
         public String getParameterValue(final InjectionPoint injectionPoint, final BeanManager beanManager) {
-
             final Parameter parameter = parameterCache.compute(injectionPoint);
 
             if (parameter != null) {
-
                 final ServiceLocator locator = beanManager.getExtension(CdiComponentProvider.class).locator;
-
                 final Set<ValueFactoryProvider> providers = Providers.getProviders(locator, ValueFactoryProvider.class);
 
                 for (final ValueFactoryProvider vfp : providers) {
                     final Factory<?> valueFactory = vfp.getValueFactory(parameter);
                     if (valueFactory != null) {
-                        return (String)valueFactory.provide();
+                        return (String) valueFactory.provide();
                     }
                 }
             }
@@ -323,7 +319,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     private static AnnotatedConstructor<?> enrichedConstructor(final AnnotatedConstructor<?> ctor) {
-        return new AnnotatedConstructor(){
+        return new AnnotatedConstructor() {
 
             @Override
             public Constructor getJavaMember() {
@@ -335,7 +331,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 final List<AnnotatedParameter> parameters = new ArrayList<>(ctor.getParameters().size());
 
                 for (final AnnotatedParameter<?> ap : ctor.getParameters()) {
-                    parameters.add(new AnnotatedParameter(){
+                    parameters.add(new AnnotatedParameter() {
 
                         @Override
                         public int getPosition() {
@@ -360,7 +356,9 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                         @Override
                         public <T extends Annotation> T getAnnotation(final Class<T> annotationType) {
                             if (annotationType == JaxRsParamProducer.JaxRsParamQualifier.class) {
-                                return hasAnnotation(ap, JaxRsParamProducer.JAX_RS_STRING_PARAM_ANNOTATIONS) ? (T)JaxRsParamProducer.JaxRsParamQUALIFIER : null;
+                                return hasAnnotation(ap,
+                                        JaxRsParamProducer.JAX_RS_STRING_PARAM_ANNOTATIONS)
+                                        ? (T) JaxRsParamProducer.JaxRsParamQUALIFIER : null;
                             } else {
                                 return ap.getAnnotation(annotationType);
                             }
@@ -382,7 +380,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                         @Override
                         public boolean isAnnotationPresent(final Class<? extends Annotation> annotationType) {
                             return (annotationType == JaxRsParamProducer.JaxRsParamQualifier.class
-                                        && hasAnnotation(ap, JaxRsParamProducer.JAX_RS_STRING_PARAM_ANNOTATIONS))
+                                    && hasAnnotation(ap, JaxRsParamProducer.JAX_RS_STRING_PARAM_ANNOTATIONS))
                                     || ap.isAnnotationPresent(annotationType);
                         }
                     });
@@ -432,7 +430,9 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         final AnnotatedType<?> annotatedType = processAnnotatedType.getAnnotatedType();
 
         // if one of the JAX-RS annotations is present in the currently seen class, add it to the "whitelist"
-        if (containsJaxRsConstructorInjection(annotatedType) || containsJaxRsFieldInjection(annotatedType) || containsJaxRsMethodInjection(annotatedType)) {
+        if (containsJaxRsConstructorInjection(annotatedType)
+                || containsJaxRsFieldInjection(annotatedType)
+                || containsJaxRsMethodInjection(annotatedType)) {
             typesInjectableByJaxRs.add(annotatedType.getBaseType());
         }
 
@@ -445,7 +445,6 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
 
         if (containsJaxRsParameterizedCtor(annotatedType)) {
-
             processAnnotatedType.setAnnotatedType(new AnnotatedType() {
 
                 @Override
@@ -517,7 +516,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     private boolean containAnnotatedParameters(final Collection<AnnotatedCallable> annotatedCallables,
-                                                 final Set<Class<? extends Annotation>> annotationSet) {
+                                               final Set<Class<? extends Annotation>> annotationSet) {
         for (final AnnotatedCallable c : annotatedCallables) {
             if (containAnnotation(c.getParameters(), annotationSet)) {
                 return true;
@@ -527,7 +526,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     private boolean containAnnotation(final Collection<Annotated> elements,
-                                               final Set<Class<? extends Annotation>> annotationSet) {
+                                      final Set<Class<? extends Annotation>> annotationSet) {
         for (Annotated e : elements) {
             if (hasAnnotation(e, annotationSet)) {
                 return true;
@@ -606,7 +605,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 hk2ProvidedTypes.add(injectedType);
             } else {
                 if (injectedType instanceof Class<?>) {
-                    final Class<?> injectedClass = (Class<?>)injectedType;
+                    final Class<?> injectedClass = (Class<?>) injectedType;
                     if (isJerseyOrDependencyType(injectedClass)) {
                         //remember the type, we would need to mock it's CDI binding at runtime
                         hk2ProvidedTypes.add(injectedType);
@@ -615,9 +614,9 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                     }
                 } else { // it is not a class, maybe provider type?:
                     if (isInjectionProvider(injectedType)
-                        && (isProviderOfJerseyType((ParameterizedType)injectedType))) {
-                            //remember the type, we would need to mock it's CDI binding at runtime
-                            hk2ProvidedTypes.add(((ParameterizedType)injectedType).getActualTypeArguments()[0]);
+                            && (isProviderOfJerseyType((ParameterizedType) injectedType))) {
+                        //remember the type, we would need to mock it's CDI binding at runtime
+                        hk2ProvidedTypes.add(((ParameterizedType) injectedType).getActualTypeArguments()[0]);
                     } else {
                         filteredInjectionPoints.add(ip);
                     }
@@ -632,12 +631,12 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     private boolean isInjectionProvider(final Type injectedType) {
         return injectedType instanceof ParameterizedType
-                && ((ParameterizedType)injectedType).getRawType() == javax.inject.Provider.class;
+                && ((ParameterizedType) injectedType).getRawType() == javax.inject.Provider.class;
     }
 
     private boolean isProviderOfJerseyType(final ParameterizedType provider) {
         final Type firstArgumentType = provider.getActualTypeArguments()[0];
-        if (firstArgumentType instanceof Class && isJerseyOrDependencyType((Class<?>)firstArgumentType)) {
+        if (firstArgumentType instanceof Class && isJerseyOrDependencyType((Class<?>) firstArgumentType)) {
             return true;
         }
         return (customHk2TypesProvider != null && customHk2TypesProvider.getHk2Types().contains(firstArgumentType));
@@ -655,17 +654,17 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
      */
     @SuppressWarnings("serial")
     public static class CdiDefaultAnnotation extends AnnotationLiteral<Default> implements Default {
+
         private static final long serialVersionUID = 1L;
     }
 
-    @SuppressWarnings({ "unused", "unchecked", "rawtypes" })
+    @SuppressWarnings({"unused", "unchecked", "rawtypes"})
     private void afterDiscoveryObserver(@Observes final AfterBeanDiscovery abd) {
-
         if (customHk2TypesProvider != null) {
             hk2ProvidedTypes.addAll(customHk2TypesProvider.getHk2Types());
         }
 
-        for (final Type t: hk2ProvidedTypes) {
+        for (final Type t : hk2ProvidedTypes) {
             abd.addBean(new Hk2Bean(t));
         }
     }
@@ -711,9 +710,9 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     private final Cache<Class<?>, Boolean> jaxRsComponentCache = new Cache<>(new Computable<Class<?>, Boolean>() {
         @Override
         public Boolean compute(final Class<?> clazz) {
-            return Application.class.isAssignableFrom(clazz) ||
-                    Providers.isJaxRsProvider(clazz) ||
-                      Resource.from(clazz) != null;
+            return Application.class.isAssignableFrom(clazz)
+                    || Providers.isJaxRsProvider(clazz)
+                    || Resource.from(clazz) != null;
         }
     });
 
@@ -742,18 +741,17 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         final String pkgName = pkg.getName();
 
-        return !clazz.isAnnotationPresent(JerseyVetoed.class) &&
-                           (pkgName.contains("org.glassfish.hk2")
-                             || pkgName.contains("jersey.repackaged")
-                             || pkgName.contains("org.jvnet.hk2")
-                             || (pkgName.startsWith("org.glassfish.jersey")
-                                    && !pkgName.startsWith("org.glassfish.jersey.examples")
-                                    && !pkgName.startsWith("org.glassfish.jersey.tests"))
-                             || (pkgName.startsWith("com.sun.jersey")
-                                    && !pkgName.startsWith("com.sun.jersey.examples")
-                                    && !pkgName.startsWith("com.sun.jersey.tests")));
+        return !clazz.isAnnotationPresent(JerseyVetoed.class)
+                   && (pkgName.contains("org.glassfish.hk2")
+                     || pkgName.contains("jersey.repackaged")
+                     || pkgName.contains("org.jvnet.hk2")
+                     || (pkgName.startsWith("org.glassfish.jersey")
+                            && !pkgName.startsWith("org.glassfish.jersey.examples")
+                            && !pkgName.startsWith("org.glassfish.jersey.tests"))
+                     || (pkgName.startsWith("com.sun.jersey")
+                            && !pkgName.startsWith("com.sun.jersey.examples")
+                            && !pkgName.startsWith("com.sun.jersey.tests")));
     }
-
 
     private void bindHk2ClassAnalyzer() {
 
@@ -837,7 +835,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         @Override
         public Class getBeanClass() {
-            return (Class)t;
+            return (Class) t;
         }
 
         @Override

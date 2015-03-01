@@ -57,19 +57,19 @@ public class LanguageTag {
     protected LanguageTag() {
     }
 
-    public static LanguageTag valueOf(String s) throws IllegalArgumentException {
-        LanguageTag lt = new LanguageTag();
+    public static LanguageTag valueOf(final String s) throws IllegalArgumentException {
+        final LanguageTag lt = new LanguageTag();
 
         try {
             lt.parse(s);
-        } catch (ParseException pe) {
+        } catch (final ParseException pe) {
             throw new IllegalArgumentException(pe);
         }
 
         return lt;
     }
 
-    public LanguageTag(String primaryTag, String subTags) {
+    public LanguageTag(final String primaryTag, final String subTags) {
         if (subTags != null && subTags.length() > 0) {
             this.tag = primaryTag + "-" + subTags;
         } else {
@@ -81,11 +81,11 @@ public class LanguageTag {
         this.subTags = subTags;
     }
 
-    public LanguageTag(String header) throws ParseException {
+    public LanguageTag(final String header) throws ParseException {
         this(HttpHeaderReader.newInstance(header));
     }
 
-    public LanguageTag(HttpHeaderReader reader) throws ParseException {
+    public LanguageTag(final HttpHeaderReader reader) throws ParseException {
         // Skip any white space
         reader.hasNext();
 
@@ -98,7 +98,7 @@ public class LanguageTag {
         parse(tag);
     }
 
-    public final boolean isCompatible(Locale tag) {
+    public final boolean isCompatible(final Locale tag) {
         if (this.tag.equals("*")) {
             return true;
         }
@@ -117,12 +117,12 @@ public class LanguageTag {
                 : new Locale(primaryTag, subTags);
     }
 
-    protected final void parse(String languageTag) throws ParseException {
+    protected final void parse(final String languageTag) throws ParseException {
         if (!isValid(languageTag)) {
             throw new ParseException("String, " + languageTag + ", is not a valid language tag", 0);
         }
 
-        int index = languageTag.indexOf('-');
+        final int index = languageTag.indexOf('-');
         if (index == -1) {
             primaryTag = languageTag;
             subTags = null;
@@ -138,7 +138,7 @@ public class LanguageTag {
      * @param tag accept-language header value.
      * @return {@code true} if the given value is valid language tag, {@code false} instead.
      */
-    private boolean isValid(String tag) {
+    private boolean isValid(final String tag) {
         int alphanumCount = 0;
         int dash = 0;
         for (int i = 0; i < tag.length(); i++) {
@@ -174,14 +174,22 @@ public class LanguageTag {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof LanguageTag) || o.getClass() == this.getClass()) return false;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof LanguageTag) || o.getClass() == this.getClass()) {
+            return false;
+        }
 
-        LanguageTag that = (LanguageTag) o;
+        final LanguageTag that = (LanguageTag) o;
 
-        if (primaryTag != null ? !primaryTag.equals(that.primaryTag) : that.primaryTag != null) return false;
-        if (subTags != null ? !subTags.equals(that.subTags) : that.subTags != null) return false;
+        if (primaryTag != null ? !primaryTag.equals(that.primaryTag) : that.primaryTag != null) {
+            return false;
+        }
+        if (subTags != null ? !subTags.equals(that.subTags) : that.subTags != null) {
+            return false;
+        }
         return !(tag != null ? !tag.equals(that.tag) : that.tag != null);
 
     }

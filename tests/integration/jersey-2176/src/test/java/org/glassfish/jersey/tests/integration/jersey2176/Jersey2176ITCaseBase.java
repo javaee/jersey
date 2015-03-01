@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,7 +49,6 @@ import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -88,24 +87,28 @@ public abstract class Jersey2176ITCaseBase extends JerseyTest {
     public void testGetException_1() {
         testGetException(-1, 500, false);
     }
+
     @Test
     public void testGetException_2() {
         testGetException(-2, 500, false);
     }
+
     @Test
     public void testGetException_3() {
         testGetException(-3, 321, false);
     }
+
     @Test
     public void testGetException_4() {
         testGetException(-4, 432, false);
     }
+
     @Test
     public void testGetException222() {
         testGetException(222, 500, true);
     }
 
-    private void testGetContent (int uc) {
+    private void testGetContent(int uc) {
         String expectedContent = "TEST";
         expectedContent = "[INTERCEPTOR]" + expectedContent + "[/INTERCEPTOR]";
         expectedContent = "[FILTER]" + expectedContent + "[/FILTER]";
@@ -122,7 +125,7 @@ public abstract class Jersey2176ITCaseBase extends JerseyTest {
         }
     }
 
-    private void testGetException (int uc, int expectedStatus, boolean fail) {
+    private void testGetException(int uc, int expectedStatus, boolean fail) {
         Invocation.Builder builder = target().path("/resource/" + uc).request();
         if (fail) {
             builder = builder.header("X-FAIL", true);
@@ -132,7 +135,8 @@ public abstract class Jersey2176ITCaseBase extends JerseyTest {
         String expectedContent = "[FILTER][/FILTER]";
         Assert.assertEquals(expectedStatus, response.getStatus());
         if (servletFilterWorks(expectedStatus)) {
-            Assert.assertEquals(expectedStatus==500?"FAIL":"OK", response.getHeaderString(TraceResponseFilter.X_STATUS_HEADER));
+            Assert.assertEquals(expectedStatus == 500 ? "FAIL" : "OK",
+                    response.getHeaderString(TraceResponseFilter.X_STATUS_HEADER));
             Assert.assertNotNull(response.getHeaderString(TraceResponseFilter.X_SERVER_DURATION_HEADER));
             Assert.assertEquals(String.valueOf(expectedContent.length()), response.getHeaderString(HttpHeaders.CONTENT_LENGTH));
         } else {
@@ -142,7 +146,7 @@ public abstract class Jersey2176ITCaseBase extends JerseyTest {
     }
 
     private boolean servletFilterWorks(int uc) {
-        return ((Jersey2176App)configure()).isSetStatusOverSendError() || (uc < 400);
+        return ((Jersey2176App) configure()).isSetStatusOverSendError() || (uc < 400);
     }
 
 }

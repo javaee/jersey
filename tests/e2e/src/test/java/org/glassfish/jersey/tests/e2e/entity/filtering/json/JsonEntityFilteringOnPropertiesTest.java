@@ -85,7 +85,7 @@ public class JsonEntityFilteringOnPropertiesTest extends JerseyTest {
 
     @Parameterized.Parameters(name = "Provider: {0}")
     public static Iterable<Class[]> providers() {
-        return Arrays.asList(new Class[][]{{MoxyJsonFeature.class}, {JacksonFeature.class}});
+        return Arrays.asList(new Class[][] {{MoxyJsonFeature.class}, {JacksonFeature.class}});
     }
 
     public JsonEntityFilteringOnPropertiesTest(final Class<Feature> filteringProvider) {
@@ -122,7 +122,8 @@ public class JsonEntityFilteringOnPropertiesTest extends JerseyTest {
         @GET
         @Path("OneFilteringEntityDefaultViewResponse")
         public Response getOneFilteringEntityDefaultViewResponse() {
-            return Response.ok().entity(OneFilteringOnPropertiesEntity.INSTANCE, new Annotation[]{new DefaultFilteringScope()}).build();
+            return Response.ok().entity(OneFilteringOnPropertiesEntity.INSTANCE, new Annotation[] {new DefaultFilteringScope()})
+                    .build();
         }
 
         @GET
@@ -175,7 +176,7 @@ public class JsonEntityFilteringOnPropertiesTest extends JerseyTest {
         assertThat(entity.getDefaultEntities().size(), is(1));
         final DefaultFilteringSubEntity defaultFilteringSubEntity = entity.getDefaultEntities().get(0);
         assertThat(defaultFilteringSubEntity.field, is(true));
-        assertThat(defaultFilteringSubEntity.getProperty(), is(20l));
+        assertThat(defaultFilteringSubEntity.getProperty(), is(20L));
 
         // OneFilteringSubEntity
         assertThat(entity.getSubEntities(), notNullValue());
@@ -256,7 +257,7 @@ public class JsonEntityFilteringOnPropertiesTest extends JerseyTest {
         assertThat(entity.defaultEntities.size(), is(1));
         final DefaultFilteringSubEntity defaultFilteringSubEntity = entity.defaultEntities.get(0);
         assertThat(defaultFilteringSubEntity.field, is(true));
-        assertThat(defaultFilteringSubEntity.getProperty(), is(20l));
+        assertThat(defaultFilteringSubEntity.getProperty(), is(20L));
 
         // OneFilteringSubEntity
         assertThat(entity.oneEntities, notNullValue());
@@ -354,7 +355,7 @@ public class JsonEntityFilteringOnPropertiesTest extends JerseyTest {
         assertThat(entity.defaultEntities.size(), is(1));
         final DefaultFilteringSubEntity defaultFilteringSubEntity = entity.defaultEntities.get(0);
         assertThat(defaultFilteringSubEntity.field, is(true));
-        assertThat(defaultFilteringSubEntity.getProperty(), is(20l));
+        assertThat(defaultFilteringSubEntity.getProperty(), is(20L));
 
         // OneFilteringSubEntity
         assertThat(entity.oneEntities, notNullValue());

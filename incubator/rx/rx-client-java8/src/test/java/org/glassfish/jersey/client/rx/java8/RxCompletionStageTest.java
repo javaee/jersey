@@ -115,7 +115,8 @@ public class RxCompletionStageTest {
         testTarget(RxCompletionStage.from(client.target("http://jersey.java.net"), executor), true);
     }
 
-    private void testClient(final RxClient<RxCompletionStageInvoker> rxClient, final boolean testDedicatedThread) throws Exception {
+    private void testClient(final RxClient<RxCompletionStageInvoker> rxClient, final boolean testDedicatedThread)
+            throws Exception {
         testTarget(rxClient.target("http://jersey.java.net"), testDedicatedThread);
     }
 

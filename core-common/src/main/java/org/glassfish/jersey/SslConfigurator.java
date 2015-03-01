@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2007-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -92,6 +92,7 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
  */
 @SuppressWarnings("UnusedDeclaration")
 public final class SslConfigurator {
+
     /**
      * <em>Trust</em> store provider name.
      *
@@ -702,9 +703,9 @@ public final class SslConfigurator {
                     keyManagerFactory.init(_keyStore, password);
                 } else {
                     String ksName =
-                            keyStoreProvider != null ? LocalizationMessages.SSL_KMF_NO_PASSWORD_FOR_PROVIDER_BASED_KS() :
-                                    keyStoreBytes != null ? LocalizationMessages.SSL_KMF_NO_PASSWORD_FOR_BYTE_BASED_KS() :
-                                            keyStoreFile;
+                            keyStoreProvider != null ? LocalizationMessages.SSL_KMF_NO_PASSWORD_FOR_PROVIDER_BASED_KS()
+                                    : keyStoreBytes != null ? LocalizationMessages.SSL_KMF_NO_PASSWORD_FOR_BYTE_BASED_KS()
+                                            : keyStoreFile;
 
                     LOGGER.config(LocalizationMessages.SSL_KMF_NO_PASSWORD_SET(ksName));
                     keyManagerFactory = null;
@@ -845,17 +846,21 @@ public final class SslConfigurator {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         SslConfigurator that = (SslConfigurator) o;
 
-        if (keyManagerFactoryAlgorithm != null ?
-                !keyManagerFactoryAlgorithm.equals(that.keyManagerFactoryAlgorithm) : that.keyManagerFactoryAlgorithm != null) {
+        if (keyManagerFactoryAlgorithm != null
+                ? !keyManagerFactoryAlgorithm.equals(that.keyManagerFactoryAlgorithm) : that.keyManagerFactoryAlgorithm != null) {
             return false;
         }
-        if (keyManagerFactoryProvider != null ?
-                !keyManagerFactoryProvider.equals(that.keyManagerFactoryProvider) : that.keyManagerFactoryProvider != null) {
+        if (keyManagerFactoryProvider != null
+                ? !keyManagerFactoryProvider.equals(that.keyManagerFactoryProvider) : that.keyManagerFactoryProvider != null) {
             return false;
         }
         if (!Arrays.equals(keyPass, that.keyPass)) {
@@ -886,8 +891,8 @@ public final class SslConfigurator {
                 : that.trustManagerFactoryAlgorithm != null) {
             return false;
         }
-        if (trustManagerFactoryProvider != null ? !trustManagerFactoryProvider.equals(that.trustManagerFactoryProvider) :
-                that.trustManagerFactoryProvider != null) {
+        if (trustManagerFactoryProvider != null ? !trustManagerFactoryProvider.equals(that.trustManagerFactoryProvider)
+                : that.trustManagerFactoryProvider != null) {
             return false;
         }
         if (trustStore != null ? !trustStore.equals(that.trustStore) : that.trustStore != null) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -80,10 +80,11 @@ import static org.ops4j.pax.exam.CoreOptions.systemProperty;
  */
 public abstract class AbstractHttpServiceTest {
 
-    @Inject BundleContext bundleContext;
+    @Inject
+    BundleContext bundleContext;
 
     /** maximum waiting time for runtime initialization and Jersey deployment */
-    public static final long MAX_WAITING_SECONDS =  10L;
+    public static final long MAX_WAITING_SECONDS = 10L;
 
     /** Latch for blocking the testing thread until the runtime is ready and Jersey deployed */
     final CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -93,18 +94,18 @@ public abstract class AbstractHttpServiceTest {
     private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(port).path(CONTEXT).build();
     private static final String BundleLocationProperty = "jersey.bundle.location";
 
-
     private static final Logger LOGGER = Logger.getLogger(AbstractHttpServiceTest.class.getName());
 
     public abstract List<Option> httpServiceProviderOptions();
+
     public abstract List<Option> osgiRuntimeOptions();
 
     public List<Option> genericOsgiOptions() {
         @SuppressWarnings("RedundantStringToString")
-        final String bundleLocation = mavenBundle().
-                groupId("org.glassfish.jersey.examples.osgi-http-service").
-                artifactId("bundle").
-                versionAsInProject().getURL().toString();
+        final String bundleLocation = mavenBundle()
+                .groupId("org.glassfish.jersey.examples.osgi-http-service")
+                .artifactId("bundle")
+                .versionAsInProject().getURL().toString();
 
         List<Option> options = Arrays.asList(options(
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
@@ -153,7 +154,7 @@ public abstract class AbstractHttpServiceTest {
 
         final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
         if (localRepository != null) {
-            options = new ArrayList<Option>(options);
+            options = new ArrayList<>(options);
             options.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository));
         }
 
@@ -183,6 +184,7 @@ public abstract class AbstractHttpServiceTest {
         public WebEventHandler(String handlerName) {
             this.handlerName = handlerName;
         }
+
         private final String handlerName;
 
         protected String getHandlerName() {
@@ -190,11 +192,10 @@ public abstract class AbstractHttpServiceTest {
         }
     }
 
-
     @SuppressWarnings("UnusedDeclaration")
     @Configuration
     public Option[] configuration() {
-        final List<Option> options = new LinkedList<Option>();
+        final List<Option> options = new LinkedList<>();
 
         options.addAll(genericOsgiOptions());
         options.addAll(httpServiceProviderOptions());
@@ -205,7 +206,8 @@ public abstract class AbstractHttpServiceTest {
 
     public void defaultMandatoryBeforeMethod() {
         LOGGER.fine("Registering event handler for jersey/test/DEPLOYED");
-        bundleContext.registerService(EventHandler.class.getName(), new WebEventHandler("Deploy Handler"), getHandlerServiceProperties("jersey/test/DEPLOYED"));
+        bundleContext.registerService(EventHandler.class.getName(), new WebEventHandler("Deploy Handler"),
+                getHandlerServiceProperties("jersey/test/DEPLOYED"));
     }
 
     public void defaultHttpServiceTestMethod() throws Exception {
@@ -235,10 +237,9 @@ public abstract class AbstractHttpServiceTest {
         LOGGER.fine("Waiting for jersey/test/DEPLOYED event with timeout " + MAX_WAITING_SECONDS + " seconds...");
         if (!countDownLatch.await(MAX_WAITING_SECONDS, TimeUnit.SECONDS)) {
             throw new TimeoutException("The event jersey/test/DEPLOYED did not arrive in "
-                                        + MAX_WAITING_SECONDS
-                                        + " seconds. Waiting timed out.");
+                    + MAX_WAITING_SECONDS
+                    + " seconds. Waiting timed out.");
         }
-
 
         Client c = ClientBuilder.newClient();
         final WebTarget target = c.target(baseUri);

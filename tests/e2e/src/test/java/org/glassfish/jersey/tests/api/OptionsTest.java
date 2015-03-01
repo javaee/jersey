@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,35 +67,35 @@ public class OptionsTest extends JerseyTest {
 
         static String html_content =
                 "<html><head><title>get text/html</title></head>"
-                + "<body>get text/html</body></html>";
+                        + "<body>get text/html</body></html>";
 
         @GET
         public Response getPlain() {
-            return Response.ok("CTS-get text/plain").header("TEST-HEAD", "text-plain").
-                    build();
+            return Response.ok("CTS-get text/plain").header("TEST-HEAD", "text-plain")
+                    .build();
         }
 
         @GET
         @Produces("text/html")
         public Response getHtml() {
-            return Response.ok(html_content).header("TEST-HEAD", "text-html").
-                    build();
+            return Response.ok(html_content).header("TEST-HEAD", "text-html")
+                    .build();
         }
 
         @GET
         @Path("/sub")
         public Response getSub() {
             return Response.ok("TEST-get text/plain").header("TEST-HEAD",
-                    "sub-text-plain").
-                    build();
+                    "sub-text-plain")
+                    .build();
         }
 
         @GET
         @Path("/sub")
         @Produces(value = "text/html")
         public Response headSub() {
-            return Response.ok(html_content).header("TEST-HEAD", "sub-text-html").
-                    build();
+            return Response.ok(html_content).header("TEST-HEAD", "sub-text-html")
+                    .build();
         }
     }
 

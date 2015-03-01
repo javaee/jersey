@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -135,7 +135,7 @@ public class ValidateOnExecutionInheritanceGenericsTest extends ValidateOnExecut
         Integer validateExecutableNone(final Integer value);
     }
 
-    public static abstract class ValidateExecutableOnMethodsAbstractResource
+    public abstract static class ValidateExecutableOnMethodsAbstractResource
             implements ValidateExecutableOnMethodsJaxRs, ValidateExecutableOnMethodsCharSequenceValidation<String> {
 
         @ValidateOnExecution(type = ExecutableType.NONE)
@@ -220,7 +220,7 @@ public class ValidateOnExecutionInheritanceGenericsTest extends ValidateOnExecut
      * This {@link ValidateOnExecution} annotation should be considered during validating phase.
      */
     @ValidateOnExecution(type = ExecutableType.GETTER_METHODS)
-    public static abstract class ValidateExecutableOnTypeDefaultAbstractResource implements ValidateExecutableOnTypeDefault {
+    public abstract static class ValidateExecutableOnTypeDefaultAbstractResource implements ValidateExecutableOnTypeDefault {
 
         @POST
         public Integer validateExecutable(final Integer value) {
@@ -255,7 +255,7 @@ public class ValidateOnExecutionInheritanceGenericsTest extends ValidateOnExecut
     }
 
     @ValidateOnExecution(type = ExecutableType.GETTER_METHODS)
-    public static abstract class ValidateExecutableOnTypeMatchAbstractResource implements ValidateExecutableOnTypeMatch {
+    public abstract static class ValidateExecutableOnTypeMatchAbstractResource implements ValidateExecutableOnTypeMatch {
 
         @POST
         public Integer validateExecutable(final Integer value) {
@@ -290,7 +290,7 @@ public class ValidateOnExecutionInheritanceGenericsTest extends ValidateOnExecut
     }
 
     @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
-    public static abstract class ValidateExecutableOnTypeMissAbstractResource implements ValidateExecutableOnTypeMiss {
+    public abstract static class ValidateExecutableOnTypeMissAbstractResource implements ValidateExecutableOnTypeMiss {
 
         @POST
         public Integer validateExecutable(final Integer value) {
@@ -325,7 +325,7 @@ public class ValidateOnExecutionInheritanceGenericsTest extends ValidateOnExecut
     }
 
     @ValidateOnExecution(type = ExecutableType.ALL)
-    public static abstract class ValidateExecutableOnTypeNoneAbstractResource implements ValidateExecutableOnTypeNone {
+    public abstract static class ValidateExecutableOnTypeNoneAbstractResource implements ValidateExecutableOnTypeNone {
 
         @POST
         public Integer validateExecutable(final Integer value) {

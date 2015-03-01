@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,6 @@ public class Aircraft {
     private AircraftType type;
     @Detail
     private Location location;
-
 
     public static enum Status {
         AVAILABLE,
@@ -126,15 +125,27 @@ public class Aircraft {
 
     @Override
     public synchronized boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Aircraft aircraft = (Aircraft) o;
 
-        if (id != null ? !id.equals(aircraft.id) : aircraft.id != null) return false;
-        if (location != null ? !location.equals(aircraft.location) : aircraft.location != null) return false;
-        if (status != aircraft.status) return false;
-        if (type != null ? !type.equals(aircraft.type) : aircraft.type != null) return false;
+        if (id != null ? !id.equals(aircraft.id) : aircraft.id != null) {
+            return false;
+        }
+        if (location != null ? !location.equals(aircraft.location) : aircraft.location != null) {
+            return false;
+        }
+        if (status != aircraft.status) {
+            return false;
+        }
+        if (type != null ? !type.equals(aircraft.type) : aircraft.type != null) {
+            return false;
+        }
 
         return true;
     }

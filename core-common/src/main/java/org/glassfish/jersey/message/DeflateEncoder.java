@@ -86,8 +86,8 @@ public class DeflateEncoder extends ContentEncoder {
     public InputStream decode(String contentEncoding, InputStream encodedStream)
             throws IOException {
         // correct impl. should wrap deflate in zlib, but some don't do it - have to identify, which one we got
-        InputStream markSupportingStream = encodedStream.markSupported() ? encodedStream :
-                new BufferedInputStream(encodedStream);
+        InputStream markSupportingStream = encodedStream.markSupported() ? encodedStream
+                : new BufferedInputStream(encodedStream);
 
         markSupportingStream.mark(1);
         // read the first byte
@@ -121,8 +121,8 @@ public class DeflateEncoder extends ContentEncoder {
             deflateWithoutZLib = false;
         }
 
-        return deflateWithoutZLib ?
-                new DeflaterOutputStream(entityStream, new Deflater(Deflater.DEFAULT_COMPRESSION, true)) :
-                new DeflaterOutputStream(entityStream);
+        return deflateWithoutZLib
+                ? new DeflaterOutputStream(entityStream, new Deflater(Deflater.DEFAULT_COMPRESSION, true))
+                : new DeflaterOutputStream(entityStream);
     }
 }

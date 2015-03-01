@@ -47,8 +47,8 @@ import javax.xml.bind.annotation.XmlElement;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 /**
-* @author Michal Gajdos (michal.gajdos at oracle.com)
-*/
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
+ */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.ANY)
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class DefaultFilteringSubEntity {
@@ -58,7 +58,7 @@ public class DefaultFilteringSubEntity {
     static {
         INSTANCE = new DefaultFilteringSubEntity();
         INSTANCE.field = true;
-        INSTANCE.property = 20l;
+        INSTANCE.property = 20L;
     }
 
     @XmlElement

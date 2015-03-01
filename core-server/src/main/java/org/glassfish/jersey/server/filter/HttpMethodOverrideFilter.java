@@ -278,8 +278,8 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
         if (override != null) {
             request.setMethod(override);
             if (override.equals("GET")) {
-                if (request.getMediaType() != null &&
-                        MediaType.APPLICATION_FORM_URLENCODED_TYPE.getType().equals(request.getMediaType().getType())) {
+                if (request.getMediaType() != null
+                        && MediaType.APPLICATION_FORM_URLENCODED_TYPE.getType().equals(request.getMediaType().getType())) {
                     UriBuilder ub = request.getUriInfo().getRequestUriBuilder();
                     Form f = ((ContainerRequest) request).readEntity(Form.class);
                     for (Map.Entry<String, List<String>> param : f.asMap().entrySet()) {

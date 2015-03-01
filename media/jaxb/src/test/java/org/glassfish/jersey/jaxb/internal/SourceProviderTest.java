@@ -52,14 +52,16 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.glassfish.jersey.message.internal.SourceProvider;
+
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.message.internal.SourceProvider;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class SourceProviderTest {
+
     private ServiceLocator locator;
 
     @Before
@@ -75,7 +77,8 @@ public class SourceProviderTest {
     @Test
     public void saxSourceReaderDoesNotReadExternalDtds() throws Exception {
         SourceProvider.SaxSourceReader reader = locator.getService(SourceProvider.SaxSourceReader.class);
-        InputStream entityStream = new ByteArrayInputStream("<!DOCTYPE x SYSTEM 'file:///no-such-file'> <rootObject/>".getBytes("us-ascii"));
+        InputStream entityStream = new ByteArrayInputStream(
+                "<!DOCTYPE x SYSTEM 'file:///no-such-file'> <rootObject/>".getBytes("us-ascii"));
         SAXSource ss = reader.readFrom(null, null, null, null, null, entityStream);
 
         TransformerFactory.newInstance().newTransformer().transform(ss, new StreamResult(new ByteArrayOutputStream()));

@@ -47,13 +47,12 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.InternalProperties;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 import org.codehaus.jackson.jaxrs.JsonMappingExceptionMapper;
 import org.codehaus.jackson.jaxrs.JsonParseExceptionMapper;
-
-import org.glassfish.jersey.internal.InternalProperties;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
  * Feature used to register Jackson (1.x) JSON providers.
@@ -63,7 +62,7 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
  */
 public final class Jackson1Feature implements Feature {
 
-    private final static String JSON_FEATURE = Jackson1Feature.class.getSimpleName();
+    private static final String JSON_FEATURE = Jackson1Feature.class.getSimpleName();
 
     @Override
     public boolean configure(final FeatureContext context) {

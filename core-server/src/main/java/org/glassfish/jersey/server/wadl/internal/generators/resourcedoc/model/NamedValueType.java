@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,7 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * The documentation type for named values.<br>
  * Created on: Jun 12, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -57,10 +57,10 @@ public class NamedValueType {
 
     private String name;
     private String value;
-    
+
     public NamedValueType() {
     }
-    
+
     public NamedValueType(String name, String value) {
         this.name = name;
         this.value = value;
@@ -76,7 +76,7 @@ public class NamedValueType {
     /**
      * @param name the name to set
      */
-    public void setName( String name ) {
+    public void setName(String name) {
         this.name = name;
     }
 
@@ -90,8 +90,8 @@ public class NamedValueType {
     /**
      * @param value the value to set
      */
-    public void setValue( String value ) {
+    public void setValue(String value) {
         this.value = value;
     }
-    
+
 }

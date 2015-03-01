@@ -43,15 +43,15 @@ package org.glassfish.jersey.tests.cdi.resources;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.ManagedBean;
-import javax.annotation.PostConstruct;
-
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+
+import javax.annotation.ManagedBean;
+import javax.annotation.PostConstruct;
 
 /**
  * JAX-RS exception mapper registered as a CDI managed bean.
@@ -65,9 +65,11 @@ public class JCDIBeanDependentExceptionMapper implements ExceptionMapper<JDCIBea
 
     private static final Logger LOGGER = Logger.getLogger(JCDIBeanDependentExceptionMapper.class.getName());
 
-    private @Context UriInfo uiFieldInject;
+    @Context
+    private UriInfo uiFieldInject;
 
-    private @Context ResourceContext resourceContext;
+    @Context
+    private ResourceContext resourceContext;
 
     private UriInfo uiMethodInject;
 
@@ -81,7 +83,6 @@ public class JCDIBeanDependentExceptionMapper implements ExceptionMapper<JDCIBea
         LOGGER.log(Level.INFO, String.format("In post construct of %s", this));
         ensureInjected();
     }
-
 
     @Override
     public Response toResponse(JDCIBeanDependentException exception) {

@@ -66,7 +66,8 @@ import static org.junit.Assert.assertNotNull;
  * @author Miroslav Fuksa
  */
 public class ReaderProviderTest extends JerseyTest {
-    public final static String GET_READER_RESPONSE = "GET_READER_RESPONSE";
+
+    public static final String GET_READER_RESPONSE = "GET_READER_RESPONSE";
     public static final String GET_POST_RESPONSE = "GET_POST_RESPONSE";
 
     @Override
@@ -110,21 +111,20 @@ public class ReaderProviderTest extends JerseyTest {
 
     @Test
     public void testReaderOnClientAsRequestEntity() throws IOException {
-        Response response = target().path("test/postReaderGetReader").request().post(Entity.entity(new StringReader
-                (GET_POST_RESPONSE), MediaType.TEXT_PLAIN));
+        Response response = target().path("test/postReaderGetReader").request()
+                .post(Entity.entity(new StringReader(GET_POST_RESPONSE), MediaType.TEXT_PLAIN));
         assertEquals(200, response.getStatus());
         assertEquals(GET_POST_RESPONSE, response.readEntity(String.class));
     }
 
-
     @Path("test")
     public static class ReaderResource {
+
         @POST
         @Path("postReaderGetReader")
         public Reader postReader(Reader reader) throws IOException {
             return reader;
         }
-
 
         @GET
         @Path("getReader")

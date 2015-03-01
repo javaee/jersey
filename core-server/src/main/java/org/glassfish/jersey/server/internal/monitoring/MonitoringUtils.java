@@ -55,7 +55,7 @@ public final class MonitoringUtils {
     /**
      * Request rate limit (per second) below which statistics can be considered as cacheable.
      */
-    private final static double CACHEABLE_REQUEST_RATE_LIMIT = 0.001;
+    private static final double CACHEABLE_REQUEST_RATE_LIMIT = 0.001;
 
     /**
      * Get the method unique string ID. The ID is constructed from method attributes separated

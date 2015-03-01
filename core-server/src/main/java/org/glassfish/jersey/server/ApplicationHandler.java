@@ -355,7 +355,8 @@ public final class ApplicationHandler {
                     appClassBound = true;
                 }
             }
-            final Application app = appClassBound ? locator.getService(applicationClass) : locator.createAndInitialize(applicationClass);
+            final Application app = appClassBound
+                    ? locator.getService(applicationClass) : locator.createAndInitialize(applicationClass);
             if (app instanceof ResourceConfig) {
                 final ResourceConfig _rc = (ResourceConfig) app;
                 final Class<? extends Application> innerAppClass = _rc.getApplicationClass();
@@ -369,16 +370,16 @@ public final class ApplicationHandler {
     }
 
     private List<ComponentProvider> initializedComponentProviders() {
-                // Registering Injection Bindings
-            List<ComponentProvider> result = new LinkedList<>();
+        // Registering Injection Bindings
+        List<ComponentProvider> result = new LinkedList<>();
 
-            // Registering Injection Bindings
-            for (final RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
-                final ComponentProvider provider = rankedProvider.getProvider();
-                provider.initialize(locator);
-                result.add(provider);
-            }
-            return result;
+        // Registering Injection Bindings
+        for (final RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
+            final ComponentProvider provider = rankedProvider.getProvider();
+            provider.initialize(locator);
+            result.add(provider);
+        }
+        return result;
     }
 
     /**
@@ -410,7 +411,6 @@ public final class ApplicationHandler {
         final ComponentBag componentBag;
         ResourceModel resourceModel;
         CompositeApplicationEventListener compositeListener = null;
-
 
         Errors.mark(); // mark begin of validation phase
         try {
@@ -485,7 +485,9 @@ public final class ApplicationHandler {
 
             if (!extScopesFound) {
                 final DynamicConfiguration configuration = Injections.getConfiguration(locator);
-                final ScopedBindingBuilder<ExternalRequestScope> binder = Injections.newBinder((ExternalRequestScope) ServerRuntime.NOOP_EXTERNAL_REQ_SCOPE).to(ExternalRequestScope.class);
+                final ScopedBindingBuilder<ExternalRequestScope> binder = Injections
+                        .newBinder((ExternalRequestScope) ServerRuntime.NOOP_EXTERNAL_REQ_SCOPE)
+                        .to(ExternalRequestScope.class);
                 Injections.addBinding(binder, configuration);
                 configuration.commit();
             }
@@ -652,6 +654,7 @@ public final class ApplicationHandler {
     }
 
     private static class WorkersToStringTransform<T> implements Function<T, String> {
+
         @Override
         public String apply(final T t) {
             if (t != null) {
@@ -669,7 +672,9 @@ public final class ApplicationHandler {
 
             for (final Map.Entry<Class<? extends Annotation>, List<RankedProvider<T>>> entry : providers.entrySet()) {
                 for (final RankedProvider rankedProvider : entry.getValue()) {
-                    sb.append("   ").append(LocalizationMessages.LOGGING_PROVIDER_BOUND(rankedProvider, entry.getKey())).append('\n');
+                    sb.append("   ")
+                            .append(LocalizationMessages.LOGGING_PROVIDER_BOUND(rankedProvider, entry.getKey()))
+                            .append('\n');
                 }
             }
         }
@@ -701,17 +706,16 @@ public final class ApplicationHandler {
     private ProcessingProviders getProcessingProviders(final ComponentBag componentBag) {
 
         // scan for NameBinding annotations attached to the application class
-        final Collection<Class<? extends Annotation>> applicationNameBindings =
-                ReflectionHelper.getAnnotationTypes(ConfigHelper.getWrappedApplication(runtimeConfig).getClass(), NameBinding.class);
-
+        final Collection<Class<? extends Annotation>> applicationNameBindings = ReflectionHelper.getAnnotationTypes(
+                ConfigHelper.getWrappedApplication(runtimeConfig).getClass(), NameBinding.class);
 
         // find all filters, interceptors and dynamic features
         final Iterable<RankedProvider<ContainerResponseFilter>> responseFilters = Providers.getAllRankedProviders(locator,
                 ContainerResponseFilter.class);
 
-        final MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>> nameBoundResponseFiltersInverse =
+        final MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>> nameBoundRespFiltersInverse =
                 new MultivaluedHashMap<>();
-        final MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>> nameBoundRequestFiltersInverse =
+        final MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>> nameBoundReqFiltersInverse =
                 new MultivaluedHashMap<>();
         final MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>> nameBoundReaderInterceptorsInverse =
                 new MultivaluedHashMap<>();
@@ -719,38 +723,48 @@ public final class ApplicationHandler {
                 new MultivaluedHashMap<>();
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters
-                = filterNameBound(responseFilters, null, componentBag, applicationNameBindings, nameBoundResponseFiltersInverse);
+                = filterNameBound(responseFilters, null, componentBag, applicationNameBindings, nameBoundRespFiltersInverse);
 
         final Iterable<RankedProvider<ContainerRequestFilter>> requestFilters = Providers.getAllRankedProviders(locator,
                 ContainerRequestFilter.class);
 
         final List<RankedProvider<ContainerRequestFilter>> preMatchFilters = Lists.newArrayList();
 
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters
-                = filterNameBound(requestFilters, preMatchFilters, componentBag, applicationNameBindings, nameBoundRequestFiltersInverse);
+        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundReqFilters =
+                filterNameBound(requestFilters, preMatchFilters, componentBag, applicationNameBindings,
+                        nameBoundReqFiltersInverse);
 
         final Iterable<RankedProvider<ReaderInterceptor>> readerInterceptors = Providers.getAllRankedProviders(locator,
                 ReaderInterceptor.class);
 
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors
-                = filterNameBound(readerInterceptors, null, componentBag, applicationNameBindings, nameBoundReaderInterceptorsInverse);
+        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors =
+                filterNameBound(readerInterceptors, null, componentBag, applicationNameBindings,
+                        nameBoundReaderInterceptorsInverse);
 
         final Iterable<RankedProvider<WriterInterceptor>> writerInterceptors = Providers.getAllRankedProviders(locator,
                 WriterInterceptor.class);
 
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors
-                = filterNameBound(writerInterceptors, null, componentBag, applicationNameBindings, nameBoundWriterInterceptorsInverse);
+        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors =
+                filterNameBound(writerInterceptors, null, componentBag, applicationNameBindings,
+                        nameBoundWriterInterceptorsInverse);
 
         final Iterable<DynamicFeature> dynamicFeatures = Providers.getAllProviders(locator, DynamicFeature.class);
 
-
-        return new ProcessingProviders(nameBoundRequestFilters, nameBoundRequestFiltersInverse, nameBoundResponseFilters,
-                nameBoundResponseFiltersInverse, nameBoundReaderInterceptors, nameBoundReaderInterceptorsInverse,
-                nameBoundWriterInterceptors, nameBoundWriterInterceptorsInverse, requestFilters, preMatchFilters, responseFilters,
-                readerInterceptors, writerInterceptors, dynamicFeatures);
-
+        return new ProcessingProviders(nameBoundReqFilters,
+                nameBoundReqFiltersInverse,
+                nameBoundResponseFilters,
+                nameBoundRespFiltersInverse,
+                nameBoundReaderInterceptors,
+                nameBoundReaderInterceptorsInverse,
+                nameBoundWriterInterceptors,
+                nameBoundWriterInterceptorsInverse,
+                requestFilters,
+                preMatchFilters,
+                responseFilters,
+                readerInterceptors,
+                writerInterceptors,
+                dynamicFeatures);
     }
-
 
     private ResourceModel processResourceModel(ResourceModel resourceModel) {
         final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers.getAllRankedProviders(locator,
@@ -765,7 +779,9 @@ public final class ApplicationHandler {
     }
 
     private void bindEnhancingResourceClasses(
-            final ResourceModel resourceModel, final ResourceBag resourceBag, final Iterable<ComponentProvider> componentProviders) {
+            final ResourceModel resourceModel,
+            final ResourceBag resourceBag,
+            final Iterable<ComponentProvider> componentProviders) {
 
         final Set<Class<?>> newClasses = Sets.newHashSet();
         final Set<Object> newInstances = Sets.newHashSet();
@@ -1011,7 +1027,9 @@ public final class ApplicationHandler {
 
         private final JerseyRequestTimeoutHandler requestTimeoutHandler;
 
-        private FutureResponseWriter(final String requestMethodName, final OutputStream outputStream, final ScheduledExecutorService backgroundScheduler) {
+        private FutureResponseWriter(final String requestMethodName,
+                                     final OutputStream outputStream,
+                                     final ScheduledExecutorService backgroundScheduler) {
             this.requestMethodName = requestMethodName;
             this.outputStream = outputStream;
             this.requestTimeoutHandler = new JerseyRequestTimeoutHandler(this, backgroundScheduler);

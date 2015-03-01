@@ -73,6 +73,7 @@ import java.util.regex.Pattern;
 final class NounInflector {
 
     // ------------------------------------------------------------ Constructors
+
     /**
      * <p>Private constructor to avoid instantiation.</p>
      */
@@ -149,7 +150,7 @@ final class NounInflector {
      * <p>The singleton instance returned by the default <code>getInstance()</code>
      * method.</p>
      */
-    private transient static NounInflector instance = null;
+    private static transient NounInflector instance = null;
     /**
      * <p>List of <code>Replacer</code>s for performing replacement operations
      * on matches for plural words.</p>
@@ -166,9 +167,9 @@ final class NounInflector {
      */
     private final List<String> uncountables = new LinkedList<String>();
 
-
     // ------------------------------------------------------ Instance Variables
     // ---------------------------------------------------------- Static Methods
+
     /**
      * <p>Return a fully configured {@link NounInflector} instance that can be used
      * for performing transformations.</p>
@@ -182,8 +183,8 @@ final class NounInflector {
 
     }
 
-
     // ---------------------------------------------------------- Public Methods
+
     /**
      * <p>Convert strings to <code>EmbeddedCamelCase</code>.  Embedded
      * underscores will be removed.</p>
@@ -634,15 +635,15 @@ final class NounInflector {
             return word;
         }
         // or if already decapitalized
-        final char first =  word.charAt(0);
+        final char first = word.charAt(0);
         if (Character.isLowerCase(first)) {
             return word;
         }
         // otherwise turn the first character to lower case and attach the rest
-     	final StringBuilder sb = new StringBuilder(word.length());
-	sb.append(Character.toLowerCase(first));
-	sb.append(word.substring(1));
-	return sb.toString();
+        final StringBuilder sb = new StringBuilder(word.length());
+        sb.append(Character.toLowerCase(first));
+        sb.append(word.substring(1));
+        return sb.toString();
     }
 
     /**
@@ -700,8 +701,8 @@ final class NounInflector {
 
     }
 
-
     // --------------------------------------------------- Customization Methods
+
     /**
      * <p>Add the addSingular and addPlural forms of words that cannot be
      * converted using the normal rules.</p>
@@ -790,8 +791,8 @@ final class NounInflector {
 
     }
 
-
     // --------------------------------------------------------- Private Classes
+
     /**
      * <p>Internal class that uses a regular expression matcher to both
      * match the specified regular expression to a specified word, and
@@ -811,7 +812,6 @@ final class NounInflector {
         // -------------------------------------------------- Instance Variables
         private Pattern pattern = null;
         private String rule = null;
-
 
         // ------------------------------------------------------ Public Methods
 

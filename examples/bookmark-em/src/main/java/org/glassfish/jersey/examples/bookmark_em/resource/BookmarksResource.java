@@ -103,9 +103,9 @@ public class BookmarksResource {
         JSONArray uriArray = new JSONArray();
         for (BookmarkEntity bookmarkEntity : getBookmarks()) {
             UriBuilder ub = uriInfo.getAbsolutePathBuilder();
-            URI bookmarkUri = ub.
-                    path(bookmarkEntity.getBookmarkEntityPK().getBmid()).
-                    build();
+            URI bookmarkUri = ub
+                    .path(bookmarkEntity.getBookmarkEntityPK().getBmid())
+                    .build();
             uriArray.put(bookmarkUri.toASCIIString());
         }
         return uriArray;
@@ -129,9 +129,9 @@ public class BookmarksResource {
             }
         });
 
-        URI bookmarkUri = uriInfo.getAbsolutePathBuilder().
-                path(bookmarkEntity.getBookmarkEntityPK().getBmid()).
-                build();
+        URI bookmarkUri = uriInfo.getAbsolutePathBuilder()
+                .path(bookmarkEntity.getBookmarkEntityPK().getBmid())
+                .build();
         return Response.created(bookmarkUri).build();
     }
 

@@ -83,8 +83,8 @@ public class ExtendedWadlWebappTest extends JerseyTest {
     @Override
     protected DeploymentContext configureDeployment() {
         final ResourceConfig resourceConfig = new ResourceConfig(new MyApplication().getClasses());
-        resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG, "org.glassfish.jersey.examples.extendedwadl" +
-                ".SampleWadlGeneratorConfig");
+        resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG, "org.glassfish.jersey.examples.extendedwadl"
+                + ".SampleWadlGeneratorConfig");
 
         final Resource.Builder resourceBuilder = Resource.builder();
         resourceBuilder.name("resource-programmatic").path("programmatic").addMethod("GET")

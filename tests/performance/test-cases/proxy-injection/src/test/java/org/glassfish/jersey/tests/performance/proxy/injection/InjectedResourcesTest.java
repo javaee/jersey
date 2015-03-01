@@ -44,8 +44,8 @@ import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.test.JerseyTest;
 
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test for field/method injected resource.
@@ -62,7 +62,8 @@ public class InjectedResourcesTest extends JerseyTest {
     @Test
     public void testSameTypesInjected() {
         final String methodInjectedResponse = target().path("method-injected").path("all-parameters").request().get(String.class);
-        final String fieldInjectedResponse = target().path("field-injected").path("without-parameters").request().get(String.class);
+        final String fieldInjectedResponse = target().path("field-injected").path("without-parameters").request()
+                .get(String.class);
         assertEquals(methodInjectedResponse, fieldInjectedResponse);
     }
 }

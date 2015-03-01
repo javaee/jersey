@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
 import java.io.Closeable;
 import java.io.InputStream;
 import java.net.URI;
@@ -53,11 +49,15 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import org.glassfish.jersey.server.ResourceFinder;
+
 import org.jboss.vfs.TempFileProvider;
 import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.junit.Before;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Martin Snyder
@@ -110,7 +110,8 @@ public class VFSSchemeResourceFinderTest {
         try (TempFileProvider provider = TempFileProvider.create("test", executor, false);
              Closeable mount = VFS.mountZip(VFS.getChild(jaxRsApiPath), mountDir, provider)) {
 
-            ResourceFinder finder = new VfsSchemeResourceFinderFactory().create(new URI(mountDir.toURI().toString() + "/javax/ws/rs"), true);
+            ResourceFinder finder = new VfsSchemeResourceFinderFactory()
+                    .create(new URI(mountDir.toURI().toString() + "/javax/ws/rs"), true);
 
             int scannedEntryCount = 0;
             while (finder.hasNext()) {

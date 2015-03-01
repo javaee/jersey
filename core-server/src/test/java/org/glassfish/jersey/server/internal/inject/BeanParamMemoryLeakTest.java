@@ -40,24 +40,22 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
-import org.glassfish.hk2.api.Descriptor;
-import org.glassfish.hk2.api.Filter;
 
-import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.glassfish.hk2.api.Descriptor;
+import org.glassfish.hk2.api.Filter;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Reproducer for JERSEY-2800. We need to make sure
@@ -69,14 +67,18 @@ import org.junit.Test;
 public class BeanParamMemoryLeakTest extends AbstractTest {
 
     public static class ParameterBean {
-        @Context Request request;
-        @QueryParam("q") String q;
+
+        @Context
+        Request request;
+        @QueryParam("q")
+        String q;
     }
 
     @Path("/")
     public static class BeanParamInjectionResource {
 
-        @BeanParam ParameterBean bean;
+        @BeanParam
+        ParameterBean bean;
 
         @GET
         @Path("jaxrs")
@@ -106,11 +108,11 @@ public class BeanParamMemoryLeakTest extends AbstractTest {
         assertEquals(1, locator.getDescriptors(new ParameterBeanFilter()).size());
 
         // and some more
-        for (int i=0; i<20; i++) {
+        for (int i = 0; i < 20; i++) {
             assertEquals(Integer.toString(i), resource("/jaxrs?q=" + i).getEntity());
             assertEquals(1, locator.getDescriptors(new ParameterBeanFilter()).size());
         }
-   }
+    }
 
     private ContainerResponse resource(String uri) throws Exception {
         return apply(RequestContextBuilder.from(uri, "GET").build());

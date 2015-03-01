@@ -50,7 +50,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 /**
- * Test resource to test field injected proxiable parameters.
+ * Test resource to test field injected proxy-able parameters.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
@@ -58,14 +58,19 @@ import javax.ws.rs.core.UriInfo;
 @Produces(MediaType.TEXT_PLAIN)
 public class FieldInjectedResource {
 
-    @Context SecurityContext securityContext;
-    @Context UriInfo uriInfo;
-    @Context HttpHeaders httpHeaders;
-    @Context Request request;
+    @Context
+    SecurityContext securityContext;
+    @Context
+    UriInfo uriInfo;
+    @Context
+    HttpHeaders httpHeaders;
+    @Context
+    Request request;
 
     @GET
     @Path("without-parameters")
     public String getProxy() {
-        return String.format("sc: %s\nui: %s\nhh: %s\nreq: %s", securityContext.getClass(), uriInfo.getClass(), httpHeaders.getClass(), request.getClass());
+        return String.format("sc: %s\nui: %s\nhh: %s\nreq: %s",
+                securityContext.getClass(), uriInfo.getClass(), httpHeaders.getClass(), request.getClass());
     }
 }

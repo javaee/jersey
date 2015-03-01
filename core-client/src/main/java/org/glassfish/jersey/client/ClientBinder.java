@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -79,8 +79,8 @@ class ClientBinder extends AbstractBinder {
 
     private final Map<String, Object> applicationProperties;
 
-
     private static class RequestContextInjectionFactory extends ReferencingFactory<ClientRequest> {
+
         @Inject
         public RequestContextInjectionFactory(Provider<Ref<ClientRequest>> referenceFactory) {
             super(referenceFactory);
@@ -88,6 +88,7 @@ class ClientBinder extends AbstractBinder {
     }
 
     private static class PropertiesDelegateFactory implements Factory<PropertiesDelegate> {
+
         private final Provider<ClientRequest> requestProvider;
 
         @Inject
@@ -105,7 +106,6 @@ class ClientBinder extends AbstractBinder {
             // do nothing
         }
     }
-
 
     ClientBinder(Map<String, Object> applicationProperties) {
         this.applicationProperties = applicationProperties;
@@ -127,9 +127,9 @@ class ClientBinder extends AbstractBinder {
         bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);
 
-        bindFactory(RequestContextInjectionFactory.class).
-                to(ClientRequest.class).
-                in(RequestScoped.class);
+        bindFactory(RequestContextInjectionFactory.class)
+                .to(ClientRequest.class)
+                .in(RequestScoped.class);
 
         bindFactory(ReferencingFactory.<ClientRequest>referenceFactory()).to(new TypeLiteral<Ref<ClientRequest>>() {
         }).in(RequestScoped.class);

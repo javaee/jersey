@@ -86,6 +86,7 @@ import com.sun.net.httpserver.HttpsExchange;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JdkHttpHandlerContainer implements HttpHandler, Container {
+
     private static final Logger LOGGER = Logger.getLogger(JdkHttpHandlerContainer.class.getName());
 
     private volatile ApplicationHandler appHandler;
@@ -136,8 +137,8 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
                  *
                  * TODO support redirection in accordance with resource configuration feature.
                  */
-                exchangeUri = UriBuilder.fromUri(exchangeUri).
-                        path("/").build();
+                exchangeUri = UriBuilder.fromUri(exchangeUri)
+                        .path("/").build();
             }
             decodedBasePath += "/";
         }

@@ -66,7 +66,7 @@ public class SubResourceDynamicTest {
     }
 
     @Path("/parent")
-    static public class Parent {
+    public static class Parent {
 
         @GET
         public String getMe() {
@@ -79,7 +79,7 @@ public class SubResourceDynamicTest {
         }
     }
 
-    static public class Child {
+    public static class Child {
 
         @GET
         public String getMe() {
@@ -101,7 +101,7 @@ public class SubResourceDynamicTest {
     }
 
     @Path("/{p}")
-    static public class ParentWithTemplates {
+    public static class ParentWithTemplates {
 
         @GET
         public String getMe(@PathParam("p") String p) {
@@ -114,7 +114,7 @@ public class SubResourceDynamicTest {
         }
     }
 
-    static public class ChildWithTemplates {
+    public static class ChildWithTemplates {
 
         @GET
         public String getMe(@PathParam("c") String c) {
@@ -135,7 +135,7 @@ public class SubResourceDynamicTest {
     }
 
     @Path("/")
-    static public class SubResourceExplicitRegexCapturingGroups {
+    public static class SubResourceExplicitRegexCapturingGroups {
 
         @Path("{a: (\\d)(\\d*)}-{b: (\\d)(\\d*)}-{c: (\\d)(\\d*)}")
         public SubResourceExplicitRegexCapturingGroupsSub getMultiple() {
@@ -143,7 +143,7 @@ public class SubResourceDynamicTest {
         }
     }
 
-    static public class SubResourceExplicitRegexCapturingGroupsSub {
+    public static class SubResourceExplicitRegexCapturingGroupsSub {
 
         @GET
         @Path("{d}")

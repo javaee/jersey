@@ -150,7 +150,6 @@ public class WadlResourceTest {
         return d;
     }
 
-
     public static class Wadl7Test extends JerseyTest {
 
         @Override
@@ -160,6 +159,7 @@ public class WadlResourceTest {
 
         @Path("root")
         public static class TestRootResource {
+
             @Path("{template}")
             @GET
             public String getSub() {
@@ -187,7 +187,6 @@ public class WadlResourceTest {
         }
     }
 
-
     public static class Wadl5Test extends JerseyTest {
 
         @Override
@@ -197,6 +196,7 @@ public class WadlResourceTest {
 
         @Path("foo")
         public static class ExtraResource {
+
             @GET
             @Produces("application/xml")
             public String getRep() {
@@ -352,12 +352,12 @@ public class WadlResourceTest {
             val = (String) xp.evaluate("//wadl:resource[@path='{id}']/wadl:param[@name='id']/@type", d, XPathConstants.STRING);
             assertEquals(val, (prefix == null ? "" : prefix + ":") + "int");
             // check number of output representations is two
-            val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='GET']/wadl:response/wadl" +
-                    ":representation)", d, XPathConstants.STRING);
+            val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='GET']/wadl:response/wadl"
+                    + ":representation)", d, XPathConstants.STRING);
             assertEquals("2", val);
             // check number of output representations is one
-            val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='POST']/wadl:request/wadl" +
-                    ":representation)", d, XPathConstants.STRING);
+            val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='POST']/wadl:request/wadl"
+                    + ":representation)", d, XPathConstants.STRING);
             assertEquals("1", val);
             // check type of {id}/verbose is int
             prefix = getXmlSchemaNamespacePrefix(
@@ -379,7 +379,8 @@ public class WadlResourceTest {
         public void testLastModifiedOPTIONS() {
             final WebTarget target = target("/widgets/3/verbose");
 
-            final Response r = target.queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL_TYPE).options();
+            final Response r = target.queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL_TYPE)
+                    .options();
             System.out.println(r.readEntity(String.class));
             assertTrue(r.getHeaders().containsKey("Last-modified"));
         }
@@ -391,7 +392,6 @@ public class WadlResourceTest {
             Response response = target("/widgets").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
                     .request(MediaTypes.WADL_TYPE).options();
             assertEquals(200, response.getStatus());
-//            System.out.println(response.readEntity(String.class));
             File tmpFile = response.readEntity(File.class);
             final DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
             bf.setNamespaceAware(true);
@@ -432,12 +432,12 @@ public class WadlResourceTest {
             val = (String) xp.evaluate("//wadl:resource[@path='{id}']/wadl:param[@name='id']/@type", d, XPathConstants.STRING);
             assertEquals(val, (prefix == null ? "" : prefix + ":") + "int");
             // check number of output representations is two
-            val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='GET']/wadl:response/wadl" +
-                    ":representation)", d, XPathConstants.STRING);
+            val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='GET']/wadl:response/wadl"
+                    + ":representation)", d, XPathConstants.STRING);
             assertEquals("2", val);
             // check number of output representations is one
-            val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='POST']/wadl:request/wadl" +
-                    ":representation)", d, XPathConstants.STRING);
+            val = (String) xp.evaluate("count(//wadl:resource[@path='widgets']/wadl:method[@name='POST']/wadl:request/wadl"
+                    + ":representation)", d, XPathConstants.STRING);
             assertEquals("1", val);
 
             response = target("/foo").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
@@ -838,6 +838,7 @@ public class WadlResourceTest {
             }
 
             public static class MyWadlGenerator extends WadlGeneratorImpl {
+
                 public static final String CUSTOM_RESOURCES_BASE_URI = "http://myBaseUri";
 
                 @Override
@@ -891,29 +892,29 @@ public class WadlResourceTest {
         }
 
         //
-//    @Path("jresponse")
-//    public static class JResponseTestResource {
-//        @GET
-//        @Produces("text/plain")
-//        public JResponse<List<String>> getClichedMessage() {
-//            // Return some cliched textual content
-//            return JResponse.<List<String>>status(200).entity(new ArrayList() {
-//                {
-//                    add("Hello world!");
-//                }
-//            }).build();
-//        }
-//    }
-//
-//    public void testJresponse() throws Exception {
-//        ResourceConfig rc = new DefaultResourceConfig(JResponseTestResource.class);
-//        initiateWebApplication(rc);
-//
-//        WebResource r = resource("/application.wadl");
-//
-//        assertTrue(r.get(String.class).length() > 0);
-//    }
-//
+        //    @Path("jresponse")
+        //    public static class JResponseTestResource {
+        //        @GET
+        //        @Produces("text/plain")
+        //        public JResponse<List<String>> getClichedMessage() {
+        //            // Return some cliched textual content
+        //            return JResponse.<List<String>>status(200).entity(new ArrayList() {
+        //                {
+        //                    add("Hello world!");
+        //                }
+        //            }).build();
+        //        }
+        //    }
+        //
+        //    public void testJresponse() throws Exception {
+        //        ResourceConfig rc = new DefaultResourceConfig(JResponseTestResource.class);
+        //        initiateWebApplication(rc);
+        //
+        //        WebResource r = resource("/application.wadl");
+        //
+        //        assertTrue(r.get(String.class).length() > 0);
+        //    }
+        //
         @Path("emptyproduces")
         public static class EmptyProducesTestResource {
 
@@ -971,7 +972,6 @@ public class WadlResourceTest {
         }
     }
 
-
     public static class Wadl1Test extends JerseyTest {
 
         @Override
@@ -981,6 +981,7 @@ public class WadlResourceTest {
 
         @Path("root")
         public static class RootResource {
+
             @Path("loc")
             public Object getSub() {
                 return new SubResource();
@@ -995,6 +996,7 @@ public class WadlResourceTest {
         }
 
         public static class SubResource {
+
             @Path("loc")
             public Object getSub() {
                 return new SubResource();
@@ -1046,7 +1048,6 @@ public class WadlResourceTest {
 
     }
 
-
     public static class Wadl2Test extends JerseyTest {
 
         @Override
@@ -1054,9 +1055,9 @@ public class WadlResourceTest {
             return new ResourceConfig(RootResource1.class, RootResource2.class);
         }
 
-
         @Path("root1")
         public static class RootResource1 {
+
             @Path("loc")
             public Wadl1Test.SubResource getSub() {
                 return new Wadl1Test.SubResource();
@@ -1065,6 +1066,7 @@ public class WadlResourceTest {
 
         @Path("root2")
         public static class RootResource2 {
+
             @Path("loc")
             public Wadl1Test.SubResource getSub() {
                 return new Wadl1Test.SubResource();
@@ -1090,6 +1092,7 @@ public class WadlResourceTest {
     }
 
     public static class Wadl3Test extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(FormResource.class);
@@ -1142,6 +1145,7 @@ public class WadlResourceTest {
 
     @Ignore // TODO - fails -> fix it and unignore
     public static class Wadl4Test extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(FieldParamResource.class);
@@ -1173,7 +1177,8 @@ public class WadlResourceTest {
             _testFieldAndSetterParam(target("/application.wadl").request().get(), path);
         }
 
-        private static void _testFieldAndSetterParam(final Response response, final String path) throws ParserConfigurationException,
+        private static void _testFieldAndSetterParam(final Response response, final String path)
+                throws ParserConfigurationException,
                 SAXException, IOException, XPathExpressionException {
 
             final Document d = extractWadlAsDocument(response);
@@ -1264,10 +1269,10 @@ public class WadlResourceTest {
                 };
 
                 for (final String path : paths) {
-                    final Response response = target("wadl6test").
-                            path(path).
-                            request("application/vnd.sun.wadl+xml").
-                            options();
+                    final Response response = target("wadl6test")
+                            .path(path)
+                            .request("application/vnd.sun.wadl+xml")
+                            .options();
                     assertEquals(200, response.getStatus());
                     final String document = response.readEntity(String.class);
 
@@ -1279,6 +1284,7 @@ public class WadlResourceTest {
     }
 
     public static class Wadl8Test extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(ResourceA.class, ResourceB.class, ResourceSpecific.class);
@@ -1311,7 +1317,6 @@ public class WadlResourceTest {
                 return "template-a";
             }
 
-
             @POST
             @Path("{templateB}")
             public String postTemplateB(final String str) {
@@ -1331,7 +1336,6 @@ public class WadlResourceTest {
 
             String result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='GET']/@id", d, XPathConstants.STRING);
             assertEquals("getA", result);
-
 
             result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='POST']/@id", d, XPathConstants.STRING);
             assertEquals("postB", result);
@@ -1355,7 +1359,6 @@ public class WadlResourceTest {
             assertEquals("postTemplateB", result);
         }
     }
-
 
     /**
      * Tests usage of property {@link ServerProperties#METAINF_SERVICES_LOOKUP_DISABLE}. Wadl is registered automatically every

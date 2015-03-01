@@ -96,12 +96,11 @@ public class UserResource {
         if (null == userEntity) {
             throw new ExtendedNotFoundException("userid " + userid + "does not exist!");
         }
-        return new JSONObject().
-                put("userid", userEntity.getUserid()).
-                put("username", userEntity.getUsername()).
-                put("email", userEntity.getEmail()).
-                put("password", userEntity.getPassword()).
-                put("bookmarks", uriInfo.getAbsolutePathBuilder().path("bookmarks").build());
+        return new JSONObject().put("userid", userEntity.getUserid())
+                .put("username", userEntity.getUsername())
+                .put("email", userEntity.getEmail())
+                .put("password", userEntity.getPassword())
+                .put("bookmarks", uriInfo.getAbsolutePathBuilder().path("bookmarks").build());
     }
 
     @PUT

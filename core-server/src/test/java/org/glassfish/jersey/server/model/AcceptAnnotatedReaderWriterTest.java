@@ -83,6 +83,7 @@ public class AcceptAnnotatedReaderWriterTest {
     }
 
     public static class StringWrapper {
+
         public String s;
 
         public StringWrapper() {
@@ -100,6 +101,7 @@ public class AcceptAnnotatedReaderWriterTest {
     }
 
     public static class StringWrapperFoo extends StringWrapper {
+
         public StringWrapperFoo() {
             // DO NOT REMOVE: used by StringWrapperWorker.readFrom
         }
@@ -110,6 +112,7 @@ public class AcceptAnnotatedReaderWriterTest {
     }
 
     public static class StringWrapperBar extends StringWrapper {
+
         public StringWrapperBar() {
             // DO NOT REMOVE: used by StringWrapperWorker.readFrom
         }
@@ -122,7 +125,8 @@ public class AcceptAnnotatedReaderWriterTest {
     public static final String APPLICATION_BAR = "application/bar";
     public static final String APPLICATION_FOO = "application/foo";
 
-    public static abstract class StringWrapperWorker<T extends StringWrapper> implements MessageBodyReader<T>, MessageBodyWriter<T> {
+    public abstract static class StringWrapperWorker<T extends StringWrapper>
+            implements MessageBodyReader<T>, MessageBodyWriter<T> {
 
         @Provider
         @Produces(APPLICATION_BAR)
@@ -215,7 +219,12 @@ public class AcceptAnnotatedReaderWriterTest {
         }
 
         @Override
-        public T readFrom(Class<T> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+        public T readFrom(Class<T> type,
+                          Type genericType,
+                          Annotation[] annotations,
+                          MediaType mediaType,
+                          MultivaluedMap<String, String> httpHeaders,
+                          InputStream entityStream) throws IOException, WebApplicationException {
             try {
                 T result = type.newInstance();
                 result.s = readString(entityStream).substring(getPrefix().length());
@@ -244,7 +253,8 @@ public class AcceptAnnotatedReaderWriterTest {
     @Test
     public void testAcceptGet() throws Exception {
 
-        ApplicationHandler app = createApplication(TwoGetMethodsResource.class, StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
+        ApplicationHandler app = createApplication(TwoGetMethodsResource.class, StringWrapperWorker.FooFooStringWorker.class,
+                StringWrapperWorker.BarBarStringWorker.class);
 
         _test(app, "foo: 1st", "GET", null, null, "application/foo");
         _test(app, "foo: 1st", "GET", null, null, "application/bar;q=0.8", "application/foo");
@@ -267,7 +277,8 @@ public class AcceptAnnotatedReaderWriterTest {
     @Test
     public void testSingleMethodAcceptGet() throws Exception {
 
-        final ApplicationHandler app = createApplication(SingleGetMethodResource.class, StringWrapperWorker.FooStringWorker.class, StringWrapperWorker.BarStringWorker.class);
+        final ApplicationHandler app = createApplication(SingleGetMethodResource.class, StringWrapperWorker.FooStringWorker.class,
+                StringWrapperWorker.BarStringWorker.class);
 
         _test(app, "foo: content", "GET", null, null, "application/foo");
         _test(app, "foo: content", "GET", null, null, "application/bar;q=0.5, application/foo");
@@ -311,7 +322,8 @@ public class AcceptAnnotatedReaderWriterTest {
     @Test
     public void testSingleMethodConsumesProducesPost() throws Exception {
 
-        final ApplicationHandler app = createApplication(MultiplePostMethodResource.class, StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
+        final ApplicationHandler app = createApplication(MultiplePostMethodResource.class,
+                StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
 
         _test(app, "foo: foo", "POST", new StringWrapperFoo("foo"), APPLICATION_FOO, APPLICATION_FOO);
         _test(app, "foo: bar", "POST", new StringWrapperBar("bar"), APPLICATION_BAR, APPLICATION_FOO);

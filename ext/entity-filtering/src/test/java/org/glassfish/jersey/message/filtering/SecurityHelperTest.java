@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,13 +48,14 @@ import javax.ws.rs.core.SecurityContext;
 
 import javax.annotation.security.RolesAllowed;
 
-import jersey.repackaged.com.google.common.collect.Sets;
 import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+
+import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * {@link org.glassfish.jersey.message.filtering.SecurityHelper} unit tests.
@@ -73,25 +74,26 @@ public class SecurityHelperTest {
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(Collections.<String>emptySet()));
 
         // Not security annotations.
-        annotations = new Annotation[]{new CustomAnnotationImpl(), new CustomAnnotationImpl()};
+        annotations = new Annotation[] {new CustomAnnotationImpl(), new CustomAnnotationImpl()};
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(Collections.<String>emptySet()));
 
         // Mixed.
-        annotations = new Annotation[]{new CustomAnnotationImpl(), SecurityAnnotations.rolesAllowed("manager"), new CustomAnnotationImpl()};
+        annotations = new Annotation[] {new CustomAnnotationImpl(), SecurityAnnotations
+                .rolesAllowed("manager"), new CustomAnnotationImpl()};
         expected = Sets.newHashSet(RolesAllowed.class.getName() + "_manager");
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(expected));
 
         // Multiple.
-        annotations = new Annotation[]{SecurityAnnotations.rolesAllowed("manager", "user")};
+        annotations = new Annotation[] {SecurityAnnotations.rolesAllowed("manager", "user")};
         expected = Sets.newHashSet(RolesAllowed.class.getName() + "_manager", RolesAllowed.class.getName() + "_user");
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(expected));
 
         // PermitAll weirdo.
-        annotations = new Annotation[]{SecurityAnnotations.permitAll()};
+        annotations = new Annotation[] {SecurityAnnotations.permitAll()};
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(FilteringHelper.getDefaultFilteringScope()));
 
         // DenyAll weirdo.
-        annotations = new Annotation[]{SecurityAnnotations.denyAll()};
+        annotations = new Annotation[] {SecurityAnnotations.denyAll()};
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(null));
     }
 
@@ -107,25 +109,26 @@ public class SecurityHelperTest {
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(Collections.<String>emptySet()));
 
         // Not security annotations.
-        annotations = new Annotation[]{new CustomAnnotationImpl(), new CustomAnnotationImpl()};
+        annotations = new Annotation[] {new CustomAnnotationImpl(), new CustomAnnotationImpl()};
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(Collections.<String>emptySet()));
 
         // Mixed.
-        annotations = new Annotation[]{new CustomAnnotationImpl(), SecurityAnnotations.rolesAllowed("manager"), new CustomAnnotationImpl()};
+        annotations = new Annotation[] {new CustomAnnotationImpl(), SecurityAnnotations
+                .rolesAllowed("manager"), new CustomAnnotationImpl()};
         expected = Sets.newHashSet(RolesAllowed.class.getName() + "_manager");
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(expected));
 
         // Multiple.
-        annotations = new Annotation[]{SecurityAnnotations.rolesAllowed("client", "user")};
+        annotations = new Annotation[] {SecurityAnnotations.rolesAllowed("client", "user")};
         expected = Sets.newHashSet(RolesAllowed.class.getName() + "_user");
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(expected));
 
         // PermitAll weirdo.
-        annotations = new Annotation[]{SecurityAnnotations.permitAll()};
+        annotations = new Annotation[] {SecurityAnnotations.permitAll()};
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(FilteringHelper.getDefaultFilteringScope()));
 
         // DenyAll weirdo.
-        annotations = new Annotation[]{SecurityAnnotations.denyAll()};
+        annotations = new Annotation[] {SecurityAnnotations.denyAll()};
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(null));
     }
 

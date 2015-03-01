@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,9 +72,6 @@ public class ResponseIntegrationTest extends JerseyTest {
             Response res;
             Response.ResponseBuilder resp;
 
-            StringBuilder sb = new StringBuilder();
-            sb.append("status code in request = ").append(status);
-
             switch (status) {
                 case 200:
                     resp = Response.ok();
@@ -97,34 +94,32 @@ public class ResponseIntegrationTest extends JerseyTest {
                 case 503:
                 case 411:
                 case 412:
-                    resp =
-                            Response.status(status);
+                    resp = Response.status(status);
                     break;
                 default:
-                    resp =
-                            Response.ok().entity("Unexpected parameter in request: "
-                            + status);
+                    resp = Response.ok().entity("Unexpected parameter in request: " + status);
                     break;
             }
 
-            res = resp.header("TESTHEADER", sb.toString()).build();
+            res = resp.header("TESTHEADER", "status code in request = " + status).build();
             return res;
         }
     }
 
     private void testStatus(int status) {
-        final Response response = target().path("ResponseTest").queryParam("status", status).request(MediaType.TEXT_PLAIN).get(Response.class);
+        final Response response = target().path("ResponseTest").queryParam("status", status).request(MediaType.TEXT_PLAIN)
+                .get(Response.class);
 
         assertEquals(status, response.getStatus());
     }
 
     private void testGenericStatus(int status) {
-        final GenericType<Response> genericType = new GenericType<Response>(Response.class);
-        final Response response = target().path("ResponseTest").queryParam("status", status).request(MediaType.TEXT_PLAIN).get(genericType);
+        final GenericType<Response> genericType = new GenericType<>(Response.class);
+        final Response response = target().path("ResponseTest").queryParam("status", status).request(MediaType.TEXT_PLAIN)
+                .get(genericType);
 
         assertEquals(status, response.getStatus());
     }
-
 
     /*
      * Client send request to a resource,
@@ -132,25 +127,25 @@ public class ResponseIntegrationTest extends JerseyTest {
      */
     @Test
     public void testStatuses() {
-        final int[] statuses = new int[]{
-            200,
-            201,
-            202,
-            204,
-            303,
-            304,
-            307,
-            401,
-            403,
-            404,
-            406,
-            409,
-            410,
-            411,
-            412,
-            415,
-            500,
-            503
+        final int[] statuses = new int[] {
+                200,
+                201,
+                202,
+                204,
+                303,
+                304,
+                307,
+                401,
+                403,
+                404,
+                406,
+                409,
+                410,
+                411,
+                412,
+                415,
+                500,
+                503
         };
 
         for (Integer i : statuses) {
@@ -165,25 +160,25 @@ public class ResponseIntegrationTest extends JerseyTest {
      */
     @Test
     public void testGenericStatuses() {
-        final int[] statuses = new int[]{
-            200,
-            201,
-            202,
-            204,
-            303,
-            304,
-            307,
-            401,
-            403,
-            404,
-            406,
-            409,
-            410,
-            411,
-            412,
-            415,
-            500,
-            503
+        final int[] statuses = new int[] {
+                200,
+                201,
+                202,
+                204,
+                303,
+                304,
+                307,
+                401,
+                403,
+                404,
+                406,
+                409,
+                410,
+                411,
+                412,
+                415,
+                500,
+                503
         };
 
         for (Integer i : statuses) {
@@ -191,6 +186,5 @@ public class ResponseIntegrationTest extends JerseyTest {
             testGenericStatus(i);
         }
     }
-
 
 }

@@ -53,9 +53,7 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.annotation.ManagedBean;
 import javax.annotation.Resource;
-
 import javax.inject.Singleton;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
@@ -74,9 +72,11 @@ public class ManagedBeanSingletonResource {
     /**
      * Initial value should get injected by Java EE container.
      */
-    @Resource(name="injectedResource") int counter = 0;
+    @Resource(name = "injectedResource")
+    int counter = 0;
 
-    @Context UriInfo ui;
+    @Context
+    UriInfo ui;
 
     private EntityManager entityManager;
 
@@ -97,7 +97,7 @@ public class ManagedBeanSingletonResource {
     @GET
     @Produces("text/plain")
     public String getMessage() {
-       return Integer.toString(counter++);
+        return Integer.toString(counter++);
     }
 
     /**
@@ -107,7 +107,7 @@ public class ManagedBeanSingletonResource {
     @PUT
     @Produces("text/plain")
     public void putMessage(final int i) {
-       counter = i;
+        counter = i;
     }
 
     /**

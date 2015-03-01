@@ -74,7 +74,6 @@ public class TestViewProcessor implements TemplateProcessor<String> {
         return path;
     }
 
-
     protected boolean acceptMediaType(final MediaType mediaType) {
         return true;
     }
@@ -98,7 +97,7 @@ public class TestViewProcessor implements TemplateProcessor<String> {
     private String getModel(final Object model) {
         if (model instanceof Collection) {
             StringBuilder builder = new StringBuilder();
-            for (final Object object : (Collection)model) {
+            for (final Object object : (Collection) model) {
                 builder.append(getModel(object)).append(',');
             }
             return builder.delete(builder.length() - 1, builder.length()).toString();

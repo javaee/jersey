@@ -44,8 +44,8 @@ import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.test.JerseyTest;
 
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test for SRL/SRM resource.
@@ -62,14 +62,16 @@ public class SrlSrmTest extends JerseyTest {
     @Test
     public void testSrmSrl() {
         String[][] testData = new String[][] {
-            {"one", "two", "three"},
-            {"four", "green", "top"},
-            {"bottom", "beauty", "mash"},
+                {"one", "two", "three"},
+                {"four", "green", "top"},
+                {"bottom", "beauty", "mash"},
         };
 
         for (String[] input : testData) {
-            final String srlResponse = target().path("srl").path(input[0]).matrixParam("m", input[1]).queryParam("q", input[2]).request().get(String.class);
-            final String srmResponse = target().path("srm").path(input[0]).matrixParam("m", input[1]).queryParam("q", input[2]).request().get(String.class);
+            final String srlResponse = target().path("srl").path(input[0]).matrixParam("m", input[1]).queryParam("q", input[2])
+                    .request().get(String.class);
+            final String srmResponse = target().path("srm").path(input[0]).matrixParam("m", input[1]).queryParam("q", input[2])
+                    .request().get(String.class);
             assertEquals(srlResponse, srmResponse);
         }
     }

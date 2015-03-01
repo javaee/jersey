@@ -49,6 +49,7 @@ import java.util.Properties;
  * @author Paul Sandoz
  */
 public final class Version {
+
     private static String buildId;
     private static String version = null;
 
@@ -60,13 +61,13 @@ public final class Version {
         final InputStream in = getIntputStream();
         if (in != null) {
             try {
-                Properties p = new Properties();
+                final Properties p = new Properties();
                 p.load(in);
-                String timestamp = p.getProperty("Build-Timestamp");
+                final String timestamp = p.getProperty("Build-Timestamp");
                 version = p.getProperty("Build-Version");
 
                 buildId = String.format("Jersey: %s %s", version, timestamp);
-            } catch (Exception e){
+            } catch (final Exception e) {
                 buildId = "Jersey";
             } finally {
                 close(in);
@@ -74,10 +75,10 @@ public final class Version {
         }
     }
 
-    private static void close(InputStream in) {
+    private static void close(final InputStream in) {
         try {
             in.close();
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             // Ignore
         }
     }
@@ -85,7 +86,7 @@ public final class Version {
     private static InputStream getIntputStream() {
         try {
             return Version.class.getResourceAsStream("build.properties");
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             return null;
         }
     }

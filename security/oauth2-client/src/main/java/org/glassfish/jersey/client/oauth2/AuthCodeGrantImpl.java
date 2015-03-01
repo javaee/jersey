@@ -85,6 +85,7 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
      * Builder implementation.
      */
     static class Builder implements OAuth2CodeGrantFlow.Builder {
+
         private String accessTokenUri;
         private String refreshTokenUri;
         private String authorizationUri;
@@ -95,7 +96,6 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
         private Map<String, String> authorizationProperties = new HashMap<>();
         private Map<String, String> accessTokenProperties = new HashMap<>();
         private Map<String, String> refreshTokenProperties = new HashMap<>();
-
 
         /**
          * Create a new builder.
@@ -112,7 +112,6 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
             this.authorizationUri = authorizationUri;
             this.clientIdentifier = clientIdentifier;
         }
-
 
         /**
          * Create a new builder with defined URIs and client id and callback uri.
@@ -162,7 +161,6 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
             return this;
         }
 
-
         @Override
         public Builder refreshTokenUri(final String refreshTokenUri) {
             this.refreshTokenUri = refreshTokenUri;
@@ -174,7 +172,6 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
             phase.property(key, value, authorizationProperties, accessTokenProperties, refreshTokenProperties);
             return this;
         }
-
 
         String getAccessTokenUri() {
             return accessTokenUri;
@@ -266,7 +263,6 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
         return client;
     }
 
-
     private void setDefaultProperty(final String key, final String value, final Map<String, String>... properties) {
         if (value == null) {
             return;
@@ -282,18 +278,21 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
 
     private void initDefaultProperties(final String redirectUri, final String scope) {
         setDefaultProperty(OAuth2Parameters.RESPONSE_TYPE, "code", authorizationProperties);
-        setDefaultProperty(OAuth2Parameters.CLIENT_ID, clientIdentifier.getClientId(), authorizationProperties, accessTokenProperties, refreshTokenProperties);
+        setDefaultProperty(OAuth2Parameters.CLIENT_ID, clientIdentifier.getClientId(), authorizationProperties,
+                accessTokenProperties, refreshTokenProperties);
         setDefaultProperty(OAuth2Parameters.REDIRECT_URI, redirectUri == null
                 ? OAuth2Parameters.REDIRECT_URI_UNDEFINED : redirectUri, authorizationProperties, accessTokenProperties);
         setDefaultProperty(OAuth2Parameters.STATE, UUID.randomUUID().toString(), authorizationProperties);
         setDefaultProperty(OAuth2Parameters.SCOPE, scope, authorizationProperties);
 
-        setDefaultProperty(OAuth2Parameters.CLIENT_SECRET, clientIdentifier.getClientSecret(), accessTokenProperties, refreshTokenProperties);
-        setDefaultProperty(OAuth2Parameters.GrantType.key, OAuth2Parameters.GrantType.AUTHORIZATION_CODE.name().toLowerCase(), accessTokenProperties);
+        setDefaultProperty(OAuth2Parameters.CLIENT_SECRET, clientIdentifier.getClientSecret(), accessTokenProperties,
+                refreshTokenProperties);
+        setDefaultProperty(OAuth2Parameters.GrantType.key, OAuth2Parameters.GrantType.AUTHORIZATION_CODE.name().toLowerCase(),
+                accessTokenProperties);
 
-        setDefaultProperty(OAuth2Parameters.GrantType.key, OAuth2Parameters.GrantType.REFRESH_TOKEN.name().toLowerCase(), refreshTokenProperties);
+        setDefaultProperty(OAuth2Parameters.GrantType.key, OAuth2Parameters.GrantType.REFRESH_TOKEN.name().toLowerCase(),
+                refreshTokenProperties);
     }
-
 
     private final String accessTokenUri;
     private final String authorizationUri;
@@ -307,7 +306,6 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
     private final Map<String, String> refreshTokenProperties;
 
     private volatile TokenResult tokenResult;
-
 
     @Override
     public String start() {
@@ -374,8 +372,8 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
         return new OAuth2ClientFeature(tokenResult.getAccessToken());
     }
 
-
     static class DefaultTokenMessageBodyReader implements MessageBodyReader<TokenResult> {
+
         // Provider here prevents circular dependency error from HK2 (workers inject providers and this provider inject workers)
         @Inject
         private Provider<MessageBodyWorkers> workers;
@@ -386,7 +384,10 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
         private static Iterable<ReaderInterceptor> EMPTY_INTERCEPTORS = new ArrayList<>();
 
         @Override
-        public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
+        public boolean isReadable(final Class<?> type,
+                                  final Type genericType,
+                                  final Annotation[] annotations,
+                                  final MediaType mediaType) {
             return type.equals(TokenResult.class);
         }
 
@@ -407,6 +408,5 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
             return new TokenResult(map);
         }
     }
-
 
 }

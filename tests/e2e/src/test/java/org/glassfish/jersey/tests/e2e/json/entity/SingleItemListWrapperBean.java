@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,7 +56,7 @@ public class SingleItemListWrapperBean {
 
     public static Object createTestInstance() {
         SingleItemListWrapperBean instance = new SingleItemListWrapperBean();
-        instance.singleItemList = new LinkedList<String>();
+        instance.singleItemList = new LinkedList<>();
         instance.singleItemList.add("1");
         return instance;
     }
@@ -70,7 +70,8 @@ public class SingleItemListWrapperBean {
             return false;
         }
         final SingleItemListWrapperBean other = (SingleItemListWrapperBean) obj;
-        if (this.singleItemList != other.singleItemList && (this.singleItemList == null || !this.singleItemList.equals(other.singleItemList))) {
+        if (this.singleItemList != other.singleItemList && (this.singleItemList == null || !this.singleItemList
+                .equals(other.singleItemList))) {
             return false;
         }
         return true;

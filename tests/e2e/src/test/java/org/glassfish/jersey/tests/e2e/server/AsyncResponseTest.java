@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -89,7 +89,6 @@ public class AsyncResponseTest extends JerseyTest {
         callbackCalledSignal1 = new AsyncCallbackTest.TestLatch(3, "cancel() return value1", getAsyncTimeoutMultiplier());
         callbackCalledSignal2 = new AsyncCallbackTest.TestLatch(3, "cancel() return value2", getAsyncTimeoutMultiplier());
 
-
         set(TestProperties.RECORD_LOG_LEVEL, Level.FINE.intValue());
 
         return new ResourceConfig(Resource.class, ErrorResource.class, MappedExceptionMapper.class,
@@ -171,10 +170,11 @@ public class AsyncResponseTest extends JerseyTest {
 
     @Path("resource")
     public static class Resource {
+
         @GET
         @Path("1")
         @ManagedAsync
-        public void get1(final @Suspended AsyncResponse asyncResponse) throws IOException, InterruptedException {
+        public void get1(@Suspended final AsyncResponse asyncResponse) throws IOException, InterruptedException {
             if (asyncResponse.cancel()) {
                 callbackCalledSignal1.countDown();
             }
@@ -189,7 +189,7 @@ public class AsyncResponseTest extends JerseyTest {
         @GET
         @Path("2")
         @ManagedAsync
-        public void get2(final @Suspended AsyncResponse asyncResponse) throws IOException, InterruptedException {
+        public void get2(@Suspended final AsyncResponse asyncResponse) throws IOException, InterruptedException {
             asyncResponse.resume("ok");
 
             if (!asyncResponse.cancel()) {
@@ -226,7 +226,7 @@ public class AsyncResponseTest extends JerseyTest {
 
         @GET
         @Path("suspend")
-        public void suspend(final @Suspended AsyncResponse asyncResponse) {
+        public void suspend(@Suspended final AsyncResponse asyncResponse) {
             suspended.add(asyncResponse);
         }
 
@@ -298,13 +298,13 @@ public class AsyncResponseTest extends JerseyTest {
 
         @GET
         @Path("suspend")
-        public void suspend(final @Suspended AsyncResponse asyncResponse) {
+        public void suspend(@Suspended final AsyncResponse asyncResponse) {
             suspended.add(asyncResponse);
         }
 
         @GET
         @Path("suspend-resume")
-        public void suspendResume(final @Suspended AsyncResponse asyncResponse) {
+        public void suspendResume(@Suspended final AsyncResponse asyncResponse) {
             asyncResponse.resume(new EntityAnnotationChecker());
         }
 

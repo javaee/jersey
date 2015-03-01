@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -81,9 +81,9 @@ public class JsonResourceTest extends JerseyTest {
     @Test
     public void roundTripTest() {
         final WebTarget target = target("test");
-        final TestBean testBean = target.
-                request(MediaType.APPLICATION_JSON_TYPE).
-                post(Entity.entity(new TestBean("a", 1, 1L), MediaType.APPLICATION_JSON_TYPE), TestBean.class);
+        final TestBean testBean = target
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .post(Entity.entity(new TestBean("a", 1, 1L), MediaType.APPLICATION_JSON_TYPE), TestBean.class);
 
         assertEquals(testBean, new TestBean("a", 1, 1L));
     }

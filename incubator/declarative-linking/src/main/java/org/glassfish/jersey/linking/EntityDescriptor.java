@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,9 +42,6 @@ package org.glassfish.jersey.linking;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,13 +49,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javassist.bytecode.SignatureAttribute.TypeParameter;
+
 import javax.ws.rs.core.Link;
 
 /**
  * Describes an entity in terms of its fields, bean properties and {@link InjectLink}
  * annotated fields.
- * 
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
@@ -67,8 +64,7 @@ class EntityDescriptor {
 
     // Maintains an internal static cache to optimize processing
 
-    private static Map<Class<?>, EntityDescriptor> descriptors
-        = new HashMap<Class<?>, EntityDescriptor>();
+    private static final Map<Class<?>, EntityDescriptor> descriptors = new HashMap<>();
 
     public static synchronized EntityDescriptor getInstance(Class<?> entityClass) {
         if (descriptors.containsKey(entityClass)) {
@@ -92,13 +88,13 @@ class EntityDescriptor {
      */
     private EntityDescriptor(Class<?> entityClass) {
         // create a list of link headers
-        this.linkHeaders = new ArrayList<LinkHeaderDescriptor>();
+        this.linkHeaders = new ArrayList<>();
         findLinkHeaders(entityClass);
         this.linkHeaders = Collections.unmodifiableList(linkHeaders);
 
         // create a list of field names
-        this.nonLinkFields = new HashMap<String, FieldDescriptor>();
-        this.linkFields = new HashMap<String, FieldDescriptor>();
+        this.nonLinkFields = new HashMap<>();
+        this.linkFields = new HashMap<>();
         findFields(entityClass);
         this.nonLinkFields = Collections.unmodifiableMap(this.nonLinkFields);
         this.linkFields = Collections.unmodifiableMap(this.linkFields);
@@ -122,7 +118,7 @@ class EntityDescriptor {
      * @param entityClass the class
      */
     private void findFields(Class<?> entityClass) {
-        for (Field f: entityClass.getDeclaredFields()) {
+        for (Field f : entityClass.getDeclaredFields()) {
             InjectLink a = f.getAnnotation(InjectLink.class);
             Class<?> t = f.getType();
             if (a != null) {
@@ -130,27 +126,27 @@ class EntityDescriptor {
                     if (!linkFields.containsKey(f.getName())) {
                         linkFields.put(f.getName(), new InjectLinkFieldDescriptor(f, a, t));
                     }
-                }  else {
+                } else {
                     // TODO unsupported type
                 }
             } else if (f.isAnnotationPresent(InjectLinks.class)) {
-                
+
                 if (List.class.isAssignableFrom(t)
                         || t.isArray() && Link.class.isAssignableFrom(t.getComponentType())) {
-                    
+
                     InjectLinks a2 = f.getAnnotation(InjectLinks.class);
                     linkFields.put(f.getName(), new InjectLinksFieldDescriptor(f, a2, t));
                 } else {
                     throw new IllegalArgumentException("Can only inject links onto a List<Link> or Link[] object");
                 }
-            
+
             } else {
                 // see issue http://java.net/jira/browse/JERSEY-625
-                if(((f.getModifiers() & Modifier.STATIC) > 0) ||
-                        f.getName().startsWith("java.") ||
-                        f.getName().startsWith("javax.")
-                        )
+                if ((f.getModifiers() & Modifier.STATIC) > 0
+                        || f.getName().startsWith("java.")
+                        || f.getName().startsWith("javax.")) {
                     continue;
+                }
                 nonLinkFields.put(f.getName(), new FieldDescriptor(f));
             }
         }
@@ -174,7 +170,7 @@ class EntityDescriptor {
         }
         InjectLinks linkHeadersAnnotation = entityClass.getAnnotation(InjectLinks.class);
         if (linkHeadersAnnotation != null) {
-            for (InjectLink linkHeader: linkHeadersAnnotation.value()) {
+            for (InjectLink linkHeader : linkHeadersAnnotation.value()) {
                 linkHeaders.add(new LinkHeaderDescriptor(linkHeader));
             }
         }

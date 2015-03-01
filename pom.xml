@@ -365,7 +365,7 @@
                             -Prelease
 
                         mvn release:perform -DconnectionUrl="scm:git:file://<path-to-local-repo>" \
-                            -Prelease,skip-tests
+                            -Prelease,testsSkip
                     -->
                     <configuration>
                         <mavenExecutorId>forked-path</mavenExecutorId>
@@ -434,19 +434,25 @@
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${checkstyle.mvn.plugin.version}</version>
                     <configuration>
-                        <outputDirectory>${project.build.directory}/checkstyle</outputDirectory>
-                        <outputFile>${project.build.directory}/checkstyle/checkstyle-result.xml</outputFile>
                         <configLocation>etc/config/checkstyle.xml</configLocation>
                         <suppressionsLocation>etc/config/checkstyle-suppressions.xml</suppressionsLocation>
+                        <outputFile>${project.build.directory}/checkstyle/checkstyle-result.xml</outputFile>
+                        <outputDirectory>${project.build.directory}/checkstyle</outputDirectory>
                     </configuration>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>checkstyle</goal>
-                            </goals>
-                            <phase>validate</phase>
-                        </execution>
-                    </executions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>${checkstyle.version}</version>
+                            <exclusions>
+                                <!-- MCHECKSTYLE-156 -->
+                                <exclusion>
+                                    <groupId>com.sun</groupId>
+                                    <artifactId>tools</artifactId>
+                                </exclusion>
+                            </exclusions>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -667,6 +673,26 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>verify</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <!-- Fail the build if checkstyle rules for contributions are not met. -->
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <configLocation>etc/config/checkstyle-verify.xml</configLocation>
+                            <consoleOutput>true</consoleOutput>
+                            <failOnViolation>true</failOnViolation>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <extensions>
             <extension>
@@ -680,13 +706,31 @@
     <profiles>
         <profile>
             <!-- Use it with release-perform goal to skip another test run. -->
-            <id>skip-tests</id>
+            <id>testsSkip</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
                 <skip.release.tests>-Dmaven.test.skip=true -Dskip.tests=true</skip.release.tests>
                 <skip.tests>true</skip.tests>
+            </properties>
+        </profile>
+        <profile>
+            <id>checkstyleSkip</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <checkstyle.skip>true</checkstyle.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>findbugsSkip</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <findbugs.skip>true</findbugs.skip>
             </properties>
         </profile>
         <profile>
@@ -1520,7 +1564,8 @@
         <jersey.version>${project.version}</jersey.version>
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>
-        <checkstyle.mvn.plugin.version>2.12.1</checkstyle.mvn.plugin.version>
+        <checkstyle.mvn.plugin.version>2.14</checkstyle.mvn.plugin.version>
+        <checkstyle.version>6.3</checkstyle.version>
         <ejb.version>3.2</ejb.version>
         <gf.impl.version>4.0</gf.impl.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>

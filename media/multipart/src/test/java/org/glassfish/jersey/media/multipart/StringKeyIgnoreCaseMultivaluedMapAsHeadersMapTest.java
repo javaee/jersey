@@ -88,7 +88,7 @@ public class StringKeyIgnoreCaseMultivaluedMapAsHeadersMapTest {
         List values = map.get("foo");
 
         assertNotNull(values);
-        assertEquals(1,values.size());
+        assertEquals(1, values.size());
         assertEquals("bar", values.get(0));
 
         map.add("foo", "baz");
@@ -302,7 +302,7 @@ public class StringKeyIgnoreCaseMultivaluedMapAsHeadersMapTest {
      */
     @Test
     public void testPutAll() {
-        Map<String,List<String>> all = new HashMap<String,List<String>>();
+        Map<String, List<String>> all = new HashMap<>();
         List fooValues = new ArrayList();
         fooValues.add("foo1");
         fooValues.add("foo2");
@@ -388,14 +388,14 @@ public class StringKeyIgnoreCaseMultivaluedMapAsHeadersMapTest {
      */
     @Test
     public void testValues() {
-        Map<String, List<String>> all = new HashMap<String, List<String>>();
+        Map<String, List<String>> all = new HashMap<>();
 
-        List<String> fooValues = new ArrayList<String>();
+        List<String> fooValues = new ArrayList<>();
         fooValues.add("foo1");
         fooValues.add("foo2");
         all.put("foo", fooValues);
 
-        List<String> barValues = new ArrayList<String>();
+        List<String> barValues = new ArrayList<>();
         barValues.add("bar1");
         barValues.add("bar2");
         all.put("bar", barValues);

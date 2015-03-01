@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,15 +51,13 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * The documentation type for classes.<br>
  * Created on: Jun 12, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "classDoc", propOrder = {
-
-})
+@XmlType(name = "classDoc", propOrder = {})
 public class ClassDocType {
-    
+
     private String className;
     private String commentText;
 
@@ -68,17 +66,17 @@ public class ClassDocType {
 
     public List<MethodDocType> getMethodDocs() {
         if (methodDoc == null) {
-            methodDoc = new ArrayList<MethodDocType>();
+            methodDoc = new ArrayList<>();
         }
         return this.methodDoc;
     }
 
     @XmlAnyElement(lax = true)
     private List<Object> any;
-    
+
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }
@@ -93,7 +91,7 @@ public class ClassDocType {
     /**
      * @param commentText the commentText to set
      */
-    public void setCommentText( String commentText ) {
+    public void setCommentText(String commentText) {
         this.commentText = commentText;
     }
 
@@ -107,8 +105,8 @@ public class ClassDocType {
     /**
      * @param className the className to set
      */
-    public void setClassName( String className ) {
+    public void setClassName(String className) {
         this.className = className;
     }
-    
+
 }

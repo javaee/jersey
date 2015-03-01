@@ -58,7 +58,7 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 @ConstrainedTo(RuntimeType.SERVER)
 public final class JspMvcFeature implements Feature {
 
-    private final static String SUFFIX = ".jsp";
+    private static final String SUFFIX = ".jsp";
 
     /**
      * {@link String} property defining the base path to JSP templates. If set, the value of the property is added in front

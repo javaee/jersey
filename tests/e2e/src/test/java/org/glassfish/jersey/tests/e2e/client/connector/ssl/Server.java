@@ -88,9 +88,9 @@ final class Server {
             try {
                 return Integer.parseInt(port);
             } catch (NumberFormatException e) {
-                LOGGER.warning("Value of jersey.config.test.container.port property" +
-                        " is not a valid positive integer [" + port + "]." +
-                        " Reverting to default [" + defaultPort + "].");
+                LOGGER.warning("Value of jersey.config.test.container.port property"
+                        + " is not a valid positive integer [" + port + "]."
+                        + " Reverting to default [" + defaultPort + "].");
             }
         }
         return defaultPort;

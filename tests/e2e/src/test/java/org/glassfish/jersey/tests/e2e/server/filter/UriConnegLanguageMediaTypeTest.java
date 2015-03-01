@@ -72,14 +72,15 @@ public class UriConnegLanguageMediaTypeTest extends JerseyTest {
 
     @Path("/abc")
     public static class LanguageVariantResource {
+
         @GET
         public Response doGet(@Context Request r) {
-            final List<Variant> variants = Variant.VariantListBuilder.newInstance().
-                    mediaTypes(MediaType.valueOf("application/foo")).
-                    languages(new Locale("en")).languages(new Locale("fr")).add().
-                    mediaTypes(MediaType.valueOf("application/bar")).
-                    languages(new Locale("en")).languages(new Locale("fr")).add().
-                    build();
+            final List<Variant> variants = Variant.VariantListBuilder.newInstance()
+                    .mediaTypes(MediaType.valueOf("application/foo"))
+                    .languages(new Locale("en")).languages(new Locale("fr")).add()
+                    .mediaTypes(MediaType.valueOf("application/bar"))
+                    .languages(new Locale("en")).languages(new Locale("fr")).add()
+                    .build();
 
             final Variant variant = r.selectVariant(variants);
             if (variant == null) {

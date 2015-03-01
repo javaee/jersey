@@ -57,12 +57,12 @@ import org.glassfish.jersey.server.mvc.spi.ResolvedViewable;
  */
 final class RequestDispatcherWrapper implements RequestDispatcher {
 
-    final static String BASE_PATH_ATTRIBUTE_NAME = "_basePath";
-    final static String OLD_MODEL_ATTRIBUTE_NAME = "it";
-    final static String MODEL_ATTRIBUTE_NAME = "model";
-    final static String RESOLVING_CLASS_ATTRIBUTE_NAME = "resolvingClass";
-    final static String REQUEST_ATTRIBUTE_NAME = "_request";
-    final static String RESPONSE_ATTRIBUTE_NAME = "_response";
+    static final String BASE_PATH_ATTRIBUTE_NAME = "_basePath";
+    static final String OLD_MODEL_ATTRIBUTE_NAME = "it";
+    static final String MODEL_ATTRIBUTE_NAME = "model";
+    static final String RESOLVING_CLASS_ATTRIBUTE_NAME = "resolvingClass";
+    static final String REQUEST_ATTRIBUTE_NAME = "_request";
+    static final String RESPONSE_ATTRIBUTE_NAME = "_response";
 
     private final RequestDispatcher dispatcher;
 

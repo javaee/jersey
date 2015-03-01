@@ -149,7 +149,7 @@ public class RxTest {
 
         // Executor.
         final Matcher<String> matcher = containsString("jersey-rx-client-test");
-        assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread? matcher : not(matcher));
+        assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread ? matcher : not(matcher));
 
         // Properties.
         assertThat(response.getHeaderString("Test-Uri"), is("http://jersey.java.net"));

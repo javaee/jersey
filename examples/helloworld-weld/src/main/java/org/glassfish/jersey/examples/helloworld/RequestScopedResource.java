@@ -44,11 +44,13 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.ws.rs.GET;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.Path;
-import javax.ws.rs.container.Suspended;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
@@ -61,8 +63,10 @@ import javax.inject.Inject;
 @Path("req")
 public class RequestScopedResource {
 
-    @Inject AppScopedResource appResource;
-    @Inject RequestScopedBean bean;
+    @Inject
+    AppScopedResource appResource;
+    @Inject
+    RequestScopedBean bean;
 
     @GET
     @Path("app/counter")
@@ -76,25 +80,28 @@ public class RequestScopedResource {
         return this.toString();
     }
 
-    @GET @Path("parameterized")
+    @GET
+    @Path("parameterized")
     @ResponseBodyFromCdiBean
     public String interceptedParameterized(@QueryParam("q") String q) {
         bean.setRequestId(q);
         return "does not matter";
     }
 
-    @GET @Path("straight")
+    @GET
+    @Path("straight")
     public String parameterizedStraight(@QueryParam("q") String q) {
         return "straight: " + q;
     }
 
     private static final Executor executor = Executors.newCachedThreadPool();
 
-    @GET @Path("parameterized-async")
+    @GET
+    @Path("parameterized-async")
     @ResponseBodyFromCdiBean
     public void interceptedParameterizedAsync(@QueryParam("q") final String q, @Suspended final AsyncResponse response) {
         bean.setRequestId(q);
-        executor.execute(new Runnable(){
+        executor.execute(new Runnable() {
 
             @Override
             public void run() {

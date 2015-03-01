@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,7 +38,6 @@
  * holder.
  */
 package org.glassfish.jersey.tests.integration.servlet_25_init_5;
-
 
 import javax.ws.rs.core.Response;
 
@@ -77,7 +76,10 @@ public class HelloWorldResourceITCase extends JerseyTest {
     @Test
     public void testHelloWorldAtWrongPath() {
         Response r = target().path("application_path/filter_path/helloworld").request().get();
-        assertTrue("Request to application_path/helloworld should have failed, but did not. That means two applications are registered.", r.getStatus() >= 400);
+        assertTrue(
+                "Request to application_path/helloworld should have failed, but did not. That means two applications are "
+                        + "registered.",
+                r.getStatus() >= 400);
     }
 
     @Test

@@ -85,9 +85,9 @@ public class App {
 
         HttpServer server = startServer();
 
-        System.out.println("Application started.\n" +
-                "Try accessing " + getBaseURI() + "helloworld in the browser.\n" +
-                "Hit enter to stop the application...");
+        System.out.println("Application started.\n"
+                + "Try accessing " + getBaseURI() + "helloworld in the browser.\n"
+                + "Hit enter to stop the application...");
         System.in.read();
         server.stop(0);
     }
@@ -98,9 +98,9 @@ public class App {
             try {
                 return Integer.parseInt(port);
             } catch (NumberFormatException e) {
-                System.out.println("Value of jersey.config.test.container.port property" +
-                        " is not a valid positive integer [" + port + "]." +
-                        " Reverting to default [" + defaultPort + "].");
+                System.out.println("Value of jersey.config.test.container.port property"
+                        + " is not a valid positive integer [" + port + "]."
+                        + " Reverting to default [" + defaultPort + "].");
             }
         }
         return defaultPort;

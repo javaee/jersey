@@ -47,8 +47,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-import javax.net.ssl.SSLContext;
 import javax.ws.rs.ProcessingException;
+
+import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
@@ -85,7 +86,6 @@ public final class JdkHttpServerFactory {
      * @param uri           the {@link URI uri} on which the Jersey application will be deployed.
      * @param configuration the Jersey server-side application configuration.
      * @return Newly created {@link HttpServer}.
-     *
      * @throws ProcessingException thrown when problems during server creation
      *                             occurs.
      */
@@ -104,7 +104,6 @@ public final class JdkHttpServerFactory {
      * @param configuration the Jersey server-side application configuration.
      * @param start         if set to {@code false}, the created server will not be automatically started.
      * @return Newly created {@link HttpServer}.
-     *
      * @throws ProcessingException thrown when problems during server creation occurs.
      * @since 2.8
      */
@@ -122,7 +121,6 @@ public final class JdkHttpServerFactory {
      * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
      *                      {@link org.glassfish.jersey.server.ApplicationHandler}
      * @return Newly created {@link HttpServer}.
-     *
      * @throws ProcessingException thrown when problems during server creation occurs.
      * @see org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer
      * @see org.glassfish.hk2.api.ServiceLocator
@@ -145,7 +143,6 @@ public final class JdkHttpServerFactory {
      * @param sslContext    custom {@link SSLContext} to be passed to the server
      * @param start         if set to {@code false}, the created server will not be automatically started.
      * @return Newly created {@link HttpServer}.
-     *
      * @throws ProcessingException thrown when problems during server creation occurs.
      * @since 2.17
      */
@@ -164,12 +161,11 @@ public final class JdkHttpServerFactory {
      * The {@code start} flag controls whether or not the returned {@link HttpServer JDK HttpServer} is started.
      * </p>
      *
-     * @param uri                   the {@link URI uri} on which the Jersey application will be deployed.
-     * @param configuration         the Jersey server-side application configuration.
-     * @param httpsConfigurator     custom {@link HttpsConfigurator} to be passed to the server
-     * @param start                 if set to {@code false}, the created server will not be automatically started.
+     * @param uri               the {@link URI uri} on which the Jersey application will be deployed.
+     * @param configuration     the Jersey server-side application configuration.
+     * @param httpsConfigurator custom {@link HttpsConfigurator} to be passed to the server
+     * @param start             if set to {@code false}, the created server will not be automatically started.
      * @return Newly created {@link HttpServer}.
-     *
      * @throws ProcessingException thrown when problems during server creation occurs.
      * @since 2.17
      */
@@ -182,13 +178,12 @@ public final class JdkHttpServerFactory {
      * Create and start the {@link HttpServer JDK HttpServer}, eventually {@code HttpServer}'s subclass
      * {@link HttpsServer} with the JAX-RS / Jersey application deployed on the given {@link URI}.
      *
-     * @param uri                 the {@link URI uri} on which the Jersey application will be deployed.
-     * @param configuration       the Jersey server-side application configuration.
-     * @param httpsConfigurator   custom {@link HttpsConfigurator} to be passed to the server
-     * @param parentLocator       {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
-     *                            {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param uri               the {@link URI uri} on which the Jersey application will be deployed.
+     * @param configuration     the Jersey server-side application configuration.
+     * @param httpsConfigurator custom {@link HttpsConfigurator} to be passed to the server
+     * @param parentLocator     {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
+     *                          {@link org.glassfish.jersey.server.ApplicationHandler}
      * @return Newly created {@link HttpServer}.
-     *
      * @throws ProcessingException thrown when problems during server creation occurs.
      * @since 2.17
      */
@@ -204,9 +199,10 @@ public final class JdkHttpServerFactory {
         return createHttpServer(uri, handler, null, start);
     }
 
-
-    private static HttpServer createHttpServer(final URI uri, final JdkHttpHandlerContainer handler, final HttpsConfigurator httpsConfigurator, final boolean start) {
-
+    private static HttpServer createHttpServer(final URI uri,
+                                               final JdkHttpHandlerContainer handler,
+                                               final HttpsConfigurator httpsConfigurator,
+                                               final boolean start) {
         if (uri == null) {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_NULL());
         }
@@ -214,7 +210,6 @@ public final class JdkHttpServerFactory {
         final String scheme = uri.getScheme();
         final boolean isHttp = "http".equalsIgnoreCase(scheme);
         final boolean isHttps = "https".equalsIgnoreCase(scheme);
-
 
         if (isHttp) {
             if (httpsConfigurator != null) {

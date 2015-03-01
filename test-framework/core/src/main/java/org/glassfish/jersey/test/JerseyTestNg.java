@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -145,8 +145,8 @@ public abstract class JerseyTestNg extends JerseyTest {
     }
 
     /**
-     * Configure {@link org.glassfish.jersey.test.spi.TestNgStrategy strategy} for this TestNG JerseyTest. The strategy defines how a test
-     * container / client is stored (per class, per thread) and is also responsible for disposing stored instances.
+     * Configure {@link org.glassfish.jersey.test.spi.TestNgStrategy strategy} for this TestNG JerseyTest. The strategy defines
+     * how a test container / client is stored (per class, per thread) and is also responsible for disposing stored instances.
      *
      * @return TestNG strategy instance.
      */
@@ -161,7 +161,7 @@ public abstract class JerseyTestNg extends JerseyTest {
      * annotated by TestNG annotations {@link BeforeClass} / {@link AfterClass}.
      */
     @SuppressWarnings("UnusedDeclaration")
-    public static abstract class ContainerPerClassTest extends JerseyTestNg {
+    public abstract static class ContainerPerClassTest extends JerseyTestNg {
 
         public ContainerPerClassTest() throws TestContainerException {
             super();
@@ -200,7 +200,7 @@ public abstract class JerseyTestNg extends JerseyTest {
      * annotated by TestNG annotations {@link BeforeMethod} / {@link AfterMethod}.
      */
     @SuppressWarnings("UnusedDeclaration")
-    public static abstract class ContainerPerMethodTest extends JerseyTestNg {
+    public abstract static class ContainerPerMethodTest extends JerseyTestNg {
 
         public ContainerPerMethodTest() throws TestContainerException {
             super();

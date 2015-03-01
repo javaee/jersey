@@ -75,6 +75,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class SecureSaxParserFactory extends SAXParserFactory {
+
     private static final Logger LOGGER = Logger.getLogger(SecureSaxParserFactory.class.getName());
     private static final EntityResolver EMPTY_ENTITY_RESOLVER = new EntityResolver() {
         @Override
@@ -157,7 +158,8 @@ public class SecureSaxParserFactory extends SAXParserFactory {
     }
 
     @Override
-    public void setFeature(String s, boolean b) throws ParserConfigurationException, SAXNotRecognizedException, SAXNotSupportedException {
+    public void setFeature(String s, boolean b)
+            throws ParserConfigurationException, SAXNotRecognizedException, SAXNotSupportedException {
         spf.setFeature(s, b);
     }
 
@@ -168,6 +170,7 @@ public class SecureSaxParserFactory extends SAXParserFactory {
 
     @SuppressWarnings("deprecation")
     private static final class WrappingSAXParser extends SAXParser {
+
         private final SAXParser sp;
 
         protected WrappingSAXParser(SAXParser sp) {
@@ -187,7 +190,8 @@ public class SecureSaxParserFactory extends SAXParserFactory {
 
         @Override
         @SuppressWarnings("deprecation")
-        public void parse(InputStream inputStream, org.xml.sax.HandlerBase handlerBase, String s) throws SAXException, IOException {
+        public void parse(InputStream inputStream, org.xml.sax.HandlerBase handlerBase, String s)
+                throws SAXException, IOException {
             sp.parse(inputStream, handlerBase, s);
         }
 

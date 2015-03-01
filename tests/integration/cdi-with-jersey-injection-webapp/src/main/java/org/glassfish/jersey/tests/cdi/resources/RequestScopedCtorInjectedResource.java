@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -78,8 +78,8 @@ public class RequestScopedCtorInjectedResource {
 
     @Inject
     public RequestScopedCtorInjectedResource(@RequestSpecific EchoService echoService,
-                        ContainerRequest request, ExceptionMappers mappers,
-                        Provider<MonitoringStatistics> stats, MyApplication.MyInjection customInjected) {
+                                             ContainerRequest request, ExceptionMappers mappers,
+                                             Provider<MonitoringStatistics> stats, MyApplication.MyInjection customInjected) {
 
         this.echoService = echoService;
         this.mappers = mappers;
@@ -108,7 +108,7 @@ public class RequestScopedCtorInjectedResource {
     @GET
     @Path("requestCount")
     public String getStatisticsProperty() {
-        return String.valueOf(stats.get().snapshot().getRequestStatistics().getTimeWindowStatistics().get(0l).getRequestCount());
+        return String.valueOf(stats.get().snapshot().getRequestStatistics().getTimeWindowStatistics().get(0L).getRequestCount());
     }
 
     @GET

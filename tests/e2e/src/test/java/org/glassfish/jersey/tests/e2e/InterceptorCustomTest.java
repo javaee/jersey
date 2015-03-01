@@ -82,6 +82,7 @@ import static org.junit.Assert.fail;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class InterceptorCustomTest extends JerseyTest {
+
     private static final String FROM_RESOURCE = "-from_resource";
     private static final String ENTITY = "hello, this is text entity";
 
@@ -93,12 +94,11 @@ public class InterceptorCustomTest extends JerseyTest {
 
     @Override
     protected void configureClient(final ClientConfig config) {
-        config.
-                register(GZIPReaderTestInterceptor.class).
-                register(GZIPWriterTestInterceptor.class).
-                register(PlusOneWriterInterceptor.class).
-                register(MinusOneReaderInterceptor.class).
-                register(AnnotationsReaderWriterInterceptor.class);
+        config.register(GZIPReaderTestInterceptor.class)
+                .register(GZIPWriterTestInterceptor.class)
+                .register(PlusOneWriterInterceptor.class)
+                .register(MinusOneReaderInterceptor.class)
+                .register(AnnotationsReaderWriterInterceptor.class);
     }
 
     @Test

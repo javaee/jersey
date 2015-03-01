@@ -43,13 +43,12 @@ package org.glassfish.jersey.tests.performance.mbw.custom;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.message.internal.MediaTypes;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import static org.junit.Assert.assertEquals;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test for json resource.
@@ -78,7 +77,7 @@ public class PersonEntityTest extends JerseyTest {
 
     @Test
     public void testPost() {
-        final Person[] testData = new Person[] {new Person("Joseph", 23, "Nazareth"), new Person("Mary", 18, "Nazareth") };
+        final Person[] testData = new Person[] {new Person("Joseph", 23, "Nazareth"), new Person("Mary", 18, "Nazareth")};
         for (Person original : testData) {
             final Person postResponse = target().request().post(Entity.entity(original, "application/person"), Person.class);
             assertEquals(original, postResponse);
@@ -87,7 +86,8 @@ public class PersonEntityTest extends JerseyTest {
 
     @Test
     public void testPut() {
-        final Response putResponse = target().request().put(Entity.entity(new Person("Jules", 12, "Paris"), "application/person"));
+        final Response putResponse = target().request()
+                .put(Entity.entity(new Person("Jules", 12, "Paris"), "application/person"));
         assertEquals(204, putResponse.getStatus());
     }
 }

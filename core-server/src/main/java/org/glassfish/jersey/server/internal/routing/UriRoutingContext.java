@@ -472,14 +472,14 @@ public class UriRoutingContext implements RoutingContext {
 
     @Override
     public Method getResourceMethod() {
-        return endpoint instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) endpoint).getResourceMethod() : null;
+        return endpoint instanceof ResourceMethodInvoker
+                ? ((ResourceMethodInvoker) endpoint).getResourceMethod() : null;
     }
 
     @Override
     public Class<?> getResourceClass() {
-        return endpoint instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) endpoint).getResourceClass() : null;
+        return endpoint instanceof ResourceMethodInvoker
+                ? ((ResourceMethodInvoker) endpoint).getResourceClass() : null;
     }
 
     @Override

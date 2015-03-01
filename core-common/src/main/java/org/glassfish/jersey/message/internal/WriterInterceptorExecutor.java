@@ -233,8 +233,8 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
                 if (tracingLogger.isLogEnabled(MsgTraceEvent.MBW_FIND)) {
                     tracingLogger.log(MsgTraceEvent.MBW_FIND,
                             context.getType().getName(),
-                            (context.getGenericType() instanceof Class ?
-                                    ((Class) context.getGenericType()).getName() : context.getGenericType()),
+                            (context.getGenericType() instanceof Class
+                                    ? ((Class) context.getGenericType()).getName() : context.getGenericType()),
                             context.getMediaType(), java.util.Arrays.toString(context.getAnnotations()));
                 }
 

@@ -254,10 +254,10 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         // pre-compute & cache invocation properties
         this.methodAnnotations = invocable.getHandlingMethod().getDeclaredAnnotations();
         this.invocableResponseType = invocable.getResponseType();
-        this.canUseInvocableResponseType = invocableResponseType != null &&
-                Void.TYPE != invocableResponseType &&
-                Void.class != invocableResponseType &&
-                // Do NOT change the entity type for Response or it's subclasses.
+        this.canUseInvocableResponseType = invocableResponseType != null
+                && Void.TYPE != invocableResponseType
+                && Void.class != invocableResponseType
+                && // Do NOT change the entity type for Response or it's subclasses.
                 !((invocableResponseType instanceof Class) && Response.class.isAssignableFrom((Class) invocableResponseType));
 
     }
@@ -375,9 +375,9 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     }
                 }
 
-                if (canUseInvocableResponseType &&
-                        response.hasEntity() &&
-                        !(response.getEntityType() instanceof ParameterizedType)) {
+                if (canUseInvocableResponseType
+                        && response.hasEntity()
+                        && !(response.getEntityType() instanceof ParameterizedType)) {
                     response.setEntityType(invocableResponseType);
                 }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -82,7 +82,7 @@ public abstract class ParamException extends WebApplicationException {
      * All such exceptions of this type will contain a response with a 404
      * (Not Found) status code.
      */
-    public static abstract class UriParamException extends ParamException {
+    public abstract static class UriParamException extends ParamException {
 
         private static final long serialVersionUID = 44233528459885541L;
 
@@ -163,12 +163,13 @@ public abstract class ParamException extends WebApplicationException {
             super(cause, Response.Status.BAD_REQUEST, FormParam.class, name, defaultStringValue);
         }
     }
+
     private final Class<? extends Annotation> parameterType;
     private final String name;
     private final String defaultStringValue;
 
     protected ParamException(Throwable cause, Response.StatusType status,
-            Class<? extends Annotation> parameterType, String name, String defaultStringValue) {
+                             Class<? extends Annotation> parameterType, String name, String defaultStringValue) {
         super(cause, status.getStatusCode());
         this.parameterType = parameterType;
         this.name = name;

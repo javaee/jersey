@@ -126,8 +126,8 @@ public class MultipartTest extends JerseyTest {
         @POST
         @Path("listAsParameter")
         @Consumes(MediaType.MULTIPART_FORM_DATA)
-        public String process(@FormDataParam(value="object") final MyObject object,
-                              @FormDataParam(value="list") final List<MyObject> list) {
+        public String process(@FormDataParam(value = "object") final MyObject object,
+                              @FormDataParam(value = "list") final List<MyObject> list) {
             String value = object.value;
 
             for (final MyObject obj : list) {
@@ -138,7 +138,8 @@ public class MultipartTest extends JerseyTest {
         }
     }
 
-    public static class MessageBodyProvider implements MessageBodyReader<MultipartResource>, MessageBodyWriter<MultipartResource> {
+    public static class MessageBodyProvider
+            implements MessageBodyReader<MultipartResource>, MessageBodyWriter<MultipartResource> {
 
         @Override
         public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations,

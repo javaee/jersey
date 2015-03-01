@@ -100,7 +100,7 @@ public class EjbExceptionMapper implements ExtendedExceptionMapper<EJBException>
 
             } else if (cause instanceof WebApplicationException) {
 
-                return ((WebApplicationException)cause).getResponse();
+                return ((WebApplicationException) cause).getResponse();
             }
         }
         return null;

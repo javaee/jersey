@@ -123,7 +123,6 @@ class HttpUrlConnector implements Connector {
     private final boolean isRestrictedHeaderPropertySet;
     private final LazyValue<SSLSocketFactory> sslSocketFactory;
 
-
     /**
      * Create new {@code HttpUrlConnector} instance.
      *
@@ -162,9 +161,9 @@ class HttpUrlConnector implements Connector {
                 PropertiesHelper.getSystemProperty(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY, "false")
         ));
 
-        LOGGER.config(isRestrictedHeaderPropertySet ?
-                        LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_TRUE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY) :
-                        LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_FALSE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY)
+        LOGGER.config(isRestrictedHeaderPropertySet
+                        ? LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_TRUE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY)
+                        : LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_FALSE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY)
         );
     }
 
@@ -302,7 +301,6 @@ class HttpUrlConnector implements Connector {
             RequestEntityProcessing entityProcessing = request.resolveProperty(
                     ClientProperties.REQUEST_ENTITY_PROCESSING, RequestEntityProcessing.class);
 
-
             if (entityProcessing == null || entityProcessing != RequestEntityProcessing.BUFFERED) {
                 final int length = request.getLength();
                 if (fixLengthStreaming && length > 0) {
@@ -389,8 +387,9 @@ class HttpUrlConnector implements Connector {
 
     private boolean isHeaderRestricted(String name, String value) {
         name = name.toLowerCase();
-        return name.startsWith("sec-") ||
-                restrictedHeaderSet.contains(name) && !("connection".equalsIgnoreCase(name) && "close".equalsIgnoreCase(value));
+        return name.startsWith("sec-")
+                || restrictedHeaderSet.contains(name)
+                && !("connection".equalsIgnoreCase(name) && "close".equalsIgnoreCase(value));
     }
 
     /**

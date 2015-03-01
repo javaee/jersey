@@ -46,16 +46,17 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.jetty.JettyHttpContainer;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.jetty.JettyHttpContainer;
 import org.glassfish.jersey.test.JerseyTest;
+
+import org.glassfish.hk2.api.ServiceLocator;
+
+import org.jvnet.hk2.internal.ServiceLocatorImpl;
 
 import org.eclipse.jetty.server.Server;
 import org.junit.Test;
-import org.jvnet.hk2.internal.ServiceLocatorImpl;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -114,9 +115,10 @@ public class JettyContainerTest extends JerseyTest {
     public void testParentServiceLocator() {
         final ServiceLocator locator = new ServiceLocatorImpl("MyServiceLocator", null);
         final Server server = JettyHttpContainerFactory.createServer(URI.create("http://localhost:9876"),
-                    new ResourceConfig(Resource.class), false, locator);
-            JettyHttpContainer container = (JettyHttpContainer) server.getHandler();
-            ServiceLocator appLocator = container.getApplicationHandler().getServiceLocator();
-            assertTrue("Application service locator was expected to have defined parent locator", appLocator.getParent() == locator);
+                new ResourceConfig(Resource.class), false, locator);
+        JettyHttpContainer container = (JettyHttpContainer) server.getHandler();
+        ServiceLocator appLocator = container.getApplicationHandler().getServiceLocator();
+        assertTrue("Application service locator was expected to have defined parent locator",
+                appLocator.getParent() == locator);
     }
 }

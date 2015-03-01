@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,8 +59,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
-import static org.junit.matchers.JUnitMatchers.containsString;
 
 /**
  * Test for JERSEY-1545.
@@ -69,14 +69,15 @@ import static org.junit.matchers.JUnitMatchers.containsString;
  */
 public class InterceptorHttpHeadersInjectionTest extends JerseyTest {
 
-    final static String WriterHEADER = "custom-writer-header";
-    final static String ReaderHEADER = "custom-reader-header";
-    final static String RawCONTENT = "SIMPLE";
+    static final String WriterHEADER = "custom-writer-header";
+    static final String ReaderHEADER = "custom-reader-header";
+    static final String RawCONTENT = "SIMPLE";
 
     @Provider
     public static class InjectedWriterInterceptor implements WriterInterceptor {
 
-        @Context HttpHeaders headers;
+        @Context
+        HttpHeaders headers;
 
         // Replace content with WriterHEADER header value if corresponding header is seen.
         @Override
@@ -94,7 +95,8 @@ public class InterceptorHttpHeadersInjectionTest extends JerseyTest {
     @Provider
     public static class InjectedReaderInterceptor implements ReaderInterceptor {
 
-        @Context HttpHeaders headers;
+        @Context
+        HttpHeaders headers;
 
         // Replace content with ReaderHEADER header value if corresponding header is seen.
         @Override
@@ -127,8 +129,7 @@ public class InterceptorHttpHeadersInjectionTest extends JerseyTest {
         return new ResourceConfig(SimpleResource.class, InjectedWriterInterceptor.class, InjectedReaderInterceptor.class);
     }
 
-
-     // No interceptor should tweak the content if there is not header present.
+    // No interceptor should tweak the content if there is not header present.
     private void _checkRawGet() {
         final String result = target().request().get(String.class);
         assertThat(result, containsString(RawCONTENT));
@@ -154,7 +155,7 @@ public class InterceptorHttpHeadersInjectionTest extends JerseyTest {
         _checkReaderInterceptor("reader-two");
     }
 
-     // No interceptor should tweak the content if there is not header present.
+    // No interceptor should tweak the content if there is not header present.
     private void _checkRawEcho() {
         final String rawResult = target().request().post(Entity.text(RawCONTENT), String.class);
         assertThat(rawResult, containsString(RawCONTENT));

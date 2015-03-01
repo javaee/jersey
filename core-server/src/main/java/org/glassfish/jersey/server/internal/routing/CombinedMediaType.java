@@ -57,6 +57,7 @@ import org.glassfish.jersey.message.internal.QualitySourceMediaType;
  * @author Miroslav Fuksa
  */
 final class CombinedMediaType {
+
     /**
      * Constant combined type representing no match.
      */
@@ -134,21 +135,27 @@ final class CombinedMediaType {
      * Comparator used to compare {@link CombinedMediaType}. The comparator sorts the elements of list
      * in the ascending order from the most appropriate to the least appropriate combined media type.
      */
-    final static Comparator<CombinedMediaType> COMPARATOR = new Comparator<CombinedMediaType>() {
+    static final Comparator<CombinedMediaType> COMPARATOR = new Comparator<CombinedMediaType>() {
 
         @Override
         public int compare(CombinedMediaType c1, CombinedMediaType c2) {
             // more concrete is better
             int delta = MediaTypes.PARTIAL_ORDER_COMPARATOR.compare(c1.combinedType, c2.combinedType);
-            if (delta != 0) return delta;
+            if (delta != 0) {
+                return delta;
+            }
 
             // higher is better
             delta = Quality.QUALITY_VALUE_COMPARATOR.compare(c1.q, c2.q);
-            if (delta != 0) return delta;
+            if (delta != 0) {
+                return delta;
+            }
 
             // higher is better
             delta = Quality.QUALITY_VALUE_COMPARATOR.compare(c1.qs, c2.qs);
-            if (delta != 0) return delta;
+            if (delta != 0) {
+                return delta;
+            }
 
             // lower is better
             return Integer.compare(c1.d, c2.d);
@@ -159,7 +166,6 @@ final class CombinedMediaType {
     public String toString() {
         return String.format("%s;q=%d;qs=%d;d=%d", combinedType, q, qs, d);
     }
-
 
     /**
      * {@link MediaType Media type} extended by flag indicating whether media type was
@@ -255,8 +261,12 @@ final class CombinedMediaType {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof EffectiveMediaType)) return false;
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof EffectiveMediaType)) {
+                return false;
+            }
 
             EffectiveMediaType that = (EffectiveMediaType) o;
 

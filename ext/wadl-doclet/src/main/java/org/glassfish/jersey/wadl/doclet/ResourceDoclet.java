@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -130,7 +130,6 @@ public class ResourceDoclet {
                 ResourceDoclet.class.getClassLoader());
         Thread.currentThread().setContextClassLoader(ncl);
 
-
         final String docProcessorOption = getOptionArg(root.options(), OPTION_DOC_PROCESSORS);
         final String[] docProcessors = docProcessorOption != null ? docProcessorOption.split(":") : null;
         final DocProcessorWrapper docProcessor = new DocProcessorWrapper();
@@ -181,7 +180,6 @@ public class ResourceDoclet {
                 m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
                 final OutputStream out = new BufferedOutputStream(new FileOutputStream(output));
 
-
                 final String[] cdataElements = getCDataElements(docProcessor);
                 final XMLSerializer serializer = getXMLSerializer(out, cdataElements);
 
@@ -202,7 +200,7 @@ public class ResourceDoclet {
     }
 
     private static String[] getCDataElements(final DocProcessor docProcessor) {
-        final String[] original = new String[]{"ns1^commentText", "ns2^commentText", "^commentText"};
+        final String[] original = new String[] {"ns1^commentText", "ns2^commentText", "^commentText"};
         if (docProcessor == null) {
             return original;
         } else {
@@ -296,8 +294,8 @@ public class ResourceDoclet {
                  */
                 if (isEmpty(tagText)) {
                     if (LOG.isLoggable(Level.FINE)) {
-                        LOG.fine("Skipping empty inline tag of @response.param in method " +
-                                methodDoc.qualifiedName() + ": " + tagName);
+                        LOG.fine("Skipping empty inline tag of @response.param in method "
+                                + methodDoc.qualifiedName() + ": " + tagName);
                     }
                     continue;
                 }
@@ -315,9 +313,9 @@ public class ResourceDoclet {
                         wadlParam.setDoc(tagText);
                         break;
                     default:
-                        LOG.warning("Unknown inline tag of @response.param in method " +
-                                methodDoc.qualifiedName() + ": " + tagName +
-                                " (value: " + tagText + ")");
+                        LOG.warning("Unknown inline tag of @response.param in method "
+                                + methodDoc.qualifiedName() + ": " + tagName
+                                + " (value: " + tagText + ")");
                         break;
                 }
             }
@@ -495,8 +493,8 @@ public class ResourceDoclet {
         }
 
         if (!referencedMember.isStatic()) {
-            LOG.warning("Referenced member of @link " + print(linkTag) + " is not static." +
-                    " Right now only references to static members are supported.");
+            LOG.warning("Referenced member of @link " + print(linkTag) + " is not static."
+                    + " Right now only references to static members are supported.");
             return null;
         }
 
@@ -538,8 +536,8 @@ public class ResourceDoclet {
     }
 
     private static String print(final Tag tag) {
-        return String.valueOf(tag.getClass()) + "[" +
-                "firstSentenceTags=" + toCSV(tag.firstSentenceTags())
+        return String.valueOf(tag.getClass()) + "["
+                + "firstSentenceTags=" + toCSV(tag.firstSentenceTags())
                 + ", inlineTags=" + toCSV(tag.inlineTags())
                 + ", kind=" + tag.kind()
                 + ", name=" + tag.name()

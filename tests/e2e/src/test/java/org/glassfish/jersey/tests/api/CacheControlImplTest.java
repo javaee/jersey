@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,19 +40,21 @@
 package org.glassfish.jersey.tests.api;
 
 import javax.ws.rs.core.CacheControl;
-import org.glassfish.jersey.message.internal.CacheControlProvider;
-import org.junit.Test;
 
+import org.glassfish.jersey.message.internal.CacheControlProvider;
+
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Marc Hadley
  */
 public class CacheControlImplTest {
+
     @Test
     public void testToString() {
         CacheControlProvider p = new CacheControlProvider();
-        CacheControl instance  = new CacheControl();
+        CacheControl instance = new CacheControl();
 
         instance.setNoCache(true);
         String expResult = "no-cache, no-transform";
@@ -79,11 +81,11 @@ public class CacheControlImplTest {
         assertEquals(expResult, result);
 
         instance = new CacheControl();
-        instance.getCacheExtension().put("key1","value1");
+        instance.getCacheExtension().put("key1", "value1");
         expResult = "no-transform, key1=value1";
         result = p.toString(instance);
         assertEquals(expResult, result);
-        instance.getCacheExtension().put("key1","value1 with spaces");
+        instance.getCacheExtension().put("key1", "value1 with spaces");
         expResult = "no-transform, key1=\"value1 with spaces\"";
         result = p.toString(instance);
         assertEquals(expResult, result);
@@ -94,7 +96,7 @@ public class CacheControlImplTest {
         assertEquals(expResult, result);
 
         instance = new CacheControl();
-        instance.getCacheExtension().put("key1",null);
+        instance.getCacheExtension().put("key1", null);
         expResult = "no-transform, key1";
         result = p.toString(instance);
         assertEquals(expResult, result);

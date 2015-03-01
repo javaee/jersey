@@ -53,7 +53,6 @@ import java.util.regex.PatternSyntaxException;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.uri.UriComponent;
 
-
 /**
  * A URI template parser that parses JAX-RS specific URI templates.
  *
@@ -61,8 +60,10 @@ import org.glassfish.jersey.uri.UriComponent;
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class UriTemplateParser {
+
     /* package */ static final int[] EMPTY_INT_ARRAY = new int[0];
     private static final Set<Character> RESERVED_REGEX_CHARACTERS = initReserved();
+    private static final String[] HEX_TO_UPPERCASE_REGEX = initHexToUpperCaseRegex();
 
     private static Set<Character> initReserved() {
         char[] reserved = {
@@ -292,8 +293,6 @@ public class UriTemplateParser {
         }
     }
 
-    private final static String[] HEX_TO_UPPERCASE_REGEX = initHexToUpperCaseRegex();
-
     private static String[] initHexToUpperCaseRegex() {
         String[] table = new String[0x80];
         for (int i = 0; i < table.length; i++) {
@@ -377,7 +376,7 @@ public class UriTemplateParser {
                 String separator = paramType == '?' ? "\\&" : ";/\\?";
 
                 // Start a group because each parameter could repeat
-//                names.add("__" + (paramType == '?' ? "query" : "matrix"));
+                //                names.add("__" + (paramType == '?' ? "query" : "matrix"));
 
                 boolean first = true;
 
@@ -399,7 +398,7 @@ public class UriTemplateParser {
                     first = false;
                 }
 
-//                groupCounts.add(1);
+                //                groupCounts.add(1);
                 skipGroup = 1;
 
                 // Knock of last bar
@@ -434,13 +433,13 @@ public class UriTemplateParser {
                 skipGroup = g;
             }
 
-            regex.append('(').
-                    append(namePattern).
-                    append(')');
+            regex.append('(')
+                    .append(namePattern)
+                    .append(')');
 
-            normalizedTemplate.append('{').
-                    append(name).
-                    append('}');
+            normalizedTemplate.append('{')
+                    .append(name)
+                    .append('}');
         } catch (PatternSyntaxException ex) {
             throw new IllegalArgumentException(
                     LocalizationMessages.ERROR_TEMPLATE_PARSER_INVALID_SYNTAX(nameRegexString, name, template), ex);

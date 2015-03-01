@@ -91,7 +91,6 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
     }
 
-
     private static final class FormParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
@@ -152,7 +151,6 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
             return newForm;
         }
 
-
         private void cacheForm(final ContainerRequest request, final Form form) {
             request.setProperty(decode ? InternalServerProperties
                     .FORM_DECODED_PROPERTY : InternalServerProperties.FORM_PROPERTY, form);
@@ -180,7 +178,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
             return request;
         }
 
-        private final static Annotation encodedAnnotation = getEncodedAnnotation();
+        private static final Annotation encodedAnnotation = getEncodedAnnotation();
 
         private static Annotation getEncodedAnnotation() {
             /**

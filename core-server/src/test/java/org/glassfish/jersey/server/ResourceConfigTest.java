@@ -74,7 +74,7 @@ public class ResourceConfigTest {
 
     @Test
     public void testGetElementsDefault1() {
-        final String[] elements = Tokenizer.tokenize(new String[]{"a b,c;d\ne"});
+        final String[] elements = Tokenizer.tokenize(new String[] {"a b,c;d\ne"});
 
         assertEquals(elements[0], "a");
         assertEquals(elements[1], "b");
@@ -85,7 +85,7 @@ public class ResourceConfigTest {
 
     @Test
     public void testGetElementsDefault2() {
-        final String[] elements = Tokenizer.tokenize(new String[]{"a    b, ,c;d\n\n\ne"});
+        final String[] elements = Tokenizer.tokenize(new String[] {"a    b, ,c;d\n\n\ne"});
 
         assertEquals(elements[0], "a");
         assertEquals(elements[1], "b");
@@ -96,7 +96,7 @@ public class ResourceConfigTest {
 
     @Test
     public void testGetElementsExplicitDelimiter() {
-        final String[] elements = Tokenizer.tokenize(new String[]{"a b,c;d\ne"}, " ;");
+        final String[] elements = Tokenizer.tokenize(new String[] {"a b,c;d\ne"}, " ;");
 
         assertEquals(elements[0], "a");
         assertEquals(elements[1], "b,c");
@@ -154,6 +154,7 @@ public class ResourceConfigTest {
     }
 
     public static class MyResourceConfig1 extends ResourceConfig {
+
         public MyResourceConfig1() {
             property(ServerProperties.WADL_FEATURE_DISABLE, true);
             register(new MyBinder());
@@ -226,8 +227,8 @@ public class ResourceConfigTest {
     @Test
     public void testClassPathPropertyTopLevelInnerStatic() {
         final ResourceConfig rc = new ResourceConfig()
-                .property(ServerProperties.PROVIDER_CLASSPATH, PublicRootResourceInnerStaticClass.class.getResource("").getPath());
-
+                .property(ServerProperties.PROVIDER_CLASSPATH,
+                        PublicRootResourceInnerStaticClass.class.getResource("").getPath());
 
         final Set<Class<?>> classes = rc.getClasses();
         assertThat(classes, hasItem(PublicRootResourceInnerStaticClass.class));
@@ -250,9 +251,9 @@ public class ResourceConfigTest {
 
     @Test
     public void testClassPathPropertyAllMultiplePaths() {
-        final String paths = PublicRootResourceClass.class.getResource("").getPath() + ";" +
-                InnerStaticClass.class.getResource("").getPath() + ";" +
-                PublicRootResourceInnerStaticClass.class.getResource("").getPath();
+        final String paths = PublicRootResourceClass.class.getResource("").getPath() + ";"
+                + InnerStaticClass.class.getResource("").getPath() + ";"
+                + PublicRootResourceInnerStaticClass.class.getResource("").getPath();
         final ResourceConfig rc = new ResourceConfig()
                 .property(ServerProperties.PROVIDER_CLASSPATH, paths);
 
@@ -266,9 +267,9 @@ public class ResourceConfigTest {
 
     @Test
     public void testClassPathPropertyAllMultiplePathsWithSpaces() {
-        final String paths = PublicRootResourceClass.class.getResource("").getPath() + "; " +
-                InnerStaticClass.class.getResource("").getPath() + ";;" +
-                PublicRootResourceInnerStaticClass.class.getResource("").getPath() + "; ;; ";
+        final String paths = PublicRootResourceClass.class.getResource("").getPath() + "; "
+                + InnerStaticClass.class.getResource("").getPath() + ";;"
+                + PublicRootResourceInnerStaticClass.class.getResource("").getPath() + "; ;; ";
         final ResourceConfig rc = new ResourceConfig()
                 .property(ServerProperties.PROVIDER_CLASSPATH, paths);
 

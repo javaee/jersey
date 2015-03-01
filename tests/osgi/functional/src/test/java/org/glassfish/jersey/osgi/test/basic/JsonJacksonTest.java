@@ -72,8 +72,10 @@ public class JsonJacksonTest extends AbstractJsonOsgiIntegrationTest {
                 mavenBundle().groupId("com.fasterxml.jackson.core").artifactId("jackson-databind").versionAsInProject(),
                 mavenBundle().groupId("com.fasterxml.jackson.core").artifactId("jackson-annotations").versionAsInProject(),
                 mavenBundle().groupId("com.fasterxml.jackson.jaxrs").artifactId("jackson-jaxrs-base").versionAsInProject(),
-                mavenBundle().groupId("com.fasterxml.jackson.jaxrs").artifactId("jackson-jaxrs-json-provider").versionAsInProject(),
-                mavenBundle().groupId("com.fasterxml.jackson.module").artifactId("jackson-module-jaxb-annotations").versionAsInProject()
+                mavenBundle().groupId("com.fasterxml.jackson.jaxrs").artifactId("jackson-jaxrs-json-provider")
+                        .versionAsInProject(),
+                mavenBundle().groupId("com.fasterxml.jackson.module").artifactId("jackson-module-jaxb-annotations")
+                        .versionAsInProject()
         ));
 
         return Helper.asArray(options);

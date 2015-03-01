@@ -109,10 +109,10 @@ final class ResourceStatisticsImpl implements ResourceStatistics {
                 resourceMethods.put(stats.getResourceMethod(), stats);
             }
 
-            final ExecutionStatistics resourceStats = resourceExecutionStatisticsBuilder == null ?
-                    ExecutionStatisticsImpl.EMPTY : resourceExecutionStatisticsBuilder.build();
-            final ExecutionStatistics requestStats = requestExecutionStatisticsBuilder == null ?
-                    ExecutionStatisticsImpl.EMPTY : requestExecutionStatisticsBuilder.build();
+            final ExecutionStatistics resourceStats = resourceExecutionStatisticsBuilder == null
+                    ? ExecutionStatisticsImpl.EMPTY : resourceExecutionStatisticsBuilder.build();
+            final ExecutionStatistics requestStats = requestExecutionStatisticsBuilder == null
+                    ? ExecutionStatisticsImpl.EMPTY : requestExecutionStatisticsBuilder.build();
 
             final ResourceStatisticsImpl stats = new ResourceStatisticsImpl(Collections.unmodifiableMap(resourceMethods),
                     resourceStats, requestStats);

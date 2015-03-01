@@ -243,7 +243,8 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * @see javax.servlet.Servlet#service
      */
     @Override
-    protected void service(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+    protected void service(final HttpServletRequest request, final HttpServletResponse response)
+            throws ServletException, IOException {
         /**
          * There is an annoying edge case where the service method is
          * invoked for the case when the URI is equal to the deployment URL
@@ -253,34 +254,34 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
         final StringBuffer requestUrl = request.getRequestURL();
         final String requestURI = request.getRequestURI();
 
-//        final String pathInfo = request.getPathInfo();
-//        final boolean checkPathInfo = pathInfo == null || pathInfo.isEmpty() || pathInfo.equals("/");
-//        if (checkPathInfo && !request.getRequestURI().endsWith("/")) {
-            // Only do this if the last segment of the servlet path does not contain '.'
-            // This handles the case when the extension mapping is used with the servlet
-            // see issue 506
-            // This solution does not require parsing the deployment descriptor,
-            // however still leaves it broken for the very rare case if a standard path
-            // servlet mapping would include dot in the last segment (e.g. /.webresources/*)
-            // and somebody would want to hit the root resource without the trailing slash
-//            final int i = servletPath.lastIndexOf('/');
-//            if (servletPath.substring(i + 1).indexOf('.') < 0) {
-                // TODO (+ handle request URL with invalid characters - see the creation of absoluteUriBuilder below)
-//                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {
-//                    URI l = UriBuilder.fromUri(request.getRequestURL().toString()).
-//                            path("/").
-//                            replaceQuery(request.getQueryString()).build();
-//
-//                    response.setStatus(307);
-//                    response.setHeader("Location", l.toASCIIString());
-//                    return;
-//                } else {
-//                pathInfo = "/";
-//                requestURL.append("/");
-//                requestURI += "/";
-//                }
-//            }
-//        }
+        //        final String pathInfo = request.getPathInfo();
+        //        final boolean checkPathInfo = pathInfo == null || pathInfo.isEmpty() || pathInfo.equals("/");
+        //        if (checkPathInfo && !request.getRequestURI().endsWith("/")) {
+        // Only do this if the last segment of the servlet path does not contain '.'
+        // This handles the case when the extension mapping is used with the servlet
+        // see issue 506
+        // This solution does not require parsing the deployment descriptor,
+        // however still leaves it broken for the very rare case if a standard path
+        // servlet mapping would include dot in the last segment (e.g. /.webresources/*)
+        // and somebody would want to hit the root resource without the trailing slash
+        //            final int i = servletPath.lastIndexOf('/');
+        //            if (servletPath.substring(i + 1).indexOf('.') < 0) {
+        // TODO (+ handle request URL with invalid characters - see the creation of absoluteUriBuilder below)
+        //                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {
+        //                    URI l = UriBuilder.fromUri(request.getRequestURL().toString()).
+        //                            path("/").
+        //                            replaceQuery(request.getQueryString()).build();
+        //
+        //                    response.setStatus(307);
+        //                    response.setHeader("Location", l.toASCIIString());
+        //                    return;
+        //                } else {
+        //                pathInfo = "/";
+        //                requestURL.append("/");
+        //                requestURI += "/";
+        //                }
+        //            }
+        //        }
 
         /**
          * The HttpServletRequest.getRequestURL() contains the complete URI
@@ -323,9 +324,9 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
                 queryParameters = "";
             }
 
-            requestUri = absoluteUriBuilder.replacePath(requestURI).
-                    replaceQuery(queryParameters).
-                    build();
+            requestUri = absoluteUriBuilder.replacePath(requestURI)
+                    .replaceQuery(queryParameters)
+                    .build();
         } catch (final UriBuilderException | IllegalArgumentException ex) {
             setResponseForInvalidUri(response, ex);
             return;
@@ -417,7 +418,9 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     }
 
     @Override
-    public void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain filterChain)
+    public void doFilter(final ServletRequest servletRequest,
+                         final ServletResponse servletResponse,
+                         final FilterChain filterChain)
             throws IOException, ServletException {
         try {
             doFilter((HttpServletRequest) servletRequest, (HttpServletResponse) servletResponse, filterChain);
@@ -490,7 +493,8 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     }
 
     private void doFilter(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain,
-                          final String requestURI, final String servletPath, final String queryString) throws IOException, ServletException {
+                          final String requestURI, final String servletPath, final String queryString)
+            throws IOException, ServletException {
         // if we match the static content regular expression lets delegate to
         // the filter chain to use the default container servlets & handlers
         final Pattern p = getStaticContentPattern();
@@ -503,19 +507,19 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             if (!servletPath.startsWith(filterContextPath)) {
                 throw new ContainerException(LocalizationMessages.SERVLET_PATH_MISMATCH(servletPath, filterContextPath));
                 //TODO:
-//            } else if (servletPath.length() == filterContextPath.length()) {
-//                // Path does not end in a slash, may need to redirect
-//                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {
-//                    URI l = UriBuilder.fromUri(request.getRequestURL().toString()).
-//                            path("/").
-//                            replaceQuery(queryString).build();
-//
-//                    response.setStatus(307);
-//                    response.setHeader("Location", l.toASCIIString());
-//                    return;
-//                } else {
-//                    requestURI += "/";
-//                }
+                //            } else if (servletPath.length() == filterContextPath.length()) {
+                //                // Path does not end in a slash, may need to redirect
+                //                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {
+                //                    URI l = UriBuilder.fromUri(request.getRequestURL().toString()).
+                //                            path("/").
+                //                            replaceQuery(queryString).build();
+                //
+                //                    response.setStatus(307);
+                //                    response.setHeader("Location", l.toASCIIString());
+                //                    return;
+                //                } else {
+                //                    requestURI += "/";
+                //                }
             }
         }
 
@@ -529,9 +533,9 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
                     .path("/")
                     .build()
                     : absoluteUriBuilder.replacePath(request.getContextPath())
-                    .path(filterContextPath)
-                    .path("/")
-                    .build();
+                            .path(filterContextPath)
+                            .path("/")
+                            .build();
 
             requestUri = absoluteUriBuilder.replacePath(requestURI)
                     .replaceQuery(ContainerUtils.encodeUnsafeCharacters(queryString))

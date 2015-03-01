@@ -131,8 +131,8 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
                 return Response.ok("FAILED:  Missing field 'foo'").build();
             } else if (!"bar".equals(multiPart.getField("foo").getValue())) {
                 return Response
-                        .ok("FAILED:  Field 'foo' has value '" + multiPart.getField("foo").getValue() + "' instead of" +
-                                " 'bar'")
+                        .ok("FAILED:  Field 'foo' has value '" + multiPart.getField("foo").getValue() + "' instead of"
+                                + " 'bar'")
                         .build();
             }
             if (multiPart.getField("baz") == null) {
@@ -160,10 +160,10 @@ public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
     @Test
     public void testConsumesFormDataResource() {
         MultiPartBean bean = new MultiPartBean("myname", "myvalue");
-        FormDataMultiPart entity = new FormDataMultiPart().
-            field("foo", "bar").
-            field("baz", "bop").
-            field("bean", bean, new MediaType("x-application", "x-format"));
+        FormDataMultiPart entity = new FormDataMultiPart()
+            .field("foo", "bar")
+            .field("baz", "bop")
+            .field("bean", bean, new MediaType("x-application", "x-format"));
 
         String response = target()
                 .path("ConsumesFormDataResource")

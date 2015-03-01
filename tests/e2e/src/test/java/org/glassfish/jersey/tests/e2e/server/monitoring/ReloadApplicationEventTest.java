@@ -97,6 +97,7 @@ public class ReloadApplicationEventTest extends JerseyTest {
     public static final String RELOADED = "reloaded";
 
     public static class GrizzlyTestCase extends ParentTest {
+
         @Override
         protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
             return new GrizzlyTestContainerFactory();
@@ -104,6 +105,7 @@ public class ReloadApplicationEventTest extends JerseyTest {
     }
 
     public static class JdkServerTestCase extends ParentTest {
+
         @Override
         protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
             return new JdkHttpServerTestContainerFactory();
@@ -114,6 +116,7 @@ public class ReloadApplicationEventTest extends JerseyTest {
      * Works only with Java 7
      */
     public static class JettyServerTestCase extends ParentTest {
+
         @Override
         protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
             return new JettyTestContainerFactory();
@@ -121,6 +124,7 @@ public class ReloadApplicationEventTest extends JerseyTest {
     }
 
     public static class SimpleHttpServerTestCase extends ParentTest {
+
         @Override
         protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
             return new SimpleTestContainerFactory();
@@ -128,6 +132,7 @@ public class ReloadApplicationEventTest extends JerseyTest {
     }
 
     public static class ParentTest extends JerseyTest {
+
         @Override
         public void setUp() throws Exception {
             super.setUp();
@@ -153,6 +158,7 @@ public class ReloadApplicationEventTest extends JerseyTest {
         }
 
         public static interface TestResultTracker {
+
             public void reloaded();
 
             public void shutdown();
@@ -171,6 +177,7 @@ public class ReloadApplicationEventTest extends JerseyTest {
         }
 
         public static class OriginalResult implements TestResultTracker {
+
             public static boolean reloadedCalled;
             public static boolean shutdownCalled;
             public static boolean startupCalled;
@@ -213,6 +220,7 @@ public class ReloadApplicationEventTest extends JerseyTest {
         }
 
         public static class ReloadedResult implements TestResultTracker {
+
             public static boolean shutdownCalled;
             public static boolean reloadedCalled;
             public static boolean reloadedEventCalled;
@@ -226,7 +234,6 @@ public class ReloadApplicationEventTest extends JerseyTest {
                 reloadedEventCalled = false;
                 initEventCalled = false;
             }
-
 
             @Override
             public void reloaded() {
@@ -254,12 +261,12 @@ public class ReloadApplicationEventTest extends JerseyTest {
                 initEventCalled = true;
             }
 
-
         }
 
         @Path("resource")
         @Singleton
         public static class TestResource implements ContainerLifecycleListener {
+
             private volatile Container container;
 
             private final TestResultTracker testResultTracker;
@@ -295,6 +302,7 @@ public class ReloadApplicationEventTest extends JerseyTest {
         }
 
         public static class AppEventListener implements ApplicationEventListener {
+
             private final TestResultTracker resultTracker;
 
             public AppEventListener(TestResultTracker resultTracker) {
@@ -363,7 +371,6 @@ public class ReloadApplicationEventTest extends JerseyTest {
             // wait again some time until events are processed and mbeans are invoked
             Thread.sleep(700);
 
-
             // after reload
             assertFalse(OriginalResult.reloadedCalled);
             assertFalse(OriginalResult.reloadedEventCalled);
@@ -383,7 +390,8 @@ public class ReloadApplicationEventTest extends JerseyTest {
                 InterruptedException {
 
             MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-            final ObjectName name = new ObjectName("org.glassfish.jersey:type=" + appName + ",subType=Global,global=Configuration");
+            final ObjectName name = new ObjectName(
+                    "org.glassfish.jersey:type=" + appName + ",subType=Global,global=Configuration");
             boolean registered = mBeanServer.isRegistered(name);
 
             int time = 0;
@@ -401,6 +409,5 @@ public class ReloadApplicationEventTest extends JerseyTest {
             }
         }
     }
-
 
 }

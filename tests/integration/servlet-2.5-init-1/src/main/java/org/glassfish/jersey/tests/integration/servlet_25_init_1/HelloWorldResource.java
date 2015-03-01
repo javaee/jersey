@@ -70,7 +70,7 @@ public class HelloWorldResource {
     public String getInjection(@Context HttpServletRequest request, @Context HttpServletResponse response,
                                @Context WebConfig webConfig, @Context ServletConfig servletConfig,
                                @Context ServletContext servletContext) {
-        return request.getMethod() + (response != null) + webConfig.getName() + servletConfig.getServletName() +
-                servletContext.getServletContextName();
+        return request.getMethod() + (response != null) + webConfig.getName() + servletConfig.getServletName()
+                + servletContext.getServletContextName();
     }
 }

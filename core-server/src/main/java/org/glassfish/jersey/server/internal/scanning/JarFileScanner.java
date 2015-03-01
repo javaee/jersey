@@ -75,7 +75,8 @@ public final class JarFileScanner implements ResourceFinder {
      */
     public JarFileScanner(final InputStream inputStream, final String parent, final boolean recursive) throws IOException {
         this.jarInputStream = new JarInputStream(inputStream);
-        this.parent = (parent.isEmpty() || parent.endsWith(String.valueOf(JAR_FILE_SEPARATOR))) ? parent : parent + JAR_FILE_SEPARATOR;
+        this.parent = (parent.isEmpty() || parent.endsWith(String.valueOf(JAR_FILE_SEPARATOR)))
+                ? parent : parent + JAR_FILE_SEPARATOR;
         this.recursive = recursive;
     }
 

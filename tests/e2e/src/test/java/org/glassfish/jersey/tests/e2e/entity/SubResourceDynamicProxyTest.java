@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,32 +42,29 @@ package org.glassfish.jersey.tests.e2e.entity;
 
 import java.io.IOException;
 import java.io.OutputStream;
-
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-
-import java.util.List;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.LinkedList;
+import java.util.List;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -77,7 +74,7 @@ import static org.junit.Assert.assertEquals;
  * of a sub-resource locator that returns a dynamic proxy.
  * This test should cover also the EJB case, as the common cause
  * is missing type parameter.
-  *
+ *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class SubResourceDynamicProxyTest extends JerseyTest {
@@ -114,12 +111,12 @@ public class SubResourceDynamicProxyTest extends JerseyTest {
         /**
          * This is the data that would be written to the response body by the {@link ListProvider} bellow.
          */
-        final static String CHECK_DATA = "ensure this one makes it to the client";
+        static final String CHECK_DATA = "ensure this one makes it to the client";
 
         /**
          * We need to work with a non-null entity here so that the worker could do it's job.
          */
-        final static LinkedList<Foo> TEST_ENTITY = new LinkedList<Foo>() {
+        static final LinkedList<Foo> TEST_ENTITY = new LinkedList<Foo>() {
             {
                 add(new Foo());
             }
@@ -152,8 +149,8 @@ public class SubResourceDynamicProxyTest extends JerseyTest {
 
         @Override
         public void writeTo(List<Foo> t, Class<?> type, Type genericType,
-                Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
-                OutputStream entityStream) throws IOException, WebApplicationException {
+                            Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
 
             assertEquals(t, TEST_ENTITY);
             entityStream.write(CHECK_DATA.getBytes());
@@ -173,7 +170,7 @@ public class SubResourceDynamicProxyTest extends JerseyTest {
         public SubResource getSubresource() {
             return (SubResource) Proxy.newProxyInstance(
                     RootResource.class.getClassLoader(),
-                    new Class<?>[]{SubResource.class},
+                    new Class<?>[] {SubResource.class},
                     new InvocationHandler() {
 
                         @Override

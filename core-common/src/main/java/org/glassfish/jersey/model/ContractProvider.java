@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -233,17 +233,17 @@ public final class ContractProvider implements Scoped, NameBound {
                 scope = Singleton.class;
             }
 
-            final Map<Class<?>, Integer> _contracts = (contracts.isEmpty()) ?
-                    Collections.<Class<?>, Integer>emptyMap() :
-                    Maps.transformEntries(contracts, new Maps.EntryTransformer<Class<?>, Integer, Integer>() {
+            final Map<Class<?>, Integer> _contracts = (contracts.isEmpty())
+                    ? Collections.<Class<?>, Integer>emptyMap()
+                    : Maps.transformEntries(contracts, new Maps.EntryTransformer<Class<?>, Integer, Integer>() {
                         @Override
                         public Integer transformEntry(final Class<?> contract, final Integer priority) {
                             return (priority != NO_PRIORITY) ? priority : defaultPriority;
                         }
                     });
 
-            final Set<Class<? extends Annotation>> bindings = (nameBindings.isEmpty()) ?
-                    Collections.<Class<? extends Annotation>>emptySet() : Collections.unmodifiableSet(nameBindings);
+            final Set<Class<? extends Annotation>> bindings = (nameBindings.isEmpty())
+                    ? Collections.<Class<? extends Annotation>>emptySet() : Collections.unmodifiableSet(nameBindings);
 
             if (scope == Singleton.class && _contracts.isEmpty() && defaultPriority == NO_PRIORITY && bindings.isEmpty()) {
                 return EMPTY_MODEL;

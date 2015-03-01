@@ -146,7 +146,7 @@ public class JsonEntityFilteringServerTest {
 
         @Parameterized.Parameters(name = "Provider: {0}")
         public static Iterable<Class[]> providers() {
-            return Arrays.asList(new Class[][]{{MoxyJsonFeature.class}, {JacksonFeature.class}});
+            return Arrays.asList(new Class[][] {{MoxyJsonFeature.class}, {JacksonFeature.class}});
         }
 
         public ConfigurationServerTest(final Class<Feature> filteringProvider) {
@@ -174,7 +174,7 @@ public class JsonEntityFilteringServerTest {
 
         @Parameterized.Parameters(name = "Provider: {0}")
         public static Iterable<Class[]> providers() {
-            return Arrays.asList(new Class[][]{{MoxyJsonFeature.class}, {JacksonFeature.class}});
+            return Arrays.asList(new Class[][] {{MoxyJsonFeature.class}, {JacksonFeature.class}});
         }
 
         public ConfigurationDefaultViewServerTest(final Class<Feature> filteringProvider) {
@@ -213,7 +213,7 @@ public class JsonEntityFilteringServerTest {
 
         @Parameterized.Parameters(name = "Provider: {0}")
         public static Iterable<Class[]> providers() {
-            return Arrays.asList(new Class[][]{{MoxyJsonFeature.class}, {JacksonFeature.class}});
+            return Arrays.asList(new Class[][] {{MoxyJsonFeature.class}, {JacksonFeature.class}});
         }
 
         public AnnotationsServerTest(final Class<Feature> filteringProvider) {
@@ -239,7 +239,7 @@ public class JsonEntityFilteringServerTest {
 
         @Parameterized.Parameters(name = "Provider: {0}")
         public static Iterable<Class[]> providers() {
-            return Arrays.asList(new Class[][]{{MoxyJsonFeature.class}, {JacksonFeature.class}});
+            return Arrays.asList(new Class[][] {{MoxyJsonFeature.class}, {JacksonFeature.class}});
         }
 
         public AnnotationsOverConfigurationServerTest(final Class<Feature> filteringProvider) {
@@ -279,7 +279,7 @@ public class JsonEntityFilteringServerTest {
         assertThat(entity.defaultEntities.size(), is(1));
         final DefaultFilteringSubEntity defaultFilteringSubEntity = entity.defaultEntities.get(0);
         assertThat(defaultFilteringSubEntity.field, is(true));
-        assertThat(defaultFilteringSubEntity.getProperty(), is(20l));
+        assertThat(defaultFilteringSubEntity.getProperty(), is(20L));
 
         // OneFilteringSubEntity
         assertThat(entity.oneEntities, notNullValue());

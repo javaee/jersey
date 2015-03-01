@@ -89,14 +89,17 @@ public class ParamConverterTest extends JerseyTest {
     public void testMyBeanParam() {
         Form form = new Form();
         form.param("form", "formParam");
-        final Response response = target().path("resource/myBean").path("pathParam").matrixParam("matrix",
-                "matrixParam").queryParam
-                ("query", "queryParam").request().header("header",
-                "headerParam").cookie("cookie", "cookieParam").post(Entity.entity(form,
-                MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        final Response response = target()
+                .path("resource/myBean").path("pathParam")
+                .matrixParam("matrix", "matrixParam")
+                .queryParam("query", "queryParam")
+                .request()
+                .header("header", "headerParam")
+                .cookie("cookie", "cookieParam")
+                .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+
         final String str = response.readEntity(String.class);
         assertEquals("*pathParam*_*matrixParam*_*queryParam*_*headerParam*_*cookieParam*_*formParam*", str);
-
     }
 
     @Test
@@ -138,14 +141,17 @@ public class ParamConverterTest extends JerseyTest {
     public void testStringParam() {
         Form form = new Form();
         form.param("form", "formParam");
-        final Response response = target().path("resource/string").path("pathParam").matrixParam("matrix",
-                "matrixParam").queryParam
-                ("query", "queryParam").request().header("header",
-                "headerParam").cookie("cookie", "cookieParam").post(Entity.entity(form,
-                MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        final Response response = target()
+                .path("resource/string").path("pathParam")
+                .matrixParam("matrix", "matrixParam")
+                .queryParam("query", "queryParam")
+                .request()
+                .header("header", "headerParam")
+                .cookie("cookie", "cookieParam")
+                .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+
         final String str = response.readEntity(String.class);
         assertEquals("-pathParam-_-matrixParam-_-queryParam-_-headerParam-_-cookieParam-_-formParam-", str);
-
     }
 
     @Test
@@ -200,13 +206,14 @@ public class ParamConverterTest extends JerseyTest {
 
     @Path("resource")
     public static class Resource {
+
         @POST
         @Path("myBean/{path}")
         public String postMyBean(@PathParam("path") MyBean pathParam, @MatrixParam("matrix") MyBean matrix,
                                  @QueryParam("query") MyBean query, @HeaderParam("header") MyBean header,
                                  @CookieParam("cookie") MyBean cookie, @FormParam("form") MyBean form) {
-            return pathParam.getValue() + "_" + matrix.getValue() + "_" + query.getValue() + "_" + header.getValue() + "_" +
-                    cookie.getValue() + "_" + form.getValue();
+            return pathParam.getValue() + "_" + matrix.getValue() + "_" + query.getValue() + "_" + header.getValue() + "_"
+                    + cookie.getValue() + "_" + form.getValue();
         }
 
         @GET
@@ -277,8 +284,8 @@ public class ParamConverterTest extends JerseyTest {
         public String postString(@PathParam("path") String pathParam, @MatrixParam("matrix") String matrix,
                                  @QueryParam("query") String query, @HeaderParam("header") String header,
                                  @CookieParam("cookie") String cookie, @FormParam("form") String form) {
-            return pathParam + "_" + matrix + "_" + query + "_" + header + "_" +
-                    cookie + "_" + form;
+            return pathParam + "_" + matrix + "_" + query + "_" + header + "_"
+                    + cookie + "_" + form;
         }
 
         @GET
@@ -287,14 +294,12 @@ public class ParamConverterTest extends JerseyTest {
             return query;
         }
 
-
         @GET
         @Path("response")
         public Response getResponse() {
             return Response.ok().header("response-header", "res-head").entity("anything").build();
         }
     }
-
 
     public static class MyParamProvider implements ParamConverterProvider {
 
@@ -349,6 +354,7 @@ public class ParamConverterTest extends JerseyTest {
     }
 
     public static class MyBean implements Comparable<MyBean> {
+
         private String value;
 
         public void setValue(String value) {
@@ -361,15 +367,19 @@ public class ParamConverterTest extends JerseyTest {
 
         @Override
         public String toString() {
-            return "MyBean{" +
-                    "value='" + value + '\'' +
-                    '}';
+            return "MyBean{"
+                    + "value='" + value + '\''
+                    + '}';
         }
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof MyBean)) return false;
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof MyBean)) {
+                return false;
+            }
 
             MyBean myBean = (MyBean) o;
 

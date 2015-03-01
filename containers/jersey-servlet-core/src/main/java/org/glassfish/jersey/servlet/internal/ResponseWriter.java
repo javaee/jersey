@@ -258,8 +258,8 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     /**
-     * Provides response status captured when {@link #writeResponseStatusAndHeaders(long, org.glassfish.jersey.server.ContainerResponse)}
-     * has been invoked.
+     * Provides response status captured when
+     * {@link #writeResponseStatusAndHeaders(long, org.glassfish.jersey.server.ContainerResponse)} has been invoked.
      * The method will block if the write method has not been called yet.
      *
      * @return response status
@@ -277,6 +277,7 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     private static class NonCloseableOutputStreamWrapper extends OutputStream {
+
         private final OutputStream delegate;
 
         public NonCloseableOutputStreamWrapper(final OutputStream delegate) {

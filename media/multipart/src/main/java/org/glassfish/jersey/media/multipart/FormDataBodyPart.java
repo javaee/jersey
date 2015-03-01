@@ -270,10 +270,12 @@ public class FormDataBodyPart extends BodyPart {
             contentDisposition = FormDataContentDisposition.name(name).build();
             super.setContentDisposition(contentDisposition);
         } else {
-            FormDataContentDisposition formDataContentDisposition = FormDataContentDisposition.name(name).fileName
-                    (contentDisposition.getFileName()).creationDate(contentDisposition.getCreationDate()).modificationDate
-                    (contentDisposition.getModificationDate()).readDate(contentDisposition.getReadDate()).size
-                    (contentDisposition.getSize()).build();
+            FormDataContentDisposition formDataContentDisposition = FormDataContentDisposition.name(name)
+                    .fileName(contentDisposition.getFileName())
+                    .creationDate(contentDisposition.getCreationDate())
+                    .modificationDate(contentDisposition.getModificationDate())
+                    .readDate(contentDisposition.getReadDate())
+                    .size(contentDisposition.getSize()).build();
             super.setContentDisposition(formDataContentDisposition);
         }
     }

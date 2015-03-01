@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,22 +56,21 @@ public class ItemsModel {
     private static ItemsModel instance;
 
     public static synchronized ItemsModel getInstance() {
-        if (instance==null) {
+        if (instance == null) {
             instance = new ItemsModel();
         }
         return instance;
     }
 
     private ItemsModel() {
-        items = new ArrayList<ItemModel>();
-        for(int i=0; i < 100; i++)
-        {
+        items = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
             items.add(new ItemModel("Item " + i));
         }
     }
 
     public boolean hasNext(String currentId) {
-        return getIndex(currentId) < items.size()-1;
+        return getIndex(currentId) < items.size() - 1;
     }
 
     public boolean hasPrev(String currentId) {
@@ -83,20 +82,18 @@ public class ItemsModel {
     }
 
     public String getNextId(String id) {
-        return Integer.toString(getIndex(id)+1);
+        return Integer.toString(getIndex(id) + 1);
     }
 
     public String getPrevId(String id) {
-        return Integer.toString(getIndex(id)-1);
+        return Integer.toString(getIndex(id) - 1);
     }
 
     private int getIndex(String id) {
         return Integer.parseInt(id);
     }
-    
-    
-    public int getSize()
-    {
+
+    public int getSize() {
         return items.size();
     }
 }

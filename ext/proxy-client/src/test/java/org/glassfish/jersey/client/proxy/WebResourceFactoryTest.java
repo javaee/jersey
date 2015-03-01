@@ -57,9 +57,9 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
+
 import org.junit.Ignore;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -67,6 +67,7 @@ import static org.junit.Assert.assertTrue;
  * @author Martin Matula
  */
 public class WebResourceFactoryTest extends JerseyTest {
+
     private MyResourceIfc resource;
     private MyResourceIfc resourceWithXML;
 
@@ -77,7 +78,7 @@ public class WebResourceFactoryTest extends JerseyTest {
         // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory
         // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory
         enable(TestProperties.LOG_TRAFFIC);
-//        enable(TestProperties.DUMP_ENTITY);
+        //        enable(TestProperties.DUMP_ENTITY);
         return new ResourceConfig(MyResource.class);
     }
 
@@ -86,9 +87,10 @@ public class WebResourceFactoryTest extends JerseyTest {
         super.setUp();
         resource = WebResourceFactory.newResource(MyResourceIfc.class, target());
 
-        final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<String, Object>(1);
+        final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>(1);
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML);
-        resourceWithXML = WebResourceFactory.newResource(MyResourceIfc.class, target(), false, headers, Collections.<Cookie>emptyList(), new Form());
+        resourceWithXML = WebResourceFactory
+                .newResource(MyResourceIfc.class, target(), false, headers, Collections.<Cookie>emptyList(), new Form());
     }
 
     @Test
@@ -145,10 +147,9 @@ public class WebResourceFactoryTest extends JerseyTest {
         assertEquals("Got it!", resource.getSubResource().getMyBean().name);
     }
 
-
     @Test
     public void testQueryParamsAsList() {
-        final List<String> list = new ArrayList<String>();
+        final List<String> list = new ArrayList<>();
         list.add("a");
         list.add("bb");
         list.add("ccc");
@@ -158,7 +159,7 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     @Test
     public void testQueryParamsAsSet() {
-        final Set<String> set = new HashSet<String>();
+        final Set<String> set = new HashSet<>();
         set.add("a");
         set.add("bb");
         set.add("ccc");
@@ -169,7 +170,7 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     @Test
     public void testQueryParamsAsSortedSet() {
-        final SortedSet<String> set = new TreeSet<String>();
+        final SortedSet<String> set = new TreeSet<>();
         set.add("a");
         set.add("bb");
         set.add("ccc");
@@ -181,7 +182,7 @@ public class WebResourceFactoryTest extends JerseyTest {
     @Test
     @Ignore("See issue JERSEY-2441")
     public void testHeaderCookieAsList() {
-        final List<String> list = new ArrayList<String>();
+        final List<String> list = new ArrayList<>();
         list.add("a");
         list.add("bb");
         list.add("ccc");
@@ -192,7 +193,7 @@ public class WebResourceFactoryTest extends JerseyTest {
     @Test
     @Ignore("See issue JERSEY-2441")
     public void testHeaderCookieAsSet() {
-        final Set<String> set = new HashSet<String>();
+        final Set<String> set = new HashSet<>();
         set.add("a");
         set.add("bb");
         set.add("ccc");
@@ -204,7 +205,7 @@ public class WebResourceFactoryTest extends JerseyTest {
     @Test
     @Ignore("See issue JERSEY-2441")
     public void testHeaderCookieAsSortedSet() {
-        final SortedSet<String> set = new TreeSet<String>();
+        final SortedSet<String> set = new TreeSet<>();
         set.add("a");
         set.add("bb");
         set.add("ccc");
@@ -220,7 +221,7 @@ public class WebResourceFactoryTest extends JerseyTest {
     @Test
     @Ignore("See issue JERSEY-2263")
     public void testHeaderParamsAsList() {
-        final List<String> list = new ArrayList<String>();
+        final List<String> list = new ArrayList<>();
         list.add("a");
         list.add("bb");
         list.add("ccc");
@@ -231,7 +232,7 @@ public class WebResourceFactoryTest extends JerseyTest {
     @Test
     @Ignore("See issue JERSEY-2263")
     public void testHeaderParamsAsSet() {
-        final Set<String> set = new HashSet<String>();
+        final Set<String> set = new HashSet<>();
         set.add("a");
         set.add("bb");
         set.add("ccc");
@@ -243,7 +244,7 @@ public class WebResourceFactoryTest extends JerseyTest {
     @Test
     @Ignore("See issue JERSEY-2263")
     public void testHeaderParamsAsSortedSet() {
-        final SortedSet<String> set = new TreeSet<String>();
+        final SortedSet<String> set = new TreeSet<>();
         set.add("a");
         set.add("bb");
         set.add("ccc");
@@ -254,7 +255,7 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     @Test
     public void testMatrixParamsAsList() {
-        final List<String> list = new ArrayList<String>();
+        final List<String> list = new ArrayList<>();
         list.add("a");
         list.add("bb");
         list.add("ccc");
@@ -264,7 +265,7 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     @Test
     public void testMatrixParamsAsSet() {
-        final Set<String> set = new HashSet<String>();
+        final Set<String> set = new HashSet<>();
         set.add("a");
         set.add("bb");
         set.add("ccc");
@@ -275,7 +276,7 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     @Test
     public void testMatrixParamsAsSortedSet() {
-        final SortedSet<String> set = new TreeSet<String>();
+        final SortedSet<String> set = new TreeSet<>();
         set.add("a");
         set.add("bb");
         set.add("ccc");
@@ -291,10 +292,9 @@ public class WebResourceFactoryTest extends JerseyTest {
         assertTrue("Set does not contain 'ccc' item.", result.contains("ccc"));
     }
 
-
     @Test
     public void testFormParamsAsList() {
-        final List<String> list = new ArrayList<String>();
+        final List<String> list = new ArrayList<>();
         list.add("a");
         list.add("bb");
         list.add("ccc");
@@ -304,7 +304,7 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     @Test
     public void testFormParamsAsSet() {
-        final Set<String> set = new HashSet<String>();
+        final Set<String> set = new HashSet<>();
         set.add("a");
         set.add("bb");
         set.add("ccc");
@@ -315,7 +315,7 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     @Test
     public void testFormParamsAsSortedSet() {
-        final SortedSet<String> set = new TreeSet<String>();
+        final SortedSet<String> set = new TreeSet<>();
         set.add("a");
         set.add("bb");
         set.add("ccc");
@@ -331,7 +331,8 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     @Test
     public void testPutWithExplicitContentType() {
-        assertEquals("Content-Type HTTP header does not match explicitly provided type", resourceWithXML.putIt(new MyBean()), MediaType.APPLICATION_XML);
+        assertEquals("Content-Type HTTP header does not match explicitly provided type", resourceWithXML.putIt(new MyBean()),
+                MediaType.APPLICATION_XML);
     }
 
     @Test

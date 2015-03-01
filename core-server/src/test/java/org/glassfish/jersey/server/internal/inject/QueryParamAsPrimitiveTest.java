@@ -81,6 +81,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceQueryPrimitives {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@QueryParam("boolean") boolean v) {
@@ -140,6 +141,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default/null")
     public static class ResourceQueryPrimitivesDefaultNull {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@QueryParam("boolean") boolean v) {
@@ -178,7 +180,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/long")
         public String doGet(@QueryParam("long") long v) {
-            assertEquals(0l, v);
+            assertEquals(0L, v);
             return "content";
         }
 
@@ -199,6 +201,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default")
     public static class ResourceQueryPrimitivesDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@QueryParam("boolean") @DefaultValue("true") boolean v) {
@@ -258,6 +261,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default/override")
     public static class ResourceQueryPrimitivesDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@QueryParam("boolean") @DefaultValue("false") boolean v) {
@@ -317,6 +321,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers")
     public static class ResourceQueryPrimitiveWrappers {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@QueryParam("boolean") Boolean v) {
@@ -337,7 +342,6 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
             assertEquals('c', v.charValue());
             return "content";
         }
-
 
         @GET
         @Produces("application/short")
@@ -377,6 +381,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default/null")
     public static class ResourceQueryPrimitiveWrappersDefaultNull {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@QueryParam("boolean") Boolean v) {
@@ -436,6 +441,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default")
     public static class ResourceQueryPrimitiveWrappersDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@QueryParam("boolean") @DefaultValue("true") Boolean v) {
@@ -495,6 +501,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default/override")
     public static class ResourceQueryPrimitiveWrappersDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@QueryParam("boolean") @DefaultValue("false") Boolean v) {
@@ -554,6 +561,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list")
     public static class ResourceQueryPrimitiveList {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@QueryParam("boolean") List<Boolean> v) {
@@ -629,6 +637,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default/null")
     public static class ResourceQueryPrimitiveListDefaultEmpty {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@QueryParam("boolean") List<Boolean> v) {
@@ -688,6 +697,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default")
     public static class ResourceQueryPrimitiveListDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@QueryParam("boolean") @DefaultValue("true") List<Boolean> v) {
@@ -747,6 +757,7 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default/override")
     public static class ResourceQueryPrimitiveListDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@QueryParam("boolean") @DefaultValue("false") List<Boolean> v) {
@@ -828,25 +839,25 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
         ContainerResponse get = apply(
-                RequestContextBuilder.from(base + "default/null", "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from(base + "default/null", "GET")
+                        .accept("application/" + type)
+                        .build()
         );
         System.out.println("### " + get.getStatus());
         assertEquals("content", get.getEntity());
 
         assertEquals("content", apply(
-                RequestContextBuilder.from(base + "default", "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from(base + "default", "GET")
+                        .accept("application/" + type)
+                        .build()
         ).getEntity());
 
         String param = type + "=" + value;
 
         assertEquals("content", apply(
-                RequestContextBuilder.from(base + "default/override?" + param, "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from(base + "default/override?" + param, "GET")
+                        .accept("application/" + type)
+                        .build()
         ).getEntity());
     }
 

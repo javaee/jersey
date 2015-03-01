@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import static org.junit.Assert.fail;
-
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -52,84 +50,88 @@ import java.util.Vector;
 
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.fail;
 
 /**
  * @author Eric Navarro
  */
 public class PackageNamesScannerTest {
 
-	private String jaxRsApiPath;
-	private String[] packages = {"javax.ws.rs-api"};
-	
-	@Before
-	public void setUp() throws Exception {
-		final String classPath = System.getProperty("java.class.path");
-		final String[] entries = classPath.split(System
-				.getProperty("path.separator"));
+    private String jaxRsApiPath;
+    private String[] packages = {"javax.ws.rs-api"};
 
-		for (final String entry : entries) {
-			if (entry.contains("javax.ws.rs-api")) {
-				jaxRsApiPath = entry;
-				break;
-			}
-		}
+    @Before
+    public void setUp() throws Exception {
+        final String classPath = System.getProperty("java.class.path");
+        final String[] entries = classPath.split(System
+                .getProperty("path.separator"));
 
-		if (jaxRsApiPath == null) {
-			fail("Could not find javax.ws.rs-api.");
-		}
-	}
+        for (final String entry : entries) {
+            if (entry.contains("javax.ws.rs-api")) {
+                jaxRsApiPath = entry;
+                break;
+            }
+        }
 
-	@Test
-	public void testWsJarScheme() {
-		new PackageNamesScanner(createTestClassLoader("wsjar", createTestURLStreamHandler("wsjar"), jaxRsApiPath), packages, false);
-	}
+        if (jaxRsApiPath == null) {
+            fail("Could not find javax.ws.rs-api.");
+        }
+    }
 
-	@Test
-	public void testJarScheme() {
-		// Uses default class loader
-		new PackageNamesScanner(packages, false);
-	}
+    @Test
+    public void testWsJarScheme() {
+        new PackageNamesScanner(createTestClassLoader("wsjar", createTestURLStreamHandler("wsjar"), jaxRsApiPath), packages,
+                false);
+    }
 
-	@Test
-	public void testZipScheme() {
-		new PackageNamesScanner(createTestClassLoader("zip", createTestURLStreamHandler("zip"), jaxRsApiPath), packages, false);
-	}
-	
-	@Test
-	public void testFileScheme() {
-		// Uses default class loader
-		new PackageNamesScanner(packages, false);
-	}
-	
-	@Test(expected=ResourceFinderException.class)
-	public void testInvalidScheme() {
-		new PackageNamesScanner(createTestClassLoader("bad", createTestURLStreamHandler("bad"), jaxRsApiPath), packages, false);
-	}
-	
-	private ClassLoader createTestClassLoader(final String scheme, final URLStreamHandler urlStreamHandler, final String resourceFilePath) {
-		return new ClassLoader() {
-			public Enumeration<URL> getResources(String name) throws IOException {
-				List<URL> list = new ArrayList<URL>();
-				list.add((urlStreamHandler == null 
-							? new URL(null, scheme + ":" + resourceFilePath + "!/" + name)
-							: new URL(null, scheme + ":" + resourceFilePath + "!/" + name, urlStreamHandler)));
-				return new Vector<URL>(list).elements();
-			}
-		};
-	}
+    @Test
+    public void testJarScheme() {
+        // Uses default class loader
+        new PackageNamesScanner(packages, false);
+    }
 
-	// URLStreamHandler creation for the various schemes without having to add them as dependencies
-	private URLStreamHandler createTestURLStreamHandler(final String scheme) {
-		return new URLStreamHandler() {
-			@Override
-			protected URLConnection openConnection(URL u) throws IOException {
-				throw new UnsupportedOperationException();
-			}
+    @Test
+    public void testZipScheme() {
+        new PackageNamesScanner(createTestClassLoader("zip", createTestURLStreamHandler("zip"), jaxRsApiPath), packages, false);
+    }
 
-			@Override
-			protected void parseURL(URL u, String spec, int start, int limit) {
-				setURL(u, scheme, "", -1, null, null, spec.substring(scheme.length() + 1) , null, null);
-			}
-		};
-	}
+    @Test
+    public void testFileScheme() {
+        // Uses default class loader
+        new PackageNamesScanner(packages, false);
+    }
+
+    @Test(expected = ResourceFinderException.class)
+    public void testInvalidScheme() {
+        new PackageNamesScanner(createTestClassLoader("bad", createTestURLStreamHandler("bad"), jaxRsApiPath), packages, false);
+    }
+
+    private ClassLoader createTestClassLoader(final String scheme,
+                                              final URLStreamHandler urlStreamHandler,
+                                              final String resourceFilePath) {
+        return new ClassLoader() {
+            public Enumeration<URL> getResources(String name) throws IOException {
+                List<URL> list = new ArrayList<URL>();
+                list.add((urlStreamHandler == null
+                        ? new URL(null, scheme + ":" + resourceFilePath + "!/" + name)
+                        : new URL(null, scheme + ":" + resourceFilePath + "!/" + name, urlStreamHandler)));
+                return new Vector<URL>(list).elements();
+            }
+        };
+    }
+
+    // URLStreamHandler creation for the various schemes without having to add them as dependencies
+    private URLStreamHandler createTestURLStreamHandler(final String scheme) {
+        return new URLStreamHandler() {
+            @Override
+            protected URLConnection openConnection(URL u) throws IOException {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            protected void parseURL(URL u, String spec, int start, int limit) {
+                setURL(u, scheme, "", -1, null, null, spec.substring(scheme.length() + 1), null, null);
+            }
+        };
+    }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -165,8 +165,13 @@ public class InheritanceTest extends JerseyTest {
         }
 
         @Override
-        public void writeTo(final B b, final Class<?> type, final Type genericType, final Annotation[] annotations,
-                            final MediaType mediaType, final MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(final B b,
+                            final Class<?> type,
+                            final Type genericType,
+                            final Annotation[] annotations,
+                            final MediaType mediaType,
+                            final MultivaluedMap<String, Object> httpHeaders,
+                            final OutputStream entityStream) throws IOException, WebApplicationException {
             entityStream.write(("b" + b.value).getBytes());
         }
     }

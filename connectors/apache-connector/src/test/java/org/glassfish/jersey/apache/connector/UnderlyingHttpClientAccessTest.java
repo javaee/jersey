@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,8 +72,8 @@ public class UnderlyingHttpClientAccessTest {
 
         assertNotNull("HTTP client instance set on JerseyClient should not be null.", hcOnClient);
         assertNotNull("HTTP client instance set on JerseyWebTarget should not be null.", hcOnTarget);
-        assertSame("HTTP client instance set on JerseyClient should be the same instance as the one set on JerseyWebTarget" +
-                        "(provided the target instance has not been further configured).",
+        assertSame("HTTP client instance set on JerseyClient should be the same instance as the one set on JerseyWebTarget"
+                        + "(provided the target instance has not been further configured).",
                 hcOnClient, hcOnTarget
         );
     }

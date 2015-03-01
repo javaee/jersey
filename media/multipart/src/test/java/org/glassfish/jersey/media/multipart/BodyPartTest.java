@@ -91,7 +91,7 @@ public class BodyPartTest {
 
     @Test
     public void testHeaders() {
-        MultivaluedMap<String,String> headers = bodyPart.getHeaders();
+        MultivaluedMap<String, String> headers = bodyPart.getHeaders();
         assertNotNull(headers);
         assertNull(headers.get(HttpHeaders.ACCEPT));
         headers.add(HttpHeaders.ACCEPT, "application/xml");

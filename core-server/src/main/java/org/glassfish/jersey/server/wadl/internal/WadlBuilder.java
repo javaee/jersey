@@ -88,7 +88,6 @@ public class WadlBuilder {
 
     private final boolean detailedWadl;
 
-
     public WadlBuilder(WadlGenerator wadlGenerator, boolean detailedWadl, UriInfo uriInfo) {
         this.detailedWadl = detailedWadl;
         _wadlGenerator = wadlGenerator;
@@ -184,7 +183,8 @@ public class WadlBuilder {
             String message;
 
             if (detailedWadl) {
-                final String uriWithoutQueryParam = UriBuilder.fromUri(uriInfo.getRequestUri()).replaceQuery("").build().toString();
+                final String uriWithoutQueryParam = UriBuilder.fromUri(uriInfo.getRequestUri()).replaceQuery("").build()
+                        .toString();
                 message = LocalizationMessages.WADL_DOC_EXTENDED_WADL(WadlUtils.DETAILED_WADL_QUERY_PARAM, uriWithoutQueryParam);
             } else {
                 final String uriWithQueryParam = UriBuilder.fromUri(uriInfo.getRequestUri())
@@ -207,7 +207,6 @@ public class WadlBuilder {
                 return null;
             }
             com.sun.research.ws.wadl.Method wadlMethod = _wadlGenerator.createMethod(r, m);
-
 
             // generate the request part
             Request wadlRequest = generateRequest(r, m, wadlResourceParams);
@@ -257,8 +256,8 @@ public class WadlBuilder {
                             }
                         }
                     }
-                } else if (p.getSourceAnnotation().annotationType().getName().equals("org.glassfish.jersey.media.multipart" +
-                        ".FormDataParam")) { // jersey-multipart support
+                } else if (p.getSourceAnnotation().annotationType().getName().equals("org.glassfish.jersey.media.multipart"
+                        + ".FormDataParam")) { // jersey-multipart support
                     // Use multipart/form-data if no @Consumes
                     List<MediaType> supportedInputTypes = m.getConsumedTypes();
                     if (supportedInputTypes.isEmpty()
@@ -377,7 +376,6 @@ public class WadlBuilder {
                 visitedResources.add(resource);
             }
 
-
             // if the resource contains subresource locator create new resource for this locator and return it instead
             // of this resource
             final ResourceMethod locator = resource.getResourceLocator();
@@ -442,7 +440,6 @@ public class WadlBuilder {
                 }
                 wadlResource.getMethodOrResource().add(childWadlResource);
             }
-
 
             return wadlResource;
         } catch (Exception e) {

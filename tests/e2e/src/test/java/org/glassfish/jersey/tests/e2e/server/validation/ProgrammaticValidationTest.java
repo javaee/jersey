@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -97,7 +97,8 @@ public class ProgrammaticValidationTest extends JerseyTest {
             resourceBuilder = Resource.builder("methodClassClass");
             resourceBuilder
                     .addMethod("POST")
-                    .handledBy(ValidationInflector.class, ValidationInflector.class.getMethod("get", ContainerRequestContext.class));
+                    .handledBy(ValidationInflector.class,
+                            ValidationInflector.class.getMethod("get", ContainerRequestContext.class));
             resources.add(resourceBuilder.build());
         } catch (NoSuchMethodException e) {
             throw new RuntimeException();
@@ -188,7 +189,8 @@ public class ProgrammaticValidationTest extends JerseyTest {
 
     @Test
     public void testInflectorMethodInstanceInterface() throws Exception {
-        final Response response = target("methodInstanceInterface").request().post(Entity.entity("value", MediaType.TEXT_PLAIN_TYPE));
+        final Response response = target("methodInstanceInterface").request()
+                .post(Entity.entity("value", MediaType.TEXT_PLAIN_TYPE));
 
         assertEquals(200, response.getStatus());
         assertEquals("value", response.readEntity(String.class));
@@ -196,14 +198,16 @@ public class ProgrammaticValidationTest extends JerseyTest {
 
     @Test
     public void testInflectorMethodInstanceInterfaceNegative() throws Exception {
-        final Response response = target("methodInstanceInterface").request().post(Entity.entity(null, MediaType.TEXT_PLAIN_TYPE));
+        final Response response = target("methodInstanceInterface").request()
+                .post(Entity.entity(null, MediaType.TEXT_PLAIN_TYPE));
 
         assertEquals(500, response.getStatus());
     }
 
     @Test
     public void testInflectorMethodClassInterface() throws Exception {
-        final Response response = target("methodClassInterface").request().post(Entity.entity("value", MediaType.TEXT_PLAIN_TYPE));
+        final Response response = target("methodClassInterface").request()
+                .post(Entity.entity("value", MediaType.TEXT_PLAIN_TYPE));
 
         assertEquals(200, response.getStatus());
         assertEquals("value", response.readEntity(String.class));

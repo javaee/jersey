@@ -64,10 +64,12 @@ public class CsrfProtectionFilterTest {
 
     @Path("/resource")
     public static class Resource {
+
         @GET
         public String get() {
             return "GET";
         }
+
         @PUT
         public String put() {
             return "PUT";
@@ -88,7 +90,9 @@ public class CsrfProtectionFilterTest {
 
     @Test
     public void testGetWithHeader() throws Exception {
-        ContainerResponse response = handler.apply(RequestContextBuilder.from("", "/resource", "GET").header(CsrfProtectionFilter.HEADER_NAME, "").build()).get();
+        ContainerResponse response = handler
+                .apply(RequestContextBuilder.from("", "/resource", "GET").header(CsrfProtectionFilter.HEADER_NAME, "").build())
+                .get();
         assertEquals("GET", response.getEntity());
     }
 
@@ -100,7 +104,9 @@ public class CsrfProtectionFilterTest {
 
     @Test
     public void testPutWithHeader() throws Exception {
-        ContainerResponse response = handler.apply(RequestContextBuilder.from("", "/resource", "PUT").header(CsrfProtectionFilter.HEADER_NAME, "").build()).get();
+        ContainerResponse response = handler
+                .apply(RequestContextBuilder.from("", "/resource", "PUT").header(CsrfProtectionFilter.HEADER_NAME, "").build())
+                .get();
         assertEquals("PUT", response.getEntity());
     }
 }

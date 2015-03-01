@@ -63,6 +63,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -75,6 +76,7 @@ import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartProperties;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
+
 import org.jvnet.mimepull.Header;
 import org.jvnet.mimepull.MIMEConfig;
 import org.jvnet.mimepull.MIMEMessage;
@@ -238,8 +240,9 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
 
             try {
                 final String contentType = bodyPart.getHeaders().getFirst("Content-Type");
-                if (contentType != null)
+                if (contentType != null) {
                     bodyPart.setMediaType(MediaType.valueOf(contentType));
+                }
 
                 bodyPart.getContentDisposition();
             } catch (final IllegalArgumentException ex) {

@@ -85,6 +85,7 @@ import static org.junit.Assert.assertTrue;
  * @see GloballyNameBoundResourceFilterTest
  */
 public class ResourceFilterTest extends JerseyTest {
+
     @Override
     protected Application configure() {
         return new ResourceConfig(
@@ -146,6 +147,7 @@ public class ResourceFilterTest extends JerseyTest {
 
     @Path("/basic")
     public static class BasicTestsResource {
+
         @Path("dynamicBinder")
         @GET
         public String getDynamicBinder() {
@@ -177,7 +179,6 @@ public class ResourceFilterTest extends JerseyTest {
     @Retention(RetentionPolicy.RUNTIME)
     private static @interface NameBoundRequest {}
 
-
     @NameBinding
     @Retention(RetentionPolicy.RUNTIME)
     private static @interface NameBoundAbortResponse {}
@@ -185,6 +186,7 @@ public class ResourceFilterTest extends JerseyTest {
     @NameBoundRequest
     @Priority(1)
     public static class NameBoundRequestFilter implements ContainerRequestFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
             requestContext.abortWith(Response.ok("nameBoundRequest", MediaType.TEXT_PLAIN_TYPE).build());
@@ -193,6 +195,7 @@ public class ResourceFilterTest extends JerseyTest {
 
     @NameBoundResponse
     public static class NameBoundResponseFilter implements ContainerResponseFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
             responseContext.setEntity("nameBoundResponse", responseContext.getEntityAnnotations(), MediaType.TEXT_PLAIN_TYPE);
@@ -200,6 +203,7 @@ public class ResourceFilterTest extends JerseyTest {
     }
 
     public static class PostMatchingFilter implements ContainerRequestFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
             if (requestContext.getUriInfo().getPath().startsWith("basic")) {
@@ -211,6 +215,7 @@ public class ResourceFilterTest extends JerseyTest {
     @Priority(1)
     @PreMatching
     private static class DbFilter implements ContainerRequestFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
             requestContext.abortWith(Response.ok("dynamicBinder", MediaType.TEXT_PLAIN_TYPE).build());
@@ -218,6 +223,7 @@ public class ResourceFilterTest extends JerseyTest {
     }
 
     public static class MyDynamicFeature implements DynamicFeature {
+
         private final DbFilter filter = new DbFilter();
 
         @Override
@@ -230,6 +236,7 @@ public class ResourceFilterTest extends JerseyTest {
 
     @Path("/exception")
     public static class ExceptionTestsResource {
+
         @Path("matched")
         @GET
         @ExceptionTestBound
@@ -240,6 +247,7 @@ public class ResourceFilterTest extends JerseyTest {
 
     @PreMatching
     public static class ExceptionPreMatchRequestFilter implements ContainerRequestFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
             if ("exception/not-found".equals(requestContext.getUriInfo().getPath())) {
@@ -254,6 +262,7 @@ public class ResourceFilterTest extends JerseyTest {
 
     @ExceptionTestBound
     public static class ExceptionPostMatchRequestFilter implements ContainerRequestFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
             throw new TestException("nameBoundRequest");
@@ -263,6 +272,7 @@ public class ResourceFilterTest extends JerseyTest {
     @ExceptionTestBound
     @Priority(10)
     public static class ExceptionTestBoundResponseFilter implements ContainerResponseFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
             responseContext.setEntity(
@@ -274,6 +284,7 @@ public class ResourceFilterTest extends JerseyTest {
 
     @Priority(1)
     public static class ExceptionTestGlobalResponseFilter implements ContainerResponseFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
             if (!requestContext.getUriInfo().getPath().startsWith("exception")) {
@@ -288,6 +299,7 @@ public class ResourceFilterTest extends JerseyTest {
     }
 
     public static class TestException extends RuntimeException {
+
         public TestException(String message) {
             super(message);
         }
@@ -369,7 +381,6 @@ public class ResourceFilterTest extends JerseyTest {
                 System.out.println(iae.getMessage());
             }
 
-
             try {
                 // checks that IllegalStateException is thrown when aborting request
                 requestContext.abortWith(Response.serverError().build());
@@ -380,7 +391,6 @@ public class ResourceFilterTest extends JerseyTest {
             responseContext.getHeaders().add(ABORT_FILTER_TEST_PASSED, passed);
         }
     }
-
 
     @NameBoundAbortRequest
     private static class AbortRequestFilter implements ContainerRequestFilter {
@@ -416,9 +426,9 @@ public class ResourceFilterTest extends JerseyTest {
     @Retention(RetentionPolicy.RUNTIME)
     private static @interface NameBoundExceptionInRequest {}
 
-
     @Path("abort")
     public static class AbortResponseResource {
+
         @Path("response")
         @GET
         @NameBoundAbortResponse
@@ -465,7 +475,8 @@ public class ResourceFilterTest extends JerseyTest {
     public void testAbortedResponseFromExceptionResponse() {
         Response r = target("abort").path("exception").request().get();
         assertEquals(200, r.getStatus());
-        assertEquals(ExceptionRequestFilter.EXCEPTION_IN_REQUEST_FILTER + TestExceptionMapper.POSTFIX, r.readEntity(String.class));
+        assertEquals(ExceptionRequestFilter.EXCEPTION_IN_REQUEST_FILTER + TestExceptionMapper.POSTFIX,
+                r.readEntity(String.class));
         assertNotNull(r.getHeaderString(AbortResponseFitler.ABORT_FILTER_TEST_PASSED));
         assertEquals("true", r.getHeaderString(AbortResponseFitler.ABORT_FILTER_TEST_PASSED));
     }

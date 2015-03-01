@@ -161,7 +161,8 @@ public class ImplicitViewWithResourceFilterTest extends JerseyTest {
 
         Properties p = new Properties();
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitViewWithResourceFilterTest/ImplicitTemplate/index.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitViewWithResourceFilterTest/ImplicitTemplate/index.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitTemplate", p.getProperty("model"));
     }
 }

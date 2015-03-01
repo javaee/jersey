@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,7 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * The documentation type for requests.<br>
  * Created on: Jun 16, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -54,7 +54,7 @@ import javax.xml.bind.annotation.XmlType;
 
 })
 public class RequestDocType {
-    
+
     private RepresentationDocType representationDoc;
 
     /**
@@ -67,8 +67,8 @@ public class RequestDocType {
     /**
      * @param representationDoc the representationDoc to set
      */
-    public void setRepresentationDoc( RepresentationDocType representationDoc ) {
+    public void setRepresentationDoc(RepresentationDocType representationDoc) {
         this.representationDoc = representationDoc;
     }
-    
+
 }

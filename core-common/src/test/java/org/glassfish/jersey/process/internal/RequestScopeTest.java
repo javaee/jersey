@@ -42,20 +42,23 @@ package org.glassfish.jersey.process.internal;
 
 import java.util.concurrent.Callable;
 
-import org.glassfish.hk2.api.ServiceHandle;
-import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.jersey.process.internal.RequestScope.Instance;
 
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test of the {@link RequestScope request scope}.
  *
  * @author Miroslav Fuksa
- *
  */
 public class RequestScopeTest {
+
     @Test
     public void testScopeWithCreatedInstance() {
         final RequestScope requestScope = new RequestScope();
@@ -86,7 +89,7 @@ public class RequestScopeTest {
 
             @Override
             public void run() {
-                Instance internalInstance = requestScope.suspendCurrent();
+                final Instance internalInstance = requestScope.suspendCurrent();
                 assertEquals(internalInstance, instance);
                 assertEquals("1", instance.get(inhab));
                 instance.release();
@@ -103,11 +106,11 @@ public class RequestScopeTest {
         final RequestScope requestScope = new RequestScope();
         assertNull(requestScope.suspendCurrent());
         final TestProvider inhab = new TestProvider("a");
-        Instance instance = requestScope.runInScope(new Callable<Instance>() {
+        final Instance instance = requestScope.runInScope(new Callable<Instance>() {
 
             @Override
             public Instance call() throws Exception {
-                Instance internalInstance = requestScope.suspendCurrent();
+                final Instance internalInstance = requestScope.suspendCurrent();
                 assertNull(internalInstance.get(inhab));
                 internalInstance.put(inhab, "1");
                 assertEquals("1", internalInstance.get(inhab));
@@ -124,13 +127,13 @@ public class RequestScopeTest {
         final RequestScope requestScope = new RequestScope();
         assertNull(requestScope.suspendCurrent());
         final TestProvider inhab = new TestProvider("a");
-        Instance instance = requestScope.runInScope(new Callable<Instance>() {
+        final Instance instance = requestScope.runInScope(new Callable<Instance>() {
 
             @Override
             public Instance call() throws Exception {
                 final Instance internalInstance = requestScope.suspendCurrent();
 
-                Instance anotherInstance = requestScope.runInScope(new Callable<Instance>() {
+                final Instance anotherInstance = requestScope.runInScope(new Callable<Instance>() {
 
                     @Override
                     public Instance call() throws Exception {
@@ -157,7 +160,7 @@ public class RequestScopeTest {
         final RequestScope requestScope = new RequestScope();
         assertNull(requestScope.suspendCurrent());
         final TestProvider inhab = new TestProvider("a");
-        Instance instance = requestScope.runInScope(new Callable<Instance>() {
+        final Instance instance = requestScope.runInScope(new Callable<Instance>() {
 
             @Override
             public Instance call() throws Exception {
@@ -185,12 +188,12 @@ public class RequestScopeTest {
 
     /**
      * Test request scope inhabitant.
-     *
      */
     public static class TestProvider extends AbstractActiveDescriptor<String> {
-        private String id;
 
-        public TestProvider(String id) {
+        private final String id;
+
+        public TestProvider(final String id) {
             super();
             this.id = id;
         }
@@ -201,7 +204,7 @@ public class RequestScopeTest {
         }
 
         @Override
-        public String create(ServiceHandle<?> root) {
+        public String create(final ServiceHandle<?> root) {
             return id;
         }
     }

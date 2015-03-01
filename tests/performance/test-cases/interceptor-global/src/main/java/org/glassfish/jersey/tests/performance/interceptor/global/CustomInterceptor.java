@@ -66,7 +66,7 @@ public class CustomInterceptor implements ReaderInterceptor, WriterInterceptor {
 
     @Override
     public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
-	context.getOutputStream().write("WRITE ".getBytes());
+    context.getOutputStream().write("WRITE ".getBytes());
         context.proceed();
     }
 }

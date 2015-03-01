@@ -59,6 +59,7 @@ import static org.junit.Assert.assertTrue;
  * @author Martin Matula
  */
 public class HttpMethodOverrideFilterTest {
+
     @Test
     public void testEnableFor() {
         ResourceConfig rc = new ResourceConfig();
@@ -72,8 +73,8 @@ public class HttpMethodOverrideFilterTest {
     @Test
     public void testDefaultConfig() {
         HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig());
-        assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
-                HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
+        assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config)
+                && HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
     }
 
     @Test
@@ -81,8 +82,8 @@ public class HttpMethodOverrideFilterTest {
         HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().property(
                 ServerProperties.HTTP_METHOD_OVERRIDE, "HEADER"
         ));
-        assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
-                !HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
+        assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config)
+                && !HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
     }
 
     @Test
@@ -90,8 +91,8 @@ public class HttpMethodOverrideFilterTest {
         HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().property(
                 ServerProperties.HTTP_METHOD_OVERRIDE, "QUERY"
         ));
-        assertTrue(!HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
-                HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
+        assertTrue(!HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config)
+                && HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
     }
 
     @Test
@@ -99,8 +100,8 @@ public class HttpMethodOverrideFilterTest {
         HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().property(
                 ServerProperties.HTTP_METHOD_OVERRIDE, "HEADER, QUERY"
         ));
-        assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
-                HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
+        assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config)
+                && HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
     }
 
     @Test
@@ -108,28 +109,32 @@ public class HttpMethodOverrideFilterTest {
         HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().property(
                 ServerProperties.HTTP_METHOD_OVERRIDE, "foo, QUERY"
         ));
-        assertTrue(!HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
-                HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
+        assertTrue(!HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config)
+                && HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
     }
 
     @Test
     public void testInitWithStringArrayConfig() {
         HttpMethodOverrideFilter f = new HttpMethodOverrideFilter(new ResourceConfig().property(
-                ServerProperties.HTTP_METHOD_OVERRIDE, new String[]{"HEADER"}
+                ServerProperties.HTTP_METHOD_OVERRIDE, new String[] {"HEADER"}
         ));
-        assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config) &&
-                !HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
+        assertTrue(HttpMethodOverrideFilter.Source.HEADER.isPresentIn(f.config)
+                && !HttpMethodOverrideFilter.Source.QUERY.isPresentIn(f.config));
     }
 
     @Path("/")
     public static class Resource {
+
         @PUT
-        public String put() { return "PUT"; }
+        public String put() {
+            return "PUT";
+        }
 
         @DELETE
-        public String delete() { return "DELETE"; }
+        public String delete() {
+            return "DELETE";
+        }
     }
-
 
     @Test
     public void testDefault() {

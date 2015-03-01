@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -126,10 +126,10 @@ public class ContactBean implements Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(ContactBean.class).
-                add("email", email).
-                add("phone", phone).
-                add("name", name).
-                toString();
+        return Objects.toStringHelper(ContactBean.class)
+                .add("email", email)
+                .add("phone", phone)
+                .add("name", name)
+                .toString();
     }
 }

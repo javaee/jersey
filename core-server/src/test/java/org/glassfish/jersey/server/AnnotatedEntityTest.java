@@ -65,6 +65,7 @@ import static org.junit.Assert.fail;
  *
  */
 public class AnnotatedEntityTest {
+
     private ApplicationHandler createApplication(Class<?>... rc) {
         final ResourceConfig resourceConfig = new ResourceConfig(rc);
         return new ApplicationHandler(resourceConfig);
@@ -116,10 +117,9 @@ public class AnnotatedEntityTest {
     public static @interface TestAnnotation {
     }
 
-    ;
-
     @Path("resource/{path}")
     public static class Resource {
+
         @POST
         public String postEntityAnnotated(@PathParam("path") String pathParam, @TestAnnotation String entity,
                                           @QueryParam("query") String queryParam) {
@@ -155,6 +155,7 @@ public class AnnotatedEntityTest {
 
     @Path("wrongResource/{path}")
     public static class WrongResource {
+
         @POST
         public String postEntityAnnotated(@PathParam("path") String pathParam, @TestAnnotation String ambiguousEntity,
                                           String ambiguousParameter,

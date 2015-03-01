@@ -67,7 +67,7 @@ public class NameBoundInterceptor implements ReaderInterceptor, WriterIntercepto
 
     @Override
     public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
-	context.getOutputStream().write("WRITE ".getBytes());
+    context.getOutputStream().write("WRITE ".getBytes());
         context.proceed();
     }
 }

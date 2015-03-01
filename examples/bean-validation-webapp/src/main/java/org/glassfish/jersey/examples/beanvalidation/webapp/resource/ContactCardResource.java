@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,9 +57,9 @@ import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
 
 import org.glassfish.jersey.examples.beanvalidation.webapp.constraint.AtLeastOneContact;
+import org.glassfish.jersey.examples.beanvalidation.webapp.constraint.HasId;
 import org.glassfish.jersey.examples.beanvalidation.webapp.domain.ContactCard;
 import org.glassfish.jersey.examples.beanvalidation.webapp.service.StorageService;
-import org.glassfish.jersey.examples.beanvalidation.webapp.constraint.HasId;
 
 /**
  * Contact card basic resource class. Provides support for inserting, retrieving and deleting contact cards.
@@ -87,7 +87,8 @@ public class ContactCardResource {
     }
 
     @GET
-    @NotNull @HasId
+    @NotNull
+    @HasId
     public List<ContactCard> getContacts() {
         return StorageService.findByName("");
     }
@@ -103,7 +104,8 @@ public class ContactCardResource {
     }
 
     @DELETE
-    @NotNull @HasId
+    @NotNull
+    @HasId
     public List<ContactCard> deleteContacts() {
         return StorageService.clear();
     }

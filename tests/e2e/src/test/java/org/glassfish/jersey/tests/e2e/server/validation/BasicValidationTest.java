@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -113,16 +113,22 @@ public class BasicValidationTest extends JerseyTest {
     @Produces("application/contactBean")
     @Provider
     public static class ContactBeanProvider implements MessageBodyReader<ContactBean>, MessageBodyWriter<ContactBean> {
+
         @Override
         public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
             return type.equals(ContactBean.class);
         }
 
         @Override
-        public ContactBean readFrom(Class<ContactBean> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+        public ContactBean readFrom(Class<ContactBean> type,
+                                    Type genericType,
+                                    Annotation[] annotations,
+                                    MediaType mediaType,
+                                    MultivaluedMap<String, String> httpHeaders,
+                                    InputStream entityStream) throws IOException, WebApplicationException {
             try {
                 final ObjectInputStream objectInputStream = new ObjectInputStream(entityStream);
-                return (ContactBean)objectInputStream.readObject();
+                return (ContactBean) objectInputStream.readObject();
             } catch (Exception e) {
                 // do nothing.
             }
@@ -135,12 +141,22 @@ public class BasicValidationTest extends JerseyTest {
         }
 
         @Override
-        public long getSize(ContactBean contactBean, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        public long getSize(ContactBean contactBean,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType) {
             return -1;
         }
 
         @Override
-        public void writeTo(ContactBean contactBean, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(ContactBean contactBean,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
             try {
                 new ObjectOutputStream(entityStream).writeObject(contactBean);
             } catch (Exception e) {
@@ -222,14 +238,14 @@ public class BasicValidationTest extends JerseyTest {
 
         @Override
         public String toString() {
-            return "Bean{" +
-                    "cookie='" + cookie + '\'' +
-                    ", formParam='" + formParam + '\'' +
-                    ", headerParam='" + headerParam + '\'' +
-                    ", matrixParam='" + matrixParam + '\'' +
-                    ", pathParam='" + pathParam + '\'' +
-                    ", queryParam='" + queryParam + '\'' +
-                    '}';
+            return "Bean{"
+                    + "cookie='" + cookie + '\''
+                    + ", formParam='" + formParam + '\''
+                    + ", headerParam='" + headerParam + '\''
+                    + ", matrixParam='" + matrixParam + '\''
+                    + ", pathParam='" + pathParam + '\''
+                    + ", queryParam='" + queryParam + '\''
+                    + '}';
         }
     }
 
@@ -256,10 +272,10 @@ public class BasicValidationTest extends JerseyTest {
             target = target.path("/");
         }
 
-        Invocation.Builder request = target.
-                matrixParam("matrix", paramBean.getMatrixParam()).
-                queryParam("query", paramBean.getQueryParam()).
-                request();
+        Invocation.Builder request = target
+                .matrixParam("matrix", paramBean.getMatrixParam())
+                .queryParam("query", paramBean.getQueryParam())
+                .request();
 
         if (paramBean.getHeaderParam() != null) {
             request = request.header("header", paramBean.getHeaderParam());
@@ -413,9 +429,9 @@ public class BasicValidationTest extends JerseyTest {
     }
 
     private Response testBean(final String path, final ContactBean contactBean) {
-        return target("beanvalidation").
-                path(path).
-                request("application/contactBean").post(Entity.entity(contactBean, "application/contactBean"));
+        return target("beanvalidation")
+                .path(path)
+                .request("application/contactBean").post(Entity.entity(contactBean, "application/contactBean"));
     }
 
     @Test
@@ -576,11 +592,11 @@ public class BasicValidationTest extends JerseyTest {
     }
 
     private Response testSubResource(final String path, final Form form) throws Exception {
-        return target("beanvalidation").
-                path("sub").
-                path(path).
-                request().
-                post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        return target("beanvalidation")
+                .path("sub")
+                .path(path)
+                .request()
+                .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
     }
 
     private void testSubResourcePositive(final String path) throws Exception {
@@ -672,10 +688,10 @@ public class BasicValidationTest extends JerseyTest {
 
     @Test
     public void testWrongSubResourceNegative() throws Exception {
-        final Response response = target("beanvalidation").
-                path("sub/wrong").
-                request().
-                get();
+        final Response response = target("beanvalidation")
+                .path("sub/wrong")
+                .request()
+                .get();
 
         assertEquals(400, response.getStatus());
 

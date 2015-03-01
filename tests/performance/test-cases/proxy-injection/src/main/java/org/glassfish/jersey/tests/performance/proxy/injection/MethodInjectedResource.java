@@ -43,10 +43,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -61,12 +61,16 @@ public class MethodInjectedResource {
     @GET
     @Path("without-parameters")
     public String getNoProxy() {
-            return "text";
+        return "text";
     }
 
     @GET
     @Path("all-parameters")
-    public String getProxy(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders, @Context Request request) {
-        return String.format("sc: %s\nui: %s\nhh: %s\nreq: %s", securityContext.getClass(), uriInfo.getClass(), httpHeaders.getClass(), request.getClass());
+    public String getProxy(@Context SecurityContext securityContext,
+                           @Context UriInfo uriInfo,
+                           @Context HttpHeaders httpHeaders,
+                           @Context Request request) {
+        return String.format("sc: %s\nui: %s\nhh: %s\nreq: %s",
+                securityContext.getClass(), uriInfo.getClass(), httpHeaders.getClass(), request.getClass());
     }
 }

@@ -173,12 +173,12 @@ public class EntityExpansionTest extends JerseyTest {
 
     @Test
     public void testEntityExpansion() {
-        String str = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                "\n<!DOCTYPE lolz [\n" +
-                "  <!ENTITY lol \"lollollollollollollol[...]\">\n" +
-                "  <!ENTITY lol2 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\">\n" +
-                "  <!ENTITY lol3 \"&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;\">\n" +
-                "]>\n"
+        String str = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                + "\n<!DOCTYPE lolz [\n"
+                + "  <!ENTITY lol \"lollollollollollollol[...]\">\n"
+                + "  <!ENTITY lol2 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\">\n"
+                + "  <!ENTITY lol3 \"&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;\">\n"
+                + "]>\n"
                 + "<testBean><input>&lol3;</input></testBean>";
 
         final Response response = target().path("resource").request().post(Entity.entity(str, MediaType.APPLICATION_XML));

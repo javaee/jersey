@@ -87,7 +87,7 @@ public class JsonEntityFilteringClientTest extends JerseyTest {
 
     @Parameterized.Parameters(name = "Provider: {0}")
     public static Iterable<Class[]> providers() {
-        return Arrays.asList(new Class[][]{{MoxyJsonFeature.class}, {JacksonFeature.class}});
+        return Arrays.asList(new Class[][] {{MoxyJsonFeature.class}, {JacksonFeature.class}});
     }
 
     @Parameterized.Parameter
@@ -124,9 +124,9 @@ public class JsonEntityFilteringClientTest extends JerseyTest {
         final OneFilteringOnClassEntity entity = target()
                 .request()
                 .post(Entity.entity(
-                        OneFilteringOnClassEntity.INSTANCE,
-                        MediaType.APPLICATION_JSON_TYPE,
-                        new Annotation[]{PrimaryDetailedView.Factory.get()}),
+                                OneFilteringOnClassEntity.INSTANCE,
+                                MediaType.APPLICATION_JSON_TYPE,
+                                new Annotation[] {PrimaryDetailedView.Factory.get()}),
                         OneFilteringOnClassEntity.class);
 
         _testPrimaryViewEntity(entity);
@@ -137,9 +137,9 @@ public class JsonEntityFilteringClientTest extends JerseyTest {
         final OneFilteringOnClassEntity entity = target()
                 .request()
                 .post(Entity.entity(
-                        OneFilteringOnClassEntity.INSTANCE,
-                        MediaType.APPLICATION_JSON_TYPE,
-                        new Annotation[]{new DefaultFilteringScope()}),
+                                OneFilteringOnClassEntity.INSTANCE,
+                                MediaType.APPLICATION_JSON_TYPE,
+                                new Annotation[] {new DefaultFilteringScope()}),
                         OneFilteringOnClassEntity.class);
 
         _testEmptyEntity(entity);
@@ -150,9 +150,9 @@ public class JsonEntityFilteringClientTest extends JerseyTest {
         final OneFilteringOnClassEntity entity = target()
                 .request()
                 .post(Entity.entity(
-                        OneFilteringOnClassEntity.INSTANCE,
-                        MediaType.APPLICATION_JSON_TYPE,
-                        new Annotation[]{new CustomAnnotationImpl()}),
+                                OneFilteringOnClassEntity.INSTANCE,
+                                MediaType.APPLICATION_JSON_TYPE,
+                                new Annotation[] {new CustomAnnotationImpl()}),
                         OneFilteringOnClassEntity.class);
 
         _testEmptyEntity(entity);
@@ -193,9 +193,10 @@ public class JsonEntityFilteringClientTest extends JerseyTest {
 
         final OneFilteringOnClassEntity entity =
                 ClientBuilder.newClient(config)
-                    .target(getBaseUri())
-                    .request()
-                    .post(Entity.entity(OneFilteringOnClassEntity.INSTANCE, MediaType.APPLICATION_JSON_TYPE), OneFilteringOnClassEntity.class);
+                        .target(getBaseUri())
+                        .request()
+                        .post(Entity.entity(OneFilteringOnClassEntity.INSTANCE, MediaType.APPLICATION_JSON_TYPE),
+                                OneFilteringOnClassEntity.class);
 
         _testEmptyEntity(entity);
     }
@@ -210,9 +211,9 @@ public class JsonEntityFilteringClientTest extends JerseyTest {
                 .target(getBaseUri())
                 .request()
                 .post(Entity.entity(
-                        ManyFilteringsOnClassEntity.INSTANCE,
-                        MediaType.APPLICATION_JSON_TYPE,
-                        new Annotation[]{PrimaryDetailedView.Factory.get()}),
+                                ManyFilteringsOnClassEntity.INSTANCE,
+                                MediaType.APPLICATION_JSON_TYPE,
+                                new Annotation[] {PrimaryDetailedView.Factory.get()}),
                         ManyFilteringsOnClassEntity.class);
 
         // ManyFilteringsOnClassEntity
@@ -231,7 +232,7 @@ public class JsonEntityFilteringClientTest extends JerseyTest {
         assertThat(entity.defaultEntities.size(), is(1));
         final DefaultFilteringSubEntity defaultFilteringSubEntity = entity.defaultEntities.get(0);
         assertThat(defaultFilteringSubEntity.field, is(true));
-        assertThat(defaultFilteringSubEntity.getProperty(), is(20l));
+        assertThat(defaultFilteringSubEntity.getProperty(), is(20L));
 
         // OneFilteringSubEntity
         assertThat(entity.oneEntities, notNullValue());
@@ -286,7 +287,7 @@ public class JsonEntityFilteringClientTest extends JerseyTest {
         assertThat(entity.getDefaultEntities().size(), is(1));
         final DefaultFilteringSubEntity defaultFilteringSubEntity = entity.getDefaultEntities().get(0);
         assertThat(defaultFilteringSubEntity.field, is(true));
-        assertThat(defaultFilteringSubEntity.getProperty(), is(20l));
+        assertThat(defaultFilteringSubEntity.getProperty(), is(20L));
 
         // OneFilteringSubEntity
         assertThat(entity.getSubEntities(), notNullValue());

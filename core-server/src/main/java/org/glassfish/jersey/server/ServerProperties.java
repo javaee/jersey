@@ -770,7 +770,11 @@ public final class ServerProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(final Map<String, ?> properties, final RuntimeType runtimeType, final String key, final T defaultValue, final Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties,
+                                 final RuntimeType runtimeType,
+                                 final String key,
+                                 final T defaultValue,
+                                 final Class<T> type) {
         return PropertiesHelper.getValue(properties, runtimeType, key, defaultValue, type, null);
     }
 }

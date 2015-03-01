@@ -62,6 +62,7 @@ import static org.junit.Assert.assertEquals;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ProvidersTest {
+
     @Test
     public void testIsProviderInterface() {
         assertEquals(true, Providers.isProvider(Provider.class));
@@ -78,7 +79,7 @@ public class ProvidersTest {
     }
 
     @Contract
-    public static abstract class ContractClass {
+    public abstract static class ContractClass {
     }
 
     public static class Provider implements ContractInterface {
@@ -88,6 +89,7 @@ public class ProvidersTest {
     }
 
     public static class JaxRsProvider implements MessageBodyReader<String> {
+
         @Override
         public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
             return false;

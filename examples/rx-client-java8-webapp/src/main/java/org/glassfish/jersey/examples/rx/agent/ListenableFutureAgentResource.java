@@ -133,7 +133,8 @@ public class ListenableFutureAgentResource {
 
     private ListenableFuture<AgentResponse> recommended(final AgentResponse response) {
         // Get a list of recommended destinations ...
-        final ListenableFuture<List<Destination>> destinations = RxListenableFuture.from(destination).path("recommended").request()
+        final ListenableFuture<List<Destination>> destinations = RxListenableFuture.from(destination).path("recommended")
+                .request()
                 // Identify the user.
                 .header("Rx-User", "Guava")
                 // Reactive invoker.
@@ -174,8 +175,8 @@ public class ListenableFutureAgentResource {
                         // For each recommendation ...
                         Futures.successfulAsList(Lists.transform(list, recommendation -> Futures.transform(
                                 // ... get the weather forecast ...
-                                rxForecast.resolveTemplate("destination", recommendation.getDestination()).request().rx().get
-                                        (Forecast.class),
+                                rxForecast.resolveTemplate("destination", recommendation.getDestination()).request().rx()
+                                        .get(Forecast.class),
                                 // ... and set it to the recommendation.
                                 (AsyncFunction<Forecast, Recommendation>) forecast -> {
                                     recommendation.setForecast(forecast.getForecast());

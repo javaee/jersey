@@ -131,8 +131,9 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
             // fatal
             Errors.fatal(runtimeResource, LocalizationMessages.AMBIGUOUS_FATAL_RMS(httpMethod, m1.getInvocable()
                     .getHandlingMethod(), m2.getInvocable().getHandlingMethod(), runtimeResource.getRegex()));
-        } else if ((producesFails && consumesOnlyIntersects) || (consumesFails && producesOnlyIntersects) ||
-                (consumesOnlyIntersects && producesOnlyIntersects)) {
+        } else if ((producesFails && consumesOnlyIntersects)
+                || (consumesFails && producesOnlyIntersects)
+                || (consumesOnlyIntersects && producesOnlyIntersects)) {
             // warning
             if (m1.getInvocable().requiresEntity()) {
                 Errors.hint(runtimeResource, LocalizationMessages.AMBIGUOUS_RMS_IN(
@@ -152,7 +153,7 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
         if (!resourceMethod.getConsumedTypes().isEmpty()) {
             return resourceMethod.getConsumedTypes();
         }
-        List<MediaType> result = new LinkedList<MediaType>();
+        List<MediaType> result = new LinkedList<>();
         if (workers != null) {
             for (Parameter p : resourceMethod.getInvocable().getParameters()) {
                 if (p.getSource() == Parameter.Source.ENTITY) {
@@ -168,7 +169,7 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
         if (!resourceMethod.getProducedTypes().isEmpty()) {
             return resourceMethod.getProducedTypes();
         }
-        List<MediaType> result = new LinkedList<MediaType>();
+        List<MediaType> result = new LinkedList<>();
         if (workers != null) {
             final Invocable invocable = resourceMethod.getInvocable();
             result.addAll(workers.getMessageBodyWriterMediaTypes(
@@ -178,7 +179,6 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
         }
         return result.isEmpty() ? StarTypeList : result;
     }
-
 
     private boolean sameHttpMethod(ResourceMethod m1, ResourceMethod m2) {
         return m1.getHttpMethod().equals(m2.getHttpMethod());

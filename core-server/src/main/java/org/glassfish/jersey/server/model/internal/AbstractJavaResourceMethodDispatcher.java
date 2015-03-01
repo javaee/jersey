@@ -83,7 +83,9 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @param methodHandler  method invocation handler.
      * @param validator      input/output parameter validator.
      */
-    AbstractJavaResourceMethodDispatcher(Invocable resourceMethod, InvocationHandler methodHandler, ConfiguredValidator validator) {
+    AbstractJavaResourceMethodDispatcher(Invocable resourceMethod,
+                                         InvocationHandler methodHandler,
+                                         ConfiguredValidator validator) {
         this.method = resourceMethod.getDefinitionMethod();
         this.methodHandler = methodHandler;
         this.resourceMethod = resourceMethod;
@@ -126,7 +128,8 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @throws ProcessingException (possibly {@link MappableException mappable})
      *                             container exception in case the invocation failed.
      */
-    final Object invoke(final ContainerRequest containerRequest, final Object resource, final Object... args) throws ProcessingException {
+    final Object invoke(final ContainerRequest containerRequest, final Object resource, final Object... args)
+            throws ProcessingException {
         try {
             // Validate resource class & method input parameters.
             if (validator != null) {
@@ -156,8 +159,8 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
 
             final SecurityContext securityContext = containerRequest.getSecurityContext();
 
-            final Object invocationResult = (securityContext instanceof SubjectSecurityContext) ?
-                    ((SubjectSecurityContext) securityContext).doAsSubject(invokeMethodAction) : invokeMethodAction.run();
+            final Object invocationResult = (securityContext instanceof SubjectSecurityContext)
+                    ? ((SubjectSecurityContext) securityContext).doAsSubject(invokeMethodAction) : invokeMethodAction.run();
 
             // Validate response entity.
             if (validator != null) {

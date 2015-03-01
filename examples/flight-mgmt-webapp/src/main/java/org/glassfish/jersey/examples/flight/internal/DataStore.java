@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,16 +63,17 @@ import org.glassfish.jersey.examples.flight.model.Location;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class DataStore {
+
     public static final int CONCURRENCY_LEVEL =
             ceilingNextPowerOfTwo(Runtime.getRuntime().availableProcessors());
+
     private static int ceilingNextPowerOfTwo(int x) {
         // Hacker's Delight, Chapter 3, Harry S. Warren Jr.
         return 1 << (Integer.SIZE - Integer.numberOfLeadingZeros(x - 1));
     }
 
-
     private static final ConcurrentMap<String, Flight> flights =
-            new ConcurrentHashMap<String, Flight>(16, 0.75f, CONCURRENCY_LEVEL);
+            new ConcurrentHashMap<>(16, 0.75f, CONCURRENCY_LEVEL);
     private static final Comparator<Flight> FLIGHT_COMPARATOR = new Comparator<Flight>() {
         @Override
         public int compare(Flight f1, Flight f2) {
@@ -81,7 +82,7 @@ public class DataStore {
     };
 
     private static final ConcurrentMap<Integer, Aircraft> aircrafts =
-            new ConcurrentHashMap<Integer, Aircraft>(16, 0.75f, CONCURRENCY_LEVEL);
+            new ConcurrentHashMap<>(16, 0.75f, CONCURRENCY_LEVEL);
     private static final AtomicInteger nextAircraftId = new AtomicInteger(1);
     private static final Comparator<Aircraft> AIRCRAFT_COMPARATOR = new Comparator<Aircraft>() {
         @Override
@@ -90,15 +91,14 @@ public class DataStore {
         }
     };
 
-
     public static List<Flight> selectAllFlights() {
-        final List<Flight> result = new ArrayList<Flight>(DataStore.flights.values());
+        final List<Flight> result = new ArrayList<>(DataStore.flights.values());
         Collections.sort(result, FLIGHT_COMPARATOR);
         return result;
     }
 
     public static List<Flight> selectOpenFlights() {
-        final List<Flight> result = new ArrayList<Flight>(DataStore.flights.values());
+        final List<Flight> result = new ArrayList<>(DataStore.flights.values());
         final Iterator<Flight> it = result.iterator();
         while (it.hasNext()) {
             final Flight flight = it.next();
@@ -116,7 +116,7 @@ public class DataStore {
 
     public static Flight selectFlightByAircraft(Integer id) {
         if (id == null) {
-            return  null;
+            return null;
         }
 
         final Aircraft aircraft = selectAircraft(id);
@@ -150,13 +150,13 @@ public class DataStore {
     }
 
     public static List<Aircraft> selectAllAircrafts() {
-        final List<Aircraft> result = new ArrayList<Aircraft>(aircrafts.values());
+        final List<Aircraft> result = new ArrayList<>(aircrafts.values());
         Collections.sort(result, AIRCRAFT_COMPARATOR);
         return result;
     }
 
     public static List<Aircraft> selectAvailableAircrafts() {
-        final ArrayList<Aircraft> result = new ArrayList<Aircraft>(aircrafts.values());
+        final ArrayList<Aircraft> result = new ArrayList<>(aircrafts.values());
         final Iterator<Aircraft> it = result.iterator();
         while (it.hasNext()) {
             Aircraft a = it.next();
@@ -209,7 +209,9 @@ public class DataStore {
         AircraftType type = null;
         while (iterator.hasNext()) {
             type = iterator.next();
-            if (--i < 0) break;
+            if (--i < 0) {
+                break;
+            }
         }
 
         aircraft.setType(type);
@@ -230,7 +232,7 @@ public class DataStore {
         flights.clear();
         aircrafts.clear();
 
-        LinkedList<Aircraft> planes = new LinkedList<Aircraft>();
+        LinkedList<Aircraft> planes = new LinkedList<>();
         while (planes.size() < MAX_GEN_AIRCRAFTS) {
             Aircraft a = generateAircraft();
             if (addAircraft(a)) {
@@ -253,7 +255,7 @@ public class DataStore {
     private static final Set<AircraftType> aircraftTypes = initAircraftTypes();
 
     private static Set<AircraftType> initAircraftTypes() {
-        Set<AircraftType> ats = new LinkedHashSet<AircraftType>();
+        Set<AircraftType> ats = new LinkedHashSet<>();
 
         // Airbus
 
@@ -269,13 +271,13 @@ public class DataStore {
         ats.add(new AircraftType("Airbus", "A330-500", 222));
 
         // Medium-range
-        ats.add(new AircraftType("Airbus" ,"A340-200", 240));
+        ats.add(new AircraftType("Airbus", "A340-200", 240));
         ats.add(new AircraftType("Airbus", "A340-300", 295));
         ats.add(new AircraftType("Airbus", "A340-500", 313));
         ats.add(new AircraftType("Airbus", "A340-600", 380));
 
         // Long-range
-        ats.add(new AircraftType("Airbus" ,"A350-800", 270));
+        ats.add(new AircraftType("Airbus", "A350-800", 270));
         ats.add(new AircraftType("Airbus", "A350-900", 314));
         ats.add(new AircraftType("Airbus", "A350-1000", 350));
 

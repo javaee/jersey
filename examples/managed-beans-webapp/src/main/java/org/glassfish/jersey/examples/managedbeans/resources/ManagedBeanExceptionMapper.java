@@ -59,11 +59,11 @@ import javax.annotation.PostConstruct;
 @ManagedBean
 public class ManagedBeanExceptionMapper implements ExceptionMapper<ManagedBeanException> {
 
-    private @Context
-    UriInfo uiFieldInject;
+    @Context
+    private UriInfo uiFieldInject;
 
-    private @Context
-    ResourceContext rc;
+    @Context
+    private ResourceContext rc;
 
     private UriInfo uiMethodInject;
 
@@ -78,7 +78,7 @@ public class ManagedBeanExceptionMapper implements ExceptionMapper<ManagedBeanEx
     public void postConstruct() {
         ensureInjected();
         this.ui = uiMethodInject;
-   }
+    }
 
     @Override
     public Response toResponse(ManagedBeanException exception) {

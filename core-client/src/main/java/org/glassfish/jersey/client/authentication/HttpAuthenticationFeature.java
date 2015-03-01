@@ -43,7 +43,6 @@ package org.glassfish.jersey.client.authentication;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-
 /**
  * Features that provides Http Basic and Digest client authentication (based on RFC 2617).
  * <p>
@@ -203,6 +202,7 @@ public class HttpAuthenticationFeature implements Feature {
      * that builds the http authentication feature configured for basic authentication.
      */
     public static interface BasicBuilder extends Builder {
+
         /**
          * Configure the builder to create features in non-preemptive basic authentication mode.
          *
@@ -259,6 +259,7 @@ public class HttpAuthenticationFeature implements Feature {
      * Implementation of all authentication builders.
      */
     static class BuilderImpl implements UniversalBuilder, BasicBuilder {
+
         private String usernameBasic;
         private byte[] passwordBasic;
         private String usernameDigest;
@@ -286,10 +287,10 @@ public class HttpAuthenticationFeature implements Feature {
             return this;
         }
 
-
         @Override
         public UniversalBuilder credentialsForBasic(String username, String password) {
-            return credentialsForBasic(username, password == null ? null : password.getBytes(HttpAuthenticationFilter.CHARACTER_SET));
+            return credentialsForBasic(username,
+                    password == null ? null : password.getBytes(HttpAuthenticationFilter.CHARACTER_SET));
         }
 
         @Override
@@ -299,10 +300,10 @@ public class HttpAuthenticationFeature implements Feature {
             return this;
         }
 
-
         @Override
         public UniversalBuilder credentialsForDigest(String username, String password) {
-            return credentialsForDigest(username, password == null ? null : password.getBytes(HttpAuthenticationFilter.CHARACTER_SET));
+            return credentialsForDigest(username,
+                    password == null ? null : password.getBytes(HttpAuthenticationFilter.CHARACTER_SET));
         }
 
         @Override
@@ -315,10 +316,10 @@ public class HttpAuthenticationFeature implements Feature {
         @Override
         public HttpAuthenticationFeature build() {
             return new HttpAuthenticationFeature(mode,
-                    usernameBasic == null ? null :
-                            new HttpAuthenticationFilter.Credentials(usernameBasic, passwordBasic),
-                    usernameDigest == null ? null :
-                            new HttpAuthenticationFilter.Credentials(usernameDigest, passwordDigest));
+                    usernameBasic == null ? null
+                            : new HttpAuthenticationFilter.Credentials(usernameBasic, passwordBasic),
+                    usernameDigest == null ? null
+                            : new HttpAuthenticationFilter.Credentials(usernameDigest, passwordDigest));
         }
 
         @Override
@@ -471,7 +472,6 @@ public class HttpAuthenticationFeature implements Feature {
      */
     public static final String HTTP_AUTHENTICATION_DIGEST_PASSWORD = "jersey.config.client.http.auth.digest.password";
 
-
     /**
      * Create the builder of the http authentication feature working in basic authentication mode. The builder
      * can build preemptive and non-preemptive basic authentication features.
@@ -546,7 +546,6 @@ public class HttpAuthenticationFeature implements Feature {
         return new BuilderImpl(Mode.UNIVERSAL);
     }
 
-
     /**
      * Create the http authentication feature in combined mode supporting both,
      * basic and digest authentication.
@@ -571,7 +570,6 @@ public class HttpAuthenticationFeature implements Feature {
         return build(Mode.UNIVERSAL, username, password);
     }
 
-
     private static HttpAuthenticationFeature build(Mode mode) {
         return new BuilderImpl(mode).build();
     }
@@ -584,11 +582,9 @@ public class HttpAuthenticationFeature implements Feature {
         return new BuilderImpl(mode).credentials(username, password).build();
     }
 
-
     private final Mode mode;
     private final HttpAuthenticationFilter.Credentials basicCredentials;
     private final HttpAuthenticationFilter.Credentials digestCredentials;
-
 
     private HttpAuthenticationFeature(Mode mode, HttpAuthenticationFilter.Credentials basicCredentials,
                                       HttpAuthenticationFilter.Credentials digestCredentials) {

@@ -75,6 +75,7 @@ import javax.ws.rs.core.GenericType;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -163,9 +164,9 @@ public class ReflectionHelper {
      */
     public static String methodInstanceToString(final Object o, final Method m) {
         final StringBuilder sb = new StringBuilder();
-        sb.append(o.getClass().getName()).
-                append('@').append(Integer.toHexString(o.hashCode())).
-                append('.').append(m.getName()).append('(');
+        sb.append(o.getClass().getName())
+                .append('@').append(Integer.toHexString(o.hashCode()))
+                .append('.').append(m.getName()).append('(');
 
         final Class[] params = m.getParameterTypes();
         for (int i = 0; i < params.length; i++) {
@@ -322,17 +323,17 @@ public class ReflectionHelper {
         return new PrivilegedAction<Field[]>() {
             @Override
             public Field[] run() {
-            	final List<Field> fields = new ArrayList<Field>();
-            	recurse(clazz, fields);
+                final List<Field> fields = new ArrayList<Field>();
+                recurse(clazz, fields);
                 return fields.toArray(new Field[fields.size()]);
             }
 
-           private void recurse(final Class<?> clazz, final List<Field> fields) {
-        	   fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
-        	   if(clazz.getSuperclass() != null) {
-        		   recurse(clazz.getSuperclass(), fields);
-        	   }
-           }
+            private void recurse(final Class<?> clazz, final List<Field> fields) {
+                fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+                if (clazz.getSuperclass() != null) {
+                    recurse(clazz.getSuperclass(), fields);
+                }
+            }
         };
     }
 
@@ -370,7 +371,8 @@ public class ReflectionHelper {
      *
      * @see AccessController#doPrivileged(java.security.PrivilegedExceptionAction)
      */
-    public static <T> PrivilegedExceptionAction<Class<T>> classForNameWithExceptionPEA(final String name) throws ClassNotFoundException {
+    public static <T> PrivilegedExceptionAction<Class<T>> classForNameWithExceptionPEA(final String name)
+            throws ClassNotFoundException {
         return classForNameWithExceptionPEA(name, getContextClassLoader());
     }
 
@@ -390,20 +392,21 @@ public class ReflectionHelper {
      * @see AccessController#doPrivileged(java.security.PrivilegedExceptionAction)
      */
     @SuppressWarnings("unchecked")
-    public static <T> PrivilegedExceptionAction<Class<T>> classForNameWithExceptionPEA(final String name, final ClassLoader cl) throws ClassNotFoundException {
-            return new PrivilegedExceptionAction<Class<T>>() {
-                @Override
-                public Class<T> run() throws ClassNotFoundException {
-                    if (cl != null) {
-                        try {
-                            return (Class<T>) Class.forName(name, false, cl);
-                        } catch (final ClassNotFoundException ex) {
-                            // ignored on purpose
-                        }
+    public static <T> PrivilegedExceptionAction<Class<T>> classForNameWithExceptionPEA(final String name, final ClassLoader cl)
+            throws ClassNotFoundException {
+        return new PrivilegedExceptionAction<Class<T>>() {
+            @Override
+            public Class<T> run() throws ClassNotFoundException {
+                if (cl != null) {
+                    try {
+                        return (Class<T>) Class.forName(name, false, cl);
+                    } catch (final ClassNotFoundException ex) {
+                        // ignored on purpose
                     }
-                    return (Class<T>) Class.forName(name);
                 }
-            };
+                return (Class<T>) Class.forName(name);
+            }
+        };
     }
 
     /**
@@ -616,8 +619,9 @@ public class ReflectionHelper {
      * See bug 6202725.
      */
     private static Type fix(final Type t) {
-        if (!(t instanceof GenericArrayType))
+        if (!(t instanceof GenericArrayType)) {
             return t;
+        }
 
         final GenericArrayType gat = (GenericArrayType) t;
         if (gat.getGenericComponentType() instanceof Class) {
@@ -735,8 +739,9 @@ public class ReflectionHelper {
             final Class c = (Class) type;
             return c.getComponentType();
         }
-        if (type instanceof GenericArrayType)
+        if (type instanceof GenericArrayType) {
             return ((GenericArrayType) type).getGenericComponentType();
+        }
 
         throw new IllegalArgumentException();
     }
@@ -851,10 +856,8 @@ public class ReflectionHelper {
      *                         types of all attached annotations will be returned).
      * @return list of annotation types with a given meta annotation
      */
-    public static Collection<Class<? extends Annotation>> getAnnotationTypes(
-            final AnnotatedElement annotatedElement,
-            final Class<? extends Annotation> metaAnnotation
-    ) {
+    public static Collection<Class<? extends Annotation>> getAnnotationTypes(final AnnotatedElement annotatedElement,
+                                                                             final Class<? extends Annotation> metaAnnotation) {
         final Set<Class<? extends Annotation>> result = Sets.newIdentityHashSet();
         for (final Annotation a : annotatedElement.getAnnotations()) {
             final Class<? extends Annotation> aType = a.annotationType();
@@ -981,10 +984,12 @@ public class ReflectionHelper {
          */
         public final Type genericInterface;
 
-        private DeclaringClassInterfacePair(final Class<?> concreteClass, final Class<?> declaringClass, final Type genericInteface) {
+        private DeclaringClassInterfacePair(final Class<?> concreteClass,
+                                            final Class<?> declaringClass,
+                                            final Type genericInterface) {
             this.concreteClass = concreteClass;
             this.declaringClass = declaringClass;
-            this.genericInterface = genericInteface;
+            this.genericInterface = genericInterface;
         }
     }
 
@@ -1090,7 +1095,10 @@ public class ReflectionHelper {
         return getClass(concrete, iface, c);
     }
 
-    private static DeclaringClassInterfacePair getType(final Class<?> concrete, final Class<?> iface, final Class<?> c, final Type[] ts) {
+    private static DeclaringClassInterfacePair getType(final Class<?> concrete,
+                                                       final Class<?> iface,
+                                                       final Class<?> c,
+                                                       final Type[] ts) {
         for (final Type t : ts) {
             final DeclaringClassInterfacePair p = getType(concrete, iface, c, t);
             if (p != null) {
@@ -1100,7 +1108,10 @@ public class ReflectionHelper {
         return null;
     }
 
-    private static DeclaringClassInterfacePair getType(final Class<?> concrete, final Class<?> iface, final Class<?> c, final Type t) {
+    private static DeclaringClassInterfacePair getType(final Class<?> concrete,
+                                                       final Class<?> iface,
+                                                       final Class<?> c,
+                                                       final Type t) {
         if (t instanceof Class) {
             if (t == iface) {
                 return new DeclaringClassInterfacePair(concrete, c, t);
@@ -1315,25 +1326,25 @@ public class ReflectionHelper {
      * @see AccessController#doPrivileged(java.security.PrivilegedAction)
      */
     public static PrivilegedAction<Method> findMethodOnClassPA(final Class<?> c, final Method m) {
-            return new PrivilegedAction<Method>() {
-                @Override
-                public Method run() {
-                    try {
-                        return c.getMethod(m.getName(), m.getParameterTypes());
-                    } catch (final NoSuchMethodException nsme) {
-                            for (final Method _m : c.getMethods()) {
-                                if (_m.getName().equals(m.getName())
-                                        && _m.getParameterTypes().length == m.getParameterTypes().length) {
-                                    if (compareParameterTypes(m.getGenericParameterTypes(),
-                                            _m.getGenericParameterTypes())) {
-                                        return _m;
-                                    }
+        return new PrivilegedAction<Method>() {
+            @Override
+            public Method run() {
+                try {
+                    return c.getMethod(m.getName(), m.getParameterTypes());
+                } catch (final NoSuchMethodException nsme) {
+                    for (final Method _m : c.getMethods()) {
+                        if (_m.getName().equals(m.getName())
+                                && _m.getParameterTypes().length == m.getParameterTypes().length) {
+                            if (compareParameterTypes(m.getGenericParameterTypes(),
+                                    _m.getGenericParameterTypes())) {
+                                return _m;
                             }
                         }
-                        return null;
                     }
+                    return null;
                 }
-            };
+            }
+        };
     }
 
     /**
@@ -1457,7 +1468,8 @@ public class ReflectionHelper {
         return true;
     }
 
-    private final static Class<?> bundleReferenceClass = AccessController.doPrivileged(classForNamePA("org.osgi.framework.BundleReference", null));
+    private static final Class<?> bundleReferenceClass = AccessController.doPrivileged(
+            classForNamePA("org.osgi.framework.BundleReference", null));
 
     /**
      * Returns an {@link OsgiRegistry} instance.
@@ -1483,7 +1495,8 @@ public class ReflectionHelper {
      * will be taken from the provided loader getResourceAsStream method.
      *
      * @param loader      class loader where to lookup the resource in non-OSGi environment or if OSGi means fail.
-     * @param originClass if not null, and OSGi environment is detected, the resource will be taken from the bundle including the originClass type.
+     * @param originClass if not null, and OSGi environment is detected, the resource will be taken from the bundle including
+     *                    the originClass type.
      * @param name        filename of the desired resource.
      * @return an input stream corresponding to the required resource or null if the resource could not be found.
      */
@@ -1508,5 +1521,6 @@ public class ReflectionHelper {
      * Prevents instantiation.
      */
     private ReflectionHelper() {
+        throw new AssertionError("No instances allowed.");
     }
 }

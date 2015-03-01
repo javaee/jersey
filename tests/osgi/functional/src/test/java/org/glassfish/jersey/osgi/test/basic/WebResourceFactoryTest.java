@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -82,10 +82,10 @@ public class WebResourceFactoryTest {
 
     private static final String CONTEXT = "/jersey";
 
-    private static final URI baseUri = UriBuilder.
-            fromUri("http://localhost").
-            port(Helper.getPort()).
-            path(CONTEXT).build();
+    private static final URI baseUri = UriBuilder
+            .fromUri("http://localhost")
+            .port(Helper.getPort())
+            .path(CONTEXT).build();
 
     @Configuration
     public static Option[] configuration() {
@@ -106,6 +106,7 @@ public class WebResourceFactoryTest {
 
     @Path("myresource")
     public static interface MyResourceIfc {
+
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         String getIt();
@@ -158,6 +159,7 @@ public class WebResourceFactoryTest {
     }
 
     public static class MySubResource implements MySubResourceIfc {
+
         @Override
         public MyBean getMyBean() {
             MyBean bean = new MyBean();
@@ -167,6 +169,7 @@ public class WebResourceFactoryTest {
     }
 
     public static interface MySubResourceIfc {
+
         @GET
         @Produces(MediaType.APPLICATION_XML)
         public MyBean getMyBean();

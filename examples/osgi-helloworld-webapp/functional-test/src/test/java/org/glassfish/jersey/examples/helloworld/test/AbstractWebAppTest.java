@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -105,7 +105,8 @@ public abstract class AbstractWebAppTest {
      */
     final CountDownLatch countDownLatch = new CountDownLatch(1);
     private static final int port = getProperty("jersey.config.test.container.port", 8080);
-    private static final String runtimePolicy = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("runtime.policy"));
+    private static final String runtimePolicy = AccessController.doPrivileged(
+            PropertiesHelper.getSystemProperty("runtime.policy"));
     private static final String felixPolicy = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("felix.policy"));
     private static final String CONTEXT = "/helloworld";
     private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(port).path(CONTEXT).build();
@@ -122,8 +123,6 @@ public abstract class AbstractWebAppTest {
     /**
      * Generic OSGi options - defines which dependencies (bundles) should be
      * loaded into runtime
-     *
-     * @return
      */
     public List<Option> genericOsgiOptions() {
 
@@ -133,29 +132,30 @@ public abstract class AbstractWebAppTest {
         @SuppressWarnings("RedundantStringToString")
         List<Option> options = Arrays.asList(options(
                 // vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
-                //                vmOption("-Djava.security.debug=scl"),
+                // vmOption("-Djava.security.debug=scl"),
 
                 // uncomment for verbose class loading info
-                //                vmOption("-verbose:class"),
+                // vmOption("-verbose:class"),
 
-                //                bootDelegationPackage("org.glassfish.jersey.client.*"),
+                // bootDelegationPackage("org.glassfish.jersey.client.*"),
 
                 systemProperty("java.security.manager").value(""),
                 systemProperty("felix.policy").value(felixPolicy),
                 systemProperty("java.security.policy").value(runtimePolicy),
-                systemProperty(org.osgi.framework.Constants.FRAMEWORK_SECURITY).value(org.osgi.framework.Constants.FRAMEWORK_SECURITY_OSGI),
+                systemProperty(org.osgi.framework.Constants.FRAMEWORK_SECURITY)
+                        .value(org.osgi.framework.Constants.FRAMEWORK_SECURITY_OSGI),
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
                 systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
                 systemProperty("jersey.config.test.container.port").value(String.valueOf(port)),
-                //                systemProperty(BundleLocationProperty).value(bundleLocation),
+                // systemProperty(BundleLocationProperty).value(bundleLocation),
 
                 // do not remove the following line
                 systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
                 // uncomment the following 4 lines should you need to debug from th felix console
-//                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.runtime").version(gogoVersion),
-//                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.shell").version(gogoVersion),
-//                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.command").version(gogoVersion),
-//                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.shell.remote").versionAsInProject(),
+                // mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.runtime").version(gogoVersion),
+                // mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.shell").version(gogoVersion),
+                // mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.command").version(gogoVersion),
+                // mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.shell.remote").versionAsInProject(),
                 mavenBundle("org.apache.felix", "org.apache.felix.framework.security").versionAsInProject(),
                 // uncomment for logging (do not remove the following two lines)
                 //                 mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
@@ -224,7 +224,8 @@ public abstract class AbstractWebAppTest {
     private void updatePermissionsFromFile() throws IOException {
 
         final ServiceReference cpaRef = bundleContext.getServiceReference(ConditionalPermissionAdmin.class.getName());
-        final ConditionalPermissionAdmin conditionalPermissionAdmin = (ConditionalPermissionAdmin) bundleContext.getService(cpaRef);
+        final ConditionalPermissionAdmin conditionalPermissionAdmin = (ConditionalPermissionAdmin) bundleContext
+                .getService(cpaRef);
         final ConditionalPermissionUpdate permissionUpdate = conditionalPermissionAdmin.newConditionalPermissionUpdate();
         final List conditionalPermissionInfos = permissionUpdate.getConditionalPermissionInfos();
 
@@ -333,12 +334,14 @@ public abstract class AbstractWebAppTest {
         final WebTarget target = c.target(baseUri);
 
         // send request and check response - helloworld resource
-        final String helloResult = target.path("/webresources/helloworld").request().build("GET").invoke().readEntity(String.class);
+        final String helloResult = target.path("/webresources/helloworld").request().build("GET").invoke().readEntity(
+                String.class);
         LOGGER.info("HELLO RESULT = " + helloResult);
         assertEquals("Hello World", helloResult);
 
         // send request and check response - another resource
-        final String anotherResult = target.path("/webresources/another").request().build("GET").invoke().readEntity(String.class);
+        final String anotherResult = target.path("/webresources/another").request().build("GET").invoke()
+                .readEntity(String.class);
 
         LOGGER.info("ANOTHER RESULT = " + anotherResult);
         assertEquals("Another", anotherResult);

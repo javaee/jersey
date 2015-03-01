@@ -81,8 +81,8 @@ public class CookieTest extends JerseyTest {
         public Response get(@Context HttpHeaders h) {
             Cookie c = h.getCookies().get("name");
             String e = (c == null) ? "NO-COOKIE" : c.getValue();
-            return Response.ok(e).
-                    cookie(new NewCookie("name", "value")).build();
+            return Response.ok(e)
+                    .cookie(new NewCookie("name", "value")).build();
         }
     }
 

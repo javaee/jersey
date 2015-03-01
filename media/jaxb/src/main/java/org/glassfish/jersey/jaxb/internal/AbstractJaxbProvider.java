@@ -79,7 +79,8 @@ import org.xml.sax.InputSource;
  */
 public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWriterProvider<T> {
 
-    private static final Map<Class<?>, WeakReference<JAXBContext>> jaxbContexts = new WeakHashMap<>();
+    private static final Map<Class<?>, WeakReference<JAXBContext>> jaxbContexts =
+            new WeakHashMap<Class<?>, WeakReference<JAXBContext>>();
     private final Providers ps;
     private final boolean fixedMediaType;
     private final Value<ContextResolver<JAXBContext>> mtContext;
@@ -256,7 +257,7 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
             JAXBContext c = (ref != null) ? ref.get() : null;
             if (c == null) {
                 c = JAXBContext.newInstance(type);
-                jaxbContexts.put(type, new WeakReference(c));
+                jaxbContexts.put(type, new WeakReference<JAXBContext>(c));
             }
             return c;
         }
@@ -294,7 +295,8 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
                     } catch (PropertyException ex) {
                         // other jaxb implementation
                         Logger.getLogger(AbstractJaxbProvider.class.getName()).log(
-                                Level.WARNING, "@XmlHeader annotation is not supported with this JAXB implementation. Please use JAXB RI if you need this feature.");
+                                Level.WARNING, "@XmlHeader annotation is not supported with this JAXB implementation."
+                                        + " Please use JAXB RI if you need this feature.");
                     }
                 }
                 break;

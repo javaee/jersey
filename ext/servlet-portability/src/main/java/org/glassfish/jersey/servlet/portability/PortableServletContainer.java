@@ -86,6 +86,7 @@ import javax.servlet.ServletResponse;
  * @author Martin Matula
  */
 public class PortableServletContainer implements Filter, Servlet {
+
     private static final String JERSEY_1_PREFIX = "jersey1#";
     private static final String JERSEY_2_PREFIX = "jersey2#";
 
@@ -129,7 +130,8 @@ public class PortableServletContainer implements Filter, Servlet {
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
         wrappedFilter.doFilter(request, response, chain);
     }
 
@@ -159,10 +161,11 @@ public class PortableServletContainer implements Filter, Servlet {
     }
 
     private abstract class InitParamsWrapper {
+
         private final HashMap<String, String> filteredInitParams = new HashMap<String, String>();
 
         void init() {
-            for (Enumeration e = getInitParamNames(); e.hasMoreElements();) {
+            for (Enumeration e = getInitParamNames(); e.hasMoreElements(); ) {
                 String name = (String) e.nextElement();
                 String value = getInitParamValue(name);
                 if (name.startsWith(includePrefix)) {
@@ -175,6 +178,7 @@ public class PortableServletContainer implements Filter, Servlet {
         }
 
         abstract String getInitParamValue(String name);
+
         abstract Enumeration getInitParamNames();
 
         public String getInitParameter(String name) {
@@ -187,6 +191,7 @@ public class PortableServletContainer implements Filter, Servlet {
     }
 
     private class FilterConfigWrapper extends InitParamsWrapper implements FilterConfig {
+
         private final FilterConfig wrapped;
 
         FilterConfigWrapper(FilterConfig wrapped) {
@@ -216,6 +221,7 @@ public class PortableServletContainer implements Filter, Servlet {
     }
 
     private class ServletConfigWrapper extends InitParamsWrapper implements ServletConfig {
+
         private final ServletConfig wrapped;
 
         ServletConfigWrapper(ServletConfig wrapped) {

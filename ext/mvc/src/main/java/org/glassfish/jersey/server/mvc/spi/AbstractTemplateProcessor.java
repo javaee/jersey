@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -129,10 +129,10 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
                         input = input.toLowerCase();
                         return input.startsWith(".") ? input : "." + input;
                     }
-        }));
+                }));
 
         // Resolve property values.
-        final Map<String,Object> properties = config.getProperties();
+        final Map<String, Object> properties = config.getProperties();
 
         // Base Path.
         String basePath = PropertiesHelper.getValue(properties, MvcFeature.TEMPLATE_BASE_PATH + suffix, String.class, null);
@@ -335,7 +335,6 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
         httpHeaders.put(HttpHeaders.CONTENT_TYPE, typeList);
         return encoding;
     }
-
 
     /**
      * Get the output encoding.

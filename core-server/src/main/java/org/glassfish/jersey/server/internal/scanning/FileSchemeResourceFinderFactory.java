@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -80,7 +80,6 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
         private final ResourceFinderStack resourceFinderStack;
         private final boolean recursive;
 
-
         private FileSchemeScanner(final URI uri, boolean recursive) {
             this.resourceFinderStack = new ResourceFinderStack();
             this.recursive = recursive;
@@ -117,10 +116,10 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
             resourceFinderStack.push(new ResourceFinder() {
 
                 Stack<File> files = new Stack<File>() {{
-                    if(f.isDirectory()) {
+                    if (f.isDirectory()) {
                         final File[] subDirFiles = f.listFiles();
                         if (subDirFiles != null) {
-                            for(File file : subDirFiles) {
+                            for (File file : subDirFiles) {
                                 push(file);
                             }
                         }
@@ -134,10 +133,10 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
 
                 @Override
                 public boolean hasNext() {
-                    while(next == null && !files.empty()) {
+                    while (next == null && !files.empty()) {
                         next = files.pop();
 
-                        if(next.isDirectory()) {
+                        if (next.isDirectory()) {
                             if (recursive) {
                                 processFile(next);
                             }
@@ -150,7 +149,7 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
 
                 @Override
                 public String next() {
-                    if(next != null || hasNext()) {
+                    if (next != null || hasNext()) {
                         current = next;
                         next = null;
                         return current.getName();

@@ -71,6 +71,6 @@ public class ThreadLocalNamedInvoker<T> extends ThreadLocalInvoker<T> {
             T t = (T) ctx.lookup(name);
             this.set(t);
         }
-        return super.invoke(proxy,method,args);
+        return super.invoke(proxy, method, args);
     }
 }

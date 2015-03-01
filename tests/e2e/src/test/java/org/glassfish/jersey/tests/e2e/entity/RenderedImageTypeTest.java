@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -100,41 +100,41 @@ public class RenderedImageTypeTest extends JerseyTest {
     public void testPostPng() throws Exception {
         final InputStream stream = getClass().getResourceAsStream("Jersey_yellow.png");
         Response response = target().request().post(Entity.entity(stream, "image/png"));
-        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0l));
+        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0L));
 
         final RenderedImage image = response.readEntity(RenderedImage.class);
         assertThat(image, notNullValue());
 
         response = target().request().post(Entity.entity(image, "image/png"));
         assertThat(response.readEntity(RenderedImage.class), notNullValue());
-        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0l));
+        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0L));
     }
 
     @Test
     public void testPostGif() throws Exception {
         final InputStream stream = getClass().getResourceAsStream("duke_rocket.gif");
         Response response = target().request().post(Entity.entity(stream, "image/gif"));
-        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0l));
+        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0L));
 
         final RenderedImage image = response.readEntity(RenderedImage.class);
         assertThat(image, notNullValue());
 
         response = target().request().post(Entity.entity(image, "image/png"));
         assertThat(response.readEntity(RenderedImage.class), notNullValue());
-        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0l));
+        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0L));
     }
 
     @Test
     public void testPostUndefined() throws Exception {
         final InputStream stream = getClass().getResourceAsStream("duke_rocket.gif");
         Response response = target("sub").request().post(Entity.entity(stream, "application/octet-stream"));
-        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0l));
+        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0L));
 
         final RenderedImage image = response.readEntity(RenderedImage.class);
         assertThat(image, notNullValue());
 
         response = target().request().post(Entity.entity(image, "image/png"));
         assertThat(response.readEntity(RenderedImage.class), notNullValue());
-        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0l));
+        assertThat(Long.valueOf(response.getHeaderString("Content-Length")), greaterThan(0L));
     }
 }

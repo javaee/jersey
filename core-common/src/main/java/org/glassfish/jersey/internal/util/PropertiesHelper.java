@@ -152,7 +152,11 @@ public final class PropertiesHelper {
      * @return Value of the property or defaultValue.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, T defaultValue, Map<String, String> legacyMap) {
+    public static <T> T getValue(Map<String, ?> properties,
+                                 RuntimeType runtimeType,
+                                 String key,
+                                 T defaultValue,
+                                 Map<String, String> legacyMap) {
         return getValue(properties, runtimeType, key, defaultValue, (Class<T>) defaultValue.getClass(), legacyMap);
     }
 
@@ -168,7 +172,11 @@ public final class PropertiesHelper {
      * @param legacyMap    Legacy fallback map, where key is the actual property name, value is the old property name
      * @return Value of the property or null.
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Class<T> type, Map<String, String> legacyMap) {
+    public static <T> T getValue(Map<String, ?> properties,
+                                 String key,
+                                 T defaultValue,
+                                 Class<T> type,
+                                 Map<String, String> legacyMap) {
         return getValue(properties, null, key, defaultValue, type, legacyMap);
     }
 

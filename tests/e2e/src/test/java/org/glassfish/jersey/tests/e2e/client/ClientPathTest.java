@@ -76,8 +76,7 @@ public class ClientPathTest extends JerseyTest {
     public void pathParamInTargetTest() {
 
         Response response = client().target("http://localhost:" + getPort() + "/test/{beginBy}")
-                .resolveTemplate
-                        ("beginBy", "abc")
+                .resolveTemplate("beginBy", "abc")
                 .request(MediaType.TEXT_PLAIN_TYPE).get();
         assertEquals(200, response.getStatus());
         assertEquals("test-get,abc", response.readEntity(String.class));
@@ -94,7 +93,6 @@ public class ClientPathTest extends JerseyTest {
         assertEquals("test-path", response.readEntity(String.class));
     }
 
-
     /**
      * Tests path concatenation. (regression test for JERSEY-1114)
      */
@@ -105,7 +103,6 @@ public class ClientPathTest extends JerseyTest {
         assertEquals(200, response.getStatus());
         assertEquals("test-path", response.readEntity(String.class));
     }
-
 
     /**
      * Tests path concatenation. (regression test for JERSEY-1114)
@@ -146,6 +143,7 @@ public class ClientPathTest extends JerseyTest {
      */
     @Path("test/{beginBy}")
     public static class TestResourceWithPathParams {
+
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         @Consumes(MediaType.TEXT_PLAIN)
@@ -161,6 +159,7 @@ public class ClientPathTest extends JerseyTest {
      */
     @Path("path")
     public static class TestResource {
+
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         @Consumes(MediaType.TEXT_PLAIN)

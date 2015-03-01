@@ -80,7 +80,6 @@ import javax.xml.stream.XMLStreamReader;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.EntityInputStream;
 
-
 /**
  * Base class for implementing JAXB collection readers and writers.
  *
@@ -120,7 +119,7 @@ import org.glassfish.jersey.message.internal.EntityInputStream;
  */
 public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvider<Object> {
 
-    private static final Class<?>[] DEFAULT_IMPLS = new Class[]{
+    private static final Class<?>[] DEFAULT_IMPLS = new Class[] {
             ArrayList.class,
             LinkedList.class,
             HashSet.class,
@@ -343,6 +342,9 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
                     }
                 }
             }
+            if (l == null) {
+                l = new ArrayList<Object>();
+            }
 
             // Move to root element
             int event = r.next();
@@ -444,7 +446,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
         }
     }
 
-    protected final static String getElementName(Class<?> elementType) {
+    protected static final String getElementName(Class<?> elementType) {
         String name = elementType.getName();
         XmlRootElement xre = elementType.getAnnotation(XmlRootElement.class);
         if (xre != null && !xre.name().equals("##default")) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ package org.glassfish.jersey.tests.performance.tools;
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public class TestBeanInfo {
+
     @GenerateForTest
     public Integer someNumber;
     @GenerateForTest
@@ -58,7 +59,9 @@ public class TestBeanInfo {
         buf.append(pad + "# " + this).append("\n");
         buf.append(pad + "someNumber=" + someNumber).append("\n");
         buf.append(pad + "i=" + i).append("\n");
-        if (coords != null) { buf.append(coords.printContent(level + 1)); }
+        if (coords != null) {
+            buf.append(coords.printContent(level + 1));
+        }
         return buf.toString();
     }
 }

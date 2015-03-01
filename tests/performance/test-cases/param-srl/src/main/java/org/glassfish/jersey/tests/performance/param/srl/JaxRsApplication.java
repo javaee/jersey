@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.performance.param.srl;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.ws.rs.core.Application;
 
 /**
@@ -51,7 +52,9 @@ import javax.ws.rs.core.Application;
  */
 public class JaxRsApplication extends Application {
 
-    static final Set<Class<?>> APP_CLASSES = new HashSet<Class<?>>(){{add(SrlResource.class);}};
+    static final Set<Class<?>> APP_CLASSES = new HashSet<Class<?>>() {{
+        add(SrlResource.class);
+    }};
 
     @Override
     public Set<Class<?>> getClasses() {
