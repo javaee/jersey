@@ -43,6 +43,7 @@ package org.glassfish.jersey.linking;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Filter;
 import java.util.logging.LogRecord;
@@ -734,4 +735,30 @@ public class FieldProcessorTest {
         assertEquals(null, testClass.nested.link);
         assertEquals(null, testClass.transientNested.link);
     }
+
+
+
+ 
+    public static class TestClassN {
+        
+        // Simulate object injected by JPA
+        // in order to test a fix for JERSEY-2625
+        private transient Iterable res1 = new Iterable()
+        {
+            @Override
+            public Iterator iterator() {
+                throw new RuntimeException("Declarative linking feature is incorrectly processing a transient iterator");
+            }
+            
+        };
+    }
+
+    
+        @Test
+    public void testIgnoreTransient() {
+        TestClassN testClass = new TestClassN();
+        FieldProcessor<TestClassN> instance = new FieldProcessor(TestClassN.class);
+        instance.processLinks(testClass, mockUriInfo, mockRmc);
+    }
+
 }

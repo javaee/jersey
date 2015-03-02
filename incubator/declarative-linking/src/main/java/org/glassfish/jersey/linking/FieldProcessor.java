@@ -40,9 +40,12 @@
 
 package org.glassfish.jersey.linking;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.HashSet;
@@ -98,6 +101,8 @@ class FieldProcessor<T> {
         try {
             if (instance == null || processed.contains(instance))
                 return; // ignore null properties and defeat circular references
+            if (instance.getClass().getPackage().getName().equals("java.lang"))
+                return;
             processed.add(instance);
         } catch (RuntimeException e) {
             // fix for JERSEY-1656
@@ -139,12 +144,12 @@ class FieldProcessor<T> {
             for (Object member : array) {
                 processMember(entity, resource, member, processed, uriInfo,rmc);
             }
-        } else if (instance instanceof Collection) {
-            Collection collection = (Collection) instance;
-            for (Object member : collection) {
+        } else if (instance instanceof Iterable) {
+            Iterable iterable = (Iterable) instance;
+            for (Object member : iterable) {
                 processMember(entity, resource, member, processed, uriInfo,rmc);
             }
-        }
+        } 
 
         // Recursively process all member fields
         for (FieldDescriptor member : instanceDescriptor.getNonLinkFields()) {
@@ -158,7 +163,11 @@ class FieldProcessor<T> {
 
     private boolean fieldSuitableForIntrospection(FieldDescriptor member) {
         return member.field == null
-                || (!member.field.isAnnotationPresent(InjectLinkNoFollow.class)
+                || (!member.field.isSynthetic()
+                    && !Modifier.isTransient(member.field.getModifiers())
+                    && !member.field.getType().isPrimitive()
+                    && member.field.getType() != String.class
+                    && !member.field.isAnnotationPresent(InjectLinkNoFollow.class)
                     && !member.field.isAnnotationPresent(XmlTransient.class));
     }
 
