@@ -747,7 +747,7 @@ public class FieldProcessorTest {
         {
             @Override
             public Iterator iterator() {
-                throw new RuntimeException("Something in the woodshed");
+                throw new RuntimeException("Declarative linking feature is incorrectly processing a transient interator");
             }
             
         };
