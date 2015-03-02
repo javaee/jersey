@@ -747,7 +747,7 @@ public class FieldProcessorTest {
         {
             @Override
             public Iterator iterator() {
-                throw new RuntimeException("Declarative linking feature is incorrectly processing a transient interator");
+                throw new RuntimeException("Declarative linking feature is incorrectly processing a transient iterator");
             }
             
         };
