@@ -1617,7 +1617,7 @@
         <jsp.version>2.0</jsp.version>
         <jstl.version>1.2</jstl.version>
         <jta.api.version>1.2</jta.api.version>
-        <mimepull.version>1.9.3</mimepull.version>
+        <mimepull.version>1.9.5</mimepull.version>
         <moxy.version>2.5.0</moxy.version>
         <mustache.version>0.8.12</mustache.version>
         <osgi.version>4.2.0</osgi.version>
