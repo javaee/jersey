@@ -38,7 +38,7 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.defaultMethod.resources;
+package org.glassfish.jersey.examples.java8.resources;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -48,7 +48,7 @@ import javax.ws.rs.Path;
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public interface InterfaceResource {
+public interface DefaultMethodInterface {
 
     @GET
     default String root() {

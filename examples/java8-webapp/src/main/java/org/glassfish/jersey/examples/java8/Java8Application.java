@@ -38,24 +38,25 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.defaultMethod.resources;
+package org.glassfish.jersey.examples.java8;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.ApplicationPath;
+
+import org.glassfish.jersey.examples.java8.resources.DefaultMethodResource;
+import org.glassfish.jersey.examples.java8.resources.LambdaResource;
+import org.glassfish.jersey.server.ResourceConfig;
 
 /**
- * JAX-RS resource inheriting some resource method implementations from the implemented interface.
+ * Application for illustrating some of the features of Java 8 in JAX-RS.
  *
- * @author Adam Lindenthal (adam.lindenthal at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@Path("compoundResource")
-@Produces("text/plain")
-public class ClassResource implements InterfaceResource {
+@ApplicationPath("j8")
+public class Java8Application extends ResourceConfig {
 
-    @GET
-    @Path("class")
-    public String fromClass() {
-        return "class";
+    public Java8Application() {
+        // Resources.
+        register(DefaultMethodResource.class);
+        register(LambdaResource.class);
     }
 }

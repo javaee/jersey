@@ -46,7 +46,7 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-        <title>Java8 Default Method WebApp Example</title>
+        <title>JAX-RS and Java 8 WebApp Example</title>
 
         <!-- Bootstrap -->
         <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
@@ -57,21 +57,20 @@
             <div class="row">
                 <div class="col-lg-offset-1 col-lg-10">
                     <header class="page-header">
-                        <h1>Jersey Java8 Default Method Example</h1>
+                        <h1>Jersey and Java 8 Examples <small>Features and Types</small></h1>
                     </header>
 
                     <p>
-                        This example demonstrates the usage of Java8's new construct - the default methods in interfaces.
-                        Default methods can be used as common JAX-RS resource methods.
+                        This example demonstrates the usage of Java 8's new constructs and types.
                     </p>
                     <p>
-                        The application is common web application, only combines methods and interfaces with default
-                        methods to show to show that this use case is possible.
-
+                        Currently demonstrated are:
                     </p>
+                        <ul>
+                            <li>Default methods in interfaces - acting as JAX-RS Resource Methods</li>
+                        </ul>
 
                     <h2>Contents</h2>
-
                     <p>
                         The mapping of the URI path space is presented in the following table:
                     </p>
@@ -88,35 +87,35 @@
 
                         <tbody>
                             <tr>
-                                <td><code>/default-method/application.wadl</code></td>
-                                <td>Generated WADL</td>
-                                <td>GET</td>
-                                <td>returns XML with the application api description</td>
-                            </tr>
-                            <tr>
-                                <td><code>/default-method/compoundResource</code></td>
-                                <td>InterfaceResource</td>
+                                <td><code>/j8/default-method</code></td>
+                                <td>DefaultMethodInterface</td>
                                 <td>GET</td>
                                 <td>returns <code>interface-root</code> in <code>text/plain</code></td>
                             </tr>
                             <tr>
-                                <td><code>/default-method/compoundResource/path</code></td>
-                                <td>InterfaceResource</td>
+                                <td><code>/j8/default-method/path</code></td>
+                                <td>DefaultMethodInterface</td>
                                 <td>GET</td>
                                 <td>returns <code>interface-path</code> in <code>text/plain</code></td>
                             </tr>
                             <tr>
-                                <td><code>/default-method/compoundResource/class</code></td>
-                                <td>ClassResource</td>
+                                <td><code>/j8/default-method/class</code></td>
+                                <td>DefaultMethodResource</td>
                                 <td>GET</td>
                                 <td>returns <code>class</code> in <code>text/plain</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/j8/lambdas/{p}</code></td>
+                                <td>LambdaResource</td>
+                                <td>GET</td>
+                                <td>returns <code>{p}-lambdaized</code> in <code>text/plain</code></td>
                             </tr>
                         </tbody>
                     </table>
 
                     <p>
                         Application is Servlet 3 based, web.xml-less. Everything needed (resources/providers) is
-                        registered in the <code>DefaultMethodApplication</code> class.
+                        registered in the <code>Java8Application</code> class.
                     </p>
 
                     </p>
@@ -131,10 +130,10 @@
                     <p>
                         This deploys current example using Jetty. You can access the application at:
                         <ul>
-                            <li><a href="http://localhost:8080/default-method/application.wadl">http://localhost:8080/default-method/application.wadl</a></li>
-                            <li><a href="http://localhost:8080/default-method/compoundResource">http://localhost:8080/default-method/compoundResource</a></li>
-                            <li><a href="http://localhost:8080/default-method/compoundResource/path">http://localhost:8080/default-method/compoundResource/path</a></li>
-                            <li><a href="http://localhost:8080/default-method/compoundResource/class">http://localhost:8080/default-method/compoundResource/class</a></li>
+                            <li><a href="http://localhost:8080/j8/default-method">http://localhost:8080/j8/default-method</a></li>
+                            <li><a href="http://localhost:8080/j8/default-method/path">http://localhost:8080/j8/default-method/path</a></li>
+                            <li><a href="http://localhost:8080/j8/default-method/class">http://localhost:8080/j8/default-method/class</a></li>
+                            <li><a href="http://localhost:8080/j8/lambdas/test">http://localhost:8080/j8/lambdas/test</a></li>
                         </ul>
                     </p>
                 </div>

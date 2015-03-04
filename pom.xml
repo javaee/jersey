@@ -896,7 +896,7 @@
                 <jdk>1.8</jdk>
             </activation>
             <modules>
-                <module>examples/default-method-java8-webapp</module>
+                <module>examples/java8-webapp</module>
                 <module>examples/rx-client-java8-webapp</module>
                 <module>ext/rx/rx-client-java8</module>
             </modules>

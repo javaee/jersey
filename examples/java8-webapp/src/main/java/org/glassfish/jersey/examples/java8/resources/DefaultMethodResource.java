@@ -38,50 +38,24 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.defaultMethod;
+package org.glassfish.jersey.examples.java8.resources;
 
-import org.glassfish.jersey.test.DeploymentContext;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.ServletDeploymentContext;
-
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 /**
- * Test usage of Java8's interface default methods as resource methods.
+ * JAX-RS resource inheriting some resource method implementations from the implemented interface.
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public class DefaultMethodTest extends JerseyTest {
+@Path("default-method")
+@Produces("text/plain")
+public class DefaultMethodResource implements DefaultMethodInterface {
 
-    @Override
-    protected DeploymentContext configureDeployment() {
-        return ServletDeploymentContext.builder(DefaultMethodApplication.class).contextPath("default-method").build();
-    }
-
-    /**
-     * Test that JDK8 default methods do work as common JAX-RS resource methods
-     */
-    @Test
-    public void testDefaultMethods() {
-
-        // test default method with no @Path annotation
-        System.out.println("URI: " + target().getUri());
-        String response = target("compoundResource").request().get(String.class);
-        assertEquals("interface-root", response);
-
-        // test default method with with @Path annotation
-        response = target("compoundResource").path("path").request().get(String.class);
-        assertEquals("interface-path", response);
-    }
-
-    /**
-     * Test, that resource methods defined in the class implementing the interface with default method do work normally
-     * @throws Exception
-     */
-    @Test
-    public void testImplementingClass() throws Exception {
-        final String response = target("compoundResource").path("class").request().get(String.class);
-        assertEquals("class", response);
+    @GET
+    @Path("class")
+    public String fromClass() {
+        return "class";
     }
 }

@@ -37,24 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.examples.java8.resources;
 
-package org.glassfish.jersey.examples.defaultMethod;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
-import javax.ws.rs.ApplicationPath;
-
-import org.glassfish.jersey.examples.defaultMethod.resources.ClassResource;
-import org.glassfish.jersey.server.ResourceConfig;
-
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 
 /**
- * Resource definitions for Default Method example.
+ * JAX-RS resource using Java SE 8 lambdas.
  *
- * @author Adam Lindenthal (adam.lindenthal at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@ApplicationPath("default-method")
-public class DefaultMethodApplication extends ResourceConfig {
-
-    public DefaultMethodApplication() {
-        register(ClassResource.class);
+@Path("lambdas/{p}")
+public class LambdaResource {
+    @GET
+    public String getLambdaResult(@PathParam("p") String p) {
+        return Collections.singleton(p).stream().map(v -> v + "-lambdaized").collect(Collectors.joining());
     }
 }

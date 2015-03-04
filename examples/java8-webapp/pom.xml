@@ -50,11 +50,11 @@
         <version>2.18-SNAPSHOT</version>
     </parent>
 
-    <artifactId>default-method-java8-webapp</artifactId>
+    <artifactId>java8-webapp</artifactId>
     <packaging>war</packaging>
-    <name>jersey-examples-default-method-java8-webapp</name>
+    <name>jersey-examples-java8-webapp</name>
 
-    <description>Jersey App Using Java8 Default Methods Example.</description>
+    <description>Java 8 Types WebApp Example.</description>
 
     <dependencies>
         <dependency>
