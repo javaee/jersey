@@ -63,7 +63,7 @@ final class SingleValueExtractor<T> extends AbstractParamValueExtractor<T> imple
      * @param parameterName      string parameter name.
      * @param defaultStringValue default string value.
      */
-    public SingleValueExtractor(ParamConverter<T> converter, String parameterName, String defaultStringValue) {
+    public SingleValueExtractor(final ParamConverter<T> converter, final String parameterName, final String defaultStringValue) {
         super(converter, parameterName, defaultStringValue);
     }
 
@@ -78,17 +78,15 @@ final class SingleValueExtractor<T> extends AbstractParamValueExtractor<T> imple
      * @return extracted single parameter value.
      */
     @Override
-    public T extract(MultivaluedMap<String, String> parameters) {
-        String v = parameters.getFirst(getName());
+    public T extract(final MultivaluedMap<String, String> parameters) {
+        final String value = parameters.getFirst(getName());
         try {
-            return fromString((v == null && isDefaultValueRegistered()) ? getDefaultValueString() : v);
-        } catch (WebApplicationException ex) {
+            return fromString((value == null && isDefaultValueRegistered()) ? getDefaultValueString() : value);
+        } catch (final WebApplicationException | ProcessingException ex) {
             throw ex;
-        } catch (ProcessingException ex) {
-            throw ex;
-        } catch (IllegalArgumentException ex) {
+        } catch (final IllegalArgumentException ex) {
             return defaultValue();
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             throw new ExtractorException(ex);
         }
     }
