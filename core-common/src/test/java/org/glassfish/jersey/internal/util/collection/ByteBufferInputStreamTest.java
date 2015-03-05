@@ -273,6 +273,67 @@ public class ByteBufferInputStreamTest {
     }
 
     /**
+     * Test for blocking single-byte read of the stream.
+     *
+     * @throws Exception in case of error.
+     */
+    @Test
+    public void testBlockingReadSingleUnsignedByte() throws Exception {
+        final int BUFFER_SIZE = 256;
+        final ByteBufferInputStream bbis = new ByteBufferInputStream();
+
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final ByteBuffer data = ByteBuffer.allocate(BUFFER_SIZE);
+                    if (Thread.currentThread().isInterrupted()) {
+                        System.out.println("Got interrupted.");
+                        return;
+                    }
+                    data.clear();
+                    for (int j = 0; j < data.capacity(); j++) {
+                        data.put((byte) j);
+                    }
+                    data.flip();
+                    if (!bbis.put(data)) {
+                        System.out.println("Pipe sink closed before writing all the data.");
+                        return;
+                    }
+                    Thread.sleep(1); // Give the other thread a chance to run.
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+                } finally {
+                    bbis.closeQueue();
+                }
+            }
+        });
+
+        try {
+            int i = 0;
+            int c;
+            while ((c = bbis.read()) != -1) {
+                assertNotEquals("Should not read 'nothing' in blocking mode.", Integer.MIN_VALUE, c);
+
+                assertEquals("At position: " + i, (byte) i, (byte)c);
+                i++;
+                Thread.yield(); // Give the other thread a chance to run.
+            }
+
+            assertEquals("Number of bytes produced and bytes read does not match.", BUFFER_SIZE, i);
+        } finally {
+            executor.shutdownNow();
+            bbis.close();
+        }
+
+        if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+            System.out.println("Waiting for the task to finish has timed out.");
+        }
+    }
+
+    /**
      * Test for blocking byte buffer based read of the stream.
      *
      * @throws Exception in case of error.

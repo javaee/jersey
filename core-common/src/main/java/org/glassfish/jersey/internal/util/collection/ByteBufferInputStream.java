@@ -169,11 +169,11 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
 
         final int c;
         if (current != null && current.hasRemaining()) {
-            c = current.get();
+            c = (current.get() & 0xff);
         } else {
             try {
                 // let's block until next non-empty chunk or EOF
-                c = fetchChunk(true) ? current.get() : -1;
+                c = fetchChunk(true) ? (current.get() & 0xff) : -1;
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IOException(e);
@@ -195,13 +195,13 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
         }
 
         if (current != null && current.hasRemaining()) {
-            return current.get();
+            return (current.get() & 0xff);
         }
 
         try {
             // try to fetch, but don't block && check if something has been fetched
             if (fetchChunk(false) && current != null) {
-                return current.get();
+                return (current.get() & 0xff);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
