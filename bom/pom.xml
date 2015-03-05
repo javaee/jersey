@@ -163,6 +163,11 @@
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.ext.cdi</groupId>
+                <artifactId>jersey-cdi1x-servlet</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext.cdi</groupId>
                 <artifactId>jersey-ext-cdi1x-ban-custom-hk2-binding</artifactId>
                 <version>${project.version}</version>
             </dependency>

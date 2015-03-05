@@ -70,17 +70,20 @@ public class CdiComponentProviderTest {
     public static class MyMessageBodyReader implements MessageBodyReader {
 
         @Override
-        public boolean isReadable(Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        public boolean isReadable(final Class type,
+                                  final Type genericType,
+                                  final Annotation[] annotations,
+                                  final MediaType mediaType) {
             return true;
         }
 
         @Override
-        public Object readFrom(Class type,
-                               Type genericType,
-                               Annotation[] annotations,
-                               MediaType mediaType,
-                               MultivaluedMap httpHeaders,
-                               InputStream entityStream) throws IOException, WebApplicationException {
+        public Object readFrom(final Class type,
+                               final Type genericType,
+                               final Annotation[] annotations,
+                               final MediaType mediaType,
+                               final MultivaluedMap httpHeaders,
+                               final InputStream entityStream) throws IOException, WebApplicationException {
             return new Object();
         }
     }

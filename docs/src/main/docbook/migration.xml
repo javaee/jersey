@@ -52,6 +52,23 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.17">
+        <title>Migrating from Jersey 2.16 to 2.17</title>
+        <section xml:id="mig-2.17-highlights">
+            <title>Release 2.17 Highlights</title>
+
+            <section>
+                <title>CDI integration in EAR packaged WARs</title>
+                <para>
+                    From version 2.17 onwards, it's possible to use CDI with JAX-RS web-applications packaged in EAR. All supported
+                    HK2/CDI injections now work as expected for JAX-RS application deployed in the mentioned fashion. One need to
+                    make sure that modules <literal>jersey-cdi1x</literal> and <literal>jersey-cdi1x-servlet</literal> are present
+                    in Servlet container (that supports EARs).
+                </para>
+            </section>
+        </section>
+    </section>
+
     <section xml:id="mig-2.16">
         <title>Migrating from Jersey 2.15 to 2.16</title>
         <section xml:id="mig-2.16-highlights">

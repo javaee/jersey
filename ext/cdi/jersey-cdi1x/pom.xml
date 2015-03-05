@@ -56,7 +56,6 @@
     <description>Jersey CDI 1.1 integration</description>
 
     <dependencies>
-
         <dependency>
             <groupId>javax.enterprise</groupId>
             <artifactId>cdi-api</artifactId>
@@ -68,6 +67,12 @@
             <artifactId>jersey-server</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -90,7 +95,10 @@
                 <configuration>
                     <instructions>
                         <!--Import-Package>javax.interceptor;version="[1.0-4)",*</Import-Package-->
-                        <Export-Package>org.glassfish.jersey.ext.cdi1x.spi, org.glassfish.jersey.ext.cdi1x.internal</Export-Package>
+                        <Export-Package>
+                            org.glassfish.jersey.ext.cdi1x.spi,org.glassfish.jersey.ext.cdi1x.internal,
+                            org.glassfish.jersey.ext.cdi1x.internal.spi
+                        </Export-Package>
                         <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
                         <_nodefaultversion>false</_nodefaultversion>
                     </instructions>
