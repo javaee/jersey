@@ -61,7 +61,7 @@ import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 
-import jersey.repackaged.com.google.common.io.ByteStreams;
+import com.google.common.io.ByteStreams;
 
 import org.junit.After;
 import org.junit.Test;
