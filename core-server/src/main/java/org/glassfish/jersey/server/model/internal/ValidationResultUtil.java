@@ -69,8 +69,8 @@ public class ValidationResultUtil {
         do {
             for (Field f : clazz.getDeclaredFields()) {
                 // Of ValidationResult and CDI injectable
-                if (f.getType().getName().equals(VALIDATION_RESULT) &&
-                        f.getAnnotation(Inject.class) != null) {
+                if (f.getType().getName().equals(VALIDATION_RESULT)
+                        && f.getAnnotation(Inject.class) != null) {
                     return f;
                 }
             }
