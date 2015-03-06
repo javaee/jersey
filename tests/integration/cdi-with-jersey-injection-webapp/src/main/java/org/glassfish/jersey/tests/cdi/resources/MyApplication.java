@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,9 +41,10 @@ package org.glassfish.jersey.tests.cdi.resources;
 
 import javax.ws.rs.ApplicationPath;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
+
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * JAX-RS application to configure resources.
@@ -57,7 +58,7 @@ public class MyApplication extends ResourceConfig {
 
         private final String name;
 
-        public MyInjection(String name) {
+        public MyInjection(final String name) {
             this.name = name;
         }
 
@@ -67,7 +68,6 @@ public class MyApplication extends ResourceConfig {
     }
 
     public MyApplication() {
-
         // JAX-RS resource classes
         register(AppScopedFieldInjectedResource.class);
         register(AppScopedCtorInjectedResource.class);

@@ -899,7 +899,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         @Override
         public Object create(final CreationalContext creationalContext) {
-            return CdiComponentProvider.this.locator.getService(t);
+            return getEffectiveLocator().getService(t);
         }
 
         @Override

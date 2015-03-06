@@ -56,13 +56,15 @@
 
     <modules>
         <module>cdi-ejb-test-webapp</module>
+        <module>cdi-iface-with-non-jaxrs-impl-test-webapp</module>
         <module>cdi-multipart-webapp</module>
         <module>cdi-test-webapp</module>
+        <module>cdi-with-jersey-injection-custom-cfg-webapp</module>
+        <module>cdi-with-jersey-injection-custom-hk2-banned-webapp</module>
         <module>cdi-with-jersey-injection-webapp</module>
+        <module>ejb-multimodule</module>
         <module>ejb-test-webapp</module>
-        <module>ejb-jax-rs-ear1</module>
-        <module>ejb-jax-rs-web1</module>
-        <module>ejb-lib</module>
+        <module>j-59</module>
         <module>j-376</module>
         <module>j-441</module>
         <module>jersey-780</module>
@@ -95,9 +97,6 @@
         <module>jersey-2689</module>
         <module>jersey-2704</module>
         <module>jersey-2776</module>
-        <module>j-59-ejb-lib</module>
-        <module>j-59-cdi-war</module>
-        <module>j-59-ear</module>
         <module>portability-jersey-1</module>
         <module>portability-jersey-2</module>
         <module>property-check</module>

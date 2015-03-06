@@ -51,7 +51,7 @@
 
     <artifactId>jersey-cdi1x-ban-custom-hk2-binding</artifactId>
     <packaging>jar</packaging>
-    <name>jersey-cdi1x-ban-custom-hk2-binding</name>
+    <name>jersey-ext-cdi1x-ban-custom-hk2-binding</name>
 
     <description>Jersey CDI integration - this module disables custom HK2 bindings</description>
 
@@ -68,6 +68,7 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-library</artifactId>

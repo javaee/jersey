@@ -58,8 +58,8 @@
     </description>
 
     <modules>
-        <module>j-441-ear</module>
-        <module>j-441-war1</module>
-        <module>j-441-war2</module>
+        <module>ear</module>
+        <module>war1</module>
+        <module>war2</module>
     </modules>
 </project>

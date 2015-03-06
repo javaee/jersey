@@ -51,7 +51,7 @@
 
     <artifactId>jersey-cdi1x-transaction</artifactId>
     <packaging>jar</packaging>
-    <name>jersey-cdi1x-transaction</name>
+    <name>jersey-ext-cdi1x-transaction</name>
 
     <description>Jersey CDI 1.x Transactional Support</description>
 

@@ -77,9 +77,11 @@ public class AppScopedCtorInjectedResource {
     }
 
     @Inject
-    public AppScopedCtorInjectedResource(@AppSpecific EchoService echoService,
-                                         Provider<ContainerRequest> request, ExceptionMappers mappers,
-                                         Provider<MonitoringStatistics> stats, MyApplication.MyInjection customInjected) {
+    public AppScopedCtorInjectedResource(@AppSpecific final EchoService echoService,
+                                         final Provider<ContainerRequest> request,
+                                         final ExceptionMappers mappers,
+                                         final Provider<MonitoringStatistics> stats,
+                                         final MyApplication.MyInjection customInjected) {
         this.echoService = echoService;
         this.request = request;
         this.mappers = mappers;
@@ -88,7 +90,7 @@ public class AppScopedCtorInjectedResource {
     }
 
     @GET
-    public String echo(@QueryParam("s") String s) {
+    public String echo(@QueryParam("s") final String s) {
         return echoService.echo(s);
     }
 
