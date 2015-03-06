@@ -43,8 +43,10 @@ package org.glassfish.jersey.client.rx.java8;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.rx.RxClient;
@@ -115,6 +117,76 @@ public class RxCompletionStageTest {
         testTarget(RxCompletionStage.from(client.target("http://jersey.java.net"), executor), true);
     }
 
+    @Test
+    public void testNotFoundResponse() throws Exception {
+        final RxCompletionStageInvoker invoker = RxCompletionStage.from(client.target("http://jersey.java.net"))
+                .request()
+                .header("Response-Status", 404)
+                .rx();
+
+        testInvoker(invoker, 404, false);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testNotFoundReadEntityViaClass() throws Throwable {
+        try {
+            RxCompletionStage.from(client.target("http://jersey.java.net"))
+                    .request()
+                    .header("Response-Status", 404)
+                    .rx()
+                    .get(String.class)
+                    .toCompletableFuture()
+                    .get();
+        } catch (final Exception expected) {
+            // java.util.concurrent.ExecutionException
+            throw expected
+                    // javax.ws.rs.NotFoundException
+                    .getCause();
+        }
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testNotFoundReadEntityViaGenericType() throws Throwable {
+        try {
+            RxCompletionStage.from(client.target("http://jersey.java.net"))
+                    .request()
+                    .header("Response-Status", 404)
+                    .rx()
+                    .get(new GenericType<String>() {})
+                    .toCompletableFuture()
+                    .get();
+        } catch (final Exception expected) {
+            // java.util.concurrent.ExecutionException
+            throw expected
+                    // javax.ws.rs.NotFoundException
+                    .getCause();
+        }
+    }
+
+    @Test
+    public void testReadEntityViaClass() throws Throwable {
+        final String response = RxCompletionStage.from(client.target("http://jersey.java.net"))
+                .request()
+                .rx()
+                .get(String.class)
+                .toCompletableFuture()
+                .get();
+
+        assertThat(response, is("NO-ENTITY"));
+    }
+
+    @Test
+    public void testReadEntityViaGenericType() throws Throwable {
+        final String response = RxCompletionStage.from(client.target("http://jersey.java.net"))
+                .request()
+                .rx()
+                .get(new GenericType<String>() {})
+                .toCompletableFuture()
+                .get();
+
+        assertThat(response, is("NO-ENTITY"));
+    }
+
     private void testClient(final RxClient<RxCompletionStageInvoker> rxClient, final boolean testDedicatedThread)
             throws Exception {
         testTarget(rxClient.target("http://jersey.java.net"), testDedicatedThread);
@@ -122,13 +194,17 @@ public class RxCompletionStageTest {
 
     private void testTarget(final RxWebTarget<RxCompletionStageInvoker> rxTarget, final boolean testDedicatedThread)
             throws Exception {
-        final RxCompletionStageInvoker rx = rxTarget.request().rx();
-
-        testResponse(rx.get().toCompletableFuture().get(), testDedicatedThread);
+        testInvoker(rxTarget.request().rx(), 200, testDedicatedThread);
     }
 
-    private static void testResponse(final Response response, final boolean testDedicatedThread) {
-        assertThat(response.getStatus(), is(200));
+    private void testInvoker(final RxCompletionStageInvoker rx,
+                             final int expectedStatus,
+                             final boolean testDedicatedThread) throws Exception {
+        testResponse(rx.get().toCompletableFuture().get(), expectedStatus, testDedicatedThread);
+    }
+
+    private static void testResponse(final Response response, final int expectedStatus, final boolean testDedicatedThread) {
+        assertThat(response.getStatus(), is(expectedStatus));
         assertThat(response.readEntity(String.class), is("NO-ENTITY"));
 
         // Executor.

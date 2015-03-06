@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,8 +50,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 /**
-* @author Michal Gajdos (michal.gajdos at oracle.com)
-*/
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
+ */
 class TerminalClientRequestFilter implements ClientRequestFilter {
 
     @Override
@@ -61,7 +61,11 @@ class TerminalClientRequestFilter implements ClientRequestFilter {
                 requestContext.hasEntity() ? requestContext.getEntity().toString().getBytes() : "NO-ENTITY".getBytes()
         );
 
-        Response.ResponseBuilder response = Response.ok(entity, "application/json")
+        final int responseStatus = requestContext.getHeaders().getFirst("Response-Status") != null
+                ? (int) requestContext.getHeaders().getFirst("Response-Status") : 200;
+        Response.ResponseBuilder response = Response.status(responseStatus)
+                .entity(entity)
+                .type("application/json")
                 // Test properties.
                 .header("Test-Thread", Thread.currentThread().getName())
                 .header("Test-Uri", requestContext.getUri().toString())

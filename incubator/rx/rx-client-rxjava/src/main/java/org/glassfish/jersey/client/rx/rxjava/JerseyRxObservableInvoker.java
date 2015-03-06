@@ -46,8 +46,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.JerseyInvocation;
 import org.glassfish.jersey.client.rx.spi.AbstractRxInvoker;
 
 import rx.Observable;
@@ -73,70 +73,7 @@ final class JerseyRxObservableInvoker extends AbstractRxInvoker<Observable> impl
 
     @Override
     public <T> Observable<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
-        if (getExecutorService() == null) {
-            // Invoke as async JAX-RS client request.
-            return Observable.create(new Observable.OnSubscribe<T>() {
-                @Override
-                public void call(final Subscriber<? super T> subscriber) {
-                    final CompositeSubscription parent = new CompositeSubscription();
-                    subscriber.add(parent);
-
-                    // return a Subscription that wraps the Future to make sure it can be cancelled
-                    parent.add(Subscriptions.from(getBuilder().async().method(name, entity, new InvocationCallback<Response>() {
-                        @Override
-                        public void completed(final Response response) {
-                            if (!subscriber.isUnsubscribed()) {
-                                try {
-                                    final T entity = responseType.isAssignableFrom(response.getClass())
-                                            ? responseType.cast(response) : response.readEntity(responseType);
-
-                                    if (!subscriber.isUnsubscribed()) {
-                                        subscriber.onNext(entity);
-                                    }
-                                    if (!subscriber.isUnsubscribed()) {
-                                        subscriber.onCompleted();
-                                    }
-                                } catch (final Throwable throwable) {
-                                    failed(throwable);
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void failed(final Throwable throwable) {
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onError(throwable);
-                            }
-                        }
-                    })));
-                }
-            });
-        } else {
-            // Invoke as sync JAX-RS client request and subscribe/observe on a scheduler initialized with executor service.
-            final Scheduler scheduler = Schedulers.from(getExecutorService());
-
-            return Observable.create(new Observable.OnSubscribe<T>() {
-                @Override
-                public void call(final Subscriber<? super T> subscriber) {
-                    if (!subscriber.isUnsubscribed()) {
-                        try {
-                            final T response = getBuilder().method(name, entity, responseType);
-
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onNext(response);
-                            }
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onCompleted();
-                            }
-                        } catch (final Throwable throwable) {
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onError(throwable);
-                            }
-                        }
-                    }
-                }
-            }).subscribeOn(scheduler).observeOn(scheduler);
-        }
+        return method(name, entity, new GenericType<T>(responseType) {});
     }
 
     @Override
@@ -149,26 +86,17 @@ final class JerseyRxObservableInvoker extends AbstractRxInvoker<Observable> impl
                     final CompositeSubscription parent = new CompositeSubscription();
                     subscriber.add(parent);
 
-                    // return a Subscription that wraps the Future to make sure it can be cancelled
-                    parent.add(Subscriptions.from(getBuilder().async().method(name, entity, new InvocationCallback<Response>() {
-                        @Override
-                        public void completed(final Response response) {
-                            if (!subscriber.isUnsubscribed()) {
-                                try {
-                                    @SuppressWarnings("unchecked")
-                                    final Class<T> clazz = (Class<T>) responseType.getRawType();
-                                    final T entity = clazz.isAssignableFrom(response.getClass())
-                                            ? clazz.cast(response) : response.readEntity(responseType);
+                    final JerseyInvocation invocation = (JerseyInvocation) getBuilder().build(name, entity);
 
-                                    if (!subscriber.isUnsubscribed()) {
-                                        subscriber.onNext(entity);
-                                    }
-                                    if (!subscriber.isUnsubscribed()) {
-                                        subscriber.onCompleted();
-                                    }
-                                } catch (final Throwable throwable) {
-                                    failed(throwable);
-                                }
+                    // return a Subscription that wraps the Future to make sure it can be cancelled
+                    parent.add(Subscriptions.from(invocation.submit(responseType, new InvocationCallback<T>() {
+                        @Override
+                        public void completed(final T entity) {
+                            if (!subscriber.isUnsubscribed()) {
+                                subscriber.onNext(entity);
+                            }
+                            if (!subscriber.isUnsubscribed()) {
+                                subscriber.onCompleted();
                             }
                         }
 

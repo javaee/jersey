@@ -862,14 +862,42 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public <T> Future<T> submit(final InvocationCallback<T> callback) {
+        return submit(null, callback);
+    }
+
+    /**
+     * Submit the request for an asynchronous invocation and register an
+     * {@link InvocationCallback} to process the future result of the invocation.
+     * <p>
+     * Response type in this case is taken from {@code responseType} param (if not {@code null}) rather
+     * than from {@code callback}. This allows to pass callbacks like {@code new InvocationCallback&lt;&gt() {...}}.
+     * </p>
+     *
+     * @param <T>          response type
+     * @param responseType response type that is used instead of obtaining types from {@code callback}.
+     * @param callback     invocation callback for asynchronous processing of the
+     *                     request invocation result.
+     * @return future response object of the specified type as a result of the
+     * request invocation.
+     */
+    public <T> Future<T> submit(final GenericType<T> responseType, final InvocationCallback<T> callback) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
 
         try {
-
             final ReflectionHelper.DeclaringClassInterfacePair pair =
                     ReflectionHelper.getClass(callback.getClass(), InvocationCallback.class);
-            final Type callbackParamType = ReflectionHelper.getParameterizedTypeArguments(pair)[0];
-            final Class<T> callbackParamClass = ReflectionHelper.erasure(callbackParamType);
+
+            final Type callbackParamType;
+            final Class<T> callbackParamClass;
+
+            if (responseType == null) {
+                // If we don't have response use callback to obtain param types.
+                callbackParamType = ReflectionHelper.getParameterizedTypeArguments(pair)[0];
+                callbackParamClass = ReflectionHelper.erasure(callbackParamType);
+            } else {
+                callbackParamType = responseType.getType();
+                callbackParamClass = ReflectionHelper.erasure(responseType.getRawType());
+            }
 
             final ResponseCallback responseCallback = new ResponseCallback() {
 
