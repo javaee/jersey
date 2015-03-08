@@ -163,13 +163,15 @@
                                 </goals>
                                 <configuration>
                                     <tasks>
+                                        <task>deleteClasses</task>
                                         <task>generateProGuardConfig</task>
                                     </tasks>
                                     <args>
                                         <arg>-q</arg>
-                                        <arg>-PshadedPackage=${shade.package}</arg>
                                         <arg>-PabsolutePath=${project.parent.parent.parent.basedir}</arg>
+                                        <arg>-PbuildDir=${project.build.directory}</arg>
                                         <arg>-PconfFile=${project.build.directory}/proguard.conf</arg>
+                                        <arg>-PshadedPackage=${shade.package}</arg>
                                     </args>
                                 </configuration>
                             </execution>
@@ -181,10 +183,14 @@
                                 </goals>
                                 <configuration>
                                     <tasks>
+                                        <task>deleteClasses</task>
                                         <task>renameShadedJar</task>
                                     </tasks>
                                     <args>
+                                        <arg>-q</arg>
+                                        <arg>-PbuildDir=${project.build.directory}</arg>
                                         <arg>-PjerseyVersion=${jersey.version}</arg>
+                                        <arg>-PshadedPackage=${shade.package}</arg>
                                     </args>
                                 </configuration>
                             </execution>
