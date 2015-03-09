@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server.model.internal;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -50,6 +51,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import org.glassfish.jersey.message.internal.TracingLogger;
@@ -110,7 +112,6 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @param resource resource class instance.
      * @param request  request to be dispatched.
      * @return response for the dispatched request.
-     *
      * @throws ProcessingException in case of a processing error.
      * @see ResourceMethodDispatcher#dispatch(Object, org.glassfish.jersey.server.ContainerRequest)
      */
@@ -124,7 +125,6 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @param resource         resource class instance.
      * @param args             input argument values for the invoked Java method.
      * @return invocation result.
-     *
      * @throws ProcessingException (possibly {@link MappableException mappable})
      *                             container exception in case the invocation failed.
      */
@@ -133,7 +133,25 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
         try {
             // Validate resource class & method input parameters.
             if (validator != null) {
-                validator.validateResourceAndInputParams(resource, resourceMethod, args);
+                try {
+                    validator.validateResourceAndInputParams(resource, resourceMethod, args);
+                } catch (ConstraintViolationException e) {
+                    // First check for a property
+                    if (ValidationResultUtil.hasValidationResultProperty(resource)) {
+                        final Method validationResultGetter = ValidationResultUtil.getValidationResultGetter(resource);
+                        ValidationResultUtil.updateValidationResultProperty(resource, validationResultGetter,
+                                e.getConstraintViolations());
+                    } else {
+                        // Then check for a field
+                        final Field validationResult = ValidationResultUtil.getValidationResultField(resource);
+                        if (validationResult != null) {
+                            ValidationResultUtil.updateValidationResultField(resource, validationResult,
+                                    e.getConstraintViolations());
+                        } else {
+                            throw e;
+                        }
+                    }
+                }
             }
 
             final PrivilegedAction invokeMethodAction = new PrivilegedAction() {
@@ -185,4 +203,5 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
     public String toString() {
         return method.toString();
     }
+
 }
