@@ -733,6 +733,18 @@
                 <findbugs.skip>true</findbugs.skip>
             </properties>
         </profile>
+        <profile> <!-- tests module will automatically be included unless tests.excluded env variable is set -->
+            <id>testsIncluded</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <property>
+                  <name>!tests.excluded</name>
+                </property>
+            </activation>
+            <modules>
+                <module>tests</module>
+            </modules>
+        </profile>
         <profile>
             <id>release</id>
             <modules>
@@ -1044,7 +1056,6 @@
         <module>security</module>
         <module>test-framework</module>
 
-        <module>tests</module>
         <!--module>tools</module-->
     </modules>
 
