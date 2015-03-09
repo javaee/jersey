@@ -45,8 +45,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.rx.RxClient;
@@ -83,6 +85,8 @@ public class RxObservableTest {
     @After
     public void tearDown() throws Exception {
         executor.shutdown();
+
+        client.close();
         client = null;
     }
 
@@ -116,14 +120,95 @@ public class RxObservableTest {
         testTarget(RxObservable.from(client.target("http://jersey.java.net"), executor), true);
     }
 
+    @Test
+    public void testNotFoundResponse() throws Exception {
+        final RxObservableInvoker invoker = RxObservable.from(client.target("http://jersey.java.net"))
+                .request()
+                .header("Response-Status", 404)
+                .rx();
+
+        testInvoker(invoker, 404, false);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testNotFoundReadEntityViaClass() throws Throwable {
+        try {
+            RxObservable.from(client.target("http://jersey.java.net"))
+                    .request()
+                    .header("Response-Status", 404)
+                    .rx()
+                    .get(String.class)
+                    .toBlocking()
+                    .toFuture()
+                    .get();
+        } catch (final Exception expected) {
+            // java.util.concurrent.ExecutionException
+            throw expected
+                    // javax.ws.rs.ProcessingException
+                    .getCause()
+                    // javax.ws.rs.NotFoundException
+                    .getCause();
+        }
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testNotFoundReadEntityViaGenericType() throws Throwable {
+        try {
+            RxObservable.from(client.target("http://jersey.java.net"))
+                    .request()
+                    .header("Response-Status", 404)
+                    .rx()
+                    .get(new GenericType<String>() {})
+                    .toBlocking()
+                    .toFuture()
+                    .get();
+        } catch (final Exception expected) {
+            // java.util.concurrent.ExecutionException
+            throw expected
+                    // javax.ws.rs.ProcessingException
+                    .getCause()
+                    // javax.ws.rs.NotFoundException
+                    .getCause();
+        }
+    }
+
+    @Test
+    public void testReadEntityViaClass() throws Throwable {
+        final String response = RxObservable.from(client.target("http://jersey.java.net"))
+                .request()
+                .rx()
+                .get(String.class)
+                .toBlocking()
+                .toFuture()
+                .get();
+
+        assertThat(response, is("NO-ENTITY"));
+    }
+
+    @Test
+    public void testReadEntityViaGenericType() throws Throwable {
+        final String response = RxObservable.from(client.target("http://jersey.java.net"))
+                .request()
+                .rx()
+                .get(new GenericType<String>() {})
+                .toBlocking()
+                .toFuture()
+                .get();
+
+        assertThat(response, is("NO-ENTITY"));
+    }
+
     private void testClient(final RxClient<RxObservableInvoker> rxClient, final boolean testDedicatedThread) throws Exception {
         testTarget(rxClient.target("http://jersey.java.net"), testDedicatedThread);
     }
 
     private void testTarget(final RxWebTarget<RxObservableInvoker> rxTarget, final boolean testDedicatedThread)
             throws Exception {
-        final RxObservableInvoker rx = rxTarget.request().rx();
+        testInvoker(rxTarget.request().rx(), 200, testDedicatedThread);
+    }
 
+    private void testInvoker(final RxObservableInvoker rx, final int expectedStatus, final boolean testDedicatedThread)
+            throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Response> responseRef = new AtomicReference<>();
         final AtomicReference<Throwable> errorRef = new AtomicReference<>();
@@ -149,14 +234,14 @@ public class RxObservableTest {
         latch.await();
 
         if (errorRef.get() == null) {
-            testResponse(responseRef.get(), testDedicatedThread);
+            testResponse(responseRef.get(), expectedStatus, testDedicatedThread);
         } else {
             throw (Exception) errorRef.get();
         }
     }
 
-    private static void testResponse(final Response response, final boolean testDedicatedThread) {
-        assertThat(response.getStatus(), is(200));
+    private static void testResponse(final Response response, final int expectedStatus, final boolean testDedicatedThread) {
+        assertThat(response.getStatus(), is(expectedStatus));
         assertThat(response.readEntity(String.class), is("NO-ENTITY"));
 
         // Executor.
