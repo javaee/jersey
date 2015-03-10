@@ -115,4 +115,12 @@ public class TimeoutTest extends JerseyTest {
                     e.getCause(), instanceOf(SocketTimeoutException.class));
         }
     }
+
+    @Test
+    public void testPerRequestTimeout() {
+        Response r = target("test/timeout").request()
+                .property(ClientProperties.READ_TIMEOUT, 3000).get();
+        assertEquals(200, r.getStatus());
+        assertEquals("GET", r.readEntity(String.class));
+    }
 }

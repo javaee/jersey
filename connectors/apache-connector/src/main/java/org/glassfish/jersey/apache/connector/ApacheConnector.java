@@ -281,19 +281,11 @@ class ApacheConnector implements Connector {
 
         if (reqConfig != null) {
             final RequestConfig.Builder reqConfigBuilder = RequestConfig.copy((RequestConfig) reqConfig);
-            if (connectTimeout > 0) {
-                reqConfigBuilder.setConnectTimeout(connectTimeout);
-            }
-            if (socketTimeout > 0) {
-                reqConfigBuilder.setSocketTimeout(socketTimeout);
-            }
             if (ignoreCookies) {
                 reqConfigBuilder.setCookieSpec(CookieSpecs.IGNORE_COOKIES);
             }
             requestConfig = reqConfigBuilder.build();
         } else {
-            requestConfigBuilder.setConnectTimeout(connectTimeout);
-            requestConfigBuilder.setSocketTimeout(socketTimeout);
             if (ignoreCookies) {
                 requestConfigBuilder.setCookieSpec(CookieSpecs.IGNORE_COOKIES);
             }
@@ -536,9 +528,21 @@ class ApacheConnector implements Connector {
     }
 
     private HttpUriRequest getUriHttpRequest(final ClientRequest clientRequest) {
+        final RequestConfig.Builder requestConfigBuilder = RequestConfig.copy(requestConfig);
+
+        int connectTimeout = clientRequest.resolveProperty(ClientProperties.CONNECT_TIMEOUT, -1);
+        int socketTimeout = clientRequest.resolveProperty(ClientProperties.READ_TIMEOUT, -1);
+
+        if (connectTimeout >= 0) {
+            requestConfigBuilder.setConnectTimeout(connectTimeout);
+        }
+        if (socketTimeout >= 0) {
+            requestConfigBuilder.setSocketTimeout(socketTimeout);
+        }
+
         final Boolean redirectsEnabled =
                 clientRequest.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, requestConfig.isRedirectsEnabled());
-        final RequestConfig config = RequestConfig.copy(requestConfig).setRedirectsEnabled(redirectsEnabled).build();
+        requestConfigBuilder.setRedirectsEnabled(redirectsEnabled);
 
         final Boolean bufferingEnabled = clientRequest.resolveProperty(ClientProperties.REQUEST_ENTITY_PROCESSING,
                 RequestEntityProcessing.class) == RequestEntityProcessing.BUFFERED;
@@ -547,7 +551,7 @@ class ApacheConnector implements Connector {
         return RequestBuilder
                 .create(clientRequest.getMethod())
                 .setUri(clientRequest.getUri())
-                .setConfig(config)
+                .setConfig(requestConfigBuilder.build())
                 .setEntity(entity)
                 .build();
     }
