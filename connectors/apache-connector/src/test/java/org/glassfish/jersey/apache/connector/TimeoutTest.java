@@ -79,7 +79,7 @@ public class TimeoutTest extends JerseyTest {
         public String getTimeout() {
             try {
                 Thread.sleep(2000);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 e.printStackTrace();
             }
             return "GET";
@@ -88,20 +88,20 @@ public class TimeoutTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        ResourceConfig config = new ResourceConfig(TimeoutResource.class);
+        final ResourceConfig config = new ResourceConfig(TimeoutResource.class);
         config.register(new LoggingFilter(LOGGER, true));
         return config;
     }
 
     @Override
-    protected void configureClient(ClientConfig config) {
+    protected void configureClient(final ClientConfig config) {
         config.property(ClientProperties.READ_TIMEOUT, 1000);
         config.connectorProvider(new ApacheConnectorProvider());
     }
 
     @Test
     public void testFast() {
-        Response r = target("test").request().get();
+        final Response r = target("test").request().get();
         assertEquals(200, r.getStatus());
         assertEquals("GET", r.readEntity(String.class));
     }
@@ -110,7 +110,7 @@ public class TimeoutTest extends JerseyTest {
     public void testSlow() {
         try {
             target("test/timeout").request().get();
-        } catch (ProcessingException e) {
+        } catch (final ProcessingException e) {
             assertThat("Unexpected processing exception cause",
                     e.getCause(), instanceOf(SocketTimeoutException.class));
         }
@@ -118,7 +118,7 @@ public class TimeoutTest extends JerseyTest {
 
     @Test
     public void testPerRequestTimeout() {
-        Response r = target("test/timeout").request()
+        final Response r = target("test/timeout").request()
                 .property(ClientProperties.READ_TIMEOUT, 3000).get();
         assertEquals(200, r.getStatus());
         assertEquals("GET", r.readEntity(String.class));

@@ -462,7 +462,7 @@ class ApacheConnector implements Connector {
                 final String headerName = header.getName();
                 List<String> list = headers.get(headerName);
                 if (list == null) {
-                    list = new ArrayList<String>();
+                    list = new ArrayList<>();
                 }
                 list.add(header.getValue());
                 headers.put(headerName, list);
@@ -500,8 +500,6 @@ class ApacheConnector implements Connector {
             public void run() {
                 try {
                     callback.response(apply(request));
-                } catch (final ProcessingException ex) {
-                    callback.failure(ex);
                 } catch (final Throwable t) {
                     callback.failure(t);
                 }
