@@ -90,8 +90,11 @@ public class ServletHk2LocatorManager implements Hk2LocatorManager, InjectionTar
         }
 
         // Store given locator under particular context path.
-        final ServletContext hk2ServletContext = locator.getService(javax.servlet.ServletConfig.class)
-                .getServletContext();
+        final javax.servlet.ServletConfig hk2ServletConfig = locator.getService(javax.servlet.ServletConfig.class);
+        final ServletContext hk2ServletContext = hk2ServletConfig != null
+                ? hk2ServletConfig.getServletContext()                      // servlet
+                : locator.getService(javax.servlet.ServletContext.class);   // servlet filter
+
         locatorsByContextPath.put(hk2ServletContext.getContextPath(), locator);
 
         // Set effective locator to all injection targets with the same class loader.
