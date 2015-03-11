@@ -558,7 +558,7 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
                 <title>Custom &lit.jaxrs.core.Application; subclass</title>
                 <para>
                     If you extend the &jaxrs.core.Application; class to provide the list of relevant root resource
-                    classes (<literal>getResources()</literal>) and singletons (<literal>getSingletons()</literal>),
+                    classes (<literal>getClasses()</literal>) and singletons (<literal>getSingletons()</literal>),
                     i.e. your JAX-RS application model, you then need to register it in your web application
                     <literal>web.xml</literal> deployment descriptor using a Servlet or Servlet filter initialization
                     parameter with a name of  <literal>javax.ws.rs.Application</literal> [<emphasis>sic</emphasis>] as follows:
@@ -573,7 +573,7 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
 &lt;/init-param&gt;</programlisting>
                     </example>
 
-                    Jersey will consider all the classes returned by <literal>getResources()</literal> and
+                    Jersey will consider all the classes returned by <literal>getClasses()</literal> and
                     <literal>getSingletons()</literal> methods of your &lit.jaxrs.core.Application; implementation.
                 </para>
 
