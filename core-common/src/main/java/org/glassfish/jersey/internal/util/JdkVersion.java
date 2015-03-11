@@ -137,7 +137,7 @@ public class JdkVersion implements Comparable<JdkVersion> {
     }
 
     /**
-     * Returns <tt>true</tt> if <code>sun.misc.Unsafe</code> is present in the
+     * Returns <tt>true</tt> if {@code sun.misc.Unsafe} is present in the
      * current JDK version, or <tt>false</tt> otherwise.
      *
      * @since 2.3.6
@@ -148,12 +148,13 @@ public class JdkVersion implements Comparable<JdkVersion> {
 
     @Override
     public String toString() {
-        return "JdkVersion" + "{major=" + major + ", minor=" + minor + ", maintenance=" + maintenance + ", update=" + update + '}';
+        return "JdkVersion" + "{major=" + major + ", minor=" + minor + ", maintenance=" + maintenance
+                + ", update=" + update + '}';
     }
 
     // ------------------------------------------------- Methods from Comparable
 
-    public int compareTo(String versionString) {
+    public int compareTo(final String versionString) {
         return compareTo(JdkVersion.parseVersion(versionString));
     }
 
@@ -184,11 +185,5 @@ public class JdkVersion implements Comparable<JdkVersion> {
             return 1;
         }
         return 0;
-    }
-
-    public static void main(String[] args) {
-        final JdkVersion jdkVersion = JdkVersion.parseVersion("1.6.0");
-        final JdkVersion minimumVersion = JdkVersion.parseVersion("1.7.0");
-        System.out.println(minimumVersion.compareTo(jdkVersion));
     }
 }

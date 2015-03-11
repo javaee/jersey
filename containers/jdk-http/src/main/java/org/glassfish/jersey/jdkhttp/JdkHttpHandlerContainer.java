@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.jdkhttp;
 
 import java.io.IOException;
@@ -54,6 +55,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
@@ -80,10 +82,11 @@ import com.sun.net.httpserver.HttpsExchange;
 /**
  * Jersey {@code Container} implementation based on Java SE {@link HttpServer}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JdkHttpHandlerContainer implements HttpHandler, Container {
+
     private static final Logger LOGGER = Logger.getLogger(JdkHttpHandlerContainer.class.getName());
 
     private volatile ApplicationHandler appHandler;
@@ -103,6 +106,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
      * Create new lightweight Java SE HTTP server container.
      *
      * @param application JAX-RS / Jersey application to be deployed on the container.
+     * @param parentLocator parent HK2 service locator.
      */
     JdkHttpHandlerContainer(final Application application, final ServiceLocator parentLocator) {
         this.appHandler = new ApplicationHandler(application, null, parentLocator);
@@ -133,8 +137,8 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
                  *
                  * TODO support redirection in accordance with resource configuration feature.
                  */
-                exchangeUri = UriBuilder.fromUri(exchangeUri).
-                        path("/").build();
+                exchangeUri = UriBuilder.fromUri(exchangeUri)
+                        .path("/").build();
             }
             decodedBasePath += "/";
         }
@@ -274,7 +278,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
             }
 
             try {
-                if (context.getStatus() == 204) {
+                if (context.getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
                     // Work around bug in LW HTTP server
                     // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6886436
                     exchange.sendResponseHeaders(context.getStatus(), -1);
@@ -283,7 +287,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
                             getResponseLength(contentLength));
                 }
             } catch (final IOException ioe) {
-                throw new ContainerException("Error during writing out the response headers.", ioe);
+                throw new ContainerException(LocalizationMessages.ERROR_RESPONSEWRITER_WRITING_HEADERS(), ioe);
             }
 
             return exchange.getResponseBody();
@@ -312,9 +316,9 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         @Override
         public void failure(final Throwable error) {
             try {
-                exchange.sendResponseHeaders(500, getResponseLength(0));
+                exchange.sendResponseHeaders(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), getResponseLength(0));
             } catch (final IOException e) {
-                LOGGER.log(Level.WARNING, "Unable to send a failure response.", e);
+                LOGGER.log(Level.WARNING, LocalizationMessages.ERROR_RESPONSEWRITER_SENDING_FAILURE_RESPONSE(), e);
             } finally {
                 commit();
                 rethrow(error);

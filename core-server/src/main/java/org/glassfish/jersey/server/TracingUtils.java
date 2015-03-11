@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,7 +44,6 @@ import java.util.List;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.server.internal.ServerTraceEvent;
 
@@ -82,7 +81,9 @@ public final class TracingUtils {
      * @param containerRequest request instance to get runtime properties to store {@link TracingLogger} instance to
      *                         if tracing support is enabled for the request.
      */
-    public static void initTracingSupport(TracingConfig type, TracingLogger.Level appThreshold, ContainerRequest containerRequest) {
+    public static void initTracingSupport(TracingConfig type,
+                                          TracingLogger.Level appThreshold,
+                                          ContainerRequest containerRequest) {
         final TracingLogger tracingLogger;
         if (isTracingSupportEnabled(type, containerRequest)) {
             tracingLogger = TracingLogger.create(
@@ -135,8 +136,8 @@ public final class TracingUtils {
      * @return {@code true} if tracing support is switched on for the request.
      */
     private static boolean isTracingSupportEnabled(TracingConfig type, ContainerRequest containerRequest) {
-        return (type == TracingConfig.ALL) ||
-                ((type == TracingConfig.ON_DEMAND) && (containerRequest.getHeaderString(TracingLogger.HEADER_ACCEPT) != null));
+        return (type == TracingConfig.ALL)
+                || ((type == TracingConfig.ON_DEMAND) && (containerRequest.getHeaderString(TracingLogger.HEADER_ACCEPT) != null));
     }
 
     /**

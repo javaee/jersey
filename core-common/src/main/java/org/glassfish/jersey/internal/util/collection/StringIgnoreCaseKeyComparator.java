@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,16 +51,14 @@ public class StringIgnoreCaseKeyComparator implements KeyComparator<String> {
 
     public static final StringIgnoreCaseKeyComparator SINGLETON = new StringIgnoreCaseKeyComparator();
 
+    @Override
     public int hash(String k) {
         return k.toLowerCase().hashCode();
     }
 
+    @Override
     public boolean equals(String x, String y) {
         return x.equalsIgnoreCase(y);
-    }
-
-    public int compare(String o1, String o2) {
-        return o1.compareToIgnoreCase(o2);
     }
 
 }

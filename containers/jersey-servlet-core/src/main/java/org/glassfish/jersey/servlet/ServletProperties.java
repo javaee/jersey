@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,9 @@
  */
 package org.glassfish.jersey.servlet;
 
-import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.util.PropertiesClass;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Jersey servlet container configuration properties.
@@ -51,28 +52,27 @@ import org.glassfish.jersey.internal.util.PropertiesClass;
 public final class ServletProperties {
 
     /**
-     * If set the regular expression is used to match an incoming servlet path URI
-     * to some web page content such as static resources or JSPs to be handled
-     * by the underlying servlet engine.
-     * <p></p>
+     * If set, indicates the URL pattern of the Jersey servlet filter context path.
+     * <p>
+     * If the URL pattern of a filter is set to a base path and a wildcard,
+     * such as "/base/*", then this property can be used to declare a filter
+     * context path that behaves in the same manner as the Servlet context
+     * path for determining the base URI of the application. (Note that with
+     * the Servlet 2.x API it is not possible to determine the URL pattern
+     * without parsing the {@code web.xml}, hence why this property is necessary.)
+     * <p>
      * The property is only applicable when {@link ServletContainer Jersey servlet
-     * container} is configured to run as a {@link javax.servlet.Filter}, otherwise
-     * this property will be ignored. If a servlet path matches this regular
-     * expression then the filter forwards the request to the next filter in the
-     * filter chain so that the underlying servlet engine can process the request
-     * otherwise Jersey will process the request. For example if you set the value
-     * to {@code /(image|css)/.*} then you can serve up images and CSS files
-     * for your Implicit or Explicit Views while still processing your JAX-RS
-     * resources.
-     * <p></p>
-     * The type of this property must be a String and the value must be a valid
-     * regular expression.
+     * container} is configured to run as a {@link javax.servlet.Filter}, otherwise this property
+     * will be ignored.
+     * <p>
+     * The value of the property may consist of one or more path segments separate by
+     * {@code '/'}.
      * <p></p>
      * A default value is not set.
      * <p></p>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public static final String FILTER_STATIC_CONTENT_REGEX = "jersey.config.servlet.filter.staticContentRegex";
+    public static final String FILTER_CONTEXT_PATH = "jersey.config.servlet.filter.contextPath";
 
     /**
      * If set to {@code true} and a 404 response with no entity body is returned
@@ -100,27 +100,28 @@ public final class ServletProperties {
     public static final String FILTER_FORWARD_ON_404 = "jersey.config.servlet.filter.forwardOn404";
 
     /**
-     * If set, indicates the URL pattern of the Jersey servlet filter context path.
-     * <p>
-     * If the URL pattern of a filter is set to a base path and a wildcard,
-     * such as "/base/*", then this property can be used to declare a filter
-     * context path that behaves in the same manner as the Servlet context
-     * path for determining the base URI of the application. (Note that with
-     * the Servlet 2.x API it is not possible to determine the URL pattern
-     * without parsing the {@code web.xml}, hence why this property is necessary.)
-     * <p>
+     * If set the regular expression is used to match an incoming servlet path URI
+     * to some web page content such as static resources or JSPs to be handled
+     * by the underlying servlet engine.
+     * <p></p>
      * The property is only applicable when {@link ServletContainer Jersey servlet
-     * container} is configured to run as a {@link javax.servlet.Filter}, otherwise this property
-     * will be ignored.
-     * <p>
-     * The value of the property may consist of one or more path segments separate by
-     * {@code '/'}.
+     * container} is configured to run as a {@link javax.servlet.Filter}, otherwise
+     * this property will be ignored. If a servlet path matches this regular
+     * expression then the filter forwards the request to the next filter in the
+     * filter chain so that the underlying servlet engine can process the request
+     * otherwise Jersey will process the request. For example if you set the value
+     * to {@code /(image|css)/.*} then you can serve up images and CSS files
+     * for your Implicit or Explicit Views while still processing your JAX-RS
+     * resources.
+     * <p></p>
+     * The type of this property must be a String and the value must be a valid
+     * regular expression.
      * <p></p>
      * A default value is not set.
      * <p></p>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public static final String FILTER_CONTEXT_PATH = "jersey.config.servlet.filter.contextPath";
+    public static final String FILTER_STATIC_CONTENT_REGEX = "jersey.config.servlet.filter.staticContentRegex";
 
     /**
      * Application configuration initialization property whose value is a fully
@@ -147,6 +148,20 @@ public final class ServletProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String PROVIDER_WEB_APP = "jersey.config.servlet.provider.webapp";
+
+    /**
+     * If {@code true} then query parameters will not be treated as form parameters (e.g. injectable using
+     * {@link javax.ws.rs.FormParam}) in case a Form request is processed by server.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.16
+     */
+    public static final String QUERY_PARAMS_AS_FORM_PARAMS_DISABLED = "jersey.config.servlet.form.queryParams.disabled";
 
     /**
      * Identifies the object that will be used as a parent {@link ServiceLocator} in the Jersey

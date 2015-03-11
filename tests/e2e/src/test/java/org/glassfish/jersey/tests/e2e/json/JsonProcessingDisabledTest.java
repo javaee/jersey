@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,8 +68,8 @@ import static org.junit.Assert.assertEquals;
  */
 public class JsonProcessingDisabledTest extends JerseyTest {
 
-    private final static String JSON_OBJECT_STR = "{\"foo\":\"bar\"}";
-    private final static JsonObject JSON_OBJECT = Json.createReader(new StringReader(JSON_OBJECT_STR)).readObject();
+    private static final String JSON_OBJECT_STR = "{\"foo\":\"bar\"}";
+    private static final JsonObject JSON_OBJECT = Json.createReader(new StringReader(JSON_OBJECT_STR)).readObject();
 
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)

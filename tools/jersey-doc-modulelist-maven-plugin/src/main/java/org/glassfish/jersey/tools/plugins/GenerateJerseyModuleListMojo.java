@@ -218,8 +218,8 @@ public class GenerateJerseyModuleListMojo extends AbstractMojo {
         if (unmatched.size() > 0) {
             log.warn("There are unmatched modules (" + unmatched.size() + ").");
             if (!outputUnmatched) {
-                log.warn("You can configure the plugin to output unmatched modules by adding " +
-                        "<outputUnmatched>true</outputUnmatched> in the configuration.");
+                log.warn("You can configure the plugin to output unmatched modules by adding "
+                        + "<outputUnmatched>true</outputUnmatched> in the configuration.");
             }
         }
 
@@ -310,8 +310,8 @@ public class GenerateJerseyModuleListMojo extends AbstractMojo {
     private String getLinkPath(MavenProject project) {
         String path = "";
         MavenProject parent = project.getParent();
-        while (parent != null &&
-                !(parent.getArtifactId().equals("project") && parent.getGroupId().equals("org.glassfish.jersey"))) {
+        while (parent != null
+                && !(parent.getArtifactId().equals("project") && parent.getGroupId().equals("org.glassfish.jersey"))) {
             path = parent.getArtifactId() + "/" + path;
             parent = parent.getParent();
         }

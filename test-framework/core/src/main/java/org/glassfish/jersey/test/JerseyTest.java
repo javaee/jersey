@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -482,7 +482,7 @@ public abstract class JerseyTest {
             if (factoryClassName != null) {
                 LOGGER.log(Level.CONFIG,
                         "Loading test container factory '{0}' specified in the '{1}' system property.",
-                        new Object[]{factoryClassName, TestProperties.CONTAINER_FACTORY});
+                        new Object[] {factoryClassName, TestProperties.CONTAINER_FACTORY});
 
                 defaultTestContainerFactoryClass = loadFactoryClass(factoryClassName);
             } else {
@@ -631,7 +631,10 @@ public abstract class JerseyTest {
         }
 
         try {
-            setTestContainer(null).stop();
+            TestContainer oldContainer = setTestContainer(null);
+            if (oldContainer != null) {
+                oldContainer.stop();
+            }
         } finally {
             closeIfNotNull(setClient(null));
         }
@@ -878,7 +881,8 @@ public abstract class JerseyTest {
         if (property != null) {
             multi = Integer.valueOf(property);
             if (multi <= 0) {
-                throw new NumberFormatException("Property " + TestProperties.ASYNC_TIMEOUT_MULTIPLIER + " must be a number greater than 0.");
+                throw new NumberFormatException(
+                        "Property " + TestProperties.ASYNC_TIMEOUT_MULTIPLIER + " must be a number greater than 0.");
             }
         }
         return multi;

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -73,20 +73,16 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
 
-    final private Set<HeaderDelegateProvider> hps;
-    final private Map<Class<?>, HeaderDelegate<?>> map;
+    private final Set<HeaderDelegateProvider> hps;
+    private final Map<Class<?>, HeaderDelegate<?>> map;
 
     /**
      * Initialization constructor.
      *
      * @param serviceLocator HK2 service locator.
      */
-    protected AbstractRuntimeDelegate(ServiceLocator serviceLocator) {
+    protected AbstractRuntimeDelegate(final ServiceLocator serviceLocator) {
         hps = Providers.getProviders(serviceLocator, HeaderDelegateProvider.class);
-//        hps = new HashSet<HeaderDelegateProvider<?>>();
-//        for (HeaderDelegateProvider p : ServiceFinder.find(HeaderDelegateProvider.class, true)) {
-//            hps.add(p);
-//        }
 
         /**
          * Construct a map for quick look up of known header classes
@@ -123,13 +119,12 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
     }
 
     @Override
-    public <T> HeaderDelegate<T> createHeaderDelegate(Class<T> type) {
+    public <T> HeaderDelegate<T> createHeaderDelegate(final Class<T> type) {
         if (type == null) {
             throw new IllegalArgumentException("type parameter cannot be null");
         }
 
-        @SuppressWarnings("unchecked")
-        HeaderDelegate<T> delegate = (HeaderDelegate<T>) map.get(type);
+        @SuppressWarnings("unchecked") final HeaderDelegate<T> delegate = (HeaderDelegate<T>) map.get(type);
         if (delegate != null) {
             return delegate;
         }
@@ -138,8 +133,8 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> HeaderDelegate<T> _createHeaderDelegate(Class<T> type) {
-        for (HeaderDelegateProvider hp : hps) {
+    private <T> HeaderDelegate<T> _createHeaderDelegate(final Class<T> type) {
+        for (final HeaderDelegateProvider hp : hps) {
             if (hp.supports(type)) {
                 return hp;
             }

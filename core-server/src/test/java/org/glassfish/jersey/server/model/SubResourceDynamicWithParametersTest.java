@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,7 +65,7 @@ public class SubResourceDynamicWithParametersTest {
     }
 
     @Path("/{p}")
-    static public class ParentWithTemplates {
+    public static class ParentWithTemplates {
 
         @GET
         public String getMe(@PathParam("p") String p) {
@@ -92,7 +92,7 @@ public class SubResourceDynamicWithParametersTest {
         }
     }
 
-    static public class ChildWithTemplates {
+    public static class ChildWithTemplates {
 
         @GET
         public String getMe(@PathParam("c") String c) {
@@ -100,7 +100,7 @@ public class SubResourceDynamicWithParametersTest {
         }
     }
 
-    static public class UnmatchedPathResource {
+    public static class UnmatchedPathResource {
 
         String path;
 
@@ -122,7 +122,8 @@ public class SubResourceDynamicWithParametersTest {
         app = createApplication(ParentWithTemplates.class);
 
         assertEquals("parent", app.apply(RequestContextBuilder.from("/parent", "GET").build()).get().getEntity());
-        assertEquals("first", app.apply(RequestContextBuilder.from("/parent/child/first?a=1&b=2", "GET").build()).get().getEntity());
+        assertEquals("first",
+                app.apply(RequestContextBuilder.from("/parent/child/first?a=1&b=2", "GET").build()).get().getEntity());
     }
 
     @Test
@@ -130,6 +131,7 @@ public class SubResourceDynamicWithParametersTest {
         app = createApplication(ParentWithTemplates.class);
 
         assertEquals("", app.apply(RequestContextBuilder.from("/parent/unmatchedPath/", "GET").build()).get().getEntity());
-        assertEquals("a/b/c/d", app.apply(RequestContextBuilder.from("/parent/unmatchedPath/a/b/c/d", "GET").build()).get().getEntity());
+        assertEquals("a/b/c/d",
+                app.apply(RequestContextBuilder.from("/parent/unmatchedPath/a/b/c/d", "GET").build()).get().getEntity());
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.performance.filter.dynamic;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.SequenceInputStream;
+
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -57,12 +58,15 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class DynamicallyBoundFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
+    @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         if (requestContext.hasEntity()) {
-            requestContext.setEntityStream(new SequenceInputStream(new ByteArrayInputStream("DYN_MATCH_IN".getBytes()), requestContext.getEntityStream()));
+            requestContext.setEntityStream(new SequenceInputStream(new ByteArrayInputStream("DYN_MATCH_IN".getBytes()),
+                    requestContext.getEntityStream()));
         }
     }
 
+    @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
         if (responseContext.hasEntity()) {
             responseContext.setEntity("" + responseContext.getEntity() + "DYN_MATCH_OUT", null, MediaType.TEXT_PLAIN_TYPE);

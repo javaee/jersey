@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -78,28 +78,29 @@ import static org.junit.Assert.assertEquals;
  */
 public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
 
-    final static String ENTITY = "ENTITY";
+    static final String ENTITY = "ENTITY";
 
     @Override
     protected void configureClient(ClientConfig config) {
         super.configureClient(config);
     }
 
-    static abstract class PrefixAddingReaderInterceptor implements ReaderInterceptor {
+    abstract static class PrefixAddingReaderInterceptor implements ReaderInterceptor {
 
         public PrefixAddingReaderInterceptor() {
         }
 
         @Override
         public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {
-            context.setInputStream(new SequenceInputStream(new ByteArrayInputStream(getPrefix().getBytes()), context.getInputStream()));
+            context.setInputStream(
+                    new SequenceInputStream(new ByteArrayInputStream(getPrefix().getBytes()), context.getInputStream()));
             return context.proceed();
         }
 
         abstract String getPrefix();
     }
 
-    static abstract class PrefixAddingWriterInterceptor implements WriterInterceptor {
+    abstract static class PrefixAddingWriterInterceptor implements WriterInterceptor {
 
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
@@ -222,6 +223,7 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
             return input;
         }
     }
+
     static final Pattern ReaderMETHOD = Pattern.compile(".*Dynamically.*Reader");
     static final Pattern WriterMETHOD = Pattern.compile(".*Dynamically.*Writer");
 
@@ -287,9 +289,9 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
 
     @Test
     public void testNameBoundWriterDynamicWriterNameBoundReader() {
-        _testReader("mixed", "nameBoundWriterDynamicWriterNameBoundReader", "dynamicallyBoundWriternameBoundWriternameBoundReaderENTITY");
+        _testReader("mixed", "nameBoundWriterDynamicWriterNameBoundReader",
+                "dynamicallyBoundWriternameBoundWriternameBoundReaderENTITY");
     }
-
 
     private void _testReader(String root, String id) {
         _testReader(root, id, id + ENTITY);

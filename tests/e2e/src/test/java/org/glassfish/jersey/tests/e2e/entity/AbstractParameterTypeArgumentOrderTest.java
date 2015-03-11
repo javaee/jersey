@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,6 +53,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
+
 import org.glassfish.jersey.test.JerseyTest;
 
 /**
@@ -64,8 +65,10 @@ import org.glassfish.jersey.test.JerseyTest;
  * @author Paul Sandoz
  */
 public abstract class AbstractParameterTypeArgumentOrderTest extends JerseyTest {
+
     @Provider
     public static class ObjectWriter implements MessageBodyWriter {
+
         @Override
         public boolean isWriteable(final Class type, final Type genericType, final Annotation[] annotations,
                                    final MediaType mediaType) {
@@ -87,7 +90,9 @@ public abstract class AbstractParameterTypeArgumentOrderTest extends JerseyTest 
     }
 
     public static class GenericClassWriter<T> implements MessageBodyWriter<T> {
+
         private final Class c;
+
         GenericClassWriter(final Class c) {
             this.c = c;
         }
@@ -116,6 +121,7 @@ public abstract class AbstractParameterTypeArgumentOrderTest extends JerseyTest 
 
     @Provider
     public static class AWriter extends GenericClassWriter<A> {
+
         public AWriter() {
             super(A.class);
         }
@@ -125,6 +131,7 @@ public abstract class AbstractParameterTypeArgumentOrderTest extends JerseyTest 
 
     @Provider
     public static class BWriter extends GenericClassWriter<B> {
+
         public BWriter() {
             super(B.class);
         }
@@ -134,6 +141,7 @@ public abstract class AbstractParameterTypeArgumentOrderTest extends JerseyTest 
 
     @Provider
     public static class CWriter extends GenericClassWriter<C> {
+
         public CWriter() {
             super(C.class);
         }
@@ -141,6 +149,7 @@ public abstract class AbstractParameterTypeArgumentOrderTest extends JerseyTest 
 
     @Path("/")
     public static class ClassResource {
+
         @GET
         @Path("a")
         public A getA() {
@@ -161,6 +170,7 @@ public abstract class AbstractParameterTypeArgumentOrderTest extends JerseyTest 
     }
 
     public static class GenericClassReaderWriter<T> implements MessageBodyWriter<T>, MessageBodyReader<T> {
+
         private final Class c;
 
         GenericClassReaderWriter(final Class c) {
@@ -206,20 +216,26 @@ public abstract class AbstractParameterTypeArgumentOrderTest extends JerseyTest 
 
     @Provider
     public static class AReaderWriter<T> extends GenericClassReaderWriter<T> {
-        public AReaderWriter() { super(A.class); }
+
+        public AReaderWriter() {
+            super(A.class);
+        }
     }
 
     @Provider
     public static class BReaderWriter extends GenericClassReaderWriter<B> {
-        public BReaderWriter() { super(B.class); }
+
+        public BReaderWriter() {
+            super(B.class);
+        }
     }
 
     @Provider
     public static class CReaderWriter extends GenericClassReaderWriter<C> {
-        public CReaderWriter() { super(C.class); }
+
+        public CReaderWriter() {
+            super(C.class);
+        }
     }
-
-
-
 
 }

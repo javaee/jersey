@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,8 +40,6 @@
 package org.glassfish.jersey.examples.helloworld.spring;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -50,6 +48,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Jersey2 Spring integration example.
@@ -69,7 +70,7 @@ public class SpringSingletonResource {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String getHello(@Context HttpHeaders headers, @QueryParam("p1") String p1) {
-        if("foobar".equals(p1)) {
+        if ("foobar".equals(p1)) {
             throw new IllegalArgumentException("foobar is illegal");
         }
         return String.format("%d: %s", counter.incrementAndGet(), greetingService.greet("world"));

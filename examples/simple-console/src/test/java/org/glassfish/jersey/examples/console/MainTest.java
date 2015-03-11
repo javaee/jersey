@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -85,8 +85,8 @@ public class MainTest extends JerseyTest {
      */
     @Test
     public void testApplicationWadl() {
-        String serviceWadl = target().path("application.wadl").request(MediaTypes.WADL).get(String.class);
-        assertTrue(serviceWadl.length() > 0);
+        String serviceWadl = target().path("application.wadl").request(MediaTypes.WADL_TYPE).get(String.class);
+        assertTrue(!serviceWadl.isEmpty());
     }
 
     /**
@@ -162,7 +162,8 @@ public class MainTest extends JerseyTest {
 
         // with the query param "match" value "re"
         jsonArray = target("form/colours").queryParam("match", "re").request(MediaType.APPLICATION_JSON).get(JSONArray.class);
-        assertEquals("Returned JSONArray doesn't have expected number of entries with the query param 'match=re'", 2, jsonArray.length());
+        assertEquals("Returned JSONArray doesn't have expected number of entries with the query param 'match=re'", 2,
+                jsonArray.length());
     }
 
 }

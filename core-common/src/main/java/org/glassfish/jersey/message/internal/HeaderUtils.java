@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,9 +58,9 @@ import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.glassfish.jersey.internal.util.collection.StringKeyIgnoreCaseMultivaluedMap;
 
 import jersey.repackaged.com.google.common.base.Function;
+import jersey.repackaged.com.google.common.collect.ImmutableMap;
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.ImmutableMap;
 
 /**
  * Utility class supporting the processing of message headers.
@@ -71,7 +71,7 @@ import jersey.repackaged.com.google.common.collect.ImmutableMap;
  */
 public final class HeaderUtils {
 
-    private final static Logger LOGGER = Logger.getLogger(HeaderUtils.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(HeaderUtils.class.getName());
 
     /**
      * Create an empty inbound message headers container. Created container is mutable.
@@ -161,7 +161,7 @@ public final class HeaderUtils {
 
         return Lists.transform(headerValues, new Function<Object, String>() {
             @Override
-            public String apply(Object input) {
+            public String apply(final Object input) {
                 return (input == null) ? "[null]" : HeaderUtils.asString(input, delegate);
             }
 
@@ -184,7 +184,7 @@ public final class HeaderUtils {
         return new AbstractMultivaluedMap<String, String>(
                 Maps.transformValues(headers, new Function<List<Object>, List<String>>() {
                     @Override
-                    public List<String> apply(List<Object> input) {
+                    public List<String> apply(final List<Object> input) {
                         return HeaderUtils.asStringList(input, rd);
                     }
                 })
@@ -207,8 +207,8 @@ public final class HeaderUtils {
         }
 
         final RuntimeDelegate rd = RuntimeDelegate.getInstance();
-        ImmutableMap.Builder<String, String> immutableMapBuilder = new ImmutableMap.Builder<String, String>();
-        for (Map.Entry<? extends String, ? extends List<Object>> entry : headers.entrySet()) {
+        final ImmutableMap.Builder<String, String> immutableMapBuilder = new ImmutableMap.Builder<String, String>();
+        for (final Map.Entry<? extends String, ? extends List<Object>> entry : headers.entrySet()) {
             immutableMapBuilder.put(entry.getKey(), asHeaderString(entry.getValue(), rd));
         }
         return immutableMapBuilder.build();
@@ -230,7 +230,7 @@ public final class HeaderUtils {
      * @return single string consisting of all the values passed in as a parameter. If values parameter is {@code null},
      *         {@code null} is returned. If the list of values is empty, an empty string is returned.
      */
-    public static String asHeaderString(List<Object> values, RuntimeDelegate rd) {
+    public static String asHeaderString(final List<Object> values, final RuntimeDelegate rd) {
         if (values == null) {
             return null;
         }
@@ -239,7 +239,7 @@ public final class HeaderUtils {
             return "";
         }
 
-        StringBuilder buffer = new StringBuilder(stringValues.next());
+        final StringBuilder buffer = new StringBuilder(stringValues.next());
         while (stringValues.hasNext()) {
             buffer.append(',').append(stringValues.next());
         }
@@ -264,13 +264,13 @@ public final class HeaderUtils {
                                           final String connectorName) {
         if (HeaderUtils.LOGGER.isLoggable(Level.WARNING)) {
             final RuntimeDelegate rd = RuntimeDelegate.getInstance();
-            Set<String> changedHeaderNames = new HashSet<String>();
-            for (Map.Entry<? extends String, ? extends List<Object>> entry : currentHeaders.entrySet()) {
+            final Set<String> changedHeaderNames = new HashSet<String>();
+            for (final Map.Entry<? extends String, ? extends List<Object>> entry : currentHeaders.entrySet()) {
                 if (!headersSnapshot.containsKey(entry.getKey())) {
                     changedHeaderNames.add(entry.getKey());
                 } else {
-                    String prevValue = headersSnapshot.get(entry.getKey());
-                    String newValue = asHeaderString(currentHeaders.get(entry.getKey()), rd);
+                    final String prevValue = headersSnapshot.get(entry.getKey());
+                    final String newValue = asHeaderString(currentHeaders.get(entry.getKey()), rd);
                     if (!prevValue.equals(newValue)) {
                         changedHeaderNames.add(entry.getKey());
                     }
@@ -289,5 +289,6 @@ public final class HeaderUtils {
      * Preventing instantiation.
      */
     private HeaderUtils() {
+        throw new AssertionError("No instances allowed.");
     }
 }

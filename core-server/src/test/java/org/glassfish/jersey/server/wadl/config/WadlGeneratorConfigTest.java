@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -72,7 +73,7 @@ import com.sun.research.ws.wadl.Response;
  * Created on: Aug 2, 2008<br>
  *
  * @author <a href="mailto:martin.grotzke@freiheit.com">Martin Grotzke</a>
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
 
  */
 public class WadlGeneratorConfigTest {
@@ -81,10 +82,10 @@ public class WadlGeneratorConfigTest {
     public void testBuildWadlGeneratorFromGenerators() {
         final Class<MyWadlGenerator> generator = MyWadlGenerator.class;
         final Class<MyWadlGenerator2> generator2 = MyWadlGenerator2.class;
-        WadlGeneratorConfig config = WadlGeneratorConfig.
-                generator(generator).
-                generator(generator2).
-                build();
+        WadlGeneratorConfig config = WadlGeneratorConfig
+                .generator(generator)
+                .generator(generator2)
+                .build();
 
         final ServiceLocator locator = ServerLocatorFactory.createLocator();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
@@ -97,18 +98,18 @@ public class WadlGeneratorConfigTest {
     public void testBuildWadlGeneratorFromDescriptions() {
         final ServiceLocator locator = ServerLocatorFactory.createLocator();
         final String propValue = "bar";
-        WadlGeneratorConfig config = WadlGeneratorConfig.generator(MyWadlGenerator.class).
-                prop("foo", propValue).
-                build();
+        WadlGeneratorConfig config = WadlGeneratorConfig.generator(MyWadlGenerator.class)
+                .prop("foo", propValue)
+                .build();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
         Assert.assertEquals(MyWadlGenerator.class, wadlGenerator.getClass());
         Assert.assertEquals(((MyWadlGenerator) wadlGenerator).getFoo(), propValue);
 
         final String propValue2 = "baz";
-        config = WadlGeneratorConfig.generator(MyWadlGenerator.class).
-                prop("foo", propValue).generator(MyWadlGenerator2.class).
-                prop("bar", propValue2).
-                build();
+        config = WadlGeneratorConfig.generator(MyWadlGenerator.class)
+                .prop("foo", propValue).generator(MyWadlGenerator2.class)
+                .prop("bar", propValue2)
+                .build();
         wadlGenerator = config.createWadlGenerator(locator);
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
         final MyWadlGenerator2 wadlGenerator2 = (MyWadlGenerator2) wadlGenerator;
@@ -127,10 +128,10 @@ public class WadlGeneratorConfigTest {
 
             @Override
             public List<WadlGeneratorDescription> configure() {
-                return generator(MyWadlGenerator.class).
-                        prop("foo", propValue).
-                        generator(MyWadlGenerator2.class).
-                        prop("bar", propValue2).descriptions();
+                return generator(MyWadlGenerator.class)
+                        .prop("foo", propValue)
+                        .generator(MyWadlGenerator2.class)
+                        .prop("bar", propValue2).descriptions();
             }
         }
 
@@ -147,7 +148,7 @@ public class WadlGeneratorConfigTest {
         Assert.assertEquals(((MyWadlGenerator) wadlGenerator2.getDelegate()).getFoo(), propValue);
     }
 
-    public static abstract class BaseWadlGenerator implements WadlGenerator {
+    public abstract static class BaseWadlGenerator implements WadlGenerator {
 
         public Application createApplication() {
             return null;
@@ -289,10 +290,10 @@ public class WadlGeneratorConfigTest {
 
     @Test
     public void testBuildWadlGeneratorFromDescriptionsWithTypes() {
-        WadlGeneratorConfig config = WadlGeneratorConfig.
-                generator(MyWadlGenerator3.class).
-                prop("foo", "string").
-                prop("bar", new Bar()).build();
+        WadlGeneratorConfig config = WadlGeneratorConfig
+                .generator(MyWadlGenerator3.class)
+                .prop("foo", "string")
+                .prop("bar", new Bar()).build();
         final ServiceLocator locator = ServerLocatorFactory.createLocator();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
 

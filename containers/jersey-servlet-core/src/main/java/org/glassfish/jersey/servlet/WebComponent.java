@@ -61,6 +61,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
@@ -113,10 +114,10 @@ import jersey.repackaged.com.google.common.collect.Collections2;
  * An common Jersey web component that may be extended by a Servlet and/or
  * Filter implementation, or encapsulated by a Servlet or Filter implementation.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class WebComponent {
@@ -163,6 +164,7 @@ public class WebComponent {
 
     @SuppressWarnings("JavaDoc")
     private static class HttpServletRequestReferencingFactory extends ReferencingFactory<HttpServletRequest> {
+
         @Inject
         public HttpServletRequestReferencingFactory(final Provider<Ref<HttpServletRequest>> referenceFactory) {
             super(referenceFactory);
@@ -171,6 +173,7 @@ public class WebComponent {
 
     @SuppressWarnings("JavaDoc")
     private static class HttpServletResponseReferencingFactory extends ReferencingFactory<HttpServletResponse> {
+
         @Inject
         public HttpServletResponseReferencingFactory(final Provider<Ref<HttpServletResponse>> referenceFactory) {
             super(referenceFactory);
@@ -273,28 +276,39 @@ public class WebComponent {
      * Jersey application handler.
      */
     final ApplicationHandler appHandler;
+
     /**
      * Jersey background task scheduler - used for scheduling request timeout event handling tasks.
      */
     final ScheduledExecutorService backgroundTaskScheduler;
+
     /**
      * Web component configuration.
      */
     final WebConfig webConfig;
+
     /**
      * If {@code true} and deployed as filter, the unmatched requests will be forwarded.
      */
     final boolean forwardOn404;
+
     /**
      * Cached value of configuration property
      * {@link org.glassfish.jersey.server.ServerProperties#RESPONSE_SET_STATUS_OVER_SEND_ERROR}.
      * If {@code true} method {@link HttpServletResponse#setStatus} is used over {@link HttpServletResponse#sendError}.
      */
     final boolean configSetStatusOverSendError;
+
     /**
      * Asynchronous context delegate provider.
      */
     private final AsyncContextDelegateProvider asyncExtensionDelegate;
+
+    /**
+     * Flag whether query parameters should be kept as entity form params if a servlet filter consumes entity and
+     * Jersey has to retrieve form params from servlet request parameters.
+     */
+    private final boolean queryParamsAsFormParams;
 
     /**
      * Create and initialize new web component instance.
@@ -318,13 +332,15 @@ public class WebComponent {
         final AbstractBinder webComponentBinder = new WebComponentBinder(resourceConfig.getProperties());
         resourceConfig.register(webComponentBinder);
 
-        ServiceLocator locator = (ServiceLocator) webConfig.getServletContext().getAttribute(ServletProperties.SERVICE_LOCATOR);
+        final ServiceLocator locator = (ServiceLocator) webConfig.getServletContext()
+                .getAttribute(ServletProperties.SERVICE_LOCATOR);
 
         this.appHandler = new ApplicationHandler(resourceConfig, webComponentBinder, locator);
 
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
         this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig)
                 && resourceConfig.isProperty(ServletProperties.FILTER_FORWARD_ON_404);
+        this.queryParamsAsFormParams = !resourceConfig.isProperty(ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED);
         this.configSetStatusOverSendError = ServerProperties.getValue(resourceConfig.getProperties(),
                 ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, false, Boolean.class);
         this.backgroundTaskScheduler = appHandler.getServiceLocator()
@@ -559,16 +575,20 @@ public class WebComponent {
             final Enumeration parameterNames = servletRequest.getParameterNames();
 
             final String queryString = servletRequest.getQueryString();
-            final List<String> queryParams = queryString != null ? getDecodedQueryParamList(queryString) : Collections.<String>emptyList();
+            final List<String> queryParams = queryString != null ? getDecodedQueryParamList(queryString)
+                    : Collections.<String>emptyList();
+
+            final boolean keepQueryParams = queryParamsAsFormParams || queryParams.isEmpty();
+            final MultivaluedMap<String, String> formMap = form.asMap();
 
             while (parameterNames.hasMoreElements()) {
                 final String name = (String) parameterNames.nextElement();
                 final List<String> values = Arrays.asList(servletRequest.getParameterValues(name));
 
-                form.asMap().put(name, queryParams.isEmpty() ? values : filterQueryParams(name, values, queryParams));
+                formMap.put(name, keepQueryParams ? values : filterQueryParams(name, values, queryParams));
             }
 
-            if (!form.asMap().isEmpty()) {
+            if (!formMap.isEmpty()) {
                 containerRequest.setProperty(InternalServerProperties.FORM_DECODED_PROPERTY, form);
 
                 if (LOGGER.isLoggable(Level.WARNING)) {

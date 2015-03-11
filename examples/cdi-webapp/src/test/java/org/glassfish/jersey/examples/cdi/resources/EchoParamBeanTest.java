@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,12 +45,10 @@ import java.util.List;
 import javax.ws.rs.client.WebTarget;
 
 import org.junit.Test;
-
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test for the echo with injected param managed bean resource.
@@ -62,13 +60,13 @@ public class EchoParamBeanTest extends CdiTest {
 
     @Parameterized.Parameters
     public static List<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
-            {"alpha", "beta"}
-            ,{"AAA", "BBB"}
-            ,{"b", "a"}
-            ,{"1$s", "2&d"}
+        return Arrays.asList(new Object[][] {
+                {"alpha", "beta"},
+                {"AAA", "BBB"},
+                {"b", "a"},
+                {"1$s", "2&d"}
         });
-    };
+    }
 
     final String a, b;
 

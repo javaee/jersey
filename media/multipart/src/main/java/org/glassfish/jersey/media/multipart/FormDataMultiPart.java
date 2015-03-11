@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.media.multipart;
 
 import java.util.ArrayList;
@@ -50,38 +51,38 @@ import org.glassfish.jersey.media.multipart.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.MediaTypes;
 
 /**
- * Subclass of {@link MultiPart} with specialized support for media type <code>multipart/form-data</code>. See
+ * Subclass of {@link MultiPart} with specialized support for media type {@code multipart/form-data}. See
  * <a href="http://www.ietf.org/rfc/rfc2388.txt">RFC 2388</a> for the formal definition of this media type.
  * <p/>
- * For a server side application wishing to process an incoming <code>multipart/form-data</code> message, the following features
+ * For a server side application wishing to process an incoming {@code multipart/form-data} message, the following features
  * are provided:
  * <ul>
  * <li>Incoming entities will be of type {@link FormDataMultiPart}, enabling access to the specialized methods.</li>
  * <li>Incoming body parts will be of type {@link FormDataBodyPart}, enabling access to its specialized methods.</li>
  * <li>Convenience method to return the {@link FormDataBodyPart} for a specified control name.</li>
- * <li>Convenience method to return a <code>Map</code> of {@link FormDataBodyPart}s for all fields, keyed by field name.</li>
+ * <li>Convenience method to return a {@code Map} of {@link FormDataBodyPart}s for all fields, keyed by field name.</li>
  * </ul>
  * <p/>
  * For a client side application wishing to construct an outgoing
- * <code>multipart/form-data</code> message, the following features
+ * {@code multipart/form-data} message, the following features
  * are provided:
  * <ul>
- * <li>Media type of the {@link FormDataMultiPart} instance will automatically set to <code>multipart/form-data</code>.</li>
- * <li>Builder pattern method to add simple field values as body parts of type <code>text/plain</code>.</li>
+ * <li>Media type of the {@link FormDataMultiPart} instance will automatically set to {@code multipart/form-data}.</li>
+ * <li>Builder pattern method to add simple field values as body parts of type {@code text/plain}.</li>
  * <li>Builder pattern method to add named "file" field values with arbitrary media types.</li>
  * </ul>
  * <p/>
- * TODO Consider supporting the use case of a nested <code>multipart/mixed</code> body part to contain multiple uploaded files.
+ * TODO Consider supporting the use case of a nested {@code multipart/mixed} body part to contain multiple uploaded files.
  *
  * @author Craig McClanahan
  * @author Imran M Yousuf (imran at smartitengineering.com)
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class FormDataMultiPart extends MultiPart {
 
     /**
-     * Instantiates a new {@link FormDataMultiPart} instance with
+     * Instantiates a new {@code FormDataMultiPart} instance with
      * default characteristics.
      */
     public FormDataMultiPart() {
@@ -148,8 +149,9 @@ public class FormDataMultiPart extends MultiPart {
                 continue;
             }
             if (name.equals(((FormDataBodyPart) bodyPart).getName())) {
-                if (result == null)
-                    result = new ArrayList<FormDataBodyPart>(1);
+                if (result == null) {
+                    result = new ArrayList<>(1);
+                }
                 result.add((FormDataBodyPart) bodyPart);
             }
         }
@@ -163,7 +165,7 @@ public class FormDataMultiPart extends MultiPart {
      * @return return the map of form data body parts.
      */
     public Map<String, List<FormDataBodyPart>> getFields() {
-        Map<String, List<FormDataBodyPart>> map = new HashMap<String, List<FormDataBodyPart>>();
+        Map<String, List<FormDataBodyPart>> map = new HashMap<>();
         for (BodyPart bodyPart : getBodyParts()) {
             if (!(bodyPart instanceof FormDataBodyPart)) {
                 continue;
@@ -172,7 +174,7 @@ public class FormDataMultiPart extends MultiPart {
             FormDataBodyPart p = (FormDataBodyPart) bodyPart;
             List<FormDataBodyPart> l = map.get(p.getName());
             if (l == null) {
-                l = new ArrayList<FormDataBodyPart>(1);
+                l = new ArrayList<>(1);
                 map.put(p.getName(), l);
             }
             l.add(p);
@@ -181,10 +183,10 @@ public class FormDataMultiPart extends MultiPart {
     }
 
     /**
-     * Disables changing the media type to anything other than <code>multipart/form-data</code>.
+     * Disables changing the media type to anything other than {@code multipart/form-data}.
      *
      * @param mediaType the proposed media type.
-     * @throws IllegalArgumentException if the proposed media type is not <code>multipart/form-data</code>.
+     * @throws IllegalArgumentException if the proposed media type is not {@code multipart/form-data}.
      */
     @Override
     public void setMediaType(MediaType mediaType) {

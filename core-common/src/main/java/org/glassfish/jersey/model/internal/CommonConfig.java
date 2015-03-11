@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -92,6 +92,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class CommonConfig implements FeatureContext, ExtendedConfig {
+
     private static final Logger LOGGER = Logger.getLogger(CommonConfig.class.getName());
     private static final Function<Object, Binder> CAST_TO_BINDER = new Function<Object, Binder>() {
         @Override
@@ -508,9 +509,9 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         final ContractProvider model = componentBag.getModel(componentClass);
         if (model.getContracts().contains(Feature.class)) {
             @SuppressWarnings("unchecked")
-            final FeatureRegistration registration = (component != null) ?
-                    new FeatureRegistration((Feature) component) :
-                    new FeatureRegistration((Class<? extends Feature>) componentClass);
+            final FeatureRegistration registration = (component != null)
+                    ? new FeatureRegistration((Feature) component)
+                    : new FeatureRegistration((Class<? extends Feature>) componentClass);
             newFeatureRegistrations.add(registration);
         }
     }
@@ -601,8 +602,12 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
             });
 
             // Forced (always invoked).
-            providers.addAll(Arrays.asList(
-                    ServiceFinder.find(ForcedAutoDiscoverable.class, true).toArray()));
+            final List<ForcedAutoDiscoverable> forcedAutoDiscroverables = new LinkedList<ForcedAutoDiscoverable>();
+            for (Class<ForcedAutoDiscoverable> forcedADType : ServiceFinder.find(ForcedAutoDiscoverable.class, true)
+                    .toClassArray()) {
+                forcedAutoDiscroverables.add(locator.createAndInitialize(forcedADType));
+            }
+            providers.addAll(forcedAutoDiscroverables);
 
             // Regular.
             if (!forcedOnly) {

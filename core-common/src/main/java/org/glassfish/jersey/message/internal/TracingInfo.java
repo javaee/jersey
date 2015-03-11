@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,7 @@ final class TracingInfo {
      * @param duration time duration in nanos
      * @return Formatted duration in millis.
      */
-    public static String formatDuration(long duration) {
+    public static String formatDuration(final long duration) {
         if (duration == 0) {
             return " ----";
         } else {
@@ -73,7 +73,7 @@ final class TracingInfo {
      * @param toTimestamp   end of time interval in nanos
      * @return Formatted duration in millis.
      */
-    public static String formatDuration(long fromTimestamp, long toTimestamp) {
+    public static String formatDuration(final long fromTimestamp, final long toTimestamp) {
         return formatDuration(toTimestamp - fromTimestamp);
     }
 
@@ -84,14 +84,13 @@ final class TracingInfo {
      * @param top   100% value
      * @return Formatted value in percent.
      */
-    public static String formatPercent(long value, long top) {
+    public static String formatPercent(final long value, final long top) {
         if (value == 0) {
             return "  ----";
         } else {
             return String.format("%6.2f", 100.0 * value / top);
         }
     }
-
 
     /**
      * Returns all collected messages enhanced by time duration data.
@@ -113,13 +112,13 @@ final class TracingInfo {
             // event
             textSB.append(String.format("%-11s ", message.getEvent().category()));
             // duration
-            textSB.append('[').
-                    append(formatDuration(message.getDuration())).
-                    append(" / ").
-                    append(formatDuration(fromTimestamp, message.getTimestamp())).
-                    append(" ms |").
-                    append(formatPercent(message.getDuration(), toTimestamp - fromTimestamp)).
-                    append(" %] ");
+            textSB.append('[')
+                    .append(formatDuration(message.getDuration()))
+                    .append(" / ")
+                    .append(formatDuration(fromTimestamp, message.getTimestamp()))
+                    .append(" ms |")
+                    .append(formatPercent(message.getDuration(), toTimestamp - fromTimestamp))
+                    .append(" %] ");
             // text
             textSB.append(message.toString());
             messages[i] = textSB.toString();
@@ -132,7 +131,7 @@ final class TracingInfo {
      *
      * @param message tracing message.
      */
-    public void addMessage(Message message) {
+    public void addMessage(final Message message) {
         messageList.add(message);
     }
 
@@ -141,6 +140,7 @@ final class TracingInfo {
      * It implements message formatting.
      */
     public static class Message {
+
         /**
          * Event type.
          */
@@ -173,8 +173,8 @@ final class TracingInfo {
             if (event.messageFormat() != null) {
                 this.text = String.format(event.messageFormat(), (Object[]) args);
             } else {
-                StringBuilder textSB = new StringBuilder();
-                for (String arg : args) {
+                final StringBuilder textSB = new StringBuilder();
+                for (final String arg : args) {
                     textSB.append(arg).append(' ');
                 }
                 this.text = textSB.toString();

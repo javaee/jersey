@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -113,7 +113,8 @@ public class JsonMoxyTest extends AbstractTypeTester {
         Object out = target.request(mt).post(Entity.entity(new GenericEntity(in, gt.getType()), mt), gt);
 
         List<JAXBElement<String>> inList = isList ? ((List<JAXBElement<String>>) in) : Arrays.asList((JAXBElement<String>[]) in);
-        List<JAXBElement<String>> outList = isList ? ((List<JAXBElement<String>>) out) : Arrays.asList((JAXBElement<String>[]) out);
+        List<JAXBElement<String>> outList = isList ? ((List<JAXBElement<String>>) out) : Arrays
+                .asList((JAXBElement<String>[]) out);
         assertEquals("Lengths differ", inList.size(), outList.size());
         for (int i = 0; i < inList.size(); i++) {
             assertEquals("Names of elements at index " + i + " differ", inList.get(i).getName(), outList.get(i).getName());
@@ -134,7 +135,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
 
     @SuppressWarnings("unchecked")
     private JAXBElement<String>[] getJAXBElementArray() {
-        return new JAXBElement[]{
+        return new JAXBElement[] {
                 new JAXBElement(QName.valueOf("element1"), String.class, "ahoj"),
                 new JAXBElement(QName.valueOf("element2"), String.class, "nazdar")
         };
@@ -149,9 +150,10 @@ public class JsonMoxyTest extends AbstractTypeTester {
     protected Application configure() {
         enable(TestProperties.LOG_TRAFFIC);
         enable(TestProperties.DUMP_ENTITY);
-        return ((ResourceConfig) super.configure()).
-                register(new MoxyJsonFeature()).
-                register(new MoxyJsonConfigurationContextResolver());
+
+        return ((ResourceConfig) super.configure())
+                .register(new MoxyJsonFeature())
+                .register(new MoxyJsonConfigurationContextResolver());
     }
 
     @Override
@@ -172,8 +174,8 @@ public class JsonMoxyTest extends AbstractTypeTester {
 
         final GenericType<JAXBElement<String>> genericType = new GenericType<JAXBElement<String>>() {
         };
-        final GenericEntity<JAXBElement<String>> jaxbElementGenericEntity = new GenericEntity<JAXBElement<String>>(new
-                JAXBElement<String>(new QName("test"), String.class, "CONTENT"), genericType.getType());
+        final GenericEntity<JAXBElement<String>> jaxbElementGenericEntity = new GenericEntity<>(
+                new JAXBElement<>(new QName("test"), String.class, "CONTENT"), genericType.getType());
 
         Response rib = target.request().post(
                 Entity.entity(jaxbElementGenericEntity, "application/json"));
@@ -250,6 +252,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
     @Produces("application/json")
     @Consumes("application/json")
     public static class JAXBTypeResourceJSON {
+
         @POST
         public JaxbBean post(JaxbBeanType t) {
             return new JaxbBean(t.value);
@@ -268,6 +271,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
     @Produces("application/foo+json")
     @Consumes("application/foo+json")
     public static class JAXBTypeResourceJSONMediaType {
+
         @POST
         public JaxbBean post(JaxbBeanType t) {
             return new JaxbBean(t.value);
@@ -286,6 +290,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
     @Produces("application/xml")
     @Consumes("application/xml")
     public static class JAXBListResource {
+
         @POST
         public List<JaxbBean> post(List<JaxbBean> l) {
             return l;
@@ -317,7 +322,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
 
         @GET
         public Collection<JaxbBean> get() {
-            ArrayList<JaxbBean> l = new ArrayList<JaxbBean>();
+            ArrayList<JaxbBean> l = new ArrayList<>();
             l.add(new JaxbBean("one"));
             l.add(new JaxbBean("two"));
             l.add(new JaxbBean("three"));
@@ -327,9 +332,10 @@ public class JsonMoxyTest extends AbstractTypeTester {
         @POST
         @Path("type")
         public List<JaxbBean> postType(Collection<JaxbBeanType> l) {
-            List<JaxbBean> beans = new ArrayList<JaxbBean>();
-            for (JaxbBeanType t : l)
+            List<JaxbBean> beans = new ArrayList<>();
+            for (JaxbBeanType t : l) {
                 beans.add(new JaxbBean(t.value));
+            }
             return beans;
         }
     }
@@ -374,7 +380,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 });
         Collection<JaxbBean> b;
 
-        a = new LinkedList<JaxbBean>(a);
+        a = new LinkedList<>(a);
         b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue<JaxbBean>) a) {
         }, "application/json"), new GenericType<Queue<JaxbBean>>() {
         });
@@ -390,7 +396,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 });
         Collection<JaxbBean> b;
 
-        a = new HashSet<JaxbBean>(a);
+        a = new HashSet<>(a);
         b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set<JaxbBean>) a) {
         }, "application/json"), new GenericType<Set<JaxbBean>>() {
         });
@@ -400,7 +406,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 return t.value.compareTo(t1.value);
             }
         };
-        TreeSet<JaxbBean> t1 = new TreeSet<JaxbBean>(c), t2 = new TreeSet<JaxbBean>(c);
+        TreeSet<JaxbBean> t1 = new TreeSet<>(c), t2 = new TreeSet<>(c);
         t1.addAll(a);
         t2.addAll(b);
         assertEquals(t1, t2);
@@ -415,7 +421,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 });
         Collection<JaxbBean> b;
 
-        Stack<JaxbBean> s = new Stack<JaxbBean>();
+        Stack<JaxbBean> s = new Stack<>();
         s.addAll(a);
         b = target.path("stack").request().post(Entity.entity(new GenericEntity<Stack<JaxbBean>>(s) {
         }, "application/json"), new GenericType<Stack<JaxbBean>>() {
@@ -432,10 +438,10 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 });
         Collection<JaxbBean> b;
 
-        a = new MyArrayList<JaxbBean>(a);
+        a = new MyArrayList<>(a);
         b = target.path("custom").request().post(Entity.entity(
-                new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList<JaxbBean>) a) {
-                }, "application/json"),
+                        new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList<JaxbBean>) a) {
+                        }, "application/json"),
                 new GenericType<MyArrayList<JaxbBean>>() {
                 });
         assertEquals(a, b);

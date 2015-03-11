@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.io.ByteArrayOutputStream;
@@ -76,7 +77,7 @@ import jersey.repackaged.com.google.common.base.Preconditions;
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 final class CommittingOutputStream extends OutputStream {
 
@@ -125,7 +126,8 @@ final class CommittingOutputStream extends OutputStream {
     private boolean isClosed;
 
     private static final String STREAM_PROVIDER_NULL = LocalizationMessages.STREAM_PROVIDER_NULL();
-    private static final String COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE = LocalizationMessages.COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE();
+    private static final String COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE = LocalizationMessages
+            .COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE();
 
     /**
      * Creates new committing output stream. The returned stream instance still needs to be initialized before
@@ -133,7 +135,6 @@ final class CommittingOutputStream extends OutputStream {
      */
     public CommittingOutputStream() {
     }
-
 
     /**
      * Set the buffering output stream provider. If the committing output stream works in buffering mode
@@ -156,12 +157,13 @@ final class CommittingOutputStream extends OutputStream {
     /**
      * Enable buffering of the serialized entity.
      *
-     * @param bufferSize size of the buffer. When the value is less or equal to zero then
-     *                   buffering will be disabled and -1 will be passed to the
+     * @param bufferSize size of the buffer. When the value is less or equal to zero the buffering will be disabled and {@code -1}
+     *                   will be passed to the
      *                   {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#getOutputStream(int) callback}.
      */
     public void enableBuffering(int bufferSize) {
-        Preconditions.checkState(!isCommitted && (this.buffer == null || this.buffer.size() == 0), COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE);
+        Preconditions.checkState(!isCommitted && (this.buffer == null || this.buffer.size() == 0),
+                COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE);
         this.bufferSize = bufferSize;
         if (bufferSize <= 0) {
             this.directWrite = true;
@@ -172,14 +174,12 @@ final class CommittingOutputStream extends OutputStream {
         }
     }
 
-
     /**
      * Enable buffering of the serialized entity with the {@link #DEFAULT_BUFFER_SIZE default buffer size }.
      */
     public void enableBuffering() {
         enableBuffering(DEFAULT_BUFFER_SIZE);
     }
-
 
     /**
      * Determine whether the stream was already committed or not.

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,12 +39,13 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2184;
 
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+
+import javax.servlet.ServletContext;
 
 /**
  * Test Application subclass for JERSEY-2184 integration test.
@@ -63,13 +64,15 @@ public class App extends Application {
 
     @Override
     public Set<Class<?>> getClasses() {
-        HashSet<Class<?>> classes = new HashSet<Class<?>>();
+        HashSet<Class<?>> classes = new HashSet<>();
         String dynamicClassName = ctx.getInitParameter("dynamicClassName");
         Class<?> clazz = null;
         if (classes.isEmpty()) {
             try {
                 clazz = Class.forName(dynamicClassName);
-            } catch (ClassNotFoundException e) { } // swallow the exception - if class is not loaded, the integration test will fail
+            } catch (ClassNotFoundException e) {
+                // swallow the exception - if class is not loaded, the integration test will fail
+            }
 
             if (clazz != null) {
                 classes.add(clazz);

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,29 +51,60 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import jersey.repackaged.com.google.common.base.Predicate;
+import jersey.repackaged.com.google.common.collect.Maps;
+
 /**
  * Common media types and functionality.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class MediaTypes {
+public final class MediaTypes {
 
     /**
      * WADL Media type.
      */
-    public final static MediaType WADL = MediaType.valueOf("application/vnd.sun.wadl+xml");
+    public static final MediaType WADL_TYPE = MediaType.valueOf("application/vnd.sun.wadl+xml");
+
     /**
-     * Fast infoset media type.
+     * A comparator for media types, that implements the "partial order" defined in the resource matching algorithm
+     * section of the JAX-RS specification, except that this comparator is "inverted" so that it allows for natural
+     * sorting in Java collections, where "lower" values are put to the front of a collection.
+     *
+     * IOW, when used to sort a collection, the resulting collection can be iterated in a way that the more specific
+     * media types are preferred over the less specific ones:
+     *
+     * <pre>
+     *   m/n &lt; m/&#42; &lt; &#42;/&#42;</pre>
+     *
+     * The actual media type values are ignored, i.e. the different media types are considered equal if they are
+     * comparably specific:
+     *
+     * <pre>
+     *   compare(m/n, x/y) == 0
+     *   compare(m/&#42;, x/&#42;) == 0</pre>
      */
-    public final static MediaType FAST_INFOSET = MediaType.valueOf("application/fastinfoset");
+    public static final Comparator<MediaType> PARTIAL_ORDER_COMPARATOR = new Comparator<MediaType>() {
+
+        private int rank(final MediaType type) {
+            // "m/n" = 0; "m/*" = 1; "*/*" = 3; ...also "*/n" = 2, but that's just nonsense...
+            return ((type.isWildcardType() ? 1 : 0) << 1) | (type.isWildcardSubtype() ? 1 : 0);
+        }
+
+        @Override
+        public int compare(MediaType typeA, MediaType typeB) {
+            return rank(typeA) - rank(typeB);
+        }
+    };
+
     /**
      * Comparator for lists of media types.
      * <p>
      * The least specific content type of each list is obtained and then compared
-     * using {@link #MEDIA_TYPE_COMPARATOR}.
+     * using {@link #PARTIAL_ORDER_COMPARATOR}.
      * <p>
-     * Assumes each list is already ordered according to {@link #MEDIA_TYPE_COMPARATOR}
+     * Assumes each list is already ordered according to {@link #PARTIAL_ORDER_COMPARATOR}
      * and therefore the least specific media type is at the end of the list.
      */
     public static final Comparator<List<? extends MediaType>> MEDIA_TYPE_LIST_COMPARATOR =
@@ -81,90 +112,37 @@ public class MediaTypes {
 
                 @Override
                 public int compare(List<? extends MediaType> o1, List<? extends MediaType> o2) {
-                    return MEDIA_TYPE_COMPARATOR.compare(getLeastSpecific(o1), getLeastSpecific(o2));
+                    return PARTIAL_ORDER_COMPARATOR.compare(getLeastSpecific(o1), getLeastSpecific(o2));
                 }
 
-                public MediaType getLeastSpecific(List<? extends MediaType> l) {
+                private MediaType getLeastSpecific(List<? extends MediaType> l) {
+                    // FIXME: really comparing just last one?
                     return l.get(l.size() - 1);
                 }
             };
     /**
-     * The general media type corresponding to *\\/*.
-     *
+     * A singleton list containing the wildcard media type.
      */
-    public static final MediaType GENERAL_MEDIA_TYPE = new MediaType("*", "*");
+    public static final List<MediaType> WILDCARD_TYPE_SINGLETON_LIST =
+            Collections.singletonList(MediaType.WILDCARD_TYPE);
     /**
-     * A singleton list containing the general media type.
+     * An acceptable media type corresponding to a wildcard type.
      */
-    public static final List<MediaType> GENERAL_MEDIA_TYPE_LIST = createMediaTypeList();
+    public static final AcceptableMediaType WILDCARD_ACCEPTABLE_TYPE = new AcceptableMediaType("*", "*");
     /**
-     * The general acceptable media type corresponding to *\\/*.
-     *
+     * An acceptable media type corresponding to a wildcard type.
      */
-    static final AcceptableMediaType GENERAL_ACCEPT_MEDIA_TYPE = new AcceptableMediaType("*", "*");
+    public static final QualitySourceMediaType WILDCARD_QS_TYPE = new QualitySourceMediaType("*", "*");
     /**
-     * A singleton list containing the general acceptable media type.
+     * A singleton list containing the wildcard media type.
      */
-    static final List<AcceptableMediaType> GENERAL_ACCEPT_MEDIA_TYPE_LIST = createAcceptMediaTypeList();
-    /**
-     * A singleton list containing the general media type.
-     */
-    public static final List<MediaType> GENERAL_QUALITY_SOURCE_MEDIA_TYPE_LIST = createQualitySourceMediaTypeList();
-    /**
-     * Comparator for lists of quality source media types.
-     */
-    public static final Comparator<QualitySourceMediaType> QUALITY_SOURCE_MEDIA_TYPE_COMPARATOR = new Comparator<QualitySourceMediaType>() {
-
-        @Override
-        public int compare(QualitySourceMediaType o1, QualitySourceMediaType o2) {
-            int i = o2.getQualitySource() - o1.getQualitySource();
-            if (i != 0) {
-                return i;
-            }
-
-            return MediaTypes.MEDIA_TYPE_COMPARATOR.compare(o1, o2);
-        }
-    };
-    /**
-     * Comparator for media types. The more specific media types are preferred over
-     * the less specific ones:
-     * <pre>
-     *   m/n &lt; m/&#42; &lt; &#42;/&#42;</pre>
-     * <p />
-     * The actual media type values are ignored, i.e. the different media types are
-     * considered equal if they are comparably specific:
-     * <pre>
-     *   compare(m/n, x/y) == 0
-     *   compare(m/&#42;, x/&#42;) == 0</pre>
-     */
-    public static final Comparator<MediaType> MEDIA_TYPE_COMPARATOR = new Comparator<MediaType>() {
-
-        @Override
-        public int compare(MediaType o1, MediaType o2) {
-            if (o1.isWildcardType() && !o2.isWildcardType()) {
-                return 1;
-            }
-
-            if (o2.isWildcardType() && !o1.isWildcardType()) {
-                return -1;
-            }
-
-            if (o1.isWildcardSubtype() && !o2.isWildcardSubtype()) {
-                return 1;
-            }
-
-            if (o2.isWildcardSubtype() && !o1.isWildcardSubtype()) {
-                return -1;
-            }
-
-            return 0;
-        }
-    };
+    public static final List<MediaType> WILDCARD_QS_TYPE_SINGLETON_LIST =
+            Collections.<MediaType>singletonList(WILDCARD_QS_TYPE);
 
     /**
      * Cache containing frequently requested media type values with a wildcard subtype.
      */
-    private static Map<String, MediaType> wildcardSubtypeCache = new HashMap<String, MediaType>() {
+    private static final Map<String, MediaType> WILDCARD_SUBTYPE_CACHE = new HashMap<String, MediaType>() {
 
         private static final long serialVersionUID = 3109256773218160485L;
 
@@ -174,11 +152,22 @@ public class MediaTypes {
             put("text", new MediaType("text", MediaType.MEDIA_TYPE_WILDCARD));
         }
     };
+    /**
+     * Predicate for constructing filtering parameter maps that ignore the "q" and "qs" parameters.
+     */
+    private static final Predicate<String> QUALITY_PARAM_FILTERING_PREDICATE = new Predicate<String>() {
+        @Override
+        public boolean apply(String input) {
+            return !Quality.QUALITY_SOURCE_PARAMETER_NAME.equals(input)
+                    && !Quality.QUALITY_PARAMETER_NAME.equals(input);
+        }
+    };
 
     /**
      * Prevents initialization.
      */
     private MediaTypes() {
+        throw new AssertionError("Instantiation not allowed.");
     }
 
     /**
@@ -195,7 +184,7 @@ public class MediaTypes {
      * @param m1 first media type.
      * @param m2 second media type.
      * @return {@code true} if the two media types are of the same type and subtype,
-     *     {@code false} otherwise.
+     * {@code false} otherwise.
      */
     public static boolean typeEqual(MediaType m1, MediaType m2) {
         if (m1 == null || m2 == null) {
@@ -213,7 +202,7 @@ public class MediaTypes {
      * @param ml1 first media type list.
      * @param ml2 second media type list.
      * @return {@code true} if the two media type lists intersect by sharing a
-     *     common type-equal sub-list, {@code false} otherwise.
+     * common type-equal sub-list, {@code false} otherwise.
      */
     public static boolean intersect(List<? extends MediaType> ml1, List<? extends MediaType> ml2) {
         for (MediaType m1 : ml1) {
@@ -229,95 +218,90 @@ public class MediaTypes {
     /**
      * Get the most specific media type from a pair of media types. The most
      * specific media type is the media type from the pair that has least
-     * wild cards present.
+     * wild cards present, or has more parameters specified.
      *
-     * @param m1 the first media type
-     * @param m2 the second media type
+     * @param m1 the first media type.
+     * @param m2 the second media type.
      * @return the most specific media type. If the media types are equally
-     *         specific then the first media type is returned.
+     * specific then the first media type is returned.
      */
     public static MediaType mostSpecific(MediaType m1, MediaType m2) {
-        if (m1.isWildcardSubtype() && !m2.isWildcardSubtype()) {
-            return m2;
-        }
         if (m1.isWildcardType() && !m2.isWildcardType()) {
             return m2;
         }
+        if (m1.isWildcardSubtype() && !m2.isWildcardSubtype()) {
+            return m2;
+        }
+        if (m2.getParameters().size() > m1.getParameters().size()) {
+            return m2;
+        }
+
         return m1;
     }
 
-    private static List<MediaType> createMediaTypeList() {
-        return Collections.singletonList(GENERAL_MEDIA_TYPE);
-    }
-
-    private static List<AcceptableMediaType> createAcceptMediaTypeList() {
-        return Collections.singletonList(GENERAL_ACCEPT_MEDIA_TYPE);
-    }
-
     /**
-     * Create the list of media types from the values declared in the {@link Consumes}
+     * Create an unmodifiable list of media types from the values declared in the {@link Consumes}
      * annotation.
      *
      * @param annotation the Consumes annotation.
-     * @return the list of {@link MediaType}, ordered according to {@link #MEDIA_TYPE_COMPARATOR}.
+     * @return the list of {@link MediaType}, ordered according to {@link #PARTIAL_ORDER_COMPARATOR}.
      */
     public static List<MediaType> createFrom(Consumes annotation) {
         if (annotation == null) {
-            return GENERAL_MEDIA_TYPE_LIST;
+            return WILDCARD_TYPE_SINGLETON_LIST;
         }
 
         return createFrom(annotation.value());
     }
 
     /**
-     * Create the list of media types from the values declared in the {@link Produces}
+     * Create an unmodifiable list of media types from the values declared in the {@link Produces}
      * annotation.
      *
      * @param annotation the Produces annotation.
-     * @return the list of {@link MediaType}, ordered according to {@link #MEDIA_TYPE_COMPARATOR}.
+     * @return the list of {@link MediaType}, ordered according to {@link #PARTIAL_ORDER_COMPARATOR}.
      */
     public static List<MediaType> createFrom(Produces annotation) {
         if (annotation == null) {
-            return GENERAL_MEDIA_TYPE_LIST;
+            return WILDCARD_TYPE_SINGLETON_LIST;
         }
 
         return createFrom(annotation.value());
     }
 
     /**
-     * Create a list of media type from a string array of media types.
-     * <p>
+     * Create an unmodifiable list of media type from a string array of media types.
+     *
      * @param mediaTypes the string array of media types.
-     * @return the list of {@link MediaType}, ordered according to {@link #MEDIA_TYPE_COMPARATOR}.
+     * @return the list of {@link MediaType}, ordered according to {@link #PARTIAL_ORDER_COMPARATOR}.
      */
     public static List<MediaType> createFrom(String[] mediaTypes) {
-        List<MediaType> l = new ArrayList<MediaType>();
+        List<MediaType> result = new ArrayList<MediaType>();
+
         try {
             for (String mediaType : mediaTypes) {
-                HttpHeaderReader.readMediaTypes(l, mediaType);
+                HttpHeaderReader.readMediaTypes(result, mediaType);
             }
-
-            Collections.sort(l, MEDIA_TYPE_COMPARATOR);
-            return l;
         } catch (ParseException ex) {
             throw new IllegalArgumentException(ex);
         }
-    }
 
-    private static List<MediaType> createQualitySourceMediaTypeList() {
-        return Collections.<MediaType>singletonList(new QualitySourceMediaType("*", "*"));
+        Collections.sort(result, PARTIAL_ORDER_COMPARATOR);
+
+        return Collections.unmodifiableList(result);
     }
 
     /**
      * Create a list of quality source media type from the Produces annotation.
      * <p>
+     *
      * @param mime the Produces annotation.
      * @return the list of {@link QualitySourceMediaType}, ordered according to
-     *         {@link #QUALITY_SOURCE_MEDIA_TYPE_COMPARATOR}.
+     * {@link org.glassfish.jersey.message.internal.QualitySourceMediaType#COMPARATOR}.
      */
     public static List<MediaType> createQualitySourceMediaTypes(Produces mime) {
         if (mime == null || mime.value().length == 0) {
-            return GENERAL_QUALITY_SOURCE_MEDIA_TYPE_LIST;
+            return WILDCARD_QS_TYPE_SINGLETON_LIST;
         }
 
         return new ArrayList<MediaType>(createQualitySourceMediaTypes(mime.value()));
@@ -326,9 +310,10 @@ public class MediaTypes {
     /**
      * Create a list of quality source media type from an array of media types.
      * <p>
+     *
      * @param mediaTypes the array of media types.
      * @return the list of {@link QualitySourceMediaType}, ordered according to
-     * the quality source as the primary key and {@link #MEDIA_TYPE_COMPARATOR}
+     * the quality source as the primary key and {@link #PARTIAL_ORDER_COMPARATOR}
      * as the secondary key.
      */
     public static List<QualitySourceMediaType> createQualitySourceMediaTypes(String[] mediaTypes) {
@@ -341,18 +326,19 @@ public class MediaTypes {
 
     /**
      * Reads quality factor from given media type.
+     *
      * @param mt media type to read quality parameter from
      * @return quality factor of input media type
      */
     public static int getQuality(MediaType mt) {
 
-        final String qParam = mt.getParameters().get(Qualified.QUALITY_PARAMETER_NAME);
+        final String qParam = mt.getParameters().get(Quality.QUALITY_PARAMETER_NAME);
         return readQualityFactor(qParam);
     }
 
     private static int readQualityFactor(final String qParam) throws IllegalArgumentException {
         if (qParam == null) {
-            return Quality.DEFAULT_QUALITY;
+            return Quality.DEFAULT;
         } else {
             try {
                 return HttpHeaderReader.readQualityFactor(qParam);
@@ -367,24 +353,19 @@ public class MediaTypes {
      *
      * @param mediaType type to strip quality parameters from
      * @return media type instance corresponding to the given one with quality parameters stripped off
-     *          or the original instance if no such parameters are present
+     * or the original instance if no such parameters are present
      */
     public static MediaType stripQualityParams(MediaType mediaType) {
         final Map<String, String> oldParameters = mediaType.getParameters();
-        if (oldParameters.isEmpty()) {
+        if (oldParameters.isEmpty()
+                || (!oldParameters.containsKey(Quality.QUALITY_SOURCE_PARAMETER_NAME)
+                            && !oldParameters.containsKey(Quality.QUALITY_PARAMETER_NAME))) {
             return mediaType;
         }
-        Map<String, String> newParameters = new HashMap<String, String>();
-        for (Map.Entry<String, String> e : oldParameters.entrySet()) {
-            final boolean isQs = e.getKey().equals(QualitySourceMediaType.QUALITY_SOURCE_PARAMETER_NAME);
-            final boolean isQ = e.getKey().equals(Qualified.QUALITY_PARAMETER_NAME);
-            if (!isQ && !isQs) {
-                newParameters.put(e.getKey(), e.getValue());
-            }
-        }
-        return new MediaType(mediaType.getType(), mediaType.getSubtype(), newParameters);
-    }
 
+        return new MediaType(mediaType.getType(), mediaType.getSubtype(),
+                Maps.filterKeys(oldParameters, QUALITY_PARAM_FILTERING_PREDICATE));
+    }
 
     /**
      * Returns MediaType with wildcard in subtype.
@@ -393,7 +374,7 @@ public class MediaTypes {
      * @return MediaType with wildcard in subtype.
      */
     public static MediaType getTypeWildCart(MediaType mediaType) {
-        MediaType mt = wildcardSubtypeCache.get(mediaType.getType());
+        MediaType mt = WILDCARD_SUBTYPE_CACHE.get(mediaType.getType());
 
         if (mt == null) {
             mt = new MediaType(mediaType.getType(), MediaType.MEDIA_TYPE_WILDCARD);
@@ -426,5 +407,17 @@ public class MediaTypes {
         }
         return sb.toString();
 
+    }
+
+    /**
+     * Check if the given media type is a wildcard type.
+     *
+     * A media type is considered to be a wildcard if either the media type's type or subtype is a wildcard type.
+     *
+     * @param mediaType media type.
+     * @return {@code true} if the media type is a wildcard type, {@code false} otherwise.
+     */
+    public static boolean isWildcard(final MediaType mediaType) {
+        return mediaType.isWildcardType() || mediaType.isWildcardSubtype();
     }
 }

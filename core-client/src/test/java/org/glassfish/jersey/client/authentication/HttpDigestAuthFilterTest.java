@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,13 +55,12 @@ import org.junit.Test;
 public class HttpDigestAuthFilterTest {
 
     @Test
-    public void testParseHeaders1() throws Exception // no digest scheme
-    {
+    public void testParseHeaders1() throws Exception { // no digest scheme
         final DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
         final Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         final DigestScheme ds = (DigestScheme) method.invoke(f,
-                Arrays.asList(new String[]{
+                Arrays.asList(new String[] {
                         "basic toto=tutu",
                         "basic toto=\"tutu\""
                 }));
@@ -70,13 +69,12 @@ public class HttpDigestAuthFilterTest {
     }
 
     @Test
-    public void testParseHeaders2() throws Exception // Two concurrent schemes
-    {
+    public void testParseHeaders2() throws Exception { // Two concurrent schemes
         final DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
         final Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         final DigestScheme ds = (DigestScheme) method.invoke(f,
-                Arrays.asList(new String[]{
+                Arrays.asList(new String[] {
                         "Digest realm=\"tata\"",
                         "basic  toto=\"tutu\""
                 }));
@@ -86,13 +84,12 @@ public class HttpDigestAuthFilterTest {
     }
 
     @Test
-    public void testParseHeaders3() throws Exception // Complex case, with comma inside value
-    {
+    public void testParseHeaders3() throws Exception { // Complex case, with comma inside value
         final DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
         final Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         final DigestScheme ds = (DigestScheme) method.invoke(f,
-                Arrays.asList(new String[]{
+                Arrays.asList(new String[] {
                         "digest realm=\"tata\",nonce=\"foo, bar\""
                 }));
 
@@ -102,13 +99,12 @@ public class HttpDigestAuthFilterTest {
     }
 
     @Test
-    public void testParseHeaders4() throws Exception // Spaces
-    {
+    public void testParseHeaders4() throws Exception { // Spaces
         final DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
         final Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         final DigestScheme ds = (DigestScheme) method.invoke(f,
-                Arrays.asList(new String[]{
+                Arrays.asList(new String[] {
                         "    digest realm =   \"tata\"  ,  opaque=\"bar\" ,nonce=\"foo, bar\""
                 }));
 
@@ -119,13 +115,12 @@ public class HttpDigestAuthFilterTest {
     }
 
     @Test
-    public void testParseHeaders5() throws Exception // Mix of quotes and  non-quotes
-    {
+    public void testParseHeaders5() throws Exception { // Mix of quotes and  non-quotes
         final DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
         final Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         final DigestScheme ds = (DigestScheme) method.invoke(f,
-                Arrays.asList(new String[]{
+                Arrays.asList(new String[] {
                         "    digest realm =   \"tata\"  ,  opaque =bar ,nonce=\"foo, bar\",   algorithm=md5"
                 }));
 

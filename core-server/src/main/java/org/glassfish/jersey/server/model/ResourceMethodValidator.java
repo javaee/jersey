@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,9 +70,10 @@ import org.glassfish.hk2.api.ServiceLocator;
  * Validator checking resource methods and sub resource locators. The validator mainly checks the parameters of resource
  * methods and sub resource locators.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 class ResourceMethodValidator extends AbstractResourceModelVisitor {
+
     private final ServiceLocator locator;
 
     /**
@@ -83,7 +84,6 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
     public ResourceMethodValidator(ServiceLocator locator) {
         this.locator = locator;
     }
-
 
     @Override
     public void visitResourceMethod(final ResourceMethod method) {
@@ -142,8 +142,9 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
 
         final Type responseType = invocable.getResponseType();
         if (!isConcreteType(responseType)) {
-            Errors.warning(invocable.getHandlingMethod(), LocalizationMessages.TYPE_OF_METHOD_NOT_RESOLVABLE_TO_CONCRETE_TYPE
-                    (responseType, invocable.getHandlingMethod().toGenericString()));
+            Errors.warning(invocable.getHandlingMethod(),
+                    LocalizationMessages.TYPE_OF_METHOD_NOT_RESOLVABLE_TO_CONCRETE_TYPE(responseType,
+                            invocable.getHandlingMethod().toGenericString()));
         }
 
         final Path pathAnnotation = invocable.getHandlingMethod().getAnnotation(Path.class);
@@ -199,7 +200,6 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
             }
         }
     }
-
 
     private static final Set<Class> PARAM_ANNOTATION_SET = createParamAnnotationSet();
 

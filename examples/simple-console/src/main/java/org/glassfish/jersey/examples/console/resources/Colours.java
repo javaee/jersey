@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,9 +41,11 @@ package org.glassfish.jersey.examples.console.resources;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+
 import org.codehaus.jettison.json.JSONArray;
 
 /**
@@ -51,7 +53,7 @@ import org.codehaus.jettison.json.JSONArray;
  */
 public class Colours {
 
-    private static String colours[] = {"red","orange","yellow","green","blue","indigo","violet"};
+    private static String colours[] = {"red", "orange", "yellow", "green", "blue", "indigo", "violet"};
 
     /**
      * Returns a list of colours as plain text, one colour per line.
@@ -63,7 +65,7 @@ public class Colours {
     @Produces("text/plain")
     public String getColourListAsText(@QueryParam("match") String filter) {
         StringBuilder buf = new StringBuilder();
-        for (String colour: getMatchingColours(filter)) {
+        for (String colour : getMatchingColours(filter)) {
             buf.append(colour);
             buf.append('\n');
         }
@@ -72,7 +74,7 @@ public class Colours {
 
     /**
      * Returns a list of colours as a JSON array.
-     * @param filter If not empty, constrains the list of colours to only 
+     * @param filter If not empty, constrains the list of colours to only
      * those that contain this substring
      * @return the list of colours matching the filter
      */
@@ -89,10 +91,10 @@ public class Colours {
      * @return the list of colours matching the filter
      */
     public static List<String> getMatchingColours(String filter) {
-        List<String> matches = new ArrayList<String>();
+        List<String> matches = new ArrayList<>();
 
-        for (String colour: colours) {
-            if (filter==null || filter.length()==0 || colour.contains(filter)) {
+        for (String colour : colours) {
+            if (filter == null || filter.length() == 0 || colour.contains(filter)) {
                 matches.add(colour);
             }
         }

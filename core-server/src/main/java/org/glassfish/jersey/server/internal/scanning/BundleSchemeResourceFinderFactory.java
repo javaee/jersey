@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.internal.scanning;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -59,7 +58,7 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
 
     @Override
     public Set<String> getSchemes() {
-        return new HashSet<String>(Arrays.asList("bundle"));
+        return new HashSet<>(Arrays.asList("bundle"));
     }
 
     /**
@@ -89,7 +88,7 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
 
         @Override
         public String next() {
-            if(!accessed) {
+            if (!accessed) {
                 return uri.getPath();
             }
 
@@ -103,12 +102,10 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
 
         @Override
         public InputStream open() {
-            if(!accessed) {
+            if (!accessed) {
                 try {
                     accessed = true;
                     return uri.toURL().openStream();
-                } catch (MalformedURLException e) {
-                    throw new ResourceFinderException(e);
                 } catch (IOException e) {
                     throw new ResourceFinderException(e);
                 }

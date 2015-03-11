@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,6 @@ import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.validation.ValidationException;
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -58,6 +57,7 @@ import javax.inject.Singleton;
 import javax.validation.Configuration;
 import javax.validation.TraversableResolver;
 import javax.validation.Validation;
+import javax.validation.ValidationException;
 import javax.validation.ValidationProviderResolver;
 import javax.validation.Validator;
 import javax.validation.ValidatorContext;
@@ -111,21 +111,22 @@ public class ValidationBinder extends AbstractBinder {
                 if (!inOsgi) {
                     return Validation.byDefaultProvider().configure();
                 } else {
-                    return Validation.
-                            byDefaultProvider().
-                            providerResolver(new ValidationProviderResolver() {
+                    return Validation
+                            .byDefaultProvider()
+                            .providerResolver(new ValidationProviderResolver() {
                                 @Override
                                 public List<ValidationProvider<?>> getValidationProviders() {
                                     final List<ValidationProvider<?>> validationProviders = new ArrayList<>();
 
-                                    for (final ValidationProvider validationProvider : ServiceFinder.find(ValidationProvider.class)) {
+                                    for (final ValidationProvider validationProvider : ServiceFinder
+                                            .find(ValidationProvider.class)) {
                                         validationProviders.add(validationProvider);
                                     }
 
                                     return validationProviders;
                                 }
-                            }).
-                            configure();
+                            })
+                            .configure();
                 }
             } catch (final ValidationException e) {
                 // log and re-trow
@@ -240,7 +241,8 @@ public class ValidationBinder extends AbstractBinder {
                     }
 
                     validatorCache.put(contextResolver,
-                            new ConfiguredValidatorImpl(context.getValidator(), this.validationConfig, validateOnExecutionHandler));
+                            new ConfiguredValidatorImpl(context.getValidator(), this.validationConfig,
+                                    validateOnExecutionHandler));
                 }
 
                 return validatorCache.get(contextResolver);

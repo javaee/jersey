@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -56,15 +57,19 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Consumes("*/*")
 public class MessageBodyReaderGeneric implements MessageBodyReader<Message> {
+
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        //System.out.println("*** MessageBodyReaderGeneric.isReadable");
         return false;
     }
 
     @Override
-    public Message readFrom(Class<Message> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
-        //System.out.println("*** MessageBodyReaderGeneric.readFrom");
+    public Message readFrom(Class<Message> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, String> httpHeaders,
+                            InputStream entityStream) throws IOException, WebApplicationException {
         return null;
     }
 }

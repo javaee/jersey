@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.examples.bookmark_em.resource;
 
 import java.util.Date;
@@ -63,7 +64,7 @@ import org.codehaus.jettison.json.JSONObject;
 
 /**
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class BookmarkResource {
@@ -84,9 +85,9 @@ public class BookmarkResource {
 
         bookmarkEntity = em.find(BookmarkEntity.class, new BookmarkEntityPK(bmid, userEntity.getUserid()));
         if (null == bookmarkEntity) {
-            throw new ExtendedNotFoundException("bookmark with userid=" +
-                    userEntity.getUserid() + " and bmid=" +
-                    bmid + " not found\n");
+            throw new ExtendedNotFoundException("bookmark with userid="
+                    + userEntity.getUserid() + " and bmid="
+                    + bmid + " not found\n");
         }
         bookmarkEntity.setUserEntity(userEntity);
     }
@@ -131,11 +132,11 @@ public class BookmarkResource {
 
     public JSONObject asJson() {
         try {
-            return new JSONObject().
-                    put("userid", bookmarkEntity.getBookmarkEntityPK().getUserid()).
-                    put("sdesc", bookmarkEntity.getSdesc()).
-                    put("ldesc", bookmarkEntity.getLdesc()).
-                    put("uri", bookmarkEntity.getUri());
+            return new JSONObject()
+                    .put("userid", bookmarkEntity.getBookmarkEntityPK().getUserid())
+                    .put("sdesc", bookmarkEntity.getSdesc())
+                    .put("ldesc", bookmarkEntity.getLdesc())
+                    .put("uri", bookmarkEntity.getUri());
         } catch (JSONException je) {
             return null;
         }

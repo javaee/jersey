@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,11 +46,13 @@ import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
+
 import javax.inject.Singleton;
 
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
+
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -114,7 +116,7 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
         AnnotatedElement annotatedElement = injectee.getParent();
 
         if (annotatedElement.getClass().isAssignableFrom(Field.class)) {
-            return new DependencyDescriptor((Field) annotatedElement,!injectee.isOptional());
+            return new DependencyDescriptor((Field) annotatedElement, !injectee.isOptional());
         } else if (annotatedElement.getClass().isAssignableFrom(Method.class)) {
             return new DependencyDescriptor(
                     new MethodParameter((Method) annotatedElement, injectee.getPosition()), !injectee.isOptional());

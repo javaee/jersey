@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,9 +60,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  * @author Paul Sandoz
  */
 @SuppressWarnings("unchecked")
-public class KeyComparatorHashMap<K, V>
-        extends AbstractMap<K, V>
-        implements Map<K, V>, Cloneable, Serializable {
+public class KeyComparatorHashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 
     private static final long serialVersionUID = 3000273665665137463L;
     /**
@@ -77,7 +75,7 @@ public class KeyComparatorHashMap<K, V>
     static final int MAXIMUM_CAPACITY = 1 << 30;
     /**
      * The load factor used when none specified in constructor.
-     **/
+     */
     static final float DEFAULT_LOAD_FACTOR = 0.75f;
     /**
      * The table, resized as necessary. Length MUST Always be a power of two.
@@ -89,6 +87,7 @@ public class KeyComparatorHashMap<K, V>
     transient int size;
     /**
      * The next ss value at which to resize (capacity * load factor).
+     *
      * @serial
      */
     int threshold;
@@ -113,14 +112,14 @@ public class KeyComparatorHashMap<K, V>
      * Constructs an empty <tt>HashMap</tt> with the specified initial
      * capacity and load factor.
      *
-     * @param  initialCapacity The initial capacity.
-     * @param  loadFactor      The load factor.
-     * @param keyComparator the map key comparator.
+     * @param initialCapacity The initial capacity.
+     * @param loadFactor      The load factor.
+     * @param keyComparator   the map key comparator.
      * @throws IllegalArgumentException if the initial capacity is negative
-     *         or the load factor is nonpositive.
+     *                                  or the load factor is nonpositive.
      */
     @SuppressWarnings("unchecked")
-    public KeyComparatorHashMap(int initialCapacity, float loadFactor, KeyComparator<K> keyComparator) {
+    public KeyComparatorHashMap(int initialCapacity, final float loadFactor, final KeyComparator<K> keyComparator) {
         if (initialCapacity < 0) {
             throw new IllegalArgumentException(LocalizationMessages.ILLEGAL_INITIAL_CAPACITY(initialCapacity));
         }
@@ -149,21 +148,22 @@ public class KeyComparatorHashMap<K, V>
      * Constructs an empty <tt>HashMap</tt> with the specified initial
      * capacity and the default load factor (0.75).
      *
-     * @param  initialCapacity the initial capacity.
-     * @param keyComparator the map key comparator.
+     * @param initialCapacity the initial capacity.
+     * @param keyComparator   the map key comparator.
      * @throws IllegalArgumentException if the initial capacity is negative.
      */
     @SuppressWarnings("unchecked")
-    public KeyComparatorHashMap(int initialCapacity, KeyComparator<K> keyComparator) {
+    public KeyComparatorHashMap(final int initialCapacity, final KeyComparator<K> keyComparator) {
         this(initialCapacity, DEFAULT_LOAD_FACTOR, keyComparator);
     }
 
     /**
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity
      * (16) and the default load factor (0.75).
+     *
      * @param keyComparator the map key comparator.
      */
-    public KeyComparatorHashMap(KeyComparator<K> keyComparator) {
+    public KeyComparatorHashMap(final KeyComparator<K> keyComparator) {
         this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, keyComparator);
     }
 
@@ -173,14 +173,12 @@ public class KeyComparatorHashMap<K, V>
      * default load factor (0.75) and an initial capacity sufficient to
      * hold the mappings in the specified <tt>Map</tt>.
      *
-     * @param   m the map whose mappings are to be placed in this map.
+     * @param m             the map whose mappings are to be placed in this map.
      * @param keyComparator the comparator
-     * @throws  NullPointerException if the specified map is null.
+     * @throws NullPointerException if the specified map is null.
      */
-    public KeyComparatorHashMap(Map<? extends K, ? extends V> m,
-            KeyComparator<K> keyComparator) {
-        this(Math.max((int) (m.size() / DEFAULT_LOAD_FACTOR) + 1,
-                DEFAULT_INITIAL_CAPACITY), DEFAULT_LOAD_FACTOR, keyComparator);
+    public KeyComparatorHashMap(final Map<? extends K, ? extends V> m, final KeyComparator<K> keyComparator) {
+        this(Math.max((int) (m.size() / DEFAULT_LOAD_FACTOR) + 1, DEFAULT_INITIAL_CAPACITY), DEFAULT_LOAD_FACTOR, keyComparator);
         putAllForCreate(m);
     }
 
@@ -197,9 +195,10 @@ public class KeyComparatorHashMap<K, V>
     }
 
     // internal utilities
+
     /**
      * Initialization hook for subclasses.
-     *
+     * <p/>
      * This method is called in all pseudo-constructors (clone, readObject)
      * after HashMap has been initialized but before any entries have
      * been inserted.  (In the absence of this method, readObject would
@@ -207,6 +206,7 @@ public class KeyComparatorHashMap<K, V>
      */
     void init() {
     }
+
     /**
      * Value representing null keys inside tables.
      */
@@ -215,18 +215,18 @@ public class KeyComparatorHashMap<K, V>
     /**
      * Returns internal representation for key. Use NULL_KEY if key is null.
      */
-    static <T> T maskNull(T key) {
+    static <T> T maskNull(final T key) {
         return key == null ? (T) NULL_KEY : key;
     }
 
-    static <T> boolean isNull(T key) {
+    static <T> boolean isNull(final T key) {
         return key == NULL_KEY;
     }
 
     /**
      * Returns key represented by specified internal representation.
      */
-    static <T> T unmaskNull(T key) {
+    static <T> T unmaskNull(final T key) {
         return key == NULL_KEY ? null : key;
     }
 
@@ -236,11 +236,11 @@ public class KeyComparatorHashMap<K, V>
      * hash function," which defends against poor quality hash functions.
      * This is critical because HashMap uses power-of two length
      * hash tables.<p>
-     *
+     * <p/>
      * The shift distances in this function were chosen as the result
      * of an automated search over the entire four-dimensional search space.
      */
-    static int hash(Object x) {
+    static int hash(final Object x) {
         int h = x.hashCode();
 
         h += ~(h << 9);
@@ -253,14 +253,14 @@ public class KeyComparatorHashMap<K, V>
     /**
      * Check for equality of non-null reference x and possibly-null y.
      */
-    static boolean eq(Object x, Object y) {
+    static boolean eq(final Object x, final Object y) {
         return x == y || x.equals(y);
     }
 
     /**
      * Returns index for hash code h.
      */
-    static int indexFor(int h, int length) {
+    static int indexFor(final int h, final int length) {
         return h & (length - 1);
     }
 
@@ -284,10 +284,8 @@ public class KeyComparatorHashMap<K, V>
         return size == 0;
     }
 
-    int keyComparatorHash(K k) {
-        return isNull(k)
-                ? hash(k.hashCode())
-                : hash(keyComparator.hash(k));
+    int keyComparatorHash(final K k) {
+        return isNull(k) ? hash(k.hashCode()) : hash(keyComparator.hash(k));
     }
 
     int hash(int h) {
@@ -301,7 +299,7 @@ public class KeyComparatorHashMap<K, V>
     /**
      * Check for equality of non-null reference x and possibly-null y.
      */
-    boolean keyComparatorEq(K x, K y) {
+    boolean keyComparatorEq(final K x, final K y) {
         if (isNull(x)) {
             return x == y;
         } else if (isNull(y)) {
@@ -319,16 +317,16 @@ public class KeyComparatorHashMap<K, V>
      * the map explicitly maps the key to <tt>null</tt>. The
      * <tt>containsKey</tt> method may be used to distinguish these two cases.
      *
-     * @param   key the key whose associated value is to be returned.
-     * @return  the value to which this map maps the specified key, or
-     *          <tt>null</tt> if the map contains no mapping for this key.
+     * @param key the key whose associated value is to be returned.
+     * @return the value to which this map maps the specified key, or
+     * <tt>null</tt> if the map contains no mapping for this key.
      * @see #put(Object, Object)
      */
     @Override
-    public V get(Object key) {
-        K k = (K) maskNull(key);
-        int hash = keyComparatorHash(k);
-        int i = indexFor(hash, table.length);
+    public V get(final Object key) {
+        final K k = (K) maskNull(key);
+        final int hash = keyComparatorHash(k);
+        final int i = indexFor(hash, table.length);
         Entry<K, V> e = table[i];
         while (true) {
             if (e == null) {
@@ -345,15 +343,15 @@ public class KeyComparatorHashMap<K, V>
      * Returns <tt>true</tt> if this map contains a mapping for the
      * specified key.
      *
-     * @param   key   The key whose presence in this map is to be tested
+     * @param key The key whose presence in this map is to be tested
      * @return <tt>true</tt> if this map contains a mapping for the specified
      * key.
      */
     @Override
-    public boolean containsKey(Object key) {
-        K k = (K) maskNull(key);
-        int hash = keyComparatorHash(k);
-        int i = indexFor(hash, table.length);
+    public boolean containsKey(final Object key) {
+        final K k = (K) maskNull(key);
+        final int hash = keyComparatorHash(k);
+        final int i = indexFor(hash, table.length);
         Entry<K, V> e = table[i];
         while (e != null) {
             if (e.hash == hash && keyComparatorEq(k, e.key)) {
@@ -369,10 +367,10 @@ public class KeyComparatorHashMap<K, V>
      * HashMap.  Returns null if the HashMap contains no mapping
      * for this key.
      */
-    Entry<K, V> getEntry(K key) {
-        K k = maskNull(key);
-        int hash = keyComparatorHash(k);
-        int i = indexFor(hash, table.length);
+    Entry<K, V> getEntry(final K key) {
+        final K k = maskNull(key);
+        final int hash = keyComparatorHash(k);
+        final int i = indexFor(hash, table.length);
         Entry<K, V> e = table[i];
         while (e != null && !(e.hash == hash && keyComparatorEq(k, e.key))) {
             e = e.next;
@@ -385,22 +383,22 @@ public class KeyComparatorHashMap<K, V>
      * If the map previously contained a mapping for this key, the old
      * value is replaced.
      *
-     * @param key key with which the specified value is to be associated.
+     * @param key   key with which the specified value is to be associated.
      * @param value value to be associated with the specified key.
      * @return previous value associated with specified key, or <tt>null</tt>
-     *	       if there was no mapping for key.  A <tt>null</tt> return can
-     *	       also indicate that the HashMap previously associated
-     *	       <tt>null</tt> with the specified key.
+     * if there was no mapping for key.  A <tt>null</tt> return can
+     * also indicate that the HashMap previously associated
+     * <tt>null</tt> with the specified key.
      */
     @Override
-    public V put(K key, V value) {
-        K k = maskNull(key);
-        int hash = keyComparatorHash(k);
-        int i = indexFor(hash, table.length);
+    public V put(final K key, final V value) {
+        final K k = maskNull(key);
+        final int hash = keyComparatorHash(k);
+        final int i = indexFor(hash, table.length);
 
         for (Entry<K, V> e = table[i]; e != null; e = e.next) {
             if (e.hash == hash && keyComparatorEq(k, e.key)) {
-                V oldValue = e.value;
+                final V oldValue = e.value;
                 e.value = value;
                 e.recordAccess(this);
                 return oldValue;
@@ -418,10 +416,10 @@ public class KeyComparatorHashMap<K, V>
      * check for comodification, etc.  It calls createEntry rather than
      * addEntry.
      */
-    private void putForCreate(K key, V value) {
-        K k = maskNull(key);
-        int hash = keyComparatorHash(k);
-        int i = indexFor(hash, table.length);
+    private void putForCreate(final K key, final V value) {
+        final K k = maskNull(key);
+        final int hash = keyComparatorHash(k);
+        final int i = indexFor(hash, table.length);
 
         /**
          * Look for preexisting entry for key.  This will never happen for
@@ -438,9 +436,8 @@ public class KeyComparatorHashMap<K, V>
         createEntry(hash, k, value, i);
     }
 
-    private void putAllForCreate(Map<? extends K, ? extends V> m) {
-        for (Iterator<? extends Map.Entry<? extends K, ? extends V>> i = m.entrySet().iterator(); i.hasNext();) {
-            Map.Entry<? extends K, ? extends V> e = i.next();
+    private void putAllForCreate(final Map<? extends K, ? extends V> m) {
+        for (final Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
             putForCreate(e.getKey(), e.getValue());
         }
     }
@@ -449,25 +446,25 @@ public class KeyComparatorHashMap<K, V>
      * Rehashes the contents of this map into a new array with a
      * larger capacity.  This method is called automatically when the
      * number of keys in this map reaches its threshold.
-     *
+     * <p/>
      * If current capacity is MAXIMUM_CAPACITY, this method does not
      * resize the map, but sets threshold to Integer.MAX_VALUE.
      * This has the effect of preventing future calls.
      *
      * @param newCapacity the new capacity, MUST be a power of two;
-     *        must be greater than current capacity unless current
-     *        capacity is MAXIMUM_CAPACITY (in which case value
-     *        is irrelevant).
+     *                    must be greater than current capacity unless current
+     *                    capacity is MAXIMUM_CAPACITY (in which case value
+     *                    is irrelevant).
      */
-    void resize(int newCapacity) {
-        Entry<K, V>[] oldTable = table;
-        int oldCapacity = oldTable.length;
+    void resize(final int newCapacity) {
+        final Entry<K, V>[] oldTable = table;
+        final int oldCapacity = oldTable.length;
         if (oldCapacity == MAXIMUM_CAPACITY) {
             threshold = Integer.MAX_VALUE;
             return;
         }
 
-        Entry<K, V>[] newTable = new Entry[newCapacity];
+        final Entry<K, V>[] newTable = new Entry[newCapacity];
         transfer(newTable);
         table = newTable;
         threshold = (int) (newCapacity * loadFactor);
@@ -476,16 +473,16 @@ public class KeyComparatorHashMap<K, V>
     /**
      * Transfer all entries from current table to newTable.
      */
-    void transfer(Entry<K, V>[] newTable) {
-        Entry<K, V>[] src = table;
-        int newCapacity = newTable.length;
+    void transfer(final Entry<K, V>[] newTable) {
+        final Entry<K, V>[] src = table;
+        final int newCapacity = newTable.length;
         for (int j = 0; j < src.length; j++) {
             Entry<K, V> e = src[j];
             if (e != null) {
                 src[j] = null;
                 do {
-                    Entry<K, V> next = e.next;
-                    int i = indexFor(e.hash, newCapacity);
+                    final Entry<K, V> next = e.next;
+                    final int i = indexFor(e.hash, newCapacity);
                     e.next = newTable[i];
                     newTable[i] = e;
                     e = next;
@@ -503,8 +500,8 @@ public class KeyComparatorHashMap<K, V>
      * @throws NullPointerException if the specified map is null.
      */
     @Override
-    public void putAll(Map<? extends K, ? extends V> m) {
-        int numKeysToBeAdded = m.size();
+    public void putAll(final Map<? extends K, ? extends V> m) {
+        final int numKeysToBeAdded = m.size();
         if (numKeysToBeAdded == 0) {
             return;
         }
@@ -532,8 +529,7 @@ public class KeyComparatorHashMap<K, V>
             }
         }
 
-        for (Iterator<? extends Map.Entry<? extends K, ? extends V>> i = m.entrySet().iterator(); i.hasNext();) {
-            Map.Entry<? extends K, ? extends V> e = i.next();
+        for (final Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
             put(e.getKey(), e.getValue());
         }
     }
@@ -541,15 +537,15 @@ public class KeyComparatorHashMap<K, V>
     /**
      * Removes the mapping for this key from this map if present.
      *
-     * @param  key key whose mapping is to be removed from the map.
+     * @param key key whose mapping is to be removed from the map.
      * @return previous value associated with specified key, or <tt>null</tt>
-     *	       if there was no mapping for key.  A <tt>null</tt> return can
-     *	       also indicate that the map previously associated <tt>null</tt>
-     *	       with the specified key.
+     * if there was no mapping for key.  A <tt>null</tt> return can
+     * also indicate that the map previously associated <tt>null</tt>
+     * with the specified key.
      */
     @Override
-    public V remove(Object key) {
-        Entry<K, V> e = removeEntryForKey(key);
+    public V remove(final Object key) {
+        final Entry<K, V> e = removeEntryForKey(key);
         return (e == null ? null : e.value);
     }
 
@@ -558,15 +554,15 @@ public class KeyComparatorHashMap<K, V>
      * in the HashMap.  Returns null if the HashMap contains no mapping
      * for this key.
      */
-    Entry<K, V> removeEntryForKey(Object key) {
-        K k = (K) maskNull(key);
-        int hash = keyComparatorHash(k);
-        int i = indexFor(hash, table.length);
+    Entry<K, V> removeEntryForKey(final Object key) {
+        final K k = (K) maskNull(key);
+        final int hash = keyComparatorHash(k);
+        final int i = indexFor(hash, table.length);
         Entry<K, V> prev = table[i];
         Entry<K, V> e = prev;
 
         while (e != null) {
-            Entry<K, V> next = e.next;
+            final Entry<K, V> next = e.next;
             if (e.hash == hash && keyComparatorEq(k, e.key)) {
                 modCount++;
                 size--;
@@ -588,20 +584,20 @@ public class KeyComparatorHashMap<K, V>
     /**
      * Special version of remove for EntrySet.
      */
-    Entry<K, V> removeMapping(Object o) {
+    Entry<K, V> removeMapping(final Object o) {
         if (!(o instanceof Map.Entry)) {
             return null;
         }
 
-        Map.Entry<K, V> entry = (Map.Entry<K, V>) o;
-        K k = maskNull(entry.getKey());
-        int hash = keyComparatorHash(k);
-        int i = indexFor(hash, table.length);
+        final Map.Entry<K, V> entry = (Map.Entry<K, V>) o;
+        final K k = maskNull(entry.getKey());
+        final int hash = keyComparatorHash(k);
+        final int i = indexFor(hash, table.length);
         Entry<K, V> prev = table[i];
         Entry<K, V> e = prev;
 
         while (e != null) {
-            Entry<K, V> next = e.next;
+            final Entry<K, V> next = e.next;
             if (e.hash == hash && e.equals(entry)) {
                 modCount++;
                 size--;
@@ -626,7 +622,7 @@ public class KeyComparatorHashMap<K, V>
     @Override
     public void clear() {
         modCount++;
-        Entry[] tab = table;
+        final Entry[] tab = table;
         for (int i = 0; i < tab.length; i++) {
             tab[i] = null;
         }
@@ -639,15 +635,15 @@ public class KeyComparatorHashMap<K, V>
      *
      * @param value value whose presence in this map is to be tested.
      * @return <tt>true</tt> if this map maps one or more keys to the
-     *         specified value.
+     * specified value.
      */
     @Override
-    public boolean containsValue(Object value) {
+    public boolean containsValue(final Object value) {
         if (value == null) {
             return containsNullValue();
         }
 
-        Entry[] tab = table;
+        final Entry[] tab = table;
         for (int i = 0; i < tab.length; i++) {
             for (Entry e = tab[i]; e != null; e = e.next) {
                 if (value.equals(e.value)) {
@@ -660,11 +656,11 @@ public class KeyComparatorHashMap<K, V>
 
     /**
      * Special-case code for containsValue with null argument
-     **/
+     */
     private boolean containsNullValue() {
-        Entry[] tab = table;
-        for (int i = 0; i < tab.length; i++) {
-            for (Entry e = tab[i]; e != null; e = e.next) {
+        final Entry[] tab = table;
+        for (final Entry aTab : tab) {
+            for (Entry e = aTab; e != null; e = e.next) {
                 if (e.value == null) {
                     return true;
                 }
@@ -682,17 +678,19 @@ public class KeyComparatorHashMap<K, V>
     @Override
     public Object clone() {
         KeyComparatorHashMap<K, V> result = null;
+
         try {
             result = (KeyComparatorHashMap<K, V>) super.clone();
-        } catch (CloneNotSupportedException e) {
+
+            result.table = new Entry[table.length];
+            result.entrySet = null;
+            result.modCount = 0;
+            result.size = 0;
+            result.init();
+            result.putAllForCreate(this);
+        } catch (final CloneNotSupportedException e) {
             // assert false;
         }
-        result.table = new Entry[table.length];
-        result.entrySet = null;
-        result.modCount = 0;
-        result.size = 0;
-        result.init();
-        result.putAllForCreate(this);
 
         return result;
     }
@@ -707,7 +705,7 @@ public class KeyComparatorHashMap<K, V>
         /**
          * Create new entry.
          */
-        Entry(int h, K k, V v, Entry<K, V> n) {
+        Entry(final int h, final K k, final V v, final Entry<K, V> n) {
             value = v;
             next = n;
             key = k;
@@ -725,23 +723,23 @@ public class KeyComparatorHashMap<K, V>
         }
 
         @Override
-        public V setValue(V newValue) {
-            V oldValue = value;
+        public V setValue(final V newValue) {
+            final V oldValue = value;
             value = newValue;
             return oldValue;
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(final Object o) {
             if (!(o instanceof Map.Entry)) {
                 return false;
             }
-            Map.Entry e = (Map.Entry) o;
-            Object k1 = getKey();
-            Object k2 = e.getKey();
+            final Map.Entry e = (Map.Entry) o;
+            final Object k1 = getKey();
+            final Object k2 = e.getKey();
             if (k1 == k2 || (k1 != null && k1.equals(k2))) {
-                Object v1 = getValue();
-                Object v2 = e.getValue();
+                final Object v1 = getValue();
+                final Object v2 = e.getValue();
                 if (v1 == v2 || (v1 != null && v1.equals(v2))) {
                     return true;
                 }
@@ -751,8 +749,7 @@ public class KeyComparatorHashMap<K, V>
 
         @Override
         public int hashCode() {
-            return (key == NULL_KEY ? 0 : key.hashCode())
-                    ^ (value == null ? 0 : value.hashCode());
+            return (key == NULL_KEY ? 0 : key.hashCode()) ^ (value == null ? 0 : value.hashCode());
         }
 
         @Override
@@ -765,14 +762,14 @@ public class KeyComparatorHashMap<K, V>
          * overwritten by an invocation of put(k,v) for a key k that's already
          * in the HashMap.
          */
-        void recordAccess(KeyComparatorHashMap<K, V> m) {
+        void recordAccess(final KeyComparatorHashMap<K, V> m) {
         }
 
         /**
          * This method is invoked whenever the entry is
          * removed from the table.
          */
-        void recordRemoval(KeyComparatorHashMap<K, V> m) {
+        void recordRemoval(final KeyComparatorHashMap<K, V> m) {
         }
     }
 
@@ -780,11 +777,11 @@ public class KeyComparatorHashMap<K, V>
      * Add a new entry with the specified key, value and hash code to
      * the specified bucket.  It is the responsibility of this
      * method to resize the table if appropriate.
-     *
+     * <p/>
      * Subclass overrides this to alter the behavior of put method.
      */
-    void addEntry(int hash, K key, V value, int bucketIndex) {
-        Entry<K, V> e = table[bucketIndex];
+    void addEntry(final int hash, final K key, final V value, final int bucketIndex) {
+        final Entry<K, V> e = table[bucketIndex];
         table[bucketIndex] = new Entry<K, V>(hash, key, value, e);
         if (size++ >= threshold) {
             resize(2 * table.length);
@@ -795,29 +792,30 @@ public class KeyComparatorHashMap<K, V>
      * Like addEntry except that this version is used when creating entries
      * as part of Map construction or "pseudo-construction" (cloning,
      * deserialization).  This version needn't worry about resizing the table.
-     *
+     * <p/>
      * Subclass overrides this to alter the behavior of HashMap(Map),
      * clone, and readObject.
      */
-    void createEntry(int hash, K key, V value, int bucketIndex) {
-        Entry<K, V> e = table[bucketIndex];
+    void createEntry(final int hash, final K key, final V value, final int bucketIndex) {
+        final Entry<K, V> e = table[bucketIndex];
         table[bucketIndex] = new Entry<K, V>(hash, key, value, e);
         size++;
     }
 
     private abstract class HashIterator<E> implements Iterator<E> {
 
-        Entry<K, V> next;	// next entry to return
-        int expectedModCount;	// For fast-fail
-        int index;		// current slot
-        Entry<K, V> current;	// current entry
+        Entry<K, V> next;    // next entry to return
+        int expectedModCount;    // For fast-fail
+        int index;        // current slot
+        Entry<K, V> current;    // current entry
 
         HashIterator() {
             expectedModCount = modCount;
-            Entry<K, V>[] t = table;
+            final Entry<K, V>[] t = table;
             int i = t.length;
             Entry<K, V> n = null;
             if (size != 0) { // advance to first entry
+                //noinspection StatementWithEmptyBody
                 while (i > 0 && (n = t[--i]) == null) {
                 }
             }
@@ -834,13 +832,13 @@ public class KeyComparatorHashMap<K, V>
             if (modCount != expectedModCount) {
                 throw new ConcurrentModificationException();
             }
-            Entry<K, V> e = next;
+            final Entry<K, V> e = next;
             if (e == null) {
                 throw new NoSuchElementException();
             }
 
             Entry<K, V> n = e.next;
-            Entry<K, V>[] t = table;
+            final Entry<K, V>[] t = table;
             int i = index;
             while (n == null && i > 0) {
                 n = t[--i];
@@ -858,7 +856,7 @@ public class KeyComparatorHashMap<K, V>
             if (modCount != expectedModCount) {
                 throw new ConcurrentModificationException();
             }
-            K k = current.key;
+            final K k = current.key;
             current = null;
             KeyComparatorHashMap.this.removeEntryForKey(k);
             expectedModCount = modCount;
@@ -901,6 +899,7 @@ public class KeyComparatorHashMap<K, V>
     Iterator<Map.Entry<K, V>> newEntryIterator() {
         return new EntryIterator();
     }
+
     // Views
     private transient Set<Map.Entry<K, V>> entrySet = null;
 
@@ -918,7 +917,7 @@ public class KeyComparatorHashMap<K, V>
      */
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
-        Set<Map.Entry<K, V>> es = entrySet;
+        final Set<Map.Entry<K, V>> es = entrySet;
         return (es != null ? es : (entrySet = (Set<Map.Entry<K, V>>) new EntrySet()));
     }
 
@@ -930,17 +929,17 @@ public class KeyComparatorHashMap<K, V>
         }
 
         @Override
-        public boolean contains(Object o) {
+        public boolean contains(final Object o) {
             if (!(o instanceof Map.Entry)) {
                 return false;
             }
-            Map.Entry<K, V> e = (Map.Entry<K, V>) o;
-            Entry<K, V> candidate = getEntry(e.getKey());
+            final Map.Entry<K, V> e = (Map.Entry<K, V>) o;
+            final Entry<K, V> candidate = getEntry(e.getKey());
             return candidate != null && candidate.equals(e);
         }
 
         @Override
-        public boolean remove(Object o) {
+        public boolean remove(final Object o) {
             return removeMapping(o) != null;
         }
 
@@ -960,17 +959,15 @@ public class KeyComparatorHashMap<K, V>
      * serialize it).
      *
      * @serialData The <i>capacity</i> of the HashMap (the length of the
-     *		   bucket array) is emitted (int), followed  by the
-     *		   <i>ss</i> of the HashMap (the number of key-value
-     *		   mappings), followed by the key (Object) and value (Object)
-     *		   for each key-value mapping represented by the HashMap
-     *             The key-value mappings are emitted in the order that they
-     *             are returned by <tt>entrySet().iterator()</tt>.
-     *
+     * bucket array) is emitted (int), followed  by the
+     * <i>ss</i> of the HashMap (the number of key-value
+     * mappings), followed by the key (Object) and value (Object)
+     * for each key-value mapping represented by the HashMap
+     * The key-value mappings are emitted in the order that they
+     * are returned by <tt>entrySet().iterator()</tt>.
      */
-    private void writeObject(java.io.ObjectOutputStream s)
-            throws IOException {
-        Iterator<Map.Entry<K, V>> i = entrySet().iterator();
+    private void writeObject(final java.io.ObjectOutputStream s) throws IOException {
+        final Iterator<Map.Entry<K, V>> i = entrySet().iterator();
 
         // Write out the threshold, loadfactor, and any hidden stuff
         s.defaultWriteObject();
@@ -983,7 +980,7 @@ public class KeyComparatorHashMap<K, V>
 
         // Write out keys and values (alternating)
         while (i.hasNext()) {
-            Map.Entry<K, V> e = i.next();
+            final Map.Entry<K, V> e = i.next();
             s.writeObject(e.getKey());
             s.writeObject(e.getValue());
         }
@@ -993,24 +990,23 @@ public class KeyComparatorHashMap<K, V>
      * Reconstitute the <tt>HashMap</tt> instance from a stream (i.e.,
      * deserialize it).
      */
-    private void readObject(java.io.ObjectInputStream s)
-            throws IOException, ClassNotFoundException {
+    private void readObject(final java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
         // Read in the threshold, loadfactor, and any hidden stuff
         s.defaultReadObject();
 
         // Read in number of buckets and allocate the bucket array;
-        int numBuckets = s.readInt();
+        final int numBuckets = s.readInt();
         table = new Entry[numBuckets];
 
         init();  // Give subclass a chance to do its thing.
 
         // Read in ss (number of Mappings)
-        int ss = s.readInt();
+        final int ss = s.readInt();
 
         // Read the keys and values, and put the mappings in the HashMap
         for (int i = 0; i < ss; i++) {
-            K key = (K) s.readObject();
-            V value = (V) s.readObject();
+            final K key = (K) s.readObject();
+            final V value = (V) s.readObject();
             putForCreate(key, value);
         }
     }

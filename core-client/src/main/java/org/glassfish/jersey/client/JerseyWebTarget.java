@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -71,7 +71,6 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget, Initializa
         this(UriBuilder.fromUri(uri), parent.getConfiguration());
     }
 
-
     /**
      * Create new web target instance.
      *
@@ -81,7 +80,6 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget, Initializa
     /*package*/ JerseyWebTarget(URI uri, JerseyClient parent) {
         this(UriBuilder.fromUri(uri), parent.getConfiguration());
     }
-
 
     /**
      * Create new web target instance.
@@ -267,7 +265,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget, Initializa
         checkNotClosed();
         checkTemplateValues(templateValues);
 
-        if(templateValues.isEmpty()) {
+        if (templateValues.isEmpty()) {
             return this;
         } else {
             return new JerseyWebTarget(getUriBuilder().resolveTemplates(templateValues, encodeSlashInPath), this);
@@ -280,7 +278,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget, Initializa
         checkNotClosed();
         checkTemplateValues(templateValues);
 
-        if(templateValues.isEmpty()) {
+        if (templateValues.isEmpty()) {
             return this;
         } else {
             return new JerseyWebTarget(getUriBuilder().resolveTemplatesFromEncoded(templateValues), this);
@@ -298,7 +296,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget, Initializa
     private void checkTemplateValues(final Map<String, Object> templateValues) throws NullPointerException {
         Preconditions.checkNotNull(templateValues, "templateValues is 'null'.");
 
-        for(final Map.Entry entry : templateValues.entrySet()) {
+        for (final Map.Entry entry : templateValues.entrySet()) {
             Preconditions.checkNotNull(entry.getKey(), "name is 'null'.");
             Preconditions.checkNotNull(entry.getValue(), "value is 'null'.");
         }

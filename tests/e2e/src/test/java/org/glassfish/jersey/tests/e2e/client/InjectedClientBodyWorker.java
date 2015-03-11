@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -82,8 +82,7 @@ public class InjectedClientBodyWorker extends JerseyTest {
     static final String ProviderType = "test/providers";
     static final String ConfigurationTYPE = "test/configuration";
 
-
-    public static class MyContext {};
+    public static class MyContext {}
 
     @Provider
     public static class MyContextResolver implements ContextResolver<MyContext> {
@@ -98,7 +97,8 @@ public class InjectedClientBodyWorker extends JerseyTest {
     @Produces(ProviderType)
     public static class ProvidersInjectedWriter implements MessageBodyWriter<String> {
 
-        @Context Providers providers;
+        @Context
+        Providers providers;
 
         @Override
         public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -112,13 +112,14 @@ public class InjectedClientBodyWorker extends JerseyTest {
 
         @Override
         public void writeTo(String t, Class<?> type, Type genericType, Annotation[] annotations,
-                                    MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
-                                        OutputStream entityStream) throws IOException, WebApplicationException {
+                            MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
 
             // make sure no exception occurs here
             providers.getExceptionMapper(Exception.class);
 
-            final ContextResolver<MyContext> contextResolver = providers.getContextResolver(MyContext.class, MediaType.valueOf(ProviderType));
+            final ContextResolver<MyContext> contextResolver = providers
+                    .getContextResolver(MyContext.class, MediaType.valueOf(ProviderType));
             entityStream.write(String.format("%s", contextResolver).getBytes());
         }
     }
@@ -127,7 +128,8 @@ public class InjectedClientBodyWorker extends JerseyTest {
     @Consumes(ProviderType)
     public static class ProvidersInjectedReader implements MessageBodyReader<String> {
 
-        @Context Providers providers;
+        @Context
+        Providers providers;
 
         @Override
         public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -136,13 +138,14 @@ public class InjectedClientBodyWorker extends JerseyTest {
 
         @Override
         public String readFrom(Class<String> type, Type genericType, Annotation[] annotations,
-                                    MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
-                                        InputStream entityStream) throws IOException, WebApplicationException {
+                               MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
+                               InputStream entityStream) throws IOException, WebApplicationException {
 
             // make sure no exception occurs here
             providers.getExceptionMapper(Exception.class);
 
-            final ContextResolver<MyContext> contextResolver = providers.getContextResolver(MyContext.class, MediaType.valueOf(ProviderType));
+            final ContextResolver<MyContext> contextResolver = providers
+                    .getContextResolver(MyContext.class, MediaType.valueOf(ProviderType));
             return String.format("%s", contextResolver);
         }
 
@@ -152,7 +155,8 @@ public class InjectedClientBodyWorker extends JerseyTest {
     @Produces(ConfigurationTYPE)
     public static class ConfigurationInjectedWriter implements MessageBodyWriter<String> {
 
-        @Context Configuration configuration;
+        @Context
+        Configuration configuration;
 
         @Override
         public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -166,8 +170,8 @@ public class InjectedClientBodyWorker extends JerseyTest {
 
         @Override
         public void writeTo(String t, Class<?> type, Type genericType, Annotation[] annotations,
-                                MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
-                                    OutputStream entityStream) throws IOException, WebApplicationException {
+                            MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
 
             final boolean ctxResolverRegistered = configuration.isRegistered(MyContextResolver.class);
             entityStream.write(String.format("%b", ctxResolverRegistered).getBytes());
@@ -178,7 +182,8 @@ public class InjectedClientBodyWorker extends JerseyTest {
     @Consumes(ConfigurationTYPE)
     public static class ConfigurationInjectedReader implements MessageBodyReader<String> {
 
-        @Context Configuration configuration;
+        @Context
+        Configuration configuration;
 
         @Override
         public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -187,8 +192,8 @@ public class InjectedClientBodyWorker extends JerseyTest {
 
         @Override
         public String readFrom(Class<String> type, Type genericType, Annotation[] annotations,
-                                    MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
-                                        InputStream entityStream) throws IOException, WebApplicationException {
+                               MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
+                               InputStream entityStream) throws IOException, WebApplicationException {
             final boolean ctxResolverRegistered = configuration.isRegistered(MyContextResolver.class);
             return String.format("%b", ctxResolverRegistered);
         }

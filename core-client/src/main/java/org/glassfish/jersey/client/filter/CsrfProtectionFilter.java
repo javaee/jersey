@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client.filter;
 
 import java.io.IOException;
@@ -53,7 +54,7 @@ import javax.ws.rs.client.ClientRequestFilter;
  * This is to satisfy the requirements of the {@code org.glassfish.jersey.server.filter.CsrfProtectionFilter}
  * on the server side.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class CsrfProtectionFilter implements ClientRequestFilter {
 

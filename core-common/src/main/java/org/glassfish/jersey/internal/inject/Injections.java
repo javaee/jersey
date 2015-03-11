@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,7 +65,7 @@ import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
  */
 public class Injections {
 
-    private final static ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
+    private static final ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
 
     /**
      * Get service locator {@link DynamicConfiguration dynamic configuration}.
@@ -176,9 +176,9 @@ public class Injections {
             //
             // see InvalidParamTest
             // see JERSEY-1117
-            for(final Throwable t: e.getErrors()) {
-                if(WebApplicationException.class.isAssignableFrom(t.getClass())) {
-                    throw (WebApplicationException)t;
+            for (final Throwable t : e.getErrors()) {
+                if (WebApplicationException.class.isAssignableFrom(t.getClass())) {
+                    throw (WebApplicationException) t;
                 }
             }
 
@@ -204,7 +204,9 @@ public class Injections {
      * @param defaultLoader default HK2 service loader that should be used to load the service class
      *                      in case a custom loader has not been set.
      */
-    public static void addBinding(final BindingBuilder<?> builder, final DynamicConfiguration configuration, final HK2Loader defaultLoader) {
+    public static void addBinding(final BindingBuilder<?> builder,
+                                  final DynamicConfiguration configuration,
+                                  final HK2Loader defaultLoader) {
         BindingBuilderFactory.addBinding(builder, configuration, defaultLoader);
     }
 

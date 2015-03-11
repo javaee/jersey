@@ -107,9 +107,9 @@ public class ChunkedInputOutputITCase extends JerseyTest {
         final String response = target().path("test/from-string").request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 
         assertEquals("Unexpected value of chunked response unmarshalled as a single string.",
-                "{\"id\":0,\"data\":\"test\"}\r\n" +
-                        "{\"id\":1,\"data\":\"test\"}\r\n" +
-                        "{\"id\":2,\"data\":\"test\"}\r\n",
+                "{\"id\":0,\"data\":\"test\"}\r\n"
+                        + "{\"id\":1,\"data\":\"test\"}\r\n"
+                        + "{\"id\":2,\"data\":\"test\"}\r\n",
                 response);
     }
 

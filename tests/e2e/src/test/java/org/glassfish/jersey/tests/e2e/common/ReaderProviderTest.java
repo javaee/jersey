@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,10 +63,11 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Testing {@link Reader} on client and server.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class ReaderProviderTest extends JerseyTest {
-    public final static String GET_READER_RESPONSE = "GET_READER_RESPONSE";
+
+    public static final String GET_READER_RESPONSE = "GET_READER_RESPONSE";
     public static final String GET_POST_RESPONSE = "GET_POST_RESPONSE";
 
     @Override
@@ -110,21 +111,20 @@ public class ReaderProviderTest extends JerseyTest {
 
     @Test
     public void testReaderOnClientAsRequestEntity() throws IOException {
-        Response response = target().path("test/postReaderGetReader").request().post(Entity.entity(new StringReader
-                (GET_POST_RESPONSE), MediaType.TEXT_PLAIN));
+        Response response = target().path("test/postReaderGetReader").request()
+                .post(Entity.entity(new StringReader(GET_POST_RESPONSE), MediaType.TEXT_PLAIN));
         assertEquals(200, response.getStatus());
         assertEquals(GET_POST_RESPONSE, response.readEntity(String.class));
     }
 
-
     @Path("test")
     public static class ReaderResource {
+
         @POST
         @Path("postReaderGetReader")
         public Reader postReader(Reader reader) throws IOException {
             return reader;
         }
-
 
         @GET
         @Path("getReader")

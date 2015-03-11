@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.client;
 
 import java.io.IOException;
@@ -73,10 +74,9 @@ import org.junit.Test;
 /**
  * Tests {@link org.glassfish.jersey.client.authentication.HttpAuthenticationFeature}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class HttpAuthorizationTest extends JerseyTest {
-
 
     @NameBinding
     @Target({ElementType.TYPE, ElementType.METHOD})
@@ -96,12 +96,12 @@ public class HttpAuthorizationTest extends JerseyTest {
     public static @interface Alternating {
     }
 
-
     /**
      * Alternates between BASIC and DIGEST (each is used for 2 requests).
      */
     @Alternating
     public static class AlternatingDigestBasicFilter implements ContainerRequestFilter {
+
         int counter = 0;
 
         @Override
@@ -121,14 +121,12 @@ public class HttpAuthorizationTest extends JerseyTest {
         public void filter(ContainerRequestContext requestContext) throws IOException {
             final String authorization = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-
             if (authorization != null && authorization.startsWith("Digest")) {
                 final Matcher match = Pattern.compile("username=\"([^\"]+)\"").matcher(authorization);
                 if (!match.find()) {
                     return;
                 }
                 final String username = match.group(1);
-
 
                 requestContext.setSecurityContext(new SecurityContext() {
                     @Override
@@ -158,7 +156,10 @@ public class HttpAuthorizationTest extends JerseyTest {
                 });
                 return;
             }
-            requestContext.abortWith(Response.status(401).header(HttpHeaders.WWW_AUTHENTICATE, "Digest realm=\"my-realm\", domain=\"\", nonce=\"n9iv3MeSNkEfM3uJt2gnBUaWUbKAljxp\", algorithm=MD5, qop=\"auth\", stale=false").build());
+            requestContext.abortWith(Response.status(401).header(HttpHeaders.WWW_AUTHENTICATE,
+                    "Digest realm=\"my-realm\", domain=\"\", nonce=\"n9iv3MeSNkEfM3uJt2gnBUaWUbKAljxp\", algorithm=MD5, "
+                            + "qop=\"auth\", stale=false")
+                    .build());
         }
     }
 
@@ -168,6 +169,7 @@ public class HttpAuthorizationTest extends JerseyTest {
      */
     @Basic
     public static class BasicFilter implements ContainerRequestFilter {
+
         static final Charset CHARACTER_SET = Charset.forName("iso-8859-1");
 
         @Override
@@ -176,7 +178,7 @@ public class HttpAuthorizationTest extends JerseyTest {
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
             if (authHeader != null && authHeader.startsWith("Basic")) {
                 String decoded = new String(Base64.decode(authHeader.substring(6).getBytes()), CHARACTER_SET);
-//                String decoded = Base64.decodeAsString(authHeader.substring(6));
+                //                String decoded = Base64.decodeAsString(authHeader.substring(6));
                 final String[] split = decoded.split(":");
                 final String username = split[0];
                 final String pwd = split[1];
@@ -227,6 +229,7 @@ public class HttpAuthorizationTest extends JerseyTest {
 
     @Path("resource")
     public static class MyResource {
+
         @Context
         SecurityContext securityContext;
 
@@ -256,9 +259,7 @@ public class HttpAuthorizationTest extends JerseyTest {
             return securityContext.getAuthenticationScheme() + ":" + securityContext.getUserPrincipal().getName();
         }
 
-
     }
-
 
     @Test
     public void testBasicPreemptive() {
@@ -348,7 +349,6 @@ public class HttpAuthorizationTest extends JerseyTest {
 
         check(response, 200, "BASIC:bart");
 
-
         response = target.request().property(HttpAuthenticationFeature.HTTP_AUTHENTICATION_DIGEST_USERNAME, "bart")
                 .property(HttpAuthenticationFeature.HTTP_AUTHENTICATION_DIGEST_PASSWORD, "Bart")
                 .get();
@@ -364,7 +364,6 @@ public class HttpAuthorizationTest extends JerseyTest {
         check(response, 200, "DIGEST:homer");
     }
 
-
     @Test
     public void testDigestWithPasswords() {
         final WebTarget target = target().path("resource").path("digest")
@@ -378,7 +377,6 @@ public class HttpAuthorizationTest extends JerseyTest {
                 .register(HttpAuthenticationFeature.universalBuilder().credentials("homer", "Homer").build());
         _testDigestWithPasswords(target);
     }
-
 
     public void _testDigestWithPasswords(WebTarget target) {
         Response response = target.request().get();
@@ -429,7 +427,8 @@ public class HttpAuthorizationTest extends JerseyTest {
         check(response, 200, "DIGEST:bart");
 
         try {
-            response = target.path("digest").request().property(HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME, "bart")
+            target.path("digest").request()
+                    .property(HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_USERNAME, "bart")
                     .property(HttpAuthenticationFeature.HTTP_AUTHENTICATION_BASIC_PASSWORD, "Bart")
                     .get();
             Assert.fail("should throw an exception as no credentials were supplied for digest auth");
@@ -517,7 +516,6 @@ public class HttpAuthorizationTest extends JerseyTest {
                 .property(HttpAuthenticationFeature.HTTP_AUTHENTICATION_PASSWORD, "Bart").get(), 200, "DIGEST:bart");
         check(target.path("alternating").request().property(HttpAuthenticationFeature.HTTP_AUTHENTICATION_USERNAME, "bart")
                 .property(HttpAuthenticationFeature.HTTP_AUTHENTICATION_PASSWORD, "Bart").get(), 200, "BASIC:bart");
-
 
     }
 

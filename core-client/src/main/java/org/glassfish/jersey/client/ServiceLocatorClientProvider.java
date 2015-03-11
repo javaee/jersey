@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import javax.ws.rs.client.ClientRequestContext;
@@ -56,7 +57,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * </p>
  *
  * @see org.glassfish.jersey.ServiceLocatorProvider
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @since 2.6
  */
 public class ServiceLocatorClientProvider extends ServiceLocatorProvider {
@@ -76,7 +77,8 @@ public class ServiceLocatorClientProvider extends ServiceLocatorProvider {
     public static ServiceLocator getServiceLocator(ClientRequestContext clientRequestContext) {
         if (!(clientRequestContext instanceof ServiceLocatorSupplier)) {
             throw new IllegalArgumentException(
-                    LocalizationMessages.ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_REQUEST(clientRequestContext.getClass().getName()));
+                    LocalizationMessages
+                            .ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_REQUEST(clientRequestContext.getClass().getName()));
         }
         return ((ServiceLocatorSupplier) clientRequestContext).getServiceLocator();
     }
@@ -97,11 +99,11 @@ public class ServiceLocatorClientProvider extends ServiceLocatorProvider {
     public static ServiceLocator getServiceLocator(ClientResponseContext clientResponseContext) {
         if (!(clientResponseContext instanceof ServiceLocatorSupplier)) {
             throw new IllegalArgumentException(
-                    LocalizationMessages.ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_RESPONSE(clientResponseContext.getClass().getName()));
+                    LocalizationMessages
+                            .ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_RESPONSE(clientResponseContext.getClass().getName()));
         }
         return ((ServiceLocatorSupplier) clientResponseContext).getServiceLocator();
     }
-
 
 }
 

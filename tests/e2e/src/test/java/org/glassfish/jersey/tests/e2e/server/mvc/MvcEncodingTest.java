@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,8 +67,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /**
+ * MVC encoding charset tests.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 @RunWith(Parameterized.class)
 public class MvcEncodingTest extends JerseyTest {
@@ -143,7 +144,7 @@ public class MvcEncodingTest extends JerseyTest {
         final Response response = target().path("resource").request().get();
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("Model:" + MESSAGE, response.readEntity(String.class));
-        Assert.assertEquals("*/*; charset=" + defaultEncoding, response.getMediaType().toString());
+        Assert.assertEquals("*/*;charset=" + defaultEncoding, response.getMediaType().toString());
         Assert.assertEquals(defaultEncoding, response.getMediaType().getParameters().get(MediaType.CHARSET_PARAMETER));
     }
 
@@ -152,7 +153,7 @@ public class MvcEncodingTest extends JerseyTest {
         final Response response = target().path("resource/textplain").request("*/*,text/plain,text/html").get();
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("Model:" + MESSAGE, response.readEntity(String.class));
-        Assert.assertEquals("text/plain; charset=" + defaultEncoding, response.getMediaType().toString());
+        Assert.assertEquals("text/plain;charset=" + defaultEncoding, response.getMediaType().toString());
         Assert.assertEquals(defaultEncoding, response.getMediaType().getParameters().get(MediaType.CHARSET_PARAMETER));
     }
 
@@ -167,7 +168,7 @@ public class MvcEncodingTest extends JerseyTest {
         final Response response = target().path("resource/textplainUTF16").request("*/*,text/plain,text/html").get();
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("Model:" + MESSAGE, response.readEntity(String.class));
-        Assert.assertEquals("text/plain; charset=UTF-16", response.getMediaType().toString());
+        Assert.assertEquals("text/plain;charset=UTF-16", response.getMediaType().toString());
         Assert.assertEquals("UTF-16", response.getMediaType().getParameters().get(MediaType.CHARSET_PARAMETER));
     }
 }

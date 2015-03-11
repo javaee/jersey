@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,22 +61,22 @@ import org.glassfish.jersey.server.mvc.Template;
 @Path("/")
 @Singleton
 @Template
-@Produces("text/html;qs=5")
+@Produces(MediaType.TEXT_HTML)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Bookstore {
 
-    private final Map<String, Item> items = new TreeMap<String, Item>();
+    private final Map<String, Item> items = new TreeMap<>();
     private String name;
 
     public Bookstore() {
         setName("Czech Bookstore");
         getItems().put("1", new Book("Svejk", "Jaroslav Hasek"));
         getItems().put("2", new Book("Krakatit", "Karel Capek"));
-        getItems().put("3", new CD("Ma Vlast 1", "Bedrich Smetana", new Track[]{
-            new Track("Vysehrad",180),
-            new Track("Vltava",172),
-            new Track("Sarka",32)}));
+        getItems().put("3", new CD("Ma Vlast 1", "Bedrich Smetana", new Track[] {
+                new Track("Vysehrad", 180),
+                new Track("Vltava", 172),
+                new Track("Sarka", 32)}));
     }
 
     @Path("items/{itemid}/")

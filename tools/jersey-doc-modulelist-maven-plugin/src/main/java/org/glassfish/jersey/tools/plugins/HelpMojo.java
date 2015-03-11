@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,31 +60,31 @@ public class HelpMojo extends AbstractMojo {
         log.info("jersey-doc-modulelist-maven-plugin help");
         log.info("=======================================");
         log.info("Walks through the dependency tree and creates a list of maven modules in the docbook format.");
-        log.info("The plugin contains a predefined list of known categories (based on groupId), " +
-                "each one is represented by the separate table in the docbook output.");
+        log.info("The plugin contains a predefined list of known categories (based on groupId), "
+                + "each one is represented by the separate table in the docbook output.");
         log.info("");
         log.info("Plugin needs some external files to be able to correctly format the output.");
         log.info("");
         log.info("Configuration: ");
         log.info("  <outputFileName>        specifies where the final output (docbook section) should be written");
-        log.info("  <templateFileName>      the main template - contains the entire section and a placeholder " +
-                GenerateJerseyModuleListMojo.CONTENT_PLACEHOLDER + " to be replaced by the generated table");
+        log.info("  <templateFileName>      the main template - contains the entire section and a placeholder "
+                + GenerateJerseyModuleListMojo.CONTENT_PLACEHOLDER + " to be replaced by the generated table");
         log.info("  <tableHeaderFileName>   the header of a category table - used once per category; contains two placeholders:");
-        log.info("              " + GenerateJerseyModuleListMojo.CATEGORY_CAPTION_PLACEHOLDER + " - used for the caption of " +
-                                                                                                    "each category table");
-        log.info("              " + GenerateJerseyModuleListMojo.CATEGORY_GROUP_ID_PLACEHOLDER + " - used to create a unique " +
-                                                                                                    "id of a table");
+        log.info("              " + GenerateJerseyModuleListMojo.CATEGORY_CAPTION_PLACEHOLDER + " - used for the caption of "
+                                                                                                    + "each category table");
+        log.info("              " + GenerateJerseyModuleListMojo.CATEGORY_GROUP_ID_PLACEHOLDER + " - used to create a unique "
+                                                                                                    + "id of a table");
         log.info("  <tableFooterFileName>   the footer of a category table, used once per category");
-        log.info("  <tableRowFileName>      a template for a table row, used once per module. The template should contain two " +
-                                            "placeholders:");
-        log.info("              " + GenerateJerseyModuleListMojo.MODULE_NAME_PLACEHOLDER + " - replaced by the name of the " +
-                                                                                            "module");
-        log.info("              " + GenerateJerseyModuleListMojo.MODULE_DESCRIPTION_PLACEHOLDER + " - replaced by the " +
-                                                            "description of the module from the module's pom.xml file");
-        log.info("              " + GenerateJerseyModuleListMojo.MODULE_LINK_PATH_PLACEHOLDER + " - replaced by the relative " +
-                "path of the project-description page on java.net");
-        log.info("  <outputUnmatched>       specifies, if the modules not matching any predefined category should be also a " +
-                "part of the output. If set to true, plugin generates a table for category called 'Other' at the end.");
+        log.info("  <tableRowFileName>      a template for a table row, used once per module. The template should contain two "
+                                            + "placeholders:");
+        log.info("              " + GenerateJerseyModuleListMojo.MODULE_NAME_PLACEHOLDER + " - replaced by the name of the "
+                                                                                            + "module");
+        log.info("              " + GenerateJerseyModuleListMojo.MODULE_DESCRIPTION_PLACEHOLDER + " - replaced by the "
+                                                            + "description of the module from the module's pom.xml file");
+        log.info("              " + GenerateJerseyModuleListMojo.MODULE_LINK_PATH_PLACEHOLDER + " - replaced by the relative "
+                + "path of the project-description page on java.net");
+        log.info("  <outputUnmatched>       specifies, if the modules not matching any predefined category should be also a "
+                + "part of the output. If set to true, plugin generates a table for category called 'Other' at the end.");
         log.info("");
         log.info("");
         log.info("TARGETS:");

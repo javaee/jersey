@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.server.filter;
 
 import java.security.Principal;
@@ -67,19 +68,22 @@ import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Paul Sandoz
+ * @author Martin Matula
  */
 public class RolesAllowedTest extends JerseyTest {
+
     @PreMatching
     @Priority(Priorities.AUTHENTICATION)
     public static class SecurityFilter implements ContainerRequestFilter {
+
         public void filter(ContainerRequestContext request) {
             String user = request.getHeaders().getFirst("X-USER");
             request.setSecurityContext(new Authenticator(user));
         }
 
         private static class Authenticator implements SecurityContext {
+
             private Principal p;
 
             Authenticator(final String name) {
@@ -111,13 +115,18 @@ public class RolesAllowedTest extends JerseyTest {
     @Path("/")
     @PermitAll
     public static class Resource {
+
         @RolesAllowed("user")
         @GET
-        public String get() { return "GET"; }
+        public String get() {
+            return "GET";
+        }
 
         @RolesAllowed("admin")
         @POST
-        public String post(String content) { return content; }
+        public String post(String content) {
+            return content;
+        }
 
         @Path("sub")
         public SubResource getSubResource() {
@@ -127,6 +136,7 @@ public class RolesAllowedTest extends JerseyTest {
 
     @RolesAllowed("admin")
     public static class SubResource {
+
         @Path("deny-all")
         @DenyAll
         @GET

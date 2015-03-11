@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,21 +45,21 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.client.rx.Rx;
 import org.glassfish.jersey.client.rx.RxClient;
 import org.glassfish.jersey.client.rx.RxWebTarget;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 
-import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -76,12 +76,17 @@ public class RxObservableTest {
     @Before
     public void setUp() throws Exception {
         client = ClientBuilder.newClient().register(TerminalClientRequestFilter.class);
-        executor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setNameFormat("jersey-rx-client-test-%d").build());
+        executor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
+                .setNameFormat("jersey-rx-client-test-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build());
     }
 
     @After
     public void tearDown() throws Exception {
         executor.shutdown();
+
+        client.close();
         client = null;
     }
 
@@ -115,14 +120,95 @@ public class RxObservableTest {
         testTarget(RxObservable.from(client.target("http://jersey.java.net"), executor), true);
     }
 
+    @Test
+    public void testNotFoundResponse() throws Exception {
+        final RxObservableInvoker invoker = RxObservable.from(client.target("http://jersey.java.net"))
+                .request()
+                .header("Response-Status", 404)
+                .rx();
+
+        testInvoker(invoker, 404, false);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testNotFoundReadEntityViaClass() throws Throwable {
+        try {
+            RxObservable.from(client.target("http://jersey.java.net"))
+                    .request()
+                    .header("Response-Status", 404)
+                    .rx()
+                    .get(String.class)
+                    .toBlocking()
+                    .toFuture()
+                    .get();
+        } catch (final Exception expected) {
+            // java.util.concurrent.ExecutionException
+            throw expected
+                    // javax.ws.rs.ProcessingException
+                    .getCause()
+                    // javax.ws.rs.NotFoundException
+                    .getCause();
+        }
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testNotFoundReadEntityViaGenericType() throws Throwable {
+        try {
+            RxObservable.from(client.target("http://jersey.java.net"))
+                    .request()
+                    .header("Response-Status", 404)
+                    .rx()
+                    .get(new GenericType<String>() {})
+                    .toBlocking()
+                    .toFuture()
+                    .get();
+        } catch (final Exception expected) {
+            // java.util.concurrent.ExecutionException
+            throw expected
+                    // javax.ws.rs.ProcessingException
+                    .getCause()
+                    // javax.ws.rs.NotFoundException
+                    .getCause();
+        }
+    }
+
+    @Test
+    public void testReadEntityViaClass() throws Throwable {
+        final String response = RxObservable.from(client.target("http://jersey.java.net"))
+                .request()
+                .rx()
+                .get(String.class)
+                .toBlocking()
+                .toFuture()
+                .get();
+
+        assertThat(response, is("NO-ENTITY"));
+    }
+
+    @Test
+    public void testReadEntityViaGenericType() throws Throwable {
+        final String response = RxObservable.from(client.target("http://jersey.java.net"))
+                .request()
+                .rx()
+                .get(new GenericType<String>() {})
+                .toBlocking()
+                .toFuture()
+                .get();
+
+        assertThat(response, is("NO-ENTITY"));
+    }
+
     private void testClient(final RxClient<RxObservableInvoker> rxClient, final boolean testDedicatedThread) throws Exception {
         testTarget(rxClient.target("http://jersey.java.net"), testDedicatedThread);
     }
 
     private void testTarget(final RxWebTarget<RxObservableInvoker> rxTarget, final boolean testDedicatedThread)
             throws Exception {
-        final RxObservableInvoker rx = rxTarget.request().rx();
+        testInvoker(rxTarget.request().rx(), 200, testDedicatedThread);
+    }
 
+    private void testInvoker(final RxObservableInvoker rx, final int expectedStatus, final boolean testDedicatedThread)
+            throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Response> responseRef = new AtomicReference<>();
         final AtomicReference<Throwable> errorRef = new AtomicReference<>();
@@ -148,14 +234,14 @@ public class RxObservableTest {
         latch.await();
 
         if (errorRef.get() == null) {
-            testResponse(responseRef.get(), testDedicatedThread);
+            testResponse(responseRef.get(), expectedStatus, testDedicatedThread);
         } else {
             throw (Exception) errorRef.get();
         }
     }
 
-    private static void testResponse(final Response response, final boolean testDedicatedThread) {
-        assertThat(response.getStatus(), is(200));
+    private static void testResponse(final Response response, final int expectedStatus, final boolean testDedicatedThread) {
+        assertThat(response.getStatus(), is(expectedStatus));
         assertThat(response.readEntity(String.class), is("NO-ENTITY"));
 
         // Executor.

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,7 +60,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
 /**
  * Monitoring statistics implementation.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 final class MonitoringStatisticsImpl implements MonitoringStatistics {
 
@@ -110,14 +110,21 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
             for (final Resource resource : resourceModel.getRootResources()) {
                 processResource(resource, "");
                 for (final Resource child : resource.getChildResources()) {
-                    processResource(child, "/" + resource.getPath());
+                    final String path = resource.getPath();
+                    processResource(child, path.startsWith("/") ? path : "/" + path);
                 }
             }
 
         }
 
         private void processResource(final Resource resource, final String pathPrefix) {
-            uriStatistics.put(pathPrefix + "/" + resource.getPath(), new ResourceStatisticsImpl.Builder(resource, methodFactory));
+            final StringBuilder pathSB = new StringBuilder(pathPrefix);
+            if (!pathPrefix.endsWith("/") && !resource.getPath().startsWith("/")) {
+                pathSB.append("/");
+            }
+            pathSB.append(resource.getPath());
+
+            uriStatistics.put(pathSB.toString(), new ResourceStatisticsImpl.Builder(resource, methodFactory));
 
             for (final ResourceMethod resourceMethod : resource.getResourceMethods()) {
                 getOrCreateResourceBuilder(resourceMethod).addMethod(resourceMethod);
@@ -207,8 +214,8 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
             final Map<Class<?>, ResourceStatistics> classStats = Collections.unmodifiableMap(
                     Maps.transformValues(resourceClassStatistics, BUILDING_FUNCTION));
 
-            final ExecutionStatistics requestStats = requestStatisticsBuilder == null ?
-                    ExecutionStatisticsImpl.EMPTY : requestStatisticsBuilder.build();
+            final ExecutionStatistics requestStats = requestStatisticsBuilder == null
+                    ? ExecutionStatisticsImpl.EMPTY : requestStatisticsBuilder.build();
 
             return new MonitoringStatisticsImpl(
                     uriStats, classStats, requestStats,

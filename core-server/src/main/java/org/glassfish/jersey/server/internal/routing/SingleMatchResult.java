@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,7 @@ final class SingleMatchResult implements MatchResult {
      *
      * @param path matched path.
      */
-    public SingleMatchResult(String path) {
+    public SingleMatchResult(final String path) {
         this.path = stripMatrixParams(path);
     }
 
@@ -67,8 +67,8 @@ final class SingleMatchResult implements MatchResult {
      *
      * @return path stripped of matrix parameters.
      */
-    private static String stripMatrixParams(String path) {
-        int e = path.indexOf(";");
+    private static String stripMatrixParams(final String path) {
+        int e = path.indexOf(';');
         if (e == -1) {
             return path;
         }
@@ -80,11 +80,11 @@ final class SingleMatchResult implements MatchResult {
             sb.append(path, s, e);
 
             // Skip everything up to but not including the '/'
-            s = path.indexOf("/", e + 1);
+            s = path.indexOf('/', e + 1);
             if (s == -1) {
                 break;
             }
-            e = path.indexOf(";", s);
+            e = path.indexOf(';', s);
         } while (e != -1);
 
         if (s != -1) {
@@ -102,7 +102,7 @@ final class SingleMatchResult implements MatchResult {
     }
 
     @Override
-    public int start(int group) {
+    public int start(final int group) {
         if (group == 0) {
             return start();
         }
@@ -115,7 +115,7 @@ final class SingleMatchResult implements MatchResult {
     }
 
     @Override
-    public int end(int group) {
+    public int end(final int group) {
         if (group == 0) {
             return end();
         }
@@ -128,7 +128,7 @@ final class SingleMatchResult implements MatchResult {
     }
 
     @Override
-    public String group(int group) {
+    public String group(final int group) {
         if (group == 0) {
             return group();
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,74 +67,74 @@ import static org.junit.Assert.fail;
  */
 public class StreamDataBodyPartTest extends BodyPartTest {
 
-	/**
-	 * Class under test.
-	 */
-	private StreamDataBodyPart cut;
+    /**
+     * Class under test.
+     */
+    private StreamDataBodyPart cut;
 
-	@Override
+    @Override
     @Before
     public void setUp() throws Exception {
-		super.setUp();
-		cut = new StreamDataBodyPart();
+        super.setUp();
+        cut = new StreamDataBodyPart();
 
-		// Needed for inherited tests.
-		bodyPart = cut;
-	}
+        // Needed for inherited tests.
+        bodyPart = cut;
+    }
 
-	@Override
+    @Override
     @After
-	public void tearDown() throws Exception {
-		bodyPart = null;
-		super.tearDown();
-	}
+    public void tearDown() throws Exception {
+        bodyPart = null;
+        super.tearDown();
+    }
 
-	///////////////////////////////////////////////////////////////////////////
-	// Not supported methods
-	///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    // Not supported methods
+    ///////////////////////////////////////////////////////////////////////////
 
-	@Override
+    @Override
     @Test
-	public void testEntity() {
-		try {
-			bodyPart.setEntity("foo");
+    public void testEntity() {
+        try {
+            bodyPart.setEntity("foo");
             fail();
-		} catch (UnsupportedOperationException ex) {
-			// expected exception.
-		}
-	}
-
-    @Test
-	public void testSetValueString() {
-		try {
-			cut.setValue("foo");
-            fail();
-		} catch (UnsupportedOperationException ex) {
-			// expected exception.
-		}
-	}
+        } catch (UnsupportedOperationException ex) {
+            // expected exception.
+        }
+    }
 
     @Test
-	public void testSetValueMediaTypeObject() {
-		try {
-			// Use any MediaType and value - they doesn't matter.
-			cut.setValue(MediaType.APPLICATION_OCTET_STREAM_TYPE, new Object());
+    public void testSetValueString() {
+        try {
+            cut.setValue("foo");
             fail();
-		} catch (UnsupportedOperationException ex) {
-			// expected exception.
-		}
-	}
+        } catch (UnsupportedOperationException ex) {
+            // expected exception.
+        }
+    }
 
-	///////////////////////////////////////////////////////////////////////////
-	// Constructor tests
-	///////////////////////////////////////////////////////////////////////////
+    @Test
+    public void testSetValueMediaTypeObject() {
+        try {
+            // Use any MediaType and value - they doesn't matter.
+            cut.setValue(MediaType.APPLICATION_OCTET_STREAM_TYPE, new Object());
+            fail();
+        } catch (UnsupportedOperationException ex) {
+            // expected exception.
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Constructor tests
+    ///////////////////////////////////////////////////////////////////////////
 
     @Test
     public void testCreateStreamEntityNameStream() {
         String expectedName = "foo";
         MediaType expectedMediaType = StreamDataBodyPart.getDefaultMediaType();
 
-        cut = new StreamDataBodyPart(expectedName, new ByteArrayInputStream(new byte[]{}));
+        cut = new StreamDataBodyPart(expectedName, new ByteArrayInputStream(new byte[] {}));
 
         boolean actualIsSimpleBodyPart = cut.isSimple();
         String actualName = cut.getName();
@@ -155,7 +155,7 @@ public class StreamDataBodyPartTest extends BodyPartTest {
         String expectedFilename = "bar.txt";
         MediaType expectedMediaType = StreamDataBodyPart.getDefaultMediaType();
 
-        cut = new StreamDataBodyPart(expectedName, new ByteArrayInputStream(new byte[]{}), expectedFilename);
+        cut = new StreamDataBodyPart(expectedName, new ByteArrayInputStream(new byte[] {}), expectedFilename);
 
         boolean actualIsSimpleBodyPart = cut.isSimple();
         String actualName = cut.getName();
@@ -176,7 +176,7 @@ public class StreamDataBodyPartTest extends BodyPartTest {
         String expectedFilename = "bar.txt";
         MediaType expectedMediaType = MediaType.TEXT_HTML_TYPE;
 
-        cut = new StreamDataBodyPart(expectedName, new ByteArrayInputStream(new byte[]{}), expectedFilename, expectedMediaType);
+        cut = new StreamDataBodyPart(expectedName, new ByteArrayInputStream(new byte[] {}), expectedFilename, expectedMediaType);
 
         // All parameters must be set as the user requested. No defaults.
         boolean actualIsSimpleBodyPart = cut.isSimple();
@@ -193,7 +193,7 @@ public class StreamDataBodyPartTest extends BodyPartTest {
     @Test
     public void testCreateStreamEntityNullName() {
         try {
-            new StreamDataBodyPart(null, new ByteArrayInputStream(new byte[]{}));
+            new StreamDataBodyPart(null, new ByteArrayInputStream(new byte[] {}));
             fail();
         } catch (IllegalArgumentException ex) {
             // expected exception.
@@ -215,16 +215,16 @@ public class StreamDataBodyPartTest extends BodyPartTest {
         MediaType expectedMediaType = StreamDataBodyPart.getDefaultMediaType();
 
         // MediaType is nullable - it takes the default value in such situation.
-        cut = new StreamDataBodyPart("foo", new ByteArrayInputStream(new byte[]{}), "bar.txt", null);
+        cut = new StreamDataBodyPart("foo", new ByteArrayInputStream(new byte[] {}), "bar.txt", null);
 
         MediaType actualMediaType = cut.getMediaType();
 
         assertEquals(expectedMediaType, actualMediaType);
     }
 
-	///////////////////////////////////////////////////////////////////////////
-	// Content disposition building tests
-	///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    // Content disposition building tests
+    ///////////////////////////////////////////////////////////////////////////
 
     @Test
     public void testBuildContentDisposition() {
@@ -255,14 +255,14 @@ public class StreamDataBodyPartTest extends BodyPartTest {
         assertEquals(expectedFilename, actual.getFileName());
     }
 
-	///////////////////////////////////////////////////////////////////////////
-	// Stream entity setter tests
-	///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    // Stream entity setter tests
+    ///////////////////////////////////////////////////////////////////////////
 
     @Test
     public void testStreamEntityStreamMediaType() {
         MediaType expectedMediaType = MediaType.APPLICATION_SVG_XML_TYPE;
-        InputStream expectedInputStream = new ByteArrayInputStream(new byte[]{0x002, 0x003});
+        InputStream expectedInputStream = new ByteArrayInputStream(new byte[] {0x002, 0x003});
 
         assertSetEntityStream(expectedMediaType, expectedInputStream);
     }
@@ -270,7 +270,7 @@ public class StreamDataBodyPartTest extends BodyPartTest {
     @Test
     public void testStreamEntityStream() {
         MediaType expectedMediaType = StreamDataBodyPart.getDefaultMediaType();
-        InputStream expectedInputStream = new ByteArrayInputStream(new byte[]{0x002, 0x003});
+        InputStream expectedInputStream = new ByteArrayInputStream(new byte[] {0x002, 0x003});
 
         assertSetEntityStream(expectedMediaType, expectedInputStream);
     }
@@ -293,46 +293,46 @@ public class StreamDataBodyPartTest extends BodyPartTest {
         cut.setName("foo");
 
         // No exception is to be observed - MediaType should be the default one.
-        cut.setStreamEntity(new ByteArrayInputStream(new byte[]{}), null);
+        cut.setStreamEntity(new ByteArrayInputStream(new byte[] {}), null);
 
         MediaType actualMediaType = cut.getMediaType();
 
         assertEquals(expectedMediaType, actualMediaType);
     }
 
-	///////////////////////////////////////////////////////////////////////////
-	// Misc tests
-	///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    // Misc tests
+    ///////////////////////////////////////////////////////////////////////////
 
     @Test
-	public void testGetDefaultMediaType() {
-		MediaType expected = MediaType.APPLICATION_OCTET_STREAM_TYPE;
-		MediaType actual = StreamDataBodyPart.getDefaultMediaType();
+    public void testGetDefaultMediaType() {
+        MediaType expected = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+        MediaType actual = StreamDataBodyPart.getDefaultMediaType();
 
-		assertEquals(expected, actual);
-	}
+        assertEquals(expected, actual);
+    }
 
-	/**
-	 * Helper class for checking if the stream entity has been properly set.
-	 *
-	 * @param expectedMediaType
-	 *            after the stream entity has been set.
-	 * @param expectedStreamEntity
-	 *            after the stream entity has been set.
-	 */
-	private void assertSetEntityStream(MediaType expectedMediaType,
-			InputStream expectedStreamEntity) {
+    /**
+     * Helper class for checking if the stream entity has been properly set.
+     *
+     * @param expectedMediaType
+     *            after the stream entity has been set.
+     * @param expectedStreamEntity
+     *            after the stream entity has been set.
+     */
+    private void assertSetEntityStream(MediaType expectedMediaType,
+                                       InputStream expectedStreamEntity) {
 
-		// Required to set the entity.
-		cut.setName("foo");
+        // Required to set the entity.
+        cut.setName("foo");
 
-		cut.setStreamEntity(expectedStreamEntity, expectedMediaType);
+        cut.setStreamEntity(expectedStreamEntity, expectedMediaType);
 
-		MediaType actualMediaType = cut.getMediaType();
-		InputStream actualInputStream = cut.getStreamEntity();
+        MediaType actualMediaType = cut.getMediaType();
+        InputStream actualInputStream = cut.getStreamEntity();
 
-		assertEquals(expectedStreamEntity, actualInputStream);
-		assertEquals(expectedMediaType, actualMediaType);
-	}
+        assertEquals(expectedStreamEntity, actualInputStream);
+        assertEquals(expectedMediaType, actualMediaType);
+    }
 
 }

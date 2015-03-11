@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -81,6 +81,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceMatrixPrimitives {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@MatrixParam("boolean") boolean v) {
@@ -92,6 +93,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@MatrixParam("byte") byte v) {
             assertEquals(127, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@MatrixParam("char") char v) {
+            assertEquals('c', v);
             return "content";
         }
 
@@ -133,6 +141,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default/null")
     public static class ResourceMatrixPrimitivesDefaultNull {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@MatrixParam("boolean") boolean v) {
@@ -143,6 +152,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/byte")
         public String doGet(@MatrixParam("byte") byte v) {
+            assertEquals(0, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@MatrixParam("char") char v) {
             assertEquals(0, v);
             return "content";
         }
@@ -164,7 +180,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/long")
         public String doGet(@MatrixParam("long") long v) {
-            assertEquals(0l, v);
+            assertEquals(0L, v);
             return "content";
         }
 
@@ -185,6 +201,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default")
     public static class ResourceMatrixPrimitivesDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@MatrixParam("boolean") @DefaultValue("true") boolean v) {
@@ -196,6 +213,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@MatrixParam("byte") @DefaultValue("127") byte v) {
             assertEquals(127, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@MatrixParam("char") @DefaultValue("d") char v) {
+            assertEquals('d', v);
             return "content";
         }
 
@@ -237,6 +261,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default/override")
     public static class ResourceMatrixPrimitivesDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@MatrixParam("boolean") @DefaultValue("false") boolean v) {
@@ -248,6 +273,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@MatrixParam("byte") @DefaultValue("1") byte v) {
             assertEquals(127, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@MatrixParam("char") @DefaultValue("1") char v) {
+            assertEquals('c', v);
             return "content";
         }
 
@@ -289,6 +321,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers")
     public static class ResourceMatrixPrimitiveWrappers {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@MatrixParam("boolean") Boolean v) {
@@ -300,6 +333,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@MatrixParam("byte") Byte v) {
             assertEquals(127, v.byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@MatrixParam("char") Character v) {
+            assertEquals('c', v.charValue());
             return "content";
         }
 
@@ -341,6 +381,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default/null")
     public static class ResourceMatrixPrimitiveWrappersDefaultNull {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@MatrixParam("boolean") Boolean v) {
@@ -351,6 +392,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/byte")
         public String doGet(@MatrixParam("byte") Byte v) {
+            assertEquals(null, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@MatrixParam("char") Character v) {
             assertEquals(null, v);
             return "content";
         }
@@ -393,6 +441,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default")
     public static class ResourceMatrixPrimitiveWrappersDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@MatrixParam("boolean") @DefaultValue("true") Boolean v) {
@@ -404,6 +453,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@MatrixParam("byte") @DefaultValue("127") Byte v) {
             assertEquals(127, v.byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@MatrixParam("char") @DefaultValue("c") Character v) {
+            assertEquals('c', v.charValue());
             return "content";
         }
 
@@ -445,6 +501,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default/override")
     public static class ResourceMatrixPrimitiveWrappersDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@MatrixParam("boolean") @DefaultValue("false") Boolean v) {
@@ -456,6 +513,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@MatrixParam("byte") @DefaultValue("1") Byte v) {
             assertEquals(127, v.byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@MatrixParam("char") @DefaultValue("1") Character v) {
+            assertEquals('c', v.charValue());
             return "content";
         }
 
@@ -497,6 +561,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list")
     public static class ResourceMatrixPrimitiveList {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@MatrixParam("boolean") List<Boolean> v) {
@@ -512,6 +577,15 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
             assertEquals(127, v.get(0).byteValue());
             assertEquals(127, v.get(1).byteValue());
             assertEquals(127, v.get(2).byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGetCharacter(@MatrixParam("char") List<Character> v) {
+            assertEquals('c', v.get(0).charValue());
+            assertEquals('c', v.get(1).charValue());
+            assertEquals('c', v.get(2).charValue());
             return "content";
         }
 
@@ -563,6 +637,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default/null")
     public static class ResourceMatrixPrimitiveListDefaultEmpty {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@MatrixParam("boolean") List<Boolean> v) {
@@ -573,6 +648,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/byte")
         public String doGetByte(@MatrixParam("byte") List<Byte> v) {
+            assertEquals(0, v.size());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGetCharacter(@MatrixParam("char") List<Character> v) {
             assertEquals(0, v.size());
             return "content";
         }
@@ -615,6 +697,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default")
     public static class ResourceMatrixPrimitiveListDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@MatrixParam("boolean") @DefaultValue("true") List<Boolean> v) {
@@ -626,6 +709,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGetByte(@MatrixParam("byte") @DefaultValue("127") List<Byte> v) {
             assertEquals(127, v.get(0).byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGetCharacter(@MatrixParam("char") @DefaultValue("c") List<Character> v) {
+            assertEquals('c', v.get(0).charValue());
             return "content";
         }
 
@@ -667,6 +757,7 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default/override")
     public static class ResourceMatrixPrimitiveListDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@MatrixParam("boolean") @DefaultValue("false") List<Boolean> v) {
@@ -678,6 +769,13 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGetByte(@MatrixParam("byte") @DefaultValue("0") List<Byte> v) {
             assertEquals(127, v.get(0).byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGetCharacter(@MatrixParam("char") @DefaultValue("0") List<Character> v) {
+            assertEquals('c', v.get(0).charValue());
             return "content";
         }
 
@@ -717,47 +815,46 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
         }
     }
 
-
     void _test(String type, String value) throws ExecutionException, InterruptedException {
         String param = ";" + type + "=" + value;
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/" + param, "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from("/" + param, "GET")
+                        .accept("application/" + type)
+                        .build()
         ).getEntity());
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/wrappers" + param, "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from("/wrappers" + param, "GET")
+                        .accept("application/" + type)
+                        .build()
         ).getEntity());
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/list" + param + param + param, "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from("/list" + param + param + param, "GET")
+                        .accept("application/" + type)
+                        .build()
         ).getEntity());
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
         assertEquals("content", apply(
-                RequestContextBuilder.from(base + "default/null", "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from(base + "default/null", "GET")
+                        .accept("application/" + type)
+                        .build()
         ).getEntity());
 
         assertEquals("content", apply(
-                RequestContextBuilder.from(base + "default", "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from(base + "default", "GET")
+                        .accept("application/" + type)
+                        .build()
         ).getEntity());
 
         String param = ";" + type + "=" + value;
         assertEquals("content", apply(
-                RequestContextBuilder.from(base + "default/override" + param, "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from(base + "default/override" + param, "GET")
+                        .accept("application/" + type)
+                        .build()
         ).getEntity());
     }
 
@@ -811,6 +908,26 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testGetBytePrimitiveListDefault() throws ExecutionException, InterruptedException {
         _testListDefault("byte", "127");
+    }
+
+    @Test
+    public void testGetCharacter() throws ExecutionException, InterruptedException {
+        _test("char", "c");
+    }
+
+    @Test
+    public void testGetCharacterPrimitivesDefault() throws ExecutionException, InterruptedException {
+        _testDefault("char", "c");
+    }
+
+    @Test
+    public void testGetCharacterPrimitiveWrappersDefault() throws ExecutionException, InterruptedException {
+        _testWrappersDefault("char", "c");
+    }
+
+    @Test
+    public void testGetCharacterPrimitiveListDefault() throws ExecutionException, InterruptedException {
+        _testListDefault("char", "c");
     }
 
     @Test
@@ -916,9 +1033,9 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testBadPrimitiveValue() throws ExecutionException, InterruptedException {
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/;int=abcdef", "GET").
-                        accept("application/int").
-                        build()
+                RequestContextBuilder.from("/;int=abcdef", "GET")
+                        .accept("application/int")
+                        .build()
         );
 
         assertEquals(404, responseContext.getStatus());
@@ -927,9 +1044,9 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/wrappers;int=abcdef", "GET").
-                        accept("application/int").
-                        build()
+                RequestContextBuilder.from("/wrappers;int=abcdef", "GET")
+                        .accept("application/int")
+                        .build()
         );
 
         assertEquals(404, responseContext.getStatus());
@@ -938,9 +1055,9 @@ public class MatrixParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/list;int=abcdef;int=abcdef", "GET").
-                        accept("application/int").
-                        build()
+                RequestContextBuilder.from("/list;int=abcdef;int=abcdef", "GET")
+                        .accept("application/int")
+                        .build()
         );
 
         assertEquals(404, responseContext.getStatus());

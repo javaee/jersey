@@ -68,6 +68,7 @@ import org.glassfish.jersey.examples.rx.domain.Calculation;
 import org.glassfish.jersey.examples.rx.domain.Destination;
 import org.glassfish.jersey.examples.rx.domain.Forecast;
 import org.glassfish.jersey.examples.rx.domain.Recommendation;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.Uri;
 
@@ -95,8 +96,10 @@ public class AsyncAgentResource {
     private final ExecutorService executor;
 
     public AsyncAgentResource() {
-        executor = new ScheduledThreadPoolExecutor(20,
-                new ThreadFactoryBuilder().setNameFormat("jersey-rx-client-async-%d").build());
+        executor = new ScheduledThreadPoolExecutor(20, new ThreadFactoryBuilder()
+                .setNameFormat("jersey-rx-client-async-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build());
     }
 
     @GET
@@ -165,26 +168,27 @@ public class AsyncAgentResource {
 
                         // Calculations. (depend on recommended destinations)
                         final List<Future<Calculation>> futures = recommended.stream()
-                                .map(dest -> calculation.resolveTemplate("from", "Moon").resolveTemplate("to", dest
-                                        .getDestination()).request().async().get(Calculation.class))
+                                .map(dest -> calculation.resolveTemplate("from", "Moon").resolveTemplate("to",
+                                        dest.getDestination()).request().async().get(Calculation.class))
                                 .collect(Collectors.toList());
 
                         final Map<String, Calculation> calculations = new HashMap<>();
-                        while (futures.size() > 0) {
-                            Iterator<Future<Calculation>> iterator = futures.iterator();
+                        while (!futures.isEmpty()) {
+                            final Iterator<Future<Calculation>> iterator = futures.iterator();
+
                             while (iterator.hasNext()) {
-                                Future<Calculation> f = iterator.next();
+                                final Future<Calculation> f = iterator.next();
                                 if (f.isDone()) {
                                     try {
                                         final Calculation calculation = f.get();
                                         calculations.put(calculation.getTo(), calculation);
 
-                                        iterator.remove();
-
                                         innerLatch.countDown();
                                     } catch (final Throwable t) {
                                         errors.offer("Calculation: " + t.getMessage());
                                         innerLatch.countDown();
+                                    } finally {
+                                        iterator.remove();
                                     }
                                 }
                             }

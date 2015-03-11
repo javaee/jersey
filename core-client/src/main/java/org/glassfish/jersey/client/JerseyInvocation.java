@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -105,7 +105,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         OPTIONAL
     }
 
-    private static Map<String, EntityPresence> METHODS = initializeMap();
+    private static final Map<String, EntityPresence> METHODS = initializeMap();
 
     private static Map<String, EntityPresence> initializeMap() {
         final Map<String, EntityPresence> map = new HashMap<String, EntityPresence>();
@@ -147,7 +147,6 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             }
         }
     }
-
 
     /**
      * Jersey-specific {@link javax.ws.rs.client.Invocation.Builder client invocation builder}.
@@ -319,12 +318,14 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> T put(final Entity<?> entity, final Class<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T put(final Entity<?> entity, final Class<T> responseType)
+                throws ProcessingException, WebApplicationException {
             return method("PUT", entity, responseType);
         }
 
         @Override
-        public <T> T put(final Entity<?> entity, final GenericType<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T put(final Entity<?> entity, final GenericType<T> responseType)
+                throws ProcessingException, WebApplicationException {
             return method("PUT", entity, responseType);
         }
 
@@ -334,12 +335,14 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> T post(final Entity<?> entity, final Class<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T post(final Entity<?> entity, final Class<T> responseType)
+                throws ProcessingException, WebApplicationException {
             return method("POST", entity, responseType);
         }
 
         @Override
-        public <T> T post(final Entity<?> entity, final GenericType<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T post(final Entity<?> entity, final GenericType<T> responseType)
+                throws ProcessingException, WebApplicationException {
             return method("POST", entity, responseType);
         }
 
@@ -409,7 +412,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> T method(final String name, final GenericType<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T method(final String name, final GenericType<T> responseType)
+                throws ProcessingException, WebApplicationException {
             if (responseType == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
             }
@@ -858,14 +862,42 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     @Override
     public <T> Future<T> submit(final InvocationCallback<T> callback) {
+        return submit(null, callback);
+    }
+
+    /**
+     * Submit the request for an asynchronous invocation and register an
+     * {@link InvocationCallback} to process the future result of the invocation.
+     * <p>
+     * Response type in this case is taken from {@code responseType} param (if not {@code null}) rather
+     * than from {@code callback}. This allows to pass callbacks like {@code new InvocationCallback&lt;&gt() {...}}.
+     * </p>
+     *
+     * @param <T>          response type
+     * @param responseType response type that is used instead of obtaining types from {@code callback}.
+     * @param callback     invocation callback for asynchronous processing of the
+     *                     request invocation result.
+     * @return future response object of the specified type as a result of the
+     * request invocation.
+     */
+    public <T> Future<T> submit(final GenericType<T> responseType, final InvocationCallback<T> callback) {
         final SettableFuture<T> responseFuture = SettableFuture.create();
 
         try {
-
             final ReflectionHelper.DeclaringClassInterfacePair pair =
                     ReflectionHelper.getClass(callback.getClass(), InvocationCallback.class);
-            final Type callbackParamType = ReflectionHelper.getParameterizedTypeArguments(pair)[0];
-            final Class<T> callbackParamClass = ReflectionHelper.erasure(callbackParamType);
+
+            final Type callbackParamType;
+            final Class<T> callbackParamClass;
+
+            if (responseType == null) {
+                // If we don't have response use callback to obtain param types.
+                callbackParamType = ReflectionHelper.getParameterizedTypeArguments(pair)[0];
+                callbackParamClass = ReflectionHelper.erasure(callbackParamType);
+            } else {
+                callbackParamType = responseType.getType();
+                callbackParamClass = ReflectionHelper.erasure(responseType.getRawType());
+            }
 
             final ResponseCallback responseCallback = new ResponseCallback() {
 
@@ -873,7 +905,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 public void completed(final ClientResponse response, final RequestScope scope) {
                     if (responseFuture.isCancelled()) {
                         response.close();
-                        failed(new ProcessingException(new CancellationException(LocalizationMessages.ERROR_REQUEST_CANCELLED())));
+                        failed(new ProcessingException(
+                                new CancellationException(LocalizationMessages.ERROR_REQUEST_CANCELLED())));
                         return;
                     }
 
@@ -942,37 +975,39 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             if (status == null) {
                 final Response.Status.Family statusFamily = response.getStatusInfo().getFamily();
                 webAppException = createExceptionForFamily(response, statusFamily);
-            } else switch (status) {
-                case BAD_REQUEST:
-                    webAppException = new BadRequestException(response);
-                    break;
-                case UNAUTHORIZED:
-                    webAppException = new NotAuthorizedException(response);
-                    break;
-                case FORBIDDEN:
-                    webAppException = new ForbiddenException(response);
-                    break;
-                case NOT_FOUND:
-                    webAppException = new NotFoundException(response);
-                    break;
-                case METHOD_NOT_ALLOWED:
-                    webAppException = new NotAllowedException(response);
-                    break;
-                case NOT_ACCEPTABLE:
-                    webAppException = new NotAcceptableException(response);
-                    break;
-                case UNSUPPORTED_MEDIA_TYPE:
-                    webAppException = new NotSupportedException(response);
-                    break;
-                case INTERNAL_SERVER_ERROR:
-                    webAppException = new InternalServerErrorException(response);
-                    break;
-                case SERVICE_UNAVAILABLE:
-                    webAppException = new ServiceUnavailableException(response);
-                    break;
-                default:
-                    final Response.Status.Family statusFamily = response.getStatusInfo().getFamily();
-                    webAppException = createExceptionForFamily(response, statusFamily);
+            } else {
+                switch (status) {
+                    case BAD_REQUEST:
+                        webAppException = new BadRequestException(response);
+                        break;
+                    case UNAUTHORIZED:
+                        webAppException = new NotAuthorizedException(response);
+                        break;
+                    case FORBIDDEN:
+                        webAppException = new ForbiddenException(response);
+                        break;
+                    case NOT_FOUND:
+                        webAppException = new NotFoundException(response);
+                        break;
+                    case METHOD_NOT_ALLOWED:
+                        webAppException = new NotAllowedException(response);
+                        break;
+                    case NOT_ACCEPTABLE:
+                        webAppException = new NotAcceptableException(response);
+                        break;
+                    case UNSUPPORTED_MEDIA_TYPE:
+                        webAppException = new NotSupportedException(response);
+                        break;
+                    case INTERNAL_SERVER_ERROR:
+                        webAppException = new InternalServerErrorException(response);
+                        break;
+                    case SERVICE_UNAVAILABLE:
+                        webAppException = new ServiceUnavailableException(response);
+                        break;
+                    default:
+                        final Response.Status.Family statusFamily = response.getStatusInfo().getFamily();
+                        webAppException = createExceptionForFamily(response, statusFamily);
+                }
             }
 
             return new ProcessingException(webAppException);

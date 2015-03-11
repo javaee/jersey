@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,6 +68,7 @@ public class ResponseLinksTest extends JerseyTest {
 
     @Path("/test")
     public static class MyResource {
+
         @Context
         private UriInfo uriInfo;
 
@@ -76,7 +77,7 @@ public class ResponseLinksTest extends JerseyTest {
          */
         @Path("1")
         @GET
-        @Produces({ MediaType.APPLICATION_JSON})
+        @Produces({MediaType.APPLICATION_JSON})
         public Response getLink() {
             URI link = uriInfo.getAbsolutePathBuilder().queryParam("limit", 50).build();
             return Response.status(Response.Status.OK).link(link, "prev").build();
@@ -87,13 +88,13 @@ public class ResponseLinksTest extends JerseyTest {
          */
         @Path("2")
         @GET
-        @Produces({ MediaType.APPLICATION_JSON})
+        @Produces({MediaType.APPLICATION_JSON})
         public Response getLinks() {
-            Link link1 = Link.fromUri(uriInfo.getAbsolutePathBuilder().queryParam("limit", 50).build()).
-                    rel("prev").build();
-            Link link2 = Link.
-                    fromUri(uriInfo.getAbsolutePathBuilder().queryParam("limit", 50).queryParam("action", "next").build()).
-                    rel("next").title("next page").build();
+            Link link1 = Link.fromUri(uriInfo.getAbsolutePathBuilder().queryParam("limit", 50).build())
+                    .rel("prev").build();
+            Link link2 = Link.fromUri(
+                    uriInfo.getAbsolutePathBuilder().queryParam("limit", 50).queryParam("action", "next").build()).rel("next")
+                    .title("next page").build();
             return Response.status(Response.Status.OK).links(link1, link2).build();
         }
     }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -120,7 +120,7 @@ public class FilesScanner implements ResourceFinder {
                                 processFile(next);
                             }
                             next = null;
-                        } else if(next.getName().endsWith(".jar") || next.getName().endsWith(".zip")) {
+                        } else if (next.getName().endsWith(".jar") || next.getName().endsWith(".zip")) {
                             processFile(next);
                             next = null;
                         }

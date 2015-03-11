@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 package org.glassfish.jersey.message.internal;
 
 import java.text.ParseException;
+import java.util.Comparator;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -51,11 +52,26 @@ import javax.ws.rs.core.MediaType;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class AcceptableMediaType extends MediaType implements Qualified {
+    /**
+     * Comparator for collections of acceptable media types.
+     */
+    public static final Comparator<AcceptableMediaType> COMPARATOR = new Comparator<AcceptableMediaType>() {
+
+        @Override
+        public int compare(AcceptableMediaType o1, AcceptableMediaType o2) {
+            int i = Quality.QUALIFIED_COMPARATOR.compare(o1, o2);
+            if (i != 0) {
+                return i;
+            }
+
+            return MediaTypes.PARTIAL_ORDER_COMPARATOR.compare(o1, o2);
+        }
+    };
 
     private final int q;
 
     /**
-     * Create new acceptable media type instance with a {@link Quality#DEFAULT_QUALITY
+     * Create new acceptable media type instance with a {@link Quality#DEFAULT
      * default quality factor} value.
      *
      * @param type    the primary type, {@code null} is equivalent to
@@ -64,8 +80,8 @@ public class AcceptableMediaType extends MediaType implements Qualified {
      *                {@link #MEDIA_TYPE_WILDCARD}
      */
     public AcceptableMediaType(String type, String subtype) {
-        super(type, subtype);
-        q = Quality.DEFAULT_QUALITY;
+        super(type, subtype); // no need to add default quality parameter.
+        q = Quality.DEFAULT;
     }
 
     /**
@@ -80,6 +96,13 @@ public class AcceptableMediaType extends MediaType implements Qualified {
      *                   empty map.
      */
     public AcceptableMediaType(String type, String subtype, int quality, Map<String, String> parameters) {
+        super(type, subtype, Quality.enhanceWithQualityParameter(parameters, Quality.QUALITY_PARAMETER_NAME, quality));
+        this.q = quality;
+    }
+
+
+    // used by AcceptableMediaType.valueOf methods; no need to fix parameter map
+    private AcceptableMediaType(String type, String subtype, Map<String, String> parameters, int quality) {
         super(type, subtype, parameters);
         this.q = quality;
     }
@@ -95,6 +118,7 @@ public class AcceptableMediaType extends MediaType implements Qualified {
      *
      * @param reader HTTP header reader.
      * @return new acceptable media type instance.
+     *
      * @throws ParseException in case the input data parsing failed.
      */
     public static AcceptableMediaType valueOf(HttpHeaderReader reader) throws ParseException {
@@ -102,28 +126,57 @@ public class AcceptableMediaType extends MediaType implements Qualified {
         reader.hasNext();
 
         // Get the type
-        String type = reader.nextToken();
+        String type = reader.nextToken().toString();
         String subType = "*";
         // Some HTTP implements use "*" to mean "*/*"
         if (reader.hasNextSeparator('/', false)) {
             reader.next(false);
             // Get the subtype
-            subType = reader.nextToken();
+            subType = reader.nextToken().toString();
         }
 
         Map<String, String> parameters = null;
-        int quality = Quality.DEFAULT_QUALITY;
+        int quality = Quality.DEFAULT;
         if (reader.hasNext()) {
             parameters = HttpHeaderReader.readParameters(reader);
             if (parameters != null) {
-                String v = parameters.get(QUALITY_PARAMETER_NAME);
+                String v = parameters.get(Quality.QUALITY_PARAMETER_NAME);
                 if (v != null) {
                     quality = HttpHeaderReader.readQualityFactor(v);
                 }
             }
         }
 
-        return new AcceptableMediaType(type, subType, quality, parameters);
+        // use private constructor to skip quality value validation step
+        return new AcceptableMediaType(type, subType, parameters, quality);
+    }
+
+    /**
+     * Create new acceptable media type instance from the supplied
+     * {@link javax.ws.rs.core.MediaType media type}.
+     *
+     * @param mediaType general-purpose media type.
+     * @return new acceptable media type instance.
+     *
+     * @throws ParseException in case the quality parameter parsing failed.
+     */
+    public static AcceptableMediaType valueOf(MediaType mediaType) throws ParseException {
+        if (mediaType instanceof AcceptableMediaType) {
+            return (AcceptableMediaType) mediaType;
+        }
+
+        final Map<String, String> parameters = mediaType.getParameters();
+
+        int quality = Quality.DEFAULT;
+        if (parameters != null) {
+            final String v = parameters.get(Quality.QUALITY_PARAMETER_NAME);
+            if (v != null) {
+                quality = HttpHeaderReader.readQualityFactor(v);
+            }
+        }
+
+        // use private constructor to skip quality value validation step
+        return new AcceptableMediaType(mediaType.getType(), mediaType.getSubtype(), parameters, quality);
     }
 
     @Override
@@ -138,13 +191,18 @@ public class AcceptableMediaType extends MediaType implements Qualified {
         } else {
             // obj is a plain MediaType instance
             // with a quality factor set to default (1.0)
-            return this.q == Quality.DEFAULT_QUALITY;
+            return this.q == Quality.DEFAULT;
         }
     }
 
     @Override
     public int hashCode() {
         int hash = super.hashCode();
-        return (this.q == Quality.DEFAULT_QUALITY)? hash : 47 * hash + this.q;
+        return (this.q == Quality.DEFAULT) ? hash : 47 * hash + this.q;
+    }
+
+    @Override
+    public String toString() {
+        return "{" + super.toString() + ", q=" + q + "}";
     }
 }

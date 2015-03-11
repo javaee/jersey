@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -320,8 +320,8 @@ public class ContainerRequest extends InboundMessageContext
      */
     Iterable<RankedProvider<ContainerRequestFilter>> getRequestFilters() {
         final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
-        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getRequestFilters() : null);
+        return emptyIfNull(inflector instanceof ResourceMethodInvoker
+                ? ((ResourceMethodInvoker) inflector).getRequestFilters() : null);
     }
 
     /**
@@ -333,8 +333,8 @@ public class ContainerRequest extends InboundMessageContext
      */
     Iterable<RankedProvider<ContainerResponseFilter>> getResponseFilters() {
         final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
-        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getResponseFilters() : null);
+        return emptyIfNull(inflector instanceof ResourceMethodInvoker
+                ? ((ResourceMethodInvoker) inflector).getResponseFilters() : null);
     }
 
     /**
@@ -347,8 +347,8 @@ public class ContainerRequest extends InboundMessageContext
     @Override
     protected Iterable<ReaderInterceptor> getReaderInterceptors() {
         final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
-        return inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getReaderInterceptors()
+        return inflector instanceof ResourceMethodInvoker
+                ? ((ResourceMethodInvoker) inflector).getReaderInterceptors()
                 : processingProviders.getSortedGlobalReaderInterceptors();
     }
 
@@ -360,13 +360,13 @@ public class ContainerRequest extends InboundMessageContext
      */
     Iterable<WriterInterceptor> getWriterInterceptors() {
         final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
-        return inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getWriterInterceptors()
+        return inflector instanceof ResourceMethodInvoker
+                ? ((ResourceMethodInvoker) inflector).getWriterInterceptors()
                 : processingProviders.getSortedGlobalWriterInterceptors();
     }
 
     private Inflector<RequestProcessingContext, ContainerResponse> getInflector() {
-        return uriRoutingContext.getInflector();
+        return uriRoutingContext.getEndpoint();
     }
 
     private static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
@@ -398,7 +398,9 @@ public class ContainerRequest extends InboundMessageContext
      * @return the absolute path of the request.
      */
     public URI getAbsolutePath() {
-        if (absolutePathUri != null) return absolutePathUri;
+        if (absolutePathUri != null) {
+            return absolutePathUri;
+        }
 
         return absolutePathUri = new JerseyUriBuilder().uri(requestUri).replaceQuery("").fragment("").build();
     }
@@ -464,8 +466,8 @@ public class ContainerRequest extends InboundMessageContext
         }
 
         final int baseUriRawPathLength = baseUri.getRawPath().length();
-        return encodedRelativePath = baseUriRawPathLength < requestUriRawPath.length() ?
-                requestUriRawPath.substring(baseUriRawPathLength) : "";
+        return encodedRelativePath = baseUriRawPathLength < requestUriRawPath.length()
+                ? requestUriRawPath.substring(baseUriRawPathLength) : "";
     }
 
     @Override
@@ -795,7 +797,6 @@ public class ContainerRequest extends InboundMessageContext
     private static long roundDown(long time) {
         return time - time % 1000;
     }
-
 
     /**
      * Get the values of a HTTP request header. The returned List is read-only.

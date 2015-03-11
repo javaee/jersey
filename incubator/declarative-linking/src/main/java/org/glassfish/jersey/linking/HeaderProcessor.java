@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,14 +47,13 @@ import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
-import org.glassfish.jersey.server.ExtendedUriInfo;
 
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
 /**
  * Processes @Link and @LinkHeaders annotations on entity classes and
  * adds appropriate HTTP Link headers.
- * 
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
@@ -72,9 +71,12 @@ class HeaderProcessor<T> {
      * @param uriInfo the uriInfo for the request
      * @param headers the map into which the headers will be added
      */
-    public void processLinkHeaders(T entity, UriInfo uriInfo, ResourceMappingContext rmc, MultivaluedMap<String, Object> headers) {
-        List<String> headerValues = getLinkHeaderValues(entity, uriInfo,rmc);
-        for (String headerValue: headerValues) {
+    public void processLinkHeaders(T entity,
+                                   UriInfo uriInfo,
+                                   ResourceMappingContext rmc,
+                                   MultivaluedMap<String, Object> headers) {
+        List<String> headerValues = getLinkHeaderValues(entity, uriInfo, rmc);
+        for (String headerValue : headerValues) {
             headers.add("Link", headerValue);
         }
     }
@@ -84,9 +86,9 @@ class HeaderProcessor<T> {
 
         if (!matchedResources.isEmpty()) {
             final Object resource = matchedResources.get(0);
-            final List<String> headerValues = new ArrayList<String>();
+            final List<String> headerValues = new ArrayList<>();
 
-            for (LinkHeaderDescriptor desc: instanceDescriptor.getLinkHeaders()) {
+            for (LinkHeaderDescriptor desc : instanceDescriptor.getLinkHeaders()) {
                 if (ELLinkBuilder.evaluateCondition(desc.getCondition(), entity, resource, entity)) {
                     String headerValue = getLinkHeaderValue(desc, entity, resource, uriInfo, rmc);
                     headerValues.add(headerValue);
@@ -95,14 +97,14 @@ class HeaderProcessor<T> {
             return headerValues;
         }
 
-        return Collections.emptyList(); 
+        return Collections.emptyList();
     }
 
     static String getLinkHeaderValue(LinkHeaderDescriptor desc, Object entity, Object resource, UriInfo uriInfo,
-            ResourceMappingContext rmc) {
+                                     ResourceMappingContext rmc) {
         URI uri = ELLinkBuilder.buildURI(desc, entity, resource, entity, uriInfo, rmc);
         InjectLink link = desc.getLinkHeader();
-        return InjectLink.Util.buildLinkFromUri(uri, link).toString(); 
+        return InjectLink.Util.buildLinkFromUri(uri, link).toString();
     }
 
 }

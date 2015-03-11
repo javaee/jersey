@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,22 +51,22 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * The type for an element holding child nodes.<br>
  * Created on: Jun 17, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
-@XmlAccessorType( XmlAccessType.FIELD )
-@XmlType( name = "foo", propOrder = { } )
-@XmlRootElement( name = "foo" )
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "foo", propOrder = {})
+@XmlRootElement(name = "foo")
 public class XhtmlElementType {
-    
+
     @XmlAnyElement
     protected List<Object> any;
 
     public List<Object> getChildNodes() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }
-    
+
 }

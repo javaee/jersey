@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,6 +76,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ResponseE2ETest extends JerseyTest {
+
     /**
      * Custom OK response.
      */
@@ -230,6 +231,7 @@ public class ResponseE2ETest extends JerseyTest {
 
     @Path("response")
     public static class ResponseTestResource {
+
         @GET
         @Path("custom")
         public OkResponse subresponse() {
@@ -261,10 +263,11 @@ public class ResponseE2ETest extends JerseyTest {
         @Path("external")
         public Response external() {
             Response response;
-            if (target == null)
+            if (target == null) {
                 response = Response.serverError().entity("injected WebTarget is null").build();
-            else
+            } else {
                 response = target.request().buildGet().invoke();
+            }
             return response;
         }
 

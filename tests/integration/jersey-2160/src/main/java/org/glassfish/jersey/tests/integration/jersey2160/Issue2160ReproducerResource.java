@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,12 +39,14 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2160;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.glassfish.hk2.api.ProxyCtl;
 
 /**
@@ -55,8 +57,10 @@ import org.glassfish.hk2.api.ProxyCtl;
 @Path("servletInjectees")
 public class Issue2160ReproducerResource {
 
-    @Context HttpServletRequest requestField;
-    @Context HttpServletResponse responseField;
+    @Context
+    HttpServletRequest requestField;
+    @Context
+    HttpServletResponse responseField;
 
     @GET
     @Produces("text/plain")
@@ -72,6 +76,6 @@ public class Issue2160ReproducerResource {
             throw new IllegalArgumentException("no proxy expected!");
         }
 
-        return (String)requestParam.getAttribute(RequestFilter.REQUEST_NUMBER_PROPERTY);
+        return (String) requestParam.getAttribute(RequestFilter.REQUEST_NUMBER_PROPERTY);
     }
 }

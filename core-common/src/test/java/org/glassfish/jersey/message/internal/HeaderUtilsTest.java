@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -71,7 +71,6 @@ public class HeaderUtilsTest {
         RuntimeDelegate.setInstance(new TestRuntimeDelegate());
     }
 
-
     @Test
     public void testCreateInbound() throws Exception {
         final MultivaluedMap<String, String> inbound = HeaderUtils.createInbound();
@@ -126,7 +125,6 @@ public class HeaderUtilsTest {
         final String value = "value";
         assertSame(value, HeaderUtils.asString(value, null));
 
-
         final URI uri = new URI("test");
         assertEquals(uri.toASCIIString(), HeaderUtils.asString(uri, null));
     }
@@ -158,7 +156,7 @@ public class HeaderUtilsTest {
     public void testAsStringHeaders() throws Exception {
         assertNull(HeaderUtils.asStringHeaders(null));
 
-        final AbstractMultivaluedMap<String,Object> headers = HeaderUtils.createOutbound();
+        final AbstractMultivaluedMap<String, Object> headers = HeaderUtils.createOutbound();
 
         headers.putSingle("k1", "value");
         headers.add("k1", "value2");

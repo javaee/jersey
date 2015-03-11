@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.tests.integration.tracing;
 
+import java.io.IOException;
+
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
@@ -54,9 +56,6 @@ import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.Test;
-
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -200,8 +199,9 @@ public class AllTracingSupportITCase extends JerseyTest {
 
     private boolean hasX_Jersey_Trace(Response response) {
         for (String k : response.getHeaders().keySet()) {
-            if (k.startsWith(Utils.HEADER_TRACING_PREFIX))
+            if (k.startsWith(Utils.HEADER_TRACING_PREFIX)) {
                 return true;
+            }
         }
 
         return false;

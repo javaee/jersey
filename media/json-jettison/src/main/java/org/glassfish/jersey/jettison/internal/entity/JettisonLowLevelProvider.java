@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,7 +50,6 @@ import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider
  * Abstract, low-level JSON media type message entity provider (reader & writer).
  *
  * @param <T> supported Java type.
- * 
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public abstract class JettisonLowLevelProvider<T> extends AbstractMessageReaderWriterProvider<T> {

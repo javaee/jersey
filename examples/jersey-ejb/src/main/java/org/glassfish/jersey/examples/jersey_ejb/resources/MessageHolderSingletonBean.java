@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,12 +39,14 @@
  */
 package org.glassfish.jersey.examples.jersey_ejb.resources;
 
-import org.glassfish.jersey.examples.jersey_ejb.entities.Message;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import javax.ejb.Singleton;
+
+import org.glassfish.jersey.examples.jersey_ejb.entities.Message;
 
 /**
  * An EJB singleton to maintain all processed message beans.
@@ -71,7 +73,7 @@ public class MessageHolderSingletonBean {
 
         int index = 0;
 
-        while(index < list.size() && index < maxMessages) {
+        while (index < list.size() && index < maxMessages) {
             l.add(list.get(index));
             index++;
         }
@@ -82,7 +84,6 @@ public class MessageHolderSingletonBean {
     private int getNewId() {
         return currentId++;
     }
-
 
     public Message addMessage(String msg) {
         return addMessage(msg, new Date());
@@ -100,9 +101,10 @@ public class MessageHolderSingletonBean {
         int index = 0;
         Message m;
 
-        while(index < list.size()) {
-            if((m = list.get(index)).getUniqueId() == uniqueId)
+        while (index < list.size()) {
+            if ((m = list.get(index)).getUniqueId() == uniqueId) {
                 return m;
+            }
             index++;
         }
 
@@ -112,8 +114,8 @@ public class MessageHolderSingletonBean {
     public boolean deleteMessage(int uniqueId) {
         int index = 0;
 
-        while(index < list.size()) {
-            if(list.get(index).getUniqueId() == uniqueId) {
+        while (index < list.size()) {
+            if (list.get(index).getUniqueId() == uniqueId) {
                 list.remove(index);
                 return true;
             }

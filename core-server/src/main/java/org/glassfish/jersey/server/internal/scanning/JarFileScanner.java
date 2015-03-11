@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,7 @@ public final class JarFileScanner implements ResourceFinder {
 
     private static final Logger LOGGER = Logger.getLogger(JarFileScanner.class.getName());
     // platform independent file separator within the jar file
-    private static final char JAR_FILE_SEPARATOR = '\\';
+    private static final char JAR_FILE_SEPARATOR = '/';
 
     private final JarInputStream jarInputStream;
     private final String parent;
@@ -75,7 +75,8 @@ public final class JarFileScanner implements ResourceFinder {
      */
     public JarFileScanner(final InputStream inputStream, final String parent, final boolean recursive) throws IOException {
         this.jarInputStream = new JarInputStream(inputStream);
-        this.parent = parent;
+        this.parent = (parent.isEmpty() || parent.endsWith(String.valueOf(JAR_FILE_SEPARATOR)))
+                ? parent : parent + JAR_FILE_SEPARATOR;
         this.recursive = recursive;
     }
 
@@ -91,13 +92,7 @@ public final class JarFileScanner implements ResourceFinder {
                         break;
                     }
                     if (!next.isDirectory() && next.getName().startsWith(parent)) {
-                        if (recursive) {
-                            // accept any entries with the prefix
-                            break;
-                        }
-                        // accept only entries directly in the folder.
-                        final String suffix = next.getName().substring(parent.length());
-                        if (suffix.lastIndexOf(JAR_FILE_SEPARATOR) <= 0) {
+                        if (recursive || next.getName().substring(parent.length()).indexOf(JAR_FILE_SEPARATOR) == -1) {
                             break;
                         }
                     }

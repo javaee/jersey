@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,7 +63,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
@@ -79,11 +78,12 @@ public class ContentLengthTest extends JerseyTest {
     }
 
     public static class MyType {
+
         public String s = STR;
     }
 
     @Path("/")
-    static public class MyTypeResource {
+    public static class MyTypeResource {
 
         @GET
         public MyType getMyType() {
@@ -93,6 +93,7 @@ public class ContentLengthTest extends JerseyTest {
 
     @Provider
     public static class MyTypeWriter implements MessageBodyWriter<MyType> {
+
         @Override
         public boolean isWriteable(Class<?> aClass, Type type, Annotation[] annotations, MediaType mediaType) {
             return aClass.equals(MyType.class);
@@ -104,7 +105,13 @@ public class ContentLengthTest extends JerseyTest {
         }
 
         @Override
-        public void writeTo(MyType myType, Class<?> aClass, Type type, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> stringObjectMultivaluedMap, OutputStream outputStream) throws IOException, WebApplicationException {
+        public void writeTo(MyType myType,
+                            Class<?> aClass,
+                            Type type,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> stringObjectMultivaluedMap,
+                            OutputStream outputStream) throws IOException, WebApplicationException {
             outputStream.write(myType.s.getBytes());
         }
     }
@@ -117,7 +124,6 @@ public class ContentLengthTest extends JerseyTest {
         assertTrue(response.hasEntity());
     }
 
-
     @Test
     public void testHeadContentLengthCustomWriter() throws Exception {
         Response response = target().request().head();
@@ -127,7 +133,7 @@ public class ContentLengthTest extends JerseyTest {
     }
 
     @Path("/byte")
-    static public class ResourceGetByteNoHead {
+    public static class ResourceGetByteNoHead {
 
         @GET
         public byte[] get() {

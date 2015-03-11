@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.entity;
 
 import java.io.IOException;
@@ -76,7 +77,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class MultipartTest extends JerseyTest {
 
@@ -125,8 +126,8 @@ public class MultipartTest extends JerseyTest {
         @POST
         @Path("listAsParameter")
         @Consumes(MediaType.MULTIPART_FORM_DATA)
-        public String process(@FormDataParam(value="object") final MyObject object,
-                              @FormDataParam(value="list") final List<MyObject> list) {
+        public String process(@FormDataParam(value = "object") final MyObject object,
+                              @FormDataParam(value = "list") final List<MyObject> list) {
             String value = object.value;
 
             for (final MyObject obj : list) {
@@ -137,7 +138,8 @@ public class MultipartTest extends JerseyTest {
         }
     }
 
-    public static class MessageBodyProvider implements MessageBodyReader<MultipartResource>, MessageBodyWriter<MultipartResource> {
+    public static class MessageBodyProvider
+            implements MessageBodyReader<MultipartResource>, MessageBodyWriter<MultipartResource> {
 
         @Override
         public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations,

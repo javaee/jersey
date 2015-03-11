@@ -558,7 +558,7 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
                 <title>Custom &lit.jaxrs.core.Application; subclass</title>
                 <para>
                     If you extend the &jaxrs.core.Application; class to provide the list of relevant root resource
-                    classes (<literal>getResources()</literal>) and singletons (<literal>getSingletons()</literal>),
+                    classes (<literal>getClasses()</literal>) and singletons (<literal>getSingletons()</literal>),
                     i.e. your JAX-RS application model, you then need to register it in your web application
                     <literal>web.xml</literal> deployment descriptor using a Servlet or Servlet filter initialization
                     parameter with a name of  <literal>javax.ws.rs.Application</literal> [<emphasis>sic</emphasis>] as follows:
@@ -573,7 +573,7 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
 &lt;/init-param&gt;</programlisting>
                     </example>
 
-                    Jersey will consider all the classes returned by <literal>getResources()</literal> and
+                    Jersey will consider all the classes returned by <literal>getClasses()</literal> and
                     <literal>getSingletons()</literal> methods of your &lit.jaxrs.core.Application; implementation.
                 </para>
 
@@ -908,7 +908,7 @@ public class MyApplication extends ResourceConfig {
             <title>Jersey Servlet container modules</title>
 
             <para>
-                Jersey uses its own <literal>&jersey.containers.ServletContainer;</literal> implementation of Servlet and
+                Jersey uses its own <literal>&jersey.servlet.ServletContainer;</literal> implementation of Servlet and
                 Servlet Filter API to integrate with Servlet containers. As any JAX-RS runtime, Jersey provides support
                 for Servlet containers that support Servlet specification version 2.5 and higher. To support JAX-RS 2.0
                 asynchronous resources on top of a Servlet container, support for Servlet specification version 3.0 or higher
@@ -1020,9 +1020,10 @@ public class CdiBeanResource {
 }</programlisting>
             </para>
             <para>
-	    	The above works naturally inside any Java EE compliant AS container. In Jersey version 2.15, container agnostic CDI support was introduced.
-		This feature allows you to publish CDI based JAX-RS resources also in other containers. Jersey cdi-webapp example shows Jersey/CDI integration
-		in Grizzly HTTP and Apache Tomcat server.
+              The above works naturally inside any Java EE compliant AS container. In Jersey version 2.15, container agnostic CDI support was introduced.
+              This feature allows you to publish CDI based JAX-RS resources also in other containers. Jersey cdi-webapp example shows Jersey/CDI integration
+              in Grizzly HTTP and Apache Tomcat server. Detailed description of Jersey CDI support outside of a fully fledged Java EE application container
+              could be found in <xref linkend="cdi.support"/>.
             </para>
         </section>
 

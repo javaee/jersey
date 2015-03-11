@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.wadl.internal;
 
 import java.util.Collections;
@@ -78,7 +79,7 @@ import com.sun.research.ws.wadl.Response;
  *
  * @author Marc Hadley
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class WadlBuilder {
 
@@ -86,7 +87,6 @@ public class WadlBuilder {
     private final UriInfo uriInfo;
 
     private final boolean detailedWadl;
-
 
     public WadlBuilder(WadlGenerator wadlGenerator, boolean detailedWadl, UriInfo uriInfo) {
         this.detailedWadl = detailedWadl;
@@ -183,7 +183,8 @@ public class WadlBuilder {
             String message;
 
             if (detailedWadl) {
-                final String uriWithoutQueryParam = UriBuilder.fromUri(uriInfo.getRequestUri()).replaceQuery("").build().toString();
+                final String uriWithoutQueryParam = UriBuilder.fromUri(uriInfo.getRequestUri()).replaceQuery("").build()
+                        .toString();
                 message = LocalizationMessages.WADL_DOC_EXTENDED_WADL(WadlUtils.DETAILED_WADL_QUERY_PARAM, uriWithoutQueryParam);
             } else {
                 final String uriWithQueryParam = UriBuilder.fromUri(uriInfo.getRequestUri())
@@ -206,7 +207,6 @@ public class WadlBuilder {
                 return null;
             }
             com.sun.research.ws.wadl.Method wadlMethod = _wadlGenerator.createMethod(r, m);
-
 
             // generate the request part
             Request wadlRequest = generateRequest(r, m, wadlResourceParams);
@@ -256,8 +256,8 @@ public class WadlBuilder {
                             }
                         }
                     }
-                } else if (p.getSourceAnnotation().annotationType().getName().equals("org.glassfish.jersey.media.multipart" +
-                        ".FormDataParam")) { // jersey-multipart support
+                } else if (p.getSourceAnnotation().annotationType().getName().equals("org.glassfish.jersey.media.multipart"
+                        + ".FormDataParam")) { // jersey-multipart support
                     // Use multipart/form-data if no @Consumes
                     List<MediaType> supportedInputTypes = m.getConsumedTypes();
                     if (supportedInputTypes.isEmpty()
@@ -376,7 +376,6 @@ public class WadlBuilder {
                 visitedResources.add(resource);
             }
 
-
             // if the resource contains subresource locator create new resource for this locator and return it instead
             // of this resource
             final ResourceMethod locator = resource.getResourceLocator();
@@ -441,7 +440,6 @@ public class WadlBuilder {
                 }
                 wadlResource.getMethodOrResource().add(childWadlResource);
             }
-
 
             return wadlResource;
         } catch (Exception e) {

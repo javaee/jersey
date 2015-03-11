@@ -47,7 +47,7 @@
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
         <artifactId>project</artifactId>
-        <version>2.16-SNAPSHOT</version>
+        <version>2.17-SNAPSHOT</version>
     </parent>
 
     <artifactId>entity-filtering-selectable</artifactId>
@@ -61,8 +61,8 @@
             <artifactId>jersey-server</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-moxy</artifactId>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-grizzly2-http</artifactId>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
@@ -70,8 +70,12 @@
         </dependency>
 
         <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-grizzly2-http</artifactId>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
         </dependency>
 
         <dependency>

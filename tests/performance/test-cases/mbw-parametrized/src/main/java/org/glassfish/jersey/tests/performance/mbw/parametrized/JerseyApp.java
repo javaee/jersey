@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.performance.mbw.parametrized;
 
 import java.io.File;
@@ -79,7 +80,7 @@ import com.yammer.metrics.core.TimerContext;
  * full class name in command line arguments. The provider must be on the classpath.
  * </p>
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class JerseyApp {
 
@@ -204,8 +205,8 @@ public class JerseyApp {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("<executable>", options);
         System.out.println("The deployed application contains three methods:");
-        System.out.println("GET: return entity media type defined by the --type parameter. The entity is generated but you" +
-                " can specify --file <file> from which the data will be loaded.");
+        System.out.println("GET: return entity media type defined by the --type parameter. The entity is generated but you"
+                + " can specify --file <file> from which the data will be loaded.");
         System.out.println("POST: reads entity and writes the same entity back to the wire.");
         System.out.println("PUT: reads entity and returns 204.");
         System.out.println("\nexample: java <java params> JerseyApp -t application/json -p org.glassfish.jersey.moxy.json.MoxyJsonFeature --name MyCustomMoxyTest -u http://localhost:9998");

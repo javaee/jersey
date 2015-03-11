@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,6 @@
 package org.glassfish.jersey.internal.util.collection;
 
 import java.io.Serializable;
-import java.util.Comparator;
 
 /**
  * A key comparator.
@@ -48,7 +47,7 @@ import java.util.Comparator;
  * @param <K> Key's type
  * @author Paul Sandoz
  */
-public interface KeyComparator<K> extends Comparator<K>, Serializable {
+public interface KeyComparator<K> extends Serializable {
 
     /**
      * Compare two keys for equality.

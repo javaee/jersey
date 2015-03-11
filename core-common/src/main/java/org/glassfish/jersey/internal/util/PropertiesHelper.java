@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.util;
 
 import java.lang.reflect.Constructor;
@@ -56,7 +57,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  * Helper class containing convenience methods for reading
  * {@code org.glassfish.jersey.server.ResourceConfig} and {@link javax.ws.rs.core.Configuration} properties.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public final class PropertiesHelper {
 
@@ -151,7 +152,11 @@ public final class PropertiesHelper {
      * @return Value of the property or defaultValue.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, T defaultValue, Map<String, String> legacyMap) {
+    public static <T> T getValue(Map<String, ?> properties,
+                                 RuntimeType runtimeType,
+                                 String key,
+                                 T defaultValue,
+                                 Map<String, String> legacyMap) {
         return getValue(properties, runtimeType, key, defaultValue, (Class<T>) defaultValue.getClass(), legacyMap);
     }
 
@@ -167,7 +172,11 @@ public final class PropertiesHelper {
      * @param legacyMap    Legacy fallback map, where key is the actual property name, value is the old property name
      * @return Value of the property or null.
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Class<T> type, Map<String, String> legacyMap) {
+    public static <T> T getValue(Map<String, ?> properties,
+                                 String key,
+                                 T defaultValue,
+                                 Class<T> type,
+                                 Map<String, String> legacyMap) {
         return getValue(properties, null, key, defaultValue, type, legacyMap);
     }
 

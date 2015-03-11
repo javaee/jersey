@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.integration.servlet_25_autodiscovery_1;
 
 import java.util.List;
@@ -51,7 +52,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @Path("/abc")
@@ -59,12 +60,12 @@ public class LanguageVariantResource {
 
     @GET
     public Response doGet(@Context Request r) {
-        List<Variant> vs = Variant.VariantListBuilder.newInstance().
-                mediaTypes(MediaType.valueOf("application/foo")).
-                languages(new Locale("en")).languages(new Locale("fr")).add().
-                mediaTypes(MediaType.valueOf("application/bar")).
-                languages(new Locale("en")).languages(new Locale("fr")).add().
-                build();
+        List<Variant> vs = Variant.VariantListBuilder.newInstance()
+                .mediaTypes(MediaType.valueOf("application/foo"))
+                .languages(new Locale("en")).languages(new Locale("fr")).add()
+                .mediaTypes(MediaType.valueOf("application/bar"))
+                .languages(new Locale("en")).languages(new Locale("fr")).add()
+                .build();
 
         Variant v = r.selectVariant(vs);
         if (v == null) {

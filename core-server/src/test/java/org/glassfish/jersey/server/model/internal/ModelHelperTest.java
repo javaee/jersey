@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,13 +39,14 @@
  */
 package org.glassfish.jersey.server.model.internal;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import javax.ws.rs.Path;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+
+import javax.ws.rs.Path;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Constantino Cronemberger (ccronemberger at yahoo.com.br)
@@ -62,7 +63,7 @@ public class ModelHelperTest {
     public void testSubClass() {
         // Spring with CGLIB proxies creates sub-classes
         Object obj = new MyAnnotatedClass() {};
-        Assert.assertNotSame(MyAnnotatedClass.class,obj.getClass());
+        Assert.assertNotSame(MyAnnotatedClass.class, obj.getClass());
         Class cls = ModelHelper.getAnnotatedResourceClass(obj.getClass());
         Assert.assertSame(MyAnnotatedClass.class, cls);
     }
@@ -70,12 +71,13 @@ public class ModelHelperTest {
     @Test
     public void testProxyClass() throws Exception {
         // Spring can also create proxies for beans
-        Object obj = Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] {MyServiceInterface.class}, new InvocationHandler() {
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                return null;
-            }
-        });
+        Object obj = Proxy
+                .newProxyInstance(getClass().getClassLoader(), new Class[] {MyServiceInterface.class}, new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        return null;
+                    }
+                });
         Class cls = ModelHelper.getAnnotatedResourceClass(obj.getClass());
         Assert.assertSame(MyServiceInterface.class, cls);
     }

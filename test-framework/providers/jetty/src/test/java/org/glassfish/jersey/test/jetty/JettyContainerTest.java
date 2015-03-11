@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.test.jetty;
 
 import java.net.URI;
@@ -45,16 +46,17 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.jetty.JettyHttpContainer;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.jetty.JettyHttpContainer;
 import org.glassfish.jersey.test.JerseyTest;
+
+import org.glassfish.hk2.api.ServiceLocator;
+
+import org.jvnet.hk2.internal.ServiceLocatorImpl;
 
 import org.eclipse.jetty.server.Server;
 import org.junit.Test;
-import org.jvnet.hk2.internal.ServiceLocatorImpl;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -62,7 +64,7 @@ import static org.junit.Assert.assertTrue;
  * Test class for {@link JettyHttpContainer}.
  *
  * @author Arul Dhesiaseelan (aruld at acm org)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class JettyContainerTest extends JerseyTest {
 
@@ -113,9 +115,10 @@ public class JettyContainerTest extends JerseyTest {
     public void testParentServiceLocator() {
         final ServiceLocator locator = new ServiceLocatorImpl("MyServiceLocator", null);
         final Server server = JettyHttpContainerFactory.createServer(URI.create("http://localhost:9876"),
-                    new ResourceConfig(Resource.class), false, locator);
-            JettyHttpContainer container = (JettyHttpContainer) server.getHandler();
-            ServiceLocator appLocator = container.getApplicationHandler().getServiceLocator();
-            assertTrue("Application service locator was expected to have defined parent locator", appLocator.getParent() == locator);
+                new ResourceConfig(Resource.class), false, locator);
+        JettyHttpContainer container = (JettyHttpContainer) server.getHandler();
+        ServiceLocator appLocator = container.getApplicationHandler().getServiceLocator();
+        assertTrue("Application service locator was expected to have defined parent locator",
+                appLocator.getParent() == locator);
     }
 }

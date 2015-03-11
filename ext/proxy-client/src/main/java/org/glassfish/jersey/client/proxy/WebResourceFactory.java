@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client.proxy;
 
 import java.lang.annotation.Annotation;
@@ -73,6 +74,7 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -84,22 +86,21 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
  * See the <a href="package-summary.html">package overview</a>
  * for an example on how to use this class.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public final class WebResourceFactory implements InvocationHandler {
 
-    static private final String[] EMPTY = {};
+    private static final String[] EMPTY = {};
 
     private final WebTarget target;
     private final MultivaluedMap<String, Object> headers;
     private final List<Cookie> cookies;
     private final Form form;
 
-    private static final MultivaluedMap<String, Object> EMPTY_HEADERS = new MultivaluedHashMap<String, Object>();
+    private static final MultivaluedMap<String, Object> EMPTY_HEADERS = new MultivaluedHashMap<>();
     private static final Form EMPTY_FORM = new Form();
-    private static final List<Class> PARAM_ANNOTATION_CLASSES = Arrays.<Class>asList(
-        PathParam.class, QueryParam.class, HeaderParam.class, CookieParam.class, MatrixParam.class, FormParam.class
-    );
+    private static final List<Class> PARAM_ANNOTATION_CLASSES = Arrays.<Class>asList(PathParam.class, QueryParam.class,
+            HeaderParam.class, CookieParam.class, MatrixParam.class, FormParam.class);
 
     /**
      * Creates a new client-side representation of a resource described by
@@ -142,7 +143,7 @@ public final class WebResourceFactory implements InvocationHandler {
                                     final Form form) {
 
         return (C) Proxy.newProxyInstance(AccessController.doPrivileged(ReflectionHelper.getClassLoaderPA(resourceInterface)),
-                new Class[]{resourceInterface},
+                new Class[] {resourceInterface},
                 new WebResourceFactory(ignoreResourcePath ? target : addPathFromAnnotation(resourceInterface, target),
                         headers, cookies, form));
     }
@@ -158,6 +159,10 @@ public final class WebResourceFactory implements InvocationHandler {
     @Override
     @SuppressWarnings("unchecked")
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+        if (args == null && method.getName().equals("toString")) {
+            return toString();
+        }
+
         // get the interface describing the resource
         final Class<?> proxyIfc = proxy.getClass().getInterfaces()[0];
 
@@ -192,14 +197,14 @@ public final class WebResourceFactory implements InvocationHandler {
         // process method params (build maps of (Path|Form|Cookie|Matrix|Header..)Params
         // and extract entity type
         final MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<String, Object>(this.headers);
-        final LinkedList<Cookie> cookies = new LinkedList<Cookie>(this.cookies);
+        final LinkedList<Cookie> cookies = new LinkedList<>(this.cookies);
         final Form form = new Form();
         form.asMap().putAll(this.form.asMap());
         final Annotation[][] paramAnns = method.getParameterAnnotations();
         Object entity = null;
         Type entityType = null;
         for (int i = 0; i < paramAnns.length; i++) {
-            final Map<Class, Annotation> anns = new HashMap<Class, Annotation>();
+            final Map<Class, Annotation> anns = new HashMap<>();
             for (final Annotation ann : paramAnns[i]) {
                 anns.put(ann.annotationType(), ann);
             }
@@ -290,13 +295,17 @@ public final class WebResourceFactory implements InvocationHandler {
         // determine content type
         String contentType = null;
         if (entity != null) {
-            Consumes consumes = method.getAnnotation(Consumes.class);
-            if (consumes == null) {
-                consumes = proxyIfc.getAnnotation(Consumes.class);
-            }
-            if (consumes != null && consumes.value().length > 0) {
-                // TODO: should consider q/qs instead of picking the first one
-                contentType = consumes.value()[0];
+            final List<Object> contentTypeEntries = headers.get(HttpHeaders.CONTENT_TYPE);
+            if ((contentTypeEntries != null) && (!contentTypeEntries.isEmpty())) {
+                contentType = contentTypeEntries.get(0).toString();
+            } else {
+                Consumes consumes = method.getAnnotation(Consumes.class);
+                if (consumes == null) {
+                    consumes = proxyIfc.getAnnotation(Consumes.class);
+                }
+                if (consumes != null && consumes.value().length > 0) {
+                    contentType = consumes.value()[0];
+                }
             }
         }
 
@@ -339,8 +348,8 @@ public final class WebResourceFactory implements InvocationHandler {
         return result;
     }
 
-    private boolean hasAnyParamAnnotation(Map<Class, Annotation> anns) {
-        for (Class paramAnnotationClass : PARAM_ANNOTATION_CLASSES) {
+    private boolean hasAnyParamAnnotation(final Map<Class, Annotation> anns) {
+        for (final Class paramAnnotationClass : PARAM_ANNOTATION_CLASSES) {
             if (anns.containsKey(paramAnnotationClass)) {
                 return true;
             }
@@ -358,6 +367,11 @@ public final class WebResourceFactory implements InvocationHandler {
             target = target.path(p.value());
         }
         return target;
+    }
+
+    @Override
+    public String toString() {
+        return target.toString();
     }
 
     private static String getHttpMethodName(final AnnotatedElement ae) {

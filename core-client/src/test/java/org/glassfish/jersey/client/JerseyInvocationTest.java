@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
@@ -47,6 +48,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
@@ -57,6 +59,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -73,7 +76,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class JerseyInvocationTest {
 
@@ -137,7 +140,7 @@ public class JerseyInvocationTest {
             fail("ProcessingException expected.");
         } catch (final ProcessingException ex) {
             assertThat(ex.getCause().getClass(), anyOf(CoreMatchers.<Class<?>>equalTo(ProtocolException.class),
-                            CoreMatchers.<Class<?>>equalTo(ConnectException.class)));
+                    CoreMatchers.<Class<?>>equalTo(ConnectException.class)));
         }
 
         final Client c2 = ClientBuilder.newClient();
@@ -211,7 +214,7 @@ public class JerseyInvocationTest {
         final WebTarget target = client.target("http://localhost:8080/mypath");
 
         final Class<Response> responseType = null;
-        final String[] methods = new String[]{"GET", "PUT", "POST", "DELETE", "OPTIONS"};
+        final String[] methods = new String[] {"GET", "PUT", "POST", "DELETE", "OPTIONS"};
 
         for (final String method : methods) {
             final Invocation.Builder request = target.request();
@@ -342,7 +345,57 @@ public class JerseyInvocationTest {
 
         assertThat(callback.getThrowable(), CoreMatchers.instanceOf(ProcessingException.class));
         assertThat(callback.getThrowable().getCause(), CoreMatchers.instanceOf(IllegalArgumentException.class));
-        assertThat(callback.getThrowable().getCause().getMessage(), CoreMatchers.allOf(CoreMatchers.containsString
-                (MyUnboundCallback.class.getName()), CoreMatchers.containsString(InvocationCallback.class.getName())));
+        assertThat(callback.getThrowable().getCause().getMessage(), CoreMatchers
+                .allOf(CoreMatchers.containsString(MyUnboundCallback.class.getName()),
+                        CoreMatchers.containsString(InvocationCallback.class.getName())));
+    }
+
+    @Test
+    public void testSubmitWithGenericType() throws Exception {
+        _submitWithGenericType(new GenericType<String>() {});
+    }
+
+    @Test
+    public void testSubmitWithGenericTypeParam() throws Exception {
+        _submitWithGenericType(new GenericType(String.class) {});
+    }
+
+    private void _submitWithGenericType(final GenericType type) throws Exception {
+        final Invocation.Builder builder = ClientBuilder.newClient()
+                .register(TerminatingFilter.class)
+                .target("http://localhost/")
+                .request();
+
+        final AtomicReference<String> reference = new AtomicReference<String>();
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        final InvocationCallback callback = new InvocationCallback<Object>() {
+            @Override
+            public void completed(final Object obj) {
+                reference.set(obj.toString());
+                latch.countDown();
+            }
+
+            @Override
+            public void failed(final Throwable throwable) {
+                latch.countDown();
+            }
+        };
+
+        //noinspection unchecked
+        ((JerseyInvocation) builder.buildGet())
+                .submit(type, (InvocationCallback<String>) callback);
+
+        latch.await();
+
+        assertThat(reference.get(), is("ENTITY"));
+    }
+
+    public static class TerminatingFilter implements ClientRequestFilter {
+
+        @Override
+        public void filter(final ClientRequestContext requestContext) throws IOException {
+            requestContext.abortWith(Response.ok("ENTITY").build());
+        }
     }
 }

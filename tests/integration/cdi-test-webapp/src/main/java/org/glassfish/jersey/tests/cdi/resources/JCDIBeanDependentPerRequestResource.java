@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.cdi.resources;
 
 import java.util.logging.Logger;
@@ -59,7 +60,7 @@ import javax.enterprise.context.RequestScoped;
 /**
  * Request scoped JAX-RS resource registered as a CDI managed bean.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Path("/jcdibean/dependent/per-request")

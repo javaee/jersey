@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import java.util.concurrent.ExecutionException;
@@ -62,12 +63,14 @@ import static org.junit.Assert.fail;
 /**
  * Test sub resource locators returning {@link Resource programmatic resources}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  *
  */
 public class SubResourceProgrammaticTest {
+
     @Path("root")
     public static class RootResource {
+
         @Path("locator")
         public Resource subResourceLocator() {
             return getResource();
@@ -78,7 +81,9 @@ public class SubResourceProgrammaticTest {
             builder.addMethod("GET").produces(MediaType.TEXT_PLAIN_TYPE).handledBy(
                     new Inflector<ContainerRequestContext, String>() {
                         @Override
-                        public String apply(ContainerRequestContext containerRequestContext) { return "inflector"; }
+                        public String apply(ContainerRequestContext containerRequestContext) {
+                            return "inflector";
+                        }
                     });
             return builder.build();
         }
@@ -109,7 +114,9 @@ public class SubResourceProgrammaticTest {
             builder.addMethod("GET").produces(MediaType.TEXT_PLAIN_TYPE).handledBy(
                     new Inflector<ContainerRequestContext, String>() {
                         @Override
-                        public String apply(ContainerRequestContext containerRequestContext) { return "inflector"; }
+                        public String apply(ContainerRequestContext containerRequestContext) {
+                            return "inflector";
+                        }
                     });
             return builder.build();
         }
@@ -118,6 +125,7 @@ public class SubResourceProgrammaticTest {
     @Singleton
     @Path("root-singleton")
     public static class SingletonResource {
+
         int counter = 0;
 
         @GET
@@ -148,6 +156,7 @@ public class SubResourceProgrammaticTest {
 
     @Path("root-standard")
     public static class StandardResource {
+
         int counter = 0;
 
         @GET
@@ -169,6 +178,7 @@ public class SubResourceProgrammaticTest {
 
     @Path("singleton")
     public static class SingletonChild {
+
         @Path("/")
         public Resource locator() {
             return Resource.from(SingletonResource.class);
@@ -177,12 +187,12 @@ public class SubResourceProgrammaticTest {
 
     @Path("standard")
     public static class StandardChild {
+
         @Path("/")
         public Resource locator() {
             return Resource.from(StandardResource.class);
         }
     }
-
 
     @Test
     public void testInflectorBased() throws ExecutionException, InterruptedException {
@@ -219,7 +229,6 @@ public class SubResourceProgrammaticTest {
         _test(handler, "/root/standard-instance", "standard:0");
     }
 
-
     @Test
     public void testComplex() throws ExecutionException, InterruptedException {
         ApplicationHandler handler = new ApplicationHandler(new ResourceConfig(RootResource.class));
@@ -239,10 +248,10 @@ public class SubResourceProgrammaticTest {
         _test(handler, "/root/complex/standard/iteration/iteration-singleton/iteration/iteration-standard", "standard:0");
         _test(handler, "/root/complex/standard/iteration/iteration-singleton/iteration/iteration-standard/iteration",
                 "standard:0");
-        _test(handler, "/root/complex/standard/iteration/iteration-singleton/iteration/iteration-standard/iteration" +
-                "/iteration-singleton/iteration-class", "singleton:" + singletonCounter++);
-        _test(handler, "/root/complex/standard/iteration/iteration-singleton/iteration/iteration-standard/iteration" +
-                "/iteration-singleton/iteration-class/iteration-instance", "singleton:0");
+        _test(handler, "/root/complex/standard/iteration/iteration-singleton/iteration/iteration-standard/iteration"
+                + "/iteration-singleton/iteration-class", "singleton:" + singletonCounter++);
+        _test(handler, "/root/complex/standard/iteration/iteration-singleton/iteration/iteration-standard/iteration"
+                + "/iteration-singleton/iteration-class/iteration-instance", "singleton:0");
         _test(handler, "/root/complex/standard/iteration/iteration-singleton", "singleton:" + singletonCounter++);
 
         _test(handler, "/root/complex/singleton-method/", "singleton:" + singletonCounter++);
@@ -250,14 +259,12 @@ public class SubResourceProgrammaticTest {
         _test(handler, "/root/complex", "inflector");
     }
 
-
     private void _test(ApplicationHandler handler, String requestUri, String expected)
             throws InterruptedException, ExecutionException {
         final ContainerResponse response = handler.apply(RequestContextBuilder.from(requestUri, "GET").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals(expected, response.getEntity());
     }
-
 
     @Test
     public void testInvalidSubResource() throws ExecutionException, InterruptedException {
@@ -274,12 +281,12 @@ public class SubResourceProgrammaticTest {
 
     @Path("wrong")
     public static class WrongResource {
+
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         public String get() {
             return "ok";
         }
-
 
         @Path("locator")
         public Resource locator() {
@@ -287,11 +294,11 @@ public class SubResourceProgrammaticTest {
         }
     }
 
-
     /**
      * Invalid resource.
      */
     public static class InvalidSubResource {
+
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         public String get1() {

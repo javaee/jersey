@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -82,6 +82,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceHeaderPrimitives {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@CookieParam("boolean") boolean v) {
@@ -134,6 +135,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default/null")
     public static class ResourceHeaderPrimitivesDefaultNull {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@CookieParam("boolean") boolean v) {
@@ -165,7 +167,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/long")
         public String doGet(@CookieParam("long") long v) {
-            assertEquals(0l, v);
+            assertEquals(0L, v);
             return "content";
         }
 
@@ -186,6 +188,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default")
     public static class ResourceHeaderPrimitivesDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@CookieParam("boolean") @DefaultValue("true") boolean v) {
@@ -238,6 +241,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default/override")
     public static class ResourceHeaderPrimitivesDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@CookieParam("boolean") @DefaultValue("false") boolean v) {
@@ -290,6 +294,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers")
     public static class ResourceHeaderPrimitiveWrappers {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@CookieParam("boolean") Boolean v) {
@@ -342,6 +347,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default/null")
     public static class ResourceHeaderPrimitiveWrappersDefaultNull {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@CookieParam("boolean") Boolean v) {
@@ -394,6 +400,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default")
     public static class ResourceHeaderPrimitiveWrappersDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@CookieParam("boolean") @DefaultValue("true") Boolean v) {
@@ -446,6 +453,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default/override")
     public static class ResourceHeaderPrimitiveWrappersDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@CookieParam("boolean") @DefaultValue("false") Boolean v) {
@@ -498,6 +506,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list")
     public static class ResourceHeaderPrimitiveList {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@CookieParam("boolean") List<Boolean> v) {
@@ -550,6 +559,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default/null")
     public static class ResourceHeaderPrimitiveListDefaultNull {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@CookieParam("boolean") List<Boolean> v) {
@@ -602,6 +612,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default")
     public static class ResourceHeaderPrimitiveListDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@CookieParam("boolean") @DefaultValue("true") List<Boolean> v) {
@@ -654,6 +665,7 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default/override")
     public static class ResourceHeaderPrimitiveListDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@CookieParam("boolean") @DefaultValue("false") List<Boolean> v) {
@@ -704,21 +716,30 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
         }
     }
 
-
     void _test(String type, String value) throws ExecutionException, InterruptedException {
-        assertEquals("content", apply(RequestContextBuilder.from("/", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).getEntity());
+        assertEquals("content",
+                apply(RequestContextBuilder.from("/", "GET").accept("application/" + type).cookie(new Cookie(type, value))
+                        .build()).getEntity());
 
-        assertEquals("content", apply(RequestContextBuilder.from("/wrappers", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).getEntity());
+        assertEquals("content",
+                apply(RequestContextBuilder.from("/wrappers", "GET").accept("application/" + type).cookie(new Cookie(type, value))
+                        .build()).getEntity());
 
-        assertEquals("content", apply(RequestContextBuilder.from("/list", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).getEntity());
+        assertEquals("content",
+                apply(RequestContextBuilder.from("/list", "GET").accept("application/" + type).cookie(new Cookie(type, value))
+                        .build()).getEntity());
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
-        assertEquals("content", apply(RequestContextBuilder.from(base + "default/null", "GET").accept("application/" + type).build()).getEntity());
+        assertEquals("content",
+                apply(RequestContextBuilder.from(base + "default/null", "GET").accept("application/" + type).build())
+                        .getEntity());
 
-        assertEquals("content", apply(RequestContextBuilder.from(base + "default", "GET").accept("application/" + type).build()).getEntity());
+        assertEquals("content",
+                apply(RequestContextBuilder.from(base + "default", "GET").accept("application/" + type).build()).getEntity());
 
-        assertEquals("content", apply(RequestContextBuilder.from(base + "default/override", "GET").accept("application/" + type).cookie(new Cookie(type, value)).build()).getEntity());
+        assertEquals("content", apply(RequestContextBuilder.from(base + "default/override", "GET").accept("application/" + type)
+                .cookie(new Cookie(type, value)).build()).getEntity());
     }
 
     void _testDefault(String type, String value) throws ExecutionException, InterruptedException {
@@ -887,7 +908,8 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
 
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/wrappers", "GET").accept("application/int").cookie(new Cookie("int", "abcdef")).build()
+                RequestContextBuilder.from("/wrappers", "GET").accept("application/int").cookie(new Cookie("int", "abcdef"))
+                        .build()
         );
 
         assertEquals(400, responseContext.getStatus());
@@ -897,7 +919,8 @@ public class CookieParamAsPrimitiveTest extends AbstractTest {
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
 
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/wrappers", "GET").accept("application/int").cookie(new Cookie("int", "abcdef")).build()
+                RequestContextBuilder.from("/wrappers", "GET").accept("application/int").cookie(new Cookie("int", "abcdef"))
+                        .build()
         );
 
         assertEquals(400, responseContext.getStatus());

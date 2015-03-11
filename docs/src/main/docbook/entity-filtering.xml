@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,7 @@
     <!ENTITY % ents SYSTEM "jersey.ent" > %ents;
     <!ENTITY jersey.github.ef.example.link "<link xlink:href='&jersey.github.examples.uri;/entity-filtering'>Entity Filtering example</link>">
     <!ENTITY jersey.github.ef.security.example.link "<link xlink:href='&jersey.github.examples.uri;/entity-filtering-security'>Entity Filtering example (with security annotations)</link>">
+    <!ENTITY jersey.github.ef.selectable.example.link "<link xlink:href='&jersey.github.examples.uri;/entity-filtering-selectable'>Entity Filtering example (based on dynamic and configurable query parameters)</link>">
 ]>
 
 <chapter xmlns="http://docbook.org/ns/docbook"
@@ -900,12 +901,17 @@ public class FilteringMoxyJsonProvider extends ConfigurableMoxyJsonProvider {
                         <link linkend='json.moxy'>MOXy</link>
                     </para>
                 </listitem>
+                <listitem>
+                    <para>
+                        <link linkend='json.jackson'>Jackson (2.x)</link>
+                    </para>
+                </listitem>
             </itemizedlist>
         </para>
         <para>
             In order to use Entity Filtering in mentioned modules you need to explicitly register either
-            &jersey.message.filtering.EntityFilteringFeature; or &jersey.message.filtering.SecurityEntityFilteringFeature;
-            to activate Entity Filtering for particular module.
+            &jersey.message.filtering.EntityFilteringFeature;, &jersey.message.filtering.SecurityEntityFilteringFeature;
+            or &jersey.message.filtering.SelectableEntityFilteringFeature; to activate Entity Filtering for particular module.
         </para>
     </section>
 
@@ -921,6 +927,9 @@ public class FilteringMoxyJsonProvider extends ConfigurableMoxyJsonProvider {
                 </listitem>
                 <listitem>
                     <para>&jersey.github.ef.security.example.link;</para>
+                </listitem>
+                <listitem>
+                    <para>&jersey.github.ef.selectable.example.link;</para>
                 </listitem>
             </itemizedlist>
         </para>

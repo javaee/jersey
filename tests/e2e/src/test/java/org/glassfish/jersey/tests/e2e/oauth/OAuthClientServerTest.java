@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,8 +72,8 @@ import org.glassfish.jersey.server.oauth1.OAuth1ServerFeature;
 import org.glassfish.jersey.server.oauth1.OAuth1ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Assert;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import com.sun.security.auth.UserPrincipal;
 
@@ -82,9 +82,10 @@ import jersey.repackaged.com.google.common.collect.Sets;
 /**
  * Tests client and server OAuth 1 functionality.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class OAuthClientServerTest extends JerseyTest {
+
     private static final String SECRET_CONSUMER_KEY = "secret-consumer-key";
     private static final String CONSUMER_KEY = "my-consumer-key";
     private static final String CONSUMER_NAME = "my-consumer";
@@ -122,6 +123,7 @@ public class OAuthClientServerTest extends JerseyTest {
 
     @Path("resource")
     public static class MyProtectedResource {
+
         @Context
         private SecurityContext securityContext;
 
@@ -147,13 +149,12 @@ public class OAuthClientServerTest extends JerseyTest {
         public String mustBeGetMethod(@QueryParam("oauth_token") String token) {
             System.out.println("Token received from user: " + token);
             final DefaultOAuth1Provider defProvider = (DefaultOAuth1Provider) provider;
-            Assert.assertEquals("http://consumer/callback/homer", defProvider.getRequestToken(token).getCallbackUrl());
+            assertEquals("http://consumer/callback/homer", defProvider.getRequestToken(token).getCallbackUrl());
 
-            final String verifier = defProvider.authorizeToken(
+            return defProvider.authorizeToken(
                     defProvider.getRequestToken(token),
                     new UserPrincipal("homer"),
                     Sets.newHashSet("user"));
-            return verifier;
         }
     }
 
@@ -173,32 +174,34 @@ public class OAuthClientServerTest extends JerseyTest {
         String tempCredUri = UriBuilder.fromUri(getBaseUri()).path("requestTokenSpecialUri").build().toString();
         String accessTokenUri = UriBuilder.fromUri(getBaseUri()).path("accessTokenSpecialUri").build().toString();
         final String userAuthorizationUri = UriBuilder.fromUri(getBaseUri()).path("user-authorization").build().toString();
-        final OAuth1AuthorizationFlow authFlow = OAuth1ClientSupport.builder(new ConsumerCredentials(CONSUMER_KEY, SECRET_CONSUMER_KEY))
+        final OAuth1AuthorizationFlow authFlow = OAuth1ClientSupport
+                .builder(new ConsumerCredentials(CONSUMER_KEY, SECRET_CONSUMER_KEY))
                 .authorizationFlow(tempCredUri, accessTokenUri, userAuthorizationUri)
                 .callbackUri("http://consumer/callback/homer").build();
 
         final String authUri = authFlow.start();
         // authorize by a request to authorization URI
         final Response userAuthResponse = ClientBuilder.newClient().target(authUri).request().get();
-        Assert.assertEquals(200, userAuthResponse.getStatus());
+        assertEquals(200, userAuthResponse.getStatus());
         final String verifier = userAuthResponse.readEntity(String.class);
         System.out.println("Verifier: " + verifier);
 
-        final AccessToken accessToken = authFlow.finish(verifier);
+        authFlow.finish(verifier);
         final Client authorizedClient = authFlow.getAuthorizedClient();
 
         Response response = authorizedClient.target(getBaseUri()).path("resource")
                 .request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("homer", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("homer", response.readEntity(String.class));
 
         response = authorizedClient.target(getBaseUri()).path("resource").path("admin").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(false, response.readEntity(boolean.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(false, response.readEntity(boolean.class));
     }
 
     /**
-     * Tests {@link org.glassfish.jersey.client.oauth1.OAuth1ClientFilter} already configured with Access Token for signature purposes only.
+     * Tests {@link org.glassfish.jersey.client.oauth1.OAuth1ClientFilter} already configured with Access Token for signature
+     * purposes only.
      */
     @Test
     public void testRequestSigning() {
@@ -213,12 +216,12 @@ public class OAuthClientServerTest extends JerseyTest {
         for (int i = 0; i < 15; i++) {
             System.out.println("request: " + i);
             response = target.request().get();
-            Assert.assertEquals(200, response.getStatus());
-            Assert.assertEquals("prometheus", response.readEntity(String.class));
+            assertEquals(200, response.getStatus());
+            assertEquals("prometheus", response.readEntity(String.class));
             i++;
             response = target.path("admin").request().get();
-            Assert.assertEquals(200, response.getStatus());
-            Assert.assertEquals(true, response.readEntity(boolean.class));
+            assertEquals(200, response.getStatus());
+            assertEquals(true, response.readEntity(boolean.class));
         }
     }
 
@@ -238,15 +241,15 @@ public class OAuthClientServerTest extends JerseyTest {
         for (int i = 0; i < 20; i++) {
             System.out.println("request: " + i);
             response = target.request().get();
-            Assert.assertEquals(200, response.getStatus());
-            Assert.assertEquals("prometheus", response.readEntity(String.class));
+            assertEquals(200, response.getStatus());
+            assertEquals("prometheus", response.readEntity(String.class));
             i++;
             response = target.path("admin").request().get();
-            Assert.assertEquals(200, response.getStatus());
-            Assert.assertEquals(true, response.readEntity(boolean.class));
+            assertEquals(200, response.getStatus());
+            assertEquals(true, response.readEntity(boolean.class));
         }
         // now the nonce cache is full
         response = target.request().get();
-        Assert.assertEquals(401, response.getStatus());
+        assertEquals(401, response.getStatus());
     }
 }

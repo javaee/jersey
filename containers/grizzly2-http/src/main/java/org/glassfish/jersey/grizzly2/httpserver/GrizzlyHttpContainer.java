@@ -115,6 +115,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      * Referencing factory for Grizzly request.
      */
     private static class GrizzlyRequestReferencingFactory extends ReferencingFactory<Request> {
+
         @Inject
         public GrizzlyRequestReferencingFactory(final Provider<Ref<Request>> referenceFactory) {
             super(referenceFactory);
@@ -125,6 +126,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      * Referencing factory for Grizzly response.
      */
     private static class GrizzlyResponseReferencingFactory extends ReferencingFactory<Response> {
+
         @Inject
         public GrizzlyResponseReferencingFactory(final Provider<Ref<Response>> referenceFactory) {
             super(referenceFactory);
@@ -189,7 +191,8 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
             this.configSetStatusOverSendError = configSetStatusOverSendError;
 
             if (logger.isDebugLoggable()) {
-                this.name = "ResponseWriter {" + "id=" + UUID.randomUUID().toString() + ", grizzlyResponse=" + grizzlyResponse.hashCode() + '}';
+                this.name = "ResponseWriter {" + "id=" + UUID.randomUUID().toString() + ", grizzlyResponse="
+                        + grizzlyResponse.hashCode() + '}';
                 logger.debugLog("{0} - init", name);
             } else {
                 this.name = "ResponseWriter";

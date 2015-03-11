@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -71,7 +71,7 @@ import org.xml.sax.SAXParseException;
 /**
  * Tests properties configuring secure sax parsing.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class EntityExpansionTest extends JerseyTest {
 
@@ -173,12 +173,12 @@ public class EntityExpansionTest extends JerseyTest {
 
     @Test
     public void testEntityExpansion() {
-        String str = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
-                "\n<!DOCTYPE lolz [\n" +
-                "  <!ENTITY lol \"lollollollollollollol[...]\">\n" +
-                "  <!ENTITY lol2 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\">\n" +
-                "  <!ENTITY lol3 \"&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;\">\n" +
-                "]>\n"
+        String str = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                + "\n<!DOCTYPE lolz [\n"
+                + "  <!ENTITY lol \"lollollollollollollol[...]\">\n"
+                + "  <!ENTITY lol2 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\">\n"
+                + "  <!ENTITY lol3 \"&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;\">\n"
+                + "]>\n"
                 + "<testBean><input>&lol3;</input></testBean>";
 
         final Response response = target().path("resource").request().post(Entity.entity(str, MediaType.APPLICATION_XML));

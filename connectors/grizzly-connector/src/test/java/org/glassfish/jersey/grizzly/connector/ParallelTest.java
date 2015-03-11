@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.grizzly.connector;
 
 import java.util.concurrent.BrokenBarrierException;
@@ -68,7 +69,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests the parallel execution of multiple requests.
  *
- * @author Stepan Kopriva (stepan.kopriva at oracle.com)
+ * @author Stepan Kopriva
  */
 public class ParallelTest extends JerseyTest {
     private static final Logger LOGGER = Logger.getLogger(ParallelTest.class.getName());

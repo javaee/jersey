@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,20 +66,21 @@ import jersey.repackaged.com.google.common.collect.Maps;
 /**
  *
  * @author Paul Sandoz
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class UriConnegLanguageMediaTypeTest extends JerseyTest {
 
     @Path("/abc")
     public static class LanguageVariantResource {
+
         @GET
         public Response doGet(@Context Request r) {
-            final List<Variant> variants = Variant.VariantListBuilder.newInstance().
-                    mediaTypes(MediaType.valueOf("application/foo")).
-                    languages(new Locale("en")).languages(new Locale("fr")).add().
-                    mediaTypes(MediaType.valueOf("application/bar")).
-                    languages(new Locale("en")).languages(new Locale("fr")).add().
-                    build();
+            final List<Variant> variants = Variant.VariantListBuilder.newInstance()
+                    .mediaTypes(MediaType.valueOf("application/foo"))
+                    .languages(new Locale("en")).languages(new Locale("fr")).add()
+                    .mediaTypes(MediaType.valueOf("application/bar"))
+                    .languages(new Locale("en")).languages(new Locale("fr")).add()
+                    .build();
 
             final Variant variant = r.selectVariant(variants);
             if (variant == null) {

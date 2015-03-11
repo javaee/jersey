@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,6 +76,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 @Singleton
 @Named(JerseyClassAnalyzer.NAME)
 public final class JerseyClassAnalyzer implements ClassAnalyzer {
+
     /**
      * Name of the analyzer service.
      */
@@ -106,14 +107,14 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
      * @param resolvers       configured injection resolvers.
      */
     @Inject
-    JerseyClassAnalyzer(@Named(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME) ClassAnalyzer defaultAnalyzer,
-                        IterableProvider<InjectionResolver<?>> resolvers) {
+    JerseyClassAnalyzer(@Named(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME) final ClassAnalyzer defaultAnalyzer,
+                        final IterableProvider<InjectionResolver<?>> resolvers) {
         this.defaultAnalyzer = defaultAnalyzer;
 
         final HashSet<Class<? extends Annotation>> tmp = new HashSet<Class<? extends Annotation>>();
-        for (InjectionResolver<?> resolver : resolvers) {
+        for (final InjectionResolver<?> resolver : resolvers) {
             if (resolver.isConstructorParameterIndicator()) {
-                ReflectionHelper.DeclaringClassInterfacePair pair =
+                final ReflectionHelper.DeclaringClassInterfacePair pair =
                         ReflectionHelper.getClass(resolver.getClass(), InjectionResolver.class);
                 final Type paramType = ReflectionHelper.getParameterizedTypeArguments(pair)[0];
                 final Class<?> paramClass = ReflectionHelper.erasure(paramType);
@@ -123,8 +124,8 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
             }
         }
 
-        this.resolverAnnotations = (tmp.size() > 0) ?
-                Collections.unmodifiableSet(tmp) : Collections.<Class<? extends Annotation>>emptySet();
+        this.resolverAnnotations = (tmp.size() > 0)
+                ? Collections.unmodifiableSet(tmp) : Collections.<Class<? extends Annotation>>emptySet();
     }
 
     @SuppressWarnings("unchecked")
@@ -138,23 +139,25 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
                     LocalizationMessages.INJECTION_ERROR_NONSTATIC_MEMBER_CLASS_NOT_SUPPORTED(clazz.getName()));
         }
 
-        Constructor<T> retVal;
+        final Constructor<T> retVal;
         try {
             retVal = defaultAnalyzer.getConstructor(clazz);
 
-            Class<?> args[] = retVal.getParameterTypes();
-            if (args.length != 0) return retVal;
+            final Class<?>[] args = retVal.getParameterTypes();
+            if (args.length != 0) {
+                return retVal;
+            }
 
             // Is zero length, but is it specifically marked?
-            Inject i = retVal.getAnnotation(Inject.class);
+            final Inject i = retVal.getAnnotation(Inject.class);
             if (i != null) {
                 return retVal;
             }
 
             // In this case, the default chose a zero-arg constructor since it could find no other
-        } catch (NoSuchMethodException ignored) {
+        } catch (final NoSuchMethodException ignored) {
             // In this case, the default failed because it found no constructor it could use
-        } catch (MultiException me) {
+        } catch (final MultiException me) {
             if (me.getErrors().size() != 1 && !(me.getErrors().get(0) instanceof IllegalArgumentException)) {
                 throw me;
             }
@@ -162,7 +165,7 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
         }
 
         // At this point, we simply need to find the constructor with the largest number of parameters
-        Constructor<?> constructors[] = AccessController.doPrivileged(new PrivilegedAction<Constructor<?>[]>() {
+        final Constructor<?>[] constructors = AccessController.doPrivileged(new PrivilegedAction<Constructor<?>[]>() {
             @Override
             public Constructor<?>[] run() {
                 return clazz.getDeclaredConstructors();
@@ -172,8 +175,8 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
         int selectedSize = 0;
         int maxParams = -1;
 
-        for (Constructor<?> constructor : constructors) {
-            Class<?> params[] = constructor.getParameterTypes();
+        for (final Constructor<?> constructor : constructors) {
+            final Class<?>[] params = constructor.getParameterTypes();
             if (params.length >= maxParams && isCompatible(constructor)) {
                 if (params.length > maxParams) {
                     maxParams = params.length;
@@ -213,14 +216,14 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
 
         if (!Modifier.isPublic(constructor.getModifiers())) {
             // return true for a default constructor, return false otherwise.
-            return paramSize == 0 &&
-                    (constructor.getDeclaringClass().getModifiers() & (Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE))
-                            == constructor.getModifiers();
+            return paramSize == 0
+                    && (constructor.getDeclaringClass().getModifiers()
+                                & (Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE)) == constructor.getModifiers();
         }
 
-        for (Annotation[] paramAnnotations : constructor.getParameterAnnotations()) {
+        for (final Annotation[] paramAnnotations : constructor.getParameterAnnotations()) {
             boolean found = false;
-            for (Annotation paramAnnotation : paramAnnotations) {
+            for (final Annotation paramAnnotation : paramAnnotations) {
                 if (resolverAnnotations.contains(paramAnnotation.annotationType())) {
                     found = true;
                     break;
@@ -235,22 +238,22 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
     }
 
     @Override
-    public <T> Set<Method> getInitializerMethods(Class<T> clazz) throws MultiException {
+    public <T> Set<Method> getInitializerMethods(final Class<T> clazz) throws MultiException {
         return defaultAnalyzer.getInitializerMethods(clazz);
     }
 
     @Override
-    public <T> Set<Field> getFields(Class<T> clazz) throws MultiException {
+    public <T> Set<Field> getFields(final Class<T> clazz) throws MultiException {
         return defaultAnalyzer.getFields(clazz);
     }
 
     @Override
-    public <T> Method getPostConstructMethod(Class<T> clazz) throws MultiException {
+    public <T> Method getPostConstructMethod(final Class<T> clazz) throws MultiException {
         return defaultAnalyzer.getPostConstructMethod(clazz);
     }
 
     @Override
-    public <T> Method getPreDestroyMethod(Class<T> clazz) throws MultiException {
+    public <T> Method getPreDestroyMethod(final Class<T> clazz) throws MultiException {
         return defaultAnalyzer.getPreDestroyMethod(clazz);
     }
 

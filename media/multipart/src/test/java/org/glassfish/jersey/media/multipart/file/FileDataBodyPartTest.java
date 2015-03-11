@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.media.multipart.file;
 
 import java.io.File;
@@ -56,7 +57,7 @@ import static org.junit.Assert.assertTrue;
  * Test case for {@link FileDataBodyPart}.
  *
  * @author Imran M Yousuf (imran at smartitengineering.com)
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class FileDataBodyPartTest extends BodyPartTest {
@@ -109,7 +110,6 @@ public class FileDataBodyPartTest extends BodyPartTest {
         fdbp.setFileEntity(file, expectedType);
         checkEntityAttributes(name, fdbp, file, expectedType);
 
-
         file = new File("pom.png");
         name = "png";
         fdbp = new FileDataBodyPart("png", file);
@@ -132,8 +132,7 @@ public class FileDataBodyPartTest extends BodyPartTest {
         if (name != null) {
             assertEquals(name, fdbp.getName());
             assertEquals(name, fdbp.getFormDataContentDisposition().getName());
-            assertEquals(file.getName(), fdbp.getContentDisposition().
-                    getFileName());
+            assertEquals(file.getName(), fdbp.getContentDisposition().getFileName());
             if (file.exists()) {
                 assertEquals(file.length(), fdbp.getContentDisposition().getSize());
                 assertEquals(file.lastModified(), fdbp.getContentDisposition().getModificationDate().getTime());

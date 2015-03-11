@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,8 +70,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
-* @author Pavel Bucek (pavel.bucek at oracle.com)
-*/
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
+ */
 public class ProvidersLegacyOrderingTest extends JerseyTest {
 
     @Produces("application/xml")
@@ -88,7 +88,13 @@ public class ProvidersLegacyOrderingTest extends JerseyTest {
         }
 
         @Override
-        public void writeTo(Object myType, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(Object myType,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
         }
     }
 
@@ -106,22 +112,29 @@ public class ProvidersLegacyOrderingTest extends JerseyTest {
         }
 
         @Override
-        public void writeTo(Object myType, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(Object myType,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
         }
     }
-
 
     @Path("/")
     public static class MyResource {
 
-        @Context MessageBodyWorkers messageBodyWorkers;
+        @Context
+        MessageBodyWorkers messageBodyWorkers;
 
         @GET
         public String getMyType() {
 
-            final Map<MediaType,List<MessageBodyWriter>> writers = messageBodyWorkers.getWriters(MediaType.APPLICATION_XML_TYPE);
+            final Map<MediaType, List<MessageBodyWriter>> writers = messageBodyWorkers.getWriters(MediaType.APPLICATION_XML_TYPE);
             final List<MessageBodyWriter> messageBodyWriters1 = writers.get(MediaType.APPLICATION_XML_TYPE);
-            final List<MessageBodyWriter> messageBodyWriters2 = writers.get(MediaTypes.getTypeWildCart(MediaType.APPLICATION_XML_TYPE));
+            final List<MessageBodyWriter> messageBodyWriters2 = writers
+                    .get(MediaTypes.getTypeWildCart(MediaType.APPLICATION_XML_TYPE));
 
             // custom provider has priority - it has to be first
             assertTrue(messageBodyWriters1.get(0) instanceof MyMBW5);

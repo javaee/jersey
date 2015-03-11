@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.core.Context;
+
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.model.HandlerConstructor;
@@ -64,25 +66,19 @@ import org.glassfish.jersey.uri.UriTemplate;
 /**
  * This implementation of the resource mapping context assumed resource are
  * of simple a simple type with a statically defined structure.
+ *
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 
+public class NaiveResourceMappingContext implements ResourceMappingContext {
 
-public class NaiveResourceMappingContext 
-    implements ResourceMappingContext {
-    
-    
     private ExtendedResourceContext erc;
-    
+
     private Map<Class<?>, ResourceMappingContext.Mapping> mappings;
-    
-    
-    public NaiveResourceMappingContext(@Context ExtendedResourceContext erc)
-    {
+
+    public NaiveResourceMappingContext(@Context ExtendedResourceContext erc) {
         this.erc = erc;
     }
-    
-    
 
     @Override
     public Mapping getMapping(Class<?> resource) {
@@ -90,33 +86,21 @@ public class NaiveResourceMappingContext
         return mappings.get(resource);
     }
 
-    
-    
-    
-    
     private void buildMappings() {
-        
-        if (mappings!=null) {
+        if (mappings != null) {
             return;
         }
+        mappings = new HashMap<>();
 
-        mappings 
-            = new HashMap<Class<?>, ResourceMappingContext.Mapping>();
-        
-        
-        //
-        
         erc.getResourceModel().accept(new ResourceModelVisitor() {
-            
-            StringBuffer prefix = new StringBuffer();
-            Deque<PathPattern> stack = new LinkedList<PathPattern>();
 
+            StringBuffer prefix = new StringBuffer();
+            Deque<PathPattern> stack = new LinkedList<>();
 
             private void processComponents(ResourceModelComponent component) {
-                
+
                 List<? extends ResourceModelComponent> components = component.getComponents();
-                if (components!=null)
-                {
+                if (components != null) {
                     for (ResourceModelComponent rc : components) {
                         rc.accept(this);
                     }
@@ -138,8 +122,6 @@ public class NaiveResourceMappingContext
                 processComponents(resourceModel);
             }
 
-
-
             @Override
             public void visitResourceHandlerConstructor(HandlerConstructor handlerConstructor) {
                 processComponents(handlerConstructor);
@@ -157,16 +139,15 @@ public class NaiveResourceMappingContext
 
             @Override
             public void visitResource(Resource resource) {
-                
+
                 visitResourceIntl(resource, true);
             }
-
 
             private void visitResourceIntl(Resource resource, boolean isRoot) {
                 try {
                     stack.addLast(resource.getPathPattern());
                     processComponents(resource);
-                    
+
                     if (isRoot) {
                         Class likelyToBeRoot = null;
                         for (Class next : resource.getHandlerClasses()) {
@@ -174,59 +155,46 @@ public class NaiveResourceMappingContext
                                 likelyToBeRoot = next;
                             }
                         }
-                        
-                        if (likelyToBeRoot!=null){
+
+                        if (likelyToBeRoot != null) {
                             mappings.put(likelyToBeRoot, getMapping(getTemplate()));
                         }
                     }
-                }
-                finally {
-                    stack.removeLast();                    
+                } finally {
+                    stack.removeLast();
                 }
             }
 
-
-
             @Override
             public void visitResourceMethod(ResourceMethod resourceMethod) {
-                
+
                 if (resourceMethod.isExtended()) {
                     return;
                 }
-                
+
                 if (ResourceMethod.JaxrsType.SUB_RESOURCE_LOCATOR.equals(resourceMethod.getType())) {
-                    if (resourceMethod.getInvocable()!=null) {
+                    if (resourceMethod.getInvocable() != null) {
                         Invocable i = resourceMethod.getInvocable();
-                        
+
                         final Type type = i.getResponseType();
                         final StringBuilder template = getTemplate();
-                        
-                        mappings.put((Class)type, getMapping(template));
+
+                        mappings.put((Class) type, getMapping(template));
 
                         // Process sub resources ?
-                        
-                        try {
-                            Resource.Builder builder = Resource
-                                    .builder(i.getRawResponseType());
-                            if (builder == null) {
-                                // for example in the case the return type of the sub resource locator is Object
-                                builder = Resource.builder().path(resourceMethod.getParent().getPath());
-                            }
-                            Resource subResource = builder.build();
-                            
-                            visitChildResource(subResource);
-                        }
-                        finally {
-                            
-                        }
 
+                        Resource.Builder builder = Resource
+                                .builder(i.getRawResponseType());
+                        if (builder == null) {
+                            // for example in the case the return type of the sub resource locator is Object
+                            builder = Resource.builder().path(resourceMethod.getParent().getPath());
+                        }
+                        Resource subResource = builder.build();
+
+                        visitChildResource(subResource);
                     }
-
-
-
                 }
-                
-                
+
                 processComponents(resourceMethod);
             }
 
@@ -234,55 +202,43 @@ public class NaiveResourceMappingContext
                 final StringBuilder template = new StringBuilder();
                 for (PathPattern pp : stack) {
                     String ppTemplate = pp.getTemplate().getTemplate();
-                    
+
                     int tlength = template.length();
-                    if (tlength > 0)
-                    {
-                        if (template.charAt(tlength -1) == '/') {
+                    if (tlength > 0) {
+                        if (template.charAt(tlength - 1) == '/') {
                             if (ppTemplate.startsWith("/")) {
                                 template.append(ppTemplate, 1, ppTemplate.length());
-                            }
-                            else {
+                            } else {
                                 template.append(ppTemplate);
                             }
-                        }
-                        else {
+                        } else {
                             if (ppTemplate.startsWith("/")) {
                                 template.append(ppTemplate);
-                            }
-                            else {
+                            } else {
                                 template.append("/");
                                 template.append(ppTemplate);
                             }
                         }
-                    }
-                    else {
+                    } else {
                         template.append(ppTemplate);
                     }
-                    
-                    
-                    
+
                 }
                 return template;
             }
-
         });
-        
-    
-    
+
     }
 
     private Mapping getMapping(final StringBuilder template) {
-        return new Mapping()
-        {
+        return new Mapping() {
             UriTemplate uriTemplate = new UriTemplate(template.toString());
-            
+
             @Override
             public UriTemplate getTemplate() {
                 return uriTemplate;
             }
-            
         };
     }
-    
+
 }

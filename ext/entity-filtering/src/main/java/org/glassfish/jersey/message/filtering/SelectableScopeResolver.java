@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,11 +44,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.PostConstruct;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.util.Tokenizer;
@@ -81,7 +81,7 @@ public class SelectableScopeResolver implements ScopeResolver {
     private UriInfo uriInfo;
 
     @PostConstruct
-    private void init(){
+    private void init() {
         final String paramName = (String) configuration.getProperty(SelectableEntityFilteringFeature.QUERY_PARAM_NAME);
         SELECTABLE_PARAM_NAME = paramName != null ? paramName : SELECTABLE_PARAM_NAME;
     }
@@ -110,7 +110,7 @@ public class SelectableScopeResolver implements ScopeResolver {
             final String[] subfields = Tokenizer.tokenize(field, ".");
             // in case of nested path, add first level as stand-alone to ensure subgraph is added
             scopes.add(SelectableScopeResolver.PREFIX + subfields[0]);
-            if(subfields.length > 1){
+            if (subfields.length > 1) {
                 scopes.add(SelectableScopeResolver.PREFIX + field);
             }
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,9 +66,11 @@ import static org.junit.Assert.assertTrue;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class ContainerResponseFilterOrderingTest {
+
     @Test
     public void testResponseFilter() throws ExecutionException, InterruptedException {
-        ApplicationHandler handler = new ApplicationHandler(new ResourceConfig(Resource.class, ResponseFilter1.class, ResponseFilter2.class, ResponseFilter3.class));
+        ApplicationHandler handler = new ApplicationHandler(
+                new ResourceConfig(Resource.class, ResponseFilter1.class, ResponseFilter2.class, ResponseFilter3.class));
         ContainerResponse res = handler.apply(RequestContextBuilder.from("", "/resource/", "GET").build()).get();
         assertEquals(200, res.getStatus());
     }
@@ -121,11 +123,9 @@ public class ContainerResponseFilterOrderingTest {
         }
     }
 
-
-
-
     @Path("resource")
     public static class Resource {
+
         @GET
         public Response get() {
             return Response.ok().build();

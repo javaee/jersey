@@ -150,28 +150,29 @@ public class ServerRuntime {
 
     /*package */ static final ExternalRequestScope<Object> NOOP_EXTERNAL_REQ_SCOPE = new ExternalRequestScope<Object>() {
 
-            @Override
-            public ExternalRequestContext<Object> open() {
-                return null;
-            }
+        @Override
+        public ExternalRequestContext<Object> open() {
+            return null;
+        }
 
-            @Override
-            public void close() {
-            }
+        @Override
+        public void close() {
+        }
 
-            @Override
-            public void suspend(ExternalRequestContext<Object> o) {
-            }
+        @Override
+        public void suspend(ExternalRequestContext<Object> o) {
+        }
 
-            @Override
-            public void resume(ExternalRequestContext<Object> o) {
-            }
-        };
+        @Override
+        public void resume(ExternalRequestContext<Object> o) {
+        }
+    };
 
     /**
      * Server-side request processing runtime builder.
      */
     public static class Builder {
+
         @Inject
         private ServiceLocator locator;
         @Inject
@@ -201,7 +202,8 @@ public class ServerRuntime {
                 final ApplicationEventListener eventListener,
                 final ProcessingProviders processingProviders) {
 
-            ExternalRequestScope externalScope = externalRequestScope != null ? externalRequestScope : NOOP_EXTERNAL_REQ_SCOPE;
+            final ExternalRequestScope externalScope =
+                    externalRequestScope != null ? externalRequestScope : NOOP_EXTERNAL_REQ_SCOPE;
 
             return new ServerRuntime(
                     processingRoot,
@@ -348,6 +350,7 @@ public class ServerRuntime {
     }
 
     private static class AsyncResponderHolder implements Value<AsyncContext> {
+
         private final Responder responder;
         private final ExternalRequestScope externalScope;
         private final RequestScope.Instance scopeInstance;
@@ -356,9 +359,9 @@ public class ServerRuntime {
         private volatile AsyncResponder asyncResponder;
 
         private AsyncResponderHolder(final Responder responder,
-                                        final ExternalRequestScope externalRequestScope,
-                                        final RequestScope.Instance scopeInstance,
-                                        final ExternalRequestContext<?> externalContext) {
+                                     final ExternalRequestScope externalRequestScope,
+                                     final RequestScope.Instance scopeInstance,
+                                     final ExternalRequestContext<?> externalContext) {
             this.responder = responder;
             this.externalScope = externalRequestScope;
             this.scopeInstance = scopeInstance;
@@ -385,6 +388,7 @@ public class ServerRuntime {
     }
 
     private static class Responder {
+
         private static final Logger LOGGER = Logger.getLogger(Responder.class.getName());
 
         private final RequestProcessingContext processingContext;
@@ -394,7 +398,6 @@ public class ServerRuntime {
         private final ConnectionCallbackRunner connectionCallbackRunner = new ConnectionCallbackRunner();
 
         private final TracingLogger tracingLogger;
-
 
         public Responder(final RequestProcessingContext processingContext, final ServerRuntime runtime) {
             this.processingContext = processingContext;
@@ -642,7 +645,6 @@ public class ServerRuntime {
 
             final boolean isHead = request.getMethod().equals(HttpMethod.HEAD);
 
-
             try {
                 response.setStreamProvider(new OutboundMessageContext.StreamProvider() {
                     @Override
@@ -771,6 +773,7 @@ public class ServerRuntime {
     }
 
     private static class AsyncResponder implements AsyncContext, ContainerResponseWriter.TimeoutHandler, CompletionCallback {
+
         private static final Logger LOGGER = Logger.getLogger(AsyncResponder.class.getName());
 
         private static final TimeoutHandler DEFAULT_TIMEOUT_HANDLER = new TimeoutHandler() {
@@ -909,7 +912,11 @@ public class ServerRuntime {
                 state = RESUMED;
             }
 
-            responder.runtime.requestScope.runInScope(scopeInstance, handler);
+            try {
+                responder.runtime.requestScope.runInScope(scopeInstance, handler);
+            } finally {
+                scopeInstance.release();
+            }
 
             return true;
         }
@@ -1091,7 +1098,8 @@ public class ServerRuntime {
      *
      * @param <T> callback type
      */
-    static abstract class AbstractCallbackRunner<T> {
+    abstract static class AbstractCallbackRunner<T> {
+
         private final Queue<T> callbacks = new ConcurrentLinkedQueue<>();
         private final Logger logger;
 

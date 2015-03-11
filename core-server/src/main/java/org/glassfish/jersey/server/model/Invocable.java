@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,8 +40,8 @@
 package org.glassfish.jersey.server.model;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -53,7 +53,6 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
-import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -80,9 +79,10 @@ import org.glassfish.hk2.api.ServiceLocator;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @see ResourceMethod
- * @see ResourceMethodDispatcher
+ * @see org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher
  */
 public final class Invocable implements Parameterized, ResourceModelComponent {
+
     /**
      * Method instance representing the {@link Inflector#apply(Object)} method.
      */
@@ -130,7 +130,6 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
     public static Invocable create(MethodHandler handler, Method handlingMethod) {
         return create(handler, handlingMethod, false);
     }
-
 
     /**
      * Create a new resource method invocable model.
@@ -209,10 +208,10 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
         final Class<?> handlerClass = handler.getHandlerClass();
         final Class<?> definitionClass = definitionMethod.getDeclaringClass();
         final ClassTypePair handlingCtPair = ReflectionHelper.resolveGenericType(
-                    handlerClass,
-                    this.handlingMethod.getDeclaringClass(),
-                    this.handlingMethod.getReturnType(),
-                    this.handlingMethod.getGenericReturnType());
+                handlerClass,
+                this.handlingMethod.getDeclaringClass(),
+                this.handlingMethod.getReturnType(),
+                this.handlingMethod.getGenericReturnType());
 
         // here we need to find types also for definition method. Definition method is in most
         // cases used for parent methods (for example for interface method of resource class). But here we
@@ -220,17 +219,17 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
         // method is the original method and handling method is method on proxy. So, we try to find generic
         // type in the original class using definition method.
         final ClassTypePair definitionCtPair = ReflectionHelper.resolveGenericType(
-                    definitionClass,
-                    this.definitionMethod.getDeclaringClass(),
-                    this.definitionMethod.getReturnType(),
-                    this.definitionMethod.getGenericReturnType());
+                definitionClass,
+                this.definitionMethod.getDeclaringClass(),
+                this.definitionMethod.getReturnType(),
+                this.definitionMethod.getGenericReturnType());
         this.rawResponseType = handlingCtPair.rawClass();
         final boolean handlerReturnTypeIsParameterized = handlingCtPair.type() instanceof ParameterizedType;
         final boolean definitionReturnTypeIsParameterized = definitionCtPair.type() instanceof ParameterizedType;
         this.responseType =
                 (handlingCtPair.rawClass() == definitionCtPair.rawClass()
-                         && definitionReturnTypeIsParameterized && !handlerReturnTypeIsParameterized)
-                ? definitionCtPair.type() : handlingCtPair.type();
+                        && definitionReturnTypeIsParameterized && !handlerReturnTypeIsParameterized)
+                        ? definitionCtPair.type() : handlingCtPair.type();
         if (routingResponseType == null) {
             this.routingResponseType = responseType;
             this.rawRoutingResponseType = rawResponseType;
@@ -349,11 +348,11 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
 
     @Override
     public String toString() {
-        return "Invocable{" +
-                "handler=" + handler +
-                ", definitionMethod=" + definitionMethod +
-                ", parameters=" + parameters +
-                ", responseType=" + responseType + '}';
+        return "Invocable{"
+                + "handler=" + handler
+                + ", definitionMethod=" + definitionMethod
+                + ", parameters=" + parameters
+                + ", responseType=" + responseType + '}';
     }
 
     /**

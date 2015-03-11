@@ -52,7 +52,7 @@
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <version>2.16-SNAPSHOT</version>
+    <version>2.17-SNAPSHOT</version>
     <name>jersey</name>
     <description>
         Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339)
@@ -125,22 +125,7 @@
             <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
         <developer>
-            <name>Martin Matula</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com/</organizationUrl>
-        </developer>
-        <developer>
             <name>Michal Gajdos</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com/</organizationUrl>
-        </developer>
-        <developer>
-            <name>Miroslav Fuksa</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com/</organizationUrl>
-        </developer>
-        <developer>
-            <name>Stepan Kopriva</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
@@ -380,7 +365,7 @@
                             -Prelease
 
                         mvn release:perform -DconnectionUrl="scm:git:file://<path-to-local-repo>" \
-                            -Prelease,skip-tests
+                            -Prelease,testsSkip
                     -->
                     <configuration>
                         <mavenExecutorId>forked-path</mavenExecutorId>
@@ -449,19 +434,25 @@
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${checkstyle.mvn.plugin.version}</version>
                     <configuration>
-                        <outputDirectory>${project.build.directory}/checkstyle</outputDirectory>
-                        <outputFile>${project.build.directory}/checkstyle/checkstyle-result.xml</outputFile>
                         <configLocation>etc/config/checkstyle.xml</configLocation>
                         <suppressionsLocation>etc/config/checkstyle-suppressions.xml</suppressionsLocation>
+                        <outputFile>${project.build.directory}/checkstyle/checkstyle-result.xml</outputFile>
+                        <outputDirectory>${project.build.directory}/checkstyle</outputDirectory>
                     </configuration>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>checkstyle</goal>
-                            </goals>
-                            <phase>validate</phase>
-                        </execution>
-                    </executions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>${checkstyle.version}</version>
+                            <exclusions>
+                                <!-- MCHECKSTYLE-156 -->
+                                <exclusion>
+                                    <groupId>com.sun</groupId>
+                                    <artifactId>tools</artifactId>
+                                </exclusion>
+                            </exclusions>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -529,7 +520,7 @@
                 <plugin>
                     <groupId>org.glassfish.copyright</groupId>
                     <artifactId>glassfish-copyright-maven-plugin</artifactId>
-                    <version>1.28</version>
+                    <version>1.39</version>
                     <configuration>
                         <excludeFile>etc/config/copyright-exclude</excludeFile>
                         <!--svn|mercurial|git - defaults to svn-->
@@ -682,6 +673,26 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>verify</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <!-- Fail the build if checkstyle rules for contributions are not met. -->
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <configLocation>etc/config/checkstyle-verify.xml</configLocation>
+                            <consoleOutput>true</consoleOutput>
+                            <failOnViolation>true</failOnViolation>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <extensions>
             <extension>
@@ -695,7 +706,7 @@
     <profiles>
         <profile>
             <!-- Use it with release-perform goal to skip another test run. -->
-            <id>skip-tests</id>
+            <id>testsSkip</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
@@ -703,6 +714,36 @@
                 <skip.release.tests>-Dmaven.test.skip=true -Dskip.tests=true</skip.release.tests>
                 <skip.tests>true</skip.tests>
             </properties>
+        </profile>
+        <profile>
+            <id>checkstyleSkip</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <checkstyle.skip>true</checkstyle.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>findbugsSkip</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <findbugs.skip>true</findbugs.skip>
+            </properties>
+        </profile>
+        <profile> <!-- tests module will automatically be included unless tests.excluded env variable is set -->
+            <id>testsIncluded</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <property>
+                  <name>!tests.excluded</name>
+                </property>
+            </activation>
+            <modules>
+                <module>tests</module>
+            </modules>
         </profile>
         <profile>
             <id>release</id>
@@ -845,6 +886,7 @@
                 <jdk>1.8</jdk>
             </activation>
             <modules>
+                <module>examples/default-method-java8-webapp</module>
                 <module>examples/rx-client-java8-webapp</module>
                 <module>incubator/rx/rx-client-java8</module>
             </modules>
@@ -1014,7 +1056,6 @@
         <module>security</module>
         <module>test-framework</module>
 
-        <module>tests</module>
         <!--module>tools</module-->
     </modules>
 
@@ -1152,22 +1193,24 @@
 
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-util</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-client</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-server</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-webapp</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-continuation</artifactId>
@@ -1480,6 +1523,13 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.jmockit</groupId>
+                <artifactId>jmockit</artifactId>
+                <version>${jmockit.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>org.ops4j.pax.web</groupId>
                 <artifactId>pax-web-jetty-bundle</artifactId>
                 <version>${pax.web.version}</version>
@@ -1489,7 +1539,16 @@
                 <artifactId>pax-web-extender-war</artifactId>
                 <version>${pax.web.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${jmh.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-generator-annprocess</artifactId>
+                <version>${jmh.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -1516,7 +1575,8 @@
         <jersey.version>${project.version}</jersey.version>
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>
-        <checkstyle.mvn.plugin.version>2.12.1</checkstyle.mvn.plugin.version>
+        <checkstyle.mvn.plugin.version>2.14</checkstyle.mvn.plugin.version>
+        <checkstyle.version>6.3</checkstyle.version>
         <ejb.version>3.2</ejb.version>
         <gf.impl.version>4.0</gf.impl.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
@@ -1528,7 +1588,7 @@
         <grizzly2.version>2.3.16</grizzly2.version>
         <guava.version>14.0.1</guava.version>
         <hamcrest.version>1.3</hamcrest.version>
-        <hk2.version>2.4.0-b06</hk2.version>
+        <hk2.version>2.4.0-b10</hk2.version>
         <asm.version>5.0.2</asm.version>
         <httpclient.version>4.3.1</httpclient.version>
         <jackson.version>2.3.2</jackson.version>
@@ -1550,6 +1610,8 @@
         <jetty.plugin.version>6.1.24</jetty.plugin.version>
         <jetty.version>9.1.1.v20140108</jetty.version>
         <jetty.servlet.api.25.version>6.1.14</jetty.servlet.api.25.version>
+        <jmh.version>1.5.2</jmh.version>
+        <jmockit.version>1.14</jmockit.version>
         <jsonp.ri.version>1.0.4</jsonp.ri.version>
         <jsonp.jaxrs.version>1.0</jsonp.jaxrs.version>
         <jsp.version>2.0</jsp.version>

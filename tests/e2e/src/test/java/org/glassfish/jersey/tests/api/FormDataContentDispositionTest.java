@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,8 +45,8 @@ import java.util.Date;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.message.internal.HttpDateFormat;
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
-import org.junit.Test;
 
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -59,7 +59,6 @@ public class FormDataContentDispositionTest extends ContentDispositionTest {
         contentDispositionType = "form-data";
     }
 
-
     @Test
     @Override
     public void testCreate() {
@@ -71,7 +70,8 @@ public class FormDataContentDispositionTest extends ContentDispositionTest {
         try {
             final String dateString = HttpDateFormat.getPreferredDateFormat().format(date);
             final String header = contentDispositionType + ";filename=\"test.file\";creation-date=\"" + dateString
-                    + "\";modification-date=\"" + dateString + "\";read-date=\"" + dateString + "\";size=1222" + ";name=\"testData\"";
+                    + "\";modification-date=\"" + dateString + "\";read-date=\"" + dateString + "\";size=1222"
+                    + ";name=\"testData\"";
 
             contentDisposition = new FormDataContentDisposition(contentDisposition.toString());
             assertFormDataContentDisposition(contentDisposition, date);
@@ -79,38 +79,31 @@ public class FormDataContentDispositionTest extends ContentDispositionTest {
             assertFormDataContentDisposition(contentDisposition, date);
             contentDisposition = new FormDataContentDisposition(HttpHeaderReader.newInstance(header), true);
             assertFormDataContentDisposition(contentDisposition, date);
-        }
-        catch (final ParseException ex) {
+        } catch (final ParseException ex) {
             fail(ex.getMessage());
         }
         try {
             new FormDataContentDisposition((HttpHeaderReader) null, true);
             fail("NullPointerException was expected to be thrown.");
-        }
-        catch (final ParseException exception) {
+        } catch (final ParseException exception) {
             fail(exception.getMessage());
-        }
-        catch (final NullPointerException exception) {
+        } catch (final NullPointerException exception) {
             //expected
         }
         try {
             new FormDataContentDisposition("form-data;filename=\"test.file\"");
             fail("IllegalArgumentException was expected to be thrown.");
-        }
-        catch (final ParseException exception) {
+        } catch (final ParseException exception) {
             fail(exception.getMessage());
-        }
-        catch (final IllegalArgumentException exception) {
+        } catch (final IllegalArgumentException exception) {
             //expected
         }
         try {
             FormDataContentDisposition.name(null).build();
             fail("IllegalArgumentException was expected to be thrown.");
-        }
-        catch (final IllegalArgumentException exception) {
+        } catch (final IllegalArgumentException exception) {
             //expected
-        }
-        catch (final Exception exception) {
+        } catch (final Exception exception) {
             fail(exception.getMessage());
         }
     }
@@ -120,11 +113,12 @@ public class FormDataContentDispositionTest extends ContentDispositionTest {
     public void testToString() {
         final Date date = new Date();
         final FormDataContentDisposition contentDisposition = FormDataContentDisposition.name("testData")
-                .fileName("test.file").creationDate(date).modificationDate(date).
-                readDate(date).size(1222).build();
+                .fileName("test.file").creationDate(date).modificationDate(date)
+                        .readDate(date).size(1222).build();
         final String dateString = HttpDateFormat.getPreferredDateFormat().format(date);
         final String header = contentDispositionType + "; filename=\"test.file\"; creation-date=\"" + dateString
-                + "\"; modification-date=\"" + dateString + "\"; read-date=\"" + dateString + "\"; size=1222" + "; name=\"testData\"";
+                + "\"; modification-date=\"" + dateString + "\"; read-date=\"" + dateString + "\"; size=1222"
+                + "; name=\"testData\"";
 
         assertEquals(header, contentDisposition.toString());
     }
@@ -133,6 +127,5 @@ public class FormDataContentDispositionTest extends ContentDispositionTest {
         assertContentDisposition(contentDisposition, date);
         assertEquals("testData", contentDisposition.getName());
     }
-
 
 }

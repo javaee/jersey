@@ -54,6 +54,8 @@ public class MyHk2TypesProvider implements Hk2CustomBoundTypesProvider {
 
     @Override
     public Set<Type> getHk2Types() {
-        return new HashSet<Type>(){{add(MyApplication.MyInjection.class);}};
+        return new HashSet<Type>() {{
+            add(MyApplication.MyInjection.class);
+        }};
     }
 }

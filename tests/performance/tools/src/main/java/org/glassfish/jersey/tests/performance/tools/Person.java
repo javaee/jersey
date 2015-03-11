@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,14 +72,24 @@ public class Person {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Person person = (Person) o;
 
-        if (age != person.age) return false;
-        if (address != null ? !address.equals(person.address) : person.address != null) return false;
-        if (name != null ? !name.equals(person.name) : person.name != null) return false;
+        if (age != person.age) {
+            return false;
+        }
+        if (address != null ? !address.equals(person.address) : person.address != null) {
+            return false;
+        }
+        if (name != null ? !name.equals(person.name) : person.name != null) {
+            return false;
+        }
 
         return true;
     }

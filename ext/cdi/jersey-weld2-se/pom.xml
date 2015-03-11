@@ -46,12 +46,12 @@
     <parent>
         <groupId>org.glassfish.jersey.ext.cdi</groupId>
         <artifactId>project</artifactId>
-        <version>2.16-SNAPSHOT</version>
+        <version>2.17-SNAPSHOT</version>
     </parent>
 
     <artifactId>jersey-weld2-se</artifactId>
     <packaging>jar</packaging>
-    <name>jersey-weld2-se</name>
+    <name>jersey-ext-weld2-se</name>
 
     <description>WELD 2.x SE support</description>
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,13 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.cdi.resources;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.annotation.ManagedBean;
-import javax.annotation.PostConstruct;
 
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
@@ -52,10 +50,13 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import javax.annotation.ManagedBean;
+import javax.annotation.PostConstruct;
+
 /**
  * JAX-RS exception mapper registered as a CDI managed bean.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Provider
@@ -64,9 +65,11 @@ public class JCDIBeanDependentExceptionMapper implements ExceptionMapper<JDCIBea
 
     private static final Logger LOGGER = Logger.getLogger(JCDIBeanDependentExceptionMapper.class.getName());
 
-    private @Context UriInfo uiFieldInject;
+    @Context
+    private UriInfo uiFieldInject;
 
-    private @Context ResourceContext resourceContext;
+    @Context
+    private ResourceContext resourceContext;
 
     private UriInfo uiMethodInject;
 
@@ -80,7 +83,6 @@ public class JCDIBeanDependentExceptionMapper implements ExceptionMapper<JDCIBea
         LOGGER.log(Level.INFO, String.format("In post construct of %s", this));
         ensureInjected();
     }
-
 
     @Override
     public Response toResponse(JDCIBeanDependentException exception) {

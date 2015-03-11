@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -79,7 +79,7 @@ public abstract class JsonTestProvider {
 
     private Feature feature;
     private JettisonConfig configuration;
-    private Set<Object> providers = new LinkedHashSet<Object>();
+    private Set<Object> providers = new LinkedHashSet<>();
 
     public static class JettisonMappedJsonTestProvider extends JsonTestProvider {
 
@@ -118,13 +118,13 @@ public abstract class JsonTestProvider {
     }
 
     @Provider
-    protected final static class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyJsonConfig> {
+    protected static final class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyJsonConfig> {
 
         @Override
         public MoxyJsonConfig getContext(final Class<?> objectType) {
             final MoxyJsonConfig configuration = new MoxyJsonConfig();
 
-            final Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
+            final Map<String, String> namespacePrefixMapper = new HashMap<>(1);
             namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
             namespacePrefixMapper.put("http://example.com", "example");
             namespacePrefixMapper.put("http://test.jaxb.com", "jaxb");

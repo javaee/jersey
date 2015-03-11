@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -148,7 +148,8 @@ public final class PathPattern extends PatternWithGroups {
      */
     public PathPattern(PathTemplate template) {
         super(postfixWithCapturingGroup(template.getPattern().getRegex()),
-                addIndexForRightHandPathCapturingGroup(template.getNumberOfRegexGroups(), template.getPattern().getGroupIndexes()));
+                addIndexForRightHandPathCapturingGroup(template.getNumberOfRegexGroups(),
+                        template.getPattern().getGroupIndexes()));
 
         this.template = template;
     }
@@ -171,7 +172,8 @@ public final class PathPattern extends PatternWithGroups {
      */
     public PathPattern(PathTemplate template, RightHandPath rhpp) {
         super(postfixWithCapturingGroup(template.getPattern().getRegex(), rhpp),
-                addIndexForRightHandPathCapturingGroup(template.getNumberOfRegexGroups(), template.getPattern().getGroupIndexes()));
+                addIndexForRightHandPathCapturingGroup(template.getNumberOfRegexGroups(),
+                        template.getPattern().getGroupIndexes()));
 
         this.template = template;
     }

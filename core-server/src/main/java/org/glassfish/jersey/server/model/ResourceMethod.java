@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -689,14 +689,14 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
 
         @Override
         public String toString() {
-            return "httpMethod=" + httpMethod +
-                    ", consumedTypes=" + consumedTypes +
-                    ", producedTypes=" + producedTypes +
-                    ", suspended=" + suspended +
-                    ", suspendTimeout=" + suspendTimeout +
-                    ", suspendTimeoutUnit=" + suspendTimeoutUnit +
-                    ", invocable=" + invocable +
-                    ", nameBindings=" + nameBindings;
+            return "httpMethod=" + httpMethod
+                    + ", consumedTypes=" + consumedTypes
+                    + ", producedTypes=" + producedTypes
+                    + ", suspended=" + suspended
+                    + ", suspendTimeout=" + suspendTimeout
+                    + ", suspendTimeoutUnit=" + suspendTimeoutUnit
+                    + ", invocable=" + invocable
+                    + ", nameBindings=" + nameBindings;
         }
     }
 

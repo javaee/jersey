@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
 * only if the new code is made subject to such option by the copyright
 * holder.
 */
+
 package org.glassfish.jersey.apache.connector;
 
 import javax.ws.rs.GET;
@@ -64,19 +65,20 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public class CookieTest extends JerseyTest {
 
     @Path("/")
     public static class CookieResource {
+
         @GET
         public Response get(@Context HttpHeaders h) {
             Cookie c = h.getCookies().get("name");
             String e = (c == null) ? "NO-COOKIE" : c.getValue();
-            return Response.ok(e).
-                    cookie(new NewCookie("name", "value")).build();
+            return Response.ok(e)
+                    .cookie(new NewCookie("name", "value")).build();
         }
     }
 
@@ -91,7 +93,6 @@ public class CookieTest extends JerseyTest {
         cc.connectorProvider(new ApacheConnectorProvider());
         Client client = ClientBuilder.newClient(cc);
         WebTarget r = client.target(getBaseUri());
-
 
         assertEquals("NO-COOKIE", r.request().get(String.class));
         assertEquals("value", r.request().get(String.class));

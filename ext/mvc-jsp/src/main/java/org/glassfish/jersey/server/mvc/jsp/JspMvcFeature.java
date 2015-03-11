@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,7 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 @ConstrainedTo(RuntimeType.SERVER)
 public final class JspMvcFeature implements Feature {
 
-    private final static String SUFFIX = ".jsp";
+    private static final String SUFFIX = ".jsp";
 
     /**
      * {@link String} property defining the base path to JSP templates. If set, the value of the property is added in front
@@ -75,6 +75,26 @@ public final class JspMvcFeature implements Feature {
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
+    public static final String TEMPLATE_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + SUFFIX;
+
+    /**
+     * {@link String} property defining the base path to JSP templates. If set, the value of the property is added in front
+     * of the template name defined in:
+     * <ul>
+     * <li>{@link org.glassfish.jersey.server.mvc.Viewable Viewable}</li>
+     * <li>{@link org.glassfish.jersey.server.mvc.Template Template}, or</li>
+     * <li>{@link org.glassfish.jersey.server.mvc.ErrorTemplate ErrorTemplate}</li>
+     * </ul>
+     * <p/>
+     * Value can be absolute or relative to current {@link javax.servlet.ServletContext servlet context}.
+     * <p/>
+     * There is no default value.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Use {@link #TEMPLATE_BASE_PATH} instead.
+     */
+    @Deprecated
     public static final String TEMPLATES_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + SUFFIX;
 
 

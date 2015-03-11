@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,7 +68,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class ImplicitViewWithResourceFilterTest extends JerseyTest {
@@ -84,7 +84,7 @@ public class ImplicitViewWithResourceFilterTest extends JerseyTest {
                 .register(FilterTwo.class)
                 .register(TestViewProcessor.class);
     }
-    
+
     @Path("/")
     @Template
     public static class ImplicitTemplate {
@@ -161,7 +161,8 @@ public class ImplicitViewWithResourceFilterTest extends JerseyTest {
 
         Properties p = new Properties();
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitViewWithResourceFilterTest/ImplicitTemplate/index.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitViewWithResourceFilterTest/ImplicitTemplate/index.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitTemplate", p.getProperty("model"));
     }
 }

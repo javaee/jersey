@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,8 @@ public class Jersey1835Test extends AbstractJsonTest {
     @Parameterized.Parameters()
     public static Collection<JsonTestSetup[]> generateTestCases() throws Exception {
         final List<JsonTestSetup[]> result = new LinkedList<JsonTestSetup[]>();
-        result.add(new JsonTestSetup[]{new JsonTestSetup(new Class<?>[]{SingleItemListWrapperBean.class}, new JsonTestProvider.JettisonMappedJsonTestProvider())});
+        result.add(new JsonTestSetup[] {new JsonTestSetup(new Class<?>[] {SingleItemListWrapperBean.class},
+                new JsonTestProvider.JettisonMappedJsonTestProvider())});
         return result;
     }
 

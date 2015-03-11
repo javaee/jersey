@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,24 +70,24 @@ import jersey.repackaged.com.google.common.collect.Sets;
  */
 public class JsonProcessingResourceTest extends JerseyTest {
 
-    private final static List<JsonObject> documents = Lists.newArrayList();
+    private static final List<JsonObject> documents = Lists.newArrayList();
 
     static {
         documents.add(Json.createObjectBuilder()
-                .add("name", "Jersey")
-                .add("site", "http://jersey.java.net")
-                .build()
+                        .add("name", "Jersey")
+                        .add("site", "http://jersey.java.net")
+                        .build()
         );
         documents.add(Json.createObjectBuilder()
-                .add("age", 33)
-                .add("phone", "158158158")
-                .add("name", "Foo")
-                .build()
+                        .add("age", 33)
+                        .add("phone", "158158158")
+                        .add("name", "Foo")
+                        .build()
         );
         documents.add(Json.createObjectBuilder()
-                .add("name", "JSON-P")
-                .add("site", "http://jsonp.java.net")
-                .build()
+                        .add("name", "JSON-P")
+                        .add("site", "http://jsonp.java.net")
+                        .build()
         );
     }
 

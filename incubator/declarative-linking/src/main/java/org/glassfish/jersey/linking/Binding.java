@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,12 +43,13 @@ package org.glassfish.jersey.linking;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import org.glassfish.jersey.Beta;
 
 /**
  * Specifies the binding between a URI template parameter and a bean property.
  * @see org.glassfish.jersey.linking.InjectLink#bindings()
- * 
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
@@ -56,8 +57,9 @@ import org.glassfish.jersey.Beta;
 @Retention(RetentionPolicy.RUNTIME)
 @Beta
 public @interface Binding {
+
     /**
-     * Specifies the name of the URI template parameter, defaults to 
+     * Specifies the name of the URI template parameter, defaults to
      * "value" for convenience.
      */
     String name() default "value";
@@ -72,7 +74,7 @@ public @interface Binding {
      * <dl>
      * <dt><code>instance</code></dt><dd>The object whose class contains the
      * {@link org.glassfish.jersey.linking.InjectLink} annotation.</dd>
-     * <dt><code>entity</code></dt><dd>The entity returned by the resource 
+     * <dt><code>entity</code></dt><dd>The entity returned by the resource
      * class method. This is either the resource method return value
      * or the entity property for a resource method that returns Response.</dd>
      * <dt><code>resource</code></dt><dd>The resource class instance that

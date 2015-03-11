@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,6 @@ package org.glassfish.jersey.client;
 import java.util.Arrays;
 import java.util.Map;
 
-import javax.net.ssl.SSLSocketFactory;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
@@ -63,7 +62,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -161,9 +159,6 @@ public class ClientConfigTest {
 
         final ClientConfig runtimeConfig = runtime.getConfig();
 
-        assertEquals(1, runtimeConfig.getClasses().size());
-        assertEquals(1, runtimeConfig.getInstances().size());
-
         assertTrue(runtimeConfig.isRegistered(MyProvider.class));
         assertTrue(runtimeConfig.isEnabled(feature));
 
@@ -252,13 +247,5 @@ public class ClientConfigTest {
         assertFalse(instance.getProperties().isEmpty());
         assertEquals(1, instance.getProperties().size());
         assertEquals("value", instance.getProperty("name"));
-    }
-
-    @Test
-    public void testSSLSocketFactoryReuse() throws Exception {
-      JerseyClient jerseyClient = new JerseyClient(null, SSLContext.getDefault(), null);
-      SSLSocketFactory sslSocketFactory = jerseyClient.getSslSocketFactory();
-      assertNotNull(sslSocketFactory);
-      assertSame(sslSocketFactory, jerseyClient.getSslSocketFactory());
     }
 }

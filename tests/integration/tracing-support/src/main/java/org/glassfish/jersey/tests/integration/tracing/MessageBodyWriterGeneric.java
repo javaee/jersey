@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -56,20 +57,24 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Produces("*/*")
 public class MessageBodyWriterGeneric implements MessageBodyWriter<Message> {
+
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        //System.out.println("*** MessageBodyWriterGeneric.isWriteable");
         return false;
     }
 
     @Override
     public long getSize(Message message, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        //System.out.println("*** MessageBodyWriterGeneric.getSize");
         return -1;
     }
 
     @Override
-    public void writeTo(Message message, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
-        //System.out.println("*** MessageBodyWriterGeneric.writeTo");
+    public void writeTo(Message message,
+                        Class<?> type,
+                        Type genericType,
+                        Annotation[] annotations,
+                        MediaType mediaType,
+                        MultivaluedMap<String, Object> httpHeaders,
+                        OutputStream entityStream) throws IOException, WebApplicationException {
     }
 }

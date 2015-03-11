@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,30 +40,30 @@
     holder.
 -->
 
-<!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.2//EN" "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+<!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.3//EN" "http://www.puppycrawl.com/dtds/configuration_1_3.dtd">
 <!--
-  This file is based on maven-checkstyle-plugin config/sun_checks.xml file.
+    This file is based on maven-checkstyle-plugin config/sun_checks.xml file.
 
-  Checkstyle configuration that checks the coding conventions based on:
+    Checkstyle configuration that checks the coding conventions based on:
 
-    - the Java Language Specification at
-      http://java.sun.com/docs/books/jls/second_edition/html/index.html
+      - the Java Language Specification at
+        http://java.sun.com/docs/books/jls/second_edition/html/index.html
 
-    - the Sun Code Conventions at http://java.sun.com/docs/codeconv/
+      - the Sun Code Conventions at http://java.sun.com/docs/codeconv/
 
-    - the Javadoc guidelines at
-      http://java.sun.com/j2se/javadoc/writingdoccomments/index.html
+      - the Javadoc guidelines at
+        http://java.sun.com/j2se/javadoc/writingdoccomments/index.html
 
-    - the JDK Api documentation http://java.sun.com/j2se/docs/api/index.html
+      - the JDK Api documentation http://java.sun.com/j2se/docs/api/index.html
 
-    - some custom relaxations of the rules above & best practices
+      - some custom relaxations of the rules above & best practices
 
-  Checkstyle is very configurable. Be sure to read the documentation at
-  http://checkstyle.sf.net (or in your downloaded distribution).
+    Checkstyle is very configurable. Be sure to read the documentation at
+    http://checkstyle.sf.net (or in your downloaded distribution).
 
-  Most Checks are configurable, be sure to consult the documentation.
-  To completely disable a check, just comment it out or delete it from the file.
-  Finally, it is worth reading the documentation.
+    Most Checks are configurable, be sure to consult the documentation.
+    To completely disable a check, just comment it out or delete it from the file.
+    Finally, it is worth reading the documentation.
 -->
 
 <module name="Checker">
@@ -74,6 +74,7 @@
 
         <property name="basedir" value="${basedir}"/>
     -->
+    <property name="charset" value="UTF-8"/>
 
     <!-- Checks that each Java package has a Javadoc file used for commenting. -->
     <!-- See http://checkstyle.sf.net/config_javadoc.html#JavadocPackage       -->
@@ -81,7 +82,7 @@
 
     <!-- Checks whether files end with a new line.                        -->
     <!-- See http://checkstyle.sf.net/config_misc.html#NewlineAtEndOfFile -->
-    <module name="NewlineAtEndOfFile"/>
+    <module name="NewlineAtEndOfFile" />
 
     <!-- Checks that property files contain the same keys.         -->
     <!-- See http://checkstyle.sf.net/config_misc.html#Translation -->
@@ -92,14 +93,16 @@
     <!-- Following interprets the header file as regular expressions. -->
     <!-- <module name="RegexpHeader"/>                                -->
 
-    <module name="FileTabCharacter">
+    <!-- Present in checkstyle-verify.xml -->
+    <!--<module name="FileTabCharacter">
         <property name="eachLine" value="true"/>
-    </module>
+    </module>-->
 
-    <module name="RegexpSingleline">
+    <!-- Present in checkstyle-verify.xml -->
+    <!--<module name="RegexpSingleline">
         <property name="format" value="\S+\s+$"/>
         <property name="message" value="Non-empty line has trailing spaces."/>
-    </module>
+    </module>-->
 
     <module name="TreeWalker">
         <property name="cacheFile" value="${checkstyle.cache.file}"/>
@@ -119,7 +122,6 @@
         </module>
         <module name="JavadocStyle"/>
 
-
         <!-- Checks for Naming Conventions.                  -->
         <!-- See http://checkstyle.sf.net/config_naming.html -->
         <module name="ConstantName"/>
@@ -131,7 +133,6 @@
         <module name="ParameterName"/>
         <module name="StaticVariableName"/>
         <module name="TypeName"/>
-
 
         <!-- Checks for Headers                                -->
         <!-- See http://checkstyle.sf.net/config_header.html   -->
@@ -147,54 +148,53 @@
             <!--     value="${basedir}/java.header"/>                   -->
         <!-- </module> -->
 
-
         <!-- Checks for imports                              -->
         <!-- See http://checkstyle.sf.net/config_import.html -->
-        <module name="AvoidStarImport"/>
         <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
+        <!-- Present in checkstyle-verify.xml -->
+        <!--<module name="AvoidStarImport"/>-->
         <module name="RedundantImport"/>
-        <module name="UnusedImports"/>
-
+        <!-- Present in checkstyle-verify.xml -->
+        <!--<module name="UnusedImports"/>-->
 
         <!-- Checks for Size Violations.                    -->
         <!-- See http://checkstyle.sf.net/config_sizes.html -->
-        <module name="LineLength">
+        <!-- Present in checkstyle-verify.xml -->
+        <!--<module name="LineLength">
             <property name="max" value="130"/>
             <property name="ignorePattern" value="@version|@see|@todo|TODO"/>
-        </module>
+        </module>-->
         <module name="MethodLength"/>
         <module name="ParameterNumber"/>
-
 
         <!-- Checks for whitespace                               -->
         <!-- See http://checkstyle.sf.net/config_whitespace.html -->
         <module name="EmptyForIteratorPad"/>
-        <module name="MethodParamPad"/>
+        <module name="OperatorWrap"/>
+        <!-- Present in checkstyle-verify.xml -->
+        <!--<module name="MethodParamPad"/>
         <module name="NoWhitespaceAfter"/>
         <module name="NoWhitespaceBefore"/>
-        <module name="OperatorWrap"/>
         <module name="ParenPad"/>
         <module name="TypecastParenPad"/>
         <module name="WhitespaceAfter"/>
         <module name="WhitespaceAround">
             <property name="allowEmptyConstructors" value="true"/>
-        </module>
-
+        </module>-->
 
         <!-- Modifier Checks                                    -->
         <!-- See http://checkstyle.sf.net/config_modifiers.html -->
-        <module name="ModifierOrder"/>
+        <!--<module name="ModifierOrder"/>-->
         <module name="RedundantModifier"/>
-
 
         <!-- Checks for blocks. You know, those {}'s         -->
         <!-- See http://checkstyle.sf.net/config_blocks.html -->
         <module name="AvoidNestedBlocks"/>
-        <module name="EmptyBlock"/>
+        <!-- Present in checkstyle-verify.xml -->
+        <!--<module name="EmptyBlock"/>
         <module name="LeftCurly"/>
         <module name="NeedBraces"/>
-        <module name="RightCurly"/>
-
+        <module name="RightCurly"/>-->
 
         <!-- Checks for common coding problems               -->
         <!-- See http://checkstyle.sf.net/config_coding.html -->
@@ -211,15 +211,17 @@
             <property name="ignoreHashCodeMethod" value="true"/>
         </module>
         <module name="MissingSwitchDefault"/>
-        <module name="RedundantThrows">
+
+        <!-- TODO: Ignoring module until this bug is resolved: https://jira.codehaus.org/browse/MCHECKSTYLE-271 -->
+        <!--<module name="RedundantThrows">
             <property name="allowUnchecked" value="true"/>
-        </module>
+        </module>-->
+
         <module name="RedundantModifier">
             <property name="tokens" value="INTERFACE_DEF"/>
         </module>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
-
 
         <!-- Checks for class design                         -->
         <!-- See http://checkstyle.sf.net/config_design.html -->
@@ -232,13 +234,12 @@
             <property name="max" value="3"/>
         </module>
 
-
-
         <!-- Miscellaneous other checks.                   -->
         <!-- See http://checkstyle.sf.net/config_misc.html -->
         <module name="ArrayTypeStyle"/>
         <module name="FinalParameters"/>
         <module name="TodoComment"/>
-        <module name="UpperEll"/>
+        <!-- Present in checkstyle-verify.xml -->
+        <!--<module name="UpperEll"/>-->
     </module>
 </module>

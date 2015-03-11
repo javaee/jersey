@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,9 +61,9 @@ import org.glassfish.jersey.jettison.internal.entity.JettisonRootElementProvider
  */
 public class JettisonFeature implements Feature {
 
-    private final static String JSON_FEATURE = JettisonFeature.class.getSimpleName();
+    private static final String JSON_FEATURE = JettisonFeature.class.getSimpleName();
 
-    private static Class[] PROVIDERS = new Class[]{
+    private static Class[] PROVIDERS = new Class[] {
             JettisonArrayProvider.App.class,
             JettisonArrayProvider.General.class,
 

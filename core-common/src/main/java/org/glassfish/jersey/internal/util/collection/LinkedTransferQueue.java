@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2009-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -86,6 +86,8 @@ import java.util.concurrent.locks.LockSupport;
  * <p>This class is a member of the
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
+ *
+ * TODO: Do NOT remove this class. It's referenced from {@link org.glassfish.jersey.internal.util.collection.DataStructures}.
  *
  * @param <E> the type of elements held in this collection.
  * @author Doug Lea

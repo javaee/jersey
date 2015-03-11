@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,6 +75,7 @@ public class EntityTest extends JerseyTest {
 
     @Path("/test")
     public static class EntityResource {
+
         @GET
         public Person get() {
             return new Person("John", "Doe");
@@ -89,6 +90,7 @@ public class EntityTest extends JerseyTest {
 
     @XmlRootElement
     public static class Person {
+
         private String firstName;
         private String lastName;
 
@@ -167,10 +169,12 @@ public class EntityTest extends JerseyTest {
 
     @Test
     public void testPostAsync() throws ExecutionException, InterruptedException, TimeoutException {
-        Response response = target(PATH).request(MediaType.APPLICATION_XML_TYPE).async().post(Entity.xml(new Person("John", "Doe"))).get();
+        Response response = target(PATH).request(MediaType.APPLICATION_XML_TYPE).async()
+                .post(Entity.xml(new Person("John", "Doe"))).get();
         Person person = response.readEntity(Person.class);
         assertEquals("John Doe", person.toString());
-        response = target(PATH).request(MediaType.APPLICATION_JSON_TYPE).async().post(Entity.xml(new Person("John", "Doe"))).get();
+        response = target(PATH).request(MediaType.APPLICATION_JSON_TYPE).async().post(Entity.xml(new Person("John", "Doe")))
+                .get();
         person = response.readEntity(Person.class);
         assertEquals("John Doe", person.toString());
     }

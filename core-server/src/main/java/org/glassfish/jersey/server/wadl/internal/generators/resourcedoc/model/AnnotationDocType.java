@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,15 +50,13 @@ import javax.xml.bind.annotation.XmlType;
 /**
  * The documentation type for annotations.<br>
  * Created on: Jun 12, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "annotationDoc", propOrder = {
-
-})
+@XmlType(name = "annotationDoc", propOrder = {})
 public class AnnotationDocType {
-    
+
     private String annotationTypeName;
 
     @XmlElementWrapper(name = "attributes")
@@ -66,11 +64,11 @@ public class AnnotationDocType {
 
     public List<NamedValueType> getAttributeDocs() {
         if (attribute == null) {
-            attribute = new ArrayList<NamedValueType>();
+            attribute = new ArrayList<>();
         }
         return this.attribute;
     }
-    
+
     public boolean hasAttributeDocs() {
         return attribute != null && !attribute.isEmpty();
     }
@@ -85,8 +83,8 @@ public class AnnotationDocType {
     /**
      * @param annotationTypeName the annotationTypeName to set
      */
-    public void setAnnotationTypeName( String annotationTypeName ) {
+    public void setAnnotationTypeName(String annotationTypeName) {
         this.annotationTypeName = annotationTypeName;
     }
-    
+
 }

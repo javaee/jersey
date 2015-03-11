@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
 import java.io.IOException;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -49,19 +50,22 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * This is just test purpose {@link Filter servlet filter} implementation to demonstrate how to register filter for any Jersey Servlet.
+ * This is just test purpose {@link Filter servlet filter} implementation to demonstrate how to register filter for any Jersey
+ * Servlet.
  * The filter class is added in {@link TestServletContainerProvider}.
  *
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class TestFilter implements Filter {
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if (((HttpServletRequest)request).getRequestURI().startsWith("/application5")) {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        if (((HttpServletRequest) request).getRequestURI().startsWith("/application5")) {
             request.setAttribute("FILTER", TestServletContainerProvider.TEST_FILTER);
         }
 

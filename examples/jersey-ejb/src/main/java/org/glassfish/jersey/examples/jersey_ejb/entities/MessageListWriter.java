@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,7 +69,8 @@ import org.glassfish.jersey.message.MessageUtils;
 @Provider
 public class MessageListWriter implements MessageBodyWriter<List<Message>> {
 
-    @Context private javax.inject.Provider<UriInfo> ui;
+    @Context
+    private javax.inject.Provider<UriInfo> ui;
 
     @Override
     public boolean isWriteable(final Class<?> clazz, final Type type, final Annotation[] annotation, final MediaType mediaType) {
@@ -81,7 +82,7 @@ public class MessageListWriter implements MessageBodyWriter<List<Message>> {
             return false;
         }
 
-        final ParameterizedType pt = (ParameterizedType)genericType;
+        final ParameterizedType pt = (ParameterizedType) genericType;
 
         if (pt.getActualTypeArguments().length > 1) {
             return false;
@@ -91,17 +92,27 @@ public class MessageListWriter implements MessageBodyWriter<List<Message>> {
             return false;
         }
 
-        final Class listClass = (Class)pt.getActualTypeArguments()[0];
+        final Class listClass = (Class) pt.getActualTypeArguments()[0];
         return listClass == Message.class;
     }
 
     @Override
-    public long getSize(final List<Message> messages, final Class<?> clazz, final Type type, final Annotation[] annotation, final MediaType mediaType) {
+    public long getSize(final List<Message> messages,
+                        final Class<?> clazz,
+                        final Type type,
+                        final Annotation[] annotation,
+                        final MediaType mediaType) {
         return -1;
     }
 
     @Override
-    public void writeTo(final List<Message> messages, final Class<?> clazz, final Type type, final Annotation[] annotation, final MediaType mediaType, final MultivaluedMap<String, Object> arg5, final OutputStream ostream) throws IOException, WebApplicationException {
+    public void writeTo(final List<Message> messages,
+                        final Class<?> clazz,
+                        final Type type,
+                        final Annotation[] annotation,
+                        final MediaType mediaType,
+                        final MultivaluedMap<String, Object> arg5,
+                        final OutputStream ostream) throws IOException, WebApplicationException {
         for (final Message m : messages) {
             ostream.write(m.toString().getBytes(MessageUtils.getCharset(mediaType)));
             final URI mUri = ui.get().getAbsolutePathBuilder().path(Integer.toString(m.getUniqueId())).build();

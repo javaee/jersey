@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -116,6 +116,7 @@ public class ManagedClientTest extends JerseyTest {
         @Documented
         @Target(ElementType.METHOD)
         public static @interface Require {
+
             /**
              * Expected custom header name to be validated by the {@link CustomHeaderFilter}.
              */
@@ -147,6 +148,7 @@ public class ManagedClientTest extends JerseyTest {
      * </p>
      */
     public static class CustomHeaderFilter implements ContainerRequestFilter, ClientRequestFilter {
+
         private final String headerName;
         private final String headerValue;
 
@@ -163,7 +165,8 @@ public class ManagedClientTest extends JerseyTest {
             if (!headerValue.equals(ctx.getHeaderString(headerName))) {
                 ctx.abortWith(Response.status(Response.Status.FORBIDDEN)
                         .type(MediaType.TEXT_PLAIN)
-                        .entity(String.format("Expected header '%s' not present or value not equal to '%s'", headerName, headerValue))
+                        .entity(String
+                                .format("Expected header '%s' not present or value not equal to '%s'", headerName, headerValue))
                         .build());
             }
         }
@@ -195,7 +198,6 @@ public class ManagedClientTest extends JerseyTest {
         }
     }
 
-
     /**
      * A resource that uses managed clients to retrieve values of internal
      * resources 'A' and 'B', which are protected by a {@link CustomHeaderFilter}
@@ -208,6 +210,7 @@ public class ManagedClientTest extends JerseyTest {
      */
     @Path("public")
     public static class PublicResource {
+
         @Uri("a")
         @ClientA // resolves to <base>/internal/a
         private WebTarget targetA;
@@ -236,17 +239,18 @@ public class ManagedClientTest extends JerseyTest {
     }
 
     public static class MyClientAConfig extends ClientConfig {
+
         public MyClientAConfig() {
             this.register(new CustomHeaderFilter("custom-header", "a"));
         }
     }
 
     public static class MyClientBConfig extends ClientConfig {
+
         public MyClientBConfig() {
             this.register(new CustomHeaderFilter("custom-header", "b"));
         }
     }
-
 
     @Override
     protected void configureClient(ClientConfig config) {
@@ -271,6 +275,5 @@ public class ManagedClientTest extends JerseyTest {
         assertEquals(200, response.getStatus());
         assertEquals("b", response.readEntity(String.class));
     }
-
 
 }

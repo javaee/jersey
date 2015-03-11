@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.internal;
 
 import java.lang.reflect.Type;
@@ -126,7 +125,7 @@ public class ContextResolverFactory implements ContextResolvers {
 
         for (final Map.Entry<Type, Map<MediaType, List<ContextResolver>>> e : rs.entrySet()) {
             final Map<MediaType, ContextResolver> mr = new KeyComparatorHashMap<MediaType, ContextResolver>(
-                    4, MessageBodyFactory.MEDIA_TYPE_COMPARATOR);
+                    4, MessageBodyFactory.MEDIA_TYPE_KEY_COMPARATOR);
             resolver.put(e.getKey(), mr);
 
             cache.put(e.getKey(), new ConcurrentHashMap<MediaType, ContextResolver>(4));
@@ -219,7 +218,7 @@ public class ContextResolverFactory implements ContextResolvers {
         }
 
         if (m == null) {
-            m = MediaTypes.GENERAL_MEDIA_TYPE;
+            m = MediaType.WILDCARD_TYPE;
         }
 
         ContextResolver<T> cr = crMapCache.get(m);
@@ -227,14 +226,14 @@ public class ContextResolverFactory implements ContextResolvers {
             final Map<MediaType, ContextResolver> crMap = resolver.get(t);
 
             if (m.isWildcardType()) {
-                cr = crMap.get(MediaTypes.GENERAL_MEDIA_TYPE);
+                cr = crMap.get(MediaType.WILDCARD_TYPE);
                 if (cr == null) {
                     cr = NULL_CONTEXT_RESOLVER;
                 }
             } else if (m.isWildcardSubtype()) {
                 // Include x, x/* and */*
                 final ContextResolver<T> subTypeWildCard = crMap.get(m);
-                final ContextResolver<T> wildCard = crMap.get(MediaTypes.GENERAL_MEDIA_TYPE);
+                final ContextResolver<T> wildCard = crMap.get(MediaType.WILDCARD_TYPE);
 
                 cr = new ContextResolverAdapter(subTypeWildCard, wildCard).reduce();
             } else {

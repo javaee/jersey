@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message;
 
 import java.io.BufferedInputStream;
@@ -62,7 +63,7 @@ import org.glassfish.jersey.spi.ContentEncoder;
  * The default behavior of this interceptor can be tweaked using {@link MessageProperties#DEFLATE_WITHOUT_ZLIB}
  * property.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 @Priority(Priorities.ENTITY_CODER)
 public class DeflateEncoder extends ContentEncoder {
@@ -85,8 +86,8 @@ public class DeflateEncoder extends ContentEncoder {
     public InputStream decode(String contentEncoding, InputStream encodedStream)
             throws IOException {
         // correct impl. should wrap deflate in zlib, but some don't do it - have to identify, which one we got
-        InputStream markSupportingStream = encodedStream.markSupported() ? encodedStream :
-                new BufferedInputStream(encodedStream);
+        InputStream markSupportingStream = encodedStream.markSupported() ? encodedStream
+                : new BufferedInputStream(encodedStream);
 
         markSupportingStream.mark(1);
         // read the first byte
@@ -120,8 +121,8 @@ public class DeflateEncoder extends ContentEncoder {
             deflateWithoutZLib = false;
         }
 
-        return deflateWithoutZLib ?
-                new DeflaterOutputStream(entityStream, new Deflater(Deflater.DEFAULT_COMPRESSION, true)) :
-                new DeflaterOutputStream(entityStream);
+        return deflateWithoutZLib
+                ? new DeflaterOutputStream(entityStream, new Deflater(Deflater.DEFAULT_COMPRESSION, true))
+                : new DeflaterOutputStream(entityStream);
     }
 }

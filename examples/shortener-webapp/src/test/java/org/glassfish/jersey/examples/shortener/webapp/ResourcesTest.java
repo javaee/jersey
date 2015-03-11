@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -71,7 +71,7 @@ import com.github.mustachejava.MustacheFactory;
  */
 public class ResourcesTest extends JerseyTest {
 
-    private final static MustacheFactory factory = new DefaultMustacheFactory();
+    private static final MustacheFactory factory = new DefaultMustacheFactory();
 
     @Override
     protected Application configure() {
@@ -101,7 +101,8 @@ public class ResourcesTest extends JerseyTest {
         Assert.assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
 
         assertThat(response.readEntity(String.class),
-                equalTo(resolveTemplate("mustache/short-link.mustache", ShortenerService.shortenLink(getBaseUri(), "https://java.net/"))));
+                equalTo(resolveTemplate("mustache/short-link.mustache",
+                        ShortenerService.shortenLink(getBaseUri(), "https://java.net/"))));
     }
 
     @Test

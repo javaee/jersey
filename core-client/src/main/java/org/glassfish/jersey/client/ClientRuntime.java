@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -87,7 +87,6 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
     private final ServiceLocator locator;
     private final Iterable<ClientLifecycleListener> lifecycleListeners;
 
-
     /**
      * Create new client request processing runtime.
      *
@@ -99,12 +98,12 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
         final Stage.Builder<ClientRequest> requestingChainBuilder = Stages
                 .chain(locator.createAndInitialize(RequestProcessingInitializationStage.class));
         final ChainableStage<ClientRequest> requestFilteringStage = ClientFilteringStages.createRequestFilteringStage(locator);
-        this.requestProcessingRoot = requestFilteringStage != null ?
-                requestingChainBuilder.build(requestFilteringStage) : requestingChainBuilder.build();
+        this.requestProcessingRoot = requestFilteringStage != null
+                ? requestingChainBuilder.build(requestFilteringStage) : requestingChainBuilder.build();
 
         final ChainableStage<ClientResponse> responseFilteringStage = ClientFilteringStages.createResponseFilteringStage(locator);
-        this.responseProcessingRoot = responseFilteringStage != null ?
-                responseFilteringStage : Stages.<ClientResponse>identity();
+        this.responseProcessingRoot = responseFilteringStage != null
+                ? responseFilteringStage : Stages.<ClientResponse>identity();
 
         this.config = config;
         this.connector = connector;
@@ -190,8 +189,8 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
     }
 
     private void processFailure(final Throwable failure, final ResponseCallback callback) {
-        callback.failed(failure instanceof ProcessingException ?
-                (ProcessingException) failure : new ProcessingException(failure));
+        callback.failed(failure instanceof ProcessingException
+                ? (ProcessingException) failure : new ProcessingException(failure));
     }
 
     private Future<?> submit(final ExecutorService executor, final Runnable task) {

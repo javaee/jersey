@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,8 +41,6 @@ package org.glassfish.jersey.server.spring.scope;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -50,7 +48,10 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 
+import javax.inject.Inject;
+
 import org.glassfish.hk2.api.ServiceLocator;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.request.RequestContextHolder;
 
@@ -79,7 +80,9 @@ public class RequestContextFilter implements ContainerRequestFilter, ContainerRe
     };
 
     private static interface SpringAttributeController {
+
         public void setAttributes(final ContainerRequestContext requestContext);
+
         public void resetAttributes(final ContainerRequestContext requestContext);
     }
 
@@ -101,7 +104,8 @@ public class RequestContextFilter implements ContainerRequestFilter, ContainerRe
 
             @Override
             public void resetAttributes(final ContainerRequestContext requestContext) {
-                JaxrsRequestAttributes attributes = (JaxrsRequestAttributes)requestContext.getProperty(REQUEST_ATTRIBUTES_PROPERTY);
+                JaxrsRequestAttributes attributes = (JaxrsRequestAttributes) requestContext
+                        .getProperty(REQUEST_ATTRIBUTES_PROPERTY);
                 RequestContextHolder.resetRequestAttributes();
                 attributes.requestCompleted();
             }
@@ -114,7 +118,8 @@ public class RequestContextFilter implements ContainerRequestFilter, ContainerRe
     }
 
     @Override
-    public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws IOException {
+    public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
+            throws IOException {
         attributeController.resetAttributes(requestContext);
     }
 }

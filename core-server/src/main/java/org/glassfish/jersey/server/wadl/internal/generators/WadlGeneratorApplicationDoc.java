@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -102,16 +102,16 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
 
     public void setApplicationDocsFile(File applicationDocsFile) {
         if (_applicationDocsStream != null) {
-            throw new IllegalStateException("The applicationDocsStream property is already set," +
-                    " therefore you cannot set the applicationDocsFile property. Only one of both can be set at a time.");
+            throw new IllegalStateException("The applicationDocsStream property is already set,"
+                    + " therefore you cannot set the applicationDocsFile property. Only one of both can be set at a time.");
         }
         _applicationDocsFile = applicationDocsFile;
     }
 
     public void setApplicationDocsStream(InputStream applicationDocsStream) {
         if (_applicationDocsFile != null) {
-            throw new IllegalStateException("The applicationDocsFile property is already set," +
-                    " therefore you cannot set the applicationDocsStream property. Only one of both can be set at a time.");
+            throw new IllegalStateException("The applicationDocsFile property is already set,"
+                    + " therefore you cannot set the applicationDocsStream property. Only one of both can be set at a time.");
         }
         _applicationDocsStream = applicationDocsStream;
     }
@@ -119,8 +119,8 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
 
     public void init() throws Exception {
         if (_applicationDocsFile == null && _applicationDocsStream == null) {
-            throw new IllegalStateException("Neither the applicationDocsFile nor the applicationDocsStream" +
-                    " is set, one of both is required.");
+            throw new IllegalStateException("Neither the applicationDocsFile nor the applicationDocsStream"
+                    + " is set, one of both is required.");
         }
         _delegate.init();
 
@@ -139,8 +139,8 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
      */
     public Application createApplication() {
         final Application result = _delegate.createApplication();
-        if (_applicationDocs != null && _applicationDocs.getDocs() != null &&
-                !_applicationDocs.getDocs().isEmpty()) {
+        if (_applicationDocs != null && _applicationDocs.getDocs() != null
+                && !_applicationDocs.getDocs().isEmpty()) {
             result.getDoc().addAll(_applicationDocs.getDocs());
         }
         return result;

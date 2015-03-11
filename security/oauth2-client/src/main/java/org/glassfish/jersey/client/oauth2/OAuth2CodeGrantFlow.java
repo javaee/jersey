@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -94,7 +94,7 @@ import javax.ws.rs.core.Feature;
  * internal state of the authorization process.
  * </p>
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @since 2.3
  */
 public interface OAuth2CodeGrantFlow {
@@ -171,7 +171,11 @@ public interface OAuth2CodeGrantFlow {
          */
         ACCESS_TOKEN_REQUEST {
             @Override
-            public void property(String key, String value, Map<String, String> authorizationProps, Map<String, String> accessTokenProps, Map<String, String> refreshTokenProps) {
+            public void property(String key,
+                                 String value,
+                                 Map<String, String> authorizationProps,
+                                 Map<String, String> accessTokenProps,
+                                 Map<String, String> refreshTokenProps) {
                 nonNullProperty(key, value, accessTokenProps);
             }
         },
@@ -180,7 +184,11 @@ public interface OAuth2CodeGrantFlow {
          */
         REFRESH_ACCESS_TOKEN {
             @Override
-            public void property(String key, String value, Map<String, String> authorizationProps, Map<String, String> accessTokenProps, Map<String, String> refreshTokenProps) {
+            public void property(String key,
+                                 String value,
+                                 Map<String, String> authorizationProps,
+                                 Map<String, String> accessTokenProps,
+                                 Map<String, String> refreshTokenProps) {
                 nonNullProperty(key, value, refreshTokenProps);
             }
         },
@@ -189,7 +197,11 @@ public interface OAuth2CodeGrantFlow {
          */
         ALL {
             @Override
-            public void property(String key, String value, Map<String, String> authorizationProps, Map<String, String> accessTokenProps, Map<String, String> refreshTokenProps) {
+            public void property(String key,
+                                 String value,
+                                 Map<String, String> authorizationProps,
+                                 Map<String, String> accessTokenProps,
+                                 Map<String, String> refreshTokenProps) {
                 nonNullProperty(key, value, authorizationProps);
                 nonNullProperty(key, value, accessTokenProps);
                 nonNullProperty(key, value, refreshTokenProps);
@@ -220,7 +232,6 @@ public interface OAuth2CodeGrantFlow {
 
     }
 
-
     /**
      * The builder of {@link OAuth2CodeGrantFlow}.
      *
@@ -229,6 +240,7 @@ public interface OAuth2CodeGrantFlow {
      *           their own specific type instead of type defined by this interface only).
      */
     public interface Builder<T extends Builder> {
+
         /**
          * Set the access token URI on which the access token can be requested. The URI points to the
          * authorization server and is defined by the Service Provider.

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -73,6 +73,7 @@ import static javax.ws.rs.client.Entity.text;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.RequestExecutorProvider;
 import org.glassfish.jersey.test.JerseyTest;
@@ -91,7 +92,7 @@ import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 /**
  * Tests sync and async client invocations.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class BasicClientTest extends JerseyTest {
@@ -142,7 +143,7 @@ public class BasicClientTest extends JerseyTest {
         Future<Response> f1 = async.post(text("post"));
         final Response response = f1.get();
         final String entity = response.readEntity(String.class);
-        assertEquals("AsyncRequest-post", entity);
+        assertEquals("async-request-post", entity);
     }
 
     private void runCustomExecutorTestSync(Client client) {
@@ -150,7 +151,7 @@ public class BasicClientTest extends JerseyTest {
         final Response response = target.request().post(text("post"));
 
         final String entity = response.readEntity(String.class);
-        assertNotSame("AsyncRequest-post", entity);
+        assertNotSame("async-request-post", entity);
     }
 
     @Test
@@ -382,7 +383,10 @@ public class BasicClientTest extends JerseyTest {
 
         @Override
         public ExecutorService getRequestingExecutor() {
-            return Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("AsyncRequest").build());
+            return Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
+                    .setNameFormat("async-request")
+                    .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                    .build());
         }
 
         @Override

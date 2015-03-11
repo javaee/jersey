@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,11 +60,14 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * {@link ObjectGraphTransformer#transform(ObjectGraph)} method for this type.
  * </p>
  *
+ * @param <T> representation of entity data filtering requested by provider.
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public abstract class AbstractObjectProvider<T> implements ObjectProvider<T>, ObjectGraphTransformer<T> {
 
-    private final Cache<EntityContext, T> filteringObjects = CacheBuilder.newBuilder().maximumSize(1000).build();
+    private static final int PROVIDER_CACHE_SIZE = 1000;
+
+    private final Cache<EntityContext, T> filteringObjects = CacheBuilder.newBuilder().maximumSize(PROVIDER_CACHE_SIZE).build();
 
     @Inject
     private ScopeProvider scopeProvider;
@@ -76,7 +79,7 @@ public abstract class AbstractObjectProvider<T> implements ObjectProvider<T>, Ob
     private EntityGraphProvider graphProvider;
 
     @Override
-    public T getFilteringObject(final Type genericType, final boolean forWriter, final Annotation... annotations) {
+    public final T getFilteringObject(final Type genericType, final boolean forWriter, final Annotation... annotations) {
         return getFilteringObject(FilteringHelper.getEntityClass(genericType), forWriter, annotations);
     }
 
@@ -138,11 +141,11 @@ public abstract class AbstractObjectProvider<T> implements ObjectProvider<T>, Ob
     /**
      * Class to be used as a key in cache ({@code EntityContext} -&gt; filtering object) when processing similar requests.
      */
-    private static class EntityContext {
+    private static final class EntityContext {
 
-        private Class<?> entityClass;
+        private final Class<?> entityClass;
 
-        private Set<String> filteringContext;
+        private final Set<String> filteringContext;
 
         /**
          * Create entity context class for given entity class and set of entity-filtering scopes.

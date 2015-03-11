@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,6 +75,7 @@ import org.glassfish.jersey.server.Uri;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class Parameter implements AnnotatedElement {
+
     private static final Logger LOGGER = Logger.getLogger(Parameter.class.getName());
 
     /**
@@ -264,7 +265,7 @@ public class Parameter implements AnnotatedElement {
         return Collections.unmodifiableMap(m);
     }
 
-    private final static Map<Class, ParamAnnotationHelper> ANNOTATION_HELPER_MAP = createParamAnnotationHelperMap();
+    private static final Map<Class, ParamAnnotationHelper> ANNOTATION_HELPER_MAP = createParamAnnotationHelperMap();
 
     /**
      * Create a parameter model.
@@ -624,20 +625,40 @@ public class Parameter implements AnnotatedElement {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Parameter parameter = (Parameter) o;
 
-        if (encoded != parameter.encoded) return false;
-        if (!Arrays.equals(annotations, parameter.annotations)) return false;
-        if (defaultValue != null ? !defaultValue.equals(parameter.defaultValue) : parameter.defaultValue != null) return false;
-        if (rawType != null ? !rawType.equals(parameter.rawType) : parameter.rawType != null) return false;
-        if (source != parameter.source) return false;
-        if (sourceAnnotation != null ? !sourceAnnotation.equals(parameter.sourceAnnotation) : parameter.sourceAnnotation != null)
+        if (encoded != parameter.encoded) {
             return false;
-        if (sourceName != null ? !sourceName.equals(parameter.sourceName) : parameter.sourceName != null) return false;
-        if (type != null ? !type.equals(parameter.type) : parameter.type != null) return false;
+        }
+        if (!Arrays.equals(annotations, parameter.annotations)) {
+            return false;
+        }
+        if (defaultValue != null ? !defaultValue.equals(parameter.defaultValue) : parameter.defaultValue != null) {
+            return false;
+        }
+        if (rawType != null ? !rawType.equals(parameter.rawType) : parameter.rawType != null) {
+            return false;
+        }
+        if (source != parameter.source) {
+            return false;
+        }
+        if (sourceAnnotation != null ? !sourceAnnotation.equals(parameter.sourceAnnotation) : parameter.sourceAnnotation
+                != null) {
+            return false;
+        }
+        if (sourceName != null ? !sourceName.equals(parameter.sourceName) : parameter.sourceName != null) {
+            return false;
+        }
+        if (type != null ? !type.equals(parameter.type) : parameter.type != null) {
+            return false;
+        }
 
         return true;
     }

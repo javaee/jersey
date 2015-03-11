@@ -58,7 +58,6 @@ import javax.annotation.Priority;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
-import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.ContentEncoder;
 
@@ -78,7 +77,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  *     The filter also ensures Accept-Encoding is added to the Vary header, for proper interaction with web caches.
  * </p>
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 @Priority(Priorities.HEADER_DECORATOR)
 public final class EncodingFilter implements ContainerResponseFilter {
@@ -95,6 +94,7 @@ public final class EncodingFilter implements ContainerResponseFilter {
      * for the supplied {@link ResourceConfig}.
      *
      * @param rc Resource config this filter should be enabled for.
+     * @param encoders content encoders.
      */
     @SafeVarargs
     public static void enableFor(ResourceConfig rc, Class<? extends ContentEncoder>... encoders) {
@@ -108,7 +108,7 @@ public final class EncodingFilter implements ContainerResponseFilter {
         }
 
         // add Accept-Encoding to Vary header
-        List<String> varyHeader = ((ContainerResponse) response).getStringHeaders().get(HttpHeaders.VARY);
+        List<String> varyHeader = response.getStringHeaders().get(HttpHeaders.VARY);
         if (varyHeader == null || !varyHeader.contains(HttpHeaders.ACCEPT_ENCODING)) {
             response.getHeaders().add(HttpHeaders.VARY, HttpHeaders.ACCEPT_ENCODING);
         }
@@ -213,7 +213,7 @@ public final class EncodingFilter implements ContainerResponseFilter {
             // Skip any white space
             reader.hasNext();
 
-            return new ContentEncoding(reader.nextToken(), HttpHeaderReader.readQualityFactorParameter(reader));
+            return new ContentEncoding(reader.nextToken().toString(), HttpHeaderReader.readQualityFactorParameter(reader));
 
         }
 

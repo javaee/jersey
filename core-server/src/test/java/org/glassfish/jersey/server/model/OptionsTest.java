@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -80,7 +80,7 @@ import com.sun.research.ws.wadl.Application;
  *
  * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class OptionsTest {
 
@@ -97,7 +97,7 @@ public class OptionsTest {
     }
 
     @Path("/")
-    static public class ResourceNoOptions {
+    public static class ResourceNoOptions {
 
         @GET
         public String get() {
@@ -150,13 +150,13 @@ public class OptionsTest {
     }
 
     @Path("/")
-    static public class ResourceWithOptions {
+    public static class ResourceWithOptions {
 
         @OPTIONS
         public Response options() {
-            return Response.ok("OPTIONS").
-                    header("Allow", "OPTIONS, GET, PUT, POST, DELETE, PATCH").
-                    header("X-TEST", "OVERRIDE").build();
+            return Response.ok("OPTIONS")
+                    .header("Allow", "OPTIONS, GET, PUT, POST, DELETE, PATCH")
+                    .header("X-TEST", "OVERRIDE").build();
         }
 
         @GET
@@ -203,9 +203,9 @@ public class OptionsTest {
         assertEquals("OVERRIDE", response.getHeaderString("X-TEST"));
     }
 
-
     @Path("resource")
     public static class WadlResource {
+
         @GET
         public String get() {
             return "get";
@@ -219,7 +219,7 @@ public class OptionsTest {
         final ContainerResponse response = application.apply(request).get();
         Assert.assertEquals(200, response.getStatus());
         final MediaType type = response.getMediaType();
-        Assert.assertTrue(type.equals(MediaTypes.WADL) || type.equals(MediaType.TEXT_HTML_TYPE)
+        Assert.assertTrue(type.equals(MediaTypes.WADL_TYPE) || type.equals(MediaType.TEXT_HTML_TYPE)
                 || type.equals(MediaType.TEXT_PLAIN));
 
     }
@@ -243,7 +243,7 @@ public class OptionsTest {
     @Test
     public void testRequestWadl() throws ExecutionException, InterruptedException {
         ApplicationHandler application = new ApplicationHandler(new ResourceConfig(WadlResource.class, ResponseWadlFilter.class));
-        final MediaType requestType = MediaTypes.WADL;
+        final MediaType requestType = MediaTypes.WADL_TYPE;
         final ContainerResponse response = testOptions(requestType, application, "/resource");
     }
 
@@ -272,7 +272,7 @@ public class OptionsTest {
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
             final MediaType type = responseContext.getMediaType();
-            Assert.assertEquals(MediaTypes.WADL, type);
+            Assert.assertEquals(MediaTypes.WADL_TYPE, type);
             responseContext.getEntity().getClass().equals(Application.class);
 
         }
@@ -280,6 +280,7 @@ public class OptionsTest {
 
     @Path("no-get")
     private static class ResourceWithoutGetMethod {
+
         @POST
         public String post(String entity) {
             return entity;
@@ -301,7 +302,6 @@ public class OptionsTest {
         Assert.assertFalse(((String) response.getEntity()).contains("HEAD"));
     }
 
-
     @Test
     public void testNoHeadWildcard() throws ExecutionException, InterruptedException {
         final ResourceConfig resourceConfig = new ResourceConfig(ResourceWithoutGetMethod.class);
@@ -319,7 +319,8 @@ public class OptionsTest {
         }
     }
 
-    private ContainerResponse testOptions(MediaType requestType, ApplicationHandler application, String path) throws InterruptedException, ExecutionException {
+    private ContainerResponse testOptions(MediaType requestType, ApplicationHandler application, String path)
+            throws InterruptedException, ExecutionException {
         final ContainerRequest request = RequestContextBuilder.from(path, "OPTIONS").accept(requestType)
                 .build();
         final ContainerResponse response = application.apply(request).get();

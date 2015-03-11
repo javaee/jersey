@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.entity;
 
 import java.io.Reader;
@@ -72,8 +73,8 @@ import org.codehaus.jettison.json.JSONObject;
 import org.junit.Test;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Paul Sandoz
+ * @author Martin Matula
  */
 public class CharsetTest extends AbstractTypeTester {
 
@@ -157,7 +158,7 @@ public class CharsetTest extends AbstractTypeTester {
         }
     }
 
-    public static abstract class CharsetResource<T> {
+    public abstract static class CharsetResource<T> {
 
         @Context
         HttpHeaders h;
@@ -186,7 +187,7 @@ public class CharsetTest extends AbstractTypeTester {
 
     @Test
     public void testFormMultivaluedMapRepresentation() {
-        MultivaluedMap<String, String> map = new MultivaluedHashMap<String, String>();
+        MultivaluedMap<String, String> map = new MultivaluedHashMap<>();
 
         map.add("name", "\u00A9 CONTENT \u00FF \u2200 \u22FF");
         map.add("name", "� � �");
@@ -215,10 +216,10 @@ public class CharsetTest extends AbstractTypeTester {
     @Test
     public void testJSONObjectRepresentation() throws Exception {
         JSONObject object = new JSONObject();
-        object.put("userid", 1234).
-                put("username", CONTENT).
-                put("email", "a@b").
-                put("password", "****");
+        object.put("userid", 1234)
+                .put("username", CONTENT)
+                .put("email", "a@b")
+                .put("password", "****");
 
         _test(object, JSONObjectResource.class, MediaType.APPLICATION_JSON_TYPE);
     }
@@ -302,7 +303,7 @@ public class CharsetTest extends AbstractTypeTester {
     public <T> void _test(T in, Class resource, MediaType m) {
         WebTarget t = target(resource.getSimpleName());
         for (String charset : CHARSETS) {
-            Map<String, String> p = new HashMap<String, String>();
+            Map<String, String> p = new HashMap<>();
             p.put("charset", charset);
             MediaType _m = new MediaType(m.getType(), m.getSubtype(), p);
             Response rib = t.request().post(Entity.entity(in, _m));

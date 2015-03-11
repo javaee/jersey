@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.examples.helloworld.jaxrs;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ import com.sun.net.httpserver.HttpServer;
 /**
  * Hello world application using only the standard JAX-RS API and lightweight HTTP server bundled in JDK.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class App {
 
@@ -84,9 +85,9 @@ public class App {
 
         HttpServer server = startServer();
 
-        System.out.println("Application started.\n" +
-                "Try accessing " + getBaseURI() + "helloworld in the browser.\n" +
-                "Hit enter to stop the application...");
+        System.out.println("Application started.\n"
+                + "Try accessing " + getBaseURI() + "helloworld in the browser.\n"
+                + "Hit enter to stop the application...");
         System.in.read();
         server.stop(0);
     }
@@ -97,9 +98,9 @@ public class App {
             try {
                 return Integer.parseInt(port);
             } catch (NumberFormatException e) {
-                System.out.println("Value of jersey.config.test.container.port property" +
-                        " is not a valid positive integer [" + port + "]." +
-                        " Reverting to default [" + defaultPort + "].");
+                System.out.println("Value of jersey.config.test.container.port property"
+                        + " is not a valid positive integer [" + port + "]."
+                        + " Reverting to default [" + defaultPort + "].");
             }
         }
         return defaultPort;

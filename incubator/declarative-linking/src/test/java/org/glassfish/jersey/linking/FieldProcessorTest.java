@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ package org.glassfish.jersey.linking;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Filter;
 import java.util.logging.LogRecord;
@@ -57,6 +58,8 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
+
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
@@ -75,9 +78,11 @@ import static org.junit.Assert.assertTrue;
  */
 public class FieldProcessorTest {
 
+    private static final Logger LOG = Logger.getLogger(FieldProcessor.class.getName());
+
     ExtendedUriInfo mockUriInfo = new ExtendedUriInfo() {
 
-        private final static String baseURI = "http://example.com/application/resources";
+        private static final String baseURI = "http://example.com/application/resources";
 
         @Override
         public String getPath() {
@@ -235,10 +240,10 @@ public class FieldProcessorTest {
         }
     };
 
-
-    private final static String TEMPLATE_A = "foo";
+    private static final String TEMPLATE_A = "foo";
 
     public static class TestClassD {
+
         @InjectLink(value = TEMPLATE_A, style = InjectLink.Style.RELATIVE_PATH)
         private String res1;
 
@@ -248,7 +253,8 @@ public class FieldProcessorTest {
 
     @Test
     public void testProcessLinks() {
-        System.out.println("Links");
+        LOG.info("Links");
+
         FieldProcessor<TestClassD> instance = new FieldProcessor(TestClassD.class);
         TestClassD testClass = new TestClassD();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -256,9 +262,10 @@ public class FieldProcessorTest {
         assertEquals(TEMPLATE_A, testClass.res2.toString());
     }
 
-    private final static String TEMPLATE_B = "widgets/{id}";
+    private static final String TEMPLATE_B = "widgets/{id}";
 
     public static class TestClassE {
+
         @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
         private String link;
 
@@ -275,7 +282,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testProcessLinksWithFields() {
-        System.out.println("Links from field values");
+        LOG.info("Links from field values");
         FieldProcessor<TestClassE> instance = new FieldProcessor(TestClassE.class);
         TestClassE testClass = new TestClassE("10");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -283,6 +290,7 @@ public class FieldProcessorTest {
     }
 
     public static class TestClassF {
+
         @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
         private String thelink;
 
@@ -301,7 +309,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testNesting() {
-        System.out.println("Nesting");
+        LOG.info("Nesting");
         FieldProcessor<TestClassF> instance = new FieldProcessor(TestClassF.class);
         TestClassE nested = new TestClassE("10");
         TestClassF testClass = new TestClassF("20", nested);
@@ -312,7 +320,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testArray() {
-        System.out.println("Array");
+        LOG.info("Array");
         FieldProcessor<TestClassE[]> instance = new FieldProcessor(TestClassE[].class);
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
@@ -324,7 +332,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testCollection() {
-        System.out.println("Collection");
+        LOG.info("Collection");
         FieldProcessor<List> instance = new FieldProcessor(List.class);
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
@@ -335,6 +343,7 @@ public class FieldProcessorTest {
     }
 
     public static class TestClassG {
+
         @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
         private String relativePath;
 
@@ -360,7 +369,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testLinkStyles() {
-        System.out.println("Link styles");
+        LOG.info("Link styles");
         FieldProcessor<TestClassG> instance = new FieldProcessor(TestClassG.class);
         TestClassG testClass = new TestClassG("10");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -371,6 +380,7 @@ public class FieldProcessorTest {
     }
 
     public static class TestClassH {
+
         @InjectLink(TEMPLATE_B)
         private String link;
 
@@ -381,7 +391,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testComputedProperty() {
-        System.out.println("Computed property");
+        LOG.info("Computed property");
         FieldProcessor<TestClassH> instance = new FieldProcessor(TestClassH.class);
         TestClassH testClass = new TestClassH();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -389,6 +399,7 @@ public class FieldProcessorTest {
     }
 
     public static class TestClassI {
+
         @InjectLink("widgets/${entity.id}")
         private String link;
 
@@ -399,7 +410,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testEL() {
-        System.out.println("EL link");
+        LOG.info("El link");
         FieldProcessor<TestClassI> instance = new FieldProcessor(TestClassI.class);
         TestClassI testClass = new TestClassI();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -407,6 +418,7 @@ public class FieldProcessorTest {
     }
 
     public static class TestClassJ {
+
         @InjectLink("widgets/${entity.id}/widget/{id}")
         private String link;
 
@@ -417,7 +429,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testMixed() {
-        System.out.println("Mixed EL and template vars link");
+        LOG.info("Mixed EL and template vars link");
         FieldProcessor<TestClassJ> instance = new FieldProcessor(TestClassJ.class);
         TestClassJ testClass = new TestClassJ();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -425,6 +437,7 @@ public class FieldProcessorTest {
     }
 
     public static class DependentInnerBean {
+
         @InjectLink("${entity.id}")
         public String outerUri;
         @InjectLink("${instance.id}")
@@ -436,6 +449,7 @@ public class FieldProcessorTest {
     }
 
     public static class OuterBean {
+
         public DependentInnerBean inner = new DependentInnerBean();
 
         public String getId() {
@@ -445,7 +459,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testELScopes() {
-        System.out.println("EL scopes");
+        LOG.info("EL scopes");
         FieldProcessor<OuterBean> instance = new FieldProcessor(OuterBean.class);
         OuterBean testClass = new OuterBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -454,6 +468,7 @@ public class FieldProcessorTest {
     }
 
     public static class BoundLinkBean {
+
         @InjectLink(value = "{id}", bindings = {@Binding(name = "id", value = "${instance.name}")})
         public String uri;
 
@@ -464,7 +479,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testELBinding() {
-        System.out.println("EL binding");
+        LOG.info("EL binding");
         FieldProcessor<BoundLinkBean> instance = new FieldProcessor(BoundLinkBean.class);
         BoundLinkBean testClass = new BoundLinkBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -472,6 +487,7 @@ public class FieldProcessorTest {
     }
 
     public static class BoundLinkOnLinkBean {
+
         @InjectLink(value = "{id}",
                 bindings = {@Binding(name = "id", value = "${instance.name}")},
                 rel = "self")
@@ -484,7 +500,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testELBindingOnLink() {
-        System.out.println("EL binding");
+        LOG.info("EL binding");
         FieldProcessor<BoundLinkOnLinkBean> instance = new FieldProcessor(BoundLinkOnLinkBean.class);
         BoundLinkOnLinkBean testClass = new BoundLinkOnLinkBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -492,8 +508,8 @@ public class FieldProcessorTest {
         assertEquals("self", testClass.link.getRel());
     }
 
-
     public static class BoundLinkOnLinksBean {
+
         @InjectLinks({
                 @InjectLink(value = "{id}",
                         bindings = {@Binding(name = "id", value = "${instance.name}")},
@@ -516,7 +532,6 @@ public class FieldProcessorTest {
         })
         public Link[] linksArray;
 
-
         public String getName() {
             return "name";
         }
@@ -524,7 +539,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testELBindingOnLinks() {
-        System.out.println("EL binding");
+        LOG.info("EL binding");
         FieldProcessor<BoundLinkOnLinksBean> instance = new FieldProcessor(BoundLinkOnLinksBean.class);
         BoundLinkOnLinksBean testClass = new BoundLinkOnLinksBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -538,8 +553,8 @@ public class FieldProcessorTest {
 
     }
 
-
     public static class ConditionalLinkBean {
+
         @InjectLink(value = "{id}", condition = "${entity.uri1Enabled}")
         public String uri1;
 
@@ -561,7 +576,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testCondition() {
-        System.out.println("Condition");
+        LOG.info("Condition");
         FieldProcessor<ConditionalLinkBean> instance = new FieldProcessor(ConditionalLinkBean.class);
         ConditionalLinkBean testClass = new ConditionalLinkBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -571,6 +586,7 @@ public class FieldProcessorTest {
 
     @Path("a")
     public static class SubResource {
+
         @Path("b")
         @GET
         public String getB() {
@@ -579,13 +595,14 @@ public class FieldProcessorTest {
     }
 
     public static class SubResourceBean {
+
         @InjectLink(resource = SubResource.class, method = "getB")
         public String uri;
     }
 
     @Test
     public void testSubresource() {
-        System.out.println("Subresource");
+        LOG.info("Subresource");
         FieldProcessor<SubResourceBean> instance = new FieldProcessor(SubResourceBean.class);
         SubResourceBean testClass = new SubResourceBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -594,6 +611,7 @@ public class FieldProcessorTest {
 
     @Path("a")
     public static class QueryResource {
+
         @Path("b")
         @GET
         public String getB(@QueryParam("query") String query, @QueryParam("query2") String query2) {
@@ -620,7 +638,6 @@ public class FieldProcessorTest {
 
         private String queryExample2;
 
-
         @InjectLink(resource = QueryResource.class, method = "getB",
                 bindings = {
                         @Binding(name = "query", value = "${instance.queryParam}"),
@@ -631,7 +648,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testQueryResource() {
-        System.out.println("QueryResource");
+        LOG.info("QueryResource");
         FieldProcessor<QueryResourceBean> instance = new FieldProcessor(QueryResourceBean.class);
         QueryResourceBean testClass = new QueryResourceBean("queryExample", null);
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -640,7 +657,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testDoubleQueryResource() {
-        System.out.println("QueryResource");
+        LOG.info("QueryResource");
         FieldProcessor<QueryResourceBean> instance = new FieldProcessor(QueryResourceBean.class);
         QueryResourceBean testClass = new QueryResourceBean("queryExample", "queryExample2");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -648,14 +665,17 @@ public class FieldProcessorTest {
     }
 
     public static class TestClassK {
+
         public static final ZipEntry zipEntry = new ZipEntry("entry");
     }
 
     public static class TestClassL {
+
         public final ZipEntry zipEntry = new ZipEntry("entry");
     }
 
     private class LoggingFilter implements Filter {
+
         private int count = 0;
 
         @Override
@@ -694,4 +714,61 @@ public class FieldProcessorTest {
         Logger.getLogger(FieldDescriptor.class.getName()).setFilter(null);
 
     }
+
+    public static class TestClassM {
+
+        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
+        private String thelink;
+
+        private String id;
+
+        @InjectLinkNoFollow
+        private TestClassE nested;
+
+        @XmlTransient
+        private TestClassE transientNested;
+
+        public TestClassM(String id, TestClassE e, TestClassE transientNested) {
+            this.id = id;
+            this.nested = e;
+            this.transientNested = transientNested;
+        }
+
+        public String getId() {
+            return id;
+        }
+    }
+
+    @Test
+    public void testNoRecursiveNesting() {
+        LOG.info("No Recursive Nesting");
+        FieldProcessor<TestClassM> instance = new FieldProcessor(TestClassM.class);
+        TestClassE nested = new TestClassE("10");
+        TestClassE transientNested = new TestClassE("30");
+        TestClassM testClass = new TestClassM("20", nested, transientNested);
+        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        assertEquals("widgets/20", testClass.thelink);
+        assertEquals(null, testClass.nested.link);
+        assertEquals(null, testClass.transientNested.link);
+    }
+
+    public static class TestClassN {
+        // Simulate object injected by JPA
+        // in order to test a fix for JERSEY-2625
+        private transient Iterable res1 = new Iterable() {
+            @Override
+            public Iterator iterator() {
+                throw new RuntimeException("Declarative linking feature is incorrectly processing a transient iterator");
+            }
+
+        };
+    }
+
+    @Test
+    public void testIgnoreTransient() {
+        TestClassN testClass = new TestClassN();
+        FieldProcessor<TestClassN> instance = new FieldProcessor(TestClassN.class);
+        instance.processLinks(testClass, mockUriInfo, mockRmc);
+    }
+
 }

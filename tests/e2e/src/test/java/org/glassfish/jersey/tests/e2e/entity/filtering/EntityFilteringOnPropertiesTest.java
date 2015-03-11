@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -105,7 +105,8 @@ public class EntityFilteringOnPropertiesTest extends EntityFilteringTest {
         @GET
         @Path("OneFilteringEntityDefaultViewResponse")
         public Response getOneFilteringEntityDefaultViewResponse() {
-            return Response.ok().entity(new OneFilteringOnPropertiesEntity(), new Annotation[]{new DefaultFilteringScope()}).build();
+            return Response.ok().entity(new OneFilteringOnPropertiesEntity(), new Annotation[] {new DefaultFilteringScope()})
+                    .build();
         }
 
         @GET
@@ -141,8 +142,8 @@ public class EntityFilteringOnPropertiesTest extends EntityFilteringTest {
     public void testOneEntityFilteringOnProperties() throws Exception {
         final String fields = target("OneFilteringEntity").request().get(String.class);
 
-        assertSameFields(fields, "field,accessor,property,subEntities.field2,subEntities.property2,subEntities.property1," +
-                "subEntities.field1,defaultEntities.field,defaultEntities.property");
+        assertSameFields(fields, "field,accessor,property,subEntities.field2,subEntities.property2,subEntities.property1,"
+                + "subEntities.field1,defaultEntities.field,defaultEntities.property");
     }
 
     @Test
@@ -163,16 +164,16 @@ public class EntityFilteringOnPropertiesTest extends EntityFilteringTest {
     public void testManyFilteringsEntityPrimaryView() throws Exception {
         final String fields = target("ManyFilteringsEntityPrimaryView").request().get(String.class);
 
-        assertSameFields(fields, "field,accessor,property,oneEntities.field2,oneEntities.property2,oneEntities.property1," +
-                "oneEntities.field1,defaultEntities.field,defaultEntities.property");
+        assertSameFields(fields, "field,accessor,property,oneEntities.field2,oneEntities.property2,oneEntities.property1,"
+                + "oneEntities.field1,defaultEntities.field,defaultEntities.property");
     }
 
     @Test
     public void testManyFilteringsEntitySecondaryView() throws Exception {
         final String fields = target("ManyFilteringsEntitySecondaryView").request().get(String.class);
 
-        assertSameFields(fields, "field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.field1," +
-                "oneEntities.property2,oneEntities.field1");
+        assertSameFields(fields, "field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.field1,"
+                + "oneEntities.property2,oneEntities.field1");
     }
 
     @Test
@@ -186,8 +187,8 @@ public class EntityFilteringOnPropertiesTest extends EntityFilteringTest {
     public void testManyFilteringsEntityManyViews() throws Exception {
         final String fields = target("ManyFilteringsEntityManyViews").request().get(String.class);
 
-        assertSameFields(fields, "field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.property1," +
-                "manyEntities.field1,oneEntities.field2,oneEntities.property2,oneEntities.property1,oneEntities.field1," +
-                "defaultEntities.field,defaultEntities.property");
+        assertSameFields(fields, "field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.property1,"
+                + "manyEntities.field1,oneEntities.field2,oneEntities.property2,oneEntities.property1,oneEntities.field1,"
+                + "defaultEntities.field,defaultEntities.property");
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e;
 
 import java.io.BufferedReader;
@@ -76,15 +77,17 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests gzip interceptors.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  *
  */
 public class InterceptorGzipTest extends JerseyTest {
+
     private static final String FROM_RESOURCE = "-from_resource";
 
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig(TestResource.class, GZIPWriterTestInterceptor.class, GZIPReaderTestInterceptor.class);// GZIPInterceptor.class
+        return new ResourceConfig(TestResource.class, GZIPWriterTestInterceptor.class,
+                GZIPReaderTestInterceptor.class); // GZIPInterceptor.class
     }
 
     @Test
@@ -124,7 +127,7 @@ public class InterceptorGzipTest extends JerseyTest {
 
     @Provider
     @Priority(200)
-    public static class CustomWriterInterceptor<T> implements WriterInterceptor {
+    public static class CustomWriterInterceptor implements WriterInterceptor {
 
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
@@ -152,14 +155,15 @@ public class InterceptorGzipTest extends JerseyTest {
     @Provider
     @Priority(200)
     public static class GZIPWriterTestInterceptor implements WriterInterceptor {
+
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
             OutputStream old = context.getOutputStream();
             GZIPOutputStream newStream = new GZIPOutputStream(old);
             context.setOutputStream(newStream);
             if (context.getHeaders().containsKey(HttpHeaders.CONTENT_LENGTH)) {
-                List<Object> clen = new ArrayList<Object>();
-                clen.add(Long.valueOf(-1));
+                List<Object> clen = new ArrayList<>();
+                clen.add(-1L);
                 context.getHeaders().put(HttpHeaders.CONTENT_LENGTH, clen);
             }
             try {
@@ -174,6 +178,7 @@ public class InterceptorGzipTest extends JerseyTest {
     @Provider
     @Priority(200)
     public static class GZIPReaderTestInterceptor implements ReaderInterceptor {
+
         @Override
         public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {
             InputStream old = context.getInputStream();

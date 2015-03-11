@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,31 +46,30 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ext.ExceptionMapper;
-import org.glassfish.hk2.api.ActiveDescriptor;
-import org.glassfish.hk2.api.ServiceHandle;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
+
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates
@@ -83,6 +82,7 @@ import org.glassfish.jersey.spi.ExtendedExceptionMapper;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class ExceptionMapperFactory implements ExceptionMappers {
+
     private static final Logger LOGGER = Logger.getLogger(ExceptionMapperFactory.class.getName());
 
     /**
@@ -112,14 +112,13 @@ public class ExceptionMapperFactory implements ExceptionMappers {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends Throwable> ExceptionMapper<T> findMapping(final T exceptionInstance) {
-        return find((Class<T>)exceptionInstance.getClass(), exceptionInstance);
+        return find((Class<T>) exceptionInstance.getClass(), exceptionInstance);
     }
 
     @Override
     public <T extends Throwable> ExceptionMapper<T> find(final Class<T> type) {
         return find(type, null);
     }
-
 
     @SuppressWarnings("unchecked")
     private <T extends Throwable> ExceptionMapper<T> find(final Class<T> type, final T exceptionInstance) {
@@ -154,7 +153,6 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         }
     }
 
-
     /**
      * Create new exception mapper factory initialized with {@link ServiceLocator
      * HK2 service locator} instance that will be used to look up all providers implementing
@@ -177,16 +175,16 @@ public class ExceptionMapperFactory implements ExceptionMappers {
                 SortedSet<Class<? extends ExceptionMapper>> mapperTypes
                         = new TreeSet<Class<? extends ExceptionMapper>>(new Comparator<Class<? extends ExceptionMapper>>() {
 
-                            @Override
-                            public int compare(Class<? extends ExceptionMapper> o1, Class<? extends ExceptionMapper> o2) {
-                                return o1.isAssignableFrom(o2) ? -1 : 1;
-                            }
-                        });
+                    @Override
+                    public int compare(Class<? extends ExceptionMapper> o1, Class<? extends ExceptionMapper> o2) {
+                        return o1.isAssignableFrom(o2) ? -1 : 1;
+                    }
+                });
 
                 final Set<Type> contracts = mapperHandle.getActiveDescriptor().getContractTypes();
                 for (Type contract : contracts) {
-                    if (contract instanceof Class &&
-                            ExceptionMapper.class.isAssignableFrom((Class<?>)contract) && contract != ExceptionMapper.class) {
+                    if (contract instanceof Class
+                            && ExceptionMapper.class.isAssignableFrom((Class<?>) contract) && contract != ExceptionMapper.class) {
                         mapperTypes.add((Class<? extends ExceptionMapper>) contract);
                     }
                 }

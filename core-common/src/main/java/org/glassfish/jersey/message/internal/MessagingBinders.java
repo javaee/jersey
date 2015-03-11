@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,15 +46,10 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import javax.inject.Singleton;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.transform.TransformerFactory;
 
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
 
-import org.glassfish.hk2.api.PerThread;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
@@ -98,7 +93,6 @@ public final class MessagingBinders {
             // Message body providers (both readers & writers)
             bindSingletonWorker(ByteArrayProvider.class);
             bindSingletonWorker(DataSourceProvider.class);
-            bindSingletonWorker(DocumentProvider.class);
             bindSingletonWorker(FileProvider.class);
             bindSingletonWorker(FormMultivaluedMapProvider.class);
             bindSingletonWorker(FormProvider.class);
@@ -108,25 +102,10 @@ public final class MessagingBinders {
             bindSingletonWorker(RenderedImageProvider.class);
             bindSingletonWorker(StringMessageProvider.class);
 
-            bindSingletonWorker(XmlJaxbElementProvider.App.class);
-            bindSingletonWorker(XmlJaxbElementProvider.Text.class);
-            bindSingletonWorker(XmlJaxbElementProvider.General.class);
-
-            bindSingletonWorker(XmlCollectionJaxbProvider.App.class);
-            bindSingletonWorker(XmlCollectionJaxbProvider.Text.class);
-            bindSingletonWorker(XmlCollectionJaxbProvider.General.class);
-
-            bindSingletonWorker(XmlRootElementJaxbProvider.App.class);
-            bindSingletonWorker(XmlRootElementJaxbProvider.Text.class);
-            bindSingletonWorker(XmlRootElementJaxbProvider.General.class);
-
             // Message body readers
             bind(SourceProvider.StreamSourceReader.class).to(MessageBodyReader.class).in(Singleton.class);
             bind(SourceProvider.SaxSourceReader.class).to(MessageBodyReader.class).in(Singleton.class);
             bind(SourceProvider.DomSourceReader.class).to(MessageBodyReader.class).in(Singleton.class);
-            bind(XmlRootObjectJaxbProvider.App.class).to(MessageBodyReader.class).in(Singleton.class);
-            bind(XmlRootObjectJaxbProvider.Text.class).to(MessageBodyReader.class).in(Singleton.class);
-            bind(XmlRootObjectJaxbProvider.General.class).to(MessageBodyReader.class).in(Singleton.class);
             /*
              * TODO: com.sun.jersey.core.impl.provider.entity.EntityHolderReader
              */
@@ -134,13 +113,9 @@ public final class MessagingBinders {
             // Message body writers
             bind(StreamingOutputProvider.class).to(MessageBodyWriter.class).in(Singleton.class);
             bind(SourceProvider.SourceWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
-            install(new ServiceFinderBinder<HeaderDelegateProvider>(HeaderDelegateProvider.class, applicationProperties, runtimeType));
+            install(new ServiceFinderBinder<HeaderDelegateProvider>(HeaderDelegateProvider.class, applicationProperties,
+                    runtimeType));
 
-            // XML factory injection points
-            bindFactory(DocumentBuilderFactoryInjectionProvider.class).to(DocumentBuilderFactory.class).in(PerThread.class);
-            bindFactory(SaxParserFactoryInjectionProvider.class).to(SAXParserFactory.class).in(PerThread.class);
-            bindFactory(XmlInputFactoryInjectionProvider.class).to(XMLInputFactory.class).in(PerThread.class);
-            bindFactory(TransformerFactoryInjectionProvider.class).to(TransformerFactory.class).in(PerThread.class);
         }
 
         private <T extends MessageBodyReader & MessageBodyWriter> void bindSingletonWorker(Class<T> worker) {

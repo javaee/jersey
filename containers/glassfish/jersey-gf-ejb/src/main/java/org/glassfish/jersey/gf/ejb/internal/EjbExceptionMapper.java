@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.gf.ejb.internal;
 
 import javax.ws.rs.WebApplicationException;
@@ -55,7 +56,7 @@ import org.glassfish.jersey.spi.ExtendedExceptionMapper;
  * If this mapper was not registered, no {@link WebApplicationException}
  * would end up mapped to the corresponding response.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class EjbExceptionMapper implements ExtendedExceptionMapper<EJBException> {
@@ -99,7 +100,7 @@ public class EjbExceptionMapper implements ExtendedExceptionMapper<EJBException>
 
             } else if (cause instanceof WebApplicationException) {
 
-                return ((WebApplicationException)cause).getResponse();
+                return ((WebApplicationException) cause).getResponse();
             }
         }
         return null;

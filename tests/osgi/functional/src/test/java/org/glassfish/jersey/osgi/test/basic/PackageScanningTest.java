@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,10 +76,10 @@ public class PackageScanningTest {
 
     private static final String CONTEXT = "/jersey";
 
-    private static final URI baseUri = UriBuilder.
-            fromUri("http://localhost").
-            port(Helper.getPort()).
-            path(CONTEXT).build();
+    private static final URI baseUri = UriBuilder
+            .fromUri("http://localhost")
+            .port(Helper.getPort())
+            .path(CONTEXT).build();
 
     @Configuration
     public static Option[] configuration() {
@@ -92,10 +92,10 @@ public class PackageScanningTest {
 
                 mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").version("3.1.0"),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-servlet").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core").
-                        versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-servlet").
-                        versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core")
+                        .versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-servlet")
+                        .versionAsInProject(),
 
                 // MBR/MBW for JSON-P is on the classpath.
                 mavenBundle().groupId("org.glassfish").artifactId("javax.json").versionAsInProject()

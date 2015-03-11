@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.jetty.connector;
 
 import java.util.logging.Logger;
@@ -67,7 +68,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public class AuthTest extends JerseyTest {
@@ -78,6 +79,7 @@ public class AuthTest extends JerseyTest {
     @Path("/test")
     @Singleton
     public static class AuthResource {
+
         int requestCount = 0;
 
         @GET
@@ -86,7 +88,8 @@ public class AuthTest extends JerseyTest {
             String value = h.getRequestHeaders().getFirst("Authorization");
             if (value == null) {
                 assertEquals(1, requestCount);
-                throw new WebApplicationException(Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
             } else {
                 assertTrue(requestCount > 1);
             }
@@ -99,7 +102,8 @@ public class AuthTest extends JerseyTest {
         public String getFilter(@Context HttpHeaders h) {
             String value = h.getRequestHeaders().getFirst("Authorization");
             if (value == null) {
-                throw new WebApplicationException(Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
             }
 
             return "GET";
@@ -111,7 +115,8 @@ public class AuthTest extends JerseyTest {
             String value = h.getRequestHeaders().getFirst("Authorization");
             if (value == null) {
                 assertEquals(1, requestCount);
-                throw new WebApplicationException(Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
             } else {
                 assertTrue(requestCount > 1);
             }
@@ -124,7 +129,8 @@ public class AuthTest extends JerseyTest {
         public String postFilter(@Context HttpHeaders h, String e) {
             String value = h.getRequestHeaders().getFirst("Authorization");
             if (value == null) {
-                throw new WebApplicationException(Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
             }
 
             return e;
@@ -136,7 +142,8 @@ public class AuthTest extends JerseyTest {
             String value = h.getRequestHeaders().getFirst("Authorization");
             if (value == null) {
                 assertEquals(1, requestCount);
-                throw new WebApplicationException(Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
             } else {
                 assertTrue(requestCount > 1);
             }
@@ -147,7 +154,8 @@ public class AuthTest extends JerseyTest {
         public void deleteFilter(@Context HttpHeaders h) {
             String value = h.getRequestHeaders().getFirst("Authorization");
             if (value == null) {
-                throw new WebApplicationException(Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
             }
         }
 
@@ -156,7 +164,8 @@ public class AuthTest extends JerseyTest {
         public String deleteFilterWithEntity(@Context HttpHeaders h, String e) {
             String value = h.getRequestHeaders().getFirst("Authorization");
             if (value == null) {
-                throw new WebApplicationException(Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
             }
 
             return e;

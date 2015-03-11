@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,14 +62,14 @@ import jersey.repackaged.com.google.common.collect.Maps;
  * Dynamic MBean that exposes information about execution statistics. The exposed information contains
  * execution statistics for various time window sizes.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class ExecutionStatisticsDynamicBean implements DynamicMBean {
+
     private volatile ExecutionStatistics executionStatistics;
     private final Map<String, Value<Object>> attributeValues = Maps.newHashMap();
 
     private final MBeanInfo mBeanInfo;
-
 
     private MBeanInfo initMBeanInfo(final ExecutionStatistics initialStatistics) {
         final Map<Long, TimeWindowStatistics> statsMap = initialStatistics.getTimeWindowStatistics();
@@ -112,7 +112,6 @@ public class ExecutionStatisticsDynamicBean implements DynamicMBean {
                 }
             });
 
-
             name = "RequestRate[requestsPerSeconds]_" + postfix;
             attrs[i++] = new MBeanAttributeInfo(name, "double", "Average requests per second in last "
                     + postfix + ".", true, false, false);
@@ -123,7 +122,6 @@ public class ExecutionStatisticsDynamicBean implements DynamicMBean {
                     return executionStatistics.getTimeWindowStatistics().get(interval).getRequestsPerSecond();
                 }
             });
-
 
             name = "RequestCount_" + postfix;
             attrs[i++] = new MBeanAttributeInfo(name, "double", "Request count in last "
@@ -162,10 +160,8 @@ public class ExecutionStatisticsDynamicBean implements DynamicMBean {
             sb.setLength(sb.length() - 1);
         }
 
-
         return sb.toString();
     }
-
 
     /**
      * Create a new MXBean and register it into the mbean server using {@code mBeanExposer}.
@@ -190,14 +186,14 @@ public class ExecutionStatisticsDynamicBean implements DynamicMBean {
         this.executionStatistics = executionStatistics;
     }
 
-
     @Override
     public Object getAttribute(String attribute) throws AttributeNotFoundException, MBeanException, ReflectionException {
         return attributeValues.get(attribute).get();
     }
 
     @Override
-    public void setAttribute(Attribute attribute) throws AttributeNotFoundException, InvalidAttributeValueException, MBeanException, ReflectionException {
+    public void setAttribute(Attribute attribute)
+            throws AttributeNotFoundException, InvalidAttributeValueException, MBeanException, ReflectionException {
     }
 
     @Override

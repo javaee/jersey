@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.integration.servlet_25_init_1;
 
 import java.net.URI;
@@ -61,7 +62,7 @@ import static org.junit.Assert.assertTrue;
  * Servlet 2.5 initialization test #01.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class Servlet25Init1ITCase extends JerseyTest {
 
@@ -84,7 +85,10 @@ public class Servlet25Init1ITCase extends JerseyTest {
     @Test
     public void testHelloWorldAtWrongPath() {
         Response r = target().path("application_path/helloworld").request().get();
-        assertTrue("Request to application_path/helloworld should have failed, but did not. That means two applications are registered.", r.getStatus() >= 400);
+        assertTrue(
+                "Request to application_path/helloworld should have failed, but did not. That means two applications are "
+                        + "registered.",
+                r.getStatus() >= 400);
     }
 
     @Test

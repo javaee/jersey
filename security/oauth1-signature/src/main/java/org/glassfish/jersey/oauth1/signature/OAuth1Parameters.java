@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -108,9 +108,6 @@ public class OAuth1Parameters extends HashMap<String, String> {
      */
     public static final String NO_CALLBACK_URI_VALUE = "oob";
 
-
-
-
     /* Authorization scheme and delimiter. */
     private static final String SCHEME_SPACE = SCHEME + ' ';
 
@@ -129,7 +126,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * protection realm.
      *
      * @param realm the protection realm for the request.
@@ -155,7 +152,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * consumer key.
      *
      * @param consumerKey the consumer key.
@@ -189,7 +186,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * token.
      *
      * @param token the access or request token.
@@ -215,7 +212,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * signature method.
      *
      * @param signatureMethod the signature method used to sign the request.
@@ -241,7 +238,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * signature.
      *
      * @param signature the signature for the request.
@@ -271,7 +268,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * timestamp.
      *
      * @param timestamp positive integer, typically number of seconds since epoch.
@@ -290,7 +287,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * timestamp to the current time.
      *
      * @return this parameters object.
@@ -316,7 +313,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * nonce.
      *
      * @param nonce a value that should be unique for a given timestamp.
@@ -335,7 +332,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * nonce to a randomly-generated UUID.
      *
      * @return this parameters object.
@@ -360,7 +357,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * version.
      *
      * @param version the protocol version.
@@ -379,7 +376,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * version to the default value of 1.0.
      *
      * @return this parameters object.
@@ -404,7 +401,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * verifier code.
      *
      * @param verifier the verifier code.
@@ -430,7 +427,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
     }
 
     /**
-     * Builder pattern method to return {@link OAuth1Parameters} after setting
+     * Builder pattern method to return {@code OAuth1Parameters} after setting
      * callback URL.
      *
      * @param callback the callback URL.
@@ -447,8 +444,8 @@ public class OAuth1Parameters extends HashMap<String, String> {
      */
     private static String dequote(String value) {
         int length = value.length();
-        return ((length >= 2 && value.charAt(0) == '"' && value.charAt(length - 1) == '"') ?
-         value.substring(1, length - 1) : value);
+        return ((length >= 2 && value.charAt(0) == '"' && value.charAt(length - 1) == '"')
+                ? value.substring(1, length - 1) : value);
     }
 
     /**
@@ -464,7 +461,7 @@ public class OAuth1Parameters extends HashMap<String, String> {
             if (!param.startsWith("oauth_")) {
                 continue;
             }
-            List values = request.getParameterValues(param);
+            List<String> values = request.getParameterValues(param);
             if (values == null) {
                 continue;
             }
@@ -477,10 +474,12 @@ public class OAuth1Parameters extends HashMap<String, String> {
 
         // read all parameters from authorization header (highest preference)
         List<String> headers = request.getHeaderValues(AUTHORIZATION_HEADER);
-        if (headers == null) { return this; }
+        if (headers == null) {
+            return this;
+        }
 
         for (String header : headers) {
-                if (!header.regionMatches(true, 0, SCHEME_SPACE, 0, SCHEME_SPACE.length())) {
+            if (!header.regionMatches(true, 0, SCHEME_SPACE, 0, SCHEME_SPACE.length())) {
                 continue;
             }
             for (String param : header.substring(SCHEME_SPACE.length()).trim().split(",(?=(?:[^\"]*\"[^\"]*\")+$)")) {

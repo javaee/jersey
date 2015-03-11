@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,7 +75,6 @@ public class ResponseTest {
      */
     @Test
     public void OkTest5() {
-        boolean pass = true;
         Response resp;
         int status = 200;
         String content = "Test Only";
@@ -83,10 +82,10 @@ public class ResponseTest {
         List<String> lang = Arrays.asList("en-US", "en-GB", "zh-CN");
 
         MediaType mt = new MediaType("text", "plain");
-        List<Variant> vts = Variant.VariantListBuilder.newInstance().mediaTypes(mt).
-                languages(new Locale("en", "US"), new Locale("en", "GB"),
-                        new Locale("zh", "CN")).encodings((String[]) encoding.toArray()).
-                add().build();
+        List<Variant> vts = Variant.VariantListBuilder.newInstance().mediaTypes(mt)
+                .languages(new Locale("en", "US"), new Locale("en", "GB"),
+                        new Locale("zh", "CN")).encodings((String[]) encoding.toArray())
+                .add().build();
 
         String tmp;
         for (Variant vt : vts) {
@@ -96,11 +95,8 @@ public class ResponseTest {
             if (tmp.endsWith("false")) {
                 System.out.println("### " + tmp);
                 fail();
-                pass = false;
             }
         }
-
-        assertTrue(pass);
     }
 
     /*
@@ -111,7 +107,6 @@ public class ResponseTest {
     @Test
     public void cloneTest() throws CloneNotSupportedException {
         StringBuilder sb = new StringBuilder();
-        boolean pass = true;
 
         int status = 200;
         List<String> type = Arrays.asList("text/plain", "text/html");
@@ -125,12 +120,12 @@ public class ResponseTest {
 
         List<String> cookies = Arrays.asList(nck1.toString().toLowerCase());
 
-        Response.ResponseBuilder respb1 = Response.status(status).
-                header("Content-type", "text/plain").header("Content-type",
-                "text/html").header("Content-Language", "en-US").
-                header("Content-Language", "en-GB").header("Content-Language",
-                "zh-CN").header("Cache-Control", "no-transform").
-                header("Set-Cookie", "name_1=value_1;version=1");
+        Response.ResponseBuilder respb1 = Response.status(status)
+                .header("Content-type", "text/plain").header("Content-type",
+                "text/html").header("Content-Language", "en-US")
+                .header("Content-Language", "en-GB").header("Content-Language",
+                "zh-CN").header("Cache-Control", "no-transform")
+                .header("Set-Cookie", "name_1=value_1;version=1");
         Response.ResponseBuilder respb2 = respb1.clone();
 
         Response resp2 = respb2.build();
@@ -138,7 +133,6 @@ public class ResponseTest {
         String tmp = verifyResponse(resp2, null, status, encoding, lang, type,
                 null, null, cookies);
         if (tmp.endsWith("false")) {
-            pass = false;
             System.out.println("### " + sb.toString());
             fail();
         }
@@ -149,7 +143,6 @@ public class ResponseTest {
         tmp = verifyResponse(resp1, content, status, encoding, lang, type,
                 null, null, null);
         if (tmp.endsWith("false")) {
-            pass = false;
             System.out.println("### " + sb.toString());
             fail();
         }
@@ -157,14 +150,11 @@ public class ResponseTest {
         MultivaluedMap<java.lang.String, java.lang.Object> mvp =
                 resp1.getMetadata();
         if (mvp.containsKey("Set-Cookie")) {
-            pass = false;
             sb.append("Response contains unexpected Set-Cookie: ").append(mvp.getFirst("Set-Cookie").toString()).append(newline);
             System.out.println("### " + sb.toString());
             fail();
         }
         sb.append(tmp).append(newline);
-
-        assertTrue(pass);
     }
 
     /*
@@ -174,8 +164,6 @@ public class ResponseTest {
      */
     @Test
     public void fromResponseTest() {
-        boolean pass = true;
-
         int status = 200;
         String content = "Test Only";
         List<String> type = Arrays.asList("text/plain", "text/html");
@@ -184,10 +172,10 @@ public class ResponseTest {
 
         MediaType mt1 = new MediaType("text", "plain");
         MediaType mt2 = new MediaType("text", "html");
-        List<Variant> vts = Variant.VariantListBuilder.newInstance().mediaTypes(mt1, mt2).
-                languages(new Locale("en", "US"), new Locale("en", "GB"),
-                        new Locale("zh", "CN")).encodings((String[]) encoding.toArray()).
-                add().build();
+        List<Variant> vts = Variant.VariantListBuilder.newInstance().mediaTypes(mt1, mt2)
+                .languages(new Locale("en", "US"), new Locale("en", "GB"),
+                        new Locale("zh", "CN")).encodings((String[]) encoding.toArray())
+                .add().build();
 
         String tmp;
         for (Variant vt : vts) {
@@ -196,13 +184,10 @@ public class ResponseTest {
             tmp = verifyResponse(resp, content, status, encoding, lang, type,
                     null, null, null);
             if (tmp.endsWith("false")) {
-                pass = false;
                 System.out.println("### " + tmp);
                 fail();
             }
         }
-
-        assertTrue(pass);
     }
 
     /*
@@ -212,8 +197,6 @@ public class ResponseTest {
      */
     @Test
     public void headerTest() {
-        boolean pass = true;
-
         int status = 200;
         List<String> type = Arrays.asList("text/plain", "text/html");
         List<String> encoding = Arrays.asList("gzip", "compress");
@@ -227,18 +210,16 @@ public class ResponseTest {
         List<String> cookies = Arrays.asList(nck1.toString().toLowerCase());
 
         Response resp = Response.status(status).header("Content-type",
-                "text/plain").header("Content-type", "text/html").header("Content-Language", "en-US").
-                header("Content-Language", "en-GB").header("Content-Language",
-                "zh-CN").header("Cache-Control", "no-transform").
-                header("Set-Cookie", "name_1=value_1;version=1").build();
+                "text/plain").header("Content-type", "text/html").header("Content-Language", "en-US")
+                .header("Content-Language", "en-GB").header("Content-Language",
+                "zh-CN").header("Cache-Control", "no-transform")
+                .header("Set-Cookie", "name_1=value_1;version=1").build();
         String tmp = verifyResponse(resp, null, status, encoding, lang, type,
                 null, null, cookies);
         if (tmp.endsWith("false")) {
-            pass = false;
             System.out.println("### " + tmp);
             fail();
         }
-        assertTrue(pass);
     }
 
     /*
@@ -248,18 +229,16 @@ public class ResponseTest {
      */
     @Test
     public void variantTest() {
-        boolean pass = true;
-
         Response resp;
         int status = 200;
         List<String> encoding = Arrays.asList("gzip", "compress");
         List<String> lang = Arrays.asList("en-US", "en-GB", "zh-CN");
 
         MediaType mt = new MediaType("text", "plain");
-        List<Variant> vts = Variant.VariantListBuilder.newInstance().mediaTypes(mt).
-                languages(new Locale("en", "US"), new Locale("en", "GB"),
-                        new Locale("zh", "CN")).encodings((String[]) encoding.toArray()).
-                add().build();
+        List<Variant> vts = Variant.VariantListBuilder.newInstance().mediaTypes(mt)
+                .languages(new Locale("en", "US"), new Locale("en", "GB"),
+                        new Locale("zh", "CN")).encodings((String[]) encoding.toArray())
+                .add().build();
 
         String tmp;
         for (Variant vt : vts) {
@@ -267,15 +246,11 @@ public class ResponseTest {
             tmp = verifyResponse(resp, null, status, encoding, lang, null, null,
                     null, null);
             if (tmp.endsWith("false")) {
-                pass = false;
                 System.out.println("### " + tmp);
                 fail();
             }
         }
-
-        assertTrue(pass);
     }
-
 
     private static final String indent = "    ";
     private static final String newline = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("line.separator"));
@@ -297,9 +272,9 @@ public class ResponseTest {
         MultivaluedMap<String, String> mvp = HeaderUtils.asStringHeaders(
                 resp.getMetadata());
 
-
         for (String key : mvp.keySet()) {
-            sb.append(indent + "Processing Key found in response: ").append(key).append(": ").append(mvp.get(key)).append("; ").append(newline);
+            sb.append(indent + "Processing Key found in response: ").append(key).append(": ").append(mvp.get(key)).append("; ")
+                    .append(newline);
 
             if (key.equalsIgnoreCase("Vary")) {
                 for (String value : var) {
@@ -329,7 +304,8 @@ public class ResponseTest {
                     for (String lang : mvp.get(key)) {
                         if (!language.contains(lang)) {
                             pass = false;
-                            sb.append(indent + indent + "language test failed: ").append(lang).append(" is not expected in Response").append(newline);
+                            sb.append(indent + indent + "language test failed: ").append(lang)
+                                    .append(" is not expected in Response").append(newline);
                             for (String tt : language) {
                                 sb.append(indent + indent + "Expecting Content-Language ").append(tt).append(newline);
                             }
@@ -338,13 +314,13 @@ public class ResponseTest {
                 }
             }
 
-
             if (type != null) {
                 if (key.equalsIgnoreCase("Content-Type")) {
                     for (Object lang : mvp.get(key)) {
                         if (!type.contains(lang.toString().toLowerCase())) {
                             pass = false;
-                            sb.append(indent + indent + "Content-Type test failed: ").append(lang).append(" is not expected in Response").append(newline);
+                            sb.append(indent + indent + "Content-Type test failed: ").append(lang)
+                                    .append(" is not expected in Response").append(newline);
                         }
                     }
                 }
@@ -359,7 +335,8 @@ public class ResponseTest {
                         for (String cc : ccl) {
                             if (!(all_ccl.toString().toLowerCase().contains(cc.toLowerCase()))) {
                                 pass = false;
-                                sb.append(indent + indent + "Cache-Control test failed: ").append(cc).append(" is not found in Response.").append(newline);
+                                sb.append(indent + indent + "Cache-Control test failed: ").append(cc)
+                                        .append(" is not found in Response.").append(newline);
                             }
                         }
                     }
@@ -373,12 +350,14 @@ public class ResponseTest {
                 if (key.equalsIgnoreCase("Set-Cookie")) {
                     for (Object nck_actual : mvp.get(key)) {
                         sb.append(indent + indent + "Processing ").append(nck_actual.toString()).append(newline);
-                        if (!cookies.contains(nck_actual.toString().toLowerCase().
-                                replace(" ", ""))) {
+                        if (!cookies.contains(nck_actual.toString().toLowerCase()
+                                .replace(" ", ""))) {
                             pass = false;
-                            sb.append(indent + indent + "Set-Cookie test failed: ").append(nck_actual).append(" is not expected in Response.").append(newline);
+                            sb.append(indent + indent + "Set-Cookie test failed: ").append(nck_actual)
+                                    .append(" is not expected in Response.").append(newline);
                         } else {
-                            sb.append(indent + indent + "Expected Set-Cookie: ").append(nck_actual).append(" is found in Response.").append(newline);
+                            sb.append(indent + indent + "Expected Set-Cookie: ").append(nck_actual)
+                                    .append(" is found in Response.").append(newline);
                         }
                     }
                 }
@@ -397,20 +376,23 @@ public class ResponseTest {
         sb.append("========== Verifying a Response with Map: ").append(newline);
 
         if ((content == null) || (content.equals(""))) {
-            if (!(resp.getEntity() == null) || (resp.getEntity() == "")) {
+            if (!(resp.getEntity() == null) || "".equals(resp.getEntity())) {
                 pass = false;
-                sb.append(indent + "Entity verification failed: expecting no content, got ").append((String) resp.getEntity()).append(newline);
+                sb.append(indent + "Entity verification failed: expecting no content, got ").append((String) resp.getEntity())
+                        .append(newline);
             }
         } else if (!content.equals(resp.getEntity())) {
             pass = false;
-            sb.append(indent + "Entity verification failed: expecting ").append(content).append(", got ").append((String) resp.getEntity()).append(newline);
+            sb.append(indent + "Entity verification failed: expecting ").append(content).append(", got ")
+                    .append((String) resp.getEntity()).append(newline);
         } else {
             sb.append(indent + "Correct content found in Response: ").append((String) resp.getEntity()).append(newline);
         }
 
         if (resp.getStatus() != status) {
             pass = false;
-            sb.append(indent + "Status code verification failed: expecting ").append(status).append(", got ").append(resp.getStatus()).append(newline);
+            sb.append(indent + "Status code verification failed: expecting ").append(status).append(", got ")
+                    .append(resp.getStatus()).append(newline);
         } else {
             sb.append(indent + "Correct status found in Response: ").append(status).append(newline);
         }
@@ -420,7 +402,8 @@ public class ResponseTest {
         if (expected_map == null) {
             sb.append(indent + "No keys to verify or expected, but found the following keys in Response:").append(newline);
             for (String key : mvp.keySet()) {
-                sb.append(indent + indent + "Key: ").append(key).append("; ").append(mvp.getFirst(key)).append(";").append(newline);
+                sb.append(indent + indent + "Key: ").append(key).append("; ").append(mvp.getFirst(key)).append(";")
+                        .append(newline);
             }
         } else {
             for (String key_actual : mvp.keySet()) {
@@ -444,10 +427,13 @@ public class ResponseTest {
 
                     if (!actual.equals(expected)) {
                         pass = false;
-                        sb.append(indent + indent + "Key: ").append(key).append(" found in Response, but with different value;").append(newline);
-                        sb.append(indent + indent + "Expecting ").append(expected_map.get(key)).append("; got ").append(mvp.getFirst(key)).append(newline);
+                        sb.append(indent + indent + "Key: ").append(key).append(" found in Response, but with different value;")
+                                .append(newline);
+                        sb.append(indent + indent + "Expecting ").append(expected_map.get(key)).append("; got ")
+                                .append(mvp.getFirst(key)).append(newline);
                     }
-                    sb.append(indent + indent + "Processed key ").append(key).append(" with expected value ").append(expected_map.get(key)).append(newline);
+                    sb.append(indent + indent + "Processed key ").append(key).append(" with expected value ")
+                            .append(expected_map.get(key)).append(newline);
                 }
             }
         }
@@ -469,7 +455,7 @@ public class ResponseTest {
     public void testAllowSet() {
         Response.ResponseBuilder responseBuilder = Response.ok();
 
-        responseBuilder = responseBuilder.allow(new HashSet<String>(Arrays.asList("GET")));
+        responseBuilder = responseBuilder.allow(new HashSet<>(Arrays.asList("GET")));
         assertTrue(responseBuilder.build().getHeaderString(HttpHeaders.ALLOW).contains("GET"));
         responseBuilder = responseBuilder.allow((Set<String>) null);
         assertEquals(null, responseBuilder.build().getHeaderString(HttpHeaders.ALLOW));
@@ -479,12 +465,11 @@ public class ResponseTest {
     public void testAllowVariant() {
         Response.ResponseBuilder responseBuilder = Response.ok();
 
-        responseBuilder = responseBuilder.allow(new HashSet<String>(Arrays.asList("GET")));
+        responseBuilder = responseBuilder.allow(new HashSet<>(Arrays.asList("GET")));
         assertTrue(responseBuilder.build().getHeaderString(HttpHeaders.ALLOW).contains("GET"));
         responseBuilder = responseBuilder.allow((String[]) null);
         assertEquals(null, responseBuilder.build().getHeaderString(HttpHeaders.ALLOW));
     }
-
 
     @Test
     public void bufferEntityTest() {
@@ -530,7 +515,7 @@ public class ResponseTest {
                 .newInstance()
                 .mediaTypes(MediaType.TEXT_PLAIN_TYPE)
                 .languages(new Locale("en", "US"), new Locale("en", "GB"))
-                .encodings(encoding.toArray(new String[0])).add().build();
+                .encodings(encoding.toArray(new String[encoding.size()])).add().build();
 
         final Response r1 = Response.ok().variants(list).build();
         assertNotNull(r1);

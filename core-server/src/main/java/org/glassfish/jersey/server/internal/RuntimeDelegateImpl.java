@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal;
 
 import javax.ws.rs.core.Application;
@@ -54,7 +55,7 @@ import org.glassfish.jersey.server.ContainerFactory;
  *
  * @author Jakub Podlesak
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
 
@@ -64,7 +65,8 @@ public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
     }
 
     @Override
-    public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
+    public <T> T createEndpoint(Application application, Class<T> endpointType)
+            throws IllegalArgumentException, UnsupportedOperationException {
         if (application == null) {
             throw new IllegalArgumentException("application is null.");
         }

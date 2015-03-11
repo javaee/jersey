@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,16 +41,17 @@
 package org.glassfish.jersey.examples.linking.resources;
 
 import javax.ws.rs.DefaultValue;
-import org.glassfish.jersey.examples.linking.model.ItemsModel;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException; 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.examples.linking.model.ItemsModel;
 import org.glassfish.jersey.examples.linking.representation.ItemsRepresentation;
 
 /**
@@ -69,33 +70,27 @@ public class ItemsResource {
         itemsModel = ItemsModel.getInstance();
     }
 
-    
     @GET
     public ItemsRepresentation query(
-            @Context javax.ws.rs.core.UriInfo info, 
+            @Context javax.ws.rs.core.UriInfo info,
             @QueryParam("offset") @DefaultValue("-1") int offset, @DefaultValue("-1") @QueryParam("limit") int limit) {
-        
 
-        if (offset==-1 || limit == -1)
-        {
+        if (offset == -1 || limit == -1) {
             offset = offset == -1 ? 0 : offset;
             limit = limit == -1 ? 10 : limit;
-            
+
             throw new WebApplicationException(
                     Response.seeOther(info.getRequestUriBuilder().queryParam("offset", offset)
-                    .queryParam("limit", limit).build())
+                            .queryParam("limit", limit).build())
                             .build()
-               );
+            );
         }
-        
-        
-        
-        return new ItemsRepresentation(itemsModel, offset, limit );
+
+        return new ItemsRepresentation(itemsModel, offset, limit);
     }
-    
-    
+
     @Path("{id}")
-    public ItemResource get(@PathParam("id") String id ) {
+    public ItemResource get(@PathParam("id") String id) {
         return new ItemResource(itemsModel, id);
     }
 

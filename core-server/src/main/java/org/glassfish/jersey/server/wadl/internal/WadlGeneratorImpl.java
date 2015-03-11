@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,10 +65,9 @@ import com.sun.research.ws.wadl.Response;
  * Created on: Jun 16, 2008<br>
  *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class WadlGeneratorImpl implements WadlGenerator {
-
 
     @Override
     public String getRequiredJaxbContextPath() {
@@ -124,8 +123,9 @@ public class WadlGeneratorImpl implements WadlGenerator {
     @Override
     public Param createParam(org.glassfish.jersey.server.model.Resource r, ResourceMethod m, final Parameter p) {
 
-        if (p.getSource() == Parameter.Source.UNKNOWN)
+        if (p.getSource() == Parameter.Source.UNKNOWN) {
             return null;
+        }
 
         Param wadlParam = new Param();
         wadlParam.setName(p.getSourceName());
@@ -156,29 +156,31 @@ public class WadlGeneratorImpl implements WadlGenerator {
                 break;
         }
 
-        if (p.hasDefaultValue())
+        if (p.hasDefaultValue()) {
             wadlParam.setDefault(p.getDefaultValue());
+        }
         Class<?> pClass = p.getRawType();
         if (pClass.isArray()) {
             wadlParam.setRepeating(true);
             pClass = pClass.getComponentType();
         }
-        if (pClass.equals(int.class) || pClass.equals(Integer.class))
+        if (pClass.equals(int.class) || pClass.equals(Integer.class)) {
             wadlParam.setType(new QName("http://www.w3.org/2001/XMLSchema", "int", "xs"));
-        else if (pClass.equals(boolean.class) || pClass.equals(Boolean.class))
+        } else if (pClass.equals(boolean.class) || pClass.equals(Boolean.class)) {
             wadlParam.setType(new QName("http://www.w3.org/2001/XMLSchema", "boolean", "xs"));
-        else if (pClass.equals(long.class) || pClass.equals(Long.class))
+        } else if (pClass.equals(long.class) || pClass.equals(Long.class)) {
             wadlParam.setType(new QName("http://www.w3.org/2001/XMLSchema", "long", "xs"));
-        else if (pClass.equals(short.class) || pClass.equals(Short.class))
+        } else if (pClass.equals(short.class) || pClass.equals(Short.class)) {
             wadlParam.setType(new QName("http://www.w3.org/2001/XMLSchema", "short", "xs"));
-        else if (pClass.equals(byte.class) || pClass.equals(Byte.class))
+        } else if (pClass.equals(byte.class) || pClass.equals(Byte.class)) {
             wadlParam.setType(new QName("http://www.w3.org/2001/XMLSchema", "byte", "xs"));
-        else if (pClass.equals(float.class) || pClass.equals(Float.class))
+        } else if (pClass.equals(float.class) || pClass.equals(Float.class)) {
             wadlParam.setType(new QName("http://www.w3.org/2001/XMLSchema", "float", "xs"));
-        else if (pClass.equals(double.class) || pClass.equals(Double.class))
+        } else if (pClass.equals(double.class) || pClass.equals(Double.class)) {
             wadlParam.setType(new QName("http://www.w3.org/2001/XMLSchema", "double", "xs"));
-        else
+        } else {
             wadlParam.setType(new QName("http://www.w3.org/2001/XMLSchema", "string", "xs"));
+        }
         return wadlParam;
     }
 
@@ -192,7 +194,6 @@ public class WadlGeneratorImpl implements WadlGenerator {
         }
 
         if (resource.isExtended()) {
-
 
             wadlResource.getAny().add(WadlApplicationContextImpl.extendedElement);
         }
@@ -230,7 +231,6 @@ public class WadlGeneratorImpl implements WadlGenerator {
         wadlRepresentation.setMediaType(mediaType.toString());
         return wadlRepresentation;
     }
-
 
     // ================ methods for post build actions =======================
 

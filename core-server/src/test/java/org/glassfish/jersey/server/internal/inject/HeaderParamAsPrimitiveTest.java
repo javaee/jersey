@@ -1,42 +1,42 @@
 /*
-* DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
-*
-* Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
-*
-* The contents of this file are subject to the terms of either the GNU
-* General Public License Version 2 only ("GPL") or the Common Development
-* and Distribution License("CDDL") (collectively, the "License").  You
-* may not use this file except in compliance with the License.  You can
-* obtain a copy of the License at
-* http://glassfish.java.net/public/CDDL+GPL_1_1.html
-* or packager/legal/LICENSE.txt.  See the License for the specific
-* language governing permissions and limitations under the License.
-*
-* When distributing the software, include this License Header Notice in each
-* file and include the License file at packager/legal/LICENSE.txt.
-*
-* GPL Classpath Exception:
-* Oracle designates this particular file as subject to the "Classpath"
-* exception as provided by Oracle in the GPL Version 2 section of the License
-* file that accompanied this code.
-*
-* Modifications:
-* If applicable, add the following below the License Header, with the fields
-* enclosed by brackets [] replaced by your own identifying information:
-* "Portions Copyright [year] [name of copyright owner]"
-*
-* Contributor(s):
-* If you wish your version of this file to be governed by only the CDDL or
-* only the GPL Version 2, indicate your decision by adding "[Contributor]
-* elects to include this software in this distribution under the [CDDL or GPL
-* Version 2] license."  If you don't indicate a single choice of license, a
-* recipient has the option to distribute your version of this file under
-* either the CDDL, the GPL Version 2 or to extend the choice of license to
-* its licensees as provided above.  However, if you add GPL Version 2 code
-* and therefore, elected the GPL Version 2 license, then the option applies
-* only if the new code is made subject to such option by the copyright
-* holder.
-*/
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ *
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of either the GNU
+ * General Public License Version 2 only ("GPL") or the Common Development
+ * and Distribution License("CDDL") (collectively, the "License").  You
+ * may not use this file except in compliance with the License.  You can
+ * obtain a copy of the License at
+ * http://glassfish.java.net/public/CDDL+GPL_1_1.html
+ * or packager/legal/LICENSE.txt.  See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ * When distributing the software, include this License Header Notice in each
+ * file and include the License file at packager/legal/LICENSE.txt.
+ *
+ * GPL Classpath Exception:
+ * Oracle designates this particular file as subject to the "Classpath"
+ * exception as provided by Oracle in the GPL Version 2 section of the License
+ * file that accompanied this code.
+ *
+ * Modifications:
+ * If applicable, add the following below the License Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
+ * "Portions Copyright [year] [name of copyright owner]"
+ *
+ * Contributor(s):
+ * If you wish your version of this file to be governed by only the CDDL or
+ * only the GPL Version 2, indicate your decision by adding "[Contributor]
+ * elects to include this software in this distribution under the [CDDL or GPL
+ * Version 2] license."  If you don't indicate a single choice of license, a
+ * recipient has the option to distribute your version of this file under
+ * either the CDDL, the GPL Version 2 or to extend the choice of license to
+ * its licensees as provided above.  However, if you add GPL Version 2 code
+ * and therefore, elected the GPL Version 2 license, then the option applies
+ * only if the new code is made subject to such option by the copyright
+ * holder.
+ */
 
 package org.glassfish.jersey.server.internal.inject;
 
@@ -81,6 +81,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceHeaderPrimitives {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@HeaderParam("boolean") boolean v) {
@@ -92,6 +93,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@HeaderParam("byte") byte v) {
             assertEquals(127, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@HeaderParam("char") char v) {
+            assertEquals('c', v);
             return "content";
         }
 
@@ -133,6 +141,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default/null")
     public static class ResourceHeaderPrimitivesDefaultNull {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@HeaderParam("boolean") boolean v) {
@@ -144,6 +153,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@HeaderParam("byte") byte v) {
             assertEquals(0, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@HeaderParam("char") char v) {
+            assertEquals(0x00, v);
             return "content";
         }
 
@@ -164,7 +180,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/long")
         public String doGet(@HeaderParam("long") long v) {
-            assertEquals(0l, v);
+            assertEquals(0L, v);
             return "content";
         }
 
@@ -185,6 +201,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default")
     public static class ResourceHeaderPrimitivesDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@HeaderParam("boolean") @DefaultValue("true") boolean v) {
@@ -196,6 +213,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@HeaderParam("byte") @DefaultValue("127") byte v) {
             assertEquals(127, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@HeaderParam("char") @DefaultValue("c") char v) {
+            assertEquals('c', v);
             return "content";
         }
 
@@ -237,6 +261,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/default/override")
     public static class ResourceHeaderPrimitivesDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@HeaderParam("boolean") @DefaultValue("false") boolean v) {
@@ -248,6 +273,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@HeaderParam("byte") @DefaultValue("1") byte v) {
             assertEquals(127, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@HeaderParam("char") @DefaultValue("1") char v) {
+            assertEquals('c', v);
             return "content";
         }
 
@@ -289,6 +321,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers")
     public static class ResourceHeaderPrimitiveWrappers {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@HeaderParam("boolean") Boolean v) {
@@ -300,6 +333,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@HeaderParam("byte") Byte v) {
             assertEquals(127, v.byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@HeaderParam("char") Character v) {
+            assertEquals('c', v.charValue());
             return "content";
         }
 
@@ -341,6 +381,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default/null")
     public static class ResourceHeaderPrimitiveWrappersDefaultNull {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@HeaderParam("boolean") Boolean v) {
@@ -351,6 +392,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/byte")
         public String doGet(@HeaderParam("byte") Byte v) {
+            assertEquals(null, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@HeaderParam("char") Character v) {
             assertEquals(null, v);
             return "content";
         }
@@ -393,6 +441,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default")
     public static class ResourceHeaderPrimitiveWrappersDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@HeaderParam("boolean") @DefaultValue("true") Boolean v) {
@@ -404,6 +453,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@HeaderParam("byte") @DefaultValue("127") Byte v) {
             assertEquals(127, v.byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@HeaderParam("char") @DefaultValue("d") Character v) {
+            assertEquals('d', v.charValue());
             return "content";
         }
 
@@ -445,6 +501,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/wrappers/default/override")
     public static class ResourceHeaderPrimitiveWrappersDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGet(@HeaderParam("boolean") @DefaultValue("false") Boolean v) {
@@ -456,6 +513,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@HeaderParam("byte") @DefaultValue("1") Byte v) {
             assertEquals(127, v.byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@HeaderParam("char") @DefaultValue("d") Character v) {
+            assertEquals('c', v.charValue());
             return "content";
         }
 
@@ -497,6 +561,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list")
     public static class ResourceHeaderPrimitiveList {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@HeaderParam("boolean") List<Boolean> v) {
@@ -512,6 +577,15 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
             assertEquals(127, v.get(0).byteValue());
             assertEquals(127, v.get(1).byteValue());
             assertEquals(127, v.get(2).byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGetCharacter(@HeaderParam("char") List<Character> v) {
+            assertEquals('c', v.get(0).charValue());
+            assertEquals('c', v.get(1).charValue());
+            assertEquals('c', v.get(2).charValue());
             return "content";
         }
 
@@ -563,6 +637,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default/null")
     public static class ResourceHeaderPrimitiveListDefaultEmpty {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@HeaderParam("boolean") List<Boolean> v) {
@@ -573,6 +648,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/byte")
         public String doGetByte(@HeaderParam("byte") List<Byte> v) {
+            assertEquals(0, v.size());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGetChararcter(@HeaderParam("char") List<Character> v) {
             assertEquals(0, v.size());
             return "content";
         }
@@ -615,6 +697,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default")
     public static class ResourceHeaderPrimitiveListDefault {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@HeaderParam("boolean") @DefaultValue("true") List<Boolean> v) {
@@ -626,6 +709,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGetByte(@HeaderParam("byte") @DefaultValue("127") List<Byte> v) {
             assertEquals(127, v.get(0).byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGetCharacter(@HeaderParam("char") @DefaultValue("d") List<Character> v) {
+            assertEquals('d', v.get(0).charValue());
             return "content";
         }
 
@@ -667,6 +757,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
 
     @Path("/list/default/override")
     public static class ResourceHeaderPrimitiveListDefaultOverride {
+
         @GET
         @Produces("application/boolean")
         public String doGetBoolean(@HeaderParam("boolean") @DefaultValue("false") List<Boolean> v) {
@@ -678,6 +769,13 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGetByte(@HeaderParam("byte") @DefaultValue("0") List<Byte> v) {
             assertEquals(127, v.get(0).byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGetCharacter(@HeaderParam("char") @DefaultValue("d") List<Character> v) {
+            assertEquals('c', v.get(0).charValue());
             return "content";
         }
 
@@ -717,48 +815,35 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
         }
     }
 
-
     void _test(String type, String value) throws ExecutionException, InterruptedException {
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/" + type).
-                        header(type, value).build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/" + type)
+                        .header(type, value).build()
         ).getEntity());
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/wrappers", "GET").
-                        accept("application/" + type).
-                        header(type, value).build()
+                RequestContextBuilder.from("/wrappers", "GET").accept("application/" + type).header(type, value).build()
         ).getEntity());
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/list", "GET").
-                        accept("application/" + type).
-                        header(type, value).
-                        header(type, value).
-                        header(type, value).
-                        build()
+                RequestContextBuilder.from("/list", "GET").accept("application/" + type).header(type, value).header(type, value)
+                        .header(type, value).build()
         ).getEntity());
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
         assertEquals("content", apply(
-                RequestContextBuilder.from(base + "default/null", "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from(base + "default/null", "GET").accept("application/" + type).build()
         ).getEntity());
 
         assertEquals("content", apply(
-                RequestContextBuilder.from(base + "default", "GET").
-                        accept("application/" + type).
-                        build()
+                RequestContextBuilder.from(base + "default", "GET").accept("application/" + type).build()
         ).getEntity());
 
         assertEquals("content", apply(
-                RequestContextBuilder.from(base + "default/override", "GET").
-                        accept("application/" + type).
-                        header(type, value).
-                        build()
+                RequestContextBuilder.from(base + "default/override", "GET").accept("application/" + type).header(type, value)
+                        .build()
         ).getEntity());
     }
 
@@ -812,6 +897,26 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testGetBytePrimitiveListDefault() throws ExecutionException, InterruptedException {
         _testListDefault("byte", "127");
+    }
+
+    @Test
+    public void testGetCharacter() throws ExecutionException, InterruptedException {
+        _test("char", "c");
+    }
+
+    @Test
+    public void testGetCharacterPrimitivesDefault() throws ExecutionException, InterruptedException {
+        _testDefault("char", "c");
+    }
+
+    @Test
+    public void testGetCharacterPrimitiveWrappersDefault() throws ExecutionException, InterruptedException {
+        _testWrappersDefault("char", "c");
+    }
+
+    @Test
+    public void testGetCharacterPrimitiveListDefault() throws ExecutionException, InterruptedException {
+        _testListDefault("char", "c");
     }
 
     @Test
@@ -917,9 +1022,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testBadPrimitiveValue() throws ExecutionException, InterruptedException {
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/int").
-                        header("int", "abcdef").build()
+                RequestContextBuilder.from("/", "GET").accept("application/int").header("int", "abcdef").build()
         );
 
         assertEquals(400, responseContext.getStatus());
@@ -928,9 +1031,7 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testBadPrimitiveWrapperValue() throws ExecutionException, InterruptedException {
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/wrappers", "GET").
-                        accept("application/int").
-                        header("int", "abcdef").build()
+                RequestContextBuilder.from("/wrappers", "GET").accept("application/int").header("int", "abcdef").build()
         );
 
         assertEquals(400, responseContext.getStatus());
@@ -939,12 +1040,8 @@ public class HeaderParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testBadPrimitiveListValue() throws ExecutionException, InterruptedException {
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/int").
-                        header("int", "abcdef").
-                        header("int", "abcdef").
-                        header("int", "abcdef").
-                        build()
+                RequestContextBuilder.from("/", "GET").accept("application/int").header("int", "abcdef").header("int", "abcdef")
+                        .header("int", "abcdef").build()
         );
 
         assertEquals(400, responseContext.getStatus());

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,18 +55,18 @@ public class AuthenticationExceptionMapper implements ExceptionMapper<Authentica
 
     public Response toResponse(AuthenticationException e) {
         if (e.getRealm() != null) {
-            return Response.
-                    status(Status.UNAUTHORIZED).
-                    header("WWW-Authenticate", "Basic realm=\"" + e.getRealm() + "\"").
-                    type("text/plain").
-                    entity(e.getMessage()).
-                    build();
+            return Response
+                    .status(Status.UNAUTHORIZED)
+                    .header("WWW-Authenticate", "Basic realm=\"" + e.getRealm() + "\"")
+                    .type("text/plain")
+                    .entity(e.getMessage())
+                    .build();
         } else {
-            return Response.
-                    status(Status.UNAUTHORIZED).
-                    type("text/plain").
-                    entity(e.getMessage()).
-                    build();
+            return Response
+                    .status(Status.UNAUTHORIZED)
+                    .type("text/plain")
+                    .entity(e.getMessage())
+                    .build();
         }
     }
 

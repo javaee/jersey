@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,14 +48,14 @@ import org.glassfish.jersey.server.monitoring.TimeWindowStatistics;
  * Monitoring helper class that contains utility methods used in
  * Monitoring.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public final class MonitoringUtils {
 
     /**
      * Request rate limit (per second) below which statistics can be considered as cacheable.
      */
-    private final static double CACHEABLE_REQUEST_RATE_LIMIT = 0.001;
+    private static final double CACHEABLE_REQUEST_RATE_LIMIT = 0.001;
 
     /**
      * Get the method unique string ID. The ID is constructed from method attributes separated

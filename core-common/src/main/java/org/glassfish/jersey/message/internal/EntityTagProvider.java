@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -87,11 +87,12 @@ public class EntityTagProvider implements HeaderDelegateProvider<EntityTag> {
             HttpHeaderReader reader = HttpHeaderReader.newInstance(header);
             Event e = reader.next(false);
             if (e == Event.QuotedString) {
-                return new EntityTag(reader.getEventValue());
+                return new EntityTag(reader.getEventValue().toString());
             } else if (e == Event.Token) {
-                if (reader.getEventValue().equals("W")) {
+                final CharSequence ev = reader.getEventValue();
+                if (ev != null && ev.length() > 0 && ev.charAt(0) == 'W') {
                     reader.nextSeparator('/');
-                    return new EntityTag(reader.nextQuotedString(), true);
+                    return new EntityTag(reader.nextQuotedString().toString(), true);
                 }
             }
         } catch (ParseException ex) {

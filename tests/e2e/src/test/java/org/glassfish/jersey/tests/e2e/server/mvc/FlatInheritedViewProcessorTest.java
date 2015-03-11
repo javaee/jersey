@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,7 +61,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class FlatInheritedViewProcessorTest extends JerseyTest {
@@ -106,26 +106,31 @@ public class FlatInheritedViewProcessorTest extends JerseyTest {
 
         Properties p = new Properties();
         p.load(target.request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ExplicitTemplateBase.show.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ExplicitTemplateBase.show.testp",
+                p.getProperty("path"));
         assertEquals("get", p.getProperty("model"));
 
         p = new Properties();
         p.load(target.path("inherit").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ExplicitTemplateBase.inherit.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ExplicitTemplateBase.inherit.testp",
+                p.getProperty("path"));
         assertEquals("get", p.getProperty("model"));
 
         p = new Properties();
         p.load(target.path("override").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ExplicitTemplate.override.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ExplicitTemplate.override.testp",
+                p.getProperty("path"));
         assertEquals("get", p.getProperty("model"));
     }
 
     public static class ImplicitTemplateBase {
     }
-    
+
     @Path("/implicit")
     @Template
     public static class ImplicitTemplate extends ImplicitTemplateBase {
+
         public String toString() {
             return "ImplicitTemplate";
         }
@@ -137,17 +142,21 @@ public class FlatInheritedViewProcessorTest extends JerseyTest {
 
         Properties p = new Properties();
         p.load(target.request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ImplicitTemplateBase.index.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ImplicitTemplateBase.index.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitTemplate", p.getProperty("model"));
 
         p = new Properties();
         p.load(target.path("inherit").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ImplicitTemplateBase.inherit.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ImplicitTemplateBase.inherit.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitTemplate", p.getProperty("model"));
 
         p = new Properties();
         p.load(target.path("override").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ImplicitTemplate.override.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/FlatInheritedViewProcessorTest.ImplicitTemplate.override.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitTemplate", p.getProperty("model"));
     }
 

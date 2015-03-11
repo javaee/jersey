@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,7 +67,7 @@ public class SubResourceHttpMethodsTest {
     }
 
     @Path("/")
-    static public class SubResourceMethods {
+    public static class SubResourceMethods {
 
         @GET
         public String getMe() {
@@ -97,7 +97,7 @@ public class SubResourceHttpMethodsTest {
     }
 
     @Path("/")
-    static public class SubResourceMethodsWithTemplates {
+    public static class SubResourceMethodsWithTemplates {
 
         @GET
         public String getMe() {
@@ -143,7 +143,7 @@ public class SubResourceHttpMethodsTest {
     }
 
     @Path("/")
-    static public class SubResourceMethodsWithDifferentTemplates {
+    public static class SubResourceMethodsWithDifferentTemplates {
 
         @Path("{foo}")
         @GET
@@ -152,7 +152,7 @@ public class SubResourceHttpMethodsTest {
         }
 
         // TODO: was bar in the @Path and @PathParam annotations below, shall it work?
-//        @Path("{bar}")
+        //        @Path("{bar}")
         @Path("{foo}")
         @POST
         public String postBar(@PathParam("foo") String bar) {
@@ -169,7 +169,7 @@ public class SubResourceHttpMethodsTest {
     }
 
     @Path("/{p}/")
-    static public class SubResourceMethodWithLimitedTemplate {
+    public static class SubResourceMethodWithLimitedTemplate {
 
         @GET
         public String getMe(@PathParam("p") String p, @QueryParam("id") String id) {
@@ -194,7 +194,7 @@ public class SubResourceHttpMethodsTest {
     }
 
     @Path("/{p}")
-    static public class SubResourceNoSlashMethodWithLimitedTemplate {
+    public static class SubResourceNoSlashMethodWithLimitedTemplate {
 
         @GET
         public String getMe(@PathParam("p") String p, @QueryParam("id") String id) {
@@ -220,7 +220,7 @@ public class SubResourceHttpMethodsTest {
     }
 
     @Path("/")
-    static public class SubResourceWithSameTemplate {
+    public static class SubResourceWithSameTemplate {
 
         public static class SubResource {
 
@@ -252,7 +252,7 @@ public class SubResourceHttpMethodsTest {
     }
 
     @Path("/")
-    static public class SubResourceExplicitRegex {
+    public static class SubResourceExplicitRegex {
 
         @GET
         @Path("{id}")
@@ -291,7 +291,7 @@ public class SubResourceHttpMethodsTest {
     }
 
     @Path("/")
-    static public class SubResourceExplicitRegexCapturingGroups {
+    public static class SubResourceExplicitRegexCapturingGroups {
 
         @GET
         @Path("{a: (\\d)(\\d*)}")
@@ -318,7 +318,7 @@ public class SubResourceHttpMethodsTest {
     }
 
     @Path("/")
-    static public class SubResourceXXX {
+    public static class SubResourceXXX {
 
         @GET
         @Path("{id}/literal")

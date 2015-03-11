@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,7 @@ import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
  * Store of credentials and Authorization flow. This is very simple one user store for credentials.
  * In real usage we would store tokens and flows per user.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class SimpleOAuthService {
     private static String accessToken = null;

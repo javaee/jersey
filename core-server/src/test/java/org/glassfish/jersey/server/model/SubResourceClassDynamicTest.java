@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,7 +66,7 @@ public class SubResourceClassDynamicTest {
     }
 
     @Path("/parent")
-    static public class Parent {
+    public static class Parent {
 
         @GET
         public String getMe() {
@@ -79,7 +79,7 @@ public class SubResourceClassDynamicTest {
         }
     }
 
-    static public class Child {
+    public static class Child {
 
         @GET
         public String getMe() {
@@ -96,7 +96,7 @@ public class SubResourceClassDynamicTest {
     }
 
     @Path("/{p}")
-    static public class ParentWithTemplates {
+    public static class ParentWithTemplates {
 
         @GET
         public String getMe(@PathParam("p") String p) {
@@ -109,7 +109,7 @@ public class SubResourceClassDynamicTest {
         }
     }
 
-    static public class ChildWithTemplates {
+    public static class ChildWithTemplates {
 
         @GET
         public String getMe(@PathParam("c") String c) {
@@ -126,7 +126,7 @@ public class SubResourceClassDynamicTest {
     }
 
     @Path("/{p}")
-    static public class ParentWithTemplatesLifecycle {
+    public static class ParentWithTemplatesLifecycle {
 
         @GET
         public String getMe(@PathParam("p") String p) {
@@ -144,7 +144,7 @@ public class SubResourceClassDynamicTest {
         }
     }
 
-    static public class ChildWithTemplatesPerRequest {
+    public static class ChildWithTemplatesPerRequest {
 
         private int i = 0;
         private String c;
@@ -161,7 +161,7 @@ public class SubResourceClassDynamicTest {
     }
 
     @Singleton
-    static public class ChildWithTemplatesSingleton {
+    public static class ChildWithTemplatesSingleton {
 
         private int i = 0;
 

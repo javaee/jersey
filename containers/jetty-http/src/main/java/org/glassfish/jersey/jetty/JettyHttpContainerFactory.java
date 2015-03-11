@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,10 +40,12 @@
 package org.glassfish.jersey.jetty;
 
 import java.net.URI;
+import java.util.concurrent.ThreadFactory;
 
 import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.jetty.internal.LocalizationMessages;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
@@ -58,6 +60,9 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Factory for creating and starting Jetty server handlers. This returns
@@ -172,11 +177,11 @@ public final class JettyHttpContainerFactory {
      * @param start         if set to false, server will not get started, this allows end users to set
      *                      additional properties on the underlying listener.
      * @return newly created {@link Server}.
+     *
      * @throws ProcessingException      in case of any failure when creating a new Jetty {@code Server} instance.
      * @throws IllegalArgumentException if {@code uri} is {@code null}.
      * @see JettyHttpContainer
      * @see org.glassfish.hk2.api.ServiceLocator
-     *
      * @since 2.12
      */
     public static Server createServer(final URI uri, final ResourceConfig config, final boolean start,
@@ -198,11 +203,11 @@ public final class JettyHttpContainerFactory {
      * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
      *                      {@link org.glassfish.jersey.server.ApplicationHandler}
      * @return newly created {@link Server}.
+     *
      * @throws ProcessingException      in case of any failure when creating a new Jetty {@code Server} instance.
      * @throws IllegalArgumentException if {@code uri} is {@code null}.
      * @see JettyHttpContainer
      * @see org.glassfish.hk2.api.ServiceLocator
-     *
      * @since 2.12
      */
     public static Server createServer(final URI uri, final ResourceConfig config, final ServiceLocator parentLocator) {
@@ -226,6 +231,7 @@ public final class JettyHttpContainerFactory {
      * @param sslContextFactory this is the SSL context factory used to configure SSL connector
      * @param config            the resource configuration.
      * @return newly created {@link Server}.
+     *
      * @throws ProcessingException      in case of any failure when creating a new Jetty {@code Server} instance.
      * @throws IllegalArgumentException if {@code uri} is {@code null}.
      */
@@ -277,7 +283,7 @@ public final class JettyHttpContainerFactory {
         }
         final int port = (uri.getPort() == -1) ? defaultPort : uri.getPort();
 
-        final Server server = new Server();
+        final Server server = new Server(new JettyConnectorThreadPool());
         final HttpConfiguration config = new HttpConfiguration();
         if (sslContextFactory != null) {
             config.setSecureScheme("https");
@@ -308,5 +314,17 @@ public final class JettyHttpContainerFactory {
             }
         }
         return server;
+    }
+
+    private static final class JettyConnectorThreadPool extends QueuedThreadPool {
+        private final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("jetty-http-server-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build();
+
+        @Override
+        protected Thread newThread(Runnable runnable) {
+            return threadFactory.newThread(runnable);
+        }
     }
 }

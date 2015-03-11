@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.wadl.internal.generators.resourcedoc;
 
 import java.io.File;
@@ -91,7 +92,7 @@ import com.sun.research.ws.wadl.Response;
  * </p>
  *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class WadlGeneratorResourceDocSupport implements WadlGenerator {
 
@@ -122,8 +123,8 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      */
     public void setResourceDocFile(final File resourceDocFile) {
         if (resourceDocStream != null) {
-            throw new IllegalStateException("The resourceDocStream property is already set," +
-                    " therefore you cannot set the resourceDocFile property. Only one of both can be set at a time.");
+            throw new IllegalStateException("The resourceDocStream property is already set,"
+                    + " therefore you cannot set the resourceDocFile property. Only one of both can be set at a time.");
         }
         this.resourceDocFile = resourceDocFile;
     }
@@ -138,16 +139,16 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      */
     public void setResourceDocStream(final InputStream resourceDocStream) {
         if (this.resourceDocStream != null) {
-            throw new IllegalStateException("The resourceDocFile property is already set," +
-                    " therefore you cannot set the resourceDocStream property. Only one of both can be set at a time.");
+            throw new IllegalStateException("The resourceDocFile property is already set,"
+                    + " therefore you cannot set the resourceDocStream property. Only one of both can be set at a time.");
         }
         this.resourceDocStream = resourceDocStream;
     }
 
     public void init() throws Exception {
         if (resourceDocFile == null && resourceDocStream == null) {
-            throw new IllegalStateException("Neither the resourceDocFile nor the resourceDocStream" +
-                    " is set, one of both is required.");
+            throw new IllegalStateException("Neither the resourceDocFile nor the resourceDocStream"
+                    + " is set, one of both is required.");
         }
         delegate.init();
 

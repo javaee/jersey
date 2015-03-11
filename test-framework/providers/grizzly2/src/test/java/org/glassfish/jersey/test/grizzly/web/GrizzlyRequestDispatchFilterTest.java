@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -119,7 +119,8 @@ public class GrizzlyRequestDispatchFilterTest extends JerseyTest {
         }
 
         @Override
-        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+                throws IOException, ServletException {
             servletResponse.getOutputStream().print("[");
             filterChain.doFilter(servletRequest, servletResponse);
             servletResponse.getOutputStream().print("]");
@@ -140,7 +141,8 @@ public class GrizzlyRequestDispatchFilterTest extends JerseyTest {
         }
 
         @Override
-        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+                throws IOException, ServletException {
             servletResponse.getOutputStream().print(">>");
             filterChain.doFilter(servletRequest, servletResponse);
         }
@@ -160,7 +162,8 @@ public class GrizzlyRequestDispatchFilterTest extends JerseyTest {
         }
 
         @Override
-        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+                throws IOException, ServletException {
             servletResponse.getOutputStream().print("SOMETHING ");
             filterChain.doFilter(servletRequest, servletResponse);
         }
@@ -209,8 +212,10 @@ public class GrizzlyRequestDispatchFilterTest extends JerseyTest {
     @Override
     protected DeploymentContext configureDeployment() {
         return ServletDeploymentContext.forServlet(RequestDispatcherServlet.class)
-                .addFilter(ForwardFilter.class, "forwardFilter", EnumSet.<javax.servlet.DispatcherType>of(javax.servlet.DispatcherType.FORWARD))
-                .addFilter(IncludeFilter.class, "includeFilter", EnumSet.<javax.servlet.DispatcherType>of(javax.servlet.DispatcherType.INCLUDE))
+                .addFilter(ForwardFilter.class, "forwardFilter",
+                        EnumSet.of(javax.servlet.DispatcherType.FORWARD))
+                .addFilter(IncludeFilter.class, "includeFilter",
+                        EnumSet.of(javax.servlet.DispatcherType.INCLUDE))
                 .addFilter(RegularFilter.class, "regularFilter")
                 .initParam(ServerProperties.PROVIDER_PACKAGES, this.getClass().getPackage().getName())
                 .build();
@@ -229,7 +234,6 @@ public class GrizzlyRequestDispatchFilterTest extends JerseyTest {
         WebTarget target = target();
 
         String s;
-
 
         // check that the regular filter gets involved
         s = target.path("direct").request().get(String.class);

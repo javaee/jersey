@@ -41,9 +41,14 @@ package org.glassfish.jersey.examples.helloworld;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.ws.rs.core.Application;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -52,7 +57,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.jboss.weld.environment.se.Weld;
 
 /**
- * Main Java application.
+ * Main Java application. Used to bootstrap Weld container and start Grizzly HTTP container.
  */
 public class App {
 
@@ -82,15 +87,32 @@ public class App {
     }
 
     /**
-     * Create JAX-RS application.
+     * JAX-RS application defined as a CDI bean.
+     */
+    @ApplicationScoped
+    public static class JaxRsApplication extends Application {
+
+        static final Set<Class<?>> appClasses = new HashSet<>();
+
+        static {
+            appClasses.add(HelloWorldResource.class);
+            appClasses.add(AppScopedResource.class);
+            appClasses.add(RequestScopedResource.class);
+            appClasses.add(CustomInterceptor.class);
+        }
+
+        @Override
+        public Set<Class<?>> getClasses() {
+            return appClasses;
+        }
+    }
+
+    /**
+     * Create JAX-RS application. The same one is used also in the tests.
      *
      * @return Jersey's resource configuration of the Weld application.
      */
     public static ResourceConfig createJaxRsApp() {
-        return new ResourceConfig(
-                HelloWorldResource.class,
-                AppScopedResource.class,
-                RequestScopedResource.class,
-                CustomInterceptor.class);
+        return ResourceConfig.forApplicationClass(JaxRsApplication.class);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,19 +39,14 @@
  */
 package org.glassfish.jersey.tests.performance.proxy.injection;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.SecurityContext;
-
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.TimerContext;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -63,31 +58,19 @@ import javax.ws.rs.core.UriInfo;
 @Produces(MediaType.TEXT_PLAIN)
 public class MethodInjectedResource {
 
-    private static final com.yammer.metrics.core.Timer injectedTimer =
-            Metrics.newTimer(MethodInjectedResource.class, "parameterized-gets", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
-    private static final com.yammer.metrics.core.Timer notInjectedTimer =
-            Metrics.newTimer(MethodInjectedResource.class, "raw-gets", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
-
-
     @GET
     @Path("without-parameters")
     public String getNoProxy() {
-        final TimerContext timer = notInjectedTimer.time();
-        try {
-            return "text";
-        } finally {
-            timer.stop();
-        }
+        return "text";
     }
 
     @GET
     @Path("all-parameters")
-    public String getProxy(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @Context HttpHeaders httpHeaders, @Context Request request) {
-        final TimerContext timer = injectedTimer.time();
-        try {
-            return String.format("sc: %s\nui: %s\nhh: %s\nreq: %s", securityContext, uriInfo, httpHeaders, request);
-        } finally {
-            timer.stop();
-        }
+    public String getProxy(@Context SecurityContext securityContext,
+                           @Context UriInfo uriInfo,
+                           @Context HttpHeaders httpHeaders,
+                           @Context Request request) {
+        return String.format("sc: %s\nui: %s\nhh: %s\nreq: %s",
+                securityContext.getClass(), uriInfo.getClass(), httpHeaders.getClass(), request.getClass());
     }
 }

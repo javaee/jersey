@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.filter;
 
 import java.io.BufferedInputStream;
@@ -72,7 +71,6 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import javax.annotation.Priority;
 
-import org.glassfish.jersey.internal.util.collection.StringIgnoreCaseKeyComparator;
 import org.glassfish.jersey.message.MessageUtils;
 
 /**
@@ -81,13 +79,13 @@ import org.glassfish.jersey.message.MessageUtils;
  * Can be used on client or server side. Has the highest priority.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 @PreMatching
 @Priority(Integer.MIN_VALUE)
 @SuppressWarnings("ClassWithMultipleLoggers")
 public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilter, ContainerResponseFilter,
-        ClientResponseFilter, WriterInterceptor {
+                                      ClientResponseFilter, WriterInterceptor {
 
     private static final Logger LOGGER = Logger.getLogger(LoggingFilter.class.getName());
     private static final String NOTIFICATION_PREFIX = "* ";
@@ -100,7 +98,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
 
                 @Override
                 public int compare(final Map.Entry<String, List<String>> o1, final Map.Entry<String, List<String>> o2) {
-                    return StringIgnoreCaseKeyComparator.SINGLETON.compare(o1.getKey(), o2.getKey());
+                    return o1.getKey().compareToIgnoreCase(o2.getKey());
                 }
             };
 
@@ -167,20 +165,23 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
                 .append(note)
                 .append(" on thread ").append(Thread.currentThread().getName())
                 .append("\n");
-        prefixId(b, id).append(REQUEST_PREFIX).append(method).append(" ").
-                append(uri.toASCIIString()).append("\n");
+        prefixId(b, id).append(REQUEST_PREFIX).append(method).append(" ")
+                .append(uri.toASCIIString()).append("\n");
     }
 
     private void printResponseLine(final StringBuilder b, final String note, final long id, final int status) {
         prefixId(b, id).append(NOTIFICATION_PREFIX)
                 .append(note)
                 .append(" on thread ").append(Thread.currentThread().getName()).append("\n");
-        prefixId(b, id).append(RESPONSE_PREFIX).
-                append(Integer.toString(status)).
-                append("\n");
+        prefixId(b, id).append(RESPONSE_PREFIX)
+                .append(Integer.toString(status))
+                .append("\n");
     }
 
-    private void printPrefixedHeaders(final StringBuilder b, final long id, final String prefix, final MultivaluedMap<String, String> headers) {
+    private void printPrefixedHeaders(final StringBuilder b,
+                                      final long id,
+                                      final String prefix,
+                                      final MultivaluedMap<String, String> headers) {
         for (final Map.Entry<String, List<String>> headerEntry : getSortedHeaders(headers.entrySet())) {
             final List<?> val = headerEntry.getValue();
             final String header = headerEntry.getKey();
@@ -243,7 +244,8 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     }
 
     @Override
-    public void filter(final ClientRequestContext requestContext, final ClientResponseContext responseContext) throws IOException {
+    public void filter(final ClientRequestContext requestContext, final ClientResponseContext responseContext)
+            throws IOException {
         final long id = this._id.incrementAndGet();
         final StringBuilder b = new StringBuilder();
 
@@ -267,14 +269,16 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         printPrefixedHeaders(b, id, REQUEST_PREFIX, context.getHeaders());
 
         if (printEntity && context.hasEntity()) {
-            context.setEntityStream(logInboundEntity(b, context.getEntityStream(), MessageUtils.getCharset(context.getMediaType())));
+            context.setEntityStream(
+                    logInboundEntity(b, context.getEntityStream(), MessageUtils.getCharset(context.getMediaType())));
         }
 
         log(b);
     }
 
     @Override
-    public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws IOException {
+    public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
+            throws IOException {
         final long id = this._id.incrementAndGet();
         final StringBuilder b = new StringBuilder();
 
@@ -292,7 +296,8 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     }
 
     @Override
-    public void aroundWriteTo(final WriterInterceptorContext writerInterceptorContext) throws IOException, WebApplicationException {
+    public void aroundWriteTo(final WriterInterceptorContext writerInterceptorContext)
+            throws IOException, WebApplicationException {
         final LoggingStream stream = (LoggingStream) writerInterceptorContext.getProperty(ENTITY_LOGGER_PROPERTY);
         writerInterceptorContext.proceed();
         if (stream != null) {
@@ -301,6 +306,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     }
 
     private class LoggingStream extends FilterOutputStream {
+
         private final StringBuilder b;
         private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -310,7 +316,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
             this.b = b;
         }
 
-        StringBuilder getStringBuilder(Charset charset) {
+        StringBuilder getStringBuilder(final Charset charset) {
             // write entity to the builder
             final byte[] entity = baos.toByteArray();
 

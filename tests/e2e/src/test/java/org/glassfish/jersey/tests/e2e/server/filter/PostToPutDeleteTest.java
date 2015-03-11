@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.server.filter;
 
 import javax.ws.rs.DELETE;
@@ -60,23 +61,32 @@ import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class PostToPutDeleteTest extends JerseyTest {
 
     @Path("/")
     public static class Resource {
+
         @GET
-        public String get(@QueryParam("a") String a) { return "GET: " + a; }
+        public String get(@QueryParam("a") String a) {
+            return "GET: " + a;
+        }
 
         @PUT
-        public String put() { return "PUT"; }
+        public String put() {
+            return "PUT";
+        }
 
         @DELETE
-        public String delete() { return "DELETE"; }
+        public String delete() {
+            return "DELETE";
+        }
 
         @POST
-        public String post() { return "POST"; }
+        public String post() {
+            return "POST";
+        }
     }
 
     @Override

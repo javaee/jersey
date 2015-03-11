@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,13 +45,13 @@ import org.glassfish.jersey.uri.UriTemplate;
 /**
  * Router that pushes {@link UriTemplate uri template} of matched resource of subResource
  * to {@link org.glassfish.jersey.server.internal.routing.RoutingContext routing context}.
- * Before calling this router the {@link PathPatternRouter} must be called which matches the path
+ * Before calling this router the {@link PathMatchingRouter} must be called which matches the path
  * and pushes the {@link java.util.regex.MatchResult matched result} into the routing context.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @see RoutingContext#pushTemplates(org.glassfish.jersey.uri.UriTemplate, org.glassfish.jersey.uri.UriTemplate)
  */
-class PushMatchedTemplateRouter implements Router {
+final class PushMatchedTemplateRouter implements Router {
 
     private final UriTemplate resourceTemplate;
     private final UriTemplate methodTemplate;

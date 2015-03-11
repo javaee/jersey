@@ -96,11 +96,11 @@ public class TransactionalExceptionInterceptorProvider implements ComponentProvi
     @Override
     public void initialize(final ServiceLocator locator) {
         this.locator = locator;
-        this.beanManager = CdiUtil.lookupBeanManager();
+        this.beanManager = CdiUtil.getBeanManager();
     }
 
     @Override
-    public boolean bind(Class<?> component, Set<Class<?>> providerContracts) {
+    public boolean bind(final Class<?> component, final Set<Class<?>> providerContracts) {
         return false;
     }
 
@@ -113,8 +113,8 @@ public class TransactionalExceptionInterceptorProvider implements ComponentProvi
 
     private void bindWaeRestoringExceptionMapper() {
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        final ServiceBindingBuilder bindingBuilder =
-                Injections.newFactoryBinder(new CdiBeanHk2Factory(TransactionalExceptionMapper.class, locator, beanManager, true));
+        final ServiceBindingBuilder bindingBuilder = Injections.newFactoryBinder(
+                new CdiBeanHk2Factory(TransactionalExceptionMapper.class, locator, beanManager, true));
         bindingBuilder.to(ExceptionMapper.class);
         Injections.addBinding(bindingBuilder, dc);
         dc.commit();

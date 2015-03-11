@@ -46,7 +46,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.WebTarget;
@@ -67,10 +66,6 @@ import org.glassfish.jersey.examples.rx.domain.Recommendation;
 import org.glassfish.jersey.server.Uri;
 
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.functions.Func2;
-import rx.functions.Func3;
 import rx.schedulers.Schedulers;
 
 /**

@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server.model.internal;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -50,6 +51,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import org.glassfish.jersey.message.internal.TracingLogger;
@@ -81,8 +83,11 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      *
      * @param resourceMethod invocable resource class Java method.
      * @param methodHandler  method invocation handler.
+     * @param validator      input/output parameter validator.
      */
-    AbstractJavaResourceMethodDispatcher(Invocable resourceMethod, InvocationHandler methodHandler, ConfiguredValidator validator) {
+    AbstractJavaResourceMethodDispatcher(Invocable resourceMethod,
+                                         InvocationHandler methodHandler,
+                                         ConfiguredValidator validator) {
         this.method = resourceMethod.getDefinitionMethod();
         this.methodHandler = methodHandler;
         this.resourceMethod = resourceMethod;
@@ -116,17 +121,37 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * Use the underlying invocation handler to invoke the underlying Java method
      * with the supplied input method argument values on a given resource instance.
      *
-     * @param resource resource class instance.
-     * @param args     input argument values for the invoked Java method.
+     * @param containerRequest container request.
+     * @param resource         resource class instance.
+     * @param args             input argument values for the invoked Java method.
      * @return invocation result.
      * @throws ProcessingException (possibly {@link MappableException mappable})
      *                             container exception in case the invocation failed.
      */
-    final Object invoke(final ContainerRequest containerRequest, final Object resource, final Object... args) throws ProcessingException {
+    final Object invoke(final ContainerRequest containerRequest, final Object resource, final Object... args)
+            throws ProcessingException {
         try {
             // Validate resource class & method input parameters.
             if (validator != null) {
-                validator.validateResourceAndInputParams(resource, resourceMethod, args);
+                try {
+                    validator.validateResourceAndInputParams(resource, resourceMethod, args);
+                } catch (ConstraintViolationException e) {
+                    // First check for a property
+                    if (ValidationResultUtil.hasValidationResultProperty(resource)) {
+                        final Method validationResultGetter = ValidationResultUtil.getValidationResultGetter(resource);
+                        ValidationResultUtil.updateValidationResultProperty(resource, validationResultGetter,
+                                e.getConstraintViolations());
+                    } else {
+                        // Then check for a field
+                        final Field validationResult = ValidationResultUtil.getValidationResultField(resource);
+                        if (validationResult != null) {
+                            ValidationResultUtil.updateValidationResultField(resource, validationResult,
+                                    e.getConstraintViolations());
+                        } else {
+                            throw e;
+                        }
+                    }
+                }
             }
 
             final PrivilegedAction invokeMethodAction = new PrivilegedAction() {
@@ -138,11 +163,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
 
                         return methodHandler.invoke(resource, method, args);
 
-                    } catch (IllegalAccessException ex) {
-                        throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
-                    } catch (IllegalArgumentException ex) {
-                        throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
-                    } catch (UndeclaredThrowableException ex) {
+                    } catch (IllegalAccessException | IllegalArgumentException | UndeclaredThrowableException ex) {
                         throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
                     } catch (InvocationTargetException ex) {
                         throw mapTargetToRuntimeEx(ex.getCause());
@@ -156,8 +177,8 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
 
             final SecurityContext securityContext = containerRequest.getSecurityContext();
 
-            final Object invocationResult = (securityContext instanceof SubjectSecurityContext) ?
-                    ((SubjectSecurityContext) securityContext).doAsSubject(invokeMethodAction) : invokeMethodAction.run();
+            final Object invocationResult = (securityContext instanceof SubjectSecurityContext)
+                    ? ((SubjectSecurityContext) securityContext).doAsSubject(invokeMethodAction) : invokeMethodAction.run();
 
             // Validate response entity.
             if (validator != null) {
@@ -182,4 +203,5 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
     public String toString() {
         return method.toString();
     }
+
 }

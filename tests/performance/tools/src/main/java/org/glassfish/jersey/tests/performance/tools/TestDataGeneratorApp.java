@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -81,6 +81,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public class TestDataGeneratorApp {
+
     /** change the value to true to generate also 1GB files; can be time consuming and takes additional 3GB of disk
      * space (1GB json, 1GB xml and 1GB text) */
     private static final boolean GENERATE_ALSO_GIGABYTE_DATASETS = false;
@@ -135,9 +136,9 @@ public class TestDataGeneratorApp {
     }
 
     public static ResourceConfig createApp() {
-       return new ResourceConfig().
-                packages("org.glassfish.jersey.tests.performance.tools").
-                register(createMoxyJsonResolver());
+        return new ResourceConfig()
+                .packages("org.glassfish.jersey.tests.performance.tools")
+                .register(createMoxyJsonResolver());
     }
 
     public static ContextResolver<MoxyJsonConfig> createMoxyJsonResolver() {

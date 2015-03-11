@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.List;
@@ -52,7 +53,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * {@link ApplicationEventListener application event listener} that aggregates more event listeners into one.
  * Calling listener methods on this listener will cause calling methods on all aggregated listeners.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class CompositeApplicationEventListener implements ApplicationEventListener {
 

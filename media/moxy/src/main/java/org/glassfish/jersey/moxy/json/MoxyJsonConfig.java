@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -77,7 +77,8 @@ public final class MoxyJsonConfig {
      *     <li>{@link javax.xml.bind.Marshaller#JAXB_FORMATTED_OUTPUT} - {@code false}</li>
      *     <li>{@link org.eclipse.persistence.jaxb.JAXBContextProperties#JSON_INCLUDE_ROOT} - {@code false}</li>
      *     <li>{@link org.eclipse.persistence.jaxb.MarshallerProperties#JSON_MARSHAL_EMPTY_COLLECTIONS} - {@code true}</li>
-     *     <li>{@link org.eclipse.persistence.jaxb.JAXBContextProperties#JSON_NAMESPACE_SEPARATOR} - {@link org.eclipse.persistence.oxm.XMLConstants#DOT}</li>
+     *     <li>{@link org.eclipse.persistence.jaxb.JAXBContextProperties#JSON_NAMESPACE_SEPARATOR} -
+     *         {@link org.eclipse.persistence.oxm.XMLConstants#DOT}</li>
      * </ul>
      *
      * @param initDefaultProperties flag to determine whether the default values of properties mentioned above should be set or

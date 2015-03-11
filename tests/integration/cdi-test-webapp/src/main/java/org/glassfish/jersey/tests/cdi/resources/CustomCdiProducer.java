@@ -68,7 +68,7 @@ public class CustomCdiProducer {
      * To cover field producer.
      */
     @Produces
-    public static FieldProducedBean<String> field = new FieldProducedBean<String>("field");
+    public static FieldProducedBean<String> field = new FieldProducedBean<>("field");
 
     /**
      * To cover method producer.
@@ -77,7 +77,7 @@ public class CustomCdiProducer {
      */
     @Produces
     public MethodProducedBean<String> produceBean() {
-        return new MethodProducedBean<String>("method");
+        return new MethodProducedBean<>("method");
     }
 
     /**
@@ -86,7 +86,8 @@ public class CustomCdiProducer {
      *
      * @return fixed string value.
      */
-    @Produces @Qualifier
+    @Produces
+    @Qualifier
     public String produceString() {
         return "cdi-produced";
     }

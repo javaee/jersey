@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,7 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 @ConstrainedTo(RuntimeType.SERVER)
 public class MustacheMvcFeature implements Feature {
 
-    private final static String SUFFIX = ".mustache";
+    private static final String SUFFIX = ".mustache";
 
     /**
      * {@link String} property defining the base path to Mustache templates. If set, the value of the property is added in front

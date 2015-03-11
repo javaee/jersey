@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import javax.ws.rs.GET;
@@ -54,7 +55,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Taken from Jersey-1: jersey-tests:com.sun.jersey.impl.subresources.SubResourceDynamicTest
  *
- * @author Paul.Sandoz at Sun.Com
+ * @author Paul Sandoz
  */
 public class SubResourceDynamicTest {
 
@@ -65,7 +66,7 @@ public class SubResourceDynamicTest {
     }
 
     @Path("/parent")
-    static public class Parent {
+    public static class Parent {
 
         @GET
         public String getMe() {
@@ -78,7 +79,7 @@ public class SubResourceDynamicTest {
         }
     }
 
-    static public class Child {
+    public static class Child {
 
         @GET
         public String getMe() {
@@ -100,7 +101,7 @@ public class SubResourceDynamicTest {
     }
 
     @Path("/{p}")
-    static public class ParentWithTemplates {
+    public static class ParentWithTemplates {
 
         @GET
         public String getMe(@PathParam("p") String p) {
@@ -113,7 +114,7 @@ public class SubResourceDynamicTest {
         }
     }
 
-    static public class ChildWithTemplates {
+    public static class ChildWithTemplates {
 
         @GET
         public String getMe(@PathParam("c") String c) {
@@ -134,7 +135,7 @@ public class SubResourceDynamicTest {
     }
 
     @Path("/")
-    static public class SubResourceExplicitRegexCapturingGroups {
+    public static class SubResourceExplicitRegexCapturingGroups {
 
         @Path("{a: (\\d)(\\d*)}-{b: (\\d)(\\d*)}-{c: (\\d)(\\d*)}")
         public SubResourceExplicitRegexCapturingGroupsSub getMultiple() {
@@ -142,7 +143,7 @@ public class SubResourceDynamicTest {
         }
     }
 
-    static public class SubResourceExplicitRegexCapturingGroupsSub {
+    public static class SubResourceExplicitRegexCapturingGroupsSub {
 
         @GET
         @Path("{d}")

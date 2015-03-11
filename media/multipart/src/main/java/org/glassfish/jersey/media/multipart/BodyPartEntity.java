@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.media.multipart;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -55,7 +57,7 @@ import org.jvnet.mimepull.MIMEPart;
  * in memory for faster processing.
  *
  * @author Craig McClanahan
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class BodyPartEntity implements Closeable {
@@ -63,7 +65,7 @@ public class BodyPartEntity implements Closeable {
     private final MIMEPart mimePart;
 
     /**
-     * Constructs a new {@link BodyPartEntity} with a {@link MIMEPart}.
+     * Constructs a new {@code BodyPartEntity} with a {@link MIMEPart}.
      *
      * @param mimePart MIMEPart containing the input stream of this body part entity.
      */
@@ -94,4 +96,12 @@ public class BodyPartEntity implements Closeable {
         cleanup();
     }
 
+    /**
+     * Move the contents of the underlying {@link java.io.InputStream} or {@link java.io.File} to the given file.
+     *
+     * @param file destination file.
+     */
+    public void moveTo(final File file) {
+        mimePart.moveTo(file);
+    }
 }

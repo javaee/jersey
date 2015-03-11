@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -109,7 +109,8 @@ public class ImplicitTemplateTest extends JerseyTest {
 
             Properties p = new Properties();
             p.load(target.request().get(InputStream.class));
-            assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitTemplateTest/ImplicitResource/" + templateName + ".testp",
+            assertEquals(
+                    "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitTemplateTest/ImplicitResource/" + templateName + ".testp",
                     p.getProperty("path"));
             assertEquals("ImplicitTemplate", p.getProperty("model"));
         }
@@ -176,7 +177,9 @@ public class ImplicitTemplateTest extends JerseyTest {
 
             Properties p = new Properties();
             p.load(target.request("text/plain").get(InputStream.class));
-            assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitTemplateTest/AnotherImplicitGetResource/" + templateName + ".testp",
+            assertEquals(
+                    "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitTemplateTest/AnotherImplicitGetResource/" + templateName
+                            + ".testp",
                     p.getProperty("path"));
             assertEquals("AnotherImplicitGetTemplate", p.getProperty("model"));
         }

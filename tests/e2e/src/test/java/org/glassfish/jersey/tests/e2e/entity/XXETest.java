@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -74,8 +74,9 @@ import static org.junit.Assert.assertEquals;
  * @author Paul Sandoz
  */
 public class XXETest extends JerseyTest {
-    private static final String DOCTYPE ="<!DOCTYPE foo [<!ENTITY xxe SYSTEM \"%s\">]>";
-    private static final String XML ="<jaxbBean><value>&xxe;</value></jaxbBean>";
+
+    private static final String DOCTYPE = "<!DOCTYPE foo [<!ENTITY xxe SYSTEM \"%s\">]>";
+    private static final String XML = "<jaxbBean><value>&xxe;</value></jaxbBean>";
 
     private String getDocument() {
         final URL u = this.getClass().getResource("xxe.txt");
@@ -91,6 +92,7 @@ public class XXETest extends JerseyTest {
     @Consumes("application/xml")
     @Produces("application/xml")
     public static class EntityHolderResource {
+
         @Path("jaxb")
         @POST
         public String post(final JaxbBean s) {
@@ -118,8 +120,8 @@ public class XXETest extends JerseyTest {
         @Path("dom")
         @POST
         public String postDom(final DOMSource s) {
-            final Document d = (Document)s.getNode();
-            final Element e = (Element)d.getElementsByTagName("value").item(0);
+            final Document d = (Document) s.getNode();
+            final Element e = (Element) d.getElementsByTagName("value").item(0);
             final Node n = e.getChildNodes().item(0);
             if (n.getNodeType() == Node.TEXT_NODE) {
                 return n.getNodeValue();
@@ -208,7 +210,7 @@ public class XXETest extends JerseyTest {
     @Test
     public void testDOMSecure() {
         final String s = target().path("dom").request("application/xml").post(Entity.entity(getDocument(),
-                        MediaType.APPLICATION_XML_TYPE), String.class);
+                MediaType.APPLICATION_XML_TYPE), String.class);
         assertEquals("", s);
     }
 

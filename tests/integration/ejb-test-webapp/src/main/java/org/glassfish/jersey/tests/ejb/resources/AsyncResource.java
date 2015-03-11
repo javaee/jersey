@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,34 +40,32 @@
 
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.logging.Logger;
-
-import javax.ejb.EJB;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 
+import javax.ejb.EJB;
+
 /**
  * @author Jan Algermissen
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 @Path("async-test")
 public class AsyncResource {
-	private static Logger LOG = Logger.getLogger(AsyncResource.class.getName());
 
-	@EJB
+    @EJB
     AsyncService asyncService;
 
-	@GET
-	@Path("sync")
-	public String synchronousGet() {
-		return "sync";
-	}
+    @GET
+    @Path("sync")
+    public String synchronousGet() {
+        return "sync";
+    }
 
-	@GET
-	@Path("async")
-	public void asynchronousGet(@Suspended AsyncResponse ar) {
-		asyncService.getAsync(ar);
-	}
+    @GET
+    @Path("async")
+    public void asynchronousGet(@Suspended AsyncResponse ar) {
+        asyncService.getAsync(ar);
+    }
 }

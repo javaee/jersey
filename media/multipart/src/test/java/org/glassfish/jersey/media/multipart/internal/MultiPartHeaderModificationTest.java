@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -93,7 +93,7 @@ public class MultiPartHeaderModificationTest extends MultiPartJerseyTest {
 
     @Parameterized.Parameters(name = "{index}: {0} / {1}")
     public static List<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
+        return Arrays.asList(new Object[][] {
                 {HttpUrlConnectorProvider.class, false},
                 {GrizzlyConnectorProvider.class, true},
                 {JettyConnectorProvider.class, true},
@@ -120,15 +120,14 @@ public class MultiPartHeaderModificationTest extends MultiPartJerseyTest {
         clientConfig.connectorProvider(connectorProvider);
     }
 
-
     @Test
     public void testLogMessage() {
         final WebTarget target = target().path("multipart/ten");
 
         MultiPartBean bean = new MultiPartBean("myname", "myvalue");
-        MultiPart entity = new MultiPart().
-                bodyPart(bean, new MediaType("x-application", "x-format")).
-                bodyPart("", MediaType.APPLICATION_OCTET_STREAM_TYPE);
+        MultiPart entity = new MultiPart()
+                .bodyPart(bean, new MediaType("x-application", "x-format"))
+                .bodyPart("", MediaType.APPLICATION_OCTET_STREAM_TYPE);
 
         final String UNSENT_HEADER_CHANGES = "Unsent header changes";
         try {

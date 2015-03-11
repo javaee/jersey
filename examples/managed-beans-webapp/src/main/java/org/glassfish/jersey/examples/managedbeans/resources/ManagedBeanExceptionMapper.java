@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.examples.managedbeans.resources;
 
 import javax.ws.rs.container.ResourceContext;
@@ -52,17 +53,17 @@ import javax.annotation.PostConstruct;
 /**
  * Custom exception mapper.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  */
 @Provider
 @ManagedBean
 public class ManagedBeanExceptionMapper implements ExceptionMapper<ManagedBeanException> {
 
-    private @Context
-    UriInfo uiFieldInject;
+    @Context
+    private UriInfo uiFieldInject;
 
-    private @Context
-    ResourceContext rc;
+    @Context
+    private ResourceContext rc;
 
     private UriInfo uiMethodInject;
 
@@ -77,7 +78,7 @@ public class ManagedBeanExceptionMapper implements ExceptionMapper<ManagedBeanEx
     public void postConstruct() {
         ensureInjected();
         this.ui = uiMethodInject;
-   }
+    }
 
     @Override
     public Response toResponse(ManagedBeanException exception) {

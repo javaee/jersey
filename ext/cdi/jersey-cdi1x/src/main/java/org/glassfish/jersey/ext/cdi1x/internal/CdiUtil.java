@@ -41,28 +41,38 @@ package org.glassfish.jersey.ext.cdi1x.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.Set;
 
+import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.AmbiguousResolutionException;
+import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.CDI;
 import javax.inject.Qualifier;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+
+import org.glassfish.jersey.ext.cdi1x.internal.spi.BeanManagerProvider;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
+import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.model.internal.RankedComparator;
+import org.glassfish.jersey.model.internal.RankedProvider;
 
 /**
  * Common CDI utility methods.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public final class CdiUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(CdiUtil.class.getName());
+    private static final BeanManagerProvider BEAN_MANAGER_PROVIDER = new DefaultBeanManagerProvider();
 
     /**
      * Prevent instantiation.
      */
     private CdiUtil() {
+        throw new AssertionError("No instances allowed.");
     }
 
     /**
@@ -82,30 +92,84 @@ public final class CdiUtil {
     }
 
     /**
-     * Get me current bean manager.
+     * Get me current bean manager. Method first tries to lookup available providers via {@code META-INF/services}. If not found
+     * the bean manager is returned from the default provider.
      *
      * @return bean manager
      */
-    public static BeanManager lookupBeanManager() {
-        InitialContext initialContext = null;
+    public static BeanManager getBeanManager() {
+        final BeanManagerProvider provider = lookupService(BeanManagerProvider.class);
+        if (provider != null) {
+            return provider.getBeanManager();
+        }
+
+        return BEAN_MANAGER_PROVIDER.getBeanManager();
+    }
+
+    /**
+     * Create new instance of {@link org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager}. Method first tries to lookup
+     * available manager via {@code META-INF/services} and if not found a new instance of default one is returned.
+     *
+     * @return an instance of locator manager.
+     */
+    static Hk2LocatorManager createHk2LocatorManager() {
+        final Hk2LocatorManager manager = lookupService(Hk2LocatorManager.class);
+        return manager != null ? manager : new DefaultHk2LocatorManager();
+    }
+
+    /**
+     * Look for a service of given type. If more then one service is found the method sorts them are returns the one with highest
+     * priority.
+     *
+     * @param clazz type of service to look for.
+     * @param <T>   type of service to look for
+     * @return instance of service with highest priority or {@code null} if service of given type cannot be found.
+     * @see javax.annotation.Priority
+     */
+    static <T> T lookupService(final Class<T> clazz) {
+        final List<RankedProvider<T>> providers = new LinkedList<>();
+
+        for (final T provider : ServiceFinder.find(clazz)) {
+            providers.add(new RankedProvider<>(provider));
+        }
+        Collections.sort(providers, new RankedComparator<T>(RankedComparator.Order.ASCENDING));
+
+        return providers.isEmpty() ? null : providers.get(0).getProvider();
+    }
+
+    /**
+     * Obtain a bean reference of given type from the bean manager.
+     *
+     * @param beanClass   type of the bean to get reference to.
+     * @param beanManager bean manager used to obtain an instance of the requested bean.
+     * @param <T>         type of the bean to be returned.
+     * @return a bean reference or {@code null} if a bean instance cannot be found.
+     */
+    public static <T> T getBeanReference(final Class<T> beanClass, final BeanManager beanManager) {
+        final Set<Bean<?>> beans = beanManager.getBeans(beanClass);
+        if (beans.isEmpty()) {
+            return null;
+        }
+
         try {
-            initialContext = new InitialContext();
-            return (BeanManager) initialContext.lookup("java:comp/BeanManager");
-        } catch (final Exception ex) {
-            try {
-                return CDI.current().getBeanManager();
-            } catch (final Exception e) {
-                LOGGER.config(LocalizationMessages.CDI_BEAN_MANAGER_JNDI_LOOKUP_FAILED());
-                return null;
-            }
-        } finally {
-            if (initialContext != null) {
-                try {
-                    initialContext.close();
-                } catch (final NamingException ignored) {
-                    // no-op
+            return getBeanReference(beanClass, beanManager.resolve(beans), beanManager);
+        } catch (final AmbiguousResolutionException ex) {
+            // try to resolve the instance directly by looking at which one has already been initialized
+            for (final Bean<?> b : beans) {
+                final T reference = getBeanReference(beanClass, b, beanManager);
+                if (reference != null) {
+                    return reference;
                 }
             }
         }
+
+        return null;
+    }
+
+    private static <T> T getBeanReference(final Class<T> clazz, final Bean extensionBean, final BeanManager beanManager) {
+        final CreationalContext<?> creationalContext = beanManager.createCreationalContext(extensionBean);
+        final Object result = beanManager.getReference(extensionBean, clazz, creationalContext);
+
+        return clazz.cast(result);
     }
 }

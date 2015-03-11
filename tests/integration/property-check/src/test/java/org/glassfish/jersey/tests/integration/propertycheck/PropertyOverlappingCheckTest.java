@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -93,7 +93,7 @@ public class PropertyOverlappingCheckTest {
 
     private static final Logger log = Logger.getLogger(PropertyOverlappingCheckTest.class.getName());
 
-    private static final Class<?>[] classes = new Class[]{
+    private static final Class<?>[] classes = new Class[] {
             JettyClientProperties.class,
             ApacheClientProperties.class,
             OAuth1ServerProperties.class,
@@ -109,13 +109,18 @@ public class PropertyOverlappingCheckTest {
     };
 
     private static class ProblemReport {
+
         private final String parentProperty;
         private final String classNameParent;
         private final String childProperty;
         private final String classNameChild;
         private final boolean duplicate;
 
-        private ProblemReport(String parentProperty, String classNameParent, String childProperty, String classNameChild, boolean duplicate) {
+        private ProblemReport(String parentProperty,
+                              String classNameParent,
+                              String childProperty,
+                              String classNameChild,
+                              boolean duplicate) {
             this.parentProperty = parentProperty;
             this.classNameParent = classNameParent;
             this.childProperty = childProperty;
@@ -174,8 +179,10 @@ public class PropertyOverlappingCheckTest {
                     // property-to-class relationship into the map for later use
                     String propertyMapEntry = propertyToClassMap.get(propertyValue);
                     if (propertyToClassMap.get(propertyValue) != null) {
-//                        log.info("Duplicate property found: " + propertyValue + " in " + propertyMapEntry + " and "
-//                                + clazz.getName() + ". Test won't fail because of this, as the check is currently disabled.");
+                        //                        log.info("Duplicate property found: " + propertyValue + " in " +
+                        // propertyMapEntry + " and "
+                        //                                + clazz.getName() + ". Test won't fail because of this, as the check
+                        // is currently disabled.");
                         // this cannot cause the test to fail, as there are aliases in ClientProperties and ServerProperties,
                         // which are by definition equal to those defined in CommonProperties
                         problems.add(new ProblemReport(propertyValue, propertyMapEntry, propertyValue, clazz.getName(), true));

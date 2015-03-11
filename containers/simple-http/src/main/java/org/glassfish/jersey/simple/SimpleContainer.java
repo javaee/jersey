@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -90,6 +90,7 @@ import org.simpleframework.http.Status;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public final class SimpleContainer implements org.simpleframework.http.core.Container, Container {
+
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(SimpleContainer.class.getName()), Level.FINEST);
 
@@ -102,6 +103,7 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
      * Referencing factory for Simple request.
      */
     private static class SimpleRequestReferencingFactory extends ReferencingFactory<Request> {
+
         @Inject
         public SimpleRequestReferencingFactory(final Provider<Ref<Request>> referenceFactory) {
             super(referenceFactory);
@@ -112,6 +114,7 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
      * Referencing factory for Simple response.
      */
     private static class SimpleResponseReferencingFactory extends ReferencingFactory<Response> {
+
         @Inject
         public SimpleResponseReferencingFactory(final Provider<Ref<Response>> referenceFactory) {
             super(referenceFactory);
@@ -144,6 +147,7 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     private volatile ContainerLifecycleListener containerListener;
 
     private static final class Writer implements ContainerResponseWriter {
+
         private final Response response;
 
         Writer(final Response response) {
@@ -151,7 +155,8 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
         }
 
         @Override
-        public OutputStream writeResponseStatusAndHeaders(final long contentLength, final ContainerResponse context) throws ContainerException {
+        public OutputStream writeResponseStatusAndHeaders(final long contentLength, final ContainerResponse context)
+                throws ContainerException {
             final javax.ws.rs.core.Response.StatusType statusInfo = context.getStatusInfo();
 
             final int code = statusInfo.getStatusCode();
@@ -287,7 +292,6 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
             }
         };
     }
-
 
     private void close(final Response response) {
         try {

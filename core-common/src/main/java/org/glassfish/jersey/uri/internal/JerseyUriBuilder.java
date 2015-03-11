@@ -46,25 +46,27 @@ import java.net.URISyntaxException;
 import java.security.AccessController;
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.net.InetAddresses;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
 
+import jersey.repackaged.com.google.common.collect.Maps;
+import jersey.repackaged.com.google.common.net.InetAddresses;
+
 /**
  * A Jersey implementation of {@link UriBuilder}.
  *
  * @author Paul Sandoz
- * @author Martin Matula (martin.matula at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Martin Matula
+ * @author Miroslav Fuksa
  * @author Vetle Leinonen-Roeim (vetle at roeim.net)
  */
 public class JerseyUriBuilder extends UriBuilder {
@@ -100,7 +102,7 @@ public class JerseyUriBuilder extends UriBuilder {
         query = new StringBuilder();
     }
 
-    private JerseyUriBuilder(JerseyUriBuilder that) {
+    private JerseyUriBuilder(final JerseyUriBuilder that) {
         this.scheme = that.scheme;
         this.ssp = that.ssp;
         this.authority = that.authority;
@@ -121,7 +123,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder uri(URI uri) {
+    public JerseyUriBuilder uri(final URI uri) {
         if (uri == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("uri"));
         }
@@ -182,7 +184,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder uri(String uriTemplate) {
+    public JerseyUriBuilder uri(final String uriTemplate) {
         if (uriTemplate == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("uriTemplate"));
         }
@@ -221,7 +223,7 @@ public class JerseyUriBuilder extends UriBuilder {
      *
      * @param parser initialized URI parser.
      */
-    private void schemeSpecificPart(UriParser parser) {
+    private void schemeSpecificPart(final UriParser parser) {
         if (parser.isOpaque()) {
             if (parser.getSsp() != null) {
                 this.authority = this.host = this.port = null;
@@ -266,7 +268,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder scheme(String scheme) {
+    public JerseyUriBuilder scheme(final String scheme) {
         if (scheme != null) {
             this.scheme = scheme;
             UriComponent.validate(scheme, UriComponent.Type.SCHEME, true);
@@ -277,12 +279,12 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder schemeSpecificPart(String ssp) {
+    public JerseyUriBuilder schemeSpecificPart(final String ssp) {
         if (ssp == null) {
             throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_SCHEME_PART_NULL());
         }
 
-        UriParser parser = new UriParser((scheme != null) ? scheme + ":" + ssp : ssp);
+        final UriParser parser = new UriParser((scheme != null) ? scheme + ":" + ssp : ssp);
         parser.parse();
 
         if (parser.getScheme() != null && !parser.getScheme().equals(scheme)) {
@@ -300,7 +302,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder userInfo(String ui) {
+    public JerseyUriBuilder userInfo(final String ui) {
         checkSsp();
         this.userInfo = (ui != null)
                 ? encode(ui, UriComponent.Type.USER_INFO) : null;
@@ -308,7 +310,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder host(String host) {
+    public JerseyUriBuilder host(final String host) {
         checkSsp();
         if (host != null) {
             if (host.isEmpty()) {
@@ -327,11 +329,12 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder port(int port) {
+    public JerseyUriBuilder port(final int port) {
         checkSsp();
-        if (port < -1) // -1 is used to reset port setting and since URI allows
-        // as port any positive integer, so do we.
-        {
+        if (port < -1) {
+            // -1 is used to reset port setting and since URI allows
+            // as port any positive integer, so do we.
+
             throw new IllegalArgumentException(LocalizationMessages.INVALID_PORT());
         }
         this.port = port == -1 ? null : String.valueOf(port);
@@ -339,7 +342,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder replacePath(String path) {
+    public JerseyUriBuilder replacePath(final String path) {
         checkSsp();
         this.path.setLength(0);
         if (path != null) {
@@ -349,7 +352,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder path(String path) {
+    public JerseyUriBuilder path(final String path) {
         checkSsp();
         appendPath(path);
         return this;
@@ -357,13 +360,13 @@ public class JerseyUriBuilder extends UriBuilder {
 
     @SuppressWarnings("unchecked")
     @Override
-    public UriBuilder path(Class resource) throws IllegalArgumentException {
+    public UriBuilder path(final Class resource) throws IllegalArgumentException {
         checkSsp();
         if (resource == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("resource"));
         }
 
-        Path p = Path.class.cast(resource.getAnnotation(Path.class));
+        final Path p = Path.class.cast(resource.getAnnotation(Path.class));
         if (p == null) {
             throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_CLASS_PATH_ANNOTATION_MISSING(resource));
         }
@@ -372,7 +375,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder path(Class resource, String methodName) {
+    public JerseyUriBuilder path(final Class resource, final String methodName) {
         checkSsp();
         if (resource == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("resource"));
@@ -381,9 +384,9 @@ public class JerseyUriBuilder extends UriBuilder {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("methodName"));
         }
 
-        Method[] methods = AccessController.doPrivileged(ReflectionHelper.getMethodsPA(resource));
+        final Method[] methods = AccessController.doPrivileged(ReflectionHelper.getMethodsPA(resource));
         Method found = null;
-        for (Method m : methods) {
+        for (final Method m : methods) {
             if (methodName.equals(m.getName())) {
                 if (found == null || found.isSynthetic()) {
                     found = m;
@@ -403,7 +406,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder path(Method method) {
+    public JerseyUriBuilder path(final Method method) {
         checkSsp();
         if (method == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("method"));
@@ -412,8 +415,8 @@ public class JerseyUriBuilder extends UriBuilder {
         return this;
     }
 
-    private Path getPath(AnnotatedElement ae) {
-        Path p = ae.getAnnotation(Path.class);
+    private Path getPath(final AnnotatedElement ae) {
+        final Path p = ae.getAnnotation(Path.class);
         if (p == null) {
             throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_ANNOTATEDELEMENT_PATH_ANNOTATION_MISSING(ae));
         }
@@ -421,25 +424,25 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder segment(String... segments) throws IllegalArgumentException {
+    public JerseyUriBuilder segment(final String... segments) throws IllegalArgumentException {
         checkSsp();
         if (segments == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("segments"));
         }
 
-        for (String segment : segments) {
+        for (final String segment : segments) {
             appendPath(segment, true);
         }
         return this;
     }
 
     @Override
-    public JerseyUriBuilder replaceMatrix(String matrix) {
+    public JerseyUriBuilder replaceMatrix(final String matrix) {
         checkSsp();
-        boolean trailingSlash = path.charAt(path.length() - 1) == '/';
-        int slashIndex = trailingSlash ? path.lastIndexOf("/", path.length() - 2) : path.lastIndexOf("/");
+        final boolean trailingSlash = path.charAt(path.length() - 1) == '/';
+        final int slashIndex = trailingSlash ? path.lastIndexOf("/", path.length() - 2) : path.lastIndexOf("/");
 
-        int i = path.indexOf(";", slashIndex);
+        final int i = path.indexOf(";", slashIndex);
 
         if (i != -1) {
             path.setLength(i + 1);
@@ -461,7 +464,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder matrixParam(String name, Object... values) {
+    public JerseyUriBuilder matrixParam(String name, final Object... values) {
         checkSsp();
         if (name == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("name"));
@@ -475,7 +478,7 @@ public class JerseyUriBuilder extends UriBuilder {
 
         name = encode(name, UriComponent.Type.MATRIX_PARAM);
         if (matrixParams == null) {
-            for (Object value : values) {
+            for (final Object value : values) {
                 path.append(';').append(name);
 
                 if (value == null) {
@@ -488,7 +491,7 @@ public class JerseyUriBuilder extends UriBuilder {
                 }
             }
         } else {
-            for (Object value : values) {
+            for (final Object value : values) {
                 if (value == null) {
                     throw new IllegalArgumentException(LocalizationMessages.MATRIX_PARAM_NULL());
                 }
@@ -500,7 +503,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder replaceMatrixParam(String name, Object... values) {
+    public JerseyUriBuilder replaceMatrixParam(String name, final Object... values) {
         checkSsp();
 
         if (name == null) {
@@ -522,7 +525,7 @@ public class JerseyUriBuilder extends UriBuilder {
         name = encode(name, UriComponent.Type.MATRIX_PARAM);
         matrixParams.remove(name);
         if (values != null) {
-            for (Object value : values) {
+            for (final Object value : values) {
                 if (value == null) {
                     throw new IllegalArgumentException(LocalizationMessages.MATRIX_PARAM_NULL());
                 }
@@ -534,7 +537,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder replaceQuery(String query) {
+    public JerseyUriBuilder replaceQuery(final String query) {
         checkSsp();
         this.query.setLength(0);
         if (query != null) {
@@ -544,7 +547,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder queryParam(String name, Object... values) {
+    public JerseyUriBuilder queryParam(String name, final Object... values) {
         checkSsp();
         if (name == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("name"));
@@ -558,7 +561,7 @@ public class JerseyUriBuilder extends UriBuilder {
 
         name = encode(name, UriComponent.Type.QUERY_PARAM);
         if (queryParams == null) {
-            for (Object value : values) {
+            for (final Object value : values) {
                 if (query.length() > 0) {
                     query.append('&');
                 }
@@ -571,7 +574,7 @@ public class JerseyUriBuilder extends UriBuilder {
                 query.append('=').append(encode(value.toString(), UriComponent.Type.QUERY_PARAM));
             }
         } else {
-            for (Object value : values) {
+            for (final Object value : values) {
                 if (value == null) {
                     throw new IllegalArgumentException(LocalizationMessages.QUERY_PARAM_NULL());
                 }
@@ -583,7 +586,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder replaceQueryParam(String name, Object... values) {
+    public JerseyUriBuilder replaceQueryParam(String name, final Object... values) {
         checkSsp();
 
         if (queryParams == null) {
@@ -598,7 +601,7 @@ public class JerseyUriBuilder extends UriBuilder {
             return this;
         }
 
-        for (Object value : values) {
+        for (final Object value : values) {
             if (value == null) {
                 throw new IllegalArgumentException(LocalizationMessages.QUERY_PARAM_NULL());
             }
@@ -609,25 +612,28 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder resolveTemplate(String name, Object value) throws IllegalArgumentException {
+    public JerseyUriBuilder resolveTemplate(final String name, final Object value) throws IllegalArgumentException {
         resolveTemplate(name, value, true, true);
 
         return this;
     }
 
     @Override
-    public JerseyUriBuilder resolveTemplate(String name, Object value, boolean encodeSlashInPath) {
+    public JerseyUriBuilder resolveTemplate(final String name, final Object value, final boolean encodeSlashInPath) {
         resolveTemplate(name, value, true, encodeSlashInPath);
         return this;
     }
 
     @Override
-    public JerseyUriBuilder resolveTemplateFromEncoded(String name, Object value) {
+    public JerseyUriBuilder resolveTemplateFromEncoded(final String name, final Object value) {
         resolveTemplate(name, value, false, false);
         return this;
     }
 
-    private JerseyUriBuilder resolveTemplate(String name, Object value, boolean encode, boolean encodeSlashInPath) {
+    private JerseyUriBuilder resolveTemplate(final String name,
+                                             final Object value,
+                                             final boolean encode,
+                                             final boolean encodeSlashInPath) {
         if (name == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("name"));
         }
@@ -635,36 +641,38 @@ public class JerseyUriBuilder extends UriBuilder {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("value"));
         }
 
-        Map<String, Object> templateValues = Maps.newHashMap();
+        final Map<String, Object> templateValues = Maps.newHashMap();
         templateValues.put(name, value);
         resolveTemplates(templateValues, encode, encodeSlashInPath);
         return this;
     }
 
     @Override
-    public JerseyUriBuilder resolveTemplates(Map<String, Object> templateValues) throws IllegalArgumentException {
+    public JerseyUriBuilder resolveTemplates(final Map<String, Object> templateValues) throws IllegalArgumentException {
         resolveTemplates(templateValues, true, true);
         return this;
     }
 
     @Override
-    public JerseyUriBuilder resolveTemplates(Map<String, Object> templateValues, boolean encodeSlashInPath) throws
+    public JerseyUriBuilder resolveTemplates(final Map<String, Object> templateValues, final boolean encodeSlashInPath) throws
             IllegalArgumentException {
         resolveTemplates(templateValues, true, encodeSlashInPath);
         return this;
     }
 
     @Override
-    public JerseyUriBuilder resolveTemplatesFromEncoded(Map<String, Object> templateValues) {
+    public JerseyUriBuilder resolveTemplatesFromEncoded(final Map<String, Object> templateValues) {
         resolveTemplates(templateValues, false, false);
         return this;
     }
 
-    private JerseyUriBuilder resolveTemplates(Map<String, Object> templateValues, boolean encode, boolean encodeSlashInPath) {
+    private JerseyUriBuilder resolveTemplates(final Map<String, Object> templateValues,
+                                              final boolean encode,
+                                              final boolean encodeSlashInPath) {
         if (templateValues == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("templateValues"));
         } else {
-            for (Map.Entry entry : templateValues.entrySet()) {
+            for (final Map.Entry entry : templateValues.entrySet()) {
                 if (entry.getKey() == null || entry.getValue() == null) {
                     throw new IllegalArgumentException(LocalizationMessages.TEMPLATE_PARAM_NULL());
                 }
@@ -678,7 +686,7 @@ public class JerseyUriBuilder extends UriBuilder {
         authority = UriTemplate.resolveTemplateValues(UriComponent.Type.AUTHORITY, authority, encode, templateValues);
 
         // path template values are treated as path segments unless encodeSlashInPath is false.
-        UriComponent.Type pathComponent = (encodeSlashInPath) ? UriComponent.Type.PATH_SEGMENT : UriComponent.Type.PATH;
+        final UriComponent.Type pathComponent = (encodeSlashInPath) ? UriComponent.Type.PATH_SEGMENT : UriComponent.Type.PATH;
         final String newPath = UriTemplate.resolveTemplateValues(pathComponent, path.toString(), encode, templateValues);
         path.setLength(0);
         path.append(newPath);
@@ -694,7 +702,7 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public JerseyUriBuilder fragment(String fragment) {
+    public JerseyUriBuilder fragment(final String fragment) {
         this.fragment = (fragment != null)
                 ? encode(fragment, UriComponent.Type.FRAGMENT)
                 : null;
@@ -707,7 +715,7 @@ public class JerseyUriBuilder extends UriBuilder {
         }
     }
 
-    private void appendPath(Path path) {
+    private void appendPath(final Path path) {
         if (path == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("path"));
         }
@@ -715,11 +723,11 @@ public class JerseyUriBuilder extends UriBuilder {
         appendPath(path.value());
     }
 
-    private void appendPath(String path) {
+    private void appendPath(final String path) {
         appendPath(path, false);
     }
 
-    private void appendPath(String segments, boolean isSegment) {
+    private void appendPath(String segments, final boolean isSegment) {
         if (segments == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("segments"));
         }
@@ -753,10 +761,10 @@ public class JerseyUriBuilder extends UriBuilder {
             return;
         }
 
-        for (Map.Entry<String, List<String>> e : matrixParams.entrySet()) {
-            String name = e.getKey();
+        for (final Map.Entry<String, List<String>> e : matrixParams.entrySet()) {
+            final String name = e.getKey();
 
-            for (String value : e.getValue()) {
+            for (final String value : e.getValue()) {
                 path.append(';').append(name);
                 if (!value.isEmpty()) {
                     path.append('=').append(value);
@@ -771,10 +779,10 @@ public class JerseyUriBuilder extends UriBuilder {
             return;
         }
 
-        for (Map.Entry<String, List<String>> e : queryParams.entrySet()) {
-            String name = e.getKey();
+        for (final Map.Entry<String, List<String>> e : queryParams.entrySet()) {
+            final String name = e.getKey();
 
-            for (String value : e.getValue()) {
+            for (final String value : e.getValue()) {
                 if (query.length() > 0) {
                     query.append('&');
                 }
@@ -784,26 +792,26 @@ public class JerseyUriBuilder extends UriBuilder {
         queryParams = null;
     }
 
-    private String encode(String s, UriComponent.Type type) {
+    private String encode(final String s, final UriComponent.Type type) {
         return UriComponent.contextualEncode(s, type, true);
     }
 
     @Override
-    public URI buildFromMap(Map<String, ?> values) {
+    public URI buildFromMap(final Map<String, ?> values) {
         return _buildFromMap(true, true, values);
     }
 
     @Override
-    public URI buildFromMap(Map<String, ?> values, boolean encodeSlashInPath) {
+    public URI buildFromMap(final Map<String, ?> values, final boolean encodeSlashInPath) {
         return _buildFromMap(true, encodeSlashInPath, values);
     }
 
     @Override
-    public URI buildFromEncodedMap(Map<String, ?> values) throws IllegalArgumentException, UriBuilderException {
+    public URI buildFromEncodedMap(final Map<String, ?> values) throws IllegalArgumentException, UriBuilderException {
         return _buildFromMap(false, false, values);
     }
 
-    private URI _buildFromMap(boolean encode, boolean encodeSlashInPath, Map<String, ?> values) {
+    private URI _buildFromMap(final boolean encode, final boolean encodeSlashInPath, final Map<String, ?> values) {
         if (ssp != null) {
             throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_SCHEMA_PART_OPAQUE());
         }
@@ -811,7 +819,7 @@ public class JerseyUriBuilder extends UriBuilder {
         encodeMatrix();
         encodeQuery();
 
-        String uri = UriTemplate.createURI(
+        final String uri = UriTemplate.createURI(
                 scheme, authority,
                 userInfo, host, port,
                 path.toString(), query.toString(), fragment, values, encode, encodeSlashInPath);
@@ -819,17 +827,17 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     @Override
-    public URI build(Object... values) {
+    public URI build(final Object... values) {
         return _build(true, true, values);
     }
 
     @Override
-    public URI build(Object[] values, boolean encodeSlashInPath) {
+    public URI build(final Object[] values, final boolean encodeSlashInPath) {
         return _build(true, encodeSlashInPath, values);
     }
 
     @Override
-    public URI buildFromEncoded(Object... values) {
+    public URI buildFromEncoded(final Object... values) {
         return _build(false, false, values);
     }
 
@@ -838,7 +846,7 @@ public class JerseyUriBuilder extends UriBuilder {
         encodeMatrix();
         encodeQuery();
 
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
 
         if (scheme != null) {
             sb.append(scheme).append(':');
@@ -892,7 +900,7 @@ public class JerseyUriBuilder extends UriBuilder {
         return sb.toString();
     }
 
-    private URI _build(boolean encode, boolean encodeSlashInPath, Object... values) {
+    private URI _build(final boolean encode, final boolean encodeSlashInPath, final Object... values) {
         if (ssp != null) {
             if (values == null || values.length == 0) {
                 return createURI(create());
@@ -903,7 +911,7 @@ public class JerseyUriBuilder extends UriBuilder {
         encodeMatrix();
         encodeQuery();
 
-        String uri = UriTemplate.createURI(
+        final String uri = UriTemplate.createURI(
                 scheme, authority,
                 userInfo, host, port,
                 path.toString(), query.toString(), fragment, values, encode, encodeSlashInPath);
@@ -914,10 +922,10 @@ public class JerseyUriBuilder extends UriBuilder {
         return UriComponent.encodeTemplateNames(toTemplate());
     }
 
-    private URI createURI(String uri) {
+    private URI createURI(final String uri) {
         try {
             return new URI(uri);
-        } catch (URISyntaxException ex) {
+        } catch (final URISyntaxException ex) {
             throw new UriBuilderException(ex);
         }
     }
@@ -930,7 +938,7 @@ public class JerseyUriBuilder extends UriBuilder {
     /**
      * Check whether or not the URI represented by this {@code UriBuilder} is absolute.
      * <p/>
-     * <p> A URI is absolute if, and only if, it has a scheme component.</p>
+     * A URI is absolute if, and only if, it has a scheme component.
      *
      * @return {@code true} if, and only if, the URI represented by this {@code UriBuilder} is absolute.
      * @since 2.7

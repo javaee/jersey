@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,20 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.api;
+
+import java.util.logging.Logger;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
@@ -50,29 +63,18 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import java.util.logging.Logger;
-
 /**
  * Test setting headers that are restricted by {@link java.net.HttpURLConnection}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class RestrictedHeaderTest extends JerseyTest {
 
-    private static final Logger LOGGER = Logger.getLogger(LocationHeaderTest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RestrictedHeaderTest.class.getName());
 
     @Path("/")
     public static class MyResource {
+
         @GET
         public Response getOptions(@Context HttpHeaders headers) {
             MultivaluedMap<String, String> requestHeaders = headers.getRequestHeaders();
@@ -92,8 +94,8 @@ public class RestrictedHeaderTest extends JerseyTest {
         return new ResourceConfig(MyResource.class, LoggingFilter.class);
     }
 
-    @Ignore("The setting of allowRestrictedHeaders system property is global and cached. Only " +
-            "one of both testForbiddenHeadersNotAllowed() and testForbiddenHeadersAllowed() can be run during one test.")
+    @Ignore("The setting of allowRestrictedHeaders system property is global and cached. Only "
+            + "one of both testForbiddenHeadersNotAllowed() and testForbiddenHeadersAllowed() can be run during one test.")
     @Test
     public void testForbiddenHeadersNotAllowed() {
         Client client = ClientBuilder.newClient();
@@ -117,9 +119,9 @@ public class RestrictedHeaderTest extends JerseyTest {
         Assert.assertEquals(200, response.getStatus());
     }
 
-
     /**
-     * Same as {@link #testForbiddenHeadersAllowed()} ()} but uses {@link org.glassfish.jersey.apache.connector.ApacheConnector} connector
+     * Same as {@link #testForbiddenHeadersAllowed()} ()} but uses {@link org.glassfish.jersey.apache.connector
+     * .ApacheConnector} connector
      * which allows modification of these headers.
      */
     @Test
@@ -132,10 +134,10 @@ public class RestrictedHeaderTest extends JerseyTest {
 
     private Response testHeaders(Client client) {
         client.register(new LoggingFilter());
-        Invocation.Builder builder = client.target(getBaseUri()).path("/").request().
-                header("Origin", "http://example.com").
-                header("Access-Control-Request-Method", "POST").
-                header("Testus", "Hello");
+        Invocation.Builder builder = client.target(getBaseUri()).path("/").request()
+                .header("Origin", "http://example.com")
+                .header("Access-Control-Request-Method", "POST")
+                .header("Testus", "Hello");
         return builder.get();
     }
 }

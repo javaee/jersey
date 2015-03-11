@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e;
 
 import java.net.URI;
@@ -64,11 +65,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class LinkTest extends JerseyTest {
+
     @Path("resource")
     public static class Resource {
+
         @POST
         @Produces({
                 MediaType.APPLICATION_XHTML_XML,
@@ -118,10 +121,10 @@ public class LinkTest extends JerseyTest {
             URI test1 = URI.create(uriInfo.getAbsolutePath().toString() + "test1");
             URI test2 = URI.create(uriInfo.getAbsolutePath().toString() + "test2");
 
-            return Response.ok().
-                    link("http://oracle.com", "parent").
-                    link(new URI("http://jersey.java.net"), "framework").
-                    links(
+            return Response.ok()
+                    .link("http://oracle.com", "parent")
+                    .link(new URI("http://jersey.java.net"), "framework")
+                    .links(
                             Link.fromUri(uriInfo.relativize(test1)).rel("test1").build(),
                             Link.fromUri(test2).rel("test2").build(),
                             Link.fromUri(uriInfo.relativize(URI.create("linktest/test3"))).rel("test3").build()

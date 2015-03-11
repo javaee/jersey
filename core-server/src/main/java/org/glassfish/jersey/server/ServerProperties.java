@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,8 +53,9 @@ import org.glassfish.jersey.internal.util.PropertyAlias;
  * Jersey server-side configuration properties.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Martin Matula
  */
 @PropertiesClass
 public final class ServerProperties {
@@ -634,6 +635,62 @@ public final class ServerProperties {
      */
     public static final String PROCESSING_RESPONSE_ERRORS_ENABLED = "jersey.config.server.exception.processResponseErrors";
 
+    /**
+     * An integer value that defines the size of cache for sub-resource locator models. The cache is used to provide better
+     * performance for application that uses JAX-RS sub-resource locators.
+     * <p>
+     * The default value is {@value #SUBRESOURCE_LOCATOR_DEFAULT_CACHE_SIZE}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @see #SUBRESOURCE_LOCATOR_DEFAULT_CACHE_SIZE
+     * @see #SUBRESOURCE_LOCATOR_CACHE_AGE
+     * @since 2.16
+     */
+    public static final String SUBRESOURCE_LOCATOR_CACHE_SIZE = "jersey.config.server.subresource.cache.size";
+
+    /**
+     * The default sub-resource locator cache size ({@value}).
+     *
+     * @see #SUBRESOURCE_LOCATOR_CACHE_SIZE
+     * @since 2.16
+     */
+    public static final int SUBRESOURCE_LOCATOR_DEFAULT_CACHE_SIZE = 64;
+
+    /**
+     * An integer value that defines the maximum age (in seconds) for cached for sub-resource locator models. The age of an cache
+     * entry is defined as the time since the last access (read) to the entry in the cache.
+     * <p>
+     * Entry aging is not enabled by default.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @see #SUBRESOURCE_LOCATOR_CACHE_SIZE
+     * @since 2.16
+     */
+    public static final String SUBRESOURCE_LOCATOR_CACHE_AGE = "jersey.config.server.subresource.cache.age";
+
+    /**
+     * If {@code true} then Jersey will cache {@link org.glassfish.jersey.server.model.Resource Jersey resources} in addition to
+     * caching sub-resource locator classes and instances (which are cached by default).
+     * <p/>
+     * To make sure the caching is effective in this case you need to return same Jersey Resource instances for same input
+     * parameters from resource method. This means that generating new Jersey Resource instances for same input parameters would
+     * not have any performance effect and it would only fill-up the cache.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     */
+    public static final String SUBRESOURCE_LOCATOR_CACHE_JERSEY_RESOURCE_ENABLED =
+            "jersey.config.server.subresource.cache.jersey.resource.enabled";
+
     private ServerProperties() {
         // prevents instantiation
     }
@@ -713,7 +770,11 @@ public final class ServerProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(final Map<String, ?> properties, final RuntimeType runtimeType, final String key, final T defaultValue, final Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties,
+                                 final RuntimeType runtimeType,
+                                 final String key,
+                                 final T defaultValue,
+                                 final Class<T> type) {
         return PropertiesHelper.getValue(properties, runtimeType, key, defaultValue, type, null);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,18 +39,14 @@
  */
 package org.glassfish.jersey.server.mvc.freemarker;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -58,6 +54,7 @@ import javax.inject.Inject;
 import javax.servlet.ServletContext;
 
 import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
@@ -66,25 +63,20 @@ import org.glassfish.hk2.api.ServiceLocator;
 
 import org.jvnet.hk2.annotations.Optional;
 
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.cache.FileTemplateLoader;
-import freemarker.cache.MultiTemplateLoader;
-import freemarker.cache.TemplateLoader;
-import freemarker.cache.WebappTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * {@link org.glassfish.jersey.server.mvc.spi.TemplateProcessor Template processor} providing support for Freemarker templates.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Jeff Wilde (jeff.wilde at complicatedrobot.com)
  */
 final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> {
 
-    private final Configuration factory;
+    private final FreemarkerConfigurationFactory factory;
 
     /**
      * Create an instance of this processor with injected {@link javax.ws.rs.core.Configuration config} and
@@ -99,33 +91,25 @@ final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> 
                                    @Optional final ServletContext servletContext) {
         super(config, servletContext, "freemarker", "ftl");
 
-        this.factory = getTemplateObjectFactory(serviceLocator, Configuration.class, new Value<Configuration>() {
-            @Override
-            public Configuration get() {
-                // Create different loaders.
-                final List<TemplateLoader> loaders = Lists.newArrayList();
-                if (servletContext != null) {
-                    loaders.add(new WebappTemplateLoader(servletContext));
-                }
-                loaders.add(new ClassTemplateLoader(FreemarkerViewProcessor.class, "/"));
-                try {
-                    loaders.add(new FileTemplateLoader(new File("/")));
-                } catch (IOException e) {
-                    // NOOP
-                }
-
-                // Create Factory.
-                final Configuration configuration = new Configuration();
-                configuration.setTemplateLoader(new MultiTemplateLoader(loaders.toArray(new TemplateLoader[loaders.size()])));
-                return configuration;
-            }
-        });
+        this.factory = getTemplateObjectFactory(serviceLocator, FreemarkerConfigurationFactory.class,
+                new Value<FreemarkerConfigurationFactory>() {
+                    @Override
+                    public FreemarkerConfigurationFactory get() {
+                        Configuration configuration = getTemplateObjectFactory(serviceLocator, Configuration.class,
+                                Values.<Configuration>empty());
+                        if (configuration == null) {
+                            return new FreemarkerDefaultConfigurationFactory(servletContext);
+                        } else {
+                            return new FreemarkerSuppliedConfigurationFactory(configuration);
+                        }
+                    }
+                });
 
     }
 
     @Override
     protected Template resolve(final String templateReference, final Reader reader) throws Exception {
-        return factory.getTemplate(templateReference);
+        return factory.getConfiguration().getTemplate(templateReference);
     }
 
     @Override

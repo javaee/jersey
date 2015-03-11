@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
@@ -53,6 +54,7 @@ import javax.ws.rs.ext.ParamConverter;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -78,12 +80,12 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
      * @param stringReaderFactory string readers factory.
      */
     @Inject
-    public MultivaluedParameterExtractorFactory(ParamConverterFactory stringReaderFactory) {
+    public MultivaluedParameterExtractorFactory(final ParamConverterFactory stringReaderFactory) {
         this.paramConverterFactory = stringReaderFactory;
     }
 
     @Override
-    public MultivaluedParameterExtractor<?> getWithoutDefaultValue(Parameter p) {
+    public MultivaluedParameterExtractor<?> getWithoutDefaultValue(final Parameter p) {
         return process(
                 paramConverterFactory,
                 null,
@@ -94,7 +96,7 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
     }
 
     @Override
-    public MultivaluedParameterExtractor<?> get(Parameter p) {
+    public MultivaluedParameterExtractor<?> get(final Parameter p) {
         return process(
                 paramConverterFactory,
                 p.getDefaultValue(),
@@ -106,67 +108,83 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
 
     @SuppressWarnings("unchecked")
     private MultivaluedParameterExtractor<?> process(
-            ParamConverterFactory paramConverterFactory,
-            String defaultValue,
-            Class<?> rawType,
-            Type type,
-            Annotation[] annotations,
-            String parameterName) {
+            final ParamConverterFactory paramConverterFactory,
+            final String defaultValue,
+            final Class<?> rawType,
+            final Type type,
+            final Annotation[] annotations,
+            final String parameterName) {
 
+        // Try to find a converter that support rawType and type at first.
+        // E.g. if someone writes a converter that support List<Integer> this approach should precede the next one.
+        ParamConverter<?> converter = paramConverterFactory.getConverter(rawType, type, annotations);
+        if (converter != null) {
+            try {
+                return new SingleValueExtractor(converter, parameterName, defaultValue);
+            } catch (final ExtractorException e) {
+                throw e;
+            } catch (final Exception e) {
+                throw new ProcessingException(LocalizationMessages.ERROR_PARAMETER_TYPE_PROCESSING(rawType), e);
+            }
+        }
+
+        // Check whether the rawType is the type of the collection supported.
         if (rawType == List.class || rawType == Set.class || rawType == SortedSet.class) {
-            // Get the generic type of the list
-            // If none default to String
-            final List<ClassTypePair> ctps = ReflectionHelper.getTypeArgumentAndClass(type);
-            ClassTypePair ctp = (ctps.size() == 1) ? ctps.get(0) : null;
+            // Get the generic type of the list. If none is found default to String.
+            final List<ClassTypePair> typePairs = ReflectionHelper.getTypeArgumentAndClass(type);
+            final ClassTypePair typePair = (typePairs.size() == 1) ? typePairs.get(0) : null;
 
-            if (ctp == null || ctp.rawClass() == String.class) {
-                return StringCollectionExtractor.getInstance(
-                        rawType, parameterName, defaultValue);
+            if (typePair == null || typePair.rawClass() == String.class) {
+                return StringCollectionExtractor.getInstance(rawType, parameterName, defaultValue);
             } else {
-                final ParamConverter<?> converter = paramConverterFactory.getConverter(ctp.rawClass(), ctp.type(), annotations);
+                converter = paramConverterFactory.getConverter(typePair.rawClass(),
+                        typePair.type(),
+                        annotations);
+
                 if (converter == null) {
                     return null;
                 }
 
                 try {
                     return CollectionExtractor.getInstance(rawType, converter, parameterName, defaultValue);
-                } catch (ExtractorException e) {
+                } catch (final ExtractorException e) {
                     throw e;
-                } catch (Exception e) {
-                    throw new ProcessingException("Could not process parameter type " + rawType, e);
+                } catch (final Exception e) {
+                    throw new ProcessingException(LocalizationMessages.ERROR_PARAMETER_TYPE_PROCESSING(rawType), e);
                 }
             }
         }
 
-        final ParamConverter<?> converter = paramConverterFactory.getConverter(rawType, type, annotations);
-        if (converter != null) {
-            try {
-                return new SingleValueExtractor(converter, parameterName, defaultValue);
-            } catch (ExtractorException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new ProcessingException("Could not process parameter type " + rawType, e);
-            }
-        }
-
-
+        // Check primitive types.
         if (rawType == String.class) {
             return new SingleStringValueExtractor(parameterName, defaultValue);
+        } else if (rawType == Character.class) {
+            return new PrimitiveCharacterExtractor(parameterName,
+                    defaultValue,
+                    PrimitiveMapper.primitiveToDefaultValueMap.get(rawType));
         } else if (rawType.isPrimitive()) {
             // Convert primitive to wrapper class
-            rawType = PrimitiveMapper.primitiveToClassMap.get(rawType);
-            if (rawType == null) {
+            final Class<?> wrappedRaw = PrimitiveMapper.primitiveToClassMap.get(rawType);
+            if (wrappedRaw == null) {
                 // Primitive type not supported
                 return null;
             }
 
-            // Check for static valueOf(String )
-            Method valueOf = AccessController.doPrivileged(ReflectionHelper.getValueOfStringMethodPA(rawType));
+            if (wrappedRaw == Character.class) {
+                return new PrimitiveCharacterExtractor(parameterName,
+                        defaultValue,
+                        PrimitiveMapper.primitiveToDefaultValueMap.get(wrappedRaw));
+            }
+
+            // Check for static valueOf(String)
+            final Method valueOf = AccessController.doPrivileged(ReflectionHelper.getValueOfStringMethodPA(wrappedRaw));
             if (valueOf != null) {
                 try {
-                    Object defaultDefaultValue = PrimitiveMapper.primitiveToDefaultValueMap.get(rawType);
-                    return new PrimitiveValueOfExtractor(valueOf, parameterName, defaultValue, defaultDefaultValue);
-                } catch (Exception e) {
+                    return new PrimitiveValueOfExtractor(valueOf,
+                            parameterName,
+                            defaultValue,
+                            PrimitiveMapper.primitiveToDefaultValueMap.get(wrappedRaw));
+                } catch (final Exception e) {
                     throw new ProcessingException(LocalizationMessages.DEFAULT_COULD_NOT_PROCESS_METHOD(defaultValue, valueOf));
                 }
             }

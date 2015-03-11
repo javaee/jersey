@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,6 +47,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -72,6 +74,8 @@ import jersey.repackaged.com.google.common.collect.Lists;
 @Consumes("entity/filtering")
 @Produces("entity/filtering")
 public class FilteringMessageBodyProvider implements MessageBodyReader<Object>, MessageBodyWriter<Object> {
+
+    private static final Logger LOGGER = Logger.getLogger(FilteringMessageBodyProvider.class.getName());
 
     @Inject
     private javax.inject.Provider<ObjectProvider<ObjectGraph>> provider;
@@ -111,13 +115,19 @@ public class FilteringMessageBodyProvider implements MessageBodyReader<Object>, 
         final ObjectGraph objectGraph = provider.get()
                 .getFilteringObject(FilteringHelper.getEntityClass(genericType), true, annotations);
 
-        entityStream.write(objectGraphToString(objectGraph).getBytes());
+        try {
+            entityStream.write(objectGraphToString(objectGraph).getBytes());
+        } catch (final Throwable e) {
+            LOGGER.log(Level.WARNING, "Error during writing an object graph to string.", e);
+        }
     }
 
     private String objectGraphToString(final ObjectGraph objectGraph) {
         final StringBuilder sb = new StringBuilder();
         for (final String field : objectGraphToFields("", objectGraph)) {
-            sb.append(field).append(',');
+            if (!field.contains("Transient")) {
+                sb.append(field).append(',');
+            }
         }
         if (sb.length() > 0) {
             sb.delete(sb.length() - 1, sb.length());

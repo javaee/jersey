@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,10 +62,11 @@ public final class App {
         try {
             System.out.println("Jersey Entity Data Filtering Example.");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, new SecurityEntityFilteringApplication());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI,
+                    new SecurityEntityFilteringApplication());
 
             System.out.println("Application started.\nTry out one of these URIs:");
-            for (final String path : new String[]{"unrestricted-resource", "restricted-resource/denyAll",
+            for (final String path : new String[] {"unrestricted-resource", "restricted-resource/denyAll",
                     "restricted-resource/permitAll", "restricted-resource/rolesAllowed",
                     "restricted-resource/runtimeRolesAllowed?roles=manager,user"}) {
                 System.out.println(BASE_URI + path);

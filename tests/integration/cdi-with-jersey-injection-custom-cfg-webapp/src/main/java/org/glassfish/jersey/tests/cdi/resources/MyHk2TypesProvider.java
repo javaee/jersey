@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,12 +37,14 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.cdi.resources;
 
 import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.Set;
-import org.glassfish.jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider;
+
+import org.glassfish.jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider;
 
 /**
  * Tell Jersey CDI extension what types should be bridged from HK2 to CDI.
@@ -53,6 +55,9 @@ public class MyHk2TypesProvider implements Hk2CustomBoundTypesProvider {
 
     @Override
     public Set<Type> getHk2Types() {
-        return new HashSet<Type>(){{add(Hk2InjectedType.class);add(MyApplication.MyInjection.class);}};
+        return new HashSet<Type>() {{
+            add(Hk2InjectedType.class);
+            add(MyApplication.MyInjection.class);
+        }};
     }
 }

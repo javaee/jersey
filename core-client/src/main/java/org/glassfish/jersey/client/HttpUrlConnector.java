@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,17 +60,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
+import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
@@ -117,11 +121,12 @@ class HttpUrlConnector implements Connector {
     private final boolean fixLengthStreaming;
     private final boolean setMethodWorkaround;
     private final boolean isRestrictedHeaderPropertySet;
-
+    private final LazyValue<SSLSocketFactory> sslSocketFactory;
 
     /**
      * Create new {@code HttpUrlConnector} instance.
      *
+     * @param client              JAX-RS client instance for which the connector is being created.
      * @param connectionFactory   {@link javax.net.ssl.HttpsURLConnection} factory to be used when creating connections.
      * @param chunkSize           chunk size to use when using HTTP chunked transfer coding.
      * @param fixLengthStreaming  specify if the the {@link java.net.HttpURLConnection#setFixedLengthStreamingMode(int)
@@ -130,10 +135,20 @@ class HttpUrlConnector implements Connector {
      * @param setMethodWorkaround specify if the reflection workaround should be used to set HTTP URL connection method
      *                            name. See {@link HttpUrlConnectorProvider#SET_METHOD_WORKAROUND} for details.
      */
-    HttpUrlConnector(HttpUrlConnectorProvider.ConnectionFactory connectionFactory,
-                     int chunkSize,
-                     boolean fixLengthStreaming,
-                     boolean setMethodWorkaround) {
+    HttpUrlConnector(
+            final Client client,
+            final HttpUrlConnectorProvider.ConnectionFactory connectionFactory,
+            final int chunkSize,
+            final boolean fixLengthStreaming,
+            final boolean setMethodWorkaround) {
+
+        sslSocketFactory = Values.lazy(new Value<SSLSocketFactory>() {
+            @Override
+            public SSLSocketFactory get() {
+                return client.getSslContext().getSocketFactory();
+            }
+        });
+
         this.connectionFactory = connectionFactory;
         this.chunkSize = chunkSize;
         this.fixLengthStreaming = fixLengthStreaming;
@@ -146,9 +161,9 @@ class HttpUrlConnector implements Connector {
                 PropertiesHelper.getSystemProperty(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY, "false")
         ));
 
-        LOGGER.config(isRestrictedHeaderPropertySet ?
-                LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_TRUE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY) :
-                LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_FALSE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY)
+        LOGGER.config(isRestrictedHeaderPropertySet
+                        ? LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_TRUE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY)
+                        : LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_FALSE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY)
         );
     }
 
@@ -278,14 +293,13 @@ class HttpUrlConnector implements Connector {
             if (verifier != null) {
                 suc.setHostnameVerifier(verifier);
             }
-            suc.setSSLSocketFactory(client.getSslSocketFactory());
+            suc.setSSLSocketFactory(sslSocketFactory.get());
         }
 
         final Object entity = request.getEntity();
         if (entity != null) {
             RequestEntityProcessing entityProcessing = request.resolveProperty(
                     ClientProperties.REQUEST_ENTITY_PROCESSING, RequestEntityProcessing.class);
-
 
             if (entityProcessing == null || entityProcessing != RequestEntityProcessing.BUFFERED) {
                 final int length = request.getLength();
@@ -373,8 +387,9 @@ class HttpUrlConnector implements Connector {
 
     private boolean isHeaderRestricted(String name, String value) {
         name = name.toLowerCase();
-        return name.startsWith("sec-") ||
-                restrictedHeaderSet.contains(name) && !("connection".equalsIgnoreCase(name) && "close".equalsIgnoreCase(value));
+        return name.startsWith("sec-")
+                || restrictedHeaderSet.contains(name)
+                && !("connection".equalsIgnoreCase(name) && "close".equalsIgnoreCase(value));
     }
 
     /**
@@ -390,58 +405,55 @@ class HttpUrlConnector implements Connector {
             httpURLConnection.setRequestMethod(method); // Check whether we are running on a buggy JRE
         } catch (final ProtocolException pe) {
             try {
-                final Class<?> httpURLConnectionClass = httpURLConnection.getClass();
-				AccessController
-						.doPrivileged(new PrivilegedExceptionAction<Object>() {
-							@Override
-							public Object run() throws NoSuchFieldException,
-									IllegalAccessException {
-								try {
-									httpURLConnection.setRequestMethod(method);
-									// Check whether we are running on a buggy
-									// JRE
-								} catch (final ProtocolException pe) {
-									Class<?> connectionClass = httpURLConnection
-											.getClass();
-									Field delegateField = null;
-									try {
-										delegateField = connectionClass
-												.getDeclaredField("delegate");
-										delegateField.setAccessible(true);
-										HttpURLConnection delegateConnection = (HttpURLConnection) delegateField
-												.get(httpURLConnection);
-										setRequestMethodViaJreBugWorkaround(
-												delegateConnection, method);
-									} catch (NoSuchFieldException e) {
-										// Ignore for now, keep going
-									} catch (IllegalArgumentException e) {
-										throw new RuntimeException(e);
-									} catch (IllegalAccessException e) {
-										throw new RuntimeException(e);
-									}
-									try {
-										Field methodField;
-										while (connectionClass != null) {
-											try {
-												methodField = connectionClass
-														.getDeclaredField("method");
-											} catch (NoSuchFieldException e) {
-												connectionClass = connectionClass
-														.getSuperclass();
-												continue;
-											}
-											methodField.setAccessible(true);
-											methodField.set(httpURLConnection,
-													method);
-											break;
-										}
-									} catch (final Exception e) {
-										throw new RuntimeException(e);
-									}
-								}
-								return null;
-							}
-						});
+                AccessController
+                        .doPrivileged(new PrivilegedExceptionAction<Object>() {
+                            @Override
+                            public Object run() throws NoSuchFieldException,
+                                    IllegalAccessException {
+                                try {
+                                    httpURLConnection.setRequestMethod(method);
+                                    // Check whether we are running on a buggy
+                                    // JRE
+                                } catch (final ProtocolException pe) {
+                                    Class<?> connectionClass = httpURLConnection
+                                            .getClass();
+                                    try {
+                                        final Field delegateField = connectionClass.getDeclaredField("delegate");
+                                        delegateField.setAccessible(true);
+
+                                        HttpURLConnection delegateConnection =
+                                                (HttpURLConnection) delegateField.get(httpURLConnection);
+                                        setRequestMethodViaJreBugWorkaround(delegateConnection, method);
+                                    } catch (NoSuchFieldException e) {
+                                        // Ignore for now, keep going
+                                    } catch (IllegalArgumentException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (IllegalAccessException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    try {
+                                        Field methodField;
+                                        while (connectionClass != null) {
+                                            try {
+                                                methodField = connectionClass
+                                                        .getDeclaredField("method");
+                                            } catch (NoSuchFieldException e) {
+                                                connectionClass = connectionClass
+                                                        .getSuperclass();
+                                                continue;
+                                            }
+                                            methodField.setAccessible(true);
+                                            methodField.set(httpURLConnection,
+                                                    method);
+                                            break;
+                                        }
+                                    } catch (final Exception e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                                return null;
+                            }
+                        });
             } catch (final PrivilegedActionException e) {
                 final Throwable cause = e.getCause();
                 if (cause instanceof RuntimeException) {

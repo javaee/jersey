@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.spring.profiles;
 
 import org.junit.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-
 import static org.junit.Assert.assertEquals;
 
 public class SpringProfilesTest {
@@ -49,14 +48,16 @@ public class SpringProfilesTest {
     @Test
     public void shouldGetDefaultBean() {
         System.setProperty("spring.profiles.active", "");
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("org.glassfish.jersey.server.spring.profiles");
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
+                "org.glassfish.jersey.server.spring.profiles");
         assertEquals("default", context.getBean(TestService.class).test());
     }
 
     @Test
     public void shouldGetDevProfileBean() {
         System.setProperty("spring.profiles.active", "dev");
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("org.glassfish.jersey.server.spring.profiles");
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
+                "org.glassfish.jersey.server.spring.profiles");
         assertEquals("dev", context.getBean(TestService.class).test());
     }
 }

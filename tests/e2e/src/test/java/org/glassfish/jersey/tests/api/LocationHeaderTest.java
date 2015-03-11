@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -96,6 +96,7 @@ import static org.junit.Assert.assertTrue;
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public class LocationHeaderTest extends JerseyTest {
+
     private static final Logger LOGGER = Logger.getLogger(LocationHeaderTest.class.getName());
     static ExecutorService executor;
 
@@ -140,6 +141,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Path(value = "/ResponseTest")
     public static class ResponseTest {
+
         /* injected request URI for assertions in the resource methods */
         @Context
         private UriInfo uriInfo;
@@ -262,7 +264,7 @@ public class LocationHeaderTest extends JerseyTest {
                     Response result = Response.created(uri).build();
                     asyncResponse.resume(result);
                     if (!uriInfo.getAbsolutePath().equals(result.getLocation())) {
-                         executorComparisonFailed.set(true);
+                        executorComparisonFailed.set(true);
                     }
                 }
             });
@@ -322,22 +324,22 @@ public class LocationHeaderTest extends JerseyTest {
         @GET
         @Path("locationAborted")
         public String locationTestAborted() {
-            assertTrue("The resource method locationTestAborted() should not have been called. The post-matching filter was " +
-                    "not configured correctly. ", false);
+            assertTrue("The resource method locationTestAborted() should not have been called. The post-matching filter was "
+                    + "not configured correctly. ", false);
             return "DUMMY_RESPONSE"; // this string should never reach the client (the resource method will not be called)
         }
 
         /**
          * Resource method for testing URI absolutization after the abortion in the pre-matching filter.
-         * @return dummy response - this string should never be propagated to the client (the processing chain will be executorComparisonFailed
-         * in the filter before this resource method is even called.
+         * @return dummy response - this string should never be propagated to the client (the processing chain will be
+         * executorComparisonFailed in the filter before this resource method is even called.
          * However, it is needed here, because the filter is bound to the resource method name.
          */
         @GET
         @Path("locationAbortedPreMatching")
         public String locationTestPreMatchingAborted() {
-            assertTrue("The resource method locationTestPreMatchingAborted() should not have been called. The pre-matching " +
-                    "filter was not configured correctly. ", false);
+            assertTrue("The resource method locationTestPreMatchingAborted() should not have been called. The pre-matching "
+                    + "filter was not configured correctly. ", false);
             return "DUMMY_RESPONSE"; // this string should never reach the client (the resource method will not be called)
         }
 
@@ -454,7 +456,6 @@ public class LocationHeaderTest extends JerseyTest {
             });
         }
 
-
         /** Return UriBuilder with base pre-set {@code /ResponseTest} uri segment for this resource.
          *
          * @return UriBuilder
@@ -552,7 +553,7 @@ public class LocationHeaderTest extends JerseyTest {
         final Response response = target().path("ResponseTest/locationAsync").request().get(Response.class);
 
         String msg = String.format("Comparison failed in the resource method. \nExpected: %1$s\nActual: %2$s",
-                                    expectedUri, response.readEntity(String.class));
+                expectedUri, response.readEntity(String.class));
         assertNotEquals(msg, response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 
         String location = response.getHeaderString(HttpHeaders.LOCATION);
@@ -650,6 +651,7 @@ public class LocationHeaderTest extends JerseyTest {
     private void checkResponseFilter(String resourcePath) {
         checkResponseFilter(resourcePath, resourcePath);
     }
+
     private void checkResponseFilter(String resourcePath, String expectedRelativeUri) {
         final Response response = target().path(resourcePath).request().get(Response.class);
         assertNotEquals("Message from response filter: " + response.readEntity(String.class),
@@ -661,6 +663,7 @@ public class LocationHeaderTest extends JerseyTest {
      * Response filter - replaces the Location header with a relative uri.
      */
     public static class LocationManipulationFilter implements ContainerResponseFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
             MultivaluedMap<String, ? extends Object> headers = responseContext.getHeaders();
@@ -675,6 +678,7 @@ public class LocationHeaderTest extends JerseyTest {
      * it changes the response to 500 - Internal Server Error and sets the error message into the response body.
      */
     public static class UriCheckingResponseFilter implements ContainerResponseFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
             URI location = responseContext.getLocation();
@@ -695,6 +699,7 @@ public class LocationHeaderTest extends JerseyTest {
      * The result of the test is propagated back to the test method by separate URI values in case of a success or a failure.
      */
     public static class AbortingRequestFilter implements ContainerRequestFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
             LOGGER.info("Aborting request in the request filter. Returning status created.");
@@ -719,6 +724,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @PreMatching
     public static class AbortingPreMatchingRequestFilter implements ContainerRequestFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
             if (requestContext.getUriInfo().getAbsolutePath().toString().endsWith("locationAbortedPreMatching")) {
@@ -737,6 +743,7 @@ public class LocationHeaderTest extends JerseyTest {
      * Writer interceptor - replaces the Location header with a relative uri.
      */
     public static class LocationManipulationInterceptor implements WriterInterceptor {
+
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
             MultivaluedMap<String, ? extends Object> headers = context.getHeaders();
@@ -751,6 +758,7 @@ public class LocationHeaderTest extends JerseyTest {
      * Exception mapper which creates a test response with a relative URI.
      */
     public static class TestExceptionMapper implements ExceptionMapper<WebApplicationException> {
+
         @Override
         public Response toResponse(WebApplicationException exception) {
             return Response.created(URI.create("EXCEPTION_MAPPER")).build();
@@ -761,6 +769,7 @@ public class LocationHeaderTest extends JerseyTest {
      * Registers the filter and interceptor and binds it to the resource methods of interest.
      */
     public static class LocationManipulationDynamicBinding implements DynamicFeature {
+
         @Override
         public void configure(ResourceInfo resourceInfo, FeatureContext context) {
             if (ResponseTest.class.equals(resourceInfo.getResourceClass())) {

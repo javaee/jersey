@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -606,13 +606,13 @@ public class ServletDeploymentContext extends DeploymentContext {
                 throw new NullPointerException("The servlet context listener class must not be null");
             }
 
-            if (!ServletContextListener.class.isAssignableFrom(listenerClass) &&
-                    !ServletContextAttributeListener.class.isAssignableFrom(listenerClass) &&
-                    !ServletRequestListener.class.isAssignableFrom(listenerClass) &&
-                    !ServletRequestAttributeListener.class.isAssignableFrom(listenerClass) &&
-                    !HttpSessionListener.class.isAssignableFrom(listenerClass) &&
-                    !HttpSessionActivationListener.class.isAssignableFrom(listenerClass) &&
-                    !HttpSessionAttributeListener.class.isAssignableFrom(listenerClass)) {
+            if (!ServletContextListener.class.isAssignableFrom(listenerClass)
+                    && !ServletContextAttributeListener.class.isAssignableFrom(listenerClass)
+                    && !ServletRequestListener.class.isAssignableFrom(listenerClass)
+                    && !ServletRequestAttributeListener.class.isAssignableFrom(listenerClass)
+                    && !HttpSessionListener.class.isAssignableFrom(listenerClass)
+                    && !HttpSessionActivationListener.class.isAssignableFrom(listenerClass)
+                    && !HttpSessionAttributeListener.class.isAssignableFrom(listenerClass)) {
                 throw new IllegalArgumentException("Unsupported event listener type.");
             }
 
@@ -738,8 +738,8 @@ public class ServletDeploymentContext extends DeploymentContext {
         this.servletInstance = b.servletInstance;
         this.filters = b.filters;
         this.servletPath = b.servletPath;
-        this.listeners = (b.listeners == null) ?
-                Collections.<Class<? extends EventListener>>emptyList() : Collections.unmodifiableList(b.listeners);
+        this.listeners = (b.listeners == null)
+                ? Collections.<Class<? extends EventListener>>emptyList() : Collections.unmodifiableList(b.listeners);
     }
 
     /**

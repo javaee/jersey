@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,7 +49,8 @@ import java.util.Map;
  * @author Marko Asplund (marko.asplund at yahoo.com)
  */
 public class AccountServiceImpl implements AccountService {
-    private Map<String, BigDecimal> accounts = new HashMap<String, BigDecimal>();
+
+    private Map<String, BigDecimal> accounts = new HashMap<>();
     private BigDecimal defaultAccountBalance;
 
     @Override
@@ -60,7 +61,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public BigDecimal getAccountBalance(String accountId) {
         BigDecimal balance = accounts.get(accountId);
-        if(balance == null) {
+        if (balance == null) {
             return defaultAccountBalance;
         }
         return balance;

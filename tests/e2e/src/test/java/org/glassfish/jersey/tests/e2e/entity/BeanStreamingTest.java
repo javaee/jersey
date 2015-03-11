@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,8 +72,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Paul Sandoz
+ * @author Martin Matula
  */
 public class BeanStreamingTest extends JerseyTest {
 

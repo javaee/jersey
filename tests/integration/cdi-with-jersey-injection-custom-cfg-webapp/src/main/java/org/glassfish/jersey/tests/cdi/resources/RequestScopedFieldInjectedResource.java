@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,7 +45,6 @@ import javax.ws.rs.QueryParam;
 
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.spi.BeanManager;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 
@@ -64,20 +63,28 @@ import org.glassfish.jersey.spi.ExceptionMappers;
 public class RequestScopedFieldInjectedResource {
 
     // built-in CDI bean
-    @Inject BeanManager beanManager;
+    @Inject
+    BeanManager beanManager;
 
     // CDI injected
-    @Inject @RequestSpecific EchoService echoService;
+    @Inject
+    @RequestSpecific
+    EchoService echoService;
 
     // Jersey injected
-    @Inject ContainerRequest request;
-    @Inject ExceptionMappers mappers;
-    @Inject Provider<MonitoringStatistics> stats;
+    @Inject
+    ContainerRequest request;
+    @Inject
+    ExceptionMappers mappers;
+    @Inject
+    Provider<MonitoringStatistics> stats;
 
     // Custom Jersey/HK2 injected
-    @Inject MyApplication.MyInjection customInjected;
+    @Inject
+    MyApplication.MyInjection customInjected;
     // Custom Jersey/HK2 injected
-    @Inject Hk2InjectedType hk2Injected;
+    @Inject
+    Hk2InjectedType hk2Injected;
 
     @GET
     public String echo(@QueryParam("s") String s) {
@@ -99,7 +106,7 @@ public class RequestScopedFieldInjectedResource {
     @GET
     @Path("requestCount")
     public String getStatisticsProperty() {
-        return String.valueOf(stats.get().snapshot().getRequestStatistics().getTimeWindowStatistics().get(0l).getRequestCount());
+        return String.valueOf(stats.get().snapshot().getRequestStatistics().getTimeWindowStatistics().get(0L).getRequestCount());
     }
 
     @GET

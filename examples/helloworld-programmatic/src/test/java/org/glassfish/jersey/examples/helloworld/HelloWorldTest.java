@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class HelloWorldTest extends JerseyTest {
 
@@ -62,7 +64,8 @@ public class HelloWorldTest extends JerseyTest {
         Client client = ClientBuilder.newClient();
 
         assertFalse(App.getMethodCalled);
-        Response response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString()).request("text/plain").get();
+        Response response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString())
+                .request("text/plain").get();
         assertTrue(App.getMethodCalled);
         assertEquals(200, response.getStatus());
         assertTrue(response.hasEntity());
@@ -76,11 +79,13 @@ public class HelloWorldTest extends JerseyTest {
     public void testHelloWorldOtherMethods() throws Exception {
         Client client = ClientBuilder.newClient();
         assertFalse(App.headMethodCalled);
-        Response response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString()).request("text/plain").head();
+        Response response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString())
+                .request("text/plain").head();
         assertTrue(App.headMethodCalled);
         assertEquals(204, response.getStatus());
 
-        response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString()).request("text/plain").options();
+        response = client.target(UriBuilder.fromUri(getBaseUri()).path(App.ROOT_PATH).build().toString()).request("text/plain")
+                .options();
         assertEquals(204, response.getStatus());
     }
 }

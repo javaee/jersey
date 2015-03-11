@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,7 @@ import java.beans.FeatureDescriptor;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
 import javax.el.ELContext;
 import javax.el.ELResolver;
 import javax.el.PropertyNotWritableException;
@@ -51,27 +52,28 @@ import javax.el.PropertyNotWritableException;
 /**
  * The initial context resolver that resolves the entity and resource
  * objects used at the start of an EL expression.
- * 
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 class ResponseContextResolver extends ELResolver {
 
     private Map<String, Object> responseObjects;
-    public final static String ENTITY_OBJECT = "entity";
-    public final static String RESOURCE_OBJECT = "resource";
-    public final static String INSTANCE_OBJECT = "instance";
+    public static final String ENTITY_OBJECT = "entity";
+    public static final String RESOURCE_OBJECT = "resource";
+    public static final String INSTANCE_OBJECT = "instance";
 
     public ResponseContextResolver(Object entity, Object resource, Object instance) {
-        responseObjects = new HashMap<String, Object>();
+        responseObjects = new HashMap<>();
         responseObjects.put(ENTITY_OBJECT, entity);
         responseObjects.put(RESOURCE_OBJECT, resource);
         responseObjects.put(INSTANCE_OBJECT, instance);
     }
 
     private boolean isHandled(ELContext elc, Object base, Object property) {
-        if (base != null)
+        if (base != null) {
             return false;
+        }
         if (responseObjects.containsKey(property.toString())) {
             elc.setPropertyResolved(true);
             return true;

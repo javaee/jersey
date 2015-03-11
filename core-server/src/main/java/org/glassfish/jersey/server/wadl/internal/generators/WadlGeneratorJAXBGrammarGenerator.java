@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.wadl.internal.generators;
 
 import java.io.CharArrayWriter;
@@ -92,11 +93,12 @@ import com.sun.research.ws.wadl.Response;
  * Created on: Jun 22, 2011<br>
  *
  * @author Gerard Davison
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
 
     private static interface NameCallbackSetter {
+
         public void setName(QName name);
     }
 
@@ -111,15 +113,13 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
         NameCallbackSetter nameCallbackSetter;
     }
 
-
     private static final Logger LOGGER = Logger.getLogger(WadlGeneratorJAXBGrammarGenerator.class.getName());
     private static final java.util.Set<Class> SPECIAL_GENERIC_TYPES =
             new HashSet<Class>() {{
                 // TODO - J2 - we do not have JResponse but we should support GenericEntity
-//                    add(JResponse.class);
+                //                    add(JResponse.class);
                 add(List.class);
             }};
-
 
     // The generator we are decorating
     private WadlGenerator wadlGeneratorDelegate;
@@ -145,7 +145,6 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
         return wadlGeneratorDelegate.getRequiredJaxbContextPath();
     }
 
-
     public void init() throws Exception {
         wadlGeneratorDelegate.init();
         //
@@ -157,7 +156,6 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
     }
 
     // =============== Application Creation ================================
-
 
     /**
      * @return application
@@ -228,7 +226,9 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
      * org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
      */
     public Representation createRequestRepresentation(
-            final org.glassfish.jersey.server.model.Resource ar, final org.glassfish.jersey.server.model.ResourceMethod arm, final MediaType mt) {
+            final org.glassfish.jersey.server.model.Resource ar,
+            final org.glassfish.jersey.server.model.ResourceMethod arm,
+            final MediaType mt) {
 
         final Representation rt = wadlGeneratorDelegate.createRequestRepresentation(ar, arm, mt);
 
@@ -398,7 +398,6 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
 
             introspector = context.createJAXBIntrospector();
 
-
         } catch (final JAXBException e) {
             LOGGER.log(Level.SEVERE, "Failed to generate the schema for the JAX-B elements", e);
         } catch (final IOException e) {
@@ -458,7 +457,6 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
 
         if (introspector != null) {
 
-
             for (final TypeCallbackPair pair : nameCallbacks) {
 
                 // There is a method on the RI version that works with just
@@ -470,8 +468,8 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
                 if (SPECIAL_GENERIC_TYPES.contains(parameterClass)) {
                     final Type type = pair.genericType.getType();
 
-                    if (ParameterizedType.class.isAssignableFrom(type.getClass()) &&
-                            Class.class.isAssignableFrom(((ParameterizedType) type).getActualTypeArguments()[0].getClass())) {
+                    if (ParameterizedType.class.isAssignableFrom(type.getClass())
+                            && Class.class.isAssignableFrom(((ParameterizedType) type).getActualTypeArguments()[0].getClass())) {
                         parameterClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[0];
                     } else {
                         // Works around JERSEY-830

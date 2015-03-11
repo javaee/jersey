@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,11 +42,6 @@ package org.glassfish.jersey.examples.flight.validation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.ElementType.CONSTRUCTOR;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PARAMETER;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
@@ -59,6 +54,12 @@ import org.glassfish.jersey.examples.flight.internal.DataStore;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotBlank;
 
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.CONSTRUCTOR;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+
 /**
  * Check whether the validated value is a valid/existing flight identifier.
  *
@@ -68,7 +69,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @Target({METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER})
 @Constraint(validatedBy = ValidFlightId.StringValidator.class)
 @NotBlank
-@Length(min=7, max=7)
+@Length(min = 7, max = 7)
 @ReportAsSingleViolation
 public @interface ValidFlightId {
 

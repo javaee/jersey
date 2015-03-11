@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,7 +70,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests aborting the request on the client side.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class AbortResponseClientTest extends JerseyTest {
 
@@ -84,7 +84,6 @@ public class AbortResponseClientTest extends JerseyTest {
 
         final Date date = getDate();
 
-
         ClientRequestFilter outFilter = new ClientRequestFilter() {
 
             @Override
@@ -94,8 +93,8 @@ public class AbortResponseClientTest extends JerseyTest {
                 final Response response = Response.ok().cookie(cookie1).cookie(cookie2)
                         .header("head1", "head1").header(HttpHeaders.DATE, date).header(HttpHeaders.ETAG,
                                 "\"123465\"").header(HttpHeaders.CONTENT_LANGUAGE, "language").header(HttpHeaders.LAST_MODIFIED,
-                                date).header(HttpHeaders.CONTENT_LENGTH, 99).type(MediaType.TEXT_HTML_TYPE).location(URI.create
-                                ("www.oracle.com")).build();
+                                date).header(HttpHeaders.CONTENT_LENGTH, 99).type(MediaType.TEXT_HTML_TYPE)
+                        .location(URI.create("www.oracle.com")).build();
 
                 // abort the request
                 context.abortWith(response);
@@ -126,7 +125,7 @@ public class AbortResponseClientTest extends JerseyTest {
         assertEquals("123465", r.getEntityTag().getValue());
         assertEquals("language", r.getLanguage().toString());
         assertEquals(date.getTime(), r.getLastModified().getTime());
-//        Assert.assertEquals("uri", r.getLink("link")); TODO: not supported yet
+        // Assert.assertEquals("uri", r.getLink("link")); TODO: not supported yet
         assertEquals("www.oracle.com", r.getLocation().toString());
         assertEquals(MediaType.TEXT_HTML_TYPE, r.getMediaType());
         assertEquals(99, r.getLength());
@@ -137,8 +136,8 @@ public class AbortResponseClientTest extends JerseyTest {
     private Date getDate() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.YEAR, 2012);
-        cal.set(Calendar.MONTH, 07);
-        cal.set(Calendar.DAY_OF_MONTH, 01);
+        cal.set(Calendar.MONTH, 7);
+        cal.set(Calendar.DAY_OF_MONTH, 1);
         cal.set(Calendar.HOUR, 10);
         cal.set(Calendar.MINUTE, 5);
         cal.set(Calendar.SECOND, 1);
@@ -148,6 +147,7 @@ public class AbortResponseClientTest extends JerseyTest {
 
     @Path("test")
     public static class TestResource {
+
         @GET
         public String get() {
             return "this will never be called.";

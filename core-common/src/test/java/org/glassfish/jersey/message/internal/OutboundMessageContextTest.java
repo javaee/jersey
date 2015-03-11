@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import javax.ws.rs.core.EntityTag;
@@ -55,7 +56,10 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
 
 import org.junit.Test;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import static org.junit.Assert.assertEquals;
@@ -75,12 +79,15 @@ public class OutboundMessageContextTest {
     @Test
     public void testAcceptableMediaTypes() throws URISyntaxException {
         OutboundMessageContext r = new OutboundMessageContext();
+
         r.getHeaders().add(HttpHeaders.ACCEPT, "application/xml, text/plain");
         r.getHeaders().add(HttpHeaders.ACCEPT, "application/json");
-        assertEquals(r.getAcceptableMediaTypes().size(), 3);
-        assertTrue(r.getAcceptableMediaTypes().contains(MediaType.APPLICATION_XML_TYPE));
-        assertTrue(r.getAcceptableMediaTypes().contains(MediaType.TEXT_PLAIN_TYPE));
-        assertTrue(r.getAcceptableMediaTypes().contains(MediaType.APPLICATION_JSON_TYPE));
+
+        final List<MediaType> acceptableMediaTypes = r.getAcceptableMediaTypes();
+
+        assertThat(acceptableMediaTypes.size(), equalTo(3));
+        assertThat(acceptableMediaTypes,
+                contains(MediaType.APPLICATION_XML_TYPE, MediaType.TEXT_PLAIN_TYPE, MediaType.APPLICATION_JSON_TYPE));
     }
 
     @Test

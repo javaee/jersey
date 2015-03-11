@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.filter;
 
 import javax.ws.rs.GET;
@@ -55,7 +56,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class CsrfProtectionFilterTest {
 
@@ -63,10 +64,12 @@ public class CsrfProtectionFilterTest {
 
     @Path("/resource")
     public static class Resource {
+
         @GET
         public String get() {
             return "GET";
         }
+
         @PUT
         public String put() {
             return "PUT";
@@ -87,7 +90,9 @@ public class CsrfProtectionFilterTest {
 
     @Test
     public void testGetWithHeader() throws Exception {
-        ContainerResponse response = handler.apply(RequestContextBuilder.from("", "/resource", "GET").header(CsrfProtectionFilter.HEADER_NAME, "").build()).get();
+        ContainerResponse response = handler
+                .apply(RequestContextBuilder.from("", "/resource", "GET").header(CsrfProtectionFilter.HEADER_NAME, "").build())
+                .get();
         assertEquals("GET", response.getEntity());
     }
 
@@ -99,7 +104,9 @@ public class CsrfProtectionFilterTest {
 
     @Test
     public void testPutWithHeader() throws Exception {
-        ContainerResponse response = handler.apply(RequestContextBuilder.from("", "/resource", "PUT").header(CsrfProtectionFilter.HEADER_NAME, "").build()).get();
+        ContainerResponse response = handler
+                .apply(RequestContextBuilder.from("", "/resource", "PUT").header(CsrfProtectionFilter.HEADER_NAME, "").build())
+                .get();
         assertEquals("PUT", response.getEntity());
     }
 }

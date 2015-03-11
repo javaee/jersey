@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -98,8 +98,8 @@ public class MultiPartBeanProvider implements MessageBodyReader<MultiPartBean>, 
         String line = sb.toString();
         int equals = line.indexOf('=');
         if (equals < 0) {
-            throw new WebApplicationException
-              (new IllegalArgumentException("Input content '" + line + "' is not in a valid format"));
+            throw new WebApplicationException(
+                    new IllegalArgumentException("Input content '" + line + "' is not in a valid format"));
         }
 
         return new MultiPartBean(line.substring(0, equals), line.substring(equals + 1));

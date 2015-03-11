@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,9 +63,11 @@ import jersey.repackaged.com.google.common.base.Objects;
  */
 @Entity
 @Table(name = "BOOKMARKS")
-@NamedQueries( {
-        @NamedQuery(name = "BookmarkEntity.findByUserid", query = "SELECT b FROM BookmarkEntity b WHERE b.bookmarkEntityPK.userid = :userid"),
-        @NamedQuery(name = "BookmarkEntity.findByBmid", query = "SELECT b FROM BookmarkEntity b WHERE b.bookmarkEntityPK.bmid = :bmid"),
+@NamedQueries({
+        @NamedQuery(name = "BookmarkEntity.findByUserid",
+                query = "SELECT b FROM BookmarkEntity b WHERE b.bookmarkEntityPK.userid = :userid"),
+        @NamedQuery(name = "BookmarkEntity.findByBmid",
+                query = "SELECT b FROM BookmarkEntity b WHERE b.bookmarkEntityPK.bmid = :bmid"),
         @NamedQuery(name = "BookmarkEntity.findByUri", query = "SELECT b FROM BookmarkEntity b WHERE b.uri = :uri"),
         @NamedQuery(name = "BookmarkEntity.findByUpdated", query = "SELECT b FROM BookmarkEntity b WHERE b.updated = :updated"),
         @NamedQuery(name = "BookmarkEntity.findByLdesc", query = "SELECT b FROM BookmarkEntity b WHERE b.ldesc = :ldesc"),

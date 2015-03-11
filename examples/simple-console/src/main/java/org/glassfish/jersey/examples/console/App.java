@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,9 +60,9 @@ public class App {
             try {
                 return Integer.parseInt(port);
             } catch (NumberFormatException e) {
-                System.out.println("Value of jersey.config.test.container.port property" +
-                        " is not a valid positive integer [" + port + "]." +
-                        " Reverting to default [" + defaultPort + "].");
+                System.out.println("Value of jersey.config.test.container.port property"
+                        + " is not a valid positive integer [" + port + "]."
+                        + " Reverting to default [" + defaultPort + "].");
             }
         }
         return defaultPort;
@@ -76,9 +76,9 @@ public class App {
     public static final int defaultPort = 9998;
 
     public static ResourceConfig createApp() {
-        return new ResourceConfig().
-                register(new JettisonFeature()).
-                packages("org.glassfish.jersey.examples.console");
+        return new ResourceConfig()
+                .register(new JettisonFeature())
+                .packages("org.glassfish.jersey.examples.console");
     }
 
     @SuppressWarnings({"ResultOfMethodCallIgnored"})

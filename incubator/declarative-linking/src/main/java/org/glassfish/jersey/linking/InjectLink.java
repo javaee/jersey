@@ -44,7 +44,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
+
 import javax.ws.rs.core.Link;
+
 import org.glassfish.jersey.Beta;
 
 /**
@@ -81,7 +83,7 @@ public @interface InjectLink {
          */
         RELATIVE_PATH
 
-    };
+    }
 
     /**
      * The style of URI to inject
@@ -114,11 +116,11 @@ public @interface InjectLink {
      * for the parameter then that is used</li>
      * <li>Otherwise an implicit binding is used that extracts the value of a
      * bean property by the same name as the URI template from the implicit
-     * <code>instance</code> bean (see {@link Binding}).</li>
+     * {@code instance} bean (see {@link Binding}).</li>
      * </ol>
      * <p>
-     * E.g. assuming a resource class <code>SomeResource</code> with the
-     * following <code>@Path("{id}")</code> annotation, the following two
+     * E.g. assuming a resource class {@code SomeResource} with the
+     * following {@code @Path("{id}")} annotation, the following two
      * alternatives are therefore equivalent:</p>
      * <pre>
      * &#64;Ref(resource=SomeResource.class)
@@ -153,6 +155,7 @@ public @interface InjectLink {
 
     // Link properties
     //
+
     /**
      * Specifies the relationship.
      */
@@ -211,7 +214,7 @@ public @interface InjectLink {
     public static class Util {
 
         public static Link buildLinkFromUri(URI uri, InjectLink link) {
-            
+
             javax.ws.rs.core.Link.Builder builder = javax.ws.rs.core.Link.fromUri(uri);
             if (link.rel().length() != 0) {
                 builder = builder.rel(link.rel());
@@ -237,8 +240,7 @@ public @interface InjectLink {
             for (InjectLink.Extension ext : link.extensions()) {
                 builder = builder.param(ext.name(), ext.value());
             }
-            Link built = builder.build();
-            return built;
+            return builder.build();
         }
     }
 

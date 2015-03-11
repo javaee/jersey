@@ -52,6 +52,122 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.17">
+        <title>Migrating from Jersey 2.16 to 2.17</title>
+        <section xml:id="mig-2.17-highlights">
+            <title>Release 2.17 Highlights</title>
+
+            <section>
+                <title>CDI integration in EAR packaged WARs</title>
+                <para>
+                    From version 2.17 onwards, it's possible to use CDI with JAX-RS web-applications packaged in EAR. All supported
+                    HK2/CDI injections now work as expected for JAX-RS application deployed in the mentioned fashion. One need to
+                    make sure that modules <literal>jersey-cdi1x</literal> and <literal>jersey-cdi1x-servlet</literal> are present
+                    in Servlet container (that supports EARs).
+                </para>
+            </section>
+        </section>
+    </section>
+
+    <section xml:id="mig-2.16">
+        <title>Migrating from Jersey 2.15 to 2.16</title>
+        <section xml:id="mig-2.16-highlights">
+            <title>Release 2.16 Highlights</title>
+
+            <section>
+                <title>JAX-B providers separated from the core</title>
+                <para>
+                    From version 2.16 onwards, all JAX-B providers are being bundled in a separate module.
+                </para>
+            </section>
+            <section>
+                <title>Performance gain when using Sub-Resource Locators</title>
+                <para>
+                    We improved the performance for using sub-resource locators in an Jersey application. The performance gains
+                    are available for cases when the sub-resource locator method returns either a resource class (return value is
+                    e.g. <literal>Class&lt;?&gt;</literal> or <literal>Class&lt;MySubResource&gt;</literal>) or a (non-proxied)
+                    resource instance (when return value is an instance of <literal>MySubResource</literal> class).
+                </para>
+            </section>
+            <section>
+                <title>More unified connector configuration options</title>
+                <para>
+                    Jetty connector and Apache connector have been previously using their own custom properties
+                    to set SSL context on a connector. These properties have been deprecated and the code has been updated
+                    to read the SSL context information from the JAX-RS client configuration. This means that all Jersey
+                    connectors now properly accept SSL configuration as configured via standard JAX-RS
+                    &jaxrs.client.ClientBuilder; methods.
+                </para>
+                <para>
+                    Previously, all Jersey connectors have been using their own default chunk size when HTTP chunked coding
+                    was used. Since Jersey 2.16, there is a new default chunk size value used by all connectors, if a custom
+                    chunk size is not set. The new default value is stored under
+                    &jersey.client.ClientProperties.DEFAULT_CHUNK_SIZE; client property.
+                </para>
+            </section>
+        </section>
+        <section xml:id="mig-2.16-new-deprecated">
+            <title>Deprecated APIs</title>
+            <para>Following APIs were deprecated:</para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.apache.connector.ApacheClientProperties</literal> - constant
+                            <literal>SSL_CONFIG</literal> has been marked as deprecated and will be removed in a subsequent
+                            release. Use &jaxrs.client.ClientBuilder; methods to configure SSL in a &jaxrs.client.Client;
+                            instance.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.jetty.connector.JettyClientProperties</literal> - constant
+                            <literal>SSL_CONFIG</literal> has been marked as deprecated and will be removed in a subsequent
+                            release. Use &jaxrs.client.ClientBuilder; methods to configure SSL in a &jaxrs.client.Client;
+                            instance.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section xml:id="mig-2.16-breaking-changes">
+            <title>Breaking Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            JAX-B support modularization might cause breaking changes for those users relying on JAX-B and directly referring to the Jersey core-common module:
+<programlisting language="xml" linenumbering="unnumbered">
+&lt;dependency&gt;
+  &lt;groupId&gt;org.glassfish.jersey.core&lt;/groupId&gt;
+  &lt;artifactId&gt;jersey-common&lt;/artifactId&gt;
+  &lt;version&gt;${pre-2.16-version}&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                            The following needs to be included in addition from version 2.16 on:
+<programlisting language="xml" linenumbering="unnumbered">
+&lt;dependency&gt;
+  &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
+  &lt;artifactId&gt;jersey-media-jaxb&lt;/artifactId&gt;
+  &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>MediaType</literal>'s quality source parameters (<literal>qs</literal>) reuse the
+                            same parsing as quality parameters. This means that values higher than <literal>1.0</literal>
+                            throw ParseException. I.e. following example is not allowed any more:
+<programlisting language="java" linenumbering="unnumbered">
+@Path("/")
+@Produces("text/html;qs=5") // wrong 'qs' value
+public class Bookstore { ... }</programlisting>
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
     <section xml:id="mig-2.15">
         <title>Migrating to 2.15</title>
         <section xml:id="mig-2.15-highlights">
@@ -624,7 +740,7 @@
             </para>
         </section>
         <section xml:id="mig-2.6-new-deprecated">
-            <title>New deprecated APIs / internal classes</title>
+            <title>Deprecated APIs</title>
             <para>Following APIs were deprecated:</para>
             <para>
                 <itemizedlist>

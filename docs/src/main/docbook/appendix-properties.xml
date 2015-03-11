@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -454,6 +454,133 @@
                             <para>
                                 If property value is <literal>true</literal> then the errors raised during response processing are
                                 tried to be handled using available response error mappers.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.SUBRESOURCE_LOCATOR_CACHE_SIZE;</entry>
+                        <entry><literal>jersey.config.server.subresource.cache.size</literal></entry>
+                        <entry>
+                            <para>
+                                An integer value that defines the size of cache for sub-resource locator models. The cache is used
+                                to provide better performance for application that uses JAX-RS sub-resource locators.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.SUBRESOURCE_LOCATOR_CACHE_SIZE;</entry>
+                        <entry><literal>jersey.config.server.subresource.cache.size</literal></entry>
+                        <entry>
+                            <para>
+                                An integer value that defines the maximum age (in seconds) for cached for sub-resource locator
+                                models. The age of an cache entry is defined as the time since the last access (read) to the entry
+                                in the cache. Entry aging is not enabled by default.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.SUBRESOURCE_LOCATOR_CACHE_JERSEY_RESOURCE_ENABLED;</entry>
+                        <entry><literal>jersey.config.server.subresource.cache.jersey.resource.enabled</literal></entry>
+                        <entry>
+                            <para>
+                                If <literal>true</literal> then Jersey will cache Jersey resources in addition to caching
+                                sub-resource locator classes and instances (which are cached by default). To make sure the caching
+                                is effective in this case you need to return same Jersey Resource instances for same input
+                                parameters from resource method. This means that generating new Jersey Resource instances for same
+                                input parameters would not have any performance effect and it would only fill-up the cache.
+                            </para>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+
+    <section xml:id="appendix-properties-servlet">
+        <title>Servlet configuration properties</title>
+
+        <para>
+            List of servlet configuration properties that can be found in &jersey.servlet.ServletProperties; class.
+        </para>
+
+        <table>
+            <title>List of servlet configuration properties</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Constant</entry>
+                        <entry>Value</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.FILTER_CONTEXT_PATH;</entry>
+                        <entry><literal>jersey.config.servlet.filter.contextPath</literal></entry>
+                        <entry>
+                            <para>
+                                If set, indicates the URL pattern of the Jersey servlet filter context path.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.FILTER_FORWARD_ON_404;</entry>
+                        <entry><literal>jersey.config.servlet.filter.forwardOn404</literal></entry>
+                        <entry>
+                            <para>
+                                If set to <literal>true</literal> and a 404 response with no entity body is returned from either
+                                the runtime or the application then the runtime forwards the request to the next filter in the
+                                filter chain. This enables another filter or the underlying servlet engine to process the request.
+                                Before the request is forwarded the response status is set to 200.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.FILTER_STATIC_CONTENT_REGEX;</entry>
+                        <entry><literal>jersey.config.servlet.filter.staticContentRegex</literal></entry>
+                        <entry>
+                            <para>
+                                If set the regular expression is used to match an incoming servlet path URI to some web page
+                                content such as static resources or JSPs to be handled by the underlying servlet engine.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.JAXRS_APPLICATION_CLASS;</entry>
+                        <entry><literal>javax.ws.rs.Application</literal></entry>
+                        <entry>
+                            <para>
+                                Application configuration initialization property whose value is a fully qualified class name of a
+                                class that implements JAX-RS Application.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.PROVIDER_WEB_APP;</entry>
+                        <entry><literal>jersey.config.servlet.provider.webapp</literal></entry>
+                        <entry>
+                            <para>
+                                Indicates that Jersey should scan the whole web app for application-specific resources and
+                                providers.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED;</entry>
+                        <entry><literal>jersey.config.servlet.form.queryParams.disabled</literal></entry>
+                        <entry>
+                            <para>
+                                If <literal>true</literal> then query parameters will not be treated as form parameters
+                                (e.g. injectable using @FormParam) in case a Form request is processed by server.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.SERVICE_LOCATOR;</entry>
+                        <entry><literal>jersey.config.servlet.context.serviceLocator</literal></entry>
+                        <entry>
+                            <para>
+                                Identifies the object that will be used as a parent ServiceLocator in the Jersey WebComponent.
                             </para>
                         </entry>
                     </row>

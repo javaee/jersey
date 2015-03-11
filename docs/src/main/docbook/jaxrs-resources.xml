@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -134,7 +134,7 @@ public class UserResource {
                 If it is required that a user name must only consist of
                 lower and upper case numeric characters then it is possible to declare a
                 particular regular expression, which overrides the default regular
-                expression, "[^/]+?", for example:
+                expression, "[^/]+", for example:
                 <programlisting language="java">@Path("users/{username: [a-zA-Z][a-zA-Z_0-9]*}")</programlisting>
                 In this type of example the username variable will only match user names that begin with one upper or lower case letter and zero or more alpha numeric characters and the underscore character. If a user name does not match that a 404 (Not Found) response will occur.
             </para>

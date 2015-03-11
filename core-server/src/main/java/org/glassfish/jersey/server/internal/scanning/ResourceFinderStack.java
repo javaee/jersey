@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,23 +56,23 @@ import org.glassfish.jersey.server.ResourceFinder;
  */
 public class ResourceFinderStack implements ResourceFinder {
 
-    private final Deque<ResourceFinder> stack = new LinkedList<ResourceFinder> ();
+    private final Deque<ResourceFinder> stack = new LinkedList<ResourceFinder>();
     private ResourceFinder current = null;
 
     @Override
     public boolean hasNext() {
-        if(current == null) {
-            if(!stack.isEmpty()) {
+        if (current == null) {
+            if (!stack.isEmpty()) {
                 current = stack.pop();
             } else {
                 return false;
             }
         }
 
-        if(current.hasNext()) {
+        if (current.hasNext()) {
             return true;
         } else {
-            if(!stack.isEmpty()) {
+            if (!stack.isEmpty()) {
                 current = stack.pop();
                 return hasNext();
             } else {
@@ -83,7 +83,7 @@ public class ResourceFinderStack implements ResourceFinder {
 
     @Override
     public String next() {
-        if(hasNext()) {
+        if (hasNext()) {
             return current.next();
         }
 

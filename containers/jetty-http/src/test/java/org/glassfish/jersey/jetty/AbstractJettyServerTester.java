@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,33 +37,36 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.jetty;
 
-import org.eclipse.jetty.server.Server;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.After;
-
-import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.security.AccessController;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.eclipse.jetty.server.Server;
+import org.junit.After;
+
 /**
  * Abstract Jetty Server unit tester.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Arul Dhesiaseelan (aruld at acm.org)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public abstract class AbstractJettyServerTester {
 
-    public static final String CONTEXT = "";
-    private final int DEFAULT_PORT = 9998;
-
     private static final Logger LOGGER = Logger.getLogger(AbstractJettyServerTester.class.getName());
+
+    public static final String CONTEXT = "";
+    private static final int DEFAULT_PORT = 9998;
 
     /**
      * Get the port to be used for test application deployments.
@@ -71,7 +74,8 @@ public abstract class AbstractJettyServerTester {
      * @return The HTTP port of the URI
      */
     protected final int getPort() {
-        final String value = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("jersey.config.test.container.port"));
+        final String value = AccessController
+                .doPrivileged(PropertiesHelper.getSystemProperty("jersey.config.test.container.port"));
         if (value != null) {
 
             try {

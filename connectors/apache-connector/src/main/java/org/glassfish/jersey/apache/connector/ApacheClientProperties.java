@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,7 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
  * Configuration options specific to the Client API that utilizes {@link ApacheConnectorProvider}.
  *
  * @author jorgeluisw@mac.com
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
@@ -64,7 +64,10 @@ public final class ApacheClientProperties {
      * A default value is not set.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Set the SSL configuration on the JAX-RS {@link javax.ws.rs.client.ClientBuilder}.
      */
+    @Deprecated
     public static final String SSL_CONFIG = "jersey.config.apache.client.ssl.sslConfig";
 
     /**

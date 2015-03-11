@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,6 +47,7 @@ import javax.ws.rs.core.Configuration;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public interface ExtendedConfig extends Configuration {
+
     /**
      * Get the value of the property with a given name converted to {@code boolean}.
      * Returns {@code false} if the value is not convertible.

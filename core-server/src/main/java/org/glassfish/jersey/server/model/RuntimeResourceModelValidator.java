@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,7 +57,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
 /**
  * Runtime resource model validator validating ambiguity of resource methods.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor {
 
@@ -131,8 +131,9 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
             // fatal
             Errors.fatal(runtimeResource, LocalizationMessages.AMBIGUOUS_FATAL_RMS(httpMethod, m1.getInvocable()
                     .getHandlingMethod(), m2.getInvocable().getHandlingMethod(), runtimeResource.getRegex()));
-        } else if ((producesFails && consumesOnlyIntersects) || (consumesFails && producesOnlyIntersects) ||
-                (consumesOnlyIntersects && producesOnlyIntersects)) {
+        } else if ((producesFails && consumesOnlyIntersects)
+                || (consumesFails && producesOnlyIntersects)
+                || (consumesOnlyIntersects && producesOnlyIntersects)) {
             // warning
             if (m1.getInvocable().requiresEntity()) {
                 Errors.hint(runtimeResource, LocalizationMessages.AMBIGUOUS_RMS_IN(
@@ -152,7 +153,7 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
         if (!resourceMethod.getConsumedTypes().isEmpty()) {
             return resourceMethod.getConsumedTypes();
         }
-        List<MediaType> result = new LinkedList<MediaType>();
+        List<MediaType> result = new LinkedList<>();
         if (workers != null) {
             for (Parameter p : resourceMethod.getInvocable().getParameters()) {
                 if (p.getSource() == Parameter.Source.ENTITY) {
@@ -168,7 +169,7 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
         if (!resourceMethod.getProducedTypes().isEmpty()) {
             return resourceMethod.getProducedTypes();
         }
-        List<MediaType> result = new LinkedList<MediaType>();
+        List<MediaType> result = new LinkedList<>();
         if (workers != null) {
             final Invocable invocable = resourceMethod.getInvocable();
             result.addAll(workers.getMessageBodyWriterMediaTypes(
@@ -178,7 +179,6 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
         }
         return result.isEmpty() ? StarTypeList : result;
     }
-
 
     private boolean sameHttpMethod(ResourceMethod m1, ResourceMethod m2) {
         return m1.getHttpMethod().equals(m2.getHttpMethod());

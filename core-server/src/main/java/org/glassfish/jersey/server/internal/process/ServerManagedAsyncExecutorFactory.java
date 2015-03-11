@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.process;
 
 import java.util.concurrent.ExecutorService;
@@ -44,6 +45,7 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.process.internal.RequestExecutorFactory;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
@@ -57,7 +59,7 @@ import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
  * {@link org.glassfish.jersey.process.internal.RequestExecutorFactory Executors factory}
  * used on the server side for managed asynchronous request invocations.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class ServerManagedAsyncExecutorFactory extends RequestExecutorFactory implements ContainerLifecycleListener {
@@ -78,8 +80,10 @@ class ServerManagedAsyncExecutorFactory extends RequestExecutorFactory implement
 
             @Override
             public ExecutorService getRequestingExecutor() {
-                return Executors.newCachedThreadPool(
-                        new ThreadFactoryBuilder().setNameFormat("jersey-server-managed-async-executor-%d").build());
+                return Executors.newCachedThreadPool(new ThreadFactoryBuilder()
+                        .setNameFormat("jersey-server-managed-async-executor-%d")
+                        .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                        .build());
             }
 
             @Override

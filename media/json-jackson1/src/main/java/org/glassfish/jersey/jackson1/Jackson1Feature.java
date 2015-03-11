@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.jackson1;
 
 import javax.ws.rs.core.Configuration;
@@ -46,23 +47,22 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.InternalProperties;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 import org.codehaus.jackson.jaxrs.JsonMappingExceptionMapper;
 import org.codehaus.jackson.jaxrs.JsonParseExceptionMapper;
 
-import org.glassfish.jersey.internal.InternalProperties;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-
 /**
  * Feature used to register Jackson (1.x) JSON providers.
  *
- * @author Stepan Kopriva (stepan.kopriva at oracle.com)
+ * @author Stepan Kopriva
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public final class Jackson1Feature implements Feature {
 
-    private final static String JSON_FEATURE = Jackson1Feature.class.getSimpleName();
+    private static final String JSON_FEATURE = Jackson1Feature.class.getSimpleName();
 
     @Override
     public boolean configure(final FeatureContext context) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,6 +69,9 @@ final class EntityFilteringProcessor extends AbstractEntityProcessor {
                 addGlobalScopes(EntityFilteringHelper.getFilteringScopes(context.getEntityClass().getDeclaredAnnotations()),
                         context.getEntityGraph());
                 break;
+            default:
+                // NOOP.
+                break;
         }
         return super.process(context);
     }
@@ -76,7 +79,7 @@ final class EntityFilteringProcessor extends AbstractEntityProcessor {
     @Override
     protected Result process(final String field, final Class<?> fieldClass, final Annotation[] fieldAnnotations,
                              final Annotation[] annotations, final EntityGraph graph) {
-        Set<String> filteringScopes = Sets.newHashSet();
+        final Set<String> filteringScopes = Sets.newHashSet();
 
         if (fieldAnnotations.length > 0) {
             filteringScopes.addAll(EntityFilteringHelper.getFilteringScopes(fieldAnnotations));

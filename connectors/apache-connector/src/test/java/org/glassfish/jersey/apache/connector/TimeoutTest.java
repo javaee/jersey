@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.apache.connector;
 
 import java.net.SocketTimeoutException;
@@ -60,7 +61,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public class TimeoutTest extends JerseyTest {
@@ -78,7 +79,7 @@ public class TimeoutTest extends JerseyTest {
         public String getTimeout() {
             try {
                 Thread.sleep(2000);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 e.printStackTrace();
             }
             return "GET";
@@ -87,20 +88,20 @@ public class TimeoutTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        ResourceConfig config = new ResourceConfig(TimeoutResource.class);
+        final ResourceConfig config = new ResourceConfig(TimeoutResource.class);
         config.register(new LoggingFilter(LOGGER, true));
         return config;
     }
 
     @Override
-    protected void configureClient(ClientConfig config) {
+    protected void configureClient(final ClientConfig config) {
         config.property(ClientProperties.READ_TIMEOUT, 1000);
         config.connectorProvider(new ApacheConnectorProvider());
     }
 
     @Test
     public void testFast() {
-        Response r = target("test").request().get();
+        final Response r = target("test").request().get();
         assertEquals(200, r.getStatus());
         assertEquals("GET", r.readEntity(String.class));
     }
@@ -109,9 +110,17 @@ public class TimeoutTest extends JerseyTest {
     public void testSlow() {
         try {
             target("test/timeout").request().get();
-        } catch (ProcessingException e) {
+        } catch (final ProcessingException e) {
             assertThat("Unexpected processing exception cause",
                     e.getCause(), instanceOf(SocketTimeoutException.class));
         }
+    }
+
+    @Test
+    public void testPerRequestTimeout() {
+        final Response r = target("test/timeout").request()
+                .property(ClientProperties.READ_TIMEOUT, 3000).get();
+        assertEquals(200, r.getStatus());
+        assertEquals("GET", r.readEntity(String.class));
     }
 }

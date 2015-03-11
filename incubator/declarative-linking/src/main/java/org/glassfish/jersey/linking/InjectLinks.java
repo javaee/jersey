@@ -50,7 +50,7 @@ import org.glassfish.jersey.Beta;
 /**
  * Used to request the addition of a set of links, can be used for both
  * link headers on a Class or injection into a List<Link> or Link[] property.
- * 
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */

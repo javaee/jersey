@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,20 +40,43 @@
 
 package org.glassfish.jersey.tests.e2e.entity.filtering.domain;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
+
 import org.glassfish.jersey.tests.e2e.entity.filtering.PrimaryDetailedView;
 import org.glassfish.jersey.tests.e2e.entity.filtering.SecondaryDetailedView;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Mixed views.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.ANY)
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class ComplexSubSubEntity {
 
+    public static final ComplexSubSubEntity INSTANCE;
+
+    static {
+        INSTANCE = new ComplexSubSubEntity();
+        INSTANCE.field = "field";
+        INSTANCE.property = "property";
+    }
+
+    @XmlElement
     @SecondaryDetailedView
-    private String field;
+    public String field;
 
     private String property;
+
+    @XmlTransient
+    @JsonIgnore
+    public String accessorTransient;
 
     public String getProperty() {
         return property;
@@ -65,9 +88,10 @@ public class ComplexSubSubEntity {
 
     @PrimaryDetailedView
     public String getAccessor() {
-        return field + field;
+        return accessorTransient == null ? field + field : accessorTransient;
     }
 
     public void setAccessor(final String accessor) {
+        accessorTransient = accessor;
     }
 }

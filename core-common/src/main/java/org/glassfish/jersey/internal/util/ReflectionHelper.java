@@ -75,6 +75,7 @@ import javax.ws.rs.core.GenericType;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -86,7 +87,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
 /**
  * Utility methods for Java reflection.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class ReflectionHelper {
@@ -108,7 +109,7 @@ public class ReflectionHelper {
      * @throws IllegalArgumentException in case the type of the accessible object
      *                                  is not supported.
      */
-    public static Class<?> getDeclaringClass(AccessibleObject ao) {
+    public static Class<?> getDeclaringClass(final AccessibleObject ao) {
         if (ao instanceof Method) {
             return ((Method) ao).getDeclaringClass();
         } else if (ao instanceof Field) {
@@ -135,7 +136,7 @@ public class ReflectionHelper {
      * @param o the object.
      * @return the string representation of the object.
      */
-    public static String objectToString(Object o) {
+    public static String objectToString(final Object o) {
         if (o == null) {
             return "null";
         }
@@ -161,13 +162,13 @@ public class ReflectionHelper {
      * @param m the method.
      * @return the string representation of the method and instance.
      */
-    public static String methodInstanceToString(Object o, Method m) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(o.getClass().getName()).
-                append('@').append(Integer.toHexString(o.hashCode())).
-                append('.').append(m.getName()).append('(');
+    public static String methodInstanceToString(final Object o, final Method m) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(o.getClass().getName())
+                .append('@').append(Integer.toHexString(o.hashCode()))
+                .append('.').append(m.getName()).append('(');
 
-        Class[] params = m.getParameterTypes();
+        final Class[] params = m.getParameterTypes();
         for (int i = 0; i < params.length; i++) {
             sb.append(getTypeName(params[i]));
             if (i < (params.length - 1)) {
@@ -189,7 +190,7 @@ public class ReflectionHelper {
      * @param type Java type (can represent an array).
      * @return Java type or array name.
      */
-    private static String getTypeName(Class<?> type) {
+    private static String getTypeName(final Class<?> type) {
         if (type.isArray()) {
             Class<?> cl = type;
             int dimensions = 0;
@@ -197,7 +198,7 @@ public class ReflectionHelper {
                 dimensions++;
                 cl = cl.getComponentType();
             }
-            StringBuilder sb = new StringBuilder();
+            final StringBuilder sb = new StringBuilder();
             sb.append(cl.getName());
             for (int i = 0; i < dimensions; i++) {
                 sb.append("[]");
@@ -223,7 +224,7 @@ public class ReflectionHelper {
      *
      * @see AccessController#doPrivileged(java.security.PrivilegedAction)
      */
-    public static <T> PrivilegedAction<Class<T>> classForNamePA(String name) {
+    public static <T> PrivilegedAction<Class<T>> classForNamePA(final String name) {
         return classForNamePA(name, getContextClassLoader());
     }
 
@@ -249,7 +250,7 @@ public class ReflectionHelper {
                 if (cl != null) {
                     try {
                         return (Class<T>) Class.forName(name, false, cl);
-                    } catch (ClassNotFoundException ex) {
+                    } catch (final ClassNotFoundException ex) {
                         if (LOGGER.isLoggable(Level.FINER)) {
                             LOGGER.log(Level.FINER,
                                     "Unable to load class " + name + " using the supplied class loader "
@@ -259,7 +260,7 @@ public class ReflectionHelper {
                 }
                 try {
                     return (Class<T>) Class.forName(name);
-                } catch (ClassNotFoundException ex) {
+                } catch (final ClassNotFoundException ex) {
                     if (LOGGER.isLoggable(Level.FINER)) {
                         LOGGER.log(Level.FINER, "Unable to load class " + name + " using the current class loader.", ex);
                     }
@@ -322,17 +323,17 @@ public class ReflectionHelper {
         return new PrivilegedAction<Field[]>() {
             @Override
             public Field[] run() {
-            	final List<Field> fields = new ArrayList<Field>();
-            	recurse(clazz, fields);
+                final List<Field> fields = new ArrayList<Field>();
+                recurse(clazz, fields);
                 return fields.toArray(new Field[fields.size()]);
             }
 
-           private void recurse(final Class<?> clazz, final List<Field> fields) {
-        	   fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
-        	   if(clazz.getSuperclass() != null) {
-        		   recurse(clazz.getSuperclass(), fields);
-        	   }
-           }
+            private void recurse(final Class<?> clazz, final List<Field> fields) {
+                fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+                if (clazz.getSuperclass() != null) {
+                    recurse(clazz.getSuperclass(), fields);
+                }
+            }
         };
     }
 
@@ -370,7 +371,8 @@ public class ReflectionHelper {
      *
      * @see AccessController#doPrivileged(java.security.PrivilegedExceptionAction)
      */
-    public static <T> PrivilegedExceptionAction<Class<T>> classForNameWithExceptionPEA(final String name) throws ClassNotFoundException {
+    public static <T> PrivilegedExceptionAction<Class<T>> classForNameWithExceptionPEA(final String name)
+            throws ClassNotFoundException {
         return classForNameWithExceptionPEA(name, getContextClassLoader());
     }
 
@@ -390,20 +392,21 @@ public class ReflectionHelper {
      * @see AccessController#doPrivileged(java.security.PrivilegedExceptionAction)
      */
     @SuppressWarnings("unchecked")
-    public static <T> PrivilegedExceptionAction<Class<T>> classForNameWithExceptionPEA(final String name, final ClassLoader cl) throws ClassNotFoundException {
-            return new PrivilegedExceptionAction<Class<T>>() {
-                @Override
-                public Class<T> run() throws ClassNotFoundException {
-                    if (cl != null) {
-                        try {
-                            return (Class<T>) Class.forName(name, false, cl);
-                        } catch (ClassNotFoundException ex) {
-                            // ignored on purpose
-                        }
+    public static <T> PrivilegedExceptionAction<Class<T>> classForNameWithExceptionPEA(final String name, final ClassLoader cl)
+            throws ClassNotFoundException {
+        return new PrivilegedExceptionAction<Class<T>>() {
+            @Override
+            public Class<T> run() throws ClassNotFoundException {
+                if (cl != null) {
+                    try {
+                        return (Class<T>) Class.forName(name, false, cl);
+                    } catch (final ClassNotFoundException ex) {
+                        // ignored on purpose
                     }
-                    return (Class<T>) Class.forName(name);
                 }
-            };
+                return (Class<T>) Class.forName(name);
+            }
+        };
     }
 
     /**
@@ -513,7 +516,7 @@ public class ReflectionHelper {
         return Lists.newArrayList(Collections2.transform(Arrays.asList(types), new Function<Type, Class<?>>() {
 
             @Override
-            public Class<?> apply(Type input) {
+            public Class<?> apply(final Type input) {
                 return erasure(input);
             }
         }));
@@ -552,7 +555,7 @@ public class ReflectionHelper {
         return Lists.newArrayList(Collections2.transform(Arrays.asList(types), new Function<Type, ClassTypePair>() {
 
             @Override
-            public ClassTypePair apply(Type input) {
+            public ClassTypePair apply(final Type input) {
                 return ClassTypePair.of(erasure(input), input);
             }
         }));
@@ -563,9 +566,9 @@ public class ReflectionHelper {
      *
      * @param type type to be checked.
      */
-    public static boolean isPrimitive(Type type) {
+    public static boolean isPrimitive(final Type type) {
         if (type instanceof Class) {
-            Class c = (Class) type;
+            final Class c = (Class) type;
             return c.isPrimitive();
         }
         return false;
@@ -581,7 +584,7 @@ public class ReflectionHelper {
      * @return type arguments for a parameterized type, or {@code null} in case the input type is
      *         not a parameterized type.
      */
-    public static Type[] getTypeArguments(Type type) {
+    public static Type[] getTypeArguments(final Type type) {
         if (!(type instanceof ParameterizedType)) {
             return null;
         }
@@ -600,9 +603,9 @@ public class ReflectionHelper {
      * @return type argument for a parameterized type at a given index, or {@code null}
      *         in case the input type is not a parameterized type.
      */
-    public static Type getTypeArgument(Type type, int index) {
+    public static Type getTypeArgument(final Type type, final int index) {
         if (type instanceof ParameterizedType) {
-            ParameterizedType p = (ParameterizedType) type;
+            final ParameterizedType p = (ParameterizedType) type;
             return fix(p.getActualTypeArguments()[index]);
         }
 
@@ -615,13 +618,14 @@ public class ReflectionHelper {
      * <p/>
      * See bug 6202725.
      */
-    private static Type fix(Type t) {
-        if (!(t instanceof GenericArrayType))
+    private static Type fix(final Type t) {
+        if (!(t instanceof GenericArrayType)) {
             return t;
+        }
 
-        GenericArrayType gat = (GenericArrayType) t;
+        final GenericArrayType gat = (GenericArrayType) t;
         if (gat.getGenericComponentType() instanceof Class) {
-            Class c = (Class) gat.getGenericComponentType();
+            final Class c = (Class) gat.getGenericComponentType();
             return Array.newInstance(c, 0).getClass();
         }
 
@@ -633,33 +637,33 @@ public class ReflectionHelper {
      */
     private static final TypeVisitor<Class> eraser = new TypeVisitor<Class>() {
         @Override
-        protected Class onClass(Class clazz) {
+        protected Class onClass(final Class clazz) {
             return clazz;
         }
 
         @Override
-        protected Class onParameterizedType(ParameterizedType type) {
+        protected Class onParameterizedType(final ParameterizedType type) {
             // TODO: why getRawType returns Type? not Class?
             return visit(type.getRawType());
         }
 
         @Override
-        protected Class onGenericArray(GenericArrayType type) {
+        protected Class onGenericArray(final GenericArrayType type) {
             return Array.newInstance(visit(type.getGenericComponentType()), 0).getClass();
         }
 
         @Override
-        protected Class onVariable(TypeVariable type) {
+        protected Class onVariable(final TypeVariable type) {
             return visit(type.getBounds()[0]);
         }
 
         @Override
-        protected Class onWildcard(WildcardType type) {
+        protected Class onWildcard(final WildcardType type) {
             return visit(type.getUpperBounds()[0]);
         }
 
         @Override
-        protected RuntimeException createError(Type type) {
+        protected RuntimeException createError(final Type type) {
             return new IllegalArgumentException(LocalizationMessages.TYPE_TO_CLASS_CONVERSION_NOT_SUPPORTED(type));
         }
     };
@@ -673,7 +677,7 @@ public class ReflectionHelper {
      * @return the given type's erasure.
      */
     @SuppressWarnings("unchecked")
-    public static <T> Class<T> erasure(Type type) {
+    public static <T> Class<T> erasure(final Type type) {
         return eraser.visit(type);
     }
 
@@ -685,7 +689,7 @@ public class ReflectionHelper {
      * @return {@code true} in case the {@code subType} is a sub-type of {@code superType},
      *         {@code false} otherwise.
      */
-    public static boolean isSubClassOf(Type subType, Type superType) {
+    public static boolean isSubClassOf(final Type subType, final Type superType) {
         return erasure(superType).isAssignableFrom(erasure(subType));
     }
 
@@ -695,9 +699,9 @@ public class ReflectionHelper {
      * @param type type to check.
      * @return {@code true} in case the type is an array type, {@code false} otherwise.
      */
-    public static boolean isArray(Type type) {
+    public static boolean isArray(final Type type) {
         if (type instanceof Class) {
-            Class c = (Class) type;
+            final Class c = (Class) type;
             return c.isArray();
         }
         return type instanceof GenericArrayType;
@@ -711,9 +715,9 @@ public class ReflectionHelper {
      * @return {@code true} in case the type is an array type of a given component type,
      *         {@code false} otherwise.
      */
-    public static boolean isArrayOfType(Type type, Class<?> componentType) {
+    public static boolean isArrayOfType(final Type type, final Class<?> componentType) {
         if (type instanceof Class) {
-            Class c = (Class) type;
+            final Class c = (Class) type;
             return c.isArray() && c != byte[].class;
         }
         if (type instanceof GenericArrayType) {
@@ -730,13 +734,14 @@ public class ReflectionHelper {
      * @return array component type.
      * @throws IllegalArgumentException in case the type is not an array type.
      */
-    public static Type getArrayComponentType(Type type) {
+    public static Type getArrayComponentType(final Type type) {
         if (type instanceof Class) {
-            Class c = (Class) type;
+            final Class c = (Class) type;
             return c.getComponentType();
         }
-        if (type instanceof GenericArrayType)
+        if (type instanceof GenericArrayType) {
             return ((GenericArrayType) type).getGenericComponentType();
+        }
 
         throw new IllegalArgumentException();
     }
@@ -747,11 +752,11 @@ public class ReflectionHelper {
      * @param c the component class of the array
      * @return the array class.
      */
-    public static Class<?> getArrayForComponentType(Class<?> c) {
+    public static Class<?> getArrayForComponentType(final Class<?> c) {
         try {
-            Object o = Array.newInstance(c, 0);
+            final Object o = Array.newInstance(c, 0);
             return o.getClass();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new IllegalArgumentException(e);
         }
     }
@@ -761,28 +766,15 @@ public class ReflectionHelper {
      * If run using security manager, the returned privileged action
      * must be invoked within a doPrivileged block.
      *
-     * @param c The class to obtain the method.
+     * @param clazz class to obtain the method.
      * @return privileged action to get the method.
      *         The action could return {@code null} if the method is not present.
      *
      * @see AccessController#doPrivileged(java.security.PrivilegedAction)
      */
     @SuppressWarnings("unchecked")
-    public static PrivilegedAction<Method> getValueOfStringMethodPA(final Class<?> c) {
-        return new PrivilegedAction<Method>() {
-            @Override
-            public Method run() {
-                try {
-                    final Method m = c.getDeclaredMethod("valueOf", String.class);
-                    if (!Modifier.isStatic(m.getModifiers()) && m.getReturnType() == c) {
-                        return null;
-                    }
-                    return m;
-                } catch (NoSuchMethodException nsme) {
-                    return null;
-                }
-            }
-        };
+    public static PrivilegedAction<Method> getValueOfStringMethodPA(final Class<?> clazz) {
+        return getStringToObjectMethodPA(clazz, "valueOf");
     }
 
     /**
@@ -790,24 +782,39 @@ public class ReflectionHelper {
      * If run using security manager, the returned privileged action
      * must be invoked within a doPrivileged block.
      *
-     * @param c class for which to get the method.
+     * @param clazz class for which to get the method.
      * @return privileged action to obtain the method.
      *         The action could return {@code null} if the method is not present.
      *
      * @see AccessController#doPrivileged(java.security.PrivilegedAction)
      */
     @SuppressWarnings("unchecked")
-    public static PrivilegedAction<Method> getFromStringStringMethodPA(final Class<?> c) {
+    public static PrivilegedAction<Method> getFromStringStringMethodPA(final Class<?> clazz) {
+        return getStringToObjectMethodPA(clazz, "fromString");
+    }
+
+    /**
+     * Get privileged action to get the static method of given name. If run using security manager, the returned privileged action
+     * must be invoked within a doPrivileged block.
+     *
+     * @param clazz class for which to get the method.
+     * @param methodName name of the method to be obtained.
+     * @return privileged action to obtain the method.
+     *         The action could return {@code null} if the method is not present.
+     *
+     * @see AccessController#doPrivileged(java.security.PrivilegedAction)
+     */
+    private static PrivilegedAction<Method> getStringToObjectMethodPA(final Class<?> clazz, final String methodName) {
         return new PrivilegedAction<Method>() {
             @Override
             public Method run() {
                 try {
-                    final Method m = c.getDeclaredMethod("fromString", String.class);
-                    if (!Modifier.isStatic(m.getModifiers()) && m.getReturnType() == c) {
-                        return null;
+                    final Method method = clazz.getDeclaredMethod(methodName, String.class);
+                    if (Modifier.isStatic(method.getModifiers()) && method.getReturnType() == clazz) {
+                        return method;
                     }
-                    return m;
-                } catch (NoSuchMethodException nsme) {
+                    return null;
+                } catch (final NoSuchMethodException nsme) {
                     return null;
                 }
             }
@@ -831,9 +838,9 @@ public class ReflectionHelper {
             public Constructor run() {
                 try {
                     return c.getConstructor(String.class);
-                } catch (SecurityException e) {
+                } catch (final SecurityException e) {
                     throw e;
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     return null;
                 }
             }
@@ -849,13 +856,11 @@ public class ReflectionHelper {
      *                         types of all attached annotations will be returned).
      * @return list of annotation types with a given meta annotation
      */
-    public static Collection<Class<? extends Annotation>> getAnnotationTypes(
-            AnnotatedElement annotatedElement,
-            Class<? extends Annotation> metaAnnotation
-    ) {
-        Set<Class<? extends Annotation>> result = Sets.newIdentityHashSet();
-        for (Annotation a : annotatedElement.getAnnotations()) {
-            Class<? extends Annotation> aType = a.annotationType();
+    public static Collection<Class<? extends Annotation>> getAnnotationTypes(final AnnotatedElement annotatedElement,
+                                                                             final Class<? extends Annotation> metaAnnotation) {
+        final Set<Class<? extends Annotation>> result = Sets.newIdentityHashSet();
+        for (final Annotation a : annotatedElement.getAnnotations()) {
+            final Class<? extends Annotation> aType = a.annotationType();
             if (metaAnnotation == null || aType.getAnnotation(metaAnnotation) != null) {
                 result.add(aType);
             }
@@ -896,8 +901,8 @@ public class ReflectionHelper {
      * @param instance Java instance for which the {@code GenericType} description should be created.
      * @return {@code GenericType} describing the Java {@code instance}.
      */
-    public static GenericType genericTypeFor(Object instance) {
-        GenericType genericType;
+    public static GenericType genericTypeFor(final Object instance) {
+        final GenericType genericType;
         if (instance instanceof GenericEntity) {
             genericType = new GenericType(((GenericEntity) instance).getType());
         } else {
@@ -945,9 +950,9 @@ public class ReflectionHelper {
      * @param contractTypes to be taken into account.
      * @return the most specific type.
      */
-    public static Class<?> theMostSpecificTypeOf(Set<Type> contractTypes) {
+    public static Class<?> theMostSpecificTypeOf(final Set<Type> contractTypes) {
         Class<?> result = null;
-        for (Type t : contractTypes) {
+        for (final Type t : contractTypes) {
             final Class<?> next = (Class<?>) t;
             if (result == null) {
                 result = next;
@@ -979,10 +984,12 @@ public class ReflectionHelper {
          */
         public final Type genericInterface;
 
-        private DeclaringClassInterfacePair(Class<?> concreteClass, Class<?> declaringClass, Type genericInteface) {
+        private DeclaringClassInterfacePair(final Class<?> concreteClass,
+                                            final Class<?> declaringClass,
+                                            final Type genericInterface) {
             this.concreteClass = concreteClass;
             this.declaringClass = declaringClass;
-            this.genericInterface = genericInteface;
+            this.genericInterface = genericInterface;
         }
     }
 
@@ -994,14 +1001,14 @@ public class ReflectionHelper {
      * @return the parameterized class arguments, or null if the generic
      *         interface type is not a parameterized type.
      */
-    public static Class[] getParameterizedClassArguments(DeclaringClassInterfacePair p) {
+    public static Class[] getParameterizedClassArguments(final DeclaringClassInterfacePair p) {
         if (p.genericInterface instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) p.genericInterface;
-            Type[] as = pt.getActualTypeArguments();
-            Class[] cas = new Class[as.length];
+            final Type[] as = pt.getActualTypeArguments();
+            final Class[] cas = new Class[as.length];
 
             for (int i = 0; i < as.length; i++) {
-                Type a = as[i];
+                final Type a = as[i];
                 if (a instanceof Class) {
                     cas[i] = (Class) a;
                 } else if (a instanceof ParameterizedType) {
@@ -1009,11 +1016,11 @@ public class ReflectionHelper {
                     cas[i] = (Class) pt.getRawType();
                 } else if (a instanceof TypeVariable) {
                     final TypeVariable tv = (TypeVariable) a;
-                    ClassTypePair ctp = resolveTypeVariable(p.concreteClass, p.declaringClass, tv);
+                    final ClassTypePair ctp = resolveTypeVariable(p.concreteClass, p.declaringClass, tv);
                     cas[i] = (ctp != null) ? ctp.rawClass() : (Class<?>) (tv.getBounds()[0]);
                 } else if (a instanceof GenericArrayType) {
                     final GenericArrayType gat = (GenericArrayType) a;
-                    Type t = gat.getGenericComponentType();
+                    final Type t = gat.getGenericComponentType();
                     if (t instanceof Class) {
                         cas[i] = getArrayForComponentType((Class<?>) t);
                     }
@@ -1033,20 +1040,20 @@ public class ReflectionHelper {
      * @return the parameterized type arguments, or null if the generic
      *         interface type is not a parameterized type.
      */
-    public static Type[] getParameterizedTypeArguments(DeclaringClassInterfacePair p) {
+    public static Type[] getParameterizedTypeArguments(final DeclaringClassInterfacePair p) {
         if (p.genericInterface instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) p.genericInterface;
-            Type[] as = pt.getActualTypeArguments();
-            Type[] ras = new Type[as.length];
+            final ParameterizedType pt = (ParameterizedType) p.genericInterface;
+            final Type[] as = pt.getActualTypeArguments();
+            final Type[] ras = new Type[as.length];
 
             for (int i = 0; i < as.length; i++) {
-                Type a = as[i];
+                final Type a = as[i];
                 if (a instanceof Class) {
                     ras[i] = a;
                 } else if (a instanceof ParameterizedType) {
                     ras[i] = a;
                 } else if (a instanceof TypeVariable) {
-                    ClassTypePair ctp = resolveTypeVariable(p.concreteClass, p.declaringClass, (TypeVariable) a);
+                    final ClassTypePair ctp = resolveTypeVariable(p.concreteClass, p.declaringClass, (TypeVariable) a);
                     if (ctp == null) {
                         throw new IllegalArgumentException(
                                 LocalizationMessages.ERROR_RESOLVING_GENERIC_TYPE_VALUE(p.genericInterface, p.concreteClass));
@@ -1069,13 +1076,13 @@ public class ReflectionHelper {
      * @return the tuple of the declaring class and the generic interface
      *         type.
      */
-    public static DeclaringClassInterfacePair getClass(Class<?> concrete, Class<?> iface) {
+    public static DeclaringClassInterfacePair getClass(final Class<?> concrete, final Class<?> iface) {
         return getClass(concrete, iface, concrete);
     }
 
-    private static DeclaringClassInterfacePair getClass(Class<?> concrete, Class<?> iface, Class<?> c) {
-        Type[] gis = c.getGenericInterfaces();
-        DeclaringClassInterfacePair p = getType(concrete, iface, c, gis);
+    private static DeclaringClassInterfacePair getClass(final Class<?> concrete, final Class<?> iface, Class<?> c) {
+        final Type[] gis = c.getGenericInterfaces();
+        final DeclaringClassInterfacePair p = getType(concrete, iface, c, gis);
         if (p != null) {
             return p;
         }
@@ -1088,9 +1095,12 @@ public class ReflectionHelper {
         return getClass(concrete, iface, c);
     }
 
-    private static DeclaringClassInterfacePair getType(Class<?> concrete, Class<?> iface, Class<?> c, Type[] ts) {
-        for (Type t : ts) {
-            DeclaringClassInterfacePair p = getType(concrete, iface, c, t);
+    private static DeclaringClassInterfacePair getType(final Class<?> concrete,
+                                                       final Class<?> iface,
+                                                       final Class<?> c,
+                                                       final Type[] ts) {
+        for (final Type t : ts) {
+            final DeclaringClassInterfacePair p = getType(concrete, iface, c, t);
             if (p != null) {
                 return p;
             }
@@ -1098,7 +1108,10 @@ public class ReflectionHelper {
         return null;
     }
 
-    private static DeclaringClassInterfacePair getType(Class<?> concrete, Class<?> iface, Class<?> c, Type t) {
+    private static DeclaringClassInterfacePair getType(final Class<?> concrete,
+                                                       final Class<?> iface,
+                                                       final Class<?> c,
+                                                       final Type t) {
         if (t instanceof Class) {
             if (t == iface) {
                 return new DeclaringClassInterfacePair(concrete, c, t);
@@ -1106,7 +1119,7 @@ public class ReflectionHelper {
                 return getClass(concrete, iface, (Class<?>) t);
             }
         } else if (t instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) t;
+            final ParameterizedType pt = (ParameterizedType) t;
             if (pt.getRawType() == iface) {
                 return new DeclaringClassInterfacePair(concrete, c, t);
             } else {
@@ -1132,7 +1145,7 @@ public class ReflectionHelper {
     public static ClassTypePair resolveGenericType(final Class concreteClass, final Class declaringClass,
                                                    final Class rawResolvedType, final Type genericResolvedType) {
         if (genericResolvedType instanceof TypeVariable) {
-            ClassTypePair ct = resolveTypeVariable(
+            final ClassTypePair ct = resolveTypeVariable(
                     concreteClass,
                     declaringClass,
                     (TypeVariable) genericResolvedType);
@@ -1145,7 +1158,7 @@ public class ReflectionHelper {
             final Type[] ptts = pt.getActualTypeArguments();
             boolean modified = false;
             for (int i = 0; i < ptts.length; i++) {
-                ClassTypePair ct =
+                final ClassTypePair ct =
                         resolveGenericType(concreteClass, declaringClass, (Class) pt.getRawType(), ptts[i]);
                 if (ct.type() != ptts[i]) {
                     ptts[i] = ct.type();
@@ -1153,7 +1166,7 @@ public class ReflectionHelper {
                 }
             }
             if (modified) {
-                ParameterizedType rpt = new ParameterizedType() {
+                final ParameterizedType rpt = new ParameterizedType() {
 
                     @Override
                     public Type[] getActualTypeArguments() {
@@ -1173,14 +1186,14 @@ public class ReflectionHelper {
                 return ClassTypePair.of((Class<?>) pt.getRawType(), rpt);
             }
         } else if (genericResolvedType instanceof GenericArrayType) {
-            GenericArrayType gat = (GenericArrayType) genericResolvedType;
+            final GenericArrayType gat = (GenericArrayType) genericResolvedType;
             final ClassTypePair ct =
                     resolveGenericType(concreteClass, declaringClass, null, gat.getGenericComponentType());
             if (gat.getGenericComponentType() != ct.type()) {
                 try {
-                    Class ac = ReflectionHelper.getArrayForComponentType(ct.rawClass());
+                    final Class ac = ReflectionHelper.getArrayForComponentType(ct.rawClass());
                     return ClassTypePair.of(ac);
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     LOGGER.log(Level.FINEST, "", e);
                 }
             }
@@ -1198,28 +1211,28 @@ public class ReflectionHelper {
      * @return the resolved Java class and type, otherwise null if the type variable
      *         could not be resolved.
      */
-    public static ClassTypePair resolveTypeVariable(Class<?> c, Class<?> dc, TypeVariable tv) {
+    public static ClassTypePair resolveTypeVariable(final Class<?> c, final Class<?> dc, final TypeVariable tv) {
         return resolveTypeVariable(c, dc, tv, new HashMap<TypeVariable, Type>());
     }
 
-    private static ClassTypePair resolveTypeVariable(Class<?> c, Class<?> dc, TypeVariable tv,
-                                                     Map<TypeVariable, Type> map) {
-        Type[] gis = c.getGenericInterfaces();
-        for (Type gi : gis) {
+    private static ClassTypePair resolveTypeVariable(final Class<?> c, final Class<?> dc, final TypeVariable tv,
+                                                     final Map<TypeVariable, Type> map) {
+        final Type[] gis = c.getGenericInterfaces();
+        for (final Type gi : gis) {
             if (gi instanceof ParameterizedType) {
                 // process pt of interface
-                ParameterizedType pt = (ParameterizedType) gi;
-                ClassTypePair ctp = resolveTypeVariable(pt, (Class<?>) pt.getRawType(), dc, tv, map);
+                final ParameterizedType pt = (ParameterizedType) gi;
+                final ClassTypePair ctp = resolveTypeVariable(pt, (Class<?>) pt.getRawType(), dc, tv, map);
                 if (ctp != null) {
                     return ctp;
                 }
             }
         }
 
-        Type gsc = c.getGenericSuperclass();
+        final Type gsc = c.getGenericSuperclass();
         if (gsc instanceof ParameterizedType) {
             // process pt of class
-            ParameterizedType pt = (ParameterizedType) gsc;
+            final ParameterizedType pt = (ParameterizedType) gsc;
             return resolveTypeVariable(pt, c.getSuperclass(), dc, tv, map);
         } else if (gsc instanceof Class) {
             return resolveTypeVariable(c.getSuperclass(), dc, tv, map);
@@ -1227,18 +1240,18 @@ public class ReflectionHelper {
         return null;
     }
 
-    private static ClassTypePair resolveTypeVariable(ParameterizedType pt, Class<?> c, Class<?> dc, TypeVariable tv,
-                                                     Map<TypeVariable, Type> map) {
-        Type[] typeArguments = pt.getActualTypeArguments();
+    private static ClassTypePair resolveTypeVariable(ParameterizedType pt, Class<?> c, final Class<?> dc, final TypeVariable tv,
+                                                     final Map<TypeVariable, Type> map) {
+        final Type[] typeArguments = pt.getActualTypeArguments();
 
-        TypeVariable[] typeParameters = c.getTypeParameters();
+        final TypeVariable[] typeParameters = c.getTypeParameters();
 
-        Map<TypeVariable, Type> subMap = new HashMap<TypeVariable, Type>();
+        final Map<TypeVariable, Type> subMap = new HashMap<TypeVariable, Type>();
         for (int i = 0; i < typeArguments.length; i++) {
             // Substitute a type variable with the Java class
             final Type typeArgument = typeArguments[i];
             if (typeArgument instanceof TypeVariable) {
-                Type t = map.get(typeArgument);
+                final Type t = map.get(typeArgument);
                 subMap.put(typeParameters[i], t);
             } else {
                 subMap.put(typeParameters[i], typeArgument);
@@ -1250,18 +1263,18 @@ public class ReflectionHelper {
             if (t instanceof Class) {
                 return ClassTypePair.of((Class) t);
             } else if (t instanceof GenericArrayType) {
-                GenericArrayType gat = (GenericArrayType) t;
+                final GenericArrayType gat = (GenericArrayType) t;
                 t = gat.getGenericComponentType();
                 if (t instanceof Class) {
                     c = (Class<?>) t;
                     try {
                         return ClassTypePair.of(getArrayForComponentType(c));
-                    } catch (Exception ignored) {
+                    } catch (final Exception ignored) {
                         // ignored
                     }
                     return null;
                 } else if (t instanceof ParameterizedType) {
-                    Type rt = ((ParameterizedType) t).getRawType();
+                    final Type rt = ((ParameterizedType) t).getRawType();
                     if (rt instanceof Class) {
                         c = (Class<?>) rt;
                     } else {
@@ -1269,7 +1282,7 @@ public class ReflectionHelper {
                     }
                     try {
                         return ClassTypePair.of(getArrayForComponentType(c), gat);
-                    } catch (Exception e) {
+                    } catch (final Exception e) {
                         return null;
                     }
                 } else {
@@ -1313,25 +1326,25 @@ public class ReflectionHelper {
      * @see AccessController#doPrivileged(java.security.PrivilegedAction)
      */
     public static PrivilegedAction<Method> findMethodOnClassPA(final Class<?> c, final Method m) {
-            return new PrivilegedAction<Method>() {
-                @Override
-                public Method run() {
-                    try {
-                        return c.getMethod(m.getName(), m.getParameterTypes());
-                    } catch (NoSuchMethodException nsme) {
-                            for (final Method _m : c.getMethods()) {
-                                if (_m.getName().equals(m.getName())
-                                        && _m.getParameterTypes().length == m.getParameterTypes().length) {
-                                    if (compareParameterTypes(m.getGenericParameterTypes(),
-                                            _m.getGenericParameterTypes())) {
-                                        return _m;
-                                    }
+        return new PrivilegedAction<Method>() {
+            @Override
+            public Method run() {
+                try {
+                    return c.getMethod(m.getName(), m.getParameterTypes());
+                } catch (final NoSuchMethodException nsme) {
+                    for (final Method _m : c.getMethods()) {
+                        if (_m.getName().equals(m.getName())
+                                && _m.getParameterTypes().length == m.getParameterTypes().length) {
+                            if (compareParameterTypes(m.getGenericParameterTypes(),
+                                    _m.getGenericParameterTypes())) {
+                                return _m;
                             }
                         }
-                        return null;
                     }
+                    return null;
                 }
-            };
+            }
+        };
     }
 
     /**
@@ -1372,7 +1385,7 @@ public class ReflectionHelper {
         };
     }
 
-    private static Method[] _getMethods(Class<?> clazz) {
+    private static Method[] _getMethods(final Class<?> clazz) {
         return AccessController.doPrivileged(getMethodsPA(clazz));
     }
 
@@ -1411,7 +1424,7 @@ public class ReflectionHelper {
      * @return {@code true} if the given types are understood to be equal, {@code false} otherwise.
      * @see #compareParameterTypes(java.lang.reflect.Type, java.lang.reflect.Type)
      */
-    private static boolean compareParameterTypes(Type[] ts, Type[] _ts) {
+    private static boolean compareParameterTypes(final Type[] ts, final Type[] _ts) {
         for (int i = 0; i < ts.length; i++) {
             if (!ts[i].equals(_ts[i])) {
                 if (!compareParameterTypes(ts[i], _ts[i])) {
@@ -1455,7 +1468,8 @@ public class ReflectionHelper {
         return true;
     }
 
-    private final static Class<?> bundleReferenceClass = AccessController.doPrivileged(classForNamePA("org.osgi.framework.BundleReference", null));
+    private static final Class<?> bundleReferenceClass = AccessController.doPrivileged(
+            classForNamePA("org.osgi.framework.BundleReference", null));
 
     /**
      * Returns an {@link OsgiRegistry} instance.
@@ -1467,7 +1481,7 @@ public class ReflectionHelper {
             if (bundleReferenceClass != null) {
                 return OsgiRegistry.getInstance();
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // Do nothing - instance is null.
         }
 
@@ -1481,7 +1495,8 @@ public class ReflectionHelper {
      * will be taken from the provided loader getResourceAsStream method.
      *
      * @param loader      class loader where to lookup the resource in non-OSGi environment or if OSGi means fail.
-     * @param originClass if not null, and OSGi environment is detected, the resource will be taken from the bundle including the originClass type.
+     * @param originClass if not null, and OSGi environment is detected, the resource will be taken from the bundle including
+     *                    the originClass type.
      * @param name        filename of the desired resource.
      * @return an input stream corresponding to the required resource or null if the resource could not be found.
      */
@@ -1496,7 +1511,7 @@ public class ReflectionHelper {
                     return resourceUrl.openStream();
                 }
             }
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             // ignore
         }
         return loader.getResourceAsStream(name);
@@ -1506,5 +1521,6 @@ public class ReflectionHelper {
      * Prevents instantiation.
      */
     private ReflectionHelper() {
+        throw new AssertionError("No instances allowed.");
     }
 }

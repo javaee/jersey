@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,15 +69,17 @@ public class ClientFilterTest extends JerseyTest {
 
     @Path("/test")
     public static class FooResource {
+
         @GET
         public String get(@Context HttpHeaders headers) {
-            return "GET " +
-                    headers.getHeaderString(HttpHeaders.COOKIE) +
-                    headers.getHeaderString(HttpHeaders.CACHE_CONTROL);
+            return "GET "
+                    + headers.getHeaderString(HttpHeaders.COOKIE)
+                    + headers.getHeaderString(HttpHeaders.CACHE_CONTROL);
         }
     }
 
     public static class CustomRequestFilter implements ClientRequestFilter {
+
         @Override
         public void filter(ClientRequestContext clientRequestContext) throws IOException {
             clientRequestContext.abortWith(Response.ok("OK!", MediaType.TEXT_PLAIN_TYPE).build());
@@ -99,6 +101,7 @@ public class ClientFilterTest extends JerseyTest {
     }
 
     public static class HeaderProvidersRequestFilter implements ClientRequestFilter {
+
         @Override
         public void filter(ClientRequestContext clientRequestContext) throws IOException {
             final CacheControl cacheControl = new CacheControl();

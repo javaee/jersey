@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -113,7 +113,13 @@ public class ProvidersOrderingTest extends JerseyTest {
         }
 
         @Override
-        public void writeTo(MyType myType, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(MyType myType,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
         }
     }
 
@@ -138,7 +144,13 @@ public class ProvidersOrderingTest extends JerseyTest {
         }
 
         @Override
-        public void writeTo(MyType myType, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(MyType myType,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
         }
     }
 
@@ -163,7 +175,13 @@ public class ProvidersOrderingTest extends JerseyTest {
         }
 
         @Override
-        public void writeTo(MyType myType, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(MyType myType,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
             entityStream.write("test".getBytes());
         }
     }
@@ -189,7 +207,13 @@ public class ProvidersOrderingTest extends JerseyTest {
         }
 
         @Override
-        public void writeTo(MyTypeExt myType, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(MyTypeExt myType,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
         }
     }
 
@@ -207,7 +231,13 @@ public class ProvidersOrderingTest extends JerseyTest {
         }
 
         @Override
-        public void writeTo(Object myType, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(Object myType,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
         }
     }
 
@@ -227,7 +257,12 @@ public class ProvidersOrderingTest extends JerseyTest {
         }
 
         @Override
-        public MyType readFrom(Class<MyType> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+        public MyType readFrom(Class<MyType> type,
+                               Type genericType,
+                               Annotation[] annotations,
+                               MediaType mediaType,
+                               MultivaluedMap<String, String> httpHeaders,
+                               InputStream entityStream) throws IOException, WebApplicationException {
             return null;
         }
     }
@@ -248,7 +283,12 @@ public class ProvidersOrderingTest extends JerseyTest {
         }
 
         @Override
-        public MyTypeExt readFrom(Class<MyTypeExt> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+        public MyTypeExt readFrom(Class<MyTypeExt> type,
+                                  Type genericType,
+                                  Annotation[] annotations,
+                                  MediaType mediaType,
+                                  MultivaluedMap<String, String> httpHeaders,
+                                  InputStream entityStream) throws IOException, WebApplicationException {
             return null;
         }
     }
@@ -269,7 +309,12 @@ public class ProvidersOrderingTest extends JerseyTest {
         }
 
         @Override
-        public MyTypeExtExt readFrom(Class<MyTypeExtExt> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+        public MyTypeExtExt readFrom(Class<MyTypeExtExt> type,
+                                     Type genericType,
+                                     Annotation[] annotations,
+                                     MediaType mediaType,
+                                     MultivaluedMap<String, String> httpHeaders,
+                                     InputStream entityStream) throws IOException, WebApplicationException {
             return new MyTypeExtExt();
         }
     }
@@ -303,7 +348,7 @@ public class ProvidersOrderingTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        callList = new ArrayList<Class<?>>();
+        callList = new ArrayList<>();
 
         final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class, MyMBW5.class);
         resourceConfig.registerInstances(new MyMBW1(callList), new MyMBW2(callList), new MyMBW3(callList), new MyMBW4(callList),
@@ -318,7 +363,8 @@ public class ProvidersOrderingTest extends JerseyTest {
         WebTarget target = target();
 
         try {
-            Response response = target.request("application/test1").put(Entity.entity("test", "application/test1"), Response.class);
+            Response response = target.request("application/test1")
+                    .put(Entity.entity("test", "application/test1"), Response.class);
 
             assertNotNull(response);
             assertEquals("Request was not handled correctly, most likely fault in MessageBodyWorker selection.",
@@ -328,7 +374,6 @@ public class ProvidersOrderingTest extends JerseyTest {
             e.printStackTrace();
             fail("Request was not handled correctly, most likely fault in MessageBodyWorker selection.");
         }
-
 
         ArrayList<Class<?>> classes = Lists.newArrayList(
                 MyMBR3.class, // MBR - smallest type distance (MBR1 and MBR2 are not called because of that)

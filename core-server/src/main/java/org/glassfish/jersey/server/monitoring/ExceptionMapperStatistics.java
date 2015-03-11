@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,7 +49,7 @@ import java.util.Map;
  * as not all statistics are updated in the same time. To retrieve the immutable and consistent
  * statistics data the method {@link #snapshot()} should be used.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @see MonitoringStatistics See monitoring statistics for general details about statistics.
  */
 public interface ExceptionMapperStatistics {

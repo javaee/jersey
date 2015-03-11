@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server;
 
 import java.lang.annotation.Retention;
@@ -60,10 +61,11 @@ import static org.junit.Assert.fail;
 /**
  * Tests entity parameter annotated with non injection annotations.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  *
  */
 public class AnnotatedEntityTest {
+
     private ApplicationHandler createApplication(Class<?>... rc) {
         final ResourceConfig resourceConfig = new ResourceConfig(rc);
         return new ApplicationHandler(resourceConfig);
@@ -115,10 +117,9 @@ public class AnnotatedEntityTest {
     public static @interface TestAnnotation {
     }
 
-    ;
-
     @Path("resource/{path}")
     public static class Resource {
+
         @POST
         public String postEntityAnnotated(@PathParam("path") String pathParam, @TestAnnotation String entity,
                                           @QueryParam("query") String queryParam) {
@@ -154,6 +155,7 @@ public class AnnotatedEntityTest {
 
     @Path("wrongResource/{path}")
     public static class WrongResource {
+
         @POST
         public String postEntityAnnotated(@PathParam("path") String pathParam, @TestAnnotation String ambiguousEntity,
                                           String ambiguousParameter,

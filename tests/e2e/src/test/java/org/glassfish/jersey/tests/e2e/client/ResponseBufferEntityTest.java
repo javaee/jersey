@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -82,10 +82,11 @@ public class ResponseBufferEntityTest extends JerseyTest {
 
         @Override
         public void close() throws IOException {
-            if (corrupted)
+            if (corrupted) {
                 throw new IOException("CorruptedInputStream test IOException");
-            else
+            } else {
                 super.close();
+            }
         }
 
         public void setCorrupted(boolean corrupted) {
@@ -153,7 +154,7 @@ public class ResponseBufferEntityTest extends JerseyTest {
         assertEquals(Resource.ENTITY, entity);
 
         try {
-            Reader reader = response.readEntity(Reader.class);
+            response.readEntity(Reader.class);
             fail("IllegalStateException expected to be thrown.");
         } catch (IllegalStateException expected) {
             // passed.

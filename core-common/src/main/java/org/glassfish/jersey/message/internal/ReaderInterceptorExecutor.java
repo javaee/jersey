@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
@@ -74,13 +75,13 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * a {@link MessageBodyReader message body reader} execution interceptor is inserted,
  * which finally reads an entity from the output stream provided by the chain.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderInterceptor>
         implements ReaderInterceptorContext, ServiceLocatorSupplier {
 
-    private final static Logger LOGGER = Logger.getLogger(ReaderInterceptorExecutor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ReaderInterceptorExecutor.class.getName());
 
     private InputStream inputStream;
     private final MultivaluedMap<String, String> headers;
@@ -108,7 +109,8 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
      * @param workers            {@link org.glassfish.jersey.message.MessageBodyWorkers Message body workers}.
      * @param readerInterceptors Reader interceptor that are to be used to intercept the reading of an entity.
      *                           The interceptors will be executed in the same order as given in this parameter.
-     * @param translateNce       if {@code true}, the {@link javax.ws.rs.core.NoContentException} thrown by a selected message body
+     * @param translateNce       if {@code true}, the {@link javax.ws.rs.core.NoContentException} thrown by a selected message
+     *                           body
      *                           reader will be translated into a {@link javax.ws.rs.BadRequestException} as required by
      * @param serviceLocator Service locator.
      */
@@ -207,8 +209,8 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
                 if (tracingLogger.isLogEnabled(MsgTraceEvent.MBR_FIND)) {
                     tracingLogger.log(MsgTraceEvent.MBR_FIND,
                             context.getType().getName(),
-                            (context.getGenericType() instanceof Class ?
-                                    ((Class) context.getGenericType()).getName() : context.getGenericType()),
+                            (context.getGenericType() instanceof Class
+                                    ? ((Class) context.getGenericType()).getName() : context.getGenericType()),
                             String.valueOf(context.getMediaType()), java.util.Arrays.toString(context.getAnnotations()));
                 }
 

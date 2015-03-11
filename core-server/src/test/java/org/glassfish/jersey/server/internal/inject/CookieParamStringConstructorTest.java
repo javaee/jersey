@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,6 +67,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceString {
+
         @GET
         public String doGet(
                 @CookieParam("arg1") BigDecimal arg1,
@@ -81,6 +82,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringList {
+
         @GET
         public String doGetString(@CookieParam("args") List<BigDecimal> args) {
             assertEquals("3.145", args.get(0).toString());
@@ -90,6 +92,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListEmpty {
+
         @GET
         public String doGetString(@CookieParam("args") List<BigDecimal> args) {
             assertEquals(1, args.size());
@@ -100,6 +103,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringNullDefault {
+
         @GET
         public String doGet(
                 @CookieParam("arg1") BigDecimal arg1) {
@@ -110,6 +114,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringDefault {
+
         @GET
         public String doGet(
                 @CookieParam("arg1") @DefaultValue("3.145") BigDecimal arg1) {
@@ -120,6 +125,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringDefaultOverride {
+
         @GET
         public String doGet(
                 @CookieParam("arg1") @DefaultValue("3.145") BigDecimal arg1) {
@@ -130,6 +136,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListEmptyDefault {
+
         @GET
         public String doGetString(@CookieParam("args") List<BigDecimal> args) {
             assertEquals(0, args.size());
@@ -139,6 +146,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListDefault {
+
         @GET
         public String doGetString(
                 @CookieParam("args") @DefaultValue("3.145") List<BigDecimal> args) {
@@ -149,6 +157,7 @@ public class CookieParamStringConstructorTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListDefaultOverride {
+
         @GET
         public String doGetString(
                 @CookieParam("args") @DefaultValue("3.145") List<BigDecimal> args) {
@@ -225,10 +234,10 @@ public class CookieParamStringConstructorTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/", "GET").
-                        cookie(new Cookie("arg1", "ABCDEF")).
-                        cookie(new Cookie("arg2", "3145")).
-                        cookie(new Cookie("arg3", "http://test")).build()
+                RequestContextBuilder.from("/", "GET")
+                        .cookie(new Cookie("arg1", "ABCDEF"))
+                        .cookie(new Cookie("arg2", "3145"))
+                        .cookie(new Cookie("arg3", "http://test")).build()
         );
 
         assertEquals(400, responseContext.getStatus());

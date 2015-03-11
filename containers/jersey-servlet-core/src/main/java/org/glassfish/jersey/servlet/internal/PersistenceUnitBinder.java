@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -71,7 +71,7 @@ public class PersistenceUnitBinder extends AbstractBinder {
     /**
      * Prefix of the persistence unit init param.
      */
-    public final static String PERSISTENCE_UNIT_PREFIX = "unit:";
+    public static final String PERSISTENCE_UNIT_PREFIX = "unit:";
 
     @Singleton
     private static class PersistenceUnitInjectionResolver implements InjectionResolver<PersistenceUnit> {
@@ -108,7 +108,7 @@ public class PersistenceUnitBinder extends AbstractBinder {
 
             return Proxy.newProxyInstance(
                     this.getClass().getClassLoader(),
-                    new Class[]{EntityManagerFactory.class},
+                    new Class[] {EntityManagerFactory.class},
                     new ThreadLocalNamedInvoker<EntityManagerFactory>(persistenceUnits.get(unitName)));
         }
 

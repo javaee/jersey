@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,7 +72,7 @@ import org.glassfish.jersey.server.mvc.spi.ResolvedViewable;
  * A JSP template processor able to process resources obtained through {@link ServletContext servlet context}. This template
  * processor does not support caching of template reference objects (in Jersey) or passing custom template object factory.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 final class JspTemplateProcessor extends AbstractTemplateProcessor<String> {

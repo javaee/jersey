@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.media.multipart;
 
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ import static org.junit.Assert.fail;
 /**
  * Unit tests for {@link StringKeyIgnoreCaseMultivaluedMap}.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class StringKeyIgnoreCaseMultivaluedMapAsHeadersMapTest {
@@ -87,7 +88,7 @@ public class StringKeyIgnoreCaseMultivaluedMapAsHeadersMapTest {
         List values = map.get("foo");
 
         assertNotNull(values);
-        assertEquals(1,values.size());
+        assertEquals(1, values.size());
         assertEquals("bar", values.get(0));
 
         map.add("foo", "baz");
@@ -301,7 +302,7 @@ public class StringKeyIgnoreCaseMultivaluedMapAsHeadersMapTest {
      */
     @Test
     public void testPutAll() {
-        Map<String,List<String>> all = new HashMap<String,List<String>>();
+        Map<String, List<String>> all = new HashMap<>();
         List fooValues = new ArrayList();
         fooValues.add("foo1");
         fooValues.add("foo2");
@@ -387,14 +388,14 @@ public class StringKeyIgnoreCaseMultivaluedMapAsHeadersMapTest {
      */
     @Test
     public void testValues() {
-        Map<String, List<String>> all = new HashMap<String, List<String>>();
+        Map<String, List<String>> all = new HashMap<>();
 
-        List<String> fooValues = new ArrayList<String>();
+        List<String> fooValues = new ArrayList<>();
         fooValues.add("foo1");
         fooValues.add("foo2");
         all.put("foo", fooValues);
 
-        List<String> barValues = new ArrayList<String>();
+        List<String> barValues = new ArrayList<>();
         barValues.add("bar1");
         barValues.add("bar2");
         all.put("bar", barValues);

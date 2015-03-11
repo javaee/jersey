@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,19 +40,17 @@
 
 package org.glassfish.jersey.examples.linking;
 
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.glassfish.grizzly.http.server.HttpHandler;
 
+import org.glassfish.jersey.examples.linking.resources.ItemsResource;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.examples.linking.resources.ItemsResource;
 
 /**
  * Show link injection in action
@@ -67,15 +65,12 @@ public class App {
 
     public static void main(String[] args) {
         try {
-            Logger.getLogger(HttpHandler.class.getName()).setLevel(Level.ALL);
-            
             System.out.println("\"Declarative Linking\" Jersey Example App");
 
             final ResourceConfig resourceConfig = new ResourceConfig(ItemsResource.class);
- 
+
             resourceConfig.register(DeclarativeLinkingFeature.class);
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
 
             System.out.println(String.format("Application started.\nTry out curl -L %s%s\nHit enter to stop it...",
                     BASE_URI, ROOT_PATH));

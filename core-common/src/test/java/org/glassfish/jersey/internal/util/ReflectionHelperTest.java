@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,11 +39,17 @@
  */
 package org.glassfish.jersey.internal.util;
 
+import java.lang.reflect.Method;
+import java.security.AccessControlException;
 import java.security.AccessController;
+import java.security.PrivilegedAction;
 
-import org.junit.Assert;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * {@code ReflectionHelper} unit tests.
@@ -53,6 +59,7 @@ import static org.junit.Assert.assertEquals;
 @SuppressWarnings("unchecked")
 public class ReflectionHelperTest {
 
+    @SuppressWarnings("UnusedDeclaration")
     public static interface I<T> {
     }
 
@@ -70,37 +77,113 @@ public class ReflectionHelperTest {
      */
     @Test
     public void getParameterizedClassArgumentsTest() {
-
         ReflectionHelper.DeclaringClassInterfacePair dcip = ReflectionHelper.getClass(TestNoInterface.class, I.class);
         Class[] arguments = ReflectionHelper.getParameterizedClassArguments(dcip);
-        Class aClass = arguments[0];
+        final Class aClass = arguments[0];
 
         dcip = ReflectionHelper.getClass(TestInterface.class, I.class);
         arguments = ReflectionHelper.getParameterizedClassArguments(dcip);
         assertEquals(aClass, arguments[0]);
     }
 
+    @Test(expected = AccessControlException.class)
+    public void securityManagerSetContextClassLoader() throws Exception {
+        final ClassLoader loader = ReflectionHelper.class.getClassLoader();
+
+        Thread.currentThread().setContextClassLoader(loader);
+        fail("It should not be possible to set context class loader from unprivileged block");
+    }
+
+    @Test(expected = AccessControlException.class)
+    public void securityManagerSetContextClassLoaderPA() throws Exception {
+        final ClassLoader loader = ReflectionHelper.class.getClassLoader();
+
+        ReflectionHelper.setContextClassLoaderPA(loader).run();
+        fail("It should not be possible to set context class loader from unprivileged block even via Jersey ReflectionHelper");
+    }
+
+    @Test(expected = AccessControlException.class)
+    public void securityManagerSetContextClassLoaderInDoPrivileged() throws Exception {
+        final ClassLoader loader = ReflectionHelper.class.getClassLoader();
+
+        AccessController.doPrivileged(ReflectionHelper.setContextClassLoaderPA(loader));
+        fail("It should not be possible to set context class loader even from privileged block via Jersey ReflectionHelper "
+                + "utility");
+    }
+
+    public static class FromStringClass {
+
+        private final String value;
+
+        public FromStringClass(final String value) {
+            this.value = value;
+        }
+
+        public static FromStringClass valueOf(final String value) {
+            return new FromStringClass(value);
+        }
+
+        public static FromStringClass fromString(final String value) {
+            return new FromStringClass(value);
+        }
+    }
+
+    public static class InvalidFromStringClass {
+
+        private final String value;
+
+        public InvalidFromStringClass(final String value) {
+            this.value = value;
+        }
+
+        public static Boolean valueOf(final String value) {
+            throw new AssertionError("Should not be invoked");
+        }
+
+        public static Boolean fromString(final String value) {
+            throw new AssertionError("Should not be invoked");
+        }
+    }
+
+    /**
+     * Reproducer for JERSEY-2801.
+     */
     @Test
-    public void securityMangerTest() throws Exception {
+    public void testGetValueOfStringMethod() throws Exception {
+        final PrivilegedAction<Method> methodPA = ReflectionHelper.getValueOfStringMethodPA(FromStringClass.class);
+        final FromStringClass value = (FromStringClass) methodPA.run().invoke(null, "value");
 
-        final ClassLoader aClassLoader = ReflectionHelper.class.getClassLoader();
+        assertThat("Incorrect instance of FromStringClass created.", value.value, is("value"));
+    }
 
-        try {
-            Thread.currentThread().setContextClassLoader(aClassLoader);
-            Assert.fail("It should not be possible to set context class loader from unprivileged block");
-        } catch (java.security.AccessControlException ignoredExpectedException) {
-        }
+    /**
+     * Negative reproducer for JERSEY-2801.
+     */
+    @Test
+    public void testGetValueOfStringMethodNegative() throws Exception {
+        final PrivilegedAction<Method> methodPA = ReflectionHelper.getValueOfStringMethodPA(InvalidFromStringClass.class);
 
-        try {
-            ReflectionHelper.setContextClassLoaderPA(aClassLoader).run();
-            Assert.fail("It should not be possible to set context class loader from unprivileged block even via Jersey ReflectionHelper");
-        } catch (java.security.AccessControlException ignoredExpectedException) {
-        }
+        assertThat("Invalid valueOf method found.", methodPA.run(), nullValue());
+    }
 
-        try {
-            AccessController.doPrivileged(ReflectionHelper.setContextClassLoaderPA(aClassLoader));
-            Assert.fail("It should not be possible to set context class loader even from privileged block via Jersey ReflectionHelper utility");
-        } catch (java.security.AccessControlException ignoredExpectedException) {
-        }
+    /**
+     * Reproducer for JERSEY-2801.
+     */
+    @Test
+    public void testGetFromStringStringMethod() throws Exception {
+        final PrivilegedAction<Method> methodPA = ReflectionHelper.getFromStringStringMethodPA(FromStringClass.class);
+        final FromStringClass value = (FromStringClass) methodPA.run().invoke(null, "value");
+
+        assertThat("Incorrect instance of FromStringClass created.", value.value, is("value"));
+    }
+
+    /**
+     * Negative reproducer for JERSEY-2801.
+     */
+    @Test
+    public void testGetFromStringStringMethodNegative() throws Exception {
+        final PrivilegedAction<Method> methodPA = ReflectionHelper.getFromStringStringMethodPA(InvalidFromStringClass.class);
+
+        assertThat("Invalid valueOf method found.", methodPA.run(), nullValue());
     }
 }

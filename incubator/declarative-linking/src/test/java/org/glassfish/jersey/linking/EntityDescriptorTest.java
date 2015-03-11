@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,22 +42,24 @@ package org.glassfish.jersey.linking;
 
 import java.net.URI;
 import java.util.Iterator;
+
 import javax.ws.rs.Path;
 import javax.ws.rs.core.UriBuilder;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
-import org.junit.Test;
 
-import static org.junit.Assert.*;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
- * 
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-public class EntityDescriptorTest  {
-
+public class EntityDescriptorTest {
 
     public static class TestClassA {
+
         @InjectLink
         protected String foo;
 
@@ -66,7 +68,7 @@ public class EntityDescriptorTest  {
 
         public String baz;
     }
-    
+
     ResourceMappingContext mockRmc = new ResourceMappingContext() {
 
         @Override
@@ -74,7 +76,6 @@ public class EntityDescriptorTest  {
             return null;
         }
     };
-    
 
     /**
      * Test for declared properties
@@ -88,6 +89,7 @@ public class EntityDescriptorTest  {
     }
 
     public static class TestClassB extends TestClassA {
+
         @InjectLink
         private String bar;
     }
@@ -103,14 +105,15 @@ public class EntityDescriptorTest  {
         assertEquals(1, instance.getNonLinkFields().size());
     }
 
-    private final static String TEMPLATE_A = "foo";
+    private static final String TEMPLATE_A = "foo";
 
     @Path(TEMPLATE_A)
     public static class TestResourceA {
     }
 
     public static class TestClassC {
-        @InjectLink(resource=TestResourceA.class, bindings={@Binding(name="bar", value="baz")})
+
+        @InjectLink(resource = TestResourceA.class, bindings = {@Binding(name = "bar", value = "baz")})
         String res;
     }
 
@@ -120,16 +123,17 @@ public class EntityDescriptorTest  {
         EntityDescriptor instance = EntityDescriptor.getInstance(TestClassC.class);
         assertEquals(1, instance.getLinkFields().size());
         assertEquals(0, instance.getNonLinkFields().size());
-        InjectLinkFieldDescriptor linkDesc = (InjectLinkFieldDescriptor)instance.getLinkFields().iterator().next();
+        InjectLinkFieldDescriptor linkDesc = (InjectLinkFieldDescriptor) instance.getLinkFields().iterator().next();
         assertEquals(TEMPLATE_A, linkDesc.getLinkTemplate(mockRmc));
         assertEquals("baz", linkDesc.getBinding("bar"));
     }
 
     public static class TestClassD {
-        @InjectLink(value=TEMPLATE_A, style=InjectLink.Style.RELATIVE_PATH)
+
+        @InjectLink(value = TEMPLATE_A, style = InjectLink.Style.RELATIVE_PATH)
         private String res1;
 
-        @InjectLink(value=TEMPLATE_A, style=InjectLink.Style.RELATIVE_PATH)
+        @InjectLink(value = TEMPLATE_A, style = InjectLink.Style.RELATIVE_PATH)
         private URI res2;
     }
 
@@ -141,7 +145,7 @@ public class EntityDescriptorTest  {
         assertEquals(0, instance.getNonLinkFields().size());
         Iterator<FieldDescriptor> i = instance.getLinkFields().iterator();
         while (i.hasNext()) {
-            InjectLinkFieldDescriptor linkDesc = (InjectLinkFieldDescriptor)i.next();
+            InjectLinkFieldDescriptor linkDesc = (InjectLinkFieldDescriptor) i.next();
             assertEquals(TEMPLATE_A, linkDesc.getLinkTemplate(mockRmc));
         }
     }
@@ -153,7 +157,7 @@ public class EntityDescriptorTest  {
         Iterator<FieldDescriptor> i = instance.getLinkFields().iterator();
         TestClassD testClass = new TestClassD();
         while (i.hasNext()) {
-            InjectLinkFieldDescriptor linkDesc = (InjectLinkFieldDescriptor)i.next();
+            InjectLinkFieldDescriptor linkDesc = (InjectLinkFieldDescriptor) i.next();
             URI value = UriBuilder.fromPath(linkDesc.getLinkTemplate(mockRmc)).build();
             linkDesc.setPropertyValue(testClass, value);
         }

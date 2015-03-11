@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,7 +57,6 @@ public class AircraftType {
     @Detail
     private int capacity;
 
-
     public AircraftType() {
     }
 
@@ -93,14 +92,22 @@ public class AircraftType {
 
     @Override
     public synchronized boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         AircraftType at = (AircraftType) o;
 
-        if (capacity != at.capacity) return false;
+        if (capacity != at.capacity) {
+            return false;
+        }
         if (manufacturer != null ? !manufacturer.equals(at.manufacturer)
-                : at.manufacturer != null) return false;
+                : at.manufacturer != null) {
+            return false;
+        }
 
         return !(model != null ? !model.equals(at.model) : at.model != null);
     }

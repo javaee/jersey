@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
@@ -55,12 +56,11 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.PathParam;
 
 /**
  * Application scoped JAX-RS resource registered as CDI managed bean.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Path("/jcdibean/dependent/singleton/{p}")
@@ -70,11 +70,14 @@ public class JCDIBeanDependentSingletonResource {
 
     private static final Logger LOGGER = Logger.getLogger(JCDIBeanDependentSingletonResource.class.getName());
 
-    private @Resource(name="injectedResource") int counter = 0;
+    @Resource(name = "injectedResource")
+    private int counter = 0;
 
-    private @Context UriInfo uiFieldinject;
+    @Context
+    private UriInfo uiFieldinject;
 
-    private @Context ResourceContext resourceContext;
+    @Context
+    private ResourceContext resourceContext;
 
     private UriInfo uiMethodInject;
 
@@ -93,8 +96,7 @@ public class JCDIBeanDependentSingletonResource {
     @Produces("text/plain")
     public String getMessage(@PathParam("p") String p) {
         LOGGER.info(String.format(
-                "In getMessage in %s; uiFieldInject: %s; uiMethodInject: %s"
-                ,this, uiFieldinject, uiMethodInject));
+                "In getMessage in %s; uiFieldInject: %s; uiMethodInject: %s", this, uiFieldinject, uiMethodInject));
         ensureInjected();
 
         return String.format("%s: p=%s, queryParam=%s",

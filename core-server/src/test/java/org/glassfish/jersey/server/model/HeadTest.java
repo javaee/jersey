@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -80,7 +80,7 @@ public class HeadTest {
     }
 
     @Path("/")
-    static public class ResourceGetNoHead {
+    public static class ResourceGetNoHead {
 
         @GET
         public String get() {
@@ -103,7 +103,7 @@ public class HeadTest {
     }
 
     @Path("/")
-    static public class ResourceGetWithHead {
+    public static class ResourceGetWithHead {
 
         @HEAD
         public Response head() {
@@ -127,7 +127,7 @@ public class HeadTest {
     }
 
     @Path("/")
-    static public class ResourceGetWithProduceNoHead {
+    public static class ResourceGetWithProduceNoHead {
 
         @GET
         @Produces("application/foo")
@@ -160,7 +160,7 @@ public class HeadTest {
     }
 
     @Path("/")
-    static public class ResourceGetWithProduceWithHead {
+    public static class ResourceGetWithProduceWithHead {
 
         @HEAD
         @Produces("application/foo")
@@ -207,7 +207,7 @@ public class HeadTest {
     }
 
     @Path("/")
-    static public class ResourceGetByteNoHead {
+    public static class ResourceGetByteNoHead {
 
         @GET
         public byte[] get() {
@@ -229,19 +229,19 @@ public class HeadTest {
     }
 
     @Path("/")
-    static public class ResourceGetWithNoProduces {
+    public static class ResourceGetWithNoProduces {
 
         @GET
         public Response getPlain() {
-            return Response.ok("text").header("x-value", "text").
-                    build();
+            return Response.ok("text").header("x-value", "text")
+                    .build();
         }
 
         @GET
         @Produces("text/html")
         public Response getHtml() {
-            return Response.ok("html").header("x-value", "html").
-                    build();
+            return Response.ok("html").header("x-value", "html")
+                    .build();
         }
     }
 

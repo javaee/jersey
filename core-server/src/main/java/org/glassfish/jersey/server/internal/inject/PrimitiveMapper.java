@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,11 +58,12 @@ final class PrimitiveMapper {
             getPrimitiveToDefaultValueMap();
 
     private static Map<Class, Class> getPrimitiveToClassMap() {
-        Map<Class, Class> m = new WeakHashMap<Class, Class>();
+        Map<Class, Class> m = new WeakHashMap<>();
         // Put all primitive to wrapper class mappings except
         // that for Character
         m.put(Boolean.TYPE, Boolean.class);
         m.put(Byte.TYPE, Byte.class);
+        m.put(Character.TYPE, Character.class);
         m.put(Short.TYPE, Short.class);
         m.put(Integer.TYPE, Integer.class);
         m.put(Long.TYPE, Long.class);
@@ -73,12 +74,13 @@ final class PrimitiveMapper {
     }
 
     private static Map<Class, Object> getPrimitiveToDefaultValueMap() {
-        Map<Class, Object> m = new WeakHashMap<Class, Object>();
+        Map<Class, Object> m = new WeakHashMap<>();
         m.put(Boolean.class, Boolean.valueOf(false));
         m.put(Byte.class, Byte.valueOf((byte) 0));
+        m.put(Character.class, Character.valueOf((char) 0x00));
         m.put(Short.class, Short.valueOf((short) 0));
         m.put(Integer.class, Integer.valueOf(0));
-        m.put(Long.class, Long.valueOf(0l));
+        m.put(Long.class, Long.valueOf(0L));
         m.put(Float.class, Float.valueOf(0.0f));
         m.put(Double.class, Double.valueOf(0.0d));
 

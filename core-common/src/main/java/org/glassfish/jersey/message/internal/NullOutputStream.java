@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
@@ -51,7 +52,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  * Note that once a null output stream instance is {@link #close() closed}, any subsequent attempts
  * to write the data to the closed stream result in an {@link java.io.IOException} being thrown.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class NullOutputStream extends OutputStream {
@@ -68,8 +69,7 @@ public class NullOutputStream extends OutputStream {
         checkClosed();
         if (b == null) {
             throw new NullPointerException();
-        } else if ((off < 0) || (off > b.length) || (len < 0) ||
-                ((off + len) > b.length) || ((off + len) < 0)) {
+        } else if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) > b.length) || ((off + len) < 0)) {
             throw new IndexOutOfBoundsException();
         }
     }

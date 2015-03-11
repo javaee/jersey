@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,7 @@ grant codebase "file:${settings.localRepository}/-" {
 grant codebase "file:${project.build.directory}/test-classes/-" {
   permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
   permission java.lang.RuntimePermission "modifyThread";
+  permission java.util.PropertyPermission "*", "write";
 };
 
 grant codebase "file:${project.build.directory}/classes/-" {

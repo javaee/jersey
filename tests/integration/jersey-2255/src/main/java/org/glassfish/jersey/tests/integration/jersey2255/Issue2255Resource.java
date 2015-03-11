@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -136,7 +136,7 @@ public class Issue2255Resource {
     public Response getA(@QueryParam("detailed") final boolean isDetailed) {
         return Response
                 .ok()
-                .entity(new A("fieldA1Value"), isDetailed ? new Annotation[]{ Detailed.Factory.get() } : new Annotation[0])
+                .entity(new A("fieldA1Value"), isDetailed ? new Annotation[] {Detailed.Factory.get()} : new Annotation[0])
                 .build();
     }
 
@@ -145,8 +145,8 @@ public class Issue2255Resource {
     public Response getB(@QueryParam("detailed") final boolean isDetailed) {
         return Response
                 .ok()
-                .entity(new B("fieldA1Value", "fieldB1Value"), isDetailed ?
-                        new Annotation[]{ Detailed.Factory.get() } : new Annotation[0])
+                .entity(new B("fieldA1Value", "fieldB1Value"),
+                        isDetailed ? new Annotation[] {Detailed.Factory.get()} : new Annotation[0])
                 .build();
     }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.entity;
 
 import java.io.IOException;
@@ -82,14 +83,15 @@ import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Paul Sandoz
+ * @author Martin Matula
  */
 public class GenericTypeAndEntityTest extends AbstractTypeTester {
 
     @Provider
     @SuppressWarnings("UnusedDeclaration")
     public static class ListIntegerWriter implements MessageBodyReader<List<Integer>>, MessageBodyWriter<List<Integer>> {
+
         private final Type t;
 
         public ListIntegerWriter() {
@@ -112,7 +114,9 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
                             final OutputStream out) throws IOException, WebApplicationException {
             final StringBuilder sb = new StringBuilder();
             for (final Integer i : l) {
-                if (sb.length() > 0) sb.append(", ");
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
                 sb.append(i);
             }
             out.write(sb.toString().getBytes());
@@ -151,6 +155,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
 
     @Path("ListResource")
     public static class ListResource extends GenericListResource<Integer> {
+
         @GET
         @Path("type")
         public List<Integer> type() {
@@ -269,7 +274,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
 
     @Provider
     public static class MapStringReader implements MessageBodyReader<Map<String, String>>,
-            MessageBodyWriter<Map<String, String>> {
+                                                   MessageBodyWriter<Map<String, String>> {
 
         private final Type mapStringType;
 
@@ -339,7 +344,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
 
     @Provider
     public static class MapListStringReader implements MessageBodyReader<Map<String, List<String>>>,
-            MessageBodyWriter<Map<String, List<String>>> {
+                                                       MessageBodyWriter<Map<String, List<String>>> {
 
         private final Type mapListStringType;
 

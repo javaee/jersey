@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -74,9 +74,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class MBeansTest extends JerseyTest {
+
     @Override
     protected Application configure() {
         final ResourceConfig resourceConfig = new ResourceConfig(TestResource.class, MyExceptionMapper.class);
@@ -88,8 +89,8 @@ public class MBeansTest extends JerseyTest {
         return resourceConfig;
     }
 
-
     public static class MyException extends RuntimeException {
+
         public MyException(String message) {
             super(message);
         }
@@ -105,6 +106,7 @@ public class MBeansTest extends JerseyTest {
 
     @Path("resource")
     public static class TestResource {
+
         @GET
         public String testGet() {
             return "get";
@@ -133,7 +135,6 @@ public class MBeansTest extends JerseyTest {
         public String testGetPathPattern4() {
             return "testGetPathPattern2";
         }
-
 
         @POST
         public String testPost() {
@@ -167,6 +168,7 @@ public class MBeansTest extends JerseyTest {
     }
 
     public static class StatisticsListener extends AbstractContainerLifecycleListener implements MonitoringStatisticsListener {
+
         public static boolean ON_SHUTDOWN_CALLED = false;
 
         @Override
@@ -180,7 +182,6 @@ public class MBeansTest extends JerseyTest {
         }
     }
 
-
     @Override
     @After
     public void tearDown() throws Exception {
@@ -190,6 +191,7 @@ public class MBeansTest extends JerseyTest {
     }
 
     public static class SubResource {
+
         @GET
         @Path("in-subresource")
         public String get() {
@@ -247,7 +249,8 @@ public class MBeansTest extends JerseyTest {
 
     private void checkResourceMBean(String name) throws MalformedObjectNameException {
         final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-        final ObjectName objectName = new ObjectName("org.glassfish.jersey:type=myApplication,subType=Uris,resource=\"" + name + "\"");
+        final ObjectName objectName = new ObjectName(
+                "org.glassfish.jersey:type=myApplication,subType=Uris,resource=\"" + name + "\"");
         ObjectInstance mbean = null;
         try {
             mbean = mBeanServer.getObjectInstance(objectName);
@@ -261,10 +264,10 @@ public class MBeansTest extends JerseyTest {
     // the deployed application. The test will never finished. This should be uncommented
     // only for development testing of mbeans in jconsole.
     // Steps: uncomment the test; run it; run jconsole and attach to the process of the tests
-//    @Test
-//    public void testNeverFinishesAndMustBeCommented() throws Exception {
-//        while (true) {
-//            test();
-//        }
-//    }
+    //    @Test
+    //    public void testNeverFinishesAndMustBeCommented() throws Exception {
+    //        while (true) {
+    //            test();
+    //        }
+    //    }
 }

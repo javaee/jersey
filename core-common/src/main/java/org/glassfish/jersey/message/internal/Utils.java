@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,31 +39,46 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.File;
+import java.io.IOException;
+
 /**
- * Utility class. So far contains a single utility method
- * for HeaderDelegateProvider implementations.
+ * Utility class.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-class Utils {
-
-    /**
-     * Prevents instantiation.
-     */
-    private Utils() {
-    }
+public final class Utils {
 
     /**
      * Throws an IllegalArgumentException with given error message if the first, toCheck,
-     * parameter is null.
+     * parameter is {@code null}.
      *
      * @param toCheck an instance to check.
      * @param errorMessage message to set to the IllegalArgumentException thrown.
      */
-    static void throwIllegalArgumentExceptionIfNull(Object toCheck, String errorMessage) {
+    static void throwIllegalArgumentExceptionIfNull(final Object toCheck, final String errorMessage) {
         if (toCheck == null) {
             throw new IllegalArgumentException(errorMessage);
         }
     }
 
+    /**
+     * Create an empty file in the default temporary-file directory.
+     *
+     * @return An abstract pathname denoting a newly-created empty file.
+     * @throws IOException if a file could not be created.
+     */
+    public static File createTempFile() throws IOException {
+        final File file = File.createTempFile("rep", "tmp");
+        // Make sure the file is deleted when JVM is shutdown at last.
+        file.deleteOnExit();
+        return file;
+    }
+
+    /**
+     * Prevent instantiation.
+     */
+    private Utils() {
+        throw new AssertionError("No instances allowed.");
+    }
 }

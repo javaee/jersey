@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import org.glassfish.jersey.internal.Errors;
@@ -44,8 +45,8 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
  * Validator ensuring that resource are correct (for example that root resources contains path, etc.).
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
+ * @author Miroslav Fuksa
  */
 class ResourceValidator extends AbstractResourceModelVisitor {
 
@@ -60,9 +61,10 @@ class ResourceValidator extends AbstractResourceModelVisitor {
                     resource.getPath()));
         }
 
-        if (resource.getPath() != null && resource.getResourceMethods().isEmpty() && resource.getChildResources()
-                .isEmpty() &&
-                resource.getResourceLocator() == null) {
+        if (resource.getPath() != null
+                && resource.getResourceMethods().isEmpty()
+                && resource.getChildResources().isEmpty()
+                && resource.getResourceLocator() == null) {
             Errors.warning(resource, LocalizationMessages.RESOURCE_EMPTY(resource, resource.getPath()));
         }
 

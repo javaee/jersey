@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,12 +55,13 @@ import org.junit.Test;
 
 /**
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class MonitoringUtilsTest {
 
     @Path("resource")
     public static class MyResource {
+
         @GET
         public String get() {
             return "get";
@@ -81,14 +82,14 @@ public class MonitoringUtilsTest {
         }
     }
 
-
     @Test
     public void testGetMethodUniqueId() {
         final Resource resource = Resource.builder(MyResource.class).build();
         Assert.assertEquals("[]|[]|GET|null|get", MonitoringUtils.getMethodUniqueId(getMethod(resource, "get")));
         Assert.assertEquals("[text/html]|[]|GET|sub|subGet", MonitoringUtils.getMethodUniqueId(getMethod(resource, "subGet")));
         Assert.assertEquals("[text/html]|[]|GET|sub|subGet", MonitoringUtils.getMethodUniqueId(getMethod(resource, "subGet")));
-        Assert.assertEquals("[text/xml]|[text/plain]|POST|null|post", MonitoringUtils.getMethodUniqueId(getMethod(resource, "post")));
+        Assert.assertEquals("[text/xml]|[text/plain]|POST|null|post",
+                MonitoringUtils.getMethodUniqueId(getMethod(resource, "post")));
 
     }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,6 +69,7 @@ import org.glassfish.grizzly.http.util.HttpStatus;
  * Jersey Balloons example application.
  */
 public class App {
+
     private static final Properties TWITTER_PROPERTIES = loadSettings();
     private static final String TWITTER_USER_NAME = "twitter.user.name";
     private static final String TWITTER_USER_PASSWORD = "twitter.user.password";
@@ -117,9 +118,9 @@ public class App {
         try {
             System.out.println("\"SSE Twitter Message Aggregator\" Jersey Example App");
             final HttpServer server = startServer(args.length >= 1 ? args[0] : null);
-            System.out.println(String.format("Application started.\n" +
-                    "Access it at %s\n" +
-                    "Hit enter to stop it...",
+            System.out.println(String.format("Application started.\n"
+                            + "Access it at %s\n"
+                            + "Hit enter to stop it...",
                     getAppUri()));
             System.in.read();
             server.shutdownNow();
@@ -184,18 +185,18 @@ public class App {
             }
         }
 
-        for (String name : new String[]{TWITTER_USER_NAME, TWITTER_USER_PASSWORD}) {
+        for (String name : new String[] {TWITTER_USER_NAME, TWITTER_USER_PASSWORD}) {
             String value = System.getProperty(name);
             if (value != null) {
                 properties.setProperty(name, value);
             }
         }
 
-        if (properties.getProperty(TWITTER_USER_NAME) == null ||
-                properties.getProperty(TWITTER_USER_PASSWORD) == null) {
+        if (properties.getProperty(TWITTER_USER_NAME) == null
+                || properties.getProperty(TWITTER_USER_PASSWORD) == null) {
             System.out.println(String.format(
-                    "'%s' and '%s' properties not set. " +
-                            "You need to provide them either via '$HOME/%s' file or as system properties.",
+                    "'%s' and '%s' properties not set. "
+                            + "You need to provide them either via '$HOME/%s' file or as system properties.",
                     TWITTER_USER_NAME, TWITTER_USER_PASSWORD, TWITTER_PROPERTIES_FILE_NAME));
             System.exit(1);
         }
@@ -207,6 +208,7 @@ public class App {
      * directory of this application.
      */
     private static class StaticContentHandler extends HttpHandler {
+
         private static final HashMap<String, String> EXTENSION_TO_MEDIA_TYPE;
 
         static {
@@ -251,9 +253,9 @@ public class App {
             InputStream fileStream;
 
             try {
-                fileStream = webRootPath == null ?
-                        App.class.getResourceAsStream(WEB_ROOT + uri) :
-                        new FileInputStream(webRootPath + uri);
+                fileStream = webRootPath == null
+                        ? App.class.getResourceAsStream(WEB_ROOT + uri)
+                        : new FileInputStream(webRootPath + uri);
             } catch (IOException e) {
                 fileStream = null;
             }

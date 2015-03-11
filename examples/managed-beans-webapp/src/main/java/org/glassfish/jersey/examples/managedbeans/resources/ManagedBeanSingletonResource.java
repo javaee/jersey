@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,9 +53,7 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.annotation.ManagedBean;
 import javax.annotation.Resource;
-
 import javax.inject.Singleton;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
@@ -63,7 +61,7 @@ import javax.persistence.PersistenceUnit;
 /**
  * JAX-RS root resource treated as Java EE managed bean in singleton scope.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Path("/managedbean/singleton")
@@ -74,9 +72,11 @@ public class ManagedBeanSingletonResource {
     /**
      * Initial value should get injected by Java EE container.
      */
-    @Resource(name="injectedResource") int counter = 0;
+    @Resource(name = "injectedResource")
+    int counter = 0;
 
-    @Context UriInfo ui;
+    @Context
+    UriInfo ui;
 
     private EntityManager entityManager;
 
@@ -97,7 +97,7 @@ public class ManagedBeanSingletonResource {
     @GET
     @Produces("text/plain")
     public String getMessage() {
-       return Integer.toString(counter++);
+        return Integer.toString(counter++);
     }
 
     /**
@@ -107,7 +107,7 @@ public class ManagedBeanSingletonResource {
     @PUT
     @Produces("text/plain")
     public void putMessage(final int i) {
-       counter = i;
+        counter = i;
     }
 
     /**

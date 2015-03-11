@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,7 +67,7 @@ import org.codehaus.jettison.json.JSONObject;
 
 /**
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class BookmarksResource {
@@ -103,9 +103,9 @@ public class BookmarksResource {
         JSONArray uriArray = new JSONArray();
         for (BookmarkEntity bookmarkEntity : getBookmarks()) {
             UriBuilder ub = uriInfo.getAbsolutePathBuilder();
-            URI bookmarkUri = ub.
-                    path(bookmarkEntity.getBookmarkEntityPK().getBmid()).
-                    build();
+            URI bookmarkUri = ub
+                    .path(bookmarkEntity.getBookmarkEntityPK().getBmid())
+                    .build();
             uriArray.put(bookmarkUri.toASCIIString());
         }
         return uriArray;
@@ -129,9 +129,9 @@ public class BookmarksResource {
             }
         });
 
-        URI bookmarkUri = uriInfo.getAbsolutePathBuilder().
-                path(bookmarkEntity.getBookmarkEntityPK().getBmid()).
-                build();
+        URI bookmarkUri = uriInfo.getAbsolutePathBuilder()
+                .path(bookmarkEntity.getBookmarkEntityPK().getBmid())
+                .build();
         return Response.created(bookmarkUri).build();
     }
 

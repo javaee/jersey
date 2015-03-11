@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,9 +67,9 @@ public class InitializationLoggingTest extends JerseyTest {
         return new ResourceConfig(A.class);
     }
 
-
     @Path("test")
     public static class A {
+
         @GET
         public String get() {
             return "test";
@@ -85,7 +85,7 @@ public class InitializationLoggingTest extends JerseyTest {
         boolean found = false;
 
         for (LogRecord logRecord : getLoggedRecords()) {
-            if(logRecord.getMessage().contains(LocalizationMessages.LOGGING_APPLICATION_INITIALIZED())) {
+            if (logRecord.getMessage().contains(LocalizationMessages.LOGGING_APPLICATION_INITIALIZED())) {
                 found = true;
                 break;
             }

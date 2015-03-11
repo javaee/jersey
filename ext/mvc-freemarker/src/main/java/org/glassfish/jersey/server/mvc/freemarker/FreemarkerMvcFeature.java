@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,11 +53,12 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
  * Note: This feature also registers {@link MvcFeature}.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Jeff Wilde (jeff.wilde at complicatedrobot.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)
 public final class FreemarkerMvcFeature implements Feature {
 
-    private final static String SUFFIX = ".freemarker";
+    private static final String SUFFIX = ".freemarker";
 
     /**
      * {@link String} property defining the base path to Freemarker templates. If set, the value of the property is added in front
@@ -75,7 +76,28 @@ public final class FreemarkerMvcFeature implements Feature {
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public final static String TEMPLATES_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + SUFFIX;
+    public static final String TEMPLATE_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + SUFFIX;
+
+    /**
+     * {@link String} property defining the base path to Freemarker templates. If set, the value of the property is added in front
+     * of the template name defined in:
+     * <ul>
+     * <li>{@link org.glassfish.jersey.server.mvc.Viewable Viewable}</li>
+     * <li>{@link org.glassfish.jersey.server.mvc.Template Template}, or</li>
+     * <li>{@link org.glassfish.jersey.server.mvc.ErrorTemplate ErrorTemplate}</li>
+     * </ul>
+     * <p/>
+     * Value can be absolute providing a full path to a system directory with templates or relative to current
+     * {@link javax.servlet.ServletContext servlet context}.
+     * <p/>
+     * There is no default value.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Use {@link #TEMPLATE_BASE_PATH} instead.
+     */
+    @Deprecated
+    public static final String TEMPLATES_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + SUFFIX;
 
     /**
      * If {@code true} then enable caching of Freemarker templates to avoid multiple compilation.
@@ -89,22 +111,26 @@ public final class FreemarkerMvcFeature implements Feature {
     public static final String CACHE_TEMPLATES = MvcFeature.CACHE_TEMPLATES + SUFFIX;
 
     /**
-     * Property used to pass user-configured {@link freemarker.template.Configuration configuration} able to create
-     * {@link freemarker.template.Template Freemarker templates}.
+     * Property used to pass user-configured {@link org.glassfish.jersey.server.mvc.freemarker.FreemarkerConfigurationFactory}.
      * <p/>
      * The default value is not set.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      * <p/>
-     * If you want to set custom {@link freemarker.template.Configuration configuration} then set
+     * This property will also accept an instance of {@link freemarker.template.Configuration Configuration} directly, to
+     * support backwards compatibility. If you want to set custom {@link freemarker.template.Configuration configuration} then set
      * {@link freemarker.cache.TemplateLoader template loader} to multi loader of:
      * {@link freemarker.cache.WebappTemplateLoader} (if applicable), {@link freemarker.cache.ClassTemplateLoader} and
      * {@link freemarker.cache.FileTemplateLoader} keep functionality of resolving templates.
+     * <p/>
+     * If no value is set, a {@link org.glassfish.jersey.server.mvc.freemarker.FreemarkerDefaultConfigurationFactory factory}
+     * with the above behaviour is used by default in the
+     * {@link org.glassfish.jersey.server.mvc.freemarker.FreemarkerViewProcessor} class.
+     * <p/>
      *
      * @since 2.5
      */
     public static final String TEMPLATE_OBJECT_FACTORY = MvcFeature.TEMPLATE_OBJECT_FACTORY + SUFFIX;
-
 
     /**
      * Property defines output encoding produced by {@link org.glassfish.jersey.server.mvc.spi.TemplateProcessor}.

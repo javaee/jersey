@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,20 +57,23 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
- *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class AcceptAnnotatedReaderWriterTest {
@@ -84,15 +87,23 @@ public class AcceptAnnotatedReaderWriterTest {
         public String s;
 
         public StringWrapper() {
+            // DO NOT REMOVE: used by StringWrapperWorker.readFrom
         }
 
         public StringWrapper(String s) {
             this.s = s;
         }
+
+        @Override
+        public String toString() {
+            return s;
+        }
     }
 
     public static class StringWrapperFoo extends StringWrapper {
+
         public StringWrapperFoo() {
+            // DO NOT REMOVE: used by StringWrapperWorker.readFrom
         }
 
         public StringWrapperFoo(String s) {
@@ -101,7 +112,9 @@ public class AcceptAnnotatedReaderWriterTest {
     }
 
     public static class StringWrapperBar extends StringWrapper {
+
         public StringWrapperBar() {
+            // DO NOT REMOVE: used by StringWrapperWorker.readFrom
         }
 
         public StringWrapperBar(String s) {
@@ -112,7 +125,8 @@ public class AcceptAnnotatedReaderWriterTest {
     public static final String APPLICATION_BAR = "application/bar";
     public static final String APPLICATION_FOO = "application/foo";
 
-    public static abstract class StringWrapperWorker<T extends StringWrapper> implements MessageBodyReader<T>, MessageBodyWriter<T> {
+    public abstract static class StringWrapperWorker<T extends StringWrapper>
+            implements MessageBodyReader<T>, MessageBodyWriter<T> {
 
         @Provider
         @Produces(APPLICATION_BAR)
@@ -159,6 +173,7 @@ public class AcceptAnnotatedReaderWriterTest {
         }
 
         abstract MediaType getMediaType();
+
         abstract String getPrefix();
 
         @Override
@@ -204,7 +219,12 @@ public class AcceptAnnotatedReaderWriterTest {
         }
 
         @Override
-        public T readFrom(Class<T> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+        public T readFrom(Class<T> type,
+                          Type genericType,
+                          Annotation[] annotations,
+                          MediaType mediaType,
+                          MultivaluedMap<String, String> httpHeaders,
+                          InputStream entityStream) throws IOException, WebApplicationException {
             try {
                 T result = type.newInstance();
                 result.s = readString(entityStream).substring(getPrefix().length());
@@ -233,7 +253,8 @@ public class AcceptAnnotatedReaderWriterTest {
     @Test
     public void testAcceptGet() throws Exception {
 
-        ApplicationHandler app = createApplication(TwoGetMethodsResource.class, StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
+        ApplicationHandler app = createApplication(TwoGetMethodsResource.class, StringWrapperWorker.FooFooStringWorker.class,
+                StringWrapperWorker.BarBarStringWorker.class);
 
         _test(app, "foo: 1st", "GET", null, null, "application/foo");
         _test(app, "foo: 1st", "GET", null, null, "application/bar;q=0.8", "application/foo");
@@ -256,7 +277,8 @@ public class AcceptAnnotatedReaderWriterTest {
     @Test
     public void testSingleMethodAcceptGet() throws Exception {
 
-        final ApplicationHandler app = createApplication(SingleGetMethodResource.class, StringWrapperWorker.FooStringWorker.class, StringWrapperWorker.BarStringWorker.class);
+        final ApplicationHandler app = createApplication(SingleGetMethodResource.class, StringWrapperWorker.FooStringWorker.class,
+                StringWrapperWorker.BarStringWorker.class);
 
         _test(app, "foo: content", "GET", null, null, "application/foo");
         _test(app, "foo: content", "GET", null, null, "application/bar;q=0.5, application/foo");
@@ -269,7 +291,8 @@ public class AcceptAnnotatedReaderWriterTest {
     @Path("/")
     public static class MultiplePostMethodResource {
 
-        @Context HttpHeaders httpHeaders;
+        @Context
+        HttpHeaders httpHeaders;
 
         @POST
         public StringWrapperBar postFoo2Bar(StringWrapperFoo foo) {
@@ -299,7 +322,8 @@ public class AcceptAnnotatedReaderWriterTest {
     @Test
     public void testSingleMethodConsumesProducesPost() throws Exception {
 
-        final ApplicationHandler app = createApplication(MultiplePostMethodResource.class, StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
+        final ApplicationHandler app = createApplication(MultiplePostMethodResource.class,
+                StringWrapperWorker.FooFooStringWorker.class, StringWrapperWorker.BarBarStringWorker.class);
 
         _test(app, "foo: foo", "POST", new StringWrapperFoo("foo"), APPLICATION_FOO, APPLICATION_FOO);
         _test(app, "foo: bar", "POST", new StringWrapperBar("bar"), APPLICATION_BAR, APPLICATION_FOO);
@@ -315,8 +339,11 @@ public class AcceptAnnotatedReaderWriterTest {
         }
         ContainerRequest requestContext = requestContextBuilder.accept(accept).build();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        app.apply(requestContext, baos);
-        assertEquals(expected, baos.toString());
+
+        final ContainerResponse response = app.apply(requestContext, baos).get();
+
+        assertThat(response.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
+        assertThat(baos.toString(), equalTo(expected));
     }
 
     static String readString(InputStream is) throws IOException {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,14 +41,14 @@ package org.glassfish.jersey.tests.cdi.resources;
 
 import java.util.Arrays;
 import java.util.List;
+
 import javax.ws.rs.client.WebTarget;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test for monitoring statistics injection.
@@ -60,11 +60,11 @@ public class MonitoringTest extends CdiTest {
 
     @Parameterized.Parameters
     public static List<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
-            {"app-field-injected"}
-            ,{"app-ctor-injected"}
-            ,{"request-field-injected"}
-            ,{"request-ctor-injected"}
+        return Arrays.asList(new Object[][] {
+                {"app-field-injected"},
+                {"app-ctor-injected"},
+                {"request-field-injected"},
+                {"request-ctor-injected"}
         });
     }
 
@@ -75,7 +75,7 @@ public class MonitoringTest extends CdiTest {
      *
      * @param resource uri of resource to be tested.
      */
-    public MonitoringTest(String resource) {
+    public MonitoringTest(final String resource) {
         this.resource = resource;
     }
 
@@ -86,12 +86,12 @@ public class MonitoringTest extends CdiTest {
      */
     @Test
     public void testRequestCount() throws Exception {
-        WebTarget target = target().path(resource).path("requestCount");
+        final WebTarget target = target().path(resource).path("requestCount");
         Thread.sleep(1000); // this is to allow statistics on the server side to get updated
-        int start = Integer.decode(target.request().get(String.class));
-        for (int i = 1; i<4; i++) {
+        final int start = Integer.decode(target.request().get(String.class));
+        for (int i = 1; i < 4; i++) {
             Thread.sleep(1000); // this is to allow statistics on the server side to get updated
-            int next = Integer.decode(target.request().get(String.class));
+            final int next = Integer.decode(target.request().get(String.class));
             assertThat(String.format("testing %s", resource), next, equalTo(start + i));
         }
     }

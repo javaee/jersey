@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -120,7 +120,7 @@ public class ApplicationFilterTest {
         });
 
         final ResourceConfig resourceConfig = new ResourceConfig()
-                .register(new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilters, ContainerRequestFilter.class));
+                .register(new ProviderInstanceBindingBinder<>(requestFilters, ContainerRequestFilter.class));
 
         final Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
@@ -144,13 +144,14 @@ public class ApplicationFilterTest {
         final List<ContainerResponseFilter> responseFilterList = Lists.newArrayList();
         responseFilterList.add(new ContainerResponseFilter() {
             @Override
-            public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws IOException {
+            public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
+                    throws IOException {
                 called.incrementAndGet();
             }
         });
 
-        final ResourceConfig resourceConfig = new ResourceConfig().register(
-                new ProviderInstanceBindingBinder<ContainerResponseFilter>(responseFilterList, ContainerResponseFilter.class));
+        final ResourceConfig resourceConfig = new ResourceConfig()
+                .register(new ProviderInstanceBindingBinder<>(responseFilterList, ContainerResponseFilter.class));
 
         final Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
@@ -202,6 +203,7 @@ public class ApplicationFilterTest {
 
     @Path("simple")
     public static class SimpleResource {
+
         @GET
         public String get() {
             return "get";
@@ -277,8 +279,8 @@ public class ApplicationFilterTest {
 
         @Override
         protected void verify() {
-            assertTrue(filter1.called == true);
-            assertTrue(filter10.called == true);
+            assertTrue(filter1.called);
+            assertTrue(filter10.called);
         }
     }
 
@@ -298,8 +300,8 @@ public class ApplicationFilterTest {
         requestFilterList.add(filter1);
         requestFilterList.add(filter10);
 
-        final ResourceConfig resourceConfig = new ResourceConfig().register(
-                new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
+        final ResourceConfig resourceConfig = new ResourceConfig()
+                .register(new ProviderInstanceBindingBinder<>(requestFilterList, ContainerRequestFilter.class));
 
         final Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
@@ -316,6 +318,7 @@ public class ApplicationFilterTest {
     }
 
     public class ExceptionFilter implements ContainerRequestFilter {
+
         @Override
         public void filter(final ContainerRequestContext context) throws IOException {
             throw new IOException("test");
@@ -328,8 +331,8 @@ public class ApplicationFilterTest {
         final List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
         requestFilterList.add(new ExceptionFilter());
 
-        final ResourceConfig resourceConfig = new ResourceConfig().register(
-                new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
+        final ResourceConfig resourceConfig = new ResourceConfig()
+                .register(new ProviderInstanceBindingBinder<>(requestFilterList, ContainerRequestFilter.class));
 
         final Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {

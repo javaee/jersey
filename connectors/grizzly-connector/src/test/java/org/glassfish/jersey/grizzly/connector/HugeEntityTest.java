@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,7 +63,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -75,7 +74,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class HugeEntityTest extends JerseyTest {
 
     private static final int BUFFER_LENGTH = 1024 * 1024; // 1M
-    private static final long HUGE_DATA_LENGTH = 20l*1024l*1024l*1024l; // 20G seems sufficient
+    private static final long HUGE_DATA_LENGTH = 20L * 1024L * 1024L * 1024L; // 20G seems sufficient
 
     /**
      * JERSEY-2337 reproducer. The resource is used to check the right amount of data
@@ -93,10 +92,10 @@ public class HugeEntityTest extends JerseyTest {
         @Path("size")
         public String post(InputStream in) throws IOException {
 
-            long totalBytesRead = 0l;
+            long totalBytesRead = 0L;
 
             byte[] buffer = new byte[BUFFER_LENGTH];
-            int read = -1;
+            int read;
             do {
                 read = in.read(buffer);
                 if (read > 0) {
@@ -127,6 +126,7 @@ public class HugeEntityTest extends JerseyTest {
     }
 
     public static class TestEntity {
+
         final long size;
 
         public TestEntity(long size) {
@@ -150,13 +150,19 @@ public class HugeEntityTest extends JerseyTest {
         }
 
         @Override
-        public void writeTo(TestEntity t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(TestEntity t,
+                            Class<?> type,
+                            Type genericType,
+                            Annotation[] annotations,
+                            MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
 
             final byte[] buffer = new byte[BUFFER_LENGTH];
             final long bufferCount = t.size / BUFFER_LENGTH;
-            final int remainder = (int)(t.size % BUFFER_LENGTH);
+            final int remainder = (int) (t.size % BUFFER_LENGTH);
 
-            for (long b=0; b<bufferCount; b++) {
+            for (long b = 0; b < bufferCount; b++) {
                 entityStream.write(buffer);
             }
 
@@ -174,7 +180,8 @@ public class HugeEntityTest extends JerseyTest {
      */
     @Test
     public void testPost() throws Exception {
-        Response response = target("/size").request().post(Entity.entity(new TestEntity(HUGE_DATA_LENGTH), MediaType.APPLICATION_OCTET_STREAM_TYPE));
+        Response response = target("/size").request()
+                .post(Entity.entity(new TestEntity(HUGE_DATA_LENGTH), MediaType.APPLICATION_OCTET_STREAM_TYPE));
         String content = response.readEntity(String.class);
         assertThat(Long.parseLong(content), equalTo(HUGE_DATA_LENGTH));
 
@@ -191,7 +198,8 @@ public class HugeEntityTest extends JerseyTest {
      */
     @Test
     public void testAsyncPost() throws Exception {
-        Future<Response> response = target("/size").request().async().post(Entity.entity(new TestEntity(HUGE_DATA_LENGTH), MediaType.APPLICATION_OCTET_STREAM_TYPE));
+        Future<Response> response = target("/size").request().async()
+                .post(Entity.entity(new TestEntity(HUGE_DATA_LENGTH), MediaType.APPLICATION_OCTET_STREAM_TYPE));
         final String content = response.get().readEntity(String.class);
         assertThat(Long.parseLong(content), equalTo(HUGE_DATA_LENGTH));
 

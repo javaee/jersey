@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -77,7 +77,8 @@ import static org.junit.Assert.assertEquals;
 @SuppressWarnings("unchecked")
 public class ParamExceptionMappingTest extends AbstractTest {
 
-    public static abstract class BaseExceptionMapper<T extends ParamException> implements ExceptionMapper<T> {
+    public abstract static class BaseExceptionMapper<T extends ParamException> implements ExceptionMapper<T> {
+
         public Response toResponse(T exception, String entity) {
             assertEquals("x", exception.getParameterName());
             if (exception.getParameterType() != PathParam.class) {
@@ -88,30 +89,35 @@ public class ParamExceptionMappingTest extends AbstractTest {
     }
 
     public static class ParamExceptionMapper extends BaseExceptionMapper<ParamException> {
+
         public Response toResponse(ParamException exception) {
             return toResponse(exception, "param");
         }
     }
 
     public static class UriExceptionMapper extends BaseExceptionMapper<ParamException.UriParamException> {
+
         public Response toResponse(ParamException.UriParamException exception) {
             return toResponse(exception, "uri");
         }
     }
 
     public static class PathExceptionMapper extends BaseExceptionMapper<ParamException.PathParamException> {
+
         public Response toResponse(ParamException.PathParamException exception) {
             return toResponse(exception, "path");
         }
     }
 
     public static class MatrixExceptionMapper extends BaseExceptionMapper<ParamException.MatrixParamException> {
+
         public Response toResponse(ParamException.MatrixParamException exception) {
             return toResponse(exception, "matrix");
         }
     }
 
     public static class QueryExceptionMapper extends BaseExceptionMapper<ParamException.QueryParamException> {
+
         public Response toResponse(ParamException.QueryParamException exception) {
             return toResponse(exception, "query");
         }
@@ -119,18 +125,21 @@ public class ParamExceptionMappingTest extends AbstractTest {
 
     public static class
             CookieExceptionMapper extends BaseExceptionMapper<ParamException.CookieParamException> {
+
         public Response toResponse(ParamException.CookieParamException exception) {
             return toResponse(exception, "cookie");
         }
     }
 
     public static class HeaderExceptionMapper extends BaseExceptionMapper<ParamException.HeaderParamException> {
+
         public Response toResponse(ParamException.HeaderParamException exception) {
             return toResponse(exception, "header");
         }
     }
 
     public static class FormExceptionMapper extends BaseExceptionMapper<ParamException.FormParamException> {
+
         public Response toResponse(ParamException.FormParamException exception) {
             return toResponse(exception, "form");
         }
@@ -138,6 +147,7 @@ public class ParamExceptionMappingTest extends AbstractTest {
 
     @Path("/")
     public static class ParamExceptionMapperResource {
+
         @Path("path/{x}")
         @GET
         public String getPath(@PathParam("x") URI x) {
@@ -199,19 +209,19 @@ public class ParamExceptionMappingTest extends AbstractTest {
         assertEquals("cookie", responseContext.getEntity());
 
         responseContext = apply(
-                RequestContextBuilder.from("/header", "GET").
-                        header("x", " 123").
-                        build()
+                RequestContextBuilder.from("/header", "GET")
+                        .header("x", " 123")
+                        .build()
         );
         assertEquals("header", responseContext.getEntity());
 
         Form f = new Form();
         f.param("x", " 123");
         responseContext = apply(
-                RequestContextBuilder.from("/form", "POST").
-                        type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).
-                        entity(f).
-                        build()
+                RequestContextBuilder.from("/form", "POST")
+                        .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+                        .entity(f)
+                        .build()
         );
         assertEquals("form", responseContext.getEntity());
     }
@@ -234,19 +244,19 @@ public class ParamExceptionMappingTest extends AbstractTest {
         assertEquals("param", responseContext.getEntity());
 
         responseContext = apply(
-                RequestContextBuilder.from("/header", "GET").
-                        header("x", " 123").
-                        build()
+                RequestContextBuilder.from("/header", "GET")
+                        .header("x", " 123")
+                        .build()
         );
         assertEquals("param", responseContext.getEntity());
 
         Form f = new Form();
         f.param("x", " 123");
         responseContext = apply(
-                RequestContextBuilder.from("/form", "POST").
-                        type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).
-                        entity(f).
-                        build()
+                RequestContextBuilder.from("/form", "POST")
+                        .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+                        .entity(f)
+                        .build()
         );
         assertEquals("param", responseContext.getEntity());
     }
@@ -265,6 +275,5 @@ public class ParamExceptionMappingTest extends AbstractTest {
         responseContext = getResponseContext(UriBuilder.fromPath("/").path("query").queryParam("x", " 123").build().toString());
         assertEquals("uri", responseContext.getEntity());
     }
-
 
 }

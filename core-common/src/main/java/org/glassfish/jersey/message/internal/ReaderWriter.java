@@ -91,8 +91,8 @@ public final class ReaderWriter {
             } catch (NumberFormatException e) {
                 LOGGER.log(Level.CONFIG,
                         "Value of " + MessageProperties.IO_BUFFER_SIZE
-                        + " property is not a valid positive integer [" + value + "]."
-                        + " Reverting to default [" + MessageProperties.IO_DEFAULT_BUFFER_SIZE + "].",
+                                + " property is not a valid positive integer [" + value + "]."
+                                + " Reverting to default [" + MessageProperties.IO_DEFAULT_BUFFER_SIZE + "].",
                         e);
             }
         }
@@ -102,7 +102,7 @@ public final class ReaderWriter {
     /**
      * Read bytes from an input stream and write them to an output stream.
      *
-     * @param in the input stream to read from.
+     * @param in  the input stream to read from.
      * @param out the output stream to write to.
      * @throws IOException if there is an error reading or writing bytes.
      */
@@ -117,7 +117,7 @@ public final class ReaderWriter {
     /**
      * Read characters from an input stream and write them to an output stream.
      *
-     * @param in the reader to read from.
+     * @param in  the reader to read from.
      * @param out the writer to write to.
      * @throws IOException if there is an error reading or writing characters.
      */
@@ -146,14 +146,14 @@ public final class ReaderWriter {
     /**
      * Read the bytes of an input stream and convert to a string.
      *
-     * @param in the input stream to read from.
+     * @param in   the input stream to read from.
      * @param type the media type that determines the character set defining
-     *        how to decode bytes to charaters.
+     *             how to decode bytes to characters.
      * @return the string.
+     *
      * @throws IOException if there is an error reading from the input stream.
      */
-    public static String readFromAsString(InputStream in,
-            MediaType type) throws IOException {
+    public static String readFromAsString(InputStream in, MediaType type) throws IOException {
         return readFromAsString(new InputStreamReader(in, getCharset(type)));
     }
 
@@ -162,6 +162,7 @@ public final class ReaderWriter {
      *
      * @param reader the reader
      * @return the string
+     *
      * @throws IOException if there is an error reading from the reader.
      */
     public static String readFromAsString(Reader reader) throws IOException {
@@ -177,14 +178,13 @@ public final class ReaderWriter {
     /**
      * Convert a string to bytes and write those bytes to an output stream.
      *
-     * @param s the string to convert to bytes.
-     * @param out the output stream to write to.
+     * @param s    the string to convert to bytes.
+     * @param out  the output stream to write to.
      * @param type the media type that determines the character set defining
-     *        how to decode bytes to characters.
-     * @throws IOException
+     *             how to decode bytes to characters.
+     * @throws IOException in case of a write failure.
      */
-    public static void writeToAsString(String s, OutputStream out,
-            MediaType type) throws IOException {
+    public static void writeToAsString(String s, OutputStream out, MediaType type) throws IOException {
         Writer osw = new OutputStreamWriter(out, getCharset(type));
         osw.write(s, 0, s.length());
         osw.flush();

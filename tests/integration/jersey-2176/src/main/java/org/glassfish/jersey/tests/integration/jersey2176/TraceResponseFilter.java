@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -73,7 +73,7 @@ public class TraceResponseFilter implements Filter {
     public void doFilter(final ServletRequest request, ServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
         TraceResponseWrapper wrappedResponse = null;
-        if (((HttpServletRequest)request).getHeader(X_NO_FILTER_HEADER) == null) {
+        if (((HttpServletRequest) request).getHeader(X_NO_FILTER_HEADER) == null) {
             response = wrappedResponse = new TraceResponseWrapper((HttpServletResponse) response);
         }
         String status = "n/a";

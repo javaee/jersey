@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.filter;
 
 import java.io.IOException;
@@ -97,7 +98,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
  * The media type mappings are processed before the language type mappings.
  *
  * @author Paul Sandoz
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 @PreMatching
 @Priority(Priorities.HEADER_DECORATOR)
@@ -139,7 +140,6 @@ public class UriConnegFilter implements ContainerRequestFilter {
         this.mediaTypeMappings = mediaTypeMappings;
         this.languageMappings = languageMappings;
     }
-
 
     @Override
     public void filter(ContainerRequestContext rc) throws IOException {
@@ -193,8 +193,9 @@ public class UriConnegFilter implements ContainerRequestFilter {
 
         for (int i = suffixes.length - 1; i >= 1; i--) {
             final String suffix = suffixes[i];
-            if (suffix.length() == 0)
+            if (suffix.length() == 0) {
                 continue;
+            }
 
             final String acceptLanguage = languageMappings.get(suffix);
             if (acceptLanguage != null) {
@@ -213,6 +214,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
     }
 
     private static interface TypeParser<T> {
+
         public T valueOf(String s);
     }
 
@@ -248,7 +250,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
         if (mappings instanceof String) {
             parseMappings(property, (String) mappings, mappingsMap, parser);
         } else if (mappings instanceof String[]) {
-            final String[] mappingsArray = (String[])mappings;
+            final String[] mappingsArray = (String[]) mappings;
             for (final String aMappingsArray : mappingsArray) {
                 parseMappings(property, aMappingsArray, mappingsMap, parser);
             }
@@ -263,23 +265,27 @@ public class UriConnegFilter implements ContainerRequestFilter {
 
     private static <T> void parseMappings(String property, String mappings,
                                           Map<String, T> mappingsMap, TypeParser<T> parser) {
-        if (mappings == null)
+        if (mappings == null) {
             return;
+        }
 
         String[] records = mappings.split(",");
 
         for (String record : records) {
             String[] mapping = record.split(":");
-            if (mapping.length != 2)
+            if (mapping.length != 2) {
                 throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_FORMAT(property, mappings));
+            }
 
             String trimmedSegment = mapping[0].trim();
             String trimmedValue = mapping[1].trim();
 
-            if (trimmedSegment.length() == 0)
+            if (trimmedSegment.length() == 0) {
                 throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_KEY_EMPTY(property, record));
-            if (trimmedValue.length() == 0)
+            }
+            if (trimmedValue.length() == 0) {
                 throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_VALUE_EMPTY(property, record));
+            }
 
             mappingsMap.put(trimmedSegment, parser.valueOf(trimmedValue));
         }
@@ -287,8 +293,9 @@ public class UriConnegFilter implements ContainerRequestFilter {
 
     private static <T> void encodeKeys(Map<String, T> map) {
         Map<String, T> tempMap = new HashMap<String, T>();
-        for(Map.Entry<String, T> entry : map.entrySet())
+        for (Map.Entry<String, T> entry : map.entrySet()) {
             tempMap.put(UriComponent.contextualEncode(entry.getKey(), UriComponent.Type.PATH_SEGMENT), entry.getValue());
+        }
         map.clear();
         map.putAll(tempMap);
     }

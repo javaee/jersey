@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -230,8 +230,9 @@ public class OAuth1Signature {
     private URI constructRequestURL(final OAuth1Request request) throws OAuth1SignatureException {
         try {
             final URL url = request.getRequestURL();
-            if (url == null)
+            if (url == null) {
                 throw new OAuth1SignatureException();
+            }
             final StringBuilder builder = new StringBuilder(url.getProtocol()).append("://").append(url.getHost().toLowerCase());
             final int port = url.getPort();
             if (port > 0 && port != url.getDefaultPort()) {
@@ -286,7 +287,7 @@ public class OAuth1Signature {
     }
 
     private static void addParam(final String key, final String value, final List<String[]> list) {
-        list.add(new String[]{
+        list.add(new String[] {
                 UriComponent.encode(key, UriComponent.Type.UNRESERVED),
                 value == null ? "" : UriComponent.encode(value, UriComponent.Type.UNRESERVED)
         });

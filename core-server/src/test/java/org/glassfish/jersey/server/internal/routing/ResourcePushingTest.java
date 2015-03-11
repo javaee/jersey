@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,8 +65,8 @@ import static org.junit.Assert.assertNull;
 /**
  * Test getting matched resources from {@link ExtendedUriInfo}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class ResourcePushingTest {
 
@@ -76,6 +76,7 @@ public class ResourcePushingTest {
 
     @Path("root")
     public static class SimpleResource {
+
         @Inject
         private ExtendedUriInfo extendedUriInfo;
 
@@ -107,22 +108,22 @@ public class ResourcePushingTest {
 
     @Test
     public void testResourceMethod() throws ExecutionException, InterruptedException {
-        ApplicationHandler applicationHandler = getApplication();
-        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/root",
-                "GET").build()).get();
+        final ApplicationHandler applicationHandler = getApplication();
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/root", "GET").build()).get();
         assertEquals("root", response.getEntity());
     }
 
     @Test
     public void testChildResourceMethod() throws ExecutionException, InterruptedException {
-        ApplicationHandler applicationHandler = getApplication();
-        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/root/child",
-                "GET").build()).get();
+        final ApplicationHandler applicationHandler = getApplication();
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/root/child", "GET").build())
+                .get();
         assertEquals("child", response.getEntity());
     }
 
     @Path("locator-test")
     public static class ResourceWithLocator {
+
         @Path("/")
         public Class<SubResourceLocator> getResourceLocator() {
             return SubResourceLocator.class;
@@ -136,6 +137,7 @@ public class ResourcePushingTest {
     }
 
     public static class SubResourceLocator {
+
         @Inject
         private ExtendedUriInfo extendedUriInfo;
 
@@ -165,9 +167,9 @@ public class ResourcePushingTest {
         }
     }
 
-    private static String convertToString(List<RuntimeResource> matchedResources) {
-        StringBuffer sb = new StringBuffer();
-        for (RuntimeResource resource : matchedResources) {
+    private static String convertToString(final List<RuntimeResource> matchedResources) {
+        final StringBuilder sb = new StringBuilder();
+        for (final RuntimeResource resource : matchedResources) {
             final String path = resource.getRegex();
             sb.append(path == null ? "<no-path>" : path);
             sb.append(";");
@@ -184,10 +186,10 @@ public class ResourcePushingTest {
         _test(requestUri, expectedResourceList);
     }
 
-    private void _test(String requestUri, String expectedResourceList) throws InterruptedException, ExecutionException {
-        ApplicationHandler applicationHandler = getApplication();
-        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from(requestUri,
-                "GET").build()).get();
+    private void _test(final String requestUri, final String expectedResourceList) throws InterruptedException,
+            ExecutionException {
+        final ApplicationHandler applicationHandler = getApplication();
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from(requestUri, "GET").build()).get();
         assertEquals(200, response.getStatus());
         final String resources = (String) response.getEntity();
         assertEquals(expectedResourceList, resources);
@@ -208,7 +210,6 @@ public class ResourcePushingTest {
         _test("/locator-test/sublocator/subget", "/subget;<no-path>;/sublocator;/locator\\-test");
     }
 
-
     @Test
     public void testSubResourceLocatorRecursive() throws ExecutionException, InterruptedException {
         _test("/locator-test/sublocator/sub", "<no-path>;/sub;<no-path>;/sublocator;/locator\\-test");
@@ -216,7 +217,7 @@ public class ResourcePushingTest {
 
     @Test
     public void testSubResourceLocatorRecursive2() throws ExecutionException, InterruptedException {
-        _test("/locator-test/sublocator/sub/sub/subget",
-                "/subget;<no-path>;/sub;<no-path>;/sub;<no-path>;/sublocator;/locator\\-test");
+        _test("/locator-test/sublocator/sub/sub/subget", "/subget;<no-path>;/sub;<no-path>;/sub;<no-path>;/sublocator;"
+                + "/locator\\-test");
     }
 }

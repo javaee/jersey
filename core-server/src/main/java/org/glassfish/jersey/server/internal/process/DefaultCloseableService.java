@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,8 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class DefaultCloseableService implements CloseableService {
-    private final static Logger LOGGER = Logger.getLogger(DefaultCloseableService.class.getName());
+
+    private static final Logger LOGGER = Logger.getLogger(DefaultCloseableService.class.getName());
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final Set<Closeable> closeables = Sets.newIdentityHashSet();

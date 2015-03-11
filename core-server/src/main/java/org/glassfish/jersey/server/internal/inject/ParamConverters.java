@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,8 +56,10 @@ import javax.ws.rs.ext.ParamConverterProvider;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.HttpDateFormat;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -72,12 +74,12 @@ import org.glassfish.hk2.api.ServiceLocator;
 @Singleton
 class ParamConverters {
 
-    private static abstract class AbstractStringReader<T> implements ParamConverter<T> {
+    private abstract static class AbstractStringReader<T> implements ParamConverter<T> {
 
         @Override
         public T fromString(final String value) {
             if (value == null) {
-                throw new IllegalArgumentException("Supplied value is null");
+                throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
             }
             try {
                 return _fromString(value);
@@ -101,6 +103,9 @@ class ParamConverters {
 
         @Override
         public String toString(final T value) throws IllegalArgumentException {
+            if (value == null) {
+                throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
+            }
             return value.toString();
         }
 
@@ -114,7 +119,9 @@ class ParamConverters {
     public static class StringConstructor implements ParamConverterProvider {
 
         @Override
-        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType,
+                                                  final Type genericType,
+                                                  final Annotation[] annotations) {
 
             final Constructor constructor = AccessController.doPrivileged(ReflectionHelper.getStringConstructorPA(rawType));
 
@@ -137,7 +144,9 @@ class ParamConverters {
     public static class TypeValueOf implements ParamConverterProvider {
 
         @Override
-        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType,
+                                                  final Type genericType,
+                                                  final Annotation[] annotations) {
 
             final Method valueOf = AccessController.doPrivileged(ReflectionHelper.getValueOfStringMethodPA(rawType));
 
@@ -159,7 +168,9 @@ class ParamConverters {
     public static class TypeFromString implements ParamConverterProvider {
 
         @Override
-        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType,
+                                                  final Type genericType,
+                                                  final Annotation[] annotations) {
 
             final Method fromStringMethod = AccessController.doPrivileged(ReflectionHelper.getFromStringStringMethodPA(rawType));
 
@@ -181,8 +192,47 @@ class ParamConverters {
     public static class TypeFromStringEnum extends TypeFromString {
 
         @Override
-        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType,
+                                                  final Type genericType,
+                                                  final Annotation[] annotations) {
             return (!Enum.class.isAssignableFrom(rawType)) ? null : super.getConverter(rawType, genericType, annotations);
+        }
+    }
+
+    @Singleton
+    public static class CharacterProvider implements ParamConverterProvider {
+
+        @Override
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType,
+                                                  final Type genericType,
+                                                  final Annotation[] annotations) {
+            if (rawType.equals(Character.class)) {
+                return new ParamConverter<T>() {
+                    @Override
+                    public T fromString(String value) {
+                        if (value == null || value.isEmpty()) {
+                            return null;
+                            // throw new IllegalStateException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
+                        }
+
+                        if (value.length() == 1) {
+                            return rawType.cast(value.charAt(0));
+                        }
+
+                        throw new ExtractorException(LocalizationMessages.ERROR_PARAMETER_INVALID_CHAR_VALUE(value));
+                    }
+
+                    @Override
+                    public String toString(T value) {
+                        if (value == null) {
+                            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
+                        }
+                        return value.toString();
+                    }
+                };
+            }
+
+            return null;
         }
     }
 
@@ -195,13 +245,15 @@ class ParamConverters {
     public static class DateProvider implements ParamConverterProvider {
 
         @Override
-        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType,
+                                                  final Type genericType,
+                                                  final Annotation[] annotations) {
             return (rawType != Date.class) ? null : new ParamConverter<T>() {
 
                 @Override
                 public T fromString(final String value) {
                     if (value == null) {
-                        throw new IllegalArgumentException("Supplied value is null");
+                        throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
                     }
                     try {
                         return rawType.cast(HttpDateFormat.readDate(value));
@@ -212,6 +264,9 @@ class ParamConverters {
 
                 @Override
                 public String toString(final T value) throws IllegalArgumentException {
+                    if (value == null) {
+                        throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
+                    }
                     return value.toString();
                 }
             };
@@ -232,20 +287,22 @@ class ParamConverters {
          * @param locator HK2 service locator.
          */
         public AggregatedProvider(@Context final ServiceLocator locator) {
-            providers = new ParamConverterProvider[]{
+            providers = new ParamConverterProvider[] {
                     // ordering is important (e.g. Date provider must be executed before String Constructor
                     // as Date has a deprecated String constructor
                     locator.createAndInitialize(DateProvider.class),
                     locator.createAndInitialize(TypeFromStringEnum.class),
                     locator.createAndInitialize(TypeValueOf.class),
+                    locator.createAndInitialize(CharacterProvider.class),
                     locator.createAndInitialize(TypeFromString.class),
                     locator.createAndInitialize(StringConstructor.class),
-                    locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class)
             };
         }
 
         @Override
-        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType,
+                                                  final Type genericType,
+                                                  final Annotation[] annotations) {
             for (final ParamConverterProvider p : providers) {
                 // This iteration trough providers is important. It can't be replaced by just registering all the internal
                 // providers of this class. Using iteration trough array the correct ordering of providers is ensured (see

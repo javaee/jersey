@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.client;
 
 import javax.ws.rs.Consumes;
@@ -58,7 +59,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Test definition of path in client invocation.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  *
  */
 public class ClientPathTest extends JerseyTest {
@@ -75,8 +76,7 @@ public class ClientPathTest extends JerseyTest {
     public void pathParamInTargetTest() {
 
         Response response = client().target("http://localhost:" + getPort() + "/test/{beginBy}")
-                .resolveTemplate
-                        ("beginBy", "abc")
+                .resolveTemplate("beginBy", "abc")
                 .request(MediaType.TEXT_PLAIN_TYPE).get();
         assertEquals(200, response.getStatus());
         assertEquals("test-get,abc", response.readEntity(String.class));
@@ -93,7 +93,6 @@ public class ClientPathTest extends JerseyTest {
         assertEquals("test-path", response.readEntity(String.class));
     }
 
-
     /**
      * Tests path concatenation. (regression test for JERSEY-1114)
      */
@@ -104,7 +103,6 @@ public class ClientPathTest extends JerseyTest {
         assertEquals(200, response.getStatus());
         assertEquals("test-path", response.readEntity(String.class));
     }
-
 
     /**
      * Tests path concatenation. (regression test for JERSEY-1114)
@@ -145,6 +143,7 @@ public class ClientPathTest extends JerseyTest {
      */
     @Path("test/{beginBy}")
     public static class TestResourceWithPathParams {
+
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         @Consumes(MediaType.TEXT_PLAIN)
@@ -160,6 +159,7 @@ public class ClientPathTest extends JerseyTest {
      */
     @Path("path")
     public static class TestResource {
+
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         @Consumes(MediaType.TEXT_PLAIN)

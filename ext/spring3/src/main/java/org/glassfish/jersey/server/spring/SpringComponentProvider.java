@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,14 +45,15 @@ import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.spi.ComponentProvider;
+
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.spi.ComponentProvider;
 
 import org.jvnet.hk2.spring.bridge.api.SpringBridge;
 import org.jvnet.hk2.spring.bridge.api.SpringIntoHK2Bridge;
@@ -90,14 +91,14 @@ public class SpringComponentProvider implements ComponentProvider {
 
         ServletContext sc = locator.getService(ServletContext.class);
 
-        if(sc != null) {
+        if (sc != null) {
             // servlet container
             ctx = WebApplicationContextUtils.getWebApplicationContext(sc);
         } else {
             // non-servlet container
             ctx = createSpringContext();
         }
-        if(ctx == null) {
+        if (ctx == null) {
             LOGGER.severe(LocalizationMessages.CTX_LOOKUP_FAILED());
             return;
         }
@@ -123,16 +124,17 @@ public class SpringComponentProvider implements ComponentProvider {
             return false;
         }
 
-        if(AnnotationUtils.findAnnotation(component, Component.class) != null) {
+        if (AnnotationUtils.findAnnotation(component, Component.class) != null) {
             DynamicConfiguration c = Injections.getConfiguration(locator);
             String[] beanNames = ctx.getBeanNamesForType(component);
-            if(beanNames == null || beanNames.length != 1) {
+            if (beanNames == null || beanNames.length != 1) {
                 LOGGER.severe(LocalizationMessages.NONE_OR_MULTIPLE_BEANS_AVAILABLE(component));
                 return false;
             }
             String beanName = beanNames[0];
 
-            ServiceBindingBuilder bb = Injections.newFactoryBinder(new SpringComponentProvider.SpringManagedBeanFactory(ctx, locator, beanName));
+            ServiceBindingBuilder bb = Injections
+                    .newFactoryBinder(new SpringComponentProvider.SpringManagedBeanFactory(ctx, locator, beanName));
             bb.to(component);
             if (providerContracts != null) {
                 for (Class<?> providerContract : providerContracts) {
@@ -154,9 +156,11 @@ public class SpringComponentProvider implements ComponentProvider {
 
     private ApplicationContext createSpringContext() {
         ApplicationHandler applicationHandler = locator.getService(ApplicationHandler.class);
-        ApplicationContext springContext = (ApplicationContext) applicationHandler.getConfiguration().getProperty(PARAM_SPRING_CONTEXT);
+        ApplicationContext springContext = (ApplicationContext) applicationHandler.getConfiguration()
+                .getProperty(PARAM_SPRING_CONTEXT);
         if (springContext == null) {
-            String contextConfigLocation = (String) applicationHandler.getConfiguration().getProperty(PARAM_CONTEXT_CONFIG_LOCATION);
+            String contextConfigLocation = (String) applicationHandler.getConfiguration()
+                    .getProperty(PARAM_CONTEXT_CONFIG_LOCATION);
             springContext = createXmlSpringConfiguration(contextConfigLocation);
         }
         return springContext;
@@ -169,8 +173,8 @@ public class SpringComponentProvider implements ComponentProvider {
         return ctx = new ClassPathXmlApplicationContext(contextConfigLocation, "jersey-spring-applicationContext.xml");
     }
 
-
     private static class SpringManagedBeanFactory implements Factory {
+
         private final ApplicationContext ctx;
         private final ServiceLocator locator;
         private final String beanName;

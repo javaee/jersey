@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -91,6 +91,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ChunkedInputStreamClosedPrematurelyTest extends JerseyTest {
+
     private static final Logger LOGGER = Logger.getLogger(ChunkedInputStreamClosedPrematurelyTest.class.getName());
     private static final Exception NO_EXCEPTION = new Exception("No exception.");
 
@@ -101,7 +102,8 @@ public class ChunkedInputStreamClosedPrematurelyTest extends JerseyTest {
     @Path("/test")
     @SuppressWarnings({"ThrowableResultOfMethodCallIgnored", "JavaDoc"})
     public static class TestResource {
-        private final static ConcurrentMap<String, SettableFuture<Exception>> REQUEST_MAP = new ConcurrentHashMap<>();
+
+        private static final ConcurrentMap<String, SettableFuture<Exception>> REQUEST_MAP = new ConcurrentHashMap<>();
 
         @QueryParam(REQ_ID_PARAM_NAME)
         private String reqId;

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,6 @@ import org.glassfish.jersey.message.internal.HttpDateFormat;
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -56,6 +55,7 @@ import static org.junit.Assert.fail;
  * @author Imran@SmartITEngineering.Com
  */
 public class ContentDispositionTest {
+
     protected String contentDispositionType;
 
     public ContentDispositionTest() {
@@ -96,18 +96,15 @@ public class ContentDispositionTest {
             assertContentDisposition(contentDisposition, date);
             contentDisposition = new ContentDisposition(HttpHeaderReader.newInstance(header), true);
             assertContentDisposition(contentDisposition, date);
-        }
-        catch (final ParseException ex) {
+        } catch (final ParseException ex) {
             fail(ex.getMessage());
         }
         try {
             new ContentDisposition((HttpHeaderReader) null, true);
             fail("NullPointerException was expected to be thrown.");
-        }
-        catch (final ParseException exception) {
+        } catch (final ParseException exception) {
             fail(exception.getMessage());
-        }
-        catch (final NullPointerException exception) {
+        } catch (final NullPointerException exception) {
             //expected
         }
     }
@@ -123,7 +120,6 @@ public class ContentDispositionTest {
         assertEquals(header, contentDisposition.toString());
     }
 
-
     protected void assertContentDisposition(final ContentDisposition contentDisposition, Date date) {
         assertNotNull(contentDisposition);
         assertEquals(contentDispositionType, contentDisposition.getType());
@@ -133,7 +129,5 @@ public class ContentDispositionTest {
         assertEquals(date.toString(), contentDisposition.getCreationDate().toString());
         assertEquals(1222, contentDisposition.getSize());
     }
-
-
 
 }

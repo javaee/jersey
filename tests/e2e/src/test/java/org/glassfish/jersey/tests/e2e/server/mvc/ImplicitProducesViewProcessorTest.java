@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.server.mvc;
 
 import java.io.IOException;
@@ -63,7 +62,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class ImplicitProducesViewProcessorTest extends JerseyTest {
@@ -83,7 +82,7 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
 
     @Path("/implicit")
     @Template
-    @Produces("text/plain;qs=5")
+    @Produces("text/plain;qs=.5")
     public static class ImplicitTemplate {
 
         public String toString() {
@@ -99,37 +98,42 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
         Response cr = target.request("text/plain", "application/foo").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitTemplate/index.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitTemplate/index.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitTemplate", p.getProperty("model"));
 
         p = new Properties();
         cr = target.request("application/foo", "text/plain").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitTemplate/index.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitTemplate/index.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitTemplate", p.getProperty("model"));
 
         p = new Properties();
         cr = target.request("text/plain;q=0.5", "application/foo").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitTemplate/index.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitTemplate/index.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitTemplate", p.getProperty("model"));
 
         p = new Properties();
         cr = target.request("application/foo", "text/plain;q=0.5").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitTemplate/index.testp", p.getProperty("path"));
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitTemplate/index.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitTemplate", p.getProperty("model"));
     }
 
     @Path("/implicit-get")
     @Template
-    @Produces("text/plain;qs=5")
+    @Produces("text/plain;qs=0.5")
     public static class ImplicitWithGetTemplate {
+
         @GET
-        @Produces("application/foo")
+        @Produces("application/foo;qs=0.2")
         public String toString() {
             return "ImplicitWithGetTemplate";
         }
@@ -143,35 +147,50 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
         Response cr = target.request("text/plain", "application/foo").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithGetTemplate/index.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithGetTemplate/index"
+                        + ".testp",
+                p.getProperty("path"));
         assertEquals("ImplicitWithGetTemplate", p.getProperty("model"));
 
         p = new Properties();
         cr = target.request("application/foo", "text/plain").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithGetTemplate/index.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithGetTemplate/index"
+                        + ".testp",
+                p.getProperty("path"));
         assertEquals("ImplicitWithGetTemplate", p.getProperty("model"));
 
         p = new Properties();
         cr = target.request("text/plain", "application/foo;q=0.5").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithGetTemplate/index.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithGetTemplate/index"
+                        + ".testp",
+                p.getProperty("path"));
         assertEquals("ImplicitWithGetTemplate", p.getProperty("model"));
 
         p = new Properties();
         cr = target.request("application/foo;q=0.5", "text/plain").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithGetTemplate/index.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithGetTemplate/index"
+                        + ".testp",
+                p.getProperty("path"));
         assertEquals("ImplicitWithGetTemplate", p.getProperty("model"));
 
         p = new Properties();
         cr = target.request("*/*").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithGetTemplate/index.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithGetTemplate/index"
+                        + ".testp",
+                p.getProperty("path"));
         assertEquals("ImplicitWithGetTemplate", p.getProperty("model"));
 
         cr = target.request("text/plain;q=0.5", "application/foo").get(Response.class);
@@ -181,12 +200,12 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
 
     @Path("/implicit-get-subresource")
     @Template
-    @Produces("text/plain;qs=5")
+    @Produces("text/plain;qs=0.5")
     public static class ImplicitWithSubResourceGetTemplate {
 
         @GET
         @Path("sub")
-        @Produces("application/foo")
+        @Produces("application/foo;qs=0.2")
         public String toString() {
             return "ImplicitWithSubResourceGetTemplate";
         }
@@ -200,28 +219,40 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
         Response cr = target.request("text/plain", "application/foo").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithSubResourceGetTemplate/sub.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest"
+                        + "/ImplicitWithSubResourceGetTemplate/sub.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitWithSubResourceGetTemplate", p.getProperty("model"));
 
         p = new Properties();
         cr = target.request("application/foo", "text/plain").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithSubResourceGetTemplate/sub.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest"
+                        + "/ImplicitWithSubResourceGetTemplate/sub.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitWithSubResourceGetTemplate", p.getProperty("model"));
 
         p = new Properties();
         cr = target.request("text/plain", "application/foo;q=0.5").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithSubResourceGetTemplate/sub.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest"
+                        + "/ImplicitWithSubResourceGetTemplate/sub.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitWithSubResourceGetTemplate", p.getProperty("model"));
 
         p = new Properties();
         cr = target.request("application/foo;q=0.5", "text/plain").get(Response.class);
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest/ImplicitWithSubResourceGetTemplate/sub.testp", p.getProperty("path"));
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ImplicitProducesViewProcessorTest"
+                        + "/ImplicitWithSubResourceGetTemplate/sub.testp",
+                p.getProperty("path"));
         assertEquals("ImplicitWithSubResourceGetTemplate", p.getProperty("model"));
 
         assertEquals("ImplicitWithSubResourceGetTemplate", target.request("application/foo").get(String.class));

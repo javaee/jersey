@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -81,11 +81,11 @@ public class BasicResource {
         return path + '_' + matrix + '_' + query + '_' + header + '_' + cookie + '_' + form;
     }
 
-     @POST
-     @Path("basicParam/{path: .*}")
-     @Consumes("application/x-www-form-urlencoded")
-     @SuppressWarnings("UnusedParameters")
-     public String validateParametersBasicConstraint(
+    @POST
+    @Path("basicParam/{path: .*}")
+    @Consumes("application/x-www-form-urlencoded")
+    @SuppressWarnings("UnusedParameters")
+    public String validateParametersBasicConstraint(
             @NotNull @PathParam("path") final String path,
             @NotNull @MatrixParam("matrix") final String matrix,
             @NotNull @QueryParam("query") final String query,
@@ -192,7 +192,8 @@ public class BasicResource {
     @Path("validBeanResponse")
     @Consumes("application/contactBean")
     @Produces("application/contactBean")
-    @NotNull @Valid
+    @NotNull
+    @Valid
     public ContactBean validateValidBeanResponseConstraint(final ContactBean bean) {
         return bean;
     }
@@ -201,7 +202,8 @@ public class BasicResource {
     @Path("validBeanWrappedInResponse")
     @Consumes("application/contactBean")
     @Produces("application/contactBean")
-    @NotNull @Valid
+    @NotNull
+    @Valid
     public Response validateValidBeanWrappedInResponseConstraint(final ContactBean bean) {
         return Response.ok(bean).type("application/contactBean").build();
     }

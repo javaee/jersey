@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,15 +64,14 @@ public class AccessTokenResource {
     @Inject
     private OAuth1Signature oAuth1Signature;
 
-
     @POST
     @Produces("text/plain")
     public String post(@Context ContainerRequestContext request) {
 
         OAuthServerRequest osr = new OAuthServerRequest(request);
 
-        OAuth1Secrets secrets = new OAuth1Secrets().
-                consumerSecret("kd94hf93k423kf44").tokenSecret("hdhd0244k9j7ao03");
+        OAuth1Secrets secrets = new OAuth1Secrets()
+                .consumerSecret("kd94hf93k423kf44").tokenSecret("hdhd0244k9j7ao03");
 
         OAuth1Parameters params = new OAuth1Parameters().readRequest(osr);
 
@@ -94,7 +93,6 @@ public class AccessTokenResource {
 
         return "oauth_token=nnch734d00sl2jdk&oauth_token_secret=pfkkdhi9sl3r4s00";
     }
-
 
 }
 

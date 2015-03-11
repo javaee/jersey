@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,8 +55,8 @@ import org.glassfish.jersey.server.mvc.Viewable;
 @Path("/")
 public class Issue2031Resource {
 
-    private final static Model model;
-    private final static String absolutePath;
+    private static final Model model;
+    private static final String absolutePath;
 
     static {
         absolutePath = "/" + Issue2031Resource.class.getName().replaceAll("\\.", "/").replace('$', '/') + "/index.jsp";

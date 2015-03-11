@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.util.ArrayList;
@@ -53,7 +54,6 @@ import javax.ws.rs.ext.ParamConverter;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 
-
 /**
  * Extract parameter value as a typed collection.
  *
@@ -61,8 +61,8 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> implements
-        MultivaluedParameterExtractor<Collection<T>> {
+abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T>
+        implements MultivaluedParameterExtractor<Collection<T>> {
 
     /**
      * Create new collection parameter extractor.
@@ -71,18 +71,20 @@ abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> imp
      * @param parameterName      parameter name.
      * @param defaultStringValue default parameter String value.
      */
-    protected CollectionExtractor(ParamConverter<T> converter, String parameterName, String defaultStringValue) {
+    protected CollectionExtractor(final ParamConverter<T> converter,
+                                  final String parameterName,
+                                  final String defaultStringValue) {
         super(converter, parameterName, defaultStringValue);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Collection<T> extract(MultivaluedMap<String, String> parameters) {
+    public Collection<T> extract(final MultivaluedMap<String, String> parameters) {
         final List<String> stringList = parameters.get(getName());
 
         final Collection<T> valueList = newCollection();
         if (stringList != null) {
-            for (String v : stringList) {
+            for (final String v : stringList) {
                 valueList.add(fromString(v));
             }
         } else if (isDefaultValueRegistered()) {
@@ -94,7 +96,7 @@ abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> imp
 
     /**
      * Get a new collection instance that will be used to store the extracted parameters.
-     *
+     * <p/>
      * The method is overridden by concrete implementations to return an instance
      * of a proper collection sub-type.
      *
@@ -104,37 +106,37 @@ abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> imp
 
     private static final class ListValueOf<T> extends CollectionExtractor<T> {
 
-        ListValueOf(ParamConverter<T> converter, String parameter, String defaultValueString) {
+        ListValueOf(final ParamConverter<T> converter, final String parameter, final String defaultValueString) {
             super(converter, parameter, defaultValueString);
         }
 
         @Override
         protected List<T> newCollection() {
-            return new ArrayList<T>();
+            return new ArrayList<>();
         }
     }
 
     private static final class SetValueOf<T> extends CollectionExtractor<T> {
 
-        SetValueOf(ParamConverter<T> converter, String parameter, String defaultValueString) {
+        SetValueOf(final ParamConverter<T> converter, final String parameter, final String defaultValueString) {
             super(converter, parameter, defaultValueString);
         }
 
         @Override
         protected Set<T> newCollection() {
-            return new HashSet<T>();
+            return new HashSet<>();
         }
     }
 
     private static final class SortedSetValueOf<T> extends CollectionExtractor<T> {
 
-        SortedSetValueOf(ParamConverter<T> converter, String parameter, String defaultValueString) {
+        SortedSetValueOf(final ParamConverter<T> converter, final String parameter, final String defaultValueString) {
             super(converter, parameter, defaultValueString);
         }
 
         @Override
         protected SortedSet<T> newCollection() {
-            return new TreeSet<T>();
+            return new TreeSet<>();
         }
     }
 
@@ -149,16 +151,16 @@ abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> imp
      * @param <T>                converted parameter Java type.
      * @return new collection parameter extractor instance.
      */
-    public static <T> CollectionExtractor getInstance(Class<?> collectionType,
-                                                      ParamConverter<T> converter,
-                                                      String parameterName,
-                                                      String defaultValueString) {
+    public static <T> CollectionExtractor getInstance(final Class<?> collectionType,
+                                                      final ParamConverter<T> converter,
+                                                      final String parameterName,
+                                                      final String defaultValueString) {
         if (List.class == collectionType) {
-            return new ListValueOf<T>(converter, parameterName, defaultValueString);
+            return new ListValueOf<>(converter, parameterName, defaultValueString);
         } else if (Set.class == collectionType) {
-            return new SetValueOf<T>(converter, parameterName, defaultValueString);
+            return new SetValueOf<>(converter, parameterName, defaultValueString);
         } else if (SortedSet.class == collectionType) {
-            return new SortedSetValueOf<T>(converter, parameterName, defaultValueString);
+            return new SortedSetValueOf<>(converter, parameterName, defaultValueString);
         } else {
             throw new ProcessingException(LocalizationMessages.COLLECTION_EXTRACTOR_TYPE_UNSUPPORTED());
         }

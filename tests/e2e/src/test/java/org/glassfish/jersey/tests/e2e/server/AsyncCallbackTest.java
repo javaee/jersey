@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,21 +66,22 @@ import org.junit.Test;
 /**
  * Tests {@link ConnectionCallback connection callback}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class AsyncCallbackTest extends JerseyTest {
+
     public static final AtomicBoolean onDisconnectCalled = new AtomicBoolean(false);
 
     public static CountDownLatch streamClosedSignal;
     public static CountDownLatch callbackCalledSignal;
 
-
     @Path("resource")
     public static class Resource {
+
         @GET
         @ManagedAsync
         @Path("outputStream")
-        public void get(final @Suspended AsyncResponse asyncResponse) throws IOException, InterruptedException {
+        public void get(@Suspended final AsyncResponse asyncResponse) throws IOException, InterruptedException {
             asyncResponse.register(MyConnectionCallback.class);
             final InputStream is = new InputStream() {
                 private int counter = 0;
@@ -108,6 +109,7 @@ public class AsyncCallbackTest extends JerseyTest {
     }
 
     public static class TestLatch extends CountDownLatch {
+
         private final String name;
         private final int multiplier;
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,9 +51,10 @@ import javax.ws.rs.core.Response;
 /**
  * Application class with test resource that returns custom status reason phrase.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class Jersey1829 extends Application {
+
     public static final String REASON_PHRASE = "my-phrase";
 
     @SuppressWarnings("unchecked")
@@ -64,6 +65,7 @@ public class Jersey1829 extends Application {
 
     @Path("resource")
     public static class TestResource {
+
         @GET
         @Path("428")
         public Response get() {
@@ -77,16 +79,22 @@ public class Jersey1829 extends Application {
         }
     }
 
-
     public static class Custom428Type implements Response.StatusType {
-        @Override
-        public int getStatusCode() { return 428; }
 
         @Override
-        public String getReasonPhrase() { return REASON_PHRASE; }
+        public int getStatusCode() {
+            return 428;
+        }
 
         @Override
-        public Response.Status.Family getFamily() { return Response.Status.Family.CLIENT_ERROR; }
+        public String getReasonPhrase() {
+            return REASON_PHRASE;
+        }
+
+        @Override
+        public Response.Status.Family getFamily() {
+            return Response.Status.Family.CLIENT_ERROR;
+        }
     }
 
 }

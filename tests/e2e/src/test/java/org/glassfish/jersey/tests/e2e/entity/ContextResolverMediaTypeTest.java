@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.entity;
 
 import java.io.IOException;
@@ -63,8 +64,8 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Paul Sandoz
+ * @author Martin Matula
  */
 @RunWith(Enclosed.class)
 public class ContextResolverMediaTypeTest {
@@ -73,6 +74,7 @@ public class ContextResolverMediaTypeTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class TextPlainContextResolver implements ContextResolver<String> {
+
         public String getContext(Class<?> objectType) {
             return "text/plain";
         }
@@ -82,6 +84,7 @@ public class ContextResolverMediaTypeTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class TextContextResolver implements ContextResolver<String> {
+
         public String getContext(Class<?> objectType) {
             return "text/*";
         }
@@ -91,6 +94,7 @@ public class ContextResolverMediaTypeTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class WildcardContextResolver implements ContextResolver<String> {
+
         public String getContext(Class<?> objectType) {
             return "*/*";
         }
@@ -100,6 +104,7 @@ public class ContextResolverMediaTypeTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class TextPlainHtmlContextResolver implements ContextResolver<String> {
+
         public String getContext(Class<?> objectType) {
             return "text/plain/html";
         }
@@ -110,6 +115,7 @@ public class ContextResolverMediaTypeTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class TextHtmlContextResolver implements ContextResolver<String> {
+
         public String getContext(Class<?> objectType) {
             return "text/html";
         }
@@ -119,6 +125,7 @@ public class ContextResolverMediaTypeTest {
     @Path("/")
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class ContextResource {
+
         @Context
         Providers p;
 
@@ -134,14 +141,16 @@ public class ContextResolverMediaTypeTest {
             ContextResolver<String> cachedCr = p.getContextResolver(String.class, m);
             assertEquals(cr, cachedCr);
 
-            if (cr == null)
+            if (cr == null) {
                 return "NULL";
-            else
+            } else {
                 return cr.getContext(null);
+            }
         }
     }
 
     public static class ProduceTest extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(ContextResource.class,
@@ -167,6 +176,7 @@ public class ContextResolverMediaTypeTest {
     }
 
     public static class ProducesTest extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(ContextResource.class,
@@ -192,6 +202,7 @@ public class ContextResolverMediaTypeTest {
     }
 
     public static class ProducesSeparateTest extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(ContextResource.class,
@@ -218,6 +229,7 @@ public class ContextResolverMediaTypeTest {
     }
 
     public static class ProducesXXXTest extends JerseyTest {
+
         @Override
         protected Application configure() {
             return new ResourceConfig(ContextResource.class,

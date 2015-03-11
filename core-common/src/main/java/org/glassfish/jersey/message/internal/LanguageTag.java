@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,26 +50,26 @@ import java.util.Locale;
  */
 public class LanguageTag {
 
-    protected String tag;
-    protected String primaryTag;
-    protected String subTags;
+    String tag;
+    String primaryTag;
+    String subTags;
 
     protected LanguageTag() {
     }
 
-    public static LanguageTag valueOf(String s) throws IllegalArgumentException {
-        LanguageTag lt = new LanguageTag();
+    public static LanguageTag valueOf(final String s) throws IllegalArgumentException {
+        final LanguageTag lt = new LanguageTag();
 
         try {
             lt.parse(s);
-        } catch (ParseException pe) {
+        } catch (final ParseException pe) {
             throw new IllegalArgumentException(pe);
         }
 
         return lt;
     }
 
-    public LanguageTag(String primaryTag, String subTags) {
+    public LanguageTag(final String primaryTag, final String subTags) {
         if (subTags != null && subTags.length() > 0) {
             this.tag = primaryTag + "-" + subTags;
         } else {
@@ -81,15 +81,15 @@ public class LanguageTag {
         this.subTags = subTags;
     }
 
-    public LanguageTag(String header) throws ParseException {
+    public LanguageTag(final String header) throws ParseException {
         this(HttpHeaderReader.newInstance(header));
     }
 
-    public LanguageTag(HttpHeaderReader reader) throws ParseException {
+    public LanguageTag(final HttpHeaderReader reader) throws ParseException {
         // Skip any white space
         reader.hasNext();
 
-        tag = reader.nextToken();
+        tag = reader.nextToken().toString();
 
         if (reader.hasNext()) {
             throw new ParseException("Invalid Language tag", reader.getIndex());
@@ -98,7 +98,7 @@ public class LanguageTag {
         parse(tag);
     }
 
-    public final boolean isCompatible(Locale tag) {
+    public final boolean isCompatible(final Locale tag) {
         if (this.tag.equals("*")) {
             return true;
         }
@@ -117,12 +117,12 @@ public class LanguageTag {
                 : new Locale(primaryTag, subTags);
     }
 
-    protected final void parse(String languageTag) throws ParseException {
+    protected final void parse(final String languageTag) throws ParseException {
         if (!isValid(languageTag)) {
             throw new ParseException("String, " + languageTag + ", is not a valid language tag", 0);
         }
 
-        int index = languageTag.indexOf('-');
+        final int index = languageTag.indexOf('-');
         if (index == -1) {
             primaryTag = languageTag;
             subTags = null;
@@ -138,7 +138,7 @@ public class LanguageTag {
      * @param tag accept-language header value.
      * @return {@code true} if the given value is valid language tag, {@code false} instead.
      */
-    private boolean isValid(String tag) {
+    private boolean isValid(final String tag) {
         int alphanumCount = 0;
         int dash = 0;
         for (int i = 0; i < tag.length(); i++) {
@@ -174,46 +174,32 @@ public class LanguageTag {
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (object == null || getClass() != object.getClass()) {
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof LanguageTag) || o.getClass() == this.getClass()) {
             return false;
         }
-        LanguageTag lt = (LanguageTag) object;
 
-        if (this.tag != null) {
-            if (!this.tag.equals(lt.getTag())) {
-                return false;
-            } else if (lt.getTag() != null) {
-                return false;
-            }
+        final LanguageTag that = (LanguageTag) o;
+
+        if (primaryTag != null ? !primaryTag.equals(that.primaryTag) : that.primaryTag != null) {
+            return false;
         }
-
-        if (this.primaryTag != null) {
-            if (!this.primaryTag.equals(lt.getPrimaryTag())) {
-                return false;
-            } else if (lt.getPrimaryTag() != null) {
-                return false;
-            }
+        if (subTags != null ? !subTags.equals(that.subTags) : that.subTags != null) {
+            return false;
         }
+        return !(tag != null ? !tag.equals(that.tag) : that.tag != null);
 
-        if (this.subTags != null) {
-            if (!this.subTags.equals(lt.getSubTags())) {
-                return false;
-            } else if (lt.getSubTags() != null) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 47 * hash + (this.tag != null ? this.tag.hashCode() : 0);
-        hash = 47 * hash + (this.primaryTag != null ? this.primaryTag.hashCode() : 0);
-        hash = 47 * hash + (this.subTags != null ? this.subTags.hashCode() : 0);
-        return hash;
+        int result = tag != null ? tag.hashCode() : 0;
+        result = 31 * result + (primaryTag != null ? primaryTag.hashCode() : 0);
+        result = 31 * result + (subTags != null ? subTags.hashCode() : 0);
+        return result;
     }
 
     @Override

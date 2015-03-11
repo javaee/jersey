@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -74,7 +74,8 @@ import static org.junit.Assert.assertNotEquals;
  */
 public class ProxyInjectablesTest extends AbstractTest {
 
-    public static final Class<RequestContextBuilder.TestContainerRequest> REQUEST_CLASS = RequestContextBuilder.TestContainerRequest.class;
+    public static final Class<RequestContextBuilder.TestContainerRequest> REQUEST_CLASS = RequestContextBuilder
+            .TestContainerRequest.class;
 
     private ContainerResponse resource(String uri) throws Exception {
         return apply(RequestContextBuilder.from(uri, "GET").build());
@@ -88,7 +89,6 @@ public class ProxyInjectablesTest extends AbstractTest {
             requestContext.setSecurityContext(new MySecurityContext());
         }
     }
-
 
     private static class MySecurityContext implements SecurityContext {
 
@@ -133,7 +133,6 @@ public class ProxyInjectablesTest extends AbstractTest {
         @Context
         SecurityContext sc;
 
-
         @GET
         public String get() {
             assertEquals(UriRoutingContext.class, ui.getClass());
@@ -174,6 +173,7 @@ public class ProxyInjectablesTest extends AbstractTest {
 
     @Path("/")
     public static class PerRequestContextMethodParameterResource {
+
         @GET
         public String get(
                 @Context UriInfo ui,
@@ -192,6 +192,7 @@ public class ProxyInjectablesTest extends AbstractTest {
     @Path("/")
     @Singleton
     public static class SingletonContextMethodParameterResource {
+
         @GET
         public String get(
                 @Context UriInfo ui,
@@ -241,7 +242,8 @@ public class ProxyInjectablesTest extends AbstractTest {
      */
     public static class MyFieldInjectedBean {
 
-        @Context Request request;
+        @Context
+        Request request;
     }
 
     /**

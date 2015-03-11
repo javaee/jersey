@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,7 +61,6 @@ import com.sun.research.ws.wadl.Request;
 import com.sun.research.ws.wadl.Resource;
 import com.sun.research.ws.wadl.Resources;
 import com.sun.research.ws.wadl.Response;
-
 
 /**
  * A WadlGenerator creates artifacts related to wadl. This is designed as an interface,
@@ -143,6 +142,7 @@ public interface WadlGenerator {
      * to allow other parts of the code to attach the correct grammar information
      */
     public interface Resolver {
+
         /**
          * @param type The type of the class
          * @return The schema type of the class if defined, null if not.
@@ -177,7 +177,9 @@ public interface WadlGenerator {
             found:
             for (Resolver resolver : typeResolvers) {
                 name = resolver.resolve(type);
-                if (name != null) break found;
+                if (name != null) {
+                    break found;
+                }
             }
             return name;
         }

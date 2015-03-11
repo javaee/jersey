@@ -53,6 +53,7 @@ import java.util.logging.Logger;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public final class ExtendedLogger {
+
     @SuppressWarnings("NonConstantLogger")
     private final Logger logger;
     private final Level debugLevel;
@@ -117,7 +118,8 @@ public final class ExtendedLogger {
             }
             messageArguments[messageArguments.length - 1] = Thread.currentThread().getName();
 
-            logger.log(debugLevel, "[DEBUG] " + messageTemplate + " on thread {" + (messageArguments.length - 1) + '}', messageArguments);
+            logger.log(debugLevel, "[DEBUG] " + messageTemplate + " on thread {" + (messageArguments.length - 1) + '}',
+                    messageArguments);
         }
     }
 
@@ -125,7 +127,6 @@ public final class ExtendedLogger {
     public String toString() {
         return "ExtendedLogger{" + "logger=" + logger + ", debugLevel=" + debugLevel + '}';
     }
-
 
     @Override
     public boolean equals(final Object obj) {
@@ -185,31 +186,62 @@ public final class ExtendedLogger {
         logger.removeHandler(handler);
     }
 
-    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Throwable thrown) {
+    public void logrb(final Level level,
+                      final String sourceClass,
+                      final String sourceMethod,
+                      final String bundleName,
+                      final String msg,
+                      final Throwable thrown) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg, thrown);
     }
 
-    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Object[] params) {
+    public void logrb(final Level level,
+                      final String sourceClass,
+                      final String sourceMethod,
+                      final String bundleName,
+                      final String msg,
+                      final Object[] params) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg, params);
     }
 
-    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Object param1) {
+    public void logrb(final Level level,
+                      final String sourceClass,
+                      final String sourceMethod,
+                      final String bundleName,
+                      final String msg,
+                      final Object param1) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg, param1);
     }
 
-    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg) {
+    public void logrb(final Level level,
+                      final String sourceClass,
+                      final String sourceMethod,
+                      final String bundleName,
+                      final String msg) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg);
     }
 
-    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg, final Throwable thrown) {
+    public void logp(final Level level,
+                     final String sourceClass,
+                     final String sourceMethod,
+                     final String msg,
+                     final Throwable thrown) {
         logger.logp(level, sourceClass, sourceMethod, msg, thrown);
     }
 
-    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg, final Object[] params) {
+    public void logp(final Level level,
+                     final String sourceClass,
+                     final String sourceMethod,
+                     final String msg,
+                     final Object[] params) {
         logger.logp(level, sourceClass, sourceMethod, msg, params);
     }
 
-    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg, final Object param1) {
+    public void logp(final Level level,
+                     final String sourceClass,
+                     final String sourceMethod,
+                     final String msg,
+                     final Object param1) {
         logger.logp(level, sourceClass, sourceMethod, msg, param1);
     }
 

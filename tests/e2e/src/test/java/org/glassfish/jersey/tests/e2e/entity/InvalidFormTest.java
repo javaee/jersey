@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,16 +53,19 @@ import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  */
 public class InvalidFormTest extends AbstractTypeTester {
-    public static abstract class Resource<T> {
+
+    public abstract static class Resource<T> {
+
         @POST
-        public void post(T t) { }
+        public void post(T t) {
+        }
     }
 
     @Path("multivaluedmap")
-    public static class FormMultivaluedMapResource extends Resource<MultivaluedMap<String, String>> { }
+    public static class FormMultivaluedMapResource extends Resource<MultivaluedMap<String, String>> {}
 
     @Test
     public void testFormMultivaluedMapRepresentation() {
@@ -70,7 +73,7 @@ public class InvalidFormTest extends AbstractTypeTester {
     }
 
     @Path("form")
-    public static class FormResource extends Resource<Form> { }
+    public static class FormResource extends Resource<Form> {}
 
     @Test
     public void testRepresentation() {

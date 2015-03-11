@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Taken from Jersey-1: jersey-tests: com.sun.jersey.impl.methodparams.PathParamAsPrimitiveTest
  *
- * @author Paul.Sandoz at Sun.Com
+ * @author Paul Sandoz
  */
 public class PathParamAsPrimitiveTest {
 
@@ -68,6 +68,7 @@ public class PathParamAsPrimitiveTest {
         app = createApplication(
                 ResourceUriBoolean.class,
                 ResourceUriByte.class,
+                ResourceUriCharacter.class,
                 ResourceUriShort.class,
                 ResourceUriInt.class,
                 ResourceUriLong.class,
@@ -75,6 +76,7 @@ public class PathParamAsPrimitiveTest {
                 ResourceUriDouble.class,
                 ResourceUriBooleanWrapper.class,
                 ResourceUriByteWrapper.class,
+                ResourceUriCharacterWrapper.class,
                 ResourceUriShortWrapper.class,
                 ResourceUriIntWrapper.class,
                 ResourceUriLongWrapper.class,
@@ -98,6 +100,15 @@ public class PathParamAsPrimitiveTest {
         @GET
         public String doGet(@PathParam("arg") byte v) {
             assertEquals(127, v);
+            return "content";
+        }
+    }
+    @Path("/char/{arg}")
+    public static class ResourceUriCharacter {
+
+        @GET
+        public String doGet(@PathParam("arg") char v) {
+            assertEquals('c', v);
             return "content";
         }
     }
@@ -172,6 +183,16 @@ public class PathParamAsPrimitiveTest {
         }
     }
 
+    @Path("/char/wrapper/{arg}")
+    public static class ResourceUriCharacterWrapper {
+
+        @GET
+        public String doGet(@PathParam("arg") Character v) {
+            assertEquals('c', v.charValue());
+            return "content";
+        }
+    }
+
     @Path("/short/wrapper/{arg}")
     public static class ResourceUriShortWrapper {
 
@@ -235,6 +256,11 @@ public class PathParamAsPrimitiveTest {
     @Test
     public void testGetByte() throws Exception {
         _test("byte", "127");
+    }
+
+    @Test
+    public void testGetCharacter() throws Exception {
+        _test("char", "c");
     }
 
     @Test

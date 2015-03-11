@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.media.multipart;
 
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ import static org.junit.Assert.fail;
 /**
  * Unit tests for {@link ParameterizedHeadersMap}.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class ParameterizedHeadersMapTest {
@@ -87,7 +88,7 @@ public class ParameterizedHeadersMapTest {
         List<ParameterizedHeader> values = map.get("foo");
 
         assertNotNull(values);
-        assertEquals(1,values.size());
+        assertEquals(1, values.size());
         assertEquals("bar", values.get(0).getValue());
 
         map.add("foo", new ParameterizedHeader("baz"));
@@ -141,7 +142,7 @@ public class ParameterizedHeadersMapTest {
      */
     @Test
     public void testContainsValue() throws Exception {
-        List<ParameterizedHeader> values = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> values = new ArrayList<>();
         values.add(new ParameterizedHeader("bar"));
         values.add(new ParameterizedHeader("bop"));
 
@@ -157,13 +158,13 @@ public class ParameterizedHeadersMapTest {
      */
     @Test
     public void testEntrySet() throws Exception {
-        List<ParameterizedHeader> valuesFoo = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> valuesFoo = new ArrayList<>();
         valuesFoo.add(new ParameterizedHeader("foo1"));
         valuesFoo.add(new ParameterizedHeader("foo2"));
 
         map.put("foo", valuesFoo);
 
-        List<ParameterizedHeader> valuesBar = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> valuesBar = new ArrayList<>();
         valuesBar.add(new ParameterizedHeader("bar1"));
         valuesBar.add(new ParameterizedHeader("bar2"));
 
@@ -201,14 +202,14 @@ public class ParameterizedHeadersMapTest {
     public void testEqualsAndHashCode() throws Exception {
         ParameterizedHeadersMap map2 = new ParameterizedHeadersMap();
 
-        List<ParameterizedHeader> valuesFoo = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> valuesFoo = new ArrayList<>();
         valuesFoo.add(new ParameterizedHeader("foo1"));
         valuesFoo.add(new ParameterizedHeader("foo2"));
 
         map.put("foo", valuesFoo);
         map2.put("foo", valuesFoo);
 
-        List<ParameterizedHeader> valuesBar = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> valuesBar = new ArrayList<>();
         valuesBar.add(new ParameterizedHeader("bar1"));
         valuesBar.add(new ParameterizedHeader("bar2"));
 
@@ -274,7 +275,7 @@ public class ParameterizedHeadersMapTest {
 
     @Test
     public void testParameters() throws Exception {
-        ParameterizedHeader header = null;
+        ParameterizedHeader header;
         header = new ParameterizedHeader("foo");
 
         assertEquals("foo", header.getValue());
@@ -293,7 +294,7 @@ public class ParameterizedHeadersMapTest {
      */
     @Test
     public void testPut() throws Exception {
-        List<ParameterizedHeader> fooValues1 = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> fooValues1 = new ArrayList<>();
         fooValues1.add(new ParameterizedHeader("foo1"));
         fooValues1.add(new ParameterizedHeader("foo2"));
 
@@ -305,7 +306,7 @@ public class ParameterizedHeadersMapTest {
         assertTrue(map.containsValue(fooValues1));
         assertTrue(map.get("foo") == fooValues1);
 
-        List<ParameterizedHeader> fooValues2 = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> fooValues2 = new ArrayList<>();
         fooValues2.add(new ParameterizedHeader("foo3"));
         fooValues2.add(new ParameterizedHeader("foo4"));
 
@@ -323,15 +324,15 @@ public class ParameterizedHeadersMapTest {
      */
     @Test
     public void testPutAll() throws Exception {
-        Map<String, List<ParameterizedHeader>> all = new HashMap<String, List<ParameterizedHeader>>();
+        Map<String, List<ParameterizedHeader>> all = new HashMap<>();
 
-        List<ParameterizedHeader> fooValues = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> fooValues = new ArrayList<>();
         fooValues.add(new ParameterizedHeader("foo1"));
         fooValues.add(new ParameterizedHeader("foo2"));
 
         all.put("foo", fooValues);
 
-        List<ParameterizedHeader> barValues = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> barValues = new ArrayList<>();
         barValues.add(new ParameterizedHeader("bar1"));
         barValues.add(new ParameterizedHeader("bar2"));
 
@@ -354,7 +355,7 @@ public class ParameterizedHeadersMapTest {
      */
     @Test
     public void testPutSingle() throws Exception {
-        List<ParameterizedHeader> values = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> values = new ArrayList<>();
         values.add(new ParameterizedHeader("bar"));
         values.add(new ParameterizedHeader("baz"));
 
@@ -417,15 +418,15 @@ public class ParameterizedHeadersMapTest {
      */
     @Test
     public void testValues() throws Exception {
-        Map<String,List<ParameterizedHeader>> all = new HashMap<String,List<ParameterizedHeader>>();
+        Map<String, List<ParameterizedHeader>> all = new HashMap<>();
 
-        List<ParameterizedHeader> fooValues = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> fooValues = new ArrayList<>();
         fooValues.add(new ParameterizedHeader("foo1"));
         fooValues.add(new ParameterizedHeader("foo2"));
 
         all.put("foo", fooValues);
 
-        List<ParameterizedHeader> barValues = new ArrayList<ParameterizedHeader>();
+        List<ParameterizedHeader> barValues = new ArrayList<>();
         barValues.add(new ParameterizedHeader("bar1"));
         barValues.add(new ParameterizedHeader("bar2"));
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,14 +65,17 @@ public class JsonJacksonTest extends AbstractJsonOsgiIntegrationTest {
                 // vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
 
                 mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-json-jackson").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.jersey.ext").artifactId("jersey-entity-filtering").versionAsInProject(),
 
                 // jersey-json dependencies
                 mavenBundle().groupId("com.fasterxml.jackson.core").artifactId("jackson-core").versionAsInProject(),
                 mavenBundle().groupId("com.fasterxml.jackson.core").artifactId("jackson-databind").versionAsInProject(),
                 mavenBundle().groupId("com.fasterxml.jackson.core").artifactId("jackson-annotations").versionAsInProject(),
                 mavenBundle().groupId("com.fasterxml.jackson.jaxrs").artifactId("jackson-jaxrs-base").versionAsInProject(),
-                mavenBundle().groupId("com.fasterxml.jackson.jaxrs").artifactId("jackson-jaxrs-json-provider").versionAsInProject(),
-                mavenBundle().groupId("com.fasterxml.jackson.module").artifactId("jackson-module-jaxb-annotations").versionAsInProject()
+                mavenBundle().groupId("com.fasterxml.jackson.jaxrs").artifactId("jackson-jaxrs-json-provider")
+                        .versionAsInProject(),
+                mavenBundle().groupId("com.fasterxml.jackson.module").artifactId("jackson-module-jaxb-annotations")
+                        .versionAsInProject()
         ));
 
         return Helper.asArray(options);

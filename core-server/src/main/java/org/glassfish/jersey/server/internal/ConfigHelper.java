@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -91,7 +91,9 @@ public final class ConfigHelper {
 
         final Iterable<ContainerLifecycleListener> listeners = Iterables.concat(
                 Providers.getAllProviders(applicationHandler.getServiceLocator(), ContainerLifecycleListener.class),
-                new LinkedList<ContainerLifecycleListener>() {{ add(new ServiceLocatorShutdownListener()); }});
+                new LinkedList<ContainerLifecycleListener>() {{
+                    add(new ServiceLocatorShutdownListener());
+                }});
 
         return new ContainerLifecycleListener() {
 
@@ -126,7 +128,7 @@ public final class ConfigHelper {
      * @return the original {@link Application} subclass.
      */
     public static Application getWrappedApplication(Application app) {
-        while (app instanceof  ResourceConfig) {
+        while (app instanceof ResourceConfig) {
             final Application wrappedApplication = ((ResourceConfig) app).getApplication();
             if (wrappedApplication == app) {
                 break;

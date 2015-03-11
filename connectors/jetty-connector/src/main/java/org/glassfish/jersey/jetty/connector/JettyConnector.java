@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,8 +60,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
+
+import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientProperties;
@@ -69,6 +72,7 @@ import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
 import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
 import org.glassfish.jersey.message.internal.HeaderUtils;
@@ -157,54 +161,45 @@ class JettyConnector implements Connector {
     /**
      * Create the new Jetty client connector.
      *
+     * @param jaxrsClient JAX-RS client instance, for which the connector is created.
      * @param config client configuration.
      */
-    JettyConnector(final Configuration config) {
-        SslConfigurator sslConfig = null;
-        if (config != null) {
-            sslConfig = JettyClientProperties.getValue(config.getProperties(), JettyClientProperties.SSL_CONFIG,
-                    SslConfigurator.class);
+    JettyConnector(final Client jaxrsClient, final Configuration config) {
+
+        final SSLContext sslContext = getSslContext(jaxrsClient, config);
+        final SslContextFactory sslContextFactory = new SslContextFactory();
+        sslContextFactory.setSslContext(sslContext);
+        this.client = new HttpClient(sslContextFactory);
+
+        final Object connectTimeout = config.getProperties().get(ClientProperties.CONNECT_TIMEOUT);
+        if (connectTimeout != null && connectTimeout instanceof Integer && (Integer) connectTimeout > 0) {
+            client.setConnectTimeout((Integer) connectTimeout);
         }
-        if (sslConfig != null) {
-            final SslContextFactory sslContextFactory = new SslContextFactory();
-            sslContextFactory.setSslContext(sslConfig.createSSLContext());
-            this.client = new HttpClient(sslContextFactory);
-        } else {
-            this.client = new HttpClient();
+        final Object threadPoolSize = config.getProperties().get(ClientProperties.ASYNC_THREADPOOL_SIZE);
+        if (threadPoolSize != null && threadPoolSize instanceof Integer && (Integer) threadPoolSize > 0) {
+            final String name = HttpClient.class.getSimpleName() + "@" + hashCode();
+            final QueuedThreadPool threadPool = new QueuedThreadPool((Integer) threadPoolSize);
+            threadPool.setName(name);
+            client.setExecutor(threadPool);
+        }
+        Boolean disableCookies = (Boolean) config.getProperties().get(JettyClientProperties.DISABLE_COOKIES);
+        disableCookies = (disableCookies != null) ? disableCookies : false;
+
+        final AuthenticationStore auth = client.getAuthenticationStore();
+        final Object basicAuthProvider = config.getProperty(JettyClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION);
+        if (basicAuthProvider != null && (basicAuthProvider instanceof BasicAuthentication)) {
+            auth.addAuthentication((BasicAuthentication) basicAuthProvider);
         }
 
-        if (config != null) {
-            final Object connectTimeout = config.getProperties().get(ClientProperties.CONNECT_TIMEOUT);
-            if (connectTimeout != null && connectTimeout instanceof Integer && (Integer) connectTimeout > 0) {
-                client.setConnectTimeout((Integer) connectTimeout);
-            }
-            final Object threadPoolSize = config.getProperties().get(ClientProperties.ASYNC_THREADPOOL_SIZE);
-            if (threadPoolSize != null && threadPoolSize instanceof Integer && (Integer) threadPoolSize > 0) {
-                final String name = HttpClient.class.getSimpleName() + "@" + hashCode();
-                final QueuedThreadPool threadPool = new QueuedThreadPool((Integer) threadPoolSize);
-                threadPool.setName(name);
-                client.setExecutor(threadPool);
-            }
-            Boolean disableCookies = (Boolean) config.getProperties().get(JettyClientProperties.DISABLE_COOKIES);
-            disableCookies = (disableCookies != null) ? disableCookies : false;
+        final Object proxyUri = config.getProperties().get(ClientProperties.PROXY_URI);
+        if (proxyUri != null) {
+            final URI u = getProxyUri(proxyUri);
+            final ProxyConfiguration proxyConfig = client.getProxyConfiguration();
+            proxyConfig.getProxies().add(new HttpProxy(u.getHost(), u.getPort()));
+        }
 
-            final AuthenticationStore auth = client.getAuthenticationStore();
-            final Object basicAuthProvider = config.getProperty(JettyClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION);
-            if (basicAuthProvider != null && (basicAuthProvider instanceof BasicAuthentication)) {
-                auth.addAuthentication((BasicAuthentication) basicAuthProvider);
-            }
-
-            final Object proxyUri = config.getProperties().get(ClientProperties.PROXY_URI);
-            if (proxyUri != null) {
-                final URI u = getProxyUri(proxyUri);
-                final ProxyConfiguration proxyConfig = client.getProxyConfiguration();
-                proxyConfig.getProxies().add(new HttpProxy(u.getHost(), u.getPort()));
-            }
-
-            if (disableCookies) {
-                client.setCookieStore(new HttpCookieStore.Empty());
-            }
-
+        if (disableCookies) {
+            client.setCookieStore(new HttpCookieStore.Empty());
         }
 
         try {
@@ -213,6 +208,16 @@ class JettyConnector implements Connector {
             throw new ProcessingException("Failed to start the client.", e);
         }
         this.cookieStore = client.getCookieStore();
+    }
+
+    private SSLContext getSslContext(final Client client, final Configuration config) {
+        final SslConfigurator sslConfigurator = PropertiesHelper.getValue(
+                config.getProperties(),
+                JettyClientProperties.SSL_CONFIG,
+                SslConfigurator.class,
+                null);
+
+        return sslConfigurator != null ? sslConfigurator.createSSLContext() : client.getSslContext();
     }
 
     @SuppressWarnings("ChainOfInstanceofChecks")
@@ -260,9 +265,9 @@ class JettyConnector implements Connector {
             HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
                     JettyConnector.this.getClass().getName());
 
-            final javax.ws.rs.core.Response.StatusType status = jettyResponse.getReason() == null ?
-                    Statuses.from(jettyResponse.getStatus()) :
-                    Statuses.from(jettyResponse.getStatus(), jettyResponse.getReason());
+            final javax.ws.rs.core.Response.StatusType status = jettyResponse.getReason() == null
+                    ? Statuses.from(jettyResponse.getStatus())
+                    : Statuses.from(jettyResponse.getStatus(), jettyResponse.getReason());
 
             final ClientResponse jerseyResponse = new ClientResponse(status, jerseyRequest);
             processResponseHeaders(jettyResponse.getHeaders(), jerseyResponse);
@@ -292,6 +297,7 @@ class JettyConnector implements Connector {
     }
 
     private static final class HttpClientResponseInputStream extends FilterInputStream {
+
         HttpClientResponseInputStream(final ContentResponse jettyResponse) throws IOException {
             super(getInputStream(jettyResponse));
         }
@@ -407,10 +413,11 @@ class JettyConnector implements Connector {
                     HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
                             JettyConnector.this.getClass().getName());
 
-                    if (responseFuture.isDone())
+                    if (responseFuture.isDone()) {
                         if (!callbackInvoked.compareAndSet(false, true)) {
                             return;
                         }
+                    }
                     final ClientResponse response = translateResponse(jerseyRequest, jettyResponse, entityStream);
                     jerseyResponse.set(response);
                     callback.response(response);

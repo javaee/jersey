@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,10 +59,11 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public final class ByteBufferInputStream extends NonBlockingInputStream {
+
     /**
      * Constant buffer indicating EOF.
      */
-    private static final ByteBuffer EOF = ByteBuffer.wrap(new byte[]{});
+    private static final ByteBuffer EOF = ByteBuffer.wrap(new byte[] {});
 
     /**
      * Read-side EOF flag. Does not have to be volatile, it is transient and only accessed from the reader thread.
@@ -123,7 +124,7 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
     }
 
     private void checkThrowable() throws IOException {
-        Object o = queueStatus.get();
+        final Object o = queueStatus.get();
         if (o != null && o != EOF) { // should be faster than instanceof
             // if not null or EOF, then it must be Throwable
             if (queueStatus.compareAndSet(o, EOF)) {
@@ -148,7 +149,7 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
         if (current != null && current.hasRemaining()) {
             available = current.remaining();
         }
-        for (ByteBuffer buffer : buffers) {
+        for (final ByteBuffer buffer : buffers) {
             if (buffer == EOF) {
                 break;
             }
@@ -174,7 +175,7 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
             try {
                 // let's block until next non-empty chunk or EOF
                 c = fetchChunk(true) ? current.get() : -1;
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IOException(e);
             }
@@ -203,7 +204,7 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
             if (fetchChunk(false) && current != null) {
                 return current.get();
             }
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
@@ -211,12 +212,12 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
     }
 
     @Override
-    public int tryRead(byte b[]) throws IOException {
+    public int tryRead(final byte[] b) throws IOException {
         return tryRead(b, 0, b.length);
     }
 
     @Override
-    public int tryRead(byte b[], int off, int len) throws IOException {
+    public int tryRead(final byte[] b, final int off, final int len) throws IOException {
         checkThrowable();
         checkNotClosed();
 
@@ -232,7 +233,6 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
             return -1;
         }
 
-
         int i = 0;
         while (i < len) {
             if (current != null && current.hasRemaining()) {
@@ -244,12 +244,14 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
                     current.get(b, off + i, len - i);
                     return len;
                 }
-            } else try {
-                if (!fetchChunk(false) || current == null) {
-                    break;  // eof or no data
+            } else {
+                try {
+                    if (!fetchChunk(false) || current == null) {
+                        break;  // eof or no data
+                    }
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
         }
 
@@ -283,7 +285,7 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
      *         {@code false} if the read queue has been closed.
      * @throws InterruptedException in case the put operation has been interrupted.
      */
-    public boolean put(ByteBuffer src) throws InterruptedException {
+    public boolean put(final ByteBuffer src) throws InterruptedException {
         if (queueStatus.get() == null) {
             buffers.put(src);
             return true;
@@ -303,7 +305,7 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
         if (queueStatus.compareAndSet(null, EOF)) {
             try {
                 buffers.put(EOF);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
@@ -324,11 +326,11 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
      * @param throwable throwable that is set in the stream. It will be thrown by the stream in case
      *                  an attempt to read more data or check available bytes is made.
      */
-    public void closeQueue(Throwable throwable) {
+    public void closeQueue(final Throwable throwable) {
         if (queueStatus.compareAndSet(null, throwable)) {
             try {
                 buffers.put(EOF);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }

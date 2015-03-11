@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 
-
 /** Default in-memory implementation of OAuth1Provider. Stores consumers and tokens
  * in static hash maps. Provides some additional helper methods for consumer
  * and token management (registering new consumers, retrieving a list of all
@@ -63,10 +62,11 @@ import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
  * revoking tokens, etc.)
  *
  * @author Martin Matula
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 @Provider
 public class DefaultOAuth1Provider implements OAuth1Provider {
+
     private static final ConcurrentHashMap<String, Consumer> consumerByConsumerKey = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Token> accessTokenByTokenString = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, Token> requestTokenByTokenString = new ConcurrentHashMap<>();
@@ -99,12 +99,14 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
      * information about the consumer, such as name, URI, description, etc.)
      * @return {@link Consumer} object for the newly registered consumer.
      */
-    public Consumer registerConsumer(final String owner, final String key, final String secret, final MultivaluedMap<String, String> attributes) {
+    public Consumer registerConsumer(final String owner,
+                                     final String key,
+                                     final String secret,
+                                     final MultivaluedMap<String, String> attributes) {
         final Consumer c = new Consumer(key, secret, owner, attributes);
         consumerByConsumerKey.put(c.getKey(), c);
         return c;
     }
-
 
     /** Returns a set of consumers registered by a given owner.
      *
@@ -181,7 +183,9 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
     }
 
     @Override
-    public OAuth1Token newRequestToken(final String consumerKey, final String callbackUrl, final Map<String, List<String>> attributes) {
+    public OAuth1Token newRequestToken(final String consumerKey,
+                                       final String callbackUrl,
+                                       final Map<String, List<String>> attributes) {
         final Token rt = new Token(newUUIDString(), newUUIDString(), consumerKey, callbackUrl, attributes);
         requestTokenByTokenString.put(rt.getToken(), rt);
         return rt;
@@ -201,10 +205,14 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
         return at;
     }
 
-    public void addAccessToken(final String token, final String secret, final String consumerKey, final String callbackUrl,
-                               final Principal principal, final Set<String> roles, final MultivaluedMap<String, String> attributes) {
+    public void addAccessToken(final String token,
+                               final String secret,
+                               final String consumerKey,
+                               final String callbackUrl,
+                               final Principal principal,
+                               final Set<String> roles,
+                               final MultivaluedMap<String, String> attributes) {
         final Token accessToken = new Token(token, secret, consumerKey, callbackUrl, principal, roles, attributes);
-
 
         accessTokenByTokenString.put(accessToken.getToken(), accessToken);
     }
@@ -217,6 +225,7 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
     /** Simple read-only implementation of {@link OAuth1Consumer}.
      */
     public static class Consumer implements OAuth1Consumer {
+
         private final String key;
         private final String secret;
         private final String owner;
@@ -268,7 +277,6 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
         }
     }
 
-
     private static MultivaluedMap<String, String> getImmutableMap(final Map<String, List<String>> map) {
         final MultivaluedHashMap<String, String> newMap = new MultivaluedHashMap<>();
         for (final Map.Entry<String, List<String>> entry : map.entrySet()) {
@@ -277,11 +285,11 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
         return newMap;
     }
 
-
     /** Simple immutable implementation of {@link OAuth1Token}.
      *
      */
     public class Token implements OAuth1Token {
+
         private final String token;
         private final String secret;
         private final String consumerKey;
@@ -301,7 +309,11 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
             this.attribs = attributes;
         }
 
-        public Token(final String token, final String secret, final String consumerKey, final String callbackUrl, final Map<String, List<String>> attributes) {
+        public Token(final String token,
+                     final String secret,
+                     final String consumerKey,
+                     final String callbackUrl,
+                     final Map<String, List<String>> attributes) {
             this(token, secret, consumerKey, callbackUrl, null, Collections.<String>emptySet(),
                     new ImmutableMultivaluedMap<>(getImmutableMap(attributes)));
         }

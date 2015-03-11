@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,9 +58,9 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.glassfish.jersey.jaxb.internal.AbstractJaxbElementProvider;
 import org.glassfish.jersey.jettison.JettisonJaxbContext;
 import org.glassfish.jersey.jettison.JettisonMarshaller;
-import org.glassfish.jersey.message.internal.AbstractJaxbElementProvider;
 
 /**
  * JSON message entity media type provider (reader & writer) for {@link javax.xml.bind.JAXBElement}
@@ -116,8 +116,8 @@ public class JettisonJaxbElementProvider extends AbstractJaxbElementProvider {
                                             InputStream entityStream) throws JAXBException {
         final Charset c = getCharset(mediaType);
 
-        return JettisonJaxbContext.getJSONUnmarshaller(u).
-                unmarshalJAXBElementFromJSON(new InputStreamReader(entityStream, c), type);
+        return JettisonJaxbContext.getJSONUnmarshaller(u)
+                .unmarshalJAXBElementFromJSON(new InputStreamReader(entityStream, c), type);
     }
 
     @Override

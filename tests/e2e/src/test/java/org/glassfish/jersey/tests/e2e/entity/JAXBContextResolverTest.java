@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.entity;
 
 import javax.ws.rs.Consumes;
@@ -67,14 +68,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Paul Sandoz
+ * @author Martin Matula
  */
 @RunWith(Enclosed.class)
 public class JAXBContextResolverTest {
+
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class JAXBContextResolver implements ContextResolver<JAXBContext> {
+
         private JAXBContext context;
         private int invoked;
 
@@ -90,8 +93,9 @@ public class JAXBContextResolverTest {
             if (JaxbBean.class == c) {
                 invoked++;
                 return context;
-            } else
+            } else {
                 return null;
+            }
         }
 
         public int invoked() {
@@ -102,6 +106,7 @@ public class JAXBContextResolverTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class MarshallerResolver implements ContextResolver<Marshaller> {
+
         private JAXBContext context;
         private int invoked;
 
@@ -121,8 +126,9 @@ public class JAXBContextResolverTest {
                 } catch (JAXBException ex) {
                     throw new RuntimeException(ex);
                 }
-            } else
+            } else {
                 return null;
+            }
         }
 
         public int invoked() {
@@ -133,6 +139,7 @@ public class JAXBContextResolverTest {
     @Provider
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class UnmarshallerResolver implements ContextResolver<Unmarshaller> {
+
         private JAXBContext context;
         private int invoked;
 
@@ -152,8 +159,9 @@ public class JAXBContextResolverTest {
                 } catch (JAXBException ex) {
                     throw new RuntimeException(ex);
                 }
-            } else
+            } else {
                 return null;
+            }
         }
 
         public int invoked() {
@@ -164,6 +172,7 @@ public class JAXBContextResolverTest {
     @Path("/")
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class JaxbBeanResource {
+
         @POST
         public JaxbBean get(JaxbBean b) {
             return b;
@@ -171,6 +180,7 @@ public class JAXBContextResolverTest {
     }
 
     public static class JAXBContextTest extends AbstractTypeTester {
+
         private JAXBContextResolver cr;
 
         @Override
@@ -191,6 +201,7 @@ public class JAXBContextResolverTest {
     }
 
     public static class UnmarshallerTest extends AbstractTypeTester {
+
         private JAXBContextResolver cr;
         private MarshallerResolver mr;
         private UnmarshallerResolver umr;
@@ -242,6 +253,7 @@ public class JAXBContextResolverTest {
     }
 
     public static class JAXBContextAppTest extends AbstractTypeTester {
+
         private JAXBContextResolver cr;
         private JAXBContextResolverApp crApp;
 
@@ -254,13 +266,15 @@ public class JAXBContextResolverTest {
 
         @Test
         public void testJAXBContextApp() throws Exception {
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), "application/xml"), JaxbBean.class).value);
+            assertEquals("foo",
+                    target().request().post(Entity.entity(new JaxbBean("foo"), "application/xml"), JaxbBean.class).value);
             assertEquals(0, cr.invoked());
             assertEquals(2, crApp.invoked());
         }
     }
 
     public static class UnmarshallerAppTest extends AbstractTypeTester {
+
         private JAXBContextResolver cr;
         private MarshallerResolver mr;
         private UnmarshallerResolver umr;
@@ -279,14 +293,16 @@ public class JAXBContextResolverTest {
 
         @Test
         public void testUnmarshallerApp() throws Exception {
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), "application/xml"), JaxbBean.class).value);
+            assertEquals("foo",
+                    target().request().post(Entity.entity(new JaxbBean("foo"), "application/xml"), JaxbBean.class).value);
             assertEquals(0, cr.invoked());
             assertEquals(0, mr.invoked());
             assertEquals(0, umr.invoked());
             assertEquals(1, mrApp.invoked());
             assertEquals(1, umrApp.invoked());
 
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), "application/xml;charset=UTF-8"), JaxbBean.class).value);
+            assertEquals("foo", target().request()
+                    .post(Entity.entity(new JaxbBean("foo"), "application/xml;charset=UTF-8"), JaxbBean.class).value);
             assertEquals(0, cr.invoked());
             assertEquals(0, mr.invoked());
             assertEquals(0, umr.invoked());
@@ -321,6 +337,7 @@ public class JAXBContextResolverTest {
     }
 
     public static class JAXBContextTextTest extends AbstractTypeTester {
+
         private JAXBContextResolver cr;
         private JAXBContextResolverText crText;
 
@@ -340,6 +357,7 @@ public class JAXBContextResolverTest {
     }
 
     public static class UnmarshallerTextTest extends AbstractTypeTester {
+
         private JAXBContextResolver cr;
         private MarshallerResolver mr;
         private UnmarshallerResolver umr;
@@ -387,6 +405,7 @@ public class JAXBContextResolverTest {
     }
 
     public static class UnmarshallerFooTest extends AbstractTypeTester {
+
         private JAXBContextResolver cr;
         private MarshallerResolver mr;
         private UnmarshallerResolver umr;
@@ -405,14 +424,16 @@ public class JAXBContextResolverTest {
 
         @Test
         public void testUnmarshallerFoo() throws Exception {
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), "text/foo+xml"), JaxbBean.class).value);
+            assertEquals("foo",
+                    target().request().post(Entity.entity(new JaxbBean("foo"), "text/foo+xml"), JaxbBean.class).value);
             assertEquals(0, cr.invoked());
             assertEquals(0, mr.invoked());
             assertEquals(0, umr.invoked());
             assertEquals(1, mrFoo.invoked());
             assertEquals(1, umrFoo.invoked());
 
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), "text/foo+xml;charset=UTF-8"), JaxbBean.class).value);
+            assertEquals("foo", target().request()
+                    .post(Entity.entity(new JaxbBean("foo"), "text/foo+xml;charset=UTF-8"), JaxbBean.class).value);
             assertEquals(0, cr.invoked());
             assertEquals(0, mr.invoked());
             assertEquals(0, umr.invoked());
@@ -424,6 +445,7 @@ public class JAXBContextResolverTest {
     @Path("/")
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class JaxbBeanResourceAll {
+
         @POST
         @Consumes("application/foo+xml")
         @Produces("application/foo+xml")
@@ -447,6 +469,7 @@ public class JAXBContextResolverTest {
     }
 
     public static class JAXBContextAllTest extends AbstractTypeTester {
+
         private JAXBContextResolver cr;
         private JAXBContextResolverApp crApp;
         private JAXBContextResolverText crText;
@@ -461,12 +484,14 @@ public class JAXBContextResolverTest {
 
         @Test
         public void testJAXBContextAll() throws Exception {
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), "application/foo+xml"), JaxbBean.class).value);
+            assertEquals("foo",
+                    target().request().post(Entity.entity(new JaxbBean("foo"), "application/foo+xml"), JaxbBean.class).value);
             assertEquals(2, cr.invoked());
             assertEquals(0, crApp.invoked());
             assertEquals(0, crText.invoked());
 
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), "application/xml"), JaxbBean.class).value);
+            assertEquals("foo",
+                    target().request().post(Entity.entity(new JaxbBean("foo"), "application/xml"), JaxbBean.class).value);
             assertEquals(2, cr.invoked());
             assertEquals(2, crApp.invoked());
             assertEquals(0, crText.invoked());
@@ -479,6 +504,7 @@ public class JAXBContextResolverTest {
     }
 
     public static class UnmarshallerAllTest extends AbstractTypeTester {
+
         private JAXBContextResolver cr;
         private JAXBContextResolverApp crApp;
         private JAXBContextResolverText crText;
@@ -506,7 +532,8 @@ public class JAXBContextResolverTest {
 
         @Test
         public void testUnmarshallerAll() throws Exception {
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), "application/foo+xml"), JaxbBean.class).value);
+            assertEquals("foo",
+                    target().request().post(Entity.entity(new JaxbBean("foo"), "application/foo+xml"), JaxbBean.class).value);
             assertEquals(0, cr.invoked());
             assertEquals(0, crApp.invoked());
             assertEquals(0, crText.invoked());
@@ -517,7 +544,8 @@ public class JAXBContextResolverTest {
             assertEquals(0, mrText.invoked());
             assertEquals(0, umrText.invoked());
 
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), "application/xml"), JaxbBean.class).value);
+            assertEquals("foo",
+                    target().request().post(Entity.entity(new JaxbBean("foo"), "application/xml"), JaxbBean.class).value);
             assertEquals(0, cr.invoked());
             assertEquals(0, crApp.invoked());
             assertEquals(0, crText.invoked());
@@ -566,6 +594,7 @@ public class JAXBContextResolverTest {
     @Path("/")
     @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class JaxbBeanResourceAllOtherJaxbBean {
+
         @POST
         @Consumes("application/foo+xml")
         @Produces("application/foo+xml")
@@ -589,6 +618,7 @@ public class JAXBContextResolverTest {
     }
 
     public static class JAXBContextAllWithOtherJaxbBeanTest extends AbstractTypeTester {
+
         private JAXBContextResolver cr;
         private JAXBContextResolverApp crApp;
         private JAXBContextResolverText crText;
@@ -603,17 +633,20 @@ public class JAXBContextResolverTest {
 
         @Test
         public void testJAXBContextAllWithOtherJaxbBean() throws Exception {
-            assertEquals("foo", target().request().post(Entity.entity(new OtherJaxbBean("foo"), "application/foo+xml"), OtherJaxbBean.class).value);
+            assertEquals("foo", target().request()
+                    .post(Entity.entity(new OtherJaxbBean("foo"), "application/foo+xml"), OtherJaxbBean.class).value);
             assertEquals(0, cr.invoked());
             assertEquals(0, crApp.invoked());
             assertEquals(0, crText.invoked());
 
-            assertEquals("foo", target().request().post(Entity.entity(new OtherJaxbBean("foo"), "application/xml"), OtherJaxbBean.class).value);
+            assertEquals("foo", target().request()
+                    .post(Entity.entity(new OtherJaxbBean("foo"), "application/xml"), OtherJaxbBean.class).value);
             assertEquals(0, cr.invoked());
             assertEquals(0, crApp.invoked());
             assertEquals(0, crText.invoked());
 
-            assertEquals("foo", target().request().post(Entity.entity(new OtherJaxbBean("foo"), "text/xml"), OtherJaxbBean.class).value);
+            assertEquals("foo",
+                    target().request().post(Entity.entity(new OtherJaxbBean("foo"), "text/xml"), OtherJaxbBean.class).value);
             assertEquals(0, cr.invoked());
             assertEquals(0, crApp.invoked());
             assertEquals(0, crText.invoked());

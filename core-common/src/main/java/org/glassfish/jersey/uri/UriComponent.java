@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -283,54 +283,55 @@ public class UriComponent {
         boolean insideTemplateParam = false;
 
         StringBuilder sb = null;
-        for (int i = 0; i < s.length(); i++) {
-            final char c = s.charAt(i);
-            if (c < 0x80 && table[c]) {
+        for (int offset = 0, codePoint; offset < s.length(); offset += Character.charCount(codePoint)) {
+            codePoint = s.codePointAt(offset);
+
+            if (codePoint < 0x80 && table[codePoint]) {
                 if (sb != null) {
-                    sb.append(c);
+                    sb.append((char) codePoint);
                 }
             } else {
                 if (template) {
                     boolean leavingTemplateParam = false;
-                    if (c == '{') {
+                    if (codePoint == '{') {
                         insideTemplateParam = true;
-                    } else if (c == '}') {
+                    } else if (codePoint == '}') {
                         insideTemplateParam = false;
                         leavingTemplateParam = true;
                     }
                     if (insideTemplateParam || leavingTemplateParam) {
                         if (sb != null) {
-                            sb.append(c);
+                            sb.append(Character.toChars(codePoint));
                         }
                         continue;
                     }
                 }
 
-                if (contextualEncode) {
-                    if (c == '%' && i + 2 < s.length()) {
-                        if (isHexCharacter(s.charAt(i + 1)) && isHexCharacter(s.charAt(i + 2))) {
-                            if (sb != null) {
-                                sb.append('%').append(s.charAt(i + 1)).append(s.charAt(i + 2));
-                            }
-                            i += 2;
-                            continue;
-                        }
+                if (contextualEncode
+                        && codePoint == '%'
+                        && offset + 2 < s.length()
+                        && isHexCharacter(s.charAt(offset + 1))
+                        && isHexCharacter(s.charAt(offset + 2))) {
+                    if (sb != null) {
+                        sb.append('%').append(s.charAt(offset + 1)).append(s.charAt(offset + 2));
                     }
+                    offset += 2;
+                    continue;
                 }
 
                 if (sb == null) {
                     sb = new StringBuilder();
-                    sb.append(s.substring(0, i));
+                    sb.append(s.substring(0, offset));
                 }
 
-                if (c < 0x80) {
-                    if (c == ' ' && (t == Type.QUERY_PARAM)) {
+                if (codePoint < 0x80) {
+                    if (codePoint == ' ' && (t == Type.QUERY_PARAM)) {
                         sb.append('+');
                     } else {
-                        appendPercentEncodedOctet(sb, c);
+                        appendPercentEncodedOctet(sb, (char) codePoint);
                     }
                 } else {
-                    appendUTF8EncodedCharacter(sb, c);
+                    appendUTF8EncodedCharacter(sb, codePoint);
                 }
             }
         }
@@ -338,7 +339,7 @@ public class UriComponent {
         return (sb == null) ? s : sb.toString();
     }
 
-    private final static char[] HEX_DIGITS = {
+    private static final char[] HEX_DIGITS = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
     };
 
@@ -348,11 +349,12 @@ public class UriComponent {
         sb.append(HEX_DIGITS[b & 0x0F]);
     }
 
-    private static void appendUTF8EncodedCharacter(final StringBuilder sb, final char c) {
-        final ByteBuffer bb = UTF_8_CHARSET.encode("" + c);
+    private static void appendUTF8EncodedCharacter(final StringBuilder sb, final int codePoint) {
+        final CharBuffer chars = CharBuffer.wrap(Character.toChars(codePoint));
+        final ByteBuffer bytes = UTF_8_CHARSET.encode(chars);
 
-        while (bb.hasRemaining()) {
-            appendPercentEncodedOctet(sb, bb.get() & 0xFF);
+        while (bytes.hasRemaining()) {
+            appendPercentEncodedOctet(sb, bytes.get() & 0xFF);
         }
     }
 

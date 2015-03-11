@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,6 @@ package org.glassfish.jersey.tests.performance.tools;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
@@ -58,28 +57,38 @@ import java.util.logging.Logger;
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public abstract class TestValueGenerator {
+
     private static final int MAX_RECURSION_LEVEL = 5;
 
     private static final Logger log = Logger.getLogger(TestValueGenerator.class.getName());
 
     /** returns testing data int value */
     public abstract int getInt();
+
     /** returns testing data char value */
     public abstract char getChar();
+
     /** returns testing data String value */
     public abstract String getString();
+
     /** returns testing data long value */
     public abstract long getLong();
+
     /** returns testing data float value */
     public abstract float getFloat();
+
     /** returns testing data double value */
     public abstract double getDouble();
+
     /** returns testing data byte value */
     public abstract byte getByte();
+
     /** returns testing data short value */
     public abstract short getShort();
+
     /** returns testing data boolean value */
     public abstract boolean getBoolean();
+
     /** returns testing data enum value */
     public abstract <T> T getEnum(Class<T> enumType);
 
@@ -114,16 +123,17 @@ public abstract class TestValueGenerator {
         return null;
     }
 
-    protected Object handleCollections(Class<?> type, GenerateForTest annotation,
-                                       int recursionLevel) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, ClassNotFoundException, InstantiationException {
+    protected Object handleCollections(Class<?> type,
+                                       GenerateForTest annotation,
+                                       int recursionLevel) throws ReflectiveOperationException {
         int testDataLength = annotation.length();
         Class<?> collectionMemberType = annotation.collectionMemberType();
         Class<?> collectionType = type;
         if (collectionType.isInterface()) {
             collectionType = annotation.implementingClass();
             if (collectionType.equals(Object.class)) {
-                throw new IllegalArgumentException("Unable to instantiate collection - interface was used for the " +
-                        "declaration and parameter 'implementingClass' not set.");
+                throw new IllegalArgumentException("Unable to instantiate collection - interface was used for the "
+                        + "declaration and parameter 'implementingClass' not set.");
             }
         }
         Object collection = collectionType.newInstance();
@@ -137,8 +147,9 @@ public abstract class TestValueGenerator {
         return collection;
     }
 
-    protected Object handleArrays(Class<?> type, GenerateForTest annotation, int recursionLevel) throws ClassNotFoundException,
-            NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    protected Object handleArrays(Class<?> type, GenerateForTest annotation, int recursionLevel)
+            throws ReflectiveOperationException {
+
         int testDataLength = annotation.length();
         Class<?> arrayMemberType = type.getComponentType();
         Object array = Array.newInstance(arrayMemberType, testDataLength);
@@ -149,14 +160,13 @@ public abstract class TestValueGenerator {
         return array;
     }
 
-    public Object getValueForType(Class<?> type, GenerateForTest annotation) throws InstantiationException,
-            NoSuchMethodException, InvocationTargetException, ClassNotFoundException, IllegalAccessException {
+    public Object getValueForType(Class<?> type, GenerateForTest annotation) throws ReflectiveOperationException {
         return getValueForType(type, annotation, 0);
     }
 
-    protected Object getValueForType(Class<?> type, GenerateForTest annotation,
-                                     int recursionLevel) throws InstantiationException,
-            NoSuchMethodException, InvocationTargetException, ClassNotFoundException, IllegalAccessException {
+    protected Object getValueForType(Class<?> type, GenerateForTest annotation, int recursionLevel)
+            throws ReflectiveOperationException {
+
         // handle primitives and wrapper classes
         Object primitiveOrWrapper = handlePrimitivesAndWrappers(type);
         if (primitiveOrWrapper != null) {
@@ -167,7 +177,9 @@ public abstract class TestValueGenerator {
         if (Collection.class.isAssignableFrom(type)) {
             if (annotation != null) {
                 return handleCollections(type, annotation, recursionLevel);
-            } else return null;
+            } else {
+                return null;
+            }
         }
 
         // handle maps (unsupported)
@@ -184,7 +196,9 @@ public abstract class TestValueGenerator {
         if (type.isArray()) {
             if (annotation != null) {
                 return handleArrays(type, annotation, recursionLevel);
-            } else return null;
+            } else {
+                return null;
+            }
         }
 
         // after selecting-out "all" the other possibilities, we are probably handling a custom inner-bean

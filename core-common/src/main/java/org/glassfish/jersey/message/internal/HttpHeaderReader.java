@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,32 +62,68 @@ import javax.ws.rs.core.NewCookie;
  */
 public abstract class HttpHeaderReader {
 
-    public enum Event {
+    /**
+     * TODO javadoc.
+     */
+    public static enum Event {
 
         Token, QuotedString, Comment, Separator, Control
     }
 
+    /**
+     * TODO javadoc.
+     */
     public abstract boolean hasNext();
 
+    /**
+     * TODO javadoc.
+     */
     public abstract boolean hasNextSeparator(char separator, boolean skipWhiteSpace);
 
+    /**
+     * TODO javadoc.
+     */
     public abstract Event next() throws ParseException;
 
+    /**
+     * TODO javadoc.
+     */
     public abstract Event next(boolean skipWhiteSpace) throws ParseException;
 
-    public abstract Event next(boolean skipWhiteSpace, boolean preserveBackslash) throws ParseException;
+    /**
+     * TODO javadoc.
+     */
+    protected abstract Event next(boolean skipWhiteSpace, boolean preserveBackslash) throws ParseException;
 
-    public abstract String nextSeparatedString(char startSeparator, char endSeparator) throws ParseException;
+    /**
+     * FIXME remove.
+     */
+    protected abstract CharSequence nextSeparatedString(char startSeparator, char endSeparator) throws ParseException;
 
-    public abstract Event getEvent();
+    /**
+     * FIXME remove.
+     */
+    protected abstract Event getEvent();
 
-    public abstract String getEventValue();
+    /**
+     * TODO javadoc.
+     */
+    public abstract CharSequence getEventValue();
 
-    public abstract String getRemainder();
+    /**
+     * TODO javadoc.
+     */
+    public abstract CharSequence getRemainder();
 
+    /**
+     * TODO javadoc.
+     */
     public abstract int getIndex();
 
-    public String nextToken() throws ParseException {
+    /**
+     * TODO javadoc.
+     */
+    public final CharSequence nextToken() throws ParseException {
         Event e = next(false);
         if (e != Event.Token) {
             throw new ParseException("Next event is not a Token", getIndex());
@@ -96,16 +132,10 @@ public abstract class HttpHeaderReader {
         return getEventValue();
     }
 
-    public char nextSeparator() throws ParseException {
-        Event e = next(false);
-        if (e != Event.Separator) {
-            throw new ParseException("Next event is not a Separator", getIndex());
-        }
-
-        return getEventValue().charAt(0);
-    }
-
-    public void nextSeparator(char c) throws ParseException {
+    /**
+     * TODO javadoc.
+     */
+    public final void nextSeparator(char c) throws ParseException {
         Event e = next(false);
         if (e != Event.Separator) {
             throw new ParseException("Next event is not a Separator", getIndex());
@@ -117,7 +147,10 @@ public abstract class HttpHeaderReader {
         }
     }
 
-    public String nextQuotedString() throws ParseException {
+    /**
+     * TODO javadoc.
+     */
+    public final CharSequence nextQuotedString() throws ParseException {
         Event e = next(false);
         if (e != Event.QuotedString) {
             throw new ParseException("Next event is not a Quoted String", getIndex());
@@ -126,11 +159,14 @@ public abstract class HttpHeaderReader {
         return getEventValue();
     }
 
-    public String nextTokenOrQuotedString() throws ParseException {
+    /**
+     * TODO javadoc.
+     */
+    public final CharSequence nextTokenOrQuotedString() throws ParseException {
         return nextTokenOrQuotedString(false);
     }
 
-    public String nextTokenOrQuotedString(boolean preserveBackslash) throws ParseException {
+    private CharSequence nextTokenOrQuotedString(boolean preserveBackslash) throws ParseException {
         Event e = next(false, preserveBackslash);
         if (e != Event.Token && e != Event.QuotedString) {
             throw new ParseException("Next event is not a Token or a Quoted String, "
@@ -140,19 +176,31 @@ public abstract class HttpHeaderReader {
         return getEventValue();
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static HttpHeaderReader newInstance(String header) {
         return new HttpHeaderReaderImpl(header);
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static HttpHeaderReader newInstance(String header, boolean processComments) {
         return new HttpHeaderReaderImpl(header, processComments);
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static Date readDate(String date) throws ParseException {
         return HttpDateFormat.readDate(date);
     }
 
-    public static int readQualityFactor(String q) throws ParseException {
+    /**
+     * TODO javadoc.
+     */
+    public static int readQualityFactor(CharSequence q) throws ParseException {
         if (q == null || q.length() == 0) {
             throw new ParseException("Quality value cannot be null or an empty String", 0);
         }
@@ -172,22 +220,23 @@ public abstract class HttpHeaderReader {
             }
             c = q.charAt(index++);
             if (c != '.') {
-                throw new ParseException("Error parsing Quality value: a decimal place is expected rather than '"
-                        + c + "'", index);
+                throw new ParseException(
+                        "Error parsing Quality value: a decimal place is expected rather than '" + c + "'", index);
             }
             if (index == length) {
                 return (c - '0') * 1000;
             }
         } else if (c == '.') {
-            // This is not conformant to the HTTP specification but some implementations
+            // This is not conforming to the HTTP specification but some implementations
             // do this, for example HttpURLConnection.
             if (index == length) {
-                throw new ParseException("Error parsing Quality value: a decimal numeral is expected after the decimal point", index);
+                throw new ParseException(
+                        "Error parsing Quality value: a decimal numeral is expected after the decimal point", index);
             }
 
         } else {
-            throw new ParseException("Error parsing Quality value: a decimal numeral '0' or '1' is expected rather than '"
-                    + c + "'", index);
+            throw new ParseException(
+                    "Error parsing Quality value: a decimal numeral '0' or '1' is expected rather than '" + c + "'", index);
         }
 
         // Parse the fraction
@@ -199,8 +248,8 @@ public abstract class HttpHeaderReader {
                 value += (c - '0') * exponent;
                 exponent /= 10;
             } else {
-                throw new ParseException("Error parsing Quality value: a decimal numeral is expected rather than '"
-                        + c + "'", index);
+                throw new ParseException(
+                        "Error parsing Quality value: a decimal numeral is expected rather than '" + c + "'", index);
             }
         }
 
@@ -208,40 +257,48 @@ public abstract class HttpHeaderReader {
             if (value > 0) {
                 throw new ParseException("The Quality value, " + q + ", is greater than 1", index);
             }
-            return Quality.DEFAULT_QUALITY;
+            return Quality.DEFAULT;
         } else {
             return value;
         }
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static int readQualityFactorParameter(HttpHeaderReader reader) throws ParseException {
-        int q = -1;
         while (reader.hasNext()) {
             reader.nextSeparator(';');
 
             // Ignore a ';' with no parameters
             if (!reader.hasNext()) {
-                return Quality.DEFAULT_QUALITY;
+                return Quality.DEFAULT;
             }
 
             // Get the parameter name
-            String name = reader.nextToken();
+            CharSequence name = reader.nextToken();
             reader.nextSeparator('=');
             // Get the parameter value
-            String value = reader.nextTokenOrQuotedString();
+            CharSequence value = reader.nextTokenOrQuotedString();
 
-            if (q == -1 && name.equalsIgnoreCase(Qualified.QUALITY_PARAMETER_NAME)) {
-                q = readQualityFactor(value);
+            if (name.length() == 1 && (name.charAt(0) == 'q' || name.charAt(0) == 'Q')) {
+                return readQualityFactor(value);
             }
         }
 
-        return (q == -1) ? Quality.DEFAULT_QUALITY : q;
+        return Quality.DEFAULT;
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static Map<String, String> readParameters(HttpHeaderReader reader) throws ParseException {
         return readParameters(reader, false);
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static Map<String, String> readParameters(HttpHeaderReader reader, boolean fileNameFix) throws ParseException {
         Map<String, String> m = null;
 
@@ -257,39 +314,54 @@ public abstract class HttpHeaderReader {
             }
 
             // Get the parameter name
-            String name = reader.nextToken();
+            String name = reader.nextToken().toString().toLowerCase();
             reader.nextSeparator('=');
             // Get the parameter value
             String value;
             // fix for http://java.net/jira/browse/JERSEY-759
-            if ("filename".equalsIgnoreCase(name) && fileNameFix) {
-                value = reader.nextTokenOrQuotedString(true);
+            if ("filename".equals(name) && fileNameFix) {
+                value = reader.nextTokenOrQuotedString(true).toString();
                 value = value.substring(value.lastIndexOf('\\') + 1);
             } else {
-                value = reader.nextTokenOrQuotedString(false);
+                value = reader.nextTokenOrQuotedString(false).toString();
             }
             if (m == null) {
                 m = new LinkedHashMap<String, String>();
             }
 
             // Lower case the parameter name
-            m.put(name.toLowerCase(), value);
+            m.put(name, value);
         }
 
         return m;
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static Map<String, Cookie> readCookies(String header) {
         return CookiesParser.parseCookies(header);
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static Cookie readCookie(String header) {
         return CookiesParser.parseCookie(header);
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static NewCookie readNewCookie(String header) {
         return CookiesParser.parseNewCookie(header);
     }
+
+    private static interface ListElementCreator<T> {
+
+        T create(HttpHeaderReader reader) throws ParseException;
+    }
+
     private static final ListElementCreator<MatchingEntityTag> MATCHING_ENTITY_TAG_CREATOR =
             new ListElementCreator<MatchingEntityTag>() {
 
@@ -299,8 +371,11 @@ public abstract class HttpHeaderReader {
                 }
             };
 
+    /**
+     * TODO javadoc.
+     */
     public static Set<MatchingEntityTag> readMatchingEntityTag(String header) throws ParseException {
-        if (header.equals("*")) {
+        if ("*".equals(header)) {
             return MatchingEntityTag.ANY_MATCH;
         }
 
@@ -317,6 +392,7 @@ public abstract class HttpHeaderReader {
 
         return l;
     }
+
     private static final ListElementCreator<MediaType> MEDIA_TYPE_CREATOR =
             new ListElementCreator<MediaType>() {
 
@@ -326,12 +402,16 @@ public abstract class HttpHeaderReader {
                 }
             };
 
+    /**
+     * TODO javadoc.
+     */
     public static List<MediaType> readMediaTypes(List<MediaType> l, String header) throws ParseException {
         return HttpHeaderReader.readList(
                 l,
                 MEDIA_TYPE_CREATOR,
                 header);
     }
+
     private static final ListElementCreator<AcceptableMediaType> ACCEPTABLE_MEDIA_TYPE_CREATOR =
             new ListElementCreator<AcceptableMediaType>() {
 
@@ -340,25 +420,17 @@ public abstract class HttpHeaderReader {
                     return AcceptableMediaType.valueOf(reader);
                 }
             };
-    private static final Comparator<AcceptableMediaType> ACCEPTABLE_MEDIA_TYPE_COMPARATOR = new Comparator<AcceptableMediaType>() {
 
-        @Override
-        public int compare(AcceptableMediaType o1, AcceptableMediaType o2) {
-            int i = o2.getQuality() - o1.getQuality();
-            if (i != 0) {
-                return i;
-            }
-
-            return MediaTypes.MEDIA_TYPE_COMPARATOR.compare(o1, o2);
-        }
-    };
-
+    /**
+     * TODO javadoc.
+     */
     public static List<AcceptableMediaType> readAcceptMediaType(String header) throws ParseException {
-        return HttpHeaderReader.readAcceptableList(
-                ACCEPTABLE_MEDIA_TYPE_COMPARATOR,
+        return HttpHeaderReader.readQualifiedList(
+                AcceptableMediaType.COMPARATOR,
                 ACCEPTABLE_MEDIA_TYPE_CREATOR,
                 header);
     }
+
     private static final ListElementCreator<QualitySourceMediaType> QUALITY_SOURCE_MEDIA_TYPE_CREATOR =
             new ListElementCreator<QualitySourceMediaType>() {
 
@@ -368,13 +440,19 @@ public abstract class HttpHeaderReader {
                 }
             };
 
+    /**
+     * FIXME use somewhere in production code or remove.
+     */
     public static List<QualitySourceMediaType> readQualitySourceMediaType(String header) throws ParseException {
-        return HttpHeaderReader.readAcceptableList(
-                MediaTypes.QUALITY_SOURCE_MEDIA_TYPE_COMPARATOR,
+        return HttpHeaderReader.readQualifiedList(
+                QualitySourceMediaType.COMPARATOR,
                 QUALITY_SOURCE_MEDIA_TYPE_CREATOR,
                 header);
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static List<QualitySourceMediaType> readQualitySourceMediaType(String[] header) throws ParseException {
         if (header.length < 2) {
             return readQualitySourceMediaType(header[0]);
@@ -392,23 +470,28 @@ public abstract class HttpHeaderReader {
         return readQualitySourceMediaType(sb.toString());
     }
 
-    public static List<AcceptableMediaType> readAcceptMediaType(String header,
-            final List<QualitySourceMediaType> priorityMediaTypes) throws ParseException {
-        return HttpHeaderReader.readAcceptableList(
+    /**
+     * TODO javadoc.
+     */
+    public static List<AcceptableMediaType> readAcceptMediaType(
+            final String header, final List<QualitySourceMediaType> priorityMediaTypes) throws ParseException {
+
+        return HttpHeaderReader.readQualifiedList(
                 new Comparator<AcceptableMediaType>() {
 
                     @Override
                     public int compare(AcceptableMediaType o1, AcceptableMediaType o2) {
+                        // FIXME what is going on here?
                         boolean q_o1_set = false;
-                        int q_o1 = Quality.DEFAULT_QUALITY * Quality.DEFAULT_QUALITY;
+                        int q_o1 = 0;
                         boolean q_o2_set = false;
-                        int q_o2 = Quality.DEFAULT_QUALITY * Quality.DEFAULT_QUALITY;
-                        for (QualitySourceMediaType m : priorityMediaTypes) {
-                            if (!q_o1_set && MediaTypes.typeEqual(o1, m)) {
-                                q_o1 = o1.getQuality() * m.getQualitySource();
+                        int q_o2 = 0;
+                        for (QualitySourceMediaType priorityType : priorityMediaTypes) {
+                            if (!q_o1_set && MediaTypes.typeEqual(o1, priorityType)) {
+                                q_o1 = o1.getQuality() * priorityType.getQuality();
                                 q_o1_set = true;
-                            } else if (!q_o2_set && MediaTypes.typeEqual(o2, m)) {
-                                q_o2 = o2.getQuality() * m.getQualitySource();
+                            } else if (!q_o2_set && MediaTypes.typeEqual(o2, priorityType)) {
+                                q_o2 = o2.getQuality() * priorityType.getQuality();
                                 q_o2_set = true;
                             }
                         }
@@ -422,7 +505,7 @@ public abstract class HttpHeaderReader {
                             return i;
                         }
 
-                        return MediaTypes.MEDIA_TYPE_COMPARATOR.compare(o1, o2);
+                        return MediaTypes.PARTIAL_ORDER_COMPARATOR.compare(o1, o2);
                     }
                 },
                 ACCEPTABLE_MEDIA_TYPE_CREATOR,
@@ -437,9 +520,13 @@ public abstract class HttpHeaderReader {
                 }
             };
 
+    /**
+     * TODO javadoc.
+     */
     public static List<AcceptableToken> readAcceptToken(String header) throws ParseException {
-        return HttpHeaderReader.readAcceptableList(ACCEPTABLE_TOKEN_CREATOR, header);
+        return HttpHeaderReader.readQualifiedList(ACCEPTABLE_TOKEN_CREATOR, header);
     }
+
     private static final ListElementCreator<AcceptableLanguageTag> LANGUAGE_CREATOR =
             new ListElementCreator<AcceptableLanguageTag>() {
 
@@ -449,59 +536,53 @@ public abstract class HttpHeaderReader {
                 }
             };
 
+    /**
+     * TODO javadoc.
+     */
     public static List<AcceptableLanguageTag> readAcceptLanguage(String header) throws ParseException {
-        return HttpHeaderReader.readAcceptableList(LANGUAGE_CREATOR, header);
+        return HttpHeaderReader.readQualifiedList(LANGUAGE_CREATOR, header);
     }
-    private static final Comparator<Qualified> QUALITY_COMPARATOR = new Comparator<Qualified>() {
 
-        @Override
-        public int compare(Qualified o1, Qualified o2) {
-            return o2.getQuality() - o1.getQuality();
-        }
-    };
+    private static <T extends Qualified> List<T> readQualifiedList(ListElementCreator<T> c, String header)
+            throws ParseException {
 
-    public static <T extends Qualified> List<T> readAcceptableList(
-            ListElementCreator<T> c,
-            String header) throws ParseException {
         List<T> l = readList(c, header);
-        Collections.sort(l, QUALITY_COMPARATOR);
+        Collections.sort(l, Quality.QUALIFIED_COMPARATOR);
         return l;
     }
 
-    public static <T> List<T> readAcceptableList(
-            Comparator<T> comparator,
-            ListElementCreator<T> c,
-            String header) throws ParseException {
+    private static <T> List<T> readQualifiedList(final Comparator<T> comparator, ListElementCreator<T> c, String header)
+            throws ParseException {
+
         List<T> l = readList(c, header);
         Collections.sort(l, comparator);
         return l;
     }
 
+    /**
+     * TODO javadoc.
+     */
     public static List<String> readStringList(String header) throws ParseException {
         return readList(new ListElementCreator<String>() {
 
             @Override
             public String create(HttpHeaderReader reader) throws ParseException {
                 reader.hasNext();
-                return reader.nextToken();
+                return reader.nextToken().toString();
             }
         }, header);
     }
 
-    public static interface ListElementCreator<T> {
-
-        T create(HttpHeaderReader reader) throws ParseException;
-    }
-
-    public static <T> List<T> readList(ListElementCreator<T> c,
-            String header) throws ParseException {
+    private static <T> List<T> readList(final ListElementCreator<T> c, final String header) throws ParseException {
         return readList(new ArrayList<T>(), c, header);
     }
 
-    public static <T> List<T> readList(List<T> l, ListElementCreator<T> c,
-            String header) throws ParseException {
+    private static <T> List<T> readList(final List<T> l, final ListElementCreator<T> c, final String header)
+            throws ParseException {
+
         HttpHeaderReader reader = new HttpHeaderReaderImpl(header);
         HttpHeaderListAdapter adapter = new HttpHeaderListAdapter(reader);
+
         while (reader.hasNext()) {
             l.add(c.create(adapter));
             adapter.reset();

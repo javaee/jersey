@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.BeanParam;
@@ -58,7 +59,7 @@ import org.glassfish.jersey.server.model.Parameter;
 /**
  * Value factory provider for {@link BeanParam bean parameters}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 @Singleton
 final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
@@ -91,8 +92,9 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
                     public ActiveDescriptor<?> compute(Class<?> key) {
                         // below we make sure HK2 behaves as if injection happens into a request scoped type
                         // this is to avoid having proxies injected (see JERSEY-2386)
+                        // before touching the following statement, check BeanParamMemoryLeakTest first!
                         final AbstractActiveDescriptor<Object> descriptor =
-                                BuilderHelper.activeLink(key).in(RequestScoped.class).build();
+                                BuilderHelper.activeLink(key).to(key).in(RequestScoped.class).build();
 
                         return ServiceLocatorUtilities.addOneDescriptor(locator, descriptor, false);
                     }

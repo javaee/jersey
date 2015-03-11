@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,8 +56,8 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * 'ON_DEMAND' tracing support test that is running in external Jetty container.
@@ -117,8 +117,8 @@ public class OnDemandTracingSupportITCase extends JerseyTest {
 
     private void testTraceAccept(String acceptValue) {
         Invocation.Builder builder = resource("/root").request();
-        Response response = builder.header(TracingLogger.HEADER_ACCEPT, acceptValue).
-                post(Entity.entity(new Message("POST"), Utils.APPLICATION_X_JERSEY_TEST));
+        Response response = builder.header(TracingLogger.HEADER_ACCEPT, acceptValue)
+                .post(Entity.entity(new Message("POST"), Utils.APPLICATION_X_JERSEY_TEST));
         assertTrue(hasX_Jersey_Trace(response));
         assertEquals("TSOP", response.readEntity(Message.class).getText());
     }

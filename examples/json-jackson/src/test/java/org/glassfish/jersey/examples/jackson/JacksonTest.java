@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,7 +53,6 @@ import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Ignore;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -107,14 +106,16 @@ public class JacksonTest extends JerseyTest {
     @Test
     public void testEmptyArrayBean() {
         WebTarget target = target();
-        EmptyArrayBean responseMsg = target.path("emptyArrayResource").request(MediaType.APPLICATION_JSON).get(EmptyArrayBean.class);
+        EmptyArrayBean responseMsg = target.path("emptyArrayResource").request(MediaType.APPLICATION_JSON)
+                .get(EmptyArrayBean.class);
         assertNotNull(responseMsg);
     }
 
     @Test
     public void testCombinedAnnotationBean() {
         WebTarget target = target();
-        CombinedAnnotationBean responseMsg = target.path("combinedAnnotations").request("application/json").get(CombinedAnnotationBean.class);
+        CombinedAnnotationBean responseMsg = target.path("combinedAnnotations").request("application/json")
+                .get(CombinedAnnotationBean.class);
         assertNotNull(responseMsg);
     }
 
@@ -135,7 +136,7 @@ public class JacksonTest extends JerseyTest {
     @Test
     public void testApplicationWadl() {
         WebTarget target = target();
-        String serviceWadl = target.path("application.wadl").request(MediaTypes.WADL).get(String.class);
+        String serviceWadl = target.path("application.wadl").request(MediaTypes.WADL_TYPE).get(String.class);
 
         assertTrue(serviceWadl.length() > 0);
     }

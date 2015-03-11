@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.server;
 
 import java.io.IOException;
@@ -88,9 +89,10 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests throwing exceptions in {@link MessageBodyReader} and {@link MessageBodyWriter}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class ExceptionMapperTest extends JerseyTest {
+
     @Override
     protected Application configure() {
         return new ResourceConfig(
@@ -124,8 +126,8 @@ public class ExceptionMapperTest extends JerseyTest {
 
     @Test
     public void testReaderThrowsException() {
-        Response res = target().path("test").request("test/test").header("reader-exception", "throw").post(Entity.entity
-                ("post", "test/test"));
+        Response res = target().path("test").request("test/test").header("reader-exception", "throw")
+                .post(Entity.entity("post", "test/test"));
         assertEquals(200, res.getStatus());
         final String entity = res.readEntity(String.class);
         assertEquals("reader-exception-mapper", entity);
@@ -161,6 +163,7 @@ public class ExceptionMapperTest extends JerseyTest {
 
     @Path("test")
     public static class Resource {
+
         @GET
         @Path("before")
         @Produces("test/test")
@@ -180,7 +183,6 @@ public class ExceptionMapperTest extends JerseyTest {
         public String post(String str) {
             return "post";
         }
-
 
         @GET
         @Path("exception")
@@ -202,8 +204,8 @@ public class ExceptionMapperTest extends JerseyTest {
 
         @Override
         public Response toResponse(ClientErrorException exception) {
-            return Response.status(Response.Status.OK).entity("mapped-client-error-" +
-                    exception.getResponse().getStatus() + "-" + exception.getMessage()).build();
+            return Response.status(Response.Status.OK).entity("mapped-client-error-"
+                    + exception.getResponse().getStatus() + "-" + exception.getMessage()).build();
         }
     }
 
@@ -230,14 +232,15 @@ public class ExceptionMapperTest extends JerseyTest {
         @Override
         public Response toResponse(MyAnotherException exception) {
             // the header causes exception to be thrown again in MyMessageBodyWriter
-            return Response.ok().header("writer-exception", "before-first-byte").entity(exception.getMessage() +
-                    "-another-exception-mapper").build();
+            return Response.ok().header("writer-exception", "before-first-byte").entity(exception.getMessage()
+                    + "-another-exception-mapper").build();
         }
     }
 
     @Produces("test/test")
     public static class MyMessageBodyWritter implements MessageBodyWriter<String> {
-        public volatile static boolean firstBytesReceived;
+
+        public static volatile boolean firstBytesReceived;
 
         @Override
         public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -296,8 +299,8 @@ public class ExceptionMapperTest extends JerseyTest {
         }
     }
 
-
     public static class MyException extends RuntimeException {
+
         public MyException() {
         }
 
@@ -314,8 +317,8 @@ public class ExceptionMapperTest extends JerseyTest {
         }
     }
 
-
     public static class MyAnotherException extends RuntimeException {
+
         public MyAnotherException() {
         }
 
@@ -332,7 +335,6 @@ public class ExceptionMapperTest extends JerseyTest {
         }
     }
 
-
     /**
      * BEGIN: JERSEY-1515 reproducer code
      */
@@ -343,6 +345,7 @@ public class ExceptionMapperTest extends JerseyTest {
     }
 
     public static class VisibilityExceptionMapper implements ExceptionMapper<VisibilityException> {
+
         private HttpHeaders headers;
         private UriInfo info;
         private Application application;
@@ -398,6 +401,7 @@ public class ExceptionMapperTest extends JerseyTest {
 
     @Path("test/visible")
     public static class TestResource {
+
         @GET
         public String throwVisibleException() {
             throw new VisibilityException();
@@ -419,6 +423,7 @@ public class ExceptionMapperTest extends JerseyTest {
      */
     @Path("test/responseFilter")
     public static class ExceptionTestResource {
+
         @GET
         @ThrowsNPE
         public String getData() {
@@ -433,6 +438,7 @@ public class ExceptionMapperTest extends JerseyTest {
 
     @ThrowsNPE
     public static class ExceptionThrowingFilter implements ContainerResponseFilter {
+
         @Override
         public void filter(ContainerRequestContext requestContext,
                            ContainerResponseContext responseContext) throws IOException {
@@ -452,12 +458,14 @@ public class ExceptionMapperTest extends JerseyTest {
         assertEquals(200, res.getStatus());
         assertEquals("mapped-throwable-response-filter-exception", res.readEntity(String.class));
     }
+
     /**
      * END: JERSEY-1525 reproducer code
      */
 
     @Provider
     public static class IOExceptionMessageReader implements MessageBodyReader<IOBean>, MessageBodyWriter<IOBean> {
+
         @Override
         public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
             return type == IOBean.class;
@@ -491,6 +499,7 @@ public class ExceptionMapperTest extends JerseyTest {
     }
 
     public static class IOBean {
+
         private final String value;
 
         public IOBean(String value) {
@@ -508,6 +517,7 @@ public class ExceptionMapperTest extends JerseyTest {
 
     @Path("io")
     public static class IOExceptionResource {
+
         @POST
         public String post(IOBean iobean) {
             return iobean.value;
@@ -516,8 +526,8 @@ public class ExceptionMapperTest extends JerseyTest {
 
     @Test
     public void testIOException() {
-        final Response response = target().register(IOExceptionMessageReader.class).
-                path("io").request().post(Entity.entity(new IOBean("io-bean"), MediaType.TEXT_PLAIN));
+        final Response response = target().register(IOExceptionMessageReader.class)
+                .path("io").request().post(Entity.entity(new IOBean("io-bean"), MediaType.TEXT_PLAIN));
         assertEquals(200, response.getStatus());
         assertEquals("passed", response.readEntity(String.class));
     }
@@ -531,17 +541,20 @@ public class ExceptionMapperTest extends JerseyTest {
 
     @Path("not-found")
     public static class MessageBodyProviderNotFoundResource {
+
         @GET
         @Produces("aa/bbb")
         public UnknownType get() {
             return new UnknownType();
         }
     }
+
     public static class UnknownType {
 
     }
 
-    public static class ProviderNotFoundExceptionMapper implements ExceptionMapper<InternalServerErrorException>{
+    public static class ProviderNotFoundExceptionMapper implements ExceptionMapper<InternalServerErrorException> {
+
         @Override
         public Response toResponse(InternalServerErrorException exception) {
             if (exception.getCause() instanceof MessageBodyProviderNotFoundException) {
@@ -561,7 +574,6 @@ public class ExceptionMapperTest extends JerseyTest {
         assertEquals(200, response.getStatus());
         assertEquals("mapped-by-ProviderNotFoundExceptionMapper", response.readEntity(String.class));
     }
-
 
     public static class Jersey1887Exception extends RuntimeException {
     }

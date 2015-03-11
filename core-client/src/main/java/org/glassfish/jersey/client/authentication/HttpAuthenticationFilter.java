@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client.authentication;
 
 import java.io.IOException;
@@ -47,7 +48,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import javax.ws.rs.Priorities;
 import javax.ws.rs.ProcessingException;
@@ -75,10 +75,11 @@ import org.glassfish.jersey.client.internal.LocalizationMessages;
 /**
  * Http Authentication filter that provides basic and digest authentication (based on RFC 2617).
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 @Priority(Priorities.AUTHENTICATION)
 class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFilter {
+
     /**
      * Authentication type.
      */
@@ -93,8 +94,10 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
         DIGEST
     }
 
-    private final static String REQUEST_PROPERTY_FILTER_REUSED = "org.glassfish.jersey.client.authentication.HttpAuthenticationFilter.reused";
-    private final static String REQUEST_PROPERTY_OPERATION = "org.glassfish.jersey.client.authentication.HttpAuthenticationFilter.operation";
+    private static final String REQUEST_PROPERTY_FILTER_REUSED =
+            "org.glassfish.jersey.client.authentication.HttpAuthenticationFilter.reused";
+    private static final String REQUEST_PROPERTY_OPERATION =
+            "org.glassfish.jersey.client.authentication.HttpAuthenticationFilter.operation";
 
     /**
      * Encoding used for authentication calculations.
@@ -113,7 +116,6 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
     private final BasicAuthenticator basicAuth;
 
     private static final int MAXIMUM_DIGEST_CACHE_SIZE = 10000;
-
 
     /**
      * Create a new filter instance.
@@ -171,7 +173,6 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
         return limit;
     }
 
-
     @Override
     public void filter(ClientRequestContext request) throws IOException {
         if ("true".equals(request.getProperty(REQUEST_PROPERTY_FILTER_REUSED))) {
@@ -213,7 +214,6 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
         }
     }
 
-
     @Override
     public void filter(ClientRequestContext request, ClientResponseContext response) throws IOException {
         if ("true".equals(request.getProperty(REQUEST_PROPERTY_FILTER_REUSED))) {
@@ -240,7 +240,6 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
         } else {
             authenticate = false;
         }
-
 
         if (mode == HttpAuthenticationFeature.Mode.BASIC_PREEMPTIVE) {
             // do nothing -> 401 will be returned to the client
@@ -307,7 +306,6 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
 
         Invocation.Builder builder = resourceTarget.request(mediaType);
 
-
         MultivaluedMap<String, Object> newHeaders = new MultivaluedHashMap<String, Object>();
 
         for (Map.Entry<String, List<Object>> entry : request.getHeaders().entrySet()) {
@@ -320,7 +318,6 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
         newHeaders.add(HttpHeaders.AUTHORIZATION, newAuthorizationHeader);
         builder.headers(newHeaders);
 
-
         builder.property(REQUEST_PROPERTY_FILTER_REUSED, "true");
 
         Invocation invocation;
@@ -331,7 +328,6 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
                     Entity.entity(request.getEntity(), request.getMediaType()));
         }
         Response nextResponse = invocation.invoke();
-
 
         if (nextResponse.hasEntity()) {
             response.setEntityStream(nextResponse.readEntity(InputStream.class));
@@ -348,9 +344,9 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
      * Credentials (username + password).
      */
     static class Credentials {
+
         private final String username;
         private final byte[] password;
-
 
         /**
          * Create a new credentials from username and password as byte array.

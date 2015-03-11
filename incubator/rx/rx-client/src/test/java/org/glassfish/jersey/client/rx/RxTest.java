@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
+
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
@@ -68,7 +70,10 @@ public class RxTest {
 
     @Before
     public void setUp() throws Exception {
-        executor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setNameFormat("jersey-rx-client-test-%d").build());
+        executor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
+                .setNameFormat("jersey-rx-client-test-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build());
     }
 
     @After
@@ -144,7 +149,7 @@ public class RxTest {
 
         // Executor.
         final Matcher<String> matcher = containsString("jersey-rx-client-test");
-        assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread? matcher : not(matcher));
+        assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread ? matcher : not(matcher));
 
         // Properties.
         assertThat(response.getHeaderString("Test-Uri"), is("http://jersey.java.net"));

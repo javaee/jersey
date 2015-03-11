@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -124,15 +124,17 @@ public class ExplicitProduceTemplateTest extends JerseyTest {
 
     @Test
     public void testProducesWildcard() throws Exception {
-        for (final String path : new String[]{"explicit-no-produces", "explicit-wildcard-produces", "explicit-two-get-produces"}) {
+        for (final String path : new String[] {"explicit-no-produces", "explicit-wildcard-produces",
+                "explicit-two-get-produces"}) {
             final WebTarget target = target(path);
 
-            for (final String mediaType : new String[]{"application/def", "text/plain"}) {
+            for (final String mediaType : new String[] {"application/def", "text/plain"}) {
                 final Properties p = new Properties();
                 p.load(target.request(mediaType).get(InputStream.class));
 
-                assertTrue(p.getProperty("path").matches
-                        ("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitProduceTemplateTest/Explicit([a-zA-Z]+)Template/index.def"));
+                assertTrue(p.getProperty("path")
+                        .matches("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitProduceTemplateTest/Explicit([a-zA-Z]+)"
+                                + "Template/index.def"));
                 assertEquals("def", p.getProperty("model"));
                 assertEquals("DefViewProcessor", p.getProperty("name"));
             }
@@ -146,7 +148,8 @@ public class ExplicitProduceTemplateTest extends JerseyTest {
         final Properties p = new Properties();
         p.load(target.request("application/abc").get(InputStream.class));
 
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitProduceTemplateTest/ExplicitTwoGetProducesTemplate/index.abc",
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitProduceTemplateTest/ExplicitTwoGetProducesTemplate/index.abc",
                 p.getProperty("path"));
         assertEquals("abc", p.getProperty("model"));
         assertEquals("AbcViewProcessor", p.getProperty("name"));
@@ -158,13 +161,16 @@ public class ExplicitProduceTemplateTest extends JerseyTest {
 
         Properties props = new Properties();
         props.load(target.request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitProduceTemplateTest/ExplicitTemplateProducesClass/index.abc",
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitProduceTemplateTest/ExplicitTemplateProducesClass/index.abc",
                 props.getProperty("path"));
         assertEquals("method", props.getProperty("model"));
 
         props = new Properties();
         props.load(target.path("methodRelativePath").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitProduceTemplateTest/ExplicitTemplateProducesClass/relative.abc",
+        assertEquals(
+                "/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitProduceTemplateTest/ExplicitTemplateProducesClass/relative"
+                        + ".abc",
                 props.getProperty("path"));
         assertEquals("methodRelativePath", props.getProperty("model"));
 

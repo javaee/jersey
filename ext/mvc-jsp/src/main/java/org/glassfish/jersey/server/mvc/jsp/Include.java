@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.mvc.jsp;
 
 import java.io.IOException;
@@ -84,7 +85,7 @@ import org.glassfish.jersey.server.mvc.jsp.internal.LocalizationMessages;
  * </ol>
  *
  * @author Kohsuke Kawaguchi
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  */
 public class Include extends SimpleTagSupport {
 
@@ -105,8 +106,8 @@ public class Include extends SimpleTagSupport {
 
     public void doTag() throws JspException, IOException {
         final JspContext jspContext = getJspContext();
-        final Class<?> resolvingClass = (Class<?>) jspContext.getAttribute(RequestDispatcherWrapper.RESOLVING_CLASS_ATTRIBUTE_NAME,
-                PageContext.REQUEST_SCOPE);
+        final Class<?> resolvingClass = (Class<?>) jspContext
+                .getAttribute(RequestDispatcherWrapper.RESOLVING_CLASS_ATTRIBUTE_NAME, PageContext.REQUEST_SCOPE);
         final String basePath = (String) jspContext.getAttribute(RequestDispatcherWrapper.BASE_PATH_ATTRIBUTE_NAME,
                 PageContext.REQUEST_SCOPE);
 
@@ -126,7 +127,7 @@ public class Include extends SimpleTagSupport {
                         final HttpServletResponse response = (HttpServletResponse) getPageObject(PageContext.RESPONSE);
 
                         dispatcher.include(request,
-                                new Wrapper(response,  new PrintWriter(jspContext.getOut())));
+                                new Wrapper(response, new PrintWriter(jspContext.getOut())));
                     } catch (ServletException e) {
                         throw new JspException(e);
                     }
@@ -137,18 +138,18 @@ public class Include extends SimpleTagSupport {
 
         throw new JspException(LocalizationMessages.UNABLE_TO_FIND_PAGE_FOR_RESOLVING_CLASS(page, resolvingClass));
     }
-}
 
-class Wrapper extends HttpServletResponseWrapper {
+    class Wrapper extends HttpServletResponseWrapper {
 
-    private final PrintWriter writer;
+        private final PrintWriter writer;
 
-    Wrapper(HttpServletResponse httpServletResponse, PrintWriter w) {
-        super(httpServletResponse);
-        this.writer = w;
-    }
+        Wrapper(HttpServletResponse httpServletResponse, PrintWriter w) {
+            super(httpServletResponse);
+            this.writer = w;
+        }
 
-    public PrintWriter getWriter() throws IOException {
-        return writer;
+        public PrintWriter getWriter() throws IOException {
+            return writer;
+        }
     }
 }

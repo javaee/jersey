@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server;
 
 import java.io.ByteArrayInputStream;
@@ -70,11 +71,9 @@ import org.glassfish.jersey.message.internal.HeaderUtils;
 /**
  * Used by tests to create mock JerseyContainerRequestContext instances.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class RequestContextBuilder {
-
-    private RuntimeDelegate rd = RuntimeDelegate.getInstance();
 
     public class TestContainerRequest extends ContainerRequest {
 
@@ -82,16 +81,16 @@ public class RequestContextBuilder {
         private GenericType entityType;
         private final PropertiesDelegate propertiesDelegate;
 
-        public TestContainerRequest(URI baseUri,
-                                    URI requestUri,
-                                    String method,
-                                    SecurityContext securityContext,
-                                    PropertiesDelegate propertiesDelegate) {
+        public TestContainerRequest(final URI baseUri,
+                                    final URI requestUri,
+                                    final String method,
+                                    final SecurityContext securityContext,
+                                    final PropertiesDelegate propertiesDelegate) {
             super(baseUri, requestUri, method, securityContext, propertiesDelegate);
             this.propertiesDelegate = propertiesDelegate;
         }
 
-        public void setEntity(Object entity) {
+        public void setEntity(final Object entity) {
             if (entity instanceof GenericEntity) {
                 this.entity = ((GenericEntity) entity).getEntity();
                 this.entityType = new GenericType(((GenericEntity) entity).getType());
@@ -102,27 +101,25 @@ public class RequestContextBuilder {
         }
 
         @Override
-        public void setWorkers(MessageBodyWorkers workers) {
+        public void setWorkers(final MessageBodyWorkers workers) {
             super.setWorkers(workers);
-            byte[] entityBytes;
+            final byte[] entityBytes;
             if (entity != null) {
-                MultivaluedMap<String, Object> myMap = new MultivaluedHashMap<String, Object>(getHeaders());
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                final MultivaluedMap<String, Object> myMap = new MultivaluedHashMap<String, Object>(getHeaders());
+                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 OutputStream stream = null;
                 try {
                     stream = workers.writeTo(entity, entity.getClass(), entityType.getType(),
                             new Annotation[0], getMediaType(),
                             myMap,
                             propertiesDelegate, baos, Collections.<WriterInterceptor>emptyList());
-                } catch (IOException ex) {
-                    Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (WebApplicationException ex) {
-                    Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (final IOException | WebApplicationException ex) {
+                    Logger.getLogger(TestContainerRequest.class.getName()).log(Level.SEVERE, null, ex);
                 } finally {
                     if (stream != null) {
                         try {
                             stream.close();
-                        } catch (IOException e) {
+                        } catch (final IOException e) {
                             // ignore
                         }
                     }
@@ -135,99 +132,100 @@ public class RequestContextBuilder {
         }
     }
 
-    private final TestContainerRequest result;
+    private final RuntimeDelegate delegate = RuntimeDelegate.getInstance();
+    private final TestContainerRequest request;
 
-    public static RequestContextBuilder from(String requestUri, String method) {
+    public static RequestContextBuilder from(final String requestUri, final String method) {
         return from(null, requestUri, method);
     }
 
-    public static RequestContextBuilder from(String baseUri, String requestUri, String method) {
+    public static RequestContextBuilder from(final String baseUri, final String requestUri, final String method) {
         return new RequestContextBuilder(baseUri, requestUri, method);
     }
 
-    public static RequestContextBuilder from(URI requestUri, String method) {
+    public static RequestContextBuilder from(final URI requestUri, final String method) {
         return from(null, requestUri, method);
     }
 
-    public static RequestContextBuilder from(URI baseUri, URI requestUri, String method) {
+    public static RequestContextBuilder from(final URI baseUri, final URI requestUri, final String method) {
         return new RequestContextBuilder(baseUri, requestUri, method);
     }
 
-    private RequestContextBuilder(String baseUri, String requestUri, String method) {
+    private RequestContextBuilder(final String baseUri, final String requestUri, final String method) {
         this(baseUri == null || baseUri.isEmpty() ? null : URI.create(baseUri), URI.create(requestUri), method);
     }
 
-    private RequestContextBuilder(URI baseUri, URI requestUri, String method) {
-        result = new TestContainerRequest(baseUri, requestUri, method, null,
+    private RequestContextBuilder(final URI baseUri, final URI requestUri, final String method) {
+        request = new TestContainerRequest(baseUri, requestUri, method, null,
                 new MapPropertiesDelegate());
     }
 
     public ContainerRequest build() {
-        return result;
+        return request;
     }
 
-    public RequestContextBuilder accept(String... acceptHeader) {
+    public RequestContextBuilder accept(final String... acceptHeader) {
         putHeaders(HttpHeaders.ACCEPT, acceptHeader);
         return this;
     }
 
-    public RequestContextBuilder accept(MediaType... acceptHeader) {
+    public RequestContextBuilder accept(final MediaType... acceptHeader) {
         putHeaders(HttpHeaders.ACCEPT, (Object[]) acceptHeader);
         return this;
     }
 
-    public RequestContextBuilder entity(Object entity) {
-        result.setEntity(entity);
+    public RequestContextBuilder entity(final Object entity) {
+        request.setEntity(entity);
         return this;
     }
 
-    public RequestContextBuilder type(String contentType) {
-        result.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, contentType);
+    public RequestContextBuilder type(final String contentType) {
+        request.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, contentType);
         return this;
 
     }
 
-    public RequestContextBuilder type(MediaType contentType) {
-        result.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, HeaderUtils.asString(contentType, rd));
+    public RequestContextBuilder type(final MediaType contentType) {
+        request.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, HeaderUtils.asString(contentType, delegate));
         return this;
     }
 
-    public RequestContextBuilder header(String name, Object value) {
+    public RequestContextBuilder header(final String name, final Object value) {
         putHeader(name, value);
         return this;
     }
 
-    public RequestContextBuilder cookie(Cookie cookie) {
+    public RequestContextBuilder cookie(final Cookie cookie) {
         putHeader(HttpHeaders.COOKIE, cookie);
         return this;
     }
 
-    public RequestContextBuilder cookies(Cookie... cookies) {
+    public RequestContextBuilder cookies(final Cookie... cookies) {
         putHeaders(HttpHeaders.COOKIE, (Object[]) cookies);
         return this;
     }
 
-    private void putHeader(String name, Object value) {
+    private void putHeader(final String name, final Object value) {
         if (value == null) {
-            result.getHeaders().remove(name);
+            request.getHeaders().remove(name);
             return;
         }
-        result.header(name, HeaderUtils.asString(value, rd));
+        request.header(name, HeaderUtils.asString(value, delegate));
     }
 
-    private void putHeaders(String name, Object... values) {
+    private void putHeaders(final String name, final Object... values) {
         if (values == null) {
-            result.getHeaders().remove(name);
+            request.getHeaders().remove(name);
             return;
         }
-        result.getHeaders().addAll(name, HeaderUtils.asStringList(Arrays.asList(values), rd));
+        request.getHeaders().addAll(name, HeaderUtils.asStringList(Arrays.asList(values), delegate));
     }
 
-    private void putHeaders(String name, String... values) {
+    private void putHeaders(final String name, final String... values) {
         if (values == null) {
-            result.getHeaders().remove(name);
+            request.getHeaders().remove(name);
             return;
         }
-        result.getHeaders().addAll(name, values);
+        request.getHeaders().addAll(name, values);
     }
 }

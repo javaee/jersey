@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server;
 
 import java.io.File;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
@@ -73,7 +74,7 @@ public class ResourceConfigTest {
 
     @Test
     public void testGetElementsDefault1() {
-        final String[] elements = Tokenizer.tokenize(new String[]{"a b,c;d\ne"});
+        final String[] elements = Tokenizer.tokenize(new String[] {"a b,c;d\ne"});
 
         assertEquals(elements[0], "a");
         assertEquals(elements[1], "b");
@@ -84,7 +85,7 @@ public class ResourceConfigTest {
 
     @Test
     public void testGetElementsDefault2() {
-        final String[] elements = Tokenizer.tokenize(new String[]{"a    b, ,c;d\n\n\ne"});
+        final String[] elements = Tokenizer.tokenize(new String[] {"a    b, ,c;d\n\n\ne"});
 
         assertEquals(elements[0], "a");
         assertEquals(elements[1], "b");
@@ -95,7 +96,7 @@ public class ResourceConfigTest {
 
     @Test
     public void testGetElementsExplicitDelimiter() {
-        final String[] elements = Tokenizer.tokenize(new String[]{"a b,c;d\ne"}, " ;");
+        final String[] elements = Tokenizer.tokenize(new String[] {"a b,c;d\ne"}, " ;");
 
         assertEquals(elements[0], "a");
         assertEquals(elements[1], "b,c");
@@ -114,11 +115,11 @@ public class ResourceConfigTest {
     public void testResourceConfigInjection() throws InterruptedException, ExecutionException {
         final int rcId = 12345;
         final ResourceConfig resourceConfig = new MyResourceConfig2(rcId);
-        final ApplicationHandler ah = new ApplicationHandler(resourceConfig);
+        final ApplicationHandler handler = new ApplicationHandler(resourceConfig);
 
-        assertSame(resourceConfig, ah.getServiceLocator().getService(Application.class));
+        assertSame(resourceConfig, handler.getServiceLocator().getService(Application.class));
 
-        final ContainerResponse r = ah.apply(RequestContextBuilder.from("/", "/resource?id=" + rcId, "GET").build()).get();
+        final ContainerResponse r = handler.apply(RequestContextBuilder.from("/", "/resource?id=" + rcId, "GET").build()).get();
         assertEquals(200, r.getStatus());
         assertEquals("Injected application instance not same as used for building the Jersey handler.",
                 "true", r.getEntity());
@@ -126,21 +127,12 @@ public class ResourceConfigTest {
 
     @Test
     public void testResourceConfigMergeApplications() throws Exception {
-        // No custom binder.
-        ApplicationHandler ah = new ApplicationHandler(EmtpyResourceConfigWithoutWadl.class);
-        assertEquals(0, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
-
-        // with MyBinder
-        ah = new ApplicationHandler(MyResourceConfig1.class);
-        assertEquals(1, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
-
         // Add myBinder + one default.
         final MyOtherBinder defaultBinder = new MyOtherBinder();
         final ResourceConfig rc = ResourceConfig.forApplicationClass(MyResourceConfig1.class);
         rc.register(defaultBinder);
-        ah = new ApplicationHandler(rc);
-        assertEquals(2, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
-        assertTrue(ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).contains(defaultBinder));
+        final ApplicationHandler handler = new ApplicationHandler(rc);
+        assertTrue(handler.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).contains(defaultBinder));
     }
 
     @Test
@@ -161,13 +153,8 @@ public class ResourceConfigTest {
         assertEquals("app", resourceConfig.getApplicationName());
     }
 
-    public static class EmtpyResourceConfigWithoutWadl extends ResourceConfig {
-        public EmtpyResourceConfigWithoutWadl() {
-            property(ServerProperties.WADL_FEATURE_DISABLE, true);
-        }
-    }
-
     public static class MyResourceConfig1 extends ResourceConfig {
+
         public MyResourceConfig1() {
             property(ServerProperties.WADL_FEATURE_DISABLE, true);
             register(new MyBinder());
@@ -222,8 +209,9 @@ public class ResourceConfigTest {
         final ResourceConfig rc = new ResourceConfig()
                 .property(ServerProperties.PROVIDER_CLASSPATH, PublicRootResourceClass.class.getResource("").getPath());
 
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceClass.class));
-        assertThat(rc.getClasses().size(), is(1));
+        final Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes, hasItem(PublicRootResourceClass.class));
+        assertThat(classes.size(), is(1));
     }
 
     @Test
@@ -231,18 +219,21 @@ public class ResourceConfigTest {
         final ResourceConfig rc = new ResourceConfig()
                 .property(ServerProperties.PROVIDER_CLASSPATH, InnerStaticClass.class.getResource("").getPath());
 
-        assertThat(rc.getClasses(), hasItem(InnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses().size(), is(1));
+        final Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes, hasItem(InnerStaticClass.PublicClass.class));
+        assertThat(classes.size(), is(1));
     }
 
     @Test
     public void testClassPathPropertyTopLevelInnerStatic() {
         final ResourceConfig rc = new ResourceConfig()
-                .property(ServerProperties.PROVIDER_CLASSPATH, PublicRootResourceInnerStaticClass.class.getResource("").getPath());
+                .property(ServerProperties.PROVIDER_CLASSPATH,
+                        PublicRootResourceInnerStaticClass.class.getResource("").getPath());
 
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceInnerStaticClass.class));
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceInnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses().size(), is(2));
+        final Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes, hasItem(PublicRootResourceInnerStaticClass.class));
+        assertThat(classes, hasItem(PublicRootResourceInnerStaticClass.PublicClass.class));
+        assertThat(classes.size(), is(2));
     }
 
     @Test
@@ -250,41 +241,44 @@ public class ResourceConfigTest {
         final ResourceConfig rc = new ResourceConfig()
                 .property(ServerProperties.PROVIDER_CLASSPATH, ResourceConfigTest.class.getResource("").getPath() + "/config");
 
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceClass.class));
-        assertThat(rc.getClasses(), hasItem(InnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceInnerStaticClass.class));
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceInnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses().size(), is(4));
+        final Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes, hasItem(PublicRootResourceClass.class));
+        assertThat(classes, hasItem(InnerStaticClass.PublicClass.class));
+        assertThat(classes, hasItem(PublicRootResourceInnerStaticClass.class));
+        assertThat(classes, hasItem(PublicRootResourceInnerStaticClass.PublicClass.class));
+        assertThat(classes.size(), is(4));
     }
 
     @Test
     public void testClassPathPropertyAllMultiplePaths() {
-        final String paths = PublicRootResourceClass.class.getResource("").getPath() + ";" +
-                InnerStaticClass.class.getResource("").getPath() + ";" +
-                PublicRootResourceInnerStaticClass.class.getResource("").getPath();
+        final String paths = PublicRootResourceClass.class.getResource("").getPath() + ";"
+                + InnerStaticClass.class.getResource("").getPath() + ";"
+                + PublicRootResourceInnerStaticClass.class.getResource("").getPath();
         final ResourceConfig rc = new ResourceConfig()
                 .property(ServerProperties.PROVIDER_CLASSPATH, paths);
 
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceClass.class));
-        assertThat(rc.getClasses(), hasItem(InnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceInnerStaticClass.class));
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceInnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses().size(), is(4));
+        final Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes, hasItem(PublicRootResourceClass.class));
+        assertThat(classes, hasItem(InnerStaticClass.PublicClass.class));
+        assertThat(classes, hasItem(PublicRootResourceInnerStaticClass.class));
+        assertThat(classes, hasItem(PublicRootResourceInnerStaticClass.PublicClass.class));
+        assertThat(classes.size(), is(4));
     }
 
     @Test
     public void testClassPathPropertyAllMultiplePathsWithSpaces() {
-        final String paths = PublicRootResourceClass.class.getResource("").getPath() + "; " +
-                InnerStaticClass.class.getResource("").getPath() + ";;" +
-                PublicRootResourceInnerStaticClass.class.getResource("").getPath() + "; ;; ";
+        final String paths = PublicRootResourceClass.class.getResource("").getPath() + "; "
+                + InnerStaticClass.class.getResource("").getPath() + ";;"
+                + PublicRootResourceInnerStaticClass.class.getResource("").getPath() + "; ;; ";
         final ResourceConfig rc = new ResourceConfig()
                 .property(ServerProperties.PROVIDER_CLASSPATH, paths);
 
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceClass.class));
-        assertThat(rc.getClasses(), hasItem(InnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceInnerStaticClass.class));
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceInnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses().size(), is(4));
+        final Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes, hasItem(PublicRootResourceClass.class));
+        assertThat(classes, hasItem(InnerStaticClass.PublicClass.class));
+        assertThat(classes, hasItem(PublicRootResourceInnerStaticClass.class));
+        assertThat(classes, hasItem(PublicRootResourceInnerStaticClass.PublicClass.class));
+        assertThat(classes.size(), is(4));
     }
 
     @Test
@@ -295,8 +289,9 @@ public class ResourceConfigTest {
                         "config/toplevel/PackageRootResourceClass.class")
         );
 
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceClass.class));
-        assertThat(rc.getClasses().size(), is(1));
+        final Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes, hasItem(PublicRootResourceClass.class));
+        assertThat(classes.size(), is(1));
     }
 
     @Test
@@ -310,8 +305,9 @@ public class ResourceConfigTest {
                         "config/innerstatic/InnerStaticClass$PrivateClass.class")
         );
 
-        assertThat(rc.getClasses(), hasItem(InnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses().size(), is(1));
+        final Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes, hasItem(InnerStaticClass.PublicClass.class));
+        assertThat(classes.size(), is(1));
     }
 
     @Test
@@ -327,9 +323,10 @@ public class ResourceConfigTest {
                         "config/innerstatic/InnerStaticClass$PrivateClass.class")
         );
 
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceClass.class));
-        assertThat(rc.getClasses(), hasItem(InnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses().size(), is(2));
+        final Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes, hasItem(PublicRootResourceClass.class));
+        assertThat(classes, hasItem(InnerStaticClass.PublicClass.class));
+        assertThat(classes.size(), is(2));
     }
 
     @Test
@@ -343,9 +340,33 @@ public class ResourceConfigTest {
                         "config/innerstatic/InnerStaticClass$PrivateClass.class")
         );
 
-        assertThat(rc.getClasses(), hasItem(PublicRootResourceClass.class));
-        assertThat(rc.getClasses(), hasItem(InnerStaticClass.PublicClass.class));
-        assertThat(rc.getClasses().size(), is(2));
+        final Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes, hasItem(PublicRootResourceClass.class));
+        assertThat(classes, hasItem(InnerStaticClass.PublicClass.class));
+        assertThat(classes.size(), is(2));
+    }
+
+    /**
+     * Reproducer for JERSEY-2796: Calling getClasses() on ResourceConfig breaks example in some cases.
+     * <p/>
+     * Registering a component after calling {@link ResourceConfig#getClasses()} and checking that all expected components are
+     * registered.
+     */
+    @Test
+    public void testGetClasses() throws Exception {
+        final ResourceConfig rc = new ResourceConfig()
+                .packages(false, PublicRootResourceClass.class.getPackage().getName());
+
+        Set<Class<?>> classes = rc.getClasses();
+        assertThat(classes.size(), is(1));
+        assertThat(classes, hasItem(PublicRootResourceClass.class));
+
+        rc.register(InnerStaticClass.PublicClass.class);
+
+        classes = rc.getClasses();
+        assertThat(classes.size(), is(2));
+        assertThat(classes, hasItem(PublicRootResourceClass.class));
+        assertThat(classes, hasItem(InnerStaticClass.PublicClass.class));
     }
 
     private ResourceConfig createConfigWithClassPathProperty(final File jarFile) {

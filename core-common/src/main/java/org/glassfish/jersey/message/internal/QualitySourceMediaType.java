@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 package org.glassfish.jersey.message.internal;
 
 import java.text.ParseException;
+import java.util.Comparator;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
@@ -50,16 +51,27 @@ import javax.ws.rs.core.MediaType;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class QualitySourceMediaType extends MediaType {
+public class QualitySourceMediaType extends MediaType implements Qualified {
     /**
-     * Quality source header value parameter name.
+     * Comparator for lists of quality source media types.
      */
-    public static final String QUALITY_SOURCE_PARAMETER_NAME = "qs";
+    public static final Comparator<QualitySourceMediaType> COMPARATOR =
+            new Comparator<QualitySourceMediaType>() {
+
+                @Override
+                public int compare(QualitySourceMediaType o1, QualitySourceMediaType o2) {
+                    int i = Quality.QUALIFIED_COMPARATOR.compare(o1, o2);
+                    if (i != 0) {
+                        return i;
+                    }
+                    return MediaTypes.PARTIAL_ORDER_COMPARATOR.compare(o1, o2);
+                }
+            };
 
     private final int qs;
 
     /**
-     * Create new quality source media type instance with a {@link Quality#DEFAULT_QUALITY
+     * Create new quality source media type instance with a {@link Quality#DEFAULT
      * default quality factor} value.
      *
      * @param type    the primary type, {@code null} is equivalent to
@@ -68,8 +80,8 @@ public class QualitySourceMediaType extends MediaType {
      *                {@link #MEDIA_TYPE_WILDCARD}
      */
     public QualitySourceMediaType(String type, String subtype) {
-        super(type, subtype);
-        qs = Quality.DEFAULT_QUALITY;
+        super(type, subtype); // no need to add default quality parameter.
+        qs = Quality.DEFAULT;
     }
 
     /**
@@ -84,6 +96,12 @@ public class QualitySourceMediaType extends MediaType {
      *                   empty map.
      */
     public QualitySourceMediaType(String type, String subtype, int quality, Map<String, String> parameters) {
+        super(type, subtype, Quality.enhanceWithQualityParameter(parameters, Quality.QUALITY_SOURCE_PARAMETER_NAME, quality));
+        this.qs = quality;
+    }
+
+    // used by QualitySourceMediaType.valueOf method; no need to fix parameter map
+    private QualitySourceMediaType(String type, String subtype, Map<String, String> parameters, int quality) {
         super(type, subtype, parameters);
         this.qs = quality;
     }
@@ -93,7 +111,8 @@ public class QualitySourceMediaType extends MediaType {
      *
      * @return quality source factor value.
      */
-    public int getQualitySource() {
+    @Override
+    public int getQuality() {
         return qs;
     }
 
@@ -103,6 +122,7 @@ public class QualitySourceMediaType extends MediaType {
      *
      * @param reader HTTP header reader.
      * @return new acceptable media type instance.
+     *
      * @throws ParseException in case the input data parsing failed.
      */
     public static QualitySourceMediaType valueOf(HttpHeaderReader reader) throws ParseException {
@@ -110,38 +130,39 @@ public class QualitySourceMediaType extends MediaType {
         reader.hasNext();
 
         // Get the type
-        String type = reader.nextToken();
+        String type = reader.nextToken().toString();
         reader.nextSeparator('/');
         // Get the subtype
-        String subType = reader.nextToken();
+        String subType = reader.nextToken().toString();
 
-        int qs = Quality.DEFAULT_QUALITY;
+        int qs = Quality.DEFAULT;
         Map<String, String> parameters = null;
         if (reader.hasNext()) {
             parameters = HttpHeaderReader.readParameters(reader);
             if (parameters != null) {
-                qs = getQs(parameters.get(QUALITY_SOURCE_PARAMETER_NAME));
+                qs = getQs(parameters.get(Quality.QUALITY_SOURCE_PARAMETER_NAME));
             }
         }
 
-        return new QualitySourceMediaType(type, subType, qs, parameters);
+        // use private constructor to skip quality value validation step
+        return new QualitySourceMediaType(type, subType, parameters, qs);
     }
 
     /**
      * Extract quality source information from the supplied {@link MediaType} value.
      *
-     * If no quality source parameter is present in the media type, {@link Quality#DEFAULT_QUALITY
+     * If no quality source parameter is present in the media type, {@link Quality#DEFAULT
      * default quality} is returned.
      *
      * @param mediaType media type.
-     * @return quality source parameter value or {@link Quality#DEFAULT_QUALITY default quality},
-     *         if no quality source parameter is present.
+     * @return quality source parameter value or {@link Quality#DEFAULT default quality},
+     * if no quality source parameter is present.
+     *
      * @throws IllegalArgumentException in case the quality source parameter value could not be parsed.
      */
-    public static int getQualitySource(MediaType mediaType) throws IllegalArgumentException {
+    public static int getQualitySource(final MediaType mediaType) throws IllegalArgumentException {
         if (mediaType instanceof QualitySourceMediaType) {
-            QualitySourceMediaType qsmt = (QualitySourceMediaType) mediaType;
-            return qsmt.getQualitySource();
+            return ((QualitySourceMediaType) mediaType).getQuality();
         } else {
             return getQs(mediaType);
         }
@@ -149,7 +170,7 @@ public class QualitySourceMediaType extends MediaType {
 
     private static int getQs(MediaType mt) throws IllegalArgumentException {
         try {
-            return getQs(mt.getParameters().get(QUALITY_SOURCE_PARAMETER_NAME));
+            return getQs(mt.getParameters().get(Quality.QUALITY_SOURCE_PARAMETER_NAME));
         } catch (ParseException ex) {
             throw new IllegalArgumentException(ex);
         }
@@ -157,20 +178,10 @@ public class QualitySourceMediaType extends MediaType {
 
     private static int getQs(String v) throws ParseException {
         if (v == null) {
-            return Quality.DEFAULT_QUALITY;
+            return Quality.DEFAULT;
         }
 
-        try {
-            final int qs = (int) (Float.valueOf(v) * 1000.0);
-            if (qs < 0) {
-                throw new ParseException("The quality source (qs) value, " + v + ", must be non-negative number", 0);
-            }
-            return qs;
-        } catch (NumberFormatException ex) {
-            ParseException pe = new ParseException("The quality source (qs) value, " + v + ", is not a valid value", 0);
-            pe.initCause(ex);
-            throw pe;
-        }
+        return HttpHeaderReader.readQualityFactor(v);
     }
 
     @Override
@@ -185,13 +196,18 @@ public class QualitySourceMediaType extends MediaType {
         } else {
             // obj is a plain MediaType instance
             // with a quality source factor set to default (1.0)
-            return this.qs == Quality.DEFAULT_QUALITY;
+            return this.qs == Quality.DEFAULT;
         }
     }
 
     @Override
     public int hashCode() {
         int hash = super.hashCode();
-        return (this.qs == Quality.DEFAULT_QUALITY) ? hash : 47 * hash + this.qs;
+        return (this.qs == Quality.DEFAULT) ? hash : 47 * hash + this.qs;
+    }
+
+    @Override
+    public String toString() {
+        return "{" + super.toString() + ", qs=" + qs + "}";
     }
 }

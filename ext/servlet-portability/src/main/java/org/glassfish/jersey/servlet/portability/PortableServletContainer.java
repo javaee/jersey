@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.servlet.portability;
 
 import java.io.IOException;
@@ -82,9 +83,10 @@ import javax.servlet.ServletResponse;
  *     </pre>
  * </p>
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class PortableServletContainer implements Filter, Servlet {
+
     private static final String JERSEY_1_PREFIX = "jersey1#";
     private static final String JERSEY_2_PREFIX = "jersey2#";
 
@@ -128,7 +130,8 @@ public class PortableServletContainer implements Filter, Servlet {
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
         wrappedFilter.doFilter(request, response, chain);
     }
 
@@ -158,10 +161,11 @@ public class PortableServletContainer implements Filter, Servlet {
     }
 
     private abstract class InitParamsWrapper {
+
         private final HashMap<String, String> filteredInitParams = new HashMap<String, String>();
 
         void init() {
-            for (Enumeration e = getInitParamNames(); e.hasMoreElements();) {
+            for (Enumeration e = getInitParamNames(); e.hasMoreElements(); ) {
                 String name = (String) e.nextElement();
                 String value = getInitParamValue(name);
                 if (name.startsWith(includePrefix)) {
@@ -174,6 +178,7 @@ public class PortableServletContainer implements Filter, Servlet {
         }
 
         abstract String getInitParamValue(String name);
+
         abstract Enumeration getInitParamNames();
 
         public String getInitParameter(String name) {
@@ -186,6 +191,7 @@ public class PortableServletContainer implements Filter, Servlet {
     }
 
     private class FilterConfigWrapper extends InitParamsWrapper implements FilterConfig {
+
         private final FilterConfig wrapped;
 
         FilterConfigWrapper(FilterConfig wrapped) {
@@ -215,6 +221,7 @@ public class PortableServletContainer implements Filter, Servlet {
     }
 
     private class ServletConfigWrapper extends InitParamsWrapper implements ServletConfig {
+
         private final ServletConfig wrapped;
 
         ServletConfigWrapper(ServletConfig wrapped) {

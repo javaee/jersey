@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,7 +51,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
 /**
  * Resource method statistics.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 final class ResourceMethodStatisticsImpl implements ResourceMethodStatistics {
 
@@ -103,12 +103,13 @@ final class ResourceMethodStatisticsImpl implements ResourceMethodStatistics {
                 return cached;
             }
 
-            final ExecutionStatistics methodStats = resourceMethodExecutionStatisticsBuilder == null ?
-                    ExecutionStatisticsImpl.EMPTY : resourceMethodExecutionStatisticsBuilder.build();
-            final ExecutionStatistics requestStats = requestExecutionStatisticsBuilder == null ?
-                    ExecutionStatisticsImpl.EMPTY : requestExecutionStatisticsBuilder.build();
+            final ExecutionStatistics methodStats = resourceMethodExecutionStatisticsBuilder == null
+                    ? ExecutionStatisticsImpl.EMPTY : resourceMethodExecutionStatisticsBuilder.build();
+            final ExecutionStatistics requestStats = requestExecutionStatisticsBuilder == null
+                    ? ExecutionStatisticsImpl.EMPTY : requestExecutionStatisticsBuilder.build();
 
-            final ResourceMethodStatisticsImpl stats = new ResourceMethodStatisticsImpl(resourceMethod, methodStats, requestStats);
+            final ResourceMethodStatisticsImpl stats = new ResourceMethodStatisticsImpl(resourceMethod, methodStats,
+                    requestStats);
 
             if (MonitoringUtils.isCacheable(methodStats)) {
                 cached = stats;

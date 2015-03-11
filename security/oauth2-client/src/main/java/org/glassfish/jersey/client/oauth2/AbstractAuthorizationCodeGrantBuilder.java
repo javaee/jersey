@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,7 +45,7 @@ import javax.ws.rs.client.Client;
 /**
  * Abstract implementation of {@link OAuth2CodeGrantFlow.Builder}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @since 2.3
  */
 class AbstractAuthorizationCodeGrantBuilder<T extends OAuth2CodeGrantFlow.Builder> implements OAuth2CodeGrantFlow.Builder<T> {

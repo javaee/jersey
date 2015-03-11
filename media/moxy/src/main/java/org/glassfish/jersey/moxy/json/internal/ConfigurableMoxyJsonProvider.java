@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,8 +41,11 @@ package org.glassfish.jersey.moxy.json.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.security.AccessController;
 import java.util.Map;
 import java.util.Set;
@@ -55,6 +58,7 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
 
 import javax.inject.Singleton;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
@@ -79,8 +83,8 @@ import jersey.repackaged.com.google.common.collect.Sets;
 @Singleton
 public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
 
-    private final static Set<String> MARSHALLER_PROPERTY_NAMES;
-    private final static Set<String> UNMARSHALLER_PROPERTY_NAMES;
+    private static final Set<String> MARSHALLER_PROPERTY_NAMES;
+    private static final Set<String> UNMARSHALLER_PROPERTY_NAMES;
 
     static {
         MARSHALLER_PROPERTY_NAMES = getPropertyNames(MarshallerProperties.class);
@@ -174,8 +178,8 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
             final MoxyJsonConfig jsonConfiguration = contextResolver.getContext(MoxyJsonConfig.class);
 
             if (jsonConfiguration != null) {
-                properties.putAll(forMarshaller ?
-                        jsonConfiguration.getMarshallerProperties() : jsonConfiguration.getUnmarshallerProperties());
+                properties.putAll(forMarshaller
+                        ? jsonConfiguration.getMarshallerProperties() : jsonConfiguration.getUnmarshallerProperties());
             }
         }
 
@@ -205,4 +209,45 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
                 || CoreClassConstants.PBOOLEAN == type || CoreClassConstants.BOOLEAN == type
                 || CoreClassConstants.PBYTE == type || CoreClassConstants.BYTE == type;
     }
+
+    @Override
+    protected Class<?> getDomainClass(Type genericType) {
+        if (null == genericType) {
+            return Object.class;
+        }
+        if (genericType instanceof Class && genericType != JAXBElement.class) {
+            Class<?> clazz = (Class<?>) genericType;
+            if (clazz.isArray()) {
+                return getDomainClass(clazz.getComponentType());
+            }
+            return clazz;
+        } else if (genericType instanceof ParameterizedType) {
+            Type type = ((ParameterizedType) genericType).getActualTypeArguments()[0];
+            if (type instanceof ParameterizedType) {
+                Type rawType = ((ParameterizedType) type).getRawType();
+                if (rawType == JAXBElement.class) {
+                    return getDomainClass(type);
+                } else if (rawType instanceof Class) {
+                    return (Class<?>) rawType;
+                }
+            } else if (type instanceof WildcardType) {
+                Type[] upperTypes = ((WildcardType) type).getUpperBounds();
+                if (upperTypes.length > 0) {
+                    Type upperType = upperTypes[0];
+                    if (upperType instanceof Class) {
+                        return (Class<?>) upperType;
+                    }
+                }
+            } else if (JAXBElement.class == type) {
+                return Object.class;
+            }
+            return (Class<?>) type;
+        } else if (genericType instanceof GenericArrayType) {
+            GenericArrayType genericArrayType = (GenericArrayType) genericType;
+            return getDomainClass(genericArrayType.getGenericComponentType());
+        } else {
+            return Object.class;
+        }
+    }
+
 }

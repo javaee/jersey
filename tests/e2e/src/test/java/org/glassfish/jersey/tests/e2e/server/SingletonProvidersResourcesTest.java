@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,7 +66,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test resources which also acts as providers.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class SingletonProvidersResourcesTest extends JerseyTest {
 
@@ -74,10 +74,9 @@ public class SingletonProvidersResourcesTest extends JerseyTest {
     protected Application configure() {
         ResourceConfig resourceConfig = new ResourceConfig(ResourceSingleton.class, ResourceNotSingleton.class);
 
-
         final Resource.Builder resourceBuilder = Resource.builder();
-        resourceBuilder.name("programmatic").path("programmatic").addMethod("GET").handledBy
-                (ResourceProgrammaticNotSingleton.class);
+        resourceBuilder.name("programmatic").path("programmatic").addMethod("GET")
+                .handledBy(ResourceProgrammaticNotSingleton.class);
         resourceConfig.registerResources(resourceBuilder.build());
 
         return resourceConfig;
@@ -121,11 +120,10 @@ public class SingletonProvidersResourcesTest extends JerseyTest {
             }
         }
 
-
         @GET
         public String get(@HeaderParam("filter-class") String filterClass) {
-            return String.valueOf(String.valueOf(this.toString().equals(filterClass)) + "/" + this.toString() + ":" +
-                    filterClass);
+            return String.valueOf(String.valueOf(this.toString().equals(filterClass)) + "/" + this.toString() + ":"
+                    + filterClass);
         }
     }
 
@@ -141,17 +139,16 @@ public class SingletonProvidersResourcesTest extends JerseyTest {
             }
         }
 
-
         @GET
         public String get(@HeaderParam("filter-class") String filterClass) {
-            return String.valueOf(String.valueOf(this.toString().equals(filterClass)) + "/" + this.toString() + ":" +
-                    filterClass);
+            return String.valueOf(String.valueOf(this.toString().equals(filterClass)) + "/" + this.toString() + ":"
+                    + filterClass);
         }
     }
 
     // should not be a singleton as this is only programmatic resource and is not registered as provider
     public static class ResourceProgrammaticNotSingleton implements ContainerRequestFilter,
-            Inflector<Request, Response> {
+                                                                    Inflector<Request, Response> {
 
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {

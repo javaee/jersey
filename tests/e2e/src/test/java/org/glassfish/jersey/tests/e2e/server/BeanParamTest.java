@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,7 +69,7 @@ import org.junit.Test;
 /**
  * Tests {@link BeanParam bean param injections}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  *
  */
 public class BeanParamTest extends JerseyTest {
@@ -240,10 +240,10 @@ public class BeanParamTest extends JerseyTest {
 
         @Override
         public String toString() {
-            return "SmallBean{" +
-                    "headerParam='" + headerParam + '\'' +
-                    ", pathParam='" + pathParam + '\'' +
-                    '}';
+            return "SmallBean{"
+                    + "headerParam='" + headerParam + '\''
+                    + ", pathParam='" + pathParam + '\''
+                    + '}';
         }
     }
 
@@ -267,10 +267,10 @@ public class BeanParamTest extends JerseyTest {
 
         @Override
         public String toString() {
-            return "EncodedBean{" +
-                    "matrixParam='" + matrixParam + '\'' +
-                    ", queryParam='" + queryParam + '\'' +
-                    '}';
+            return "EncodedBean{"
+                    + "matrixParam='" + matrixParam + '\''
+                    + ", queryParam='" + queryParam + '\''
+                    + '}';
         }
     }
 
@@ -376,15 +376,15 @@ public class BeanParamTest extends JerseyTest {
 
         @Override
         public String toString() {
-            return "Bean{" +
-                    "cookie='" + cookie + '\'' +
-                    ", formParam='" + formParam + '\'' +
-                    ", headerParam='" + headerParam + '\'' +
-                    ", matrixParam='" + matrixParam + '\'' +
-                    ", pathParam='" + pathParam + '\'' +
-                    ", queryParam='" + queryParam + '\'' +
-                    ", request='" + requestToString() + "'" +
-                    '}';
+            return "Bean{"
+                    + "cookie='" + cookie + '\''
+                    + ", formParam='" + formParam + '\''
+                    + ", headerParam='" + headerParam + '\''
+                    + ", matrixParam='" + matrixParam + '\''
+                    + ", pathParam='" + pathParam + '\''
+                    + ", queryParam='" + queryParam + '\''
+                    + ", request='" + requestToString() + "'"
+                    + '}';
         }
     }
 
@@ -488,15 +488,15 @@ public class BeanParamTest extends JerseyTest {
 
         @Override
         public String toString() {
-            return "Bean{" +
-                    "cookie='" + cookie + '\'' +
-                    ", formParam='" + formParam + '\'' +
-                    ", headerParam='" + headerParam + '\'' +
-                    ", matrixParam='" + matrixParam + '\'' +
-                    ", pathParam='" + pathParam + '\'' +
-                    ", queryParam='" + queryParam + '\'' +
-                    ", request='" + requestToString() + "'" +
-                    '}';
+            return "Bean{"
+                    + "cookie='" + cookie + '\''
+                    + ", formParam='" + formParam + '\''
+                    + ", headerParam='" + headerParam + '\''
+                    + ", matrixParam='" + matrixParam + '\''
+                    + ", pathParam='" + pathParam + '\''
+                    + ", queryParam='" + queryParam + '\''
+                    + ", request='" + requestToString() + "'"
+                    + '}';
         }
     }
 

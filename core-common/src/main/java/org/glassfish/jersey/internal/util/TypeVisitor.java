@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,19 +60,24 @@ abstract class TypeVisitor<T> {
      * @param type visited type.
      * @return visiting result.
      */
-    public final T visit(Type type) {
+    public final T visit(final Type type) {
         assert type != null;
 
-        if (type instanceof Class)
+        if (type instanceof Class) {
             return onClass((Class) type);
-        if (type instanceof ParameterizedType)
+        }
+        if (type instanceof ParameterizedType) {
             return onParameterizedType((ParameterizedType) type);
-        if (type instanceof GenericArrayType)
+        }
+        if (type instanceof GenericArrayType) {
             return onGenericArray((GenericArrayType) type);
-        if (type instanceof WildcardType)
+        }
+        if (type instanceof WildcardType) {
             return onWildcard((WildcardType) type);
-        if (type instanceof TypeVariable)
+        }
+        if (type instanceof TypeVariable) {
             return onVariable((TypeVariable) type);
+        }
 
         // covered all the cases
         assert false;
@@ -126,7 +131,7 @@ abstract class TypeVisitor<T> {
      * @param type visited parameterized type.
      * @return visit result.
      */
-    protected RuntimeException createError(Type type) {
+    protected RuntimeException createError(final Type type) {
         throw new IllegalArgumentException();
     }
 }

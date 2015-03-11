@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -109,13 +109,14 @@ public class MultipartMixedWithApacheClientTest extends JerseyTest {
     public void testProducesFormDataUsingMultiPart() {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        for (int i = 0; i < 900 * 1024; i++)
+        for (int i = 0; i < 900 * 1024; i++) {
             baos.write(65);
+        }
 
-        MultiPart multiPartInput = new MultiPart().
-                bodyPart(new ByteArrayInputStream("01234567890123456789012345678901234567890123456789".getBytes()),
-                        MediaType.APPLICATION_OCTET_STREAM_TYPE).
-                bodyPart(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM_TYPE);
+        MultiPart multiPartInput = new MultiPart()
+                .bodyPart(new ByteArrayInputStream("01234567890123456789012345678901234567890123456789".getBytes()),
+                        MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .bodyPart(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM_TYPE);
 
         target().path("resource").request().post(Entity.entity(multiPartInput,
                 MultiPartMediaTypes.createMixed()));
@@ -127,14 +128,16 @@ public class MultipartMixedWithApacheClientTest extends JerseyTest {
         client.property(ClientProperties.CHUNKED_ENCODING_SIZE, 1024);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        for (int i = 0; i < 900 * 1024; i++)
+        for (int i = 0; i < 900 * 1024; i++) {
             baos.write(65);
+        }
 
-        MultiPart multiPartInput = new MultiPart().
-                bodyPart(new ByteArrayInputStream("01234567890123456789012345678901234567890123456789".getBytes()), MediaType.APPLICATION_OCTET_STREAM_TYPE).
-                bodyPart(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM_TYPE);
+        MultiPart multiPartInput = new MultiPart()
+                .bodyPart(new ByteArrayInputStream("01234567890123456789012345678901234567890123456789".getBytes()),
+                        MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .bodyPart(baos.toByteArray(), MediaType.APPLICATION_OCTET_STREAM_TYPE);
 
-        client.target(getBaseUri()).path("resource").request().
-                post(Entity.entity(multiPartInput, MultiPartMediaTypes.createMixed()));
+        client.target(getBaseUri()).path("resource").request()
+                .post(Entity.entity(multiPartInput, MultiPartMediaTypes.createMixed()));
     }
 }

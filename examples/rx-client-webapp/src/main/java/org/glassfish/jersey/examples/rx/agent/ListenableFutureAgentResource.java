@@ -115,9 +115,9 @@ public class ListenableFutureAgentResource {
         final ListenableFuture<List<Destination>> visited = RxListenableFuture.from(destination).path("visited").request()
                 // Identify the user.
                 .header("Rx-User", "Guava")
-                // Reactive invoker.
+                        // Reactive invoker.
                 .rx()
-                // Return a list of destinations.
+                        // Return a list of destinations.
                 .get(new GenericType<List<Destination>>() {});
         return Futures.transform(visited, new AsyncFunction<List<Destination>, AgentResponse>() {
             @Override
@@ -137,9 +137,9 @@ public class ListenableFutureAgentResource {
         final ListenableFuture<List<Destination>> recommended = RxListenableFuture.from(destination).path("recommended").request()
                 // Identify the user.
                 .header("Rx-User", "Guava")
-                // Reactive invoker.
+                        // Reactive invoker.
                 .rx()
-                // Return a list of destinations.
+                        // Return a list of destinations.
                 .get(new GenericType<List<Destination>>() {});
         final ListenableFuture<List<Recommendation>> recommendations = Futures.transform(recommended,
                 new AsyncFunction<List<Destination>, List<Recommendation>>() {
@@ -182,10 +182,12 @@ public class ListenableFutureAgentResource {
                                     @Override
                                     public ListenableFuture<Recommendation> apply(final Recommendation r) {
                                         return Futures.transform(
-                                                rxForecast.resolveTemplate("destination", r.getDestination()).request().rx().get(Forecast.class),
+                                                rxForecast.resolveTemplate("destination", r.getDestination()).request().rx()
+                                                        .get(Forecast.class),
                                                 new AsyncFunction<Forecast, Recommendation>() {
                                                     @Override
-                                                    public ListenableFuture<Recommendation> apply(final Forecast f) throws Exception {
+                                                    public ListenableFuture<Recommendation> apply(final Forecast f)
+                                                            throws Exception {
                                                         r.setForecast(f.getForecast());
                                                         return Futures.immediateFuture(r);
                                                     }
@@ -208,10 +210,12 @@ public class ListenableFutureAgentResource {
                                     public ListenableFuture<Recommendation> apply(final Recommendation r) {
                                         return Futures.transform(
                                                 rxCalculations.resolveTemplate("from", "Moon")
-                                                        .resolveTemplate("to", r.getDestination()).request().rx().get(Calculation.class),
+                                                        .resolveTemplate("to", r.getDestination()).request().rx()
+                                                        .get(Calculation.class),
                                                 new AsyncFunction<Calculation, Recommendation>() {
                                                     @Override
-                                                    public ListenableFuture<Recommendation> apply(final Calculation c) throws Exception {
+                                                    public ListenableFuture<Recommendation> apply(final Calculation c)
+                                                            throws Exception {
                                                         r.setPrice(c.getPrice());
                                                         return Futures.immediateFuture(r);
                                                     }

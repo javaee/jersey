@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -108,7 +108,8 @@ public class UriRoutingContextTest {
         context = createContext("http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
         assertEquals("my app/resource", context.getPath());
 
-        context = createContext("http://example.org/my%20app/", "http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
+        context = createContext("http://example.org/my%20app/", "http://example.org/my%20app/resource?foo1=bar1&foo2=bar2",
+                "GET");
         assertEquals("resource", context.getPath());
 
         context = createContext("http://example.org/my%20app/",
@@ -322,9 +323,9 @@ public class UriRoutingContextTest {
         final UriInfo ui = createContext("/widgets/10?verbose=true&item=1&item=2", "GET");
         MultivaluedMap<String, String> p = ui.getQueryParameters();
         assertEquals(p.get("verbose").size(), 1);
-        assertEquals(p.getFirst("verbose"),"true");
+        assertEquals(p.getFirst("verbose"), "true");
         assertEquals(p.get("item").size(), 2);
-        assertEquals(p.getFirst("item"),"1");
+        assertEquals(p.getFirst("item"), "1");
         assertEquals(p.get("foo"), null);
         assertEquals(p.getFirst("foo"), null);
     }
@@ -336,7 +337,7 @@ public class UriRoutingContextTest {
     public void testGetQueryParametersEmpty() throws Exception {
         final UriInfo ui = createContext("/widgets/10", "GET");
         MultivaluedMap<String, String> p = ui.getQueryParameters();
-        assertEquals(p.size(),0);
+        assertEquals(p.size(), 0);
     }
 
     /**
@@ -346,7 +347,7 @@ public class UriRoutingContextTest {
     public void testGetQueryParametersSingleAmpersand() throws Exception {
         final UriInfo ui = createContext("/widgets/10?&", "GET");
         MultivaluedMap<String, String> p = ui.getQueryParameters();
-        assertEquals(p.size(),0);
+        assertEquals(p.size(), 0);
     }
 
     /**
@@ -356,7 +357,7 @@ public class UriRoutingContextTest {
     public void testGetQueryParametersMultipleAmpersand() throws Exception {
         final UriInfo ui = createContext("/widgets/10?&&%20=%20&&&", "GET");
         MultivaluedMap<String, String> p = ui.getQueryParameters();
-        assertEquals(p.size(),1);
+        assertEquals(p.size(), 1);
     }
 
     /**
@@ -366,7 +367,7 @@ public class UriRoutingContextTest {
     public void testGetQueryParametersInterspersedAmpersand() throws Exception {
         final UriInfo ui = createContext("/widgets/10?a=1&&b=2", "GET");
         MultivaluedMap<String, String> p = ui.getQueryParameters();
-        assertEquals(p.size(),2);
+        assertEquals(p.size(), 2);
     }
 
     /**
@@ -377,9 +378,9 @@ public class UriRoutingContextTest {
         final UriInfo ui = createContext("/widgets/10?one&two&three", "GET");
         MultivaluedMap<String, String> p = ui.getQueryParameters();
 
-        assertEquals(p.getFirst("one"),"");
-        assertEquals(p.getFirst("two"),"");
-        assertEquals(p.getFirst("three"),"");
+        assertEquals(p.getFirst("one"), "");
+        assertEquals(p.getFirst("two"), "");
+        assertEquals(p.getFirst("three"), "");
     }
 
     /**
@@ -391,9 +392,9 @@ public class UriRoutingContextTest {
         MultivaluedMap<String, String> p = ui.getQueryParameters();
 
         assertEquals(p.get("one").size(), 3);
-        assertEquals(p.get("one").get(0),"");
-        assertEquals(p.get("one").get(1),"");
-        assertEquals(p.get("one").get(2),"");
+        assertEquals(p.get("one").get(0), "");
+        assertEquals(p.get("one").get(1), "");
+        assertEquals(p.get("one").get(2), "");
     }
 
     /**

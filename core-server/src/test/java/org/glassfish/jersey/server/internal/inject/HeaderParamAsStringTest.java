@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,6 +66,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceString {
+
         @GET
         public String doGet(@HeaderParam("arg1") String arg1,
                             @HeaderParam("arg2") String arg2, @HeaderParam("arg3") String arg3) {
@@ -89,6 +90,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringEmpty {
+
         @GET
         public String doGet(@HeaderParam("arg1") String arg1) {
             assertEquals("", arg1);
@@ -98,6 +100,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringAbsent {
+
         @GET
         public String doGet(@HeaderParam("arg1") String arg1) {
             assertEquals(null, arg1);
@@ -107,6 +110,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringList {
+
         @GET
         @Produces("application/stringlist")
         public String doGetString(@HeaderParam("args") List<String> args) {
@@ -131,6 +135,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListEmpty {
+
         @GET
         @Produces("application/stringlist")
         public String doGetString(@HeaderParam("args") List<String> args) {
@@ -144,6 +149,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringEmptyDefault {
+
         @GET
         public String doGet(@HeaderParam("arg1") String arg1,
                             @HeaderParam("arg2") String arg2, @HeaderParam("arg3") String arg3) {
@@ -156,6 +162,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringDefault {
+
         @GET
         public String doGet(
                 @HeaderParam("arg1") @DefaultValue("a") String arg1,
@@ -170,6 +177,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringDefaultOverride {
+
         @GET
         public String doGet(
                 @HeaderParam("arg1") @DefaultValue("a") String arg1,
@@ -184,6 +192,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListNullDefault {
+
         @GET
         @Produces("application/stringlist")
         public String doGetString(
@@ -203,6 +212,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListDefault {
+
         @GET
         @Produces("application/stringlist")
         public String doGetString(
@@ -223,6 +233,7 @@ public class HeaderParamAsStringTest extends AbstractTest {
 
     @Path("/")
     public static class ResourceStringListDefaultOverride {
+
         @GET
         @Produces("application/stringlist")
         public String doGetString(
@@ -246,11 +257,11 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        header("arg1", "a").
-                        header("arg2", "b").
-                        header("arg3", "c").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .header("arg1", "a")
+                        .header("arg2", "b")
+                        .header("arg3", "c")
+                        .build()
         ).getEntity());
     }
 
@@ -259,9 +270,9 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringEmpty.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        header("arg1", "").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .header("arg1", "")
+                        .build()
         ).getEntity());
     }
 
@@ -277,12 +288,12 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceString.class);
 
         final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/", "POST").
-                        entity("content").
-                        header("arg1", "a").
-                        header("arg2", "b").
-                        header("arg3", "c").
-                        build()
+                RequestContextBuilder.from("/", "POST")
+                        .entity("content")
+                        .header("arg1", "a")
+                        .header("arg2", "b")
+                        .header("arg3", "c")
+                        .build()
         );
 
         assertEquals("content", responseContext.getEntity());
@@ -293,12 +304,12 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringList.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/stringlist").
-                        header("args", "a").
-                        header("args", "b").
-                        header("args", "c").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/stringlist")
+                        .header("args", "a")
+                        .header("args", "b")
+                        .header("args", "c")
+                        .build()
         ).getEntity());
     }
 
@@ -307,12 +318,12 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListEmpty.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/stringlist").
-                        header("args", "").
-                        header("args", "").
-                        header("args", "").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/stringlist")
+                        .header("args", "")
+                        .header("args", "")
+                        .header("args", "")
+                        .build()
         ).getEntity());
     }
 
@@ -321,12 +332,12 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringList.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/list").
-                        header("args", "a").
-                        header("args", "b").
-                        header("args", "c").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/list")
+                        .header("args", "a")
+                        .header("args", "b")
+                        .header("args", "c")
+                        .build()
         ).getEntity());
     }
 
@@ -349,11 +360,11 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringDefaultOverride.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        header("arg1", "d").
-                        header("arg2", "e").
-                        header("arg3", "f").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .header("arg1", "d")
+                        .header("arg2", "e")
+                        .header("arg3", "f")
+                        .build()
         ).getEntity());
     }
 
@@ -362,9 +373,9 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListNullDefault.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/stringlist").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/stringlist")
+                        .build()
         ).getEntity());
     }
 
@@ -373,9 +384,9 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListNullDefault.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/list").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/list")
+                        .build()
         ).getEntity());
     }
 
@@ -384,9 +395,9 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefault.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/stringlist").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/stringlist")
+                        .build()
         ).getEntity());
     }
 
@@ -395,9 +406,9 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefault.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/list").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/list")
+                        .build()
         ).getEntity());
     }
 
@@ -406,10 +417,10 @@ public class HeaderParamAsStringTest extends AbstractTest {
         initiateWebApplication(ResourceStringListDefaultOverride.class);
 
         assertEquals("content", apply(
-                RequestContextBuilder.from("/", "GET").
-                        accept("application/list").
-                        header("args", "b").
-                        build()
+                RequestContextBuilder.from("/", "GET")
+                        .accept("application/list")
+                        .header("args", "b")
+                        .build()
         ).getEntity());
     }
 }

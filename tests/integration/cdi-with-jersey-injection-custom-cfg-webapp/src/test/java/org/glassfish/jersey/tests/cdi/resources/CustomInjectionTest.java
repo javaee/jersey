@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,9 +48,8 @@ import javax.ws.rs.core.Response;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test custom HK2 injection.
@@ -62,11 +61,11 @@ public class CustomInjectionTest extends CdiTest {
 
     @Parameterized.Parameters
     public static List<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
-            {"app-field-injected"}
-            ,{"app-ctor-injected"}
-            ,{"request-field-injected"}
-            ,{"request-ctor-injected"}
+        return Arrays.asList(new Object[][] {
+                {"app-field-injected"},
+                {"app-ctor-injected"},
+                {"request-field-injected"},
+                {"request-ctor-injected"},
         });
     }
 
@@ -77,7 +76,7 @@ public class CustomInjectionTest extends CdiTest {
      *
      * @param resource query parameter.
      */
-    public CustomInjectionTest(String resource) {
+    public CustomInjectionTest(final String resource) {
         this.resource = resource;
     }
 
@@ -87,7 +86,7 @@ public class CustomInjectionTest extends CdiTest {
      */
     @Test
     public void testCustomHk2Injection1() {
-        WebTarget target = target().path(resource).path("custom");
+        final WebTarget target = target().path(resource).path("custom");
         final Response response = target.request().get();
         assertThat(response.getStatus(), equalTo(200));
         assertThat(response.readEntity(String.class), equalTo("1st: no way CDI would chime in"));
@@ -99,7 +98,7 @@ public class CustomInjectionTest extends CdiTest {
      */
     @Test
     public void testCustomHk2Injection2() {
-        WebTarget target = target().path(resource).path("custom2");
+        final WebTarget target = target().path(resource).path("custom2");
         final Response response = target.request().get();
         assertThat(response.getStatus(), equalTo(200));
         assertThat(response.readEntity(String.class), equalTo("2nd: no way CDI would chime in"));

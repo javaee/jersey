@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,12 +41,14 @@
 package org.glassfish.jersey.examples.sparklines;
 
 import java.util.ArrayList;
+
 import javax.ws.rs.WebApplicationException;
 
 /**
  * @author Paul Sandoz
  */
 public class IntegerList extends ArrayList<Integer> {
+
     public IntegerList(String s) {
         super();
 
@@ -58,7 +60,8 @@ public class IntegerList extends ArrayList<Integer> {
                 throw new WebApplicationException(400);
             }
         }
-        if (isEmpty())
+        if (isEmpty()) {
             throw new WebApplicationException(400);
+        }
     }
 }

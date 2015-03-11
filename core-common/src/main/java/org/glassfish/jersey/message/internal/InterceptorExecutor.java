@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.lang.annotation.Annotation;
@@ -54,9 +55,10 @@ import org.glassfish.jersey.internal.PropertiesDelegate;
  * Abstract class with implementation of {@link InterceptorContext} which is common for {@link ReaderInterceptorContext}
  * and {@link WriterInterceptorContext} implementations.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesDelegate {
+
     private final PropertiesDelegate propertiesDelegate;
     private Annotation[] annotations;
     private Class<?> type;
@@ -70,10 +72,11 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
      * Holder of interceptor instance and timestamp of the interceptor invocation (in ns).
      */
     private static class InterceptorTimestampPair<T> {
+
         private final T interceptor;
         private final long timestamp;
 
-        private InterceptorTimestampPair(T interceptor, long timestamp) {
+        private InterceptorTimestampPair(final T interceptor, final long timestamp) {
             this.interceptor = interceptor;
             this.timestamp = timestamp;
         }
@@ -98,8 +101,8 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
      * @param mediaType          MediaType of HTTP entity. See {@link InterceptorContext#getMediaType()}.
      * @param propertiesDelegate request-scoped properties delegate.
      */
-    public InterceptorExecutor(Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                               PropertiesDelegate propertiesDelegate) {
+    public InterceptorExecutor(final Class<?> rawType, final Type type, final Annotation[] annotations, final MediaType mediaType,
+                               final PropertiesDelegate propertiesDelegate) {
         super();
         this.type = rawType;
         this.genericType = type;
@@ -110,7 +113,7 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
     }
 
     @Override
-    public Object getProperty(String name) {
+    public Object getProperty(final String name) {
         return propertiesDelegate.getProperty(name);
     }
 
@@ -120,12 +123,12 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
     }
 
     @Override
-    public void setProperty(String name, Object object) {
+    public void setProperty(final String name, final Object object) {
         propertiesDelegate.setProperty(name, object);
     }
 
     @Override
-    public void removeProperty(String name) {
+    public void removeProperty(final String name) {
         propertiesDelegate.removeProperty(name);
     }
 
@@ -144,7 +147,7 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
      * @param interceptor invoked interceptor
      * @param event       event type to be tested
      */
-    protected final void traceBefore(T interceptor, TracingLogger.Event event) {
+    protected final void traceBefore(final T interceptor, final TracingLogger.Event event) {
         if (tracingLogger.isLogEnabled(event)) {
             if ((lastTracedInterceptor != null) && (interceptor != null)) {
                 tracingLogger.logDuration(event, lastTracedInterceptor.getTimestamp(), lastTracedInterceptor.getInterceptor());
@@ -159,7 +162,7 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
      * @param interceptor invoked interceptor
      * @param event       event type to be tested
      */
-    protected final void traceAfter(T interceptor, TracingLogger.Event event) {
+    protected final void traceAfter(final T interceptor, final TracingLogger.Event event) {
         if (tracingLogger.isLogEnabled(event)) {
             if ((lastTracedInterceptor != null) && (lastTracedInterceptor.getInterceptor() != null)) {
                 tracingLogger.logDuration(event, lastTracedInterceptor.getTimestamp(), interceptor);
@@ -171,7 +174,7 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
     /**
      * Clear last traced interceptor information.
      */
-    protected final void clearLastTracedInterceptor(){
+    protected final void clearLastTracedInterceptor() {
         lastTracedInterceptor = null;
     }
 
@@ -181,7 +184,7 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
     }
 
     @Override
-    public void setAnnotations(Annotation[] annotations) {
+    public void setAnnotations(final Annotation[] annotations) {
         if (annotations == null) {
             throw new NullPointerException("Annotations must not be null.");
         }
@@ -194,7 +197,7 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
     }
 
     @Override
-    public void setType(Class type) {
+    public void setType(final Class type) {
         this.type = type;
     }
 
@@ -204,7 +207,7 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
     }
 
     @Override
-    public void setGenericType(Type genericType) {
+    public void setGenericType(final Type genericType) {
         this.genericType = genericType;
     }
 
@@ -214,7 +217,7 @@ abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesD
     }
 
     @Override
-    public void setMediaType(MediaType mediaType) {
+    public void setMediaType(final MediaType mediaType) {
         this.mediaType = mediaType;
     }
 

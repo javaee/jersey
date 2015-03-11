@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,7 +57,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Server-side variant selection & handling test.
@@ -75,22 +77,24 @@ public class VariantsTest extends JerseyTest {
                 MediaTypeQualitySourceResource.class);
     }
 
-
     @Path("/lvr")
     public static class LanguageVariantResource {
+
         @GET
         public Response doGet(@Context Request r) {
-            List<Variant> vs = Variant.VariantListBuilder.newInstance().
-                    languages(new Locale("zh")).
-                    languages(new Locale("fr")).
-                    languages(new Locale("en")).add().
-                    build();
+            List<Variant> vs = Variant.VariantListBuilder.newInstance()
+                    .languages(new Locale("zh"))
+                    .languages(new Locale("fr"))
+                    .languages(new Locale("en"))
+                    .add()
+                    .build();
 
             Variant v = r.selectVariant(vs);
-            if (v == null)
+            if (v == null) {
                 return Response.notAcceptable(vs).build();
-            else
+            } else {
                 return Response.ok(v.getLanguage().toString(), v).build();
+            }
         }
     }
 
@@ -143,23 +147,29 @@ public class VariantsTest extends JerseyTest {
 
     @Path("/cvr")
     public static class ComplexVariantResource {
+
         @GET
         public Response doGet(@Context Request r) {
-            List<Variant> vs = Variant.VariantListBuilder.newInstance().
-                    mediaTypes(MediaType.valueOf("image/jpeg")).add().
-                    mediaTypes(MediaType.valueOf("application/xml")).
-                    languages(new Locale("en", "us")).add().
-                    mediaTypes(MediaType.valueOf("text/xml")).
-                    languages(new Locale("en")).add().
-                    mediaTypes(MediaType.valueOf("text/xml")).
-                    languages(new Locale("en", "us")).add().
-                    build();
+            List<Variant> vs = Variant.VariantListBuilder.newInstance()
+                    .mediaTypes(MediaType.valueOf("image/jpeg"))
+                    .add()
+                    .mediaTypes(MediaType.valueOf("application/xml"))
+                    .languages(new Locale("en", "us"))
+                    .add()
+                    .mediaTypes(MediaType.valueOf("text/xml"))
+                    .languages(new Locale("en"))
+                    .add()
+                    .mediaTypes(MediaType.valueOf("text/xml"))
+                    .languages(new Locale("en", "us"))
+                    .add()
+                    .build();
 
             Variant v = r.selectVariant(vs);
-            if (v == null)
+            if (v == null) {
                 return Response.notAcceptable(vs).build();
-            else
+            } else {
                 return Response.ok("GET", v).build();
+            }
         }
     }
 
@@ -256,19 +266,21 @@ public class VariantsTest extends JerseyTest {
 
     @Path("/mtqsr")
     public static class MediaTypeQualitySourceResource {
+
         @GET
         public Response doGet(@Context Request r) {
-            List<Variant> vs = Variant.VariantListBuilder.newInstance().
-                    mediaTypes(MediaType.valueOf("application/xml")).
-                    mediaTypes(MediaType.valueOf("text/html;qs=2.0")).
-                    add().
-                    build();
+            List<Variant> vs = Variant.VariantListBuilder.newInstance()
+                    .mediaTypes(MediaType.valueOf("application/xml;qs=0.8"))
+                    .mediaTypes(MediaType.valueOf("text/html;qs=1.0"))
+                    .add()
+                    .build();
 
             Variant v = r.selectVariant(vs);
-            if (v == null)
+            if (v == null) {
                 return Response.notAcceptable(vs).build();
-            else
+            } else {
                 return Response.ok("GET", v).build();
+            }
         }
     }
 
@@ -316,8 +328,9 @@ public class VariantsTest extends JerseyTest {
         String[] vs = l.split(",");
         for (String s : vs) {
             s = s.trim();
-            if (s.equalsIgnoreCase(v))
+            if (s.equalsIgnoreCase(v)) {
                 return true;
+            }
         }
 
         return false;

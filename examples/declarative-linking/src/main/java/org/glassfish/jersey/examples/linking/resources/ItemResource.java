@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,15 +40,14 @@
 
 package org.glassfish.jersey.examples.linking.resources;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
 import org.glassfish.jersey.examples.linking.model.ItemModel;
 import org.glassfish.jersey.examples.linking.model.ItemsModel;
 import org.glassfish.jersey.examples.linking.representation.ItemRepresentation;
-import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 
 /**
  * Resource that provides access to one item from a set of items managed
@@ -67,7 +66,7 @@ public class ItemResource {
     public ItemResource() {
         throw new IllegalStateException("Only for JAX-B dressing");
     }
-    
+
     public ItemResource(ItemsModel itemsModel, String id) {
         this.id = id;
         this.itemsModel = itemsModel;
@@ -82,7 +81,6 @@ public class ItemResource {
     public ItemRepresentation get() {
         return new ItemRepresentation(itemsModel, id, itemModel.getName());
     }
-
 
     public String getId() {
         return id;

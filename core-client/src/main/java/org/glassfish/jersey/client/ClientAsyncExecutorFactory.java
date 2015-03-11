@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.util.concurrent.ExecutorService;
@@ -45,6 +46,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.process.internal.RequestExecutorFactory;
 import org.glassfish.jersey.spi.RequestExecutorProvider;
 
@@ -56,10 +58,11 @@ import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
  * {@link org.glassfish.jersey.process.internal.RequestExecutorFactory Executors factory}
  * used on the client side for asynchronous request processing.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class ClientAsyncExecutorFactory extends RequestExecutorFactory {
+
     private static final Logger LOGGER = Logger.getLogger(ClientAsyncExecutorFactory.class.getName());
 
     /**
@@ -84,7 +87,7 @@ class ClientAsyncExecutorFactory extends RequestExecutorFactory {
             public ExecutorService getRequestingExecutor() {
                 int poolSize = 0;
                 if (initArgs != null && initArgs.length > 0 && initArgs[0] instanceof Integer) {
-                    poolSize = (Integer)initArgs[0];
+                    poolSize = (Integer) initArgs[0];
                     if (poolSize <= 0) {
                         LOGGER.config(LocalizationMessages.IGNORED_ASYNC_THREADPOOL_SIZE(poolSize));
                     }
@@ -92,6 +95,7 @@ class ClientAsyncExecutorFactory extends RequestExecutorFactory {
 
                 final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                         .setNameFormat("jersey-client-async-executor-%d")
+                        .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
                         .build();
 
                 if (poolSize > 0) {

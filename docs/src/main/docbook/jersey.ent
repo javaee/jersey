@@ -307,6 +307,7 @@
 <!ENTITY jersey.client.ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#BUFFER_RESPONSE_ENTITY_ON_EXCEPTION'>ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION</link>" >
 <!ENTITY jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#CHUNKED_ENCODING_SIZE'>ClientProperties.CHUNKED_ENCODING_SIZE</link>" >
 <!ENTITY jersey.client.ClientProperties.CONNECT_TIMEOUT "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#CONNECT_TIMEOUT'>ClientProperties.CONNECT_TIMEOUT</link>" >
+<!ENTITY jersey.client.ClientProperties.DEFAULT_CHUNK_SIZE "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#DEFAULT_CHUNK_SIZE'>ClientProperties.DEFAULT_CHUNK_SIZE</link>" >
 <!ENTITY jersey.client.ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#FEATURE_AUTO_DISCOVERY_DISABLE'>ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE</link>" >
 <!ENTITY jersey.client.ClientProperties.FOLLOW_REDIRECTS "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#FOLLOW_REDIRECTS'>ClientProperties.FOLLOW_REDIRECTS</link>" >
 <!ENTITY jersey.client.ClientProperties.JSON_PROCESSING_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#JSON_PROCESSING_FEATURE_DISABLE'>ClientProperties.JSON_PROCESSING_FEATURE_DISABLE</link>" >
@@ -354,7 +355,6 @@
 <!ENTITY jersey.common.spi.RequestExecutorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/RequestExecutorProvider.html'>RequestExecutorProvider</link>">
 <!ENTITY jersey.common.uri.UriTemplate "<link xlink:href='&jersey.javadoc.uri.prefix;/uri/UriTemplate.html'>UriTemplate</link>">
 <!ENTITY jersey.common.JerseyPriorities.JERSEY_AUTO_DISCOVERABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/common/JerseyPriorities.html#JERSEY_AUTO_DISCOVERABLE'>JerseyPriorities.JERSEY_AUTO_DISCOVERABLE</link>">
-<!ENTITY jersey.containers.ServletContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletContainer.html'>ServletContainer</link>">
 <!ENTITY jersey.ext.ValidationConfig "<link xlink:href='&jersey.javadoc.uri.prefix;/server/validation/ValidationConfig.html'>ValidationConfig</link>">
 <!ENTITY jersey.ext.ValidationError "<link xlink:href='&jersey.javadoc.uri.prefix;/server/validation/ValidationError.html'>ValidationError</link>">
 <!ENTITY jersey.ext.ValidationFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/server/validation/ValidationFeature.html'>ValidationFeature</link>">
@@ -472,6 +472,9 @@
 <!ENTITY jersey.server.ServerProperties.RESOURCE_VALIDATION_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#RESOURCE_VALIDATION_DISABLE'>ServerProperties.RESOURCE_VALIDATION_DISABLE</link>" >
 <!ENTITY jersey.server.ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#RESOURCE_VALIDATION_IGNORE_ERRORS'>ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS</link>" >
 <!ENTITY jersey.server.ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#RESPONSE_SET_STATUS_OVER_SEND_ERROR'>ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR</link>" >
+<!ENTITY jersey.server.ServerProperties.SUBRESOURCE_LOCATOR_CACHE_SIZE "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#SUBRESOURCE_LOCATOR_CACHE_SIZE'>ServerProperties.SUBRESOURCE_LOCATOR_CACHE_SIZE</link>" >
+<!ENTITY jersey.server.ServerProperties.SUBRESOURCE_LOCATOR_CACHE_AGE "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#SUBRESOURCE_LOCATOR_CACHE_AGE'>ServerProperties.SUBRESOURCE_LOCATOR_CACHE_AGE</link>" >
+<!ENTITY jersey.server.ServerProperties.SUBRESOURCE_LOCATOR_CACHE_JERSEY_RESOURCE_ENABLED "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#SUBRESOURCE_LOCATOR_CACHE_JERSEY_RESOURCE_ENABLED'>ServerProperties.SUBRESOURCE_LOCATOR_CACHE_JERSEY_RESOURCE_ENABLED</link>" >
 <!ENTITY jersey.server.ServerProperties.TRACING "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#TRACING'>ServerProperties.TRACING</link>" >
 <!ENTITY jersey.server.ServerProperties.TRACING_THRESHOLD "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#TRACING_THRESHOLD'>ServerProperties.TRACING_THRESHOLD</link>" >
 <!ENTITY jersey.server.ServerProperties.WADL_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#WADL_FEATURE_DISABLE'>ServerProperties.WADL_FEATURE_DISABLE</link>" >
@@ -518,6 +521,16 @@
 <!ENTITY jersey.server.oauth1.TokenResource "<link xlink:href='&jersey.javadoc.uri.prefix;/server/oauth1/TokenResource.html'>TokenResource</link>">
 <!ENTITY jersey.server.spi.ComponentProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ComponentProvider.html'>ComponentProvider</link>">
 <!ENTITY jersey.server.spi.ContainerProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ContainerProvider.html'>ContainerProvider</link>">
+<!ENTITY jersey.server.spi.ExternalRequestScope "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ExternalRequestScope.html'>ExternalRequestScope</link>">
+<!ENTITY jersey.servlet.ServletContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletContainer.html'>ServletContainer</link>">
+<!ENTITY jersey.servlet.ServletProperties "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html'>ServletProperties</link>">
+<!ENTITY jersey.servlet.ServletProperties.FILTER_CONTEXT_PATH "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html#FILTER_CONTEXT_PATH'>ServletProperties.FILTER_CONTEXT_PATH</link>">
+<!ENTITY jersey.servlet.ServletProperties.FILTER_FORWARD_ON_404 "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html#FILTER_FORWARD_ON_404'>ServletProperties.FILTER_FORWARD_ON_404</link>">
+<!ENTITY jersey.servlet.ServletProperties.FILTER_STATIC_CONTENT_REGEX "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html#FILTER_STATIC_CONTENT_REGEX'>ServletProperties.FILTER_STATIC_CONTENT_REGEX</link>">
+<!ENTITY jersey.servlet.ServletProperties.JAXRS_APPLICATION_CLASS "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html#JAXRS_APPLICATION_CLASS'>ServletProperties.JAXRS_APPLICATION_CLASS</link>">
+<!ENTITY jersey.servlet.ServletProperties.PROVIDER_WEB_APP "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html#PROVIDER_WEB_APP'>ServletProperties.PROVIDER_WEB_APP</link>">
+<!ENTITY jersey.servlet.ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html#QUERY_PARAMS_AS_FORM_PARAMS_DISABLED'>ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED</link>">
+<!ENTITY jersey.servlet.ServletProperties.SERVICE_LOCATOR "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html#SERVICE_LOCATOR'>ServletProperties.SERVICE_LOCATOR</link>">
 <!ENTITY jersey.simple.SimpleContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/simple/SimpleContainer.html'>SimpleContainer</link>">
 <!ENTITY jersey.simple.SimpleContainerFactory "<link xlink:href='&jersey.javadoc.uri.prefix;/simple/SimpleContainerFactory.html'>SimpleContainerFactory</link>">
 <!ENTITY jersey.simple.SimpleContainerProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/simple/SimpleContainerProvider.html'>SimpleContainerProvider</link>">
@@ -739,6 +752,25 @@
 <!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">
 <!ENTITY lit.jersey.client.ChunkedInput "<literal>ChunkedInput</literal>">
 <!ENTITY lit.jersey.client.ClientConfig "<literal>ClientConfig</literal>">
+<!ENTITY lit.jersey.client.ClientProperties "<literal>ClientProperties</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.ASYNC_THREADPOOL_SIZE "<literal>ClientProperties.ASYNC_THREADPOOL_SIZE</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION "<literal>ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE "<literal>ClientProperties.CHUNKED_ENCODING_SIZE</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.CONNECT_TIMEOUT "<literal>ClientProperties.CONNECT_TIMEOUT</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.DEFAULT_CHUNK_SIZE "<literal>ClientProperties.DEFAULT_CHUNK_SIZE</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE "<literal>ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.FOLLOW_REDIRECTS "<literal>ClientProperties.FOLLOW_REDIRECTS</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.JSON_PROCESSING_FEATURE_DISABLE "<literal>ClientProperties.JSON_PROCESSING_FEATURE_DISABLE</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.METAINF_SERVICES_LOOKUP_DISABLE "<literal>ClientProperties.METAINF_SERVICES_LOOKUP_DISABLE</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.MOXY_JSON_FEATURE_DISABLE "<literal>ClientProperties.MOXY_JSON_FEATURE_DISABLE</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<literal>ClientProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.PROXY_PASSWORD "<literal>ClientProperties.PROXY_PASSWORD</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.PROXY_URI "<literal>ClientProperties.PROXY_URI</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.PROXY_USERNAME "<literal>ClientProperties.PROXY_USERNAME</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.READ_TIMEOUT "<literal>ClientProperties.READ_TIMEOUT</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING "<literal>ClientProperties.REQUEST_ENTITY_PROCESSING</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION "<literal>ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.USE_ENCODING "<literal>ClientProperties.USE_ENCODING</literal>" >
 <!ENTITY lit.jersey.client.Connector "<literal>Connector</literal>">
 <!ENTITY lit.jersey.client.ConnectorProvider "<literal>ConnectorProvider</literal>">
 <!ENTITY lit.jersey.client.CsrfProtectionFilter "<literal>CsrfProtectionFilter</literal>">
@@ -759,6 +791,11 @@
 <!ENTITY lit.jersey.client.oauth2.TokenResult "<literal>TokenResult</literal>">
 <!ENTITY lit.jersey.common.Beta "<literal>Beta</literal>">
 <!ENTITY lit.jersey.common.CommonProperties "<literal>CommonProperties</literal>">
+<!ENTITY lit.jersey.common.CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE "<literal>CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE</literal>" >
+<!ENTITY lit.jersey.common.CommonProperties.JSON_PROCESSING_FEATURE_DISABLE "<literal>CommonProperties.JSON_PROCESSING_FEATURE_DISABLE</literal>" >
+<!ENTITY lit.jersey.common.CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE "<literal>CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE</literal>" >
+<!ENTITY lit.jersey.common.CommonProperties.MOXY_JSON_FEATURE_DISABLE "<literal>CommonProperties.MOXY_JSON_FEATURE_DISABLE</literal>" >
+<!ENTITY lit.jersey.common.CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<literal>CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</literal>" >
 <!ENTITY lit.jersey.common.ServiceLocatorProvider "<literal>ServiceLocatorProvider</literal>">
 <!ENTITY lit.jersey.common.SslConfigurator "<literal>SslConfigurator</literal>">
 <!ENTITY lit.jersey.common.spi.ContentEncoder "<literal>ContentEncoder</literal>">
@@ -827,6 +864,38 @@
 <!ENTITY lit.jersey.server.ResourceConfig "<literal>ResourceConfig</literal>">
 <!ENTITY lit.jersey.server.ResponseErrorMapper "<literal>ResponseErrorMapper</literal>">
 <!ENTITY lit.jersey.server.RolesAllowedDynamicFeature "<literal>RolesAllowedDynamicFeature</literal>">
+<!ENTITY lit.jersey.server.ServerProperties "<literal>ServerProperties</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.APPLICATION_NAME "<literal>ServerProperties.APPLICATION_NAME</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK "<literal>ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.BV_FEATURE_DISABLE "<literal>ServerProperties.BV_FEATURE_DISABLE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.BV_SEND_ERROR_IN_RESPONSE "<literal>ServerProperties.BV_SEND_ERROR_IN_RESPONSE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE "<literal>ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.HTTP_METHOD_OVERRIDE "<literal>ServerProperties.HTTP_METHOD_OVERRIDE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.JSON_PROCESSING_FEATURE_DISABLE "<literal>ServerProperties.JSON_PROCESSING_FEATURE_DISABLE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.LANGUAGE_MAPPINGS "<literal>ServerProperties.LANGUAGE_MAPPINGS</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.MEDIA_TYPE_MAPPINGS "<literal>ServerProperties.MEDIA_TYPE_MAPPINGS</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE "<literal>ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.MONITORING_ENABLED "<literal>ServerProperties.MONITORING_ENABLED</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.MONITORING_STATISTICS_ENABLED "<literal>ServerProperties.MONITORING_STATISTICS_ENABLED</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED "<literal>ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL "<literal>ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.MOXY_JSON_FEATURE_DISABLE "<literal>ServerProperties.MOXY_JSON_FEATURE_DISABLE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<literal>ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.PROCESSING_RESPONSE_ERRORS_ENABLED "<literal>ServerProperties.PROCESSING_RESPONSE_ERRORS_ENABLED</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.PROVIDER_CLASSNAMES "<literal>ServerProperties.PROVIDER_CLASSNAMES</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.PROVIDER_CLASSPATH "<literal>ServerProperties.PROVIDER_CLASSPATH</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.PROVIDER_PACKAGES "<literal>ServerProperties.PROVIDER_PACKAGES</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.PROVIDER_SCANNING_RECURSIVE "<literal>ServerProperties.PROVIDER_SCANNING_RECURSIVE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.RESOURCE_VALIDATION_DISABLE "<literal>ServerProperties.RESOURCE_VALIDATION_DISABLE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS "<literal>ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR "<literal>ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.SUBRESOURCE_LOCATOR_CACHE_SIZE "<literal>ServerProperties.SUBRESOURCE_LOCATOR_CACHE_SIZE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.SUBRESOURCE_LOCATOR_CACHE_AGE "<literal>ServerProperties.SUBRESOURCE_LOCATOR_CACHE_AGE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.SUBRESOURCE_LOCATOR_CACHE_JERSEY_RESOURCE_ENABLED "<literal>ServerProperties.SUBRESOURCE_LOCATOR_CACHE_JERSEY_RESOURCE_ENABLED</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.TRACING "<literal>ServerProperties.TRACING</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.TRACING_THRESHOLD "<literal>ServerProperties.TRACING_THRESHOLD</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.WADL_FEATURE_DISABLE "<literal>ServerProperties.WADL_FEATURE_DISABLE</literal>" >
+<!ENTITY lit.jersey.server.ServerProperties.WADL_GENERATOR_CONFIG "<literal>ServerProperties.WADL_GENERATOR_CONFIG</literal>" >
 <!ENTITY lit.jersey.server.Uri "<literal>Uri</literal>">
 <!ENTITY lit.jersey.server.WadlGenerator "<literal>WadlGenerator</literal>">
 <!ENTITY lit.jersey.server.WadlGeneratorConfig "<literal>WadlGeneratorConfig</literal>">
@@ -866,6 +935,15 @@
 <!ENTITY lit.jersey.server.oauth1.TokenResource "<literal>TokenResource</literal>">
 <!ENTITY lit.jersey.server.spi.ComponentProvider "<literal>ComponentProvider</literal>">
 <!ENTITY lit.jersey.server.spi.ContainerProvider "<literal>ContainerProvider</literal>">
+<!ENTITY lit.jersey.servlet.ServletContainer "<literal>ServletContainer</literal>">
+<!ENTITY lit.jersey.servlet.ServletProperties "<literal>ServletProperties</literal>">
+<!ENTITY lit.jersey.servlet.ServletProperties.FILTER_CONTEXT_PATH "<literal>ServletProperties.FILTER_CONTEXT_PATH</literal>">
+<!ENTITY lit.jersey.servlet.ServletProperties.FILTER_FORWARD_ON_404 "<literal>ServletProperties.FILTER_FORWARD_ON_404</literal>">
+<!ENTITY lit.jersey.servlet.ServletProperties.FILTER_STATIC_CONTENT_REGEX "<literal>ServletProperties.FILTER_STATIC_CONTENT_REGEX</literal>">
+<!ENTITY lit.jersey.servlet.ServletProperties.JAXRS_APPLICATION_CLASS "<literal>ServletProperties.JAXRS_APPLICATION_CLASS</literal>">
+<!ENTITY lit.jersey.servlet.ServletProperties.PROVIDER_WEB_APP "<literal>ServletProperties.PROVIDER_WEB_APP</literal>">
+<!ENTITY lit.jersey.servlet.ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED "<literal>ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED</literal>">
+<!ENTITY lit.jersey.servlet.ServletProperties.SERVICE_LOCATOR "<literal>ServletProperties.SERVICE_LOCATOR</literal>">
 <!ENTITY lit.jersey.simple.SimpleContainer "<literal>SimpleContainer</literal>">
 <!ENTITY lit.jersey.simple.SimpleContainerFactory "<literal>SimpleContainerFactory</literal>">
 <!ENTITY lit.jersey.simple.SimpleContainerProvider "<literal>SimpleContainerProvider</literal>">

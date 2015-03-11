@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -223,7 +223,8 @@ public class RxWebTargetTest {
     public void testRegisterClassPriority() throws Exception {
         final RxWebTarget<RxFutureInvoker> webTarget = rxTarget.register(LoggingFilter.class, 42);
 
-        for (final Map.Entry<Class<?>, Integer> entry : webTarget.getConfiguration().getContracts(LoggingFilter.class).entrySet()) {
+        for (final Map.Entry<Class<?>, Integer> entry : webTarget.getConfiguration().getContracts(LoggingFilter.class)
+                .entrySet()) {
             assertThat(entry.getKey().isAssignableFrom(LoggingFilter.class), is(true));
             assertThat(entry.getValue(), is(42));
         }
@@ -231,7 +232,8 @@ public class RxWebTargetTest {
 
     @Test
     public void testRegisterClassContracts() throws Exception {
-        final RxWebTarget<RxFutureInvoker> webTarget = rxTarget.register(LoggingFilter.class, ClientRequestFilter.class, ClientResponseFilter.class);
+        final RxWebTarget<RxFutureInvoker> webTarget = rxTarget
+                .register(LoggingFilter.class, ClientRequestFilter.class, ClientResponseFilter.class);
 
         final Map<Class<?>, Integer> contracts = webTarget.getConfiguration().getContracts(LoggingFilter.class);
 
@@ -260,7 +262,8 @@ public class RxWebTargetTest {
     public void testRegisterObjectPriority() throws Exception {
         final RxWebTarget<RxFutureInvoker> webTarget = rxTarget.register(new LoggingFilter(), 42);
 
-        for (final Map.Entry<Class<?>, Integer> entry : webTarget.getConfiguration().getContracts(LoggingFilter.class).entrySet()) {
+        for (final Map.Entry<Class<?>, Integer> entry : webTarget.getConfiguration().getContracts(LoggingFilter.class)
+                .entrySet()) {
             assertThat(entry.getKey().isAssignableFrom(LoggingFilter.class), is(true));
             assertThat(entry.getValue(), is(42));
         }
@@ -268,7 +271,8 @@ public class RxWebTargetTest {
 
     @Test
     public void testRegisterObjectContracts() throws Exception {
-        final RxWebTarget<RxFutureInvoker> webTarget = rxTarget.register(new LoggingFilter(), ClientRequestFilter.class, ClientResponseFilter.class);
+        final RxWebTarget<RxFutureInvoker> webTarget = rxTarget
+                .register(new LoggingFilter(), ClientRequestFilter.class, ClientResponseFilter.class);
 
         final Map<Class<?>, Integer> contracts = webTarget.getConfiguration().getContracts(LoggingFilter.class);
 

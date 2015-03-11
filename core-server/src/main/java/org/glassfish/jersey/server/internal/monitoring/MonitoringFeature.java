@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -83,7 +83,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * by properties above without a need to explicitly register this feature.
  *
  * @see org.glassfish.jersey.server.ServerProperties#MONITORING_STATISTICS_ENABLED for more details.
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public final class MonitoringFeature implements Feature {
 
@@ -120,9 +120,11 @@ public final class MonitoringFeature implements Feature {
 
         if (statisticsEnabledProperty != null && !statisticsEnabledProperty) {
             if (mbeansEnabledProperty != null && mBeansEnabled) {
-                LOGGER.log(Level.WARNING, LocalizationMessages.WARNING_MONITORING_FEATURE_ENABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
+                LOGGER.log(Level.WARNING,
+                        LocalizationMessages.WARNING_MONITORING_FEATURE_ENABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
             } else {
-                LOGGER.log(Level.WARNING, LocalizationMessages.WARNING_MONITORING_FEATURE_DISABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
+                LOGGER.log(Level.WARNING,
+                        LocalizationMessages.WARNING_MONITORING_FEATURE_DISABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
             }
         }
 
@@ -216,6 +218,7 @@ public final class MonitoringFeature implements Feature {
     }
 
     private static class StatisticsListener implements MonitoringStatisticsListener {
+
         @Inject
         Provider<Ref<MonitoringStatistics>> statisticsFactory;
 

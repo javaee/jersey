@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,7 @@ import javax.xml.namespace.QName;
 /**
  * The documentation type for wadl params.<br>
  * Created on: Jun 12, 2008<br>
- * 
+ *
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
  */
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -56,7 +56,7 @@ import javax.xml.namespace.QName;
 
 })
 public class WadlParamType {
-    
+
     @XmlAttribute
     private String name;
     @XmlAttribute
@@ -75,7 +75,7 @@ public class WadlParamType {
     /**
      * @param commentText the commentText to set
      */
-    public void setDoc( String commentText ) {
+    public void setDoc(String commentText) {
         this.doc = commentText;
     }
 
@@ -89,7 +89,7 @@ public class WadlParamType {
     /**
      * @param paramName the className to set
      */
-    public void setName( String paramName ) {
+    public void setName(String paramName) {
         this.name = paramName;
     }
 
@@ -103,7 +103,7 @@ public class WadlParamType {
     /**
      * @param style the style to set
      */
-    public void setStyle( String style ) {
+    public void setStyle(String style) {
         this.style = style;
     }
 
@@ -117,7 +117,7 @@ public class WadlParamType {
     /**
      * @param type the type to set
      */
-    public void setType( QName type ) {
+    public void setType(QName type) {
         this.type = type;
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,17 +52,17 @@ import org.glassfish.jersey.server.mvc.spi.ResolvedViewable;
 /**
  * {@link RequestDispatcher Request dispatcher wrapper} for setting attributes (e.g. {@code it}).
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 final class RequestDispatcherWrapper implements RequestDispatcher {
 
-    final static String BASE_PATH_ATTRIBUTE_NAME = "_basePath";
-    final static String OLD_MODEL_ATTRIBUTE_NAME = "it";
-    final static String MODEL_ATTRIBUTE_NAME = "model";
-    final static String RESOLVING_CLASS_ATTRIBUTE_NAME = "resolvingClass";
-    final static String REQUEST_ATTRIBUTE_NAME = "_request";
-    final static String RESPONSE_ATTRIBUTE_NAME = "_response";
+    static final String BASE_PATH_ATTRIBUTE_NAME = "_basePath";
+    static final String OLD_MODEL_ATTRIBUTE_NAME = "it";
+    static final String MODEL_ATTRIBUTE_NAME = "model";
+    static final String RESOLVING_CLASS_ATTRIBUTE_NAME = "resolvingClass";
+    static final String REQUEST_ATTRIBUTE_NAME = "_request";
+    static final String RESPONSE_ATTRIBUTE_NAME = "_response";
 
     private final RequestDispatcher dispatcher;
 

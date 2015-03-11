@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -82,6 +82,7 @@ import jersey.repackaged.com.google.common.base.Preconditions;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ClientRequest extends OutboundMessageContext implements ClientRequestContext, ServiceLocatorSupplier {
+
     // Request-scoped configuration instance
     private final ClientConfig clientConfig;
     // Request-scoped properties delegate
@@ -186,7 +187,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         return resolveProperty(name, defaultValue, (Class<T>) defaultValue.getClass());
     }
 
-    private <T> T resolveProperty(final String name, Object defaultValue, final Class <T> type) {
+    private <T> T resolveProperty(final String name, Object defaultValue, final Class<T> type) {
         // Check runtime configuration first
         Object result = clientConfig.getProperty(name);
         if (result != null) {
@@ -454,7 +455,6 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         return asynchronous;
     }
 
-
     /**
      * Sets the flag indicating whether the request is called asynchronously using {@link javax.ws.rs.client.AsyncInvoker}.
      *
@@ -463,7 +463,6 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     void setAsynchronous(final boolean async) {
         asynchronous = async;
     }
-
 
     /**
      * Enable a buffering of serialized entity. The buffering will be configured from runtime configuration

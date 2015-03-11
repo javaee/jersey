@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,11 +45,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.TimerContext;
-
-import java.util.concurrent.TimeUnit;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 
@@ -58,42 +53,23 @@ import javax.ws.rs.PUT;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Path(JerseyApp.ROOT_PATH)
+@Path("/")
 @Consumes(MediaType.TEXT_PLAIN)
 @Produces(MediaType.TEXT_PLAIN)
 @Intercepted
 public class InterceptedByNameResource {
 
-    private static final com.yammer.metrics.core.Timer postTimer =
-            Metrics.newTimer(InterceptedByNameResource.class, "posts", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
-    private static final com.yammer.metrics.core.Timer getTimer =
-            Metrics.newTimer(InterceptedByNameResource.class, "gets", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
-    private static final com.yammer.metrics.core.Timer putTimer =
-            Metrics.newTimer(InterceptedByNameResource.class, "puts", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
-
     @POST
     public String echo(final String text) {
-        final TimerContext timer = postTimer.time();
-        try {
-            return text;
-        } finally {
-            timer.stop();
-        }
+        return text;
     }
 
     @PUT
     public void put(final String text) {
-        final TimerContext timer = putTimer.time();
-        timer.stop();
     }
 
     @GET
     public String get() {
-        final TimerContext timer = getTimer.time();
-        try {
-            return "text";
-        } finally {
-            timer.stop();
-        }
+        return "text";
     }
 }

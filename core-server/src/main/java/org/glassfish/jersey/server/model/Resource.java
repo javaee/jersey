@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -125,7 +125,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public final class Resource implements Routed, ResourceModelComponent {
 
@@ -171,9 +171,9 @@ public final class Resource implements Routed, ResourceModelComponent {
 
             this.names = immutableCopy(names);
             this.path = path;
-            this.pathPattern = (path == null || path.isEmpty()) ?
-                    PathPattern.OPEN_ROOT_PATH_PATTERN :
-                    new PathPattern(path, PathPattern.RightHandPath.capturingZeroOrMoreSegments);
+            this.pathPattern = (path == null || path.isEmpty())
+                    ? PathPattern.OPEN_ROOT_PATH_PATTERN
+                    : new PathPattern(path, PathPattern.RightHandPath.capturingZeroOrMoreSegments);
             this.resourceMethods = Resource.immutableCopy(resourceMethods);
             this.locator = locator;
             this.childResources = Collections.unmodifiableList(childResources); // no need to deep-copy the list
@@ -184,8 +184,8 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         @Override
         public String toString() {
-            return "Resource{" +
-                    ((path == null) ? "[unbound], " : "\"" + path + "\", ")
+            return "Resource{"
+                    + ((path == null) ? "[unbound], " : "\"" + path + "\", ")
                     + childResources.size() + " child resources, "
                     + resourceMethods.size() + " resource methods, "
                     + (locator == null ? "0" : "1") + " sub-resource locator, "
@@ -219,8 +219,8 @@ public final class Resource implements Routed, ResourceModelComponent {
 
 
         private Builder(final Resource.Builder parentResource) {
-            this.methodBuilders = Sets.newIdentityHashSet();
-            this.childResourceBuilders = Sets.newIdentityHashSet();
+            this.methodBuilders = Sets.newLinkedHashSet();
+            this.childResourceBuilders = Sets.newLinkedHashSet();
             this.childResources = Lists.newLinkedList();
             this.resourceMethods = Lists.newLinkedList();
             this.handlerClasses = Sets.newIdentityHashSet();
@@ -245,12 +245,12 @@ public final class Resource implements Routed, ResourceModelComponent {
         }
 
         private boolean isEmpty() {
-            return this.path == null &&
-                    methodBuilders.isEmpty() &&
-                    childResourceBuilders.isEmpty() &&
-                    resourceMethods.isEmpty() &&
-                    childResources.isEmpty() &&
-                    resourceLocator == null;
+            return this.path == null
+                    && methodBuilders.isEmpty()
+                    && childResourceBuilders.isEmpty()
+                    && resourceMethods.isEmpty()
+                    && childResources.isEmpty()
+                    && resourceLocator == null;
         }
 
         /**
@@ -488,8 +488,8 @@ public final class Resource implements Routed, ResourceModelComponent {
          */
         void onBuildMethod(ResourceMethod.Builder builder, ResourceMethod.Data methodData) {
             Preconditions.checkState(methodBuilders.remove(builder),
-                    "Resource.Builder.onBuildMethod() invoked from a resource method builder " +
-                            "that is not registered in the resource builder instance.");
+                    "Resource.Builder.onBuildMethod() invoked from a resource method builder "
+                            + "that is not registered in the resource builder instance.");
 
             switch (methodData.getType()) {
                 case RESOURCE_METHOD:
@@ -524,8 +524,8 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         private void onBuildChildResource(Builder childResourceBuilder, Resource.Data childResourceData) {
             Preconditions.checkState(childResourceBuilders.remove(childResourceBuilder),
-                    "Resource.Builder.onBuildChildResource() invoked from a resource builder " +
-                            "that is not registered in the resource builder instance as a child resource builder.");
+                    "Resource.Builder.onBuildChildResource() invoked from a resource builder "
+                            + "that is not registered in the resource builder instance as a child resource builder.");
             childResources.add(childResourceData);
 
         }

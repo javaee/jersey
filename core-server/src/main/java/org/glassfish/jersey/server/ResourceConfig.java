@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server;
 
 import java.io.IOException;
@@ -81,7 +82,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * The resource configuration for configuring a web application.
  *
  * @author Paul Sandoz
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -131,7 +132,6 @@ public class ResourceConfig extends Application implements Configurable<Resource
             this.classLoader = classLoader;
         }
 
-
         public void setApplicationName(final String applicationName) {
             this.applicationName = applicationName;
         }
@@ -149,8 +149,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
             return new Inflector<ContractProvider.Builder, ContractProvider>() {
                 @Override
                 public ContractProvider apply(final ContractProvider.Builder builder) {
-                    if (builder.getScope() == null && builder.getContracts().isEmpty() &&
-                            Resource.getPath(componentClass) != null) {
+                    if (builder.getScope() == null && builder.getContracts().isEmpty()
+                            && Resource.getPath(componentClass) != null) {
                         builder.scope(RequestScoped.class);
                     }
 
@@ -216,6 +216,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     private static final class ImmutableState extends State {
+
         private ImmutableState(final State original) {
             super(original);
         }
@@ -311,8 +312,9 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @return ResourceConfig instance for the supplied application.
      */
     public static ResourceConfig forApplication(final Application application) {
-        return (application instanceof ResourceConfig) ? ((ResourceConfig) application) : new WrappingResourceConfig
-                (application, null, null);
+        return application instanceof ResourceConfig
+                ? ((ResourceConfig) application)
+                : new WrappingResourceConfig(application, null, null);
     }
 
     /**
@@ -704,6 +706,11 @@ public class ResourceConfig extends Application implements Configurable<Resource
         this.cachedClassesView = null;
         this.cachedSingletons = null;
         this.cachedSingletonsView = null;
+
+        // Reset ResourceFinders to make sure the next package scanning is successful.
+        for (final ResourceFinder finder : this.state.resourceFinders) {
+            finder.reset();
+        }
     }
 
     /**
@@ -986,7 +993,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
     /**
      * Method used by ApplicationHandler to retrieve application class
-     * (this method is overridden by WrappingResourceConfig).
+     * (this method is overridden by {@link WrappingResourceConfig}).
      *
      * @return application class
      */
@@ -1017,6 +1024,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     private static class WrappingResourceConfig extends ResourceConfig {
+
         private Application application;
         private Class<? extends Application> applicationClass;
         private final Set<Class<?>> defaultClasses = Sets.newHashSet();
@@ -1147,11 +1155,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @return initialized run-time resource config.
      */
     static ResourceConfig createRuntimeConfig(final Application application) {
-        return (application instanceof ResourceConfig) ?
-                new RuntimeConfig((ResourceConfig) application) : new RuntimeConfig(application);
+        return (application instanceof ResourceConfig)
+                ? new RuntimeConfig((ResourceConfig) application) : new RuntimeConfig(application);
     }
 
     private static class RuntimeConfig extends ResourceConfig {
+
         private final Set<Class<?>> originalRegistrations;
         private final Application application;
 
@@ -1199,7 +1208,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
                             @Override
                             public boolean apply(final Object input) {
                                 if (input == null) {
-                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(input));
+                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(null));
                                 }
                                 return input != null;
                             }
@@ -1212,7 +1221,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
                             @Override
                             public boolean apply(final Class<?> input) {
                                 if (input == null) {
-                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(input));
+                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(null));
                                 }
                                 return input != null;
                             }
@@ -1253,7 +1262,6 @@ public class ResourceConfig extends Application implements Configurable<Resource
         Set<Class<?>> getRegisteredClasses() {
             return originalRegistrations;
         }
-
 
         @Override
         Application _getApplication() {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,14 +40,16 @@
 
 package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.linking.InjectLink.Extension;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.MatchResult;
+
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.linking.InjectLink.Extension;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Resource;
@@ -55,164 +57,174 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.uri.UriTemplate;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
- * 
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-public class HeaderProcessorTest  {
+public class HeaderProcessorTest {
 
     ExtendedUriInfo mockUriInfo = new ExtendedUriInfo() {
 
-            private final static String baseURI = "http://example.com/application/resources";
+        private static final String baseURI = "http://example.com/application/resources";
 
-            public String getPath() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public String getPath() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public String getPath(boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public String getPath(boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public List<PathSegment> getPathSegments() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public List<PathSegment> getPathSegments() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public List<PathSegment> getPathSegments(boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public List<PathSegment> getPathSegments(boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public URI getRequestUri() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public URI getRequestUri() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public UriBuilder getRequestUriBuilder() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public UriBuilder getRequestUriBuilder() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public URI getAbsolutePath() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public URI getAbsolutePath() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public UriBuilder getAbsolutePathBuilder() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public UriBuilder getAbsolutePathBuilder() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public URI getBaseUri() {
-                return getBaseUriBuilder().build();
-            }
+        public URI getBaseUri() {
+            return getBaseUriBuilder().build();
+        }
 
-            public UriBuilder getBaseUriBuilder() {
-                return UriBuilder.fromUri(baseURI);
-            }
+        public UriBuilder getBaseUriBuilder() {
+            return UriBuilder.fromUri(baseURI);
+        }
 
-            public MultivaluedMap<String, String> getPathParameters() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public MultivaluedMap<String, String> getPathParameters() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public MultivaluedMap<String, String> getPathParameters(boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public MultivaluedMap<String, String> getPathParameters(boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public MultivaluedMap<String, String> getQueryParameters() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public MultivaluedMap<String, String> getQueryParameters() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public List<String> getMatchedURIs() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public List<String> getMatchedURIs() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public List<String> getMatchedURIs(boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        public List<String> getMatchedURIs(boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public List<Object> getMatchedResources() {
-                Object dummyResource = new Object(){};
-                return Collections.singletonList(dummyResource);
-            }
+        public List<Object> getMatchedResources() {
+            Object dummyResource = new Object() {};
+            return Collections.singletonList(dummyResource);
+        }
 
-            @Override
-            public URI resolve(URI uri) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public URI resolve(URI uri) {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public URI relativize(URI uri) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public URI relativize(URI uri) {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public Throwable getMappedThrowable() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public Throwable getMappedThrowable() {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public List<MatchResult> getMatchedResults() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<MatchResult> getMatchedResults() {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public List<UriTemplate> getMatchedTemplates() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<UriTemplate> getMatchedTemplates() {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public List<PathSegment> getPathSegments(String name) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<PathSegment> getPathSegments(String name) {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public List<PathSegment> getPathSegments(String name, boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<PathSegment> getPathSegments(String name, boolean decode) {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public List<RuntimeResource> getMatchedRuntimeResources() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<RuntimeResource> getMatchedRuntimeResources() {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public ResourceMethod getMatchedResourceMethod() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public ResourceMethod getMatchedResourceMethod() {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public Resource getMatchedModelResource() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public Resource getMatchedModelResource() {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public List<ResourceMethod> getMatchedResourceLocators() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<ResourceMethod> getMatchedResourceLocators() {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-            @Override
-            public List<Resource> getLocatorSubResources() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<Resource> getLocatorSubResources() {
+            throw new UnsupportedOperationException(
+                    "Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-        };  
+    };
 
-    
-      ResourceMappingContext mockRmc = new ResourceMappingContext() {
+    ResourceMappingContext mockRmc = new ResourceMappingContext() {
 
         @Override
         public ResourceMappingContext.Mapping getMapping(Class<?> resource) {
             return null;
         }
     };
-  
-    
-     
-    @InjectLink(value="A")
+
+    @InjectLink(value = "A")
     public static class EntityA {
     }
 
@@ -227,8 +239,9 @@ public class HeaderProcessorTest  {
         assertEquals("</application/resources/A>", headerValue);
     }
 
-    @InjectLink(value="${entity.id}")
+    @InjectLink(value = "${entity.id}")
     public static class EntityB {
+
         public String getId() {
             return "B";
         }
@@ -245,8 +258,9 @@ public class HeaderProcessorTest  {
         assertEquals("</application/resources/B>", headerValue);
     }
 
-    @InjectLink(value="{id}")
+    @InjectLink(value = "{id}")
     public static class EntityC {
+
         public String getId() {
             return "C";
         }
@@ -264,8 +278,8 @@ public class HeaderProcessorTest  {
     }
 
     @InjectLinks({
-        @InjectLink(value="A"),
-        @InjectLink(value="B")
+            @InjectLink(value = "A"),
+            @InjectLink(value = "B")
     })
     public static class EntityD {
     }
@@ -285,18 +299,18 @@ public class HeaderProcessorTest  {
         assertEquals("</application/resources/B>", headerValue);
     }
 
-    @InjectLink(value="E",
-        rel="relE",
-        rev="revE",
-        type="type/e",
-        title="titleE",
-        anchor="anchorE",
-        media="mediaE",
-        hreflang="en-E",
-        extensions={
-            @Extension(name="e1", value="v1"),
-            @Extension(name="e2", value="v2")
-        }
+    @InjectLink(value = "E",
+            rel = "relE",
+            rev = "revE",
+            type = "type/e",
+            title = "titleE",
+            anchor = "anchorE",
+            media = "mediaE",
+            hreflang = "en-E",
+            extensions = {
+                    @Extension(name = "e1", value = "v1"),
+                    @Extension(name = "e2", value = "v2")
+            }
     )
     public static class EntityE {
     }
@@ -322,19 +336,23 @@ public class HeaderProcessorTest  {
     }
 
     @InjectLinks({
-        @InjectLink(value="${entity.id1}", condition="${entity.id1Enabled}"),
-        @InjectLink(value="${entity.id2}", condition="${entity.id2Enabled}")
+            @InjectLink(value = "${entity.id1}", condition = "${entity.id1Enabled}"),
+            @InjectLink(value = "${entity.id2}", condition = "${entity.id2Enabled}")
     })
     public static class EntityF {
+
         public boolean isId1Enabled() {
             return true;
         }
+
         public String getId1() {
             return "1";
         }
+
         public boolean isId2Enabled() {
             return false;
         }
+
         public String getId2() {
             return "2";
         }

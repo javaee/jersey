@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -86,10 +86,12 @@ import jersey.repackaged.com.google.common.collect.Maps;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
+
     private final Configuration serverConfig;
     private final ConcurrentMap<BindingModel, Value<ManagedClient>> managedClients;
 
     private static class ManagedClient {
+
         private final Client instance;
         private final String customBaseUri;
 
@@ -100,6 +102,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
     }
 
     private static class BindingModel {
+
         public static final BindingModel EMPTY = new BindingModel(null);
 
         /**
@@ -224,12 +227,12 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
 
         @Override
         public String toString() {
-            return "BindingModel{" +
-                    "binding=" + annotation +
-                    ", configClass=" + configClass +
-                    ", inheritProviders=" + inheritProviders +
-                    ", baseUri=" + baseUri +
-                    '}';
+            return "BindingModel{"
+                    + "binding=" + annotation
+                    + ", configClass=" + configClass
+                    + ", inheritProviders=" + inheritProviders
+                    + ", baseUri=" + baseUri
+                    + '}';
         }
     }
 
@@ -256,7 +259,6 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
             this.client = client;
         }
 
-
         @Override
         public WebTarget provide() {
             // no need for try-catch - unlike for @*Param annotations, any issues with @Uri would usually be caused
@@ -266,11 +268,11 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
             final Map<String, Object> pathParamValues = Maps.transformValues(uriInfo.getPathParameters(),
                     new Function<List<String>, Object>() {
 
-                @Override
-                public Object apply(List<String> input) {
-                    return input.isEmpty() ? null : input.get(0);
-                }
-            });
+                        @Override
+                        public Object apply(List<String> input) {
+                            return input.isEmpty() ? null : input.get(0);
+                        }
+                    });
             JerseyUriBuilder uriBuilder = new JerseyUriBuilder().uri(this.uri).resolveTemplates(pathParamValues);
 
             final ManagedClient managedClient = client.get();
@@ -358,8 +360,8 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
                                 final ClientConfig cfg = resolveConfig(configClassProperty, binding);
 
                                 final String inheritProvidersProperty = prefix + "inheritServerProviders";
-                                if (PropertiesHelper.isProperty(serverConfig.getProperty(inheritProvidersProperty)) ||
-                                        binding.inheritProviders()) {
+                                if (PropertiesHelper.isProperty(serverConfig.getProperty(inheritProvidersProperty))
+                                        || binding.inheritProviders()) {
                                     copyProviders(serverConfig, cfg);
                                 }
 
