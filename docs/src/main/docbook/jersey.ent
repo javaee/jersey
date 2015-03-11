@@ -73,6 +73,7 @@
 <!ENTITY heroku.link "<link xlink:href='&heroku.uri;'>Heroku</link>">
 <!ENTITY hk2.javadoc.uri "https://hk2.java.net/apidocs">
 <!ENTITY hk2.link "<link xlink:href='http://hk2.java.net/'>HK2</link>">
+<!ENTITY hk2.spring-bridge.link "<link xlink:href='https://hk2.java.net/spring-bridge/'>The Spring/HK2 Bridge</link>">
 <!ENTITY jaxb.release.uri "http://jaxb.java.net/nonav/&jaxb-api-jar.version;">
 <!ENTITY jaxb.javadoc.uri "&jaxb.release.uri;/docs/api/javax/xml/bind">
 <!ENTITY jaxrs.release.uri "http://jax-rs-spec.java.net/nonav/&jax-rs.version;">
