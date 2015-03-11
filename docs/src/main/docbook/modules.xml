@@ -344,6 +344,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-cdi1x-servlet/dependencies.html">
+    jersey-cdi1x-servlet
+</link>
+</entry>
+<entry>Jersey CDI 1.x Servlet Support</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-cdi1x-transaction/dependencies.html">
     jersey-cdi1x-transaction
 </link>
@@ -573,6 +581,14 @@
 </link>
 </entry>
 <entry>Jersey Test Framework - Simple HTTP container</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-test-framework-util/dependencies.html">
+    jersey-test-framework-util
+</link>
+</entry>
+<entry>Jersey Test Framework Utils</entry>
 </row>
         </tbody>
     </tgroup>
@@ -824,6 +840,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/default-method-java8-webapp/dependencies.html">
+    default-method-java8-webapp
+</link>
+</entry>
+<entry>Jersey App Using Java8 Default Methods Example.</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/entity-filtering/dependencies.html">
     entity-filtering
 </link>
@@ -909,6 +933,14 @@
 </link>
 </entry>
 <entry>Jersey annotated resource class "Hello world" example.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/helloworld-benchmark/dependencies.html">
+    helloworld-benchmark
+</link>
+</entry>
+<entry>Jersey "Hello World" benchmark example.</entry>
 </row>
 <row>
 <entry>
