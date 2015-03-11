@@ -74,10 +74,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
+ * @author Ryan Peterson
  */
 public class MethodProcessorTest {
+	private static final Logger LOG = Logger.getLogger(MethodProcessorTest.class.getName());
 
     ExtendedUriInfo mockUriInfo = new ExtendedUriInfo() {
 
@@ -267,7 +267,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testProcessLinks() {
-        System.out.println("Links");
+        LOG.info("Links");
         MethodProcessor<TestClassD> instance = new MethodProcessor(TestClassD.class);
         TestClassD testClass = new TestClassD();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -302,7 +302,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testProcessLinksWithFields() {
-        System.out.println("Links from field values");
+        LOG.info("Links from field values");
         MethodProcessor<TestClassE> instance = new MethodProcessor(TestClassE.class);
         TestClassE testClass = new TestClassE("10");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -336,7 +336,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testNesting() {
-        System.out.println("Nesting");
+        LOG.info("Nesting");
         MethodProcessor<TestClassF> instance = new MethodProcessor(TestClassF.class);
         TestClassE nested = new TestClassE("10");
         TestClassF testClass = new TestClassF("20", nested);
@@ -347,7 +347,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testArray() {
-        System.out.println("Array");
+        LOG.info("Array");
         MethodProcessor<TestClassE[]> instance = new MethodProcessor(TestClassE[].class);
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
@@ -359,7 +359,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testCollection() {
-        System.out.println("Collection");
+        LOG.info("Collection");
         MethodProcessor<List> instance = new MethodProcessor(List.class);
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
@@ -427,7 +427,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testLinkStyles() {
-        System.out.println("Link styles");
+        LOG.info("Link styles");
         MethodProcessor<TestClassG> instance = new MethodProcessor(TestClassG.class);
         TestClassG testClass = new TestClassG("10");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -456,7 +456,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testComputedProperty() {
-        System.out.println("Computed property");
+        LOG.info("Computed property");
         MethodProcessor<TestClassH> instance = new MethodProcessor(TestClassH.class);
         TestClassH testClass = new TestClassH();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -482,7 +482,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testEL() {
-        System.out.println("EL link");
+        LOG.info("EL link");
         MethodProcessor<TestClassI> instance = new MethodProcessor(TestClassI.class);
         TestClassI testClass = new TestClassI();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -508,7 +508,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testMixed() {
-        System.out.println("Mixed EL and template vars link");
+        LOG.info("Mixed EL and template vars link");
         MethodProcessor<TestClassJ> instance = new MethodProcessor(TestClassJ.class);
         TestClassJ testClass = new TestClassJ();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -552,7 +552,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testELScopes() {
-        System.out.println("EL scopes");
+        LOG.info("EL scopes");
         MethodProcessor<OuterBean> instance = new MethodProcessor(OuterBean.class);
         OuterBean testClass = new OuterBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -579,7 +579,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testELBinding() {
-        System.out.println("EL binding");
+        LOG.info("EL binding");
         MethodProcessor<BoundLinkBean> instance = new MethodProcessor(BoundLinkBean.class);
         BoundLinkBean testClass = new BoundLinkBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -607,7 +607,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testELBindingOnLink() {
-        System.out.println("EL binding");
+        LOG.info("EL binding");
         MethodProcessor<BoundLinkOnLinkBean> instance = new MethodProcessor(BoundLinkOnLinkBean.class);
         BoundLinkOnLinkBean testClass = new BoundLinkOnLinkBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -665,7 +665,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testELBindingOnLinks() {
-        System.out.println("EL binding");
+        LOG.info("EL binding");
         MethodProcessor<BoundLinkOnLinksBean> instance = new MethodProcessor(BoundLinkOnLinksBean.class);
         BoundLinkOnLinksBean testClass = new BoundLinkOnLinksBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -718,7 +718,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testCondition() {
-        System.out.println("Condition");
+        LOG.info("Condition");
         MethodProcessor<ConditionalLinkBean> instance = new MethodProcessor(ConditionalLinkBean.class);
         ConditionalLinkBean testClass = new ConditionalLinkBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -750,7 +750,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testSubresource() {
-        System.out.println("Subresource");
+        LOG.info("Subresource");
         MethodProcessor<SubResourceBean> instance = new MethodProcessor(SubResourceBean.class);
         SubResourceBean testClass = new SubResourceBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -804,7 +804,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testQueryResource() {
-        System.out.println("QueryResource");
+        LOG.info("QueryResource");
         MethodProcessor<QueryResourceBean> instance = new MethodProcessor(QueryResourceBean.class);
         QueryResourceBean testClass = new QueryResourceBean("queryExample", null);
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -813,7 +813,7 @@ public class MethodProcessorTest {
 
     @Test
     public void testDoubleQueryResource() {
-        System.out.println("QueryResource");
+        LOG.info("QueryResource");
         MethodProcessor<QueryResourceBean> instance = new MethodProcessor(QueryResourceBean.class);
         QueryResourceBean testClass = new QueryResourceBean("queryExample", "queryExample2");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -877,7 +877,7 @@ public class MethodProcessorTest {
     @Test
     public void testInterfaceProxy() {
     	try {
-	        System.out.println("Test Interface");
+	        LOG.info("Test Interface");
 	        MethodProcessor<TestInterface> instance = new MethodProcessor(TestInterface.class);
 	        TestInterface testClass = TestInterface.class.cast(Proxy.newProxyInstance(TestInterface.class.getClassLoader(), new Class[] { TestInterface.class }, new InvocationHandler() {
 	        	private String simpleValue;
