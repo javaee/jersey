@@ -113,7 +113,7 @@ class InjectLinkMethodDescriptor extends MethodDescriptor implements InjectLinkD
      * TODO javadoc.
      */
     public String getLinkTemplate(ResourceMappingContext rmc) {
-        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, link);
+        return LinkDescriptorUtil.getLinkTemplate(rmc, link);
     }
 
     /**

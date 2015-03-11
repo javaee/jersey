@@ -70,7 +70,7 @@ class LinkHeaderDescriptor implements InjectLinkDescriptor {
     }
 
     public String getLinkTemplate(ResourceMappingContext rmc) {
-        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, linkHeader);
+        return LinkDescriptorUtil.getLinkTemplate(rmc, linkHeader);
     }
 
     public Style getLinkStyle() {
