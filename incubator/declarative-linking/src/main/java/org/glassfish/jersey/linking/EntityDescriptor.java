@@ -238,7 +238,7 @@ class EntityDescriptor {
                     InjectLinks a2 = m.getAnnotation(InjectLinks.class);
                     linkMethods.put(m.getName(), new InjectLinksMethodDescriptor(m, a2, t));
                 } else {
-                    throw new IllegalArgumentException("Can only inject links onto a List<Link> or Link[] object");
+                    throw new IllegalArgumentException("Can only inject links onto method that returns a List<Link> or Link[] object");
                 }
             
             } else {
