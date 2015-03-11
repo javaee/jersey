@@ -60,6 +60,7 @@
     </description>
 
     <modules>
+        <module>assemblies</module>
         <module>filter-dynamic</module>
         <module>filter-global</module>
         <module>filter-name</module>
@@ -75,4 +76,43 @@
         <module>param-srl</module>
         <module>proxy-injection</module>
     </modules>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <dependencies>
+                        <!-- Contains shared performance test-cases assembly descriptors -->
+                        <dependency>
+                            <groupId>org.glassfish.jersey.tests.performance.testcases</groupId>
+                            <artifactId>assemblies</artifactId>
+                            <version>${project.version}</version>
+                        </dependency>
+                    </dependencies>
+                    <executions>
+                        <execution>
+                            <id>make-assembly</id>
+                            <!-- this is used for inheritance merges -->
+                            <phase>package</phase>
+                            <!-- append to the packaging phase. -->
+                            <goals>
+                                <goal>attached</goal>
+                                <!-- goals == mojos -->
+                            </goals>
+                            <configuration>
+                                <descriptorRefs>
+                                    <!-- Reference to a descriptor in org.glassfish.jersey.tests.performance.testcases:assemblies module -->
+                                    <descriptorRef>zip-with-jars</descriptorRef>
+                                    <descriptorRef>war</descriptorRef>
+                                </descriptorRefs>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
 </project>
