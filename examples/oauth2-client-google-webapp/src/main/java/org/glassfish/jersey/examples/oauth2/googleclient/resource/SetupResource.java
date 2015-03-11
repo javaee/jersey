@@ -70,8 +70,7 @@ public class SetupResource {
                           @QueryParam("clientSecret") String consumerSecret) {
 
         SimpleOAuthService.setClientIdentifier(new ClientIdentifier(consumerKey, consumerSecret));
-        final URI uri = UriBuilder.fromUri(uriInfo.getBaseUri()).path("tasks")
-                .build();
+        final URI uri = UriBuilder.fromUri(uriInfo.getBaseUri()).path("tasks").build();
 
         return Response.seeOther(uri).build();
     }

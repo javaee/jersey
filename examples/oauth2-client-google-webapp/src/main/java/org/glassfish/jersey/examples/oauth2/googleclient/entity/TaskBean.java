@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.examples.oauth2.googleclient.entity;
 
+import java.util.Calendar;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -56,11 +58,22 @@ public class TaskBean {
     @XmlAttribute
     private String title;
 
+    @XmlAttribute
+    private Calendar completed;
+
     public String getTitle() {
         return title;
     }
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public Calendar getCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(final Calendar completed) {
+        this.completed = completed;
     }
 }
