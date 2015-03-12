@@ -77,7 +77,7 @@ import org.junit.Test;
  * @author Ryan Peterson
  */
 public class MethodProcessorTest {
-	private static final Logger LOG = Logger.getLogger(MethodProcessorTest.class.getName());
+    private static final Logger LOG = Logger.getLogger(MethodProcessorTest.class.getName());
 
     ExtendedUriInfo mockUriInfo = new ExtendedUriInfo() {
 
@@ -239,29 +239,30 @@ public class MethodProcessorTest {
         }
     };
 
-
     private final static String TEMPLATE_A = "foo";
 
     public static class TestClassD {
         private String res1;
         private URI res2;
-        
-        @InjectLink(value = TEMPLATE_A, style = InjectLink.Style.RELATIVE_PATH)
+
+        @InjectLink(value = TEMPLATE_A,
+                style = InjectLink.Style.RELATIVE_PATH)
         public String getRes1() {
-        	return res1;
-        }
-        
-        public void setRes1(String res1) {
-        	this.res1 = res1;
+            return res1;
         }
 
-        @InjectLink(value = TEMPLATE_A, style = InjectLink.Style.RELATIVE_PATH)
-        public URI getRes2() {
-        	return res2;
+        public void setRes1(String res1) {
+            this.res1 = res1;
         }
-        
+
+        @InjectLink(value = TEMPLATE_A,
+                style = InjectLink.Style.RELATIVE_PATH)
+        public URI getRes2() {
+            return res2;
+        }
+
         public void setRes2(URI uri) {
-        	this.res2 = uri;
+            this.res2 = uri;
         }
     }
 
@@ -290,14 +291,15 @@ public class MethodProcessorTest {
             return id;
         }
 
-        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
-		public String getLink() {
-			return link;
-		}
+        @InjectLink(value = TEMPLATE_B,
+                style = InjectLink.Style.RELATIVE_PATH)
+        public String getLink() {
+            return link;
+        }
 
-		public void setLink(String link) {
-			this.link = link;
-		}
+        public void setLink(String link) {
+            this.link = link;
+        }
     }
 
     @Test
@@ -324,14 +326,15 @@ public class MethodProcessorTest {
             return id;
         }
 
-        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
-		public String getThelink() {
-			return thelink;
-		}
+        @InjectLink(value = TEMPLATE_B,
+                style = InjectLink.Style.RELATIVE_PATH)
+        public String getThelink() {
+            return thelink;
+        }
 
-		public void setThelink(String thelink) {
-			this.thelink = thelink;
-		}
+        public void setThelink(String thelink) {
+            this.thelink = thelink;
+        }
     }
 
     @Test
@@ -351,7 +354,7 @@ public class MethodProcessorTest {
         MethodProcessor<TestClassE[]> instance = new MethodProcessor(TestClassE[].class);
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
-        TestClassE array[] = {item1, item2};
+        TestClassE array[] = { item1, item2 };
         instance.processLinks(array, mockUriInfo, mockRmc);
         assertEquals("widgets/10", array[0].link);
         assertEquals("widgets/20", array[1].link);
@@ -388,41 +391,44 @@ public class MethodProcessorTest {
             return id;
         }
 
-        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
-		public String getRelativePath() {
-			return relativePath;
-		}
+        @InjectLink(value = TEMPLATE_B,
+                style = InjectLink.Style.RELATIVE_PATH)
+        public String getRelativePath() {
+            return relativePath;
+        }
 
-		public void setRelativePath(String relativePath) {
-			this.relativePath = relativePath;
-		}
+        public void setRelativePath(String relativePath) {
+            this.relativePath = relativePath;
+        }
 
-        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.ABSOLUTE_PATH)
-		public String getAbsolutePath() {
-			return absolutePath;
-		}
+        @InjectLink(value = TEMPLATE_B,
+                style = InjectLink.Style.ABSOLUTE_PATH)
+        public String getAbsolutePath() {
+            return absolutePath;
+        }
 
-		public void setAbsolutePath(String absolutePath) {
-			this.absolutePath = absolutePath;
-		}
+        public void setAbsolutePath(String absolutePath) {
+            this.absolutePath = absolutePath;
+        }
 
-        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.ABSOLUTE)
-		public String getAbsolute() {
-			return absolute;
-		}
+        @InjectLink(value = TEMPLATE_B,
+                style = InjectLink.Style.ABSOLUTE)
+        public String getAbsolute() {
+            return absolute;
+        }
 
-		public void setAbsolute(String absolute) {
-			this.absolute = absolute;
-		}
+        public void setAbsolute(String absolute) {
+            this.absolute = absolute;
+        }
 
         @InjectLink(TEMPLATE_B)
-		public String getDefaultStyle() {
-			return defaultStyle;
-		}
+        public String getDefaultStyle() {
+            return defaultStyle;
+        }
 
-		public void setDefaultStyle(String defaultStyle) {
-			this.defaultStyle = defaultStyle;
-		}
+        public void setDefaultStyle(String defaultStyle) {
+            this.defaultStyle = defaultStyle;
+        }
     }
 
     @Test
@@ -445,13 +451,13 @@ public class MethodProcessorTest {
         }
 
         @InjectLink(TEMPLATE_B)
-		public String getLink() {
-			return link;
-		}
+        public String getLink() {
+            return link;
+        }
 
-		public void setLink(String link) {
-			this.link = link;
-		}
+        public void setLink(String link) {
+            this.link = link;
+        }
     }
 
     @Test
@@ -471,13 +477,13 @@ public class MethodProcessorTest {
         }
 
         @InjectLink("widgets/${entity.id}")
-		public String getLink() {
-			return link;
-		}
+        public String getLink() {
+            return link;
+        }
 
-		public void setLink(String link) {
-			this.link = link;
-		}
+        public void setLink(String link) {
+            this.link = link;
+        }
     }
 
     @Test
@@ -497,13 +503,13 @@ public class MethodProcessorTest {
         }
 
         @InjectLink("widgets/${entity.id}/widget/{id}")
-		public String getLink() {
-			return link;
-		}
+        public String getLink() {
+            return link;
+        }
 
-		public void setLink(String link) {
-			this.link = link;
-		}
+        public void setLink(String link) {
+            this.link = link;
+        }
     }
 
     @Test
@@ -524,22 +530,22 @@ public class MethodProcessorTest {
         }
 
         @InjectLink("${entity.id}")
-		public String getOuterUri() {
-			return outerUri;
-		}
+        public String getOuterUri() {
+            return outerUri;
+        }
 
-		public void setOuterUri(String outerUri) {
-			this.outerUri = outerUri;
-		}
+        public void setOuterUri(String outerUri) {
+            this.outerUri = outerUri;
+        }
 
         @InjectLink("${instance.id}")
-		public String getInnerUri() {
-			return innerUri;
-		}
+        public String getInnerUri() {
+            return innerUri;
+        }
 
-		public void setInnerUri(String innerUri) {
-			this.innerUri = innerUri;
-		}
+        public void setInnerUri(String innerUri) {
+            this.innerUri = innerUri;
+        }
     }
 
     public static class OuterBean {
@@ -567,14 +573,16 @@ public class MethodProcessorTest {
             return "name";
         }
 
-        @InjectLink(value = "{id}", bindings = {@Binding(name = "id", value = "${instance.name}")})
-		public String getUri() {
-			return uri;
-		}
+        @InjectLink(value = "{id}",
+                bindings = { @Binding(name = "id",
+                        value = "${instance.name}") })
+        public String getUri() {
+            return uri;
+        }
 
-		public void setUri(String uri) {
-			this.uri = uri;
-		}
+        public void setUri(String uri) {
+            this.uri = uri;
+        }
     }
 
     @Test
@@ -594,15 +602,16 @@ public class MethodProcessorTest {
         }
 
         @InjectLink(value = "{id}",
-                bindings = {@Binding(name = "id", value = "${instance.name}")},
+                bindings = { @Binding(name = "id",
+                        value = "${instance.name}") },
                 rel = "self")
-		public Link getLink() {
-			return link;
-		}
+        public Link getLink() {
+            return link;
+        }
 
-		public void setLink(Link link) {
-			this.link = link;
-		}
+        public void setLink(Link link) {
+            this.link = link;
+        }
     }
 
     @Test
@@ -615,52 +624,47 @@ public class MethodProcessorTest {
         assertEquals("self", testClass.link.getRel());
     }
 
-
     public static class BoundLinkOnLinksBean {
         public List<Link> links;
         public Link[] linksArray;
-
 
         public String getName() {
             return "name";
         }
 
-
-        @InjectLinks({
-            @InjectLink(value = "{id}",
-                    bindings = {@Binding(name = "id", value = "${instance.name}")},
-                    rel = "self"),
-            @InjectLink(value = "{id}",
-                    bindings = {@Binding(name = "id", value = "${instance.name}")},
-                    rel = "other"),
-
-        })
-		public List<Link> getLinks() {
-			return links;
-		}
-
-
-		public void setLinks(List<Link> links) {
-			this.links = links;
-		}
-
-        @InjectLinks({
-            @InjectLink(value = "{id}",
-                    bindings = {@Binding(name = "id", value = "${instance.name}")},
-                    rel = "self"),
-            @InjectLink(value = "{id}",
-                    bindings = {@Binding(name = "id", value = "${instance.name}")},
-                    rel = "other"),
+        @InjectLinks({ @InjectLink(value = "{id}",
+                bindings = { @Binding(name = "id",
+                        value = "${instance.name}") },
+                rel = "self"), @InjectLink(value = "{id}",
+                bindings = { @Binding(name = "id",
+                        value = "${instance.name}") },
+                rel = "other"),
 
         })
-		public Link[] getLinksArray() {
-			return linksArray;
-		}
+        public List<Link> getLinks() {
+            return links;
+        }
 
+        public void setLinks(List<Link> links) {
+            this.links = links;
+        }
 
-		public void setLinksArray(Link[] linksArray) {
-			this.linksArray = linksArray;
-		}
+        @InjectLinks({ @InjectLink(value = "{id}",
+                bindings = { @Binding(name = "id",
+                        value = "${instance.name}") },
+                rel = "self"), @InjectLink(value = "{id}",
+                bindings = { @Binding(name = "id",
+                        value = "${instance.name}") },
+                rel = "other"),
+
+        })
+        public Link[] getLinksArray() {
+            return linksArray;
+        }
+
+        public void setLinksArray(Link[] linksArray) {
+            this.linksArray = linksArray;
+        }
     }
 
     @Test
@@ -679,7 +683,6 @@ public class MethodProcessorTest {
 
     }
 
-
     public static class ConditionalLinkBean {
         public String uri1;
 
@@ -697,23 +700,25 @@ public class MethodProcessorTest {
             return false;
         }
 
-        @InjectLink(value = "{id}", condition = "${entity.uri1Enabled}")
-		public String getUri1() {
-			return uri1;
-		}
+        @InjectLink(value = "{id}",
+                condition = "${entity.uri1Enabled}")
+        public String getUri1() {
+            return uri1;
+        }
 
-		public void setUri1(String uri1) {
-			this.uri1 = uri1;
-		}
+        public void setUri1(String uri1) {
+            this.uri1 = uri1;
+        }
 
-        @InjectLink(value = "{id}", condition = "${entity.uri2Enabled}")
-		public String getUri2() {
-			return uri2;
-		}
+        @InjectLink(value = "{id}",
+                condition = "${entity.uri2Enabled}")
+        public String getUri2() {
+            return uri2;
+        }
 
-		public void setUri2(String uri2) {
-			this.uri2 = uri2;
-		}
+        public void setUri2(String uri2) {
+            this.uri2 = uri2;
+        }
     }
 
     @Test
@@ -738,14 +743,15 @@ public class MethodProcessorTest {
     public static class SubResourceBean {
         public String uri;
 
-        @InjectLink(resource = SubResource.class, method = "getB")
-		public String getUri() {
-			return uri;
-		}
+        @InjectLink(resource = SubResource.class,
+                method = "getB")
+        public String getUri() {
+            return uri;
+        }
 
-		public void setUri(String uri) {
-			this.uri = uri;
-		}
+        public void setUri(String uri) {
+            this.uri = uri;
+        }
     }
 
     @Test
@@ -785,21 +791,20 @@ public class MethodProcessorTest {
 
         private String queryExample2;
 
-
         public String uri;
 
-        @InjectLink(resource = QueryResource.class, method = "getB",
-                bindings = {
-                        @Binding(name = "query", value = "${instance.queryParam}"),
-                        @Binding(name = "query2", value = "${instance.queryParam2}")
-                })
-		public String getUri() {
-			return uri;
-		}
+        @InjectLink(resource = QueryResource.class,
+                method = "getB",
+                bindings = { @Binding(name = "query",
+                        value = "${instance.queryParam}"), @Binding(name = "query2",
+                        value = "${instance.queryParam2}") })
+        public String getUri() {
+            return uri;
+        }
 
-		public void setUri(String uri) {
-			this.uri = uri;
-		}
+        public void setUri(String uri) {
+            this.uri = uri;
+        }
     }
 
     @Test
@@ -867,39 +872,42 @@ public class MethodProcessorTest {
         Logger.getLogger(FieldDescriptor.class.getName()).setFilter(null);
 
     }
-    
+
     public static interface TestInterface {
-        @InjectLink(value = TEMPLATE_A, style = InjectLink.Style.RELATIVE_PATH)
+        @InjectLink(value = TEMPLATE_A,
+                style = InjectLink.Style.RELATIVE_PATH)
         public String getRes1();
+
         public void setRes1(String res1);
     }
 
     @Test
     public void testInterfaceProxy() {
-    	try {
-	        LOG.info("Test Interface");
-	        MethodProcessor<TestInterface> instance = new MethodProcessor(TestInterface.class);
-	        TestInterface testClass = TestInterface.class.cast(Proxy.newProxyInstance(TestInterface.class.getClassLoader(), new Class[] { TestInterface.class }, new InvocationHandler() {
-	        	private String simpleValue;
-				@Override
-				public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-					String s = method.getName();
-					if(s.equals("hashCode")) { //Need this for map operations
-						return new Integer(0);
-					} else if(method.getName().startsWith("set")) {
-						simpleValue = (String)args[0];
-						return null;
-					} else {
-						return simpleValue;
-					}
-				}
-	
-			}));
-	        instance.processLinks(testClass, mockUriInfo, mockRmc);
-	        assertEquals(TEMPLATE_A, testClass.getRes1());
-    	} catch (Throwable t) {
-    		Assert.fail(t.getMessage());
-    	}
+        try {
+            LOG.info("Test Interface");
+            MethodProcessor<TestInterface> instance = new MethodProcessor(TestInterface.class);
+            TestInterface testClass = TestInterface.class.cast(Proxy.newProxyInstance(TestInterface.class.getClassLoader(), new Class[] { TestInterface.class }, new InvocationHandler() {
+                private String simpleValue;
+
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    String s = method.getName();
+                    if (s.equals("hashCode")) { // Need this for map operations
+                        return new Integer(0);
+                    } else if (method.getName().startsWith("set")) {
+                        simpleValue = (String) args[0];
+                        return null;
+                    } else {
+                        return simpleValue;
+                    }
+                }
+
+            }));
+            instance.processLinks(testClass, mockUriInfo, mockRmc);
+            assertEquals(TEMPLATE_A, testClass.getRes1());
+        } catch (Throwable t) {
+            Assert.fail(t.getMessage());
+        }
 
     }
 }
