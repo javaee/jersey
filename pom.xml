@@ -888,7 +888,7 @@
             <modules>
                 <module>examples/default-method-java8-webapp</module>
                 <module>examples/rx-client-java8-webapp</module>
-                <module>incubator/rx/rx-client-java8</module>
+                <module>ext/rx/rx-client-java8</module>
             </modules>
             <build>
                 <pluginManagement>

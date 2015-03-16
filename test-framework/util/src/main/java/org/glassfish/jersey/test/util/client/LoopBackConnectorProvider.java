@@ -43,7 +43,6 @@ package org.glassfish.jersey.test.util.client;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Configuration;
 
-import org.glassfish.jersey.Beta;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
@@ -56,7 +55,6 @@ import org.glassfish.jersey.client.spi.ConnectorProvider;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @since 2.17
  */
-@Beta
 public final class LoopBackConnectorProvider implements ConnectorProvider {
 
     @Override

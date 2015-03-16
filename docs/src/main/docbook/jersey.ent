@@ -322,6 +322,7 @@
 <!ENTITY jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#REQUEST_ENTITY_PROCESSING'>ClientProperties.REQUEST_ENTITY_PROCESSING</link>" >
 <!ENTITY jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#SUPPRESS_HTTP_COMPLIANCE_VALIDATION'>ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION</link>" >
 <!ENTITY jersey.client.ClientProperties.USE_ENCODING "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#USE_ENCODING'>ClientProperties.USE_ENCODING</link>" >
+<!ENTITY jersey.client.ClientLifecycleListener "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientLifecycleListener.html'>ClientLifecycleListener</link>">
 <!ENTITY jersey.client.Connector "<link xlink:href='&jersey.javadoc.uri.prefix;/client/spi/Connector.html'>Connector</link>">
 <!ENTITY jersey.client.ConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/client/spi/ConnectorProvider.html'>ConnectorProvider</link>">
 <!ENTITY jersey.client.CsrfProtectionFilter "<link xlink:href='&jersey.javadoc.uri.prefix;/client/filter/CsrfProtectionFilter.html'>CsrfProtectionFilter</link>">
@@ -555,6 +556,8 @@
 <!ENTITY jersey.test.TestProperties "<link xlink:href='&jersey.javadoc.uri.prefix;/test/TestProperties.html'>TestProperties</link>">
 <!ENTITY jersey.test.spi.TestContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/test/spi/TestContainer.html'>TestContainer</link>">
 <!ENTITY jersey.test.spi.TestContainerFactory "<link xlink:href='&jersey.javadoc.uri.prefix;/test/spi/TestContainerFactory.html'>TestContainerFactory</link>">
+<!ENTITY jersey.test.util.ContainerRequestBuilder "<link xlink:href='&jersey.javadoc.uri.prefix;/test/util/server/ContainerRequestBuilder.html'>ContainerRequestBuilder</link>">
+<!ENTITY jersey.test.util.LoopBackConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/test/util/client/LoopBackConnectorProvider.html'>LoopBackConnectorProvider</link>">
 
 <!-- Common Literals -->
 <!ENTITY lit.null "<literal>null</literal>">
@@ -772,6 +775,7 @@
 <!ENTITY lit.jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING "<literal>ClientProperties.REQUEST_ENTITY_PROCESSING</literal>" >
 <!ENTITY lit.jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION "<literal>ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION</literal>" >
 <!ENTITY lit.jersey.client.ClientProperties.USE_ENCODING "<literal>ClientProperties.USE_ENCODING</literal>" >
+<!ENTITY lit.jersey.client.ClientLifecycleListener "<literal>ClientLifecycleListener</literal>">
 <!ENTITY lit.jersey.client.Connector "<literal>Connector</literal>">
 <!ENTITY lit.jersey.client.ConnectorProvider "<literal>ConnectorProvider</literal>">
 <!ENTITY lit.jersey.client.CsrfProtectionFilter "<literal>CsrfProtectionFilter</literal>">
@@ -964,3 +968,5 @@
 <!ENTITY lit.jersey.test.TestProperties "<literal>TestProperties</literal>">
 <!ENTITY lit.jersey.test.spi.TestContainer "<literal>TestContainer</literal>">
 <!ENTITY lit.jersey.test.spi.TestContainerFactory "<literal>TestContainerFactory</literal>">
+<!ENTITY lit.jersey.test.util.LoopBackConnectorProvider "<literal>LoopBackConnectorProvider</literal>">
+<!ENTITY lit.jersey.test.util.ContainerRequestBuilder "<literal>ContainerRequestBuilder</literal>">

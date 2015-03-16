@@ -1067,7 +1067,7 @@ RxTarget&lt;RxCompletableFutureInvoker&gt; rxWebTarget = RxCompletableFuture.fro
                 <example xml:id="rx.client.rxinvoker">
                     <title>RxInvoker snippet</title>
 
-                    <programlisting language="java" linenumbering="numbered">@Beta public interface RxInvoker&lt;T&gt; {
+                    <programlisting language="java" linenumbering="numbered">public interface RxInvoker&lt;T&gt; {
 
     public &lt;T&gt; get();
 

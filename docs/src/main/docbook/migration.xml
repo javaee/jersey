@@ -54,6 +54,7 @@
 
     <section xml:id="mig-2.18">
         <title>Migrating from Jersey 2.17 to 2.18</title>
+
         <section xml:id="mig-2.18-highlights">
             <title>Release 2.18 Highlights</title>
 
@@ -86,6 +87,89 @@
                     </itemizedlist>
                 </para>
             </section>
+            <section>
+                <title>Promoted Public Beta APIs</title>
+
+                <para>
+                    Several experimental Jersey APIs have matured enough and as such we have decided to promote them
+                    from &jersey.common.Beta; status, namely:
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                Jersey Reactive Client API. Also Reactive Client moved from incubator to extension (umbrella)
+                                module.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey client-side &jersey.client.ClientLifecycleListener; SPI.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey server-side &jersey.server.ContainerLifecycleListener; SPI.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey server-side (MVC) &jersey.server.mvc.ErrorTemplate; annotation.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey test framework (client-side) &jersey.test.util.LoopBackConnectorProvider; connector.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey test framework (server-side) &jersey.test.util.ContainerRequestBuilder; class.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+
+                    These APIs are now part of the official public Jersey 2.x API.
+                </para>
+            </section>
+        </section>
+
+        <section xml:id="mig-2.18-removed-deprecated">
+            <title>Removed deprecated APIs</title>
+            <para>Following, already deprecated, APIs were removed:</para>
+
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.apache.connector.ApacheClientProperties</literal> - constant
+                            <literal>SSL_CONFIG</literal> has been removed. Use &jaxrs.client.ClientBuilder; methods to configure
+                            SSL in a &jaxrs.client.Client; instance.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.jetty.connector.JettyClientProperties</literal> - constant
+                            <literal>SSL_CONFIG</literal> has been removed. Use &jaxrs.client.ClientBuilder; methods to configure
+                            SSL in a &jaxrs.client.Client; instance.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>FreemarkerMvcFeature.TEMPLATES_BASE_PATH</literal> - constant has been unified across MVC
+                            modules and the deprecated one has been removed.
+                            Use <literal>FreemarkerMvcFeature.TEMPLATE_BASE_PATH</literal> or property
+                            <literal>jersey.config.server.mvc.templateBasePath.freemarker</literal> instead.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>JspMvcFeature.TEMPLATES_BASE_PATH</literal> - constant has been unified across MVC modules
+                            and the deprecated one has been removed. Use <literal>JspMvcFeature.TEMPLATE_BASE_PATH</literal> or
+                            property <literal>jersey.config.server.mvc.templateBasePath.jsp</literal> instead.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
         </section>
     </section>
 

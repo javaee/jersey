@@ -50,7 +50,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.glassfish.jersey.Beta;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -65,7 +64,6 @@ import org.glassfish.jersey.server.ContainerRequest;
  * @author Martin Matula
  * @since 2.17
  */
-@Beta
 public final class ContainerRequestBuilder {
 
     /**
