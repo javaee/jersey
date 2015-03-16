@@ -54,7 +54,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -130,7 +129,6 @@ public class MoxyEntityFilteringTest extends JerseyTest {
     }
 
     @Test
-    @Ignore
     public void testXmlAttributeEntity() throws Exception {
         final XmlElementEntity entity = target().request().get(XmlElementEntity.class);
 

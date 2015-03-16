@@ -1255,12 +1255,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.eclipse.persistence</groupId>
-                <artifactId>org.eclipse.persistence.antlr</artifactId>
-                <version>${moxy.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>javax.persistence</groupId>
                 <artifactId>persistence-api</artifactId>
                 <version>${javax.persistence.version}</version>
@@ -1618,7 +1612,7 @@
         <jstl.version>1.2</jstl.version>
         <jta.api.version>1.2</jta.api.version>
         <mimepull.version>1.9.5</mimepull.version>
-        <moxy.version>2.5.0</moxy.version>
+        <moxy.version>2.6.0</moxy.version>
         <mustache.version>0.8.17</mustache.version>
         <osgi.version>4.2.0</osgi.version>
         <pax.exam.version>3.3.0</pax.exam.version>

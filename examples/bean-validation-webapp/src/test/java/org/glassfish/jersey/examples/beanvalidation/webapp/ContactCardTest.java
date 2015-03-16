@@ -55,6 +55,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.examples.beanvalidation.webapp.domain.ContactCard;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.validation.ValidationError;
@@ -62,6 +63,8 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 
+import org.eclipse.persistence.jaxb.BeanValidationMode;
+import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -100,6 +103,10 @@ public class ContactCardTest extends JerseyTest {
         super.configureClient(config);
 
         config.register(MoxyJsonFeature.class);
+        // Turn off BV otherwise the entities on client would be validated as well.
+        config.register(new MoxyJsonConfig()
+                .property(MarshallerProperties.BEAN_VALIDATION_MODE, BeanValidationMode.NONE)
+                .resolver());
     }
 
     @Override
@@ -186,7 +193,7 @@ public class ContactCardTest extends JerseyTest {
     }
 
     private Set<String> getValidationMessageTemplates(final List<ValidationError> errors) {
-        final Set<String> templates = new HashSet<String>();
+        final Set<String> templates = new HashSet<>();
         for (final ValidationError error : errors) {
             templates.add(error.getMessageTemplate());
         }

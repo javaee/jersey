@@ -44,6 +44,7 @@ import java.lang.annotation.ElementType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -68,6 +69,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.moxy.xml.MoxyXmlFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -75,6 +77,8 @@ import org.glassfish.jersey.server.validation.ValidationConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
+import org.eclipse.persistence.jaxb.BeanValidationMode;
+import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -97,7 +101,7 @@ public class CustomConfigValidationTest extends JerseyTest {
         @NotNull
         @Valid
         public CustomBean post(@PathParam("path") final String path, final CustomBean beanParameter,
-                               @Size(min = 5) @HeaderParam("myHeader") String header) {
+                               @Size(min = 5) @HeaderParam("myHeader") final String header) {
             if ("".equals(path)) {
                 beanParameter.setPath(null);
                 beanParameter.setValidate(false);
@@ -116,7 +120,8 @@ public class CustomConfigValidationTest extends JerseyTest {
 
         final ResourceConfig resourceConfig = new ResourceConfig(CustomConfigResource.class);
 
-        resourceConfig.register(MoxyXmlFeature.class);
+        // Turn off BV in MOXy otherwise the entities on server would be validated at incorrect times.
+        resourceConfig.register(moxyXmlFeature());
         resourceConfig.register(ValidationConfigurationContextResolver.class);
 
         resourceConfig.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
@@ -127,7 +132,18 @@ public class CustomConfigValidationTest extends JerseyTest {
     @Override
     protected void configureClient(final ClientConfig config) {
         super.configureClient(config);
-        config.register(MoxyXmlFeature.class);
+
+        // Turn off BV in MOXy otherwise the entities on client would be validated as well.
+        config.register(moxyXmlFeature());
+    }
+
+    private MoxyXmlFeature moxyXmlFeature() {
+        return new MoxyXmlFeature(new HashMap<String, Object>() {{
+                    put(MarshallerProperties.BEAN_VALIDATION_MODE, BeanValidationMode.NONE);
+                }},
+                Thread.currentThread().getContextClassLoader(),
+                false
+        );
     }
 
     @Test
@@ -225,7 +241,7 @@ public class CustomConfigValidationTest extends JerseyTest {
                 if (method.equals(post)) {
                     return Arrays.asList("path", "beanParameter", "header");
                 }
-            } catch (NoSuchMethodException e) {
+            } catch (final NoSuchMethodException e) {
                 // Do nothing.
             }
             return nameProvider.getParameterNames(method);

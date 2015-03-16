@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,11 +43,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.osgi.test.util.Helper;
 
-import org.ops4j.pax.exam.Option;
+import org.eclipse.persistence.jaxb.BeanValidationMode;
+import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
 import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
@@ -58,20 +63,31 @@ public class JsonMoxyTest extends AbstractJsonOsgiIntegrationTest {
 
     @Configuration
     public static Option[] configuration() {
-        List<Option> options = new ArrayList<Option>();
+        final List<Option> options = new ArrayList<>();
 
         options.addAll(Helper.getCommonOsgiOptions());
         options.addAll(Helper.expandedList(
+                // vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
+
                 bootDelegationPackage("javax.xml.bind"),
                 bootDelegationPackage("javax.xml.bind.*"),
+                // validation
+                bootDelegationPackage("javax.xml.parsers"),
+                bootDelegationPackage("javax.xml.parsers.*"),
 
-                // jersey-json dependencies
+                // moxy dependencies
                 mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-moxy").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.ext").artifactId("jersey-entity-filtering").versionAsInProject(),
                 mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.moxy").versionAsInProject(),
-                mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.antlr").versionAsInProject(),
                 mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.core").versionAsInProject(),
-                mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.asm").versionAsInProject()
+                mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.asm").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish").artifactId("javax.json").versionAsInProject(),
+
+                // validation
+                mavenBundle().groupId("org.hibernate").artifactId("hibernate-validator").versionAsInProject(),
+                mavenBundle().groupId("org.jboss.logging").artifactId("jboss-logging").versionAsInProject(),
+                mavenBundle().groupId("com.fasterxml").artifactId("classmate").versionAsInProject(),
+                mavenBundle().groupId("javax.el").artifactId("javax.el-api").versionAsInProject()
         ));
 
         return Helper.asArray(options);
@@ -79,6 +95,17 @@ public class JsonMoxyTest extends AbstractJsonOsgiIntegrationTest {
 
     @Override
     protected Feature getJsonProviderFeature() {
-        return null;
+        // Turn off BV otherwise the test is not stable.
+        return new Feature() {
+
+            @Override
+            public boolean configure(final FeatureContext context) {
+                context.register(new MoxyJsonConfig()
+                        .property(MarshallerProperties.BEAN_VALIDATION_MODE, BeanValidationMode.NONE)
+                        .resolver());
+
+                return true;
+            }
+        };
     }
 }

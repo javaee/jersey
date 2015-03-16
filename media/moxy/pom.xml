@@ -79,10 +79,6 @@
                 <configuration>
                     <instructions>
                         <Export-Package>org.glassfish.jersey.moxy.*</Export-Package>
-                        <Import-Package>
-                            org.eclipse.persistence.jaxb.rs,
-                            *
-                        </Import-Package>
                     </instructions>
                     <unpackBundle>true</unpackBundle>
                 </configuration>
@@ -121,10 +117,6 @@
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>org.eclipse.persistence.moxy</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>org.eclipse.persistence.antlr</artifactId>
         </dependency>
 
         <dependency>
