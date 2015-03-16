@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -86,6 +87,8 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
 
     private final ServiceLocator locator;
     private final Iterable<ClientLifecycleListener> lifecycleListeners;
+
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     /**
      * Create new client request processing runtime.
@@ -273,24 +276,43 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
         return config;
     }
 
+    /**
+     * This will be used as the last resort to clean things up
+     * in the case that this instance gets garbage collected
+     * before the client itself gets released.
+     *
+     * Close will be invoked either via finalizer
+     * or via JerseyClient onShutdown hook, whatever comes first.
+     */
+    @Override
+    protected void finalize() {
+        close();
+    }
+
     @Override
     public void onShutdown() {
-        try {
-            for (final ClientLifecycleListener listener : lifecycleListeners) {
-                try {
-                    listener.onClose();
-                } catch (final Throwable t) {
-                    LOG.log(Level.WARNING, LocalizationMessages.ERROR_LISTENER_CLOSE(listener.getClass().getName()), t);
-                }
-            }
-        } finally {
+        close();
+    }
+
+    private void close() {
+        if (closed.compareAndSet(false, true)) {
             try {
-                connector.close();
+                for (final ClientLifecycleListener listener : lifecycleListeners) {
+                    try {
+                        listener.onClose();
+                    } catch (final Throwable t) {
+                        LOG.log(Level.WARNING, LocalizationMessages.ERROR_LISTENER_CLOSE(listener.getClass().getName()), t);
+                    }
+                }
             } finally {
                 try {
-                    asyncExecutorsFactory.close();
+                    connector.close();
                 } finally {
-                    Injections.shutdownLocator(locator);
+                    try {
+                        asyncExecutorsFactory.close();
+                    } finally {
+                        Injections.shutdownLocator(locator);
+                    }
                 }
             }
         }
