@@ -135,12 +135,12 @@ public abstract class JerseyTestNg extends JerseyTest {
     }
 
     @Override
-    /* package */ final Client getClient() {
+    protected final Client getClient() {
         return strategy.client();
     }
 
     @Override
-    /* package */ final Client setClient(final Client client) {
+    protected final Client setClient(final Client client) {
         return strategy.client(client);
     }
 
