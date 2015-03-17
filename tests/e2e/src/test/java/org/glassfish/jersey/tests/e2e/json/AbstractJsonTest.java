@@ -177,10 +177,10 @@ public abstract class AbstractJsonTest extends JerseyTest {
                         try {
                             String json = JsonTestHelper.getResourceAsString(PKG_NAME,
                                     providerName + "_" + testName + (moxyJaxbProvider() || runningOnJdk7AndLater() ? "_MOXy" : "")
-                                            + ".json");
+                                            + ".json").trim();
 
                             final InputStream entityStream = containerRequest.getEntityStream();
-                            String retrievedJson = JsonTestHelper.getEntityAsString(entityStream);
+                            String retrievedJson = JsonTestHelper.getEntityAsString(entityStream).trim();
                             entityStream.reset();
 
                             // JAXB-RI and MOXy generate namespace prefixes differently - unify them (ns1/ns2 into ns0)
