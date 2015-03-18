@@ -81,8 +81,10 @@ import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -95,6 +97,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
+@RunWith(ConcurrentRunner.class)
 public class LocationHeaderTest extends JerseyTest {
 
     private static final Logger LOGGER = Logger.getLogger(LocationHeaderTest.class.getName());

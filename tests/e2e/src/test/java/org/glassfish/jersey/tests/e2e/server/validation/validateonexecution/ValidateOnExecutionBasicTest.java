@@ -59,14 +59,18 @@ import javax.validation.executable.ValidateOnExecution;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
+import org.glassfish.jersey.test.util.runner.RunSeparately;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@RunWith(ConcurrentRunner.class)
 public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTest {
 
     /**
@@ -341,6 +345,7 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
     }
 
     @Test
+    @RunSeparately
     public void testOnTypeValidateResultFailValidateExecutableDefault() throws Exception {
         _testOnType("default", -15, 500);
     }

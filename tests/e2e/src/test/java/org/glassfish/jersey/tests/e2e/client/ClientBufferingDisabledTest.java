@@ -60,10 +60,12 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Tests possibility of disabling buffering of outgoing entity in
@@ -72,6 +74,7 @@ import org.junit.Test;
  * @author Miroslav Fuksa
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@RunWith(ConcurrentRunner.class)
 public class ClientBufferingDisabledTest extends JerseyTest {
 
     private static final long LENGTH = 200000000L;

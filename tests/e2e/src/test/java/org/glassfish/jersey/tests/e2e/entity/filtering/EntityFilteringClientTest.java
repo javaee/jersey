@@ -58,14 +58,17 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.tests.e2e.entity.filtering.domain.ManyFilteringsOnClassEntity;
 import org.glassfish.jersey.tests.e2e.entity.filtering.domain.OneFilteringOnClassEntity;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import org.junit.runner.RunWith;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@RunWith(ConcurrentRunner.class)
 public class EntityFilteringClientTest extends EntityFilteringTest {
 
     public static final MediaType ENTITY_FILTERING = new MediaType("entity", "filtering");

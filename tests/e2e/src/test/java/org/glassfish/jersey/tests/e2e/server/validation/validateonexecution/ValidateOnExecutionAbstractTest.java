@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.util.runner.RunSeparately;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -179,6 +180,7 @@ public abstract class ValidateOnExecutionAbstractTest extends JerseyTest {
     }
 
     @Test
+    @RunSeparately
     public void testOnTypeValidateResultFailValidateExecutableMatch() throws Exception {
         _testOnType("match", -15, 500);
     }
@@ -189,6 +191,7 @@ public abstract class ValidateOnExecutionAbstractTest extends JerseyTest {
     }
 
     @Test
+    @RunSeparately
     public void testOnTypeValidateResultPassBiggerValidateExecutableMiss() throws Exception {
         _testOnType("miss", -15, 200);
     }
@@ -199,6 +202,7 @@ public abstract class ValidateOnExecutionAbstractTest extends JerseyTest {
     }
 
     @Test
+    @RunSeparately
     public void testOnTypeValidateResultPassBiggerValidateExecutableNone() throws Exception {
         _testOnType("none", -15, 200);
     }

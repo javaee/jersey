@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld;
+package org.glassfish.jersey.test.util.runner;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -59,18 +59,24 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.Parameterized;
 import org.junit.runners.model.FrameworkMethod;
 
+import org.glassfish.jersey.Beta;
+
 /**
- * Custom implementation of a JUnit {@link Runner} that allows "parameterized"
- * tests to run in parallel.
+ * Custom implementation of a JUnit {@link Runner} that allows parameterized
+ * tests to run in parallel. This runner will probably
+ * be merged into {@link ConcurrentRunner} in the future.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
+@Beta
 public class ConcurrentParameterizedRunner extends BlockJUnit4ClassRunner {
+
+    public final int FINISH_WAIT_CYCLE_MS = 2000;
+    public final int TEST_THREADS = 124;
 
     private static final Logger LOGGER = Logger.getLogger(ConcurrentParameterizedRunner.class.getName());
 
-    // not sure how many clients could be handled by the HttpUrlConnection
-    private final ExecutorService executor = Executors.newFixedThreadPool(124);
+    private final ExecutorService executor = Executors.newFixedThreadPool(TEST_THREADS);
 
     /**
      * Create a new runner for given test class.
@@ -82,11 +88,6 @@ public class ConcurrentParameterizedRunner extends BlockJUnit4ClassRunner {
         super(clazz);
     }
 
-    /**
-     * Override this to avoid our test method validation error.
-     *
-     * @param errors
-     */
     @Override
     protected void validateTestMethods(List<Throwable> errors) {
     }
@@ -144,7 +145,7 @@ public class ConcurrentParameterizedRunner extends BlockJUnit4ClassRunner {
             while (submitted.intValue() > 0) {
                 LOGGER.info(String.format("Waiting for %d requests to finish...%n", submitted.intValue()));
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(FINISH_WAIT_CYCLE_MS);
                 } catch (InterruptedException e) {
                 }
             }

@@ -67,8 +67,11 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static org.junit.Assert.assertEquals;
 
 import jersey.repackaged.com.google.common.collect.Lists;
@@ -79,6 +82,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * @author Miroslav Fuksa
  *
  */
+@RunWith(ConcurrentRunner.class)
 public class ModelProcessorTest extends JerseyTest {
 
     public static class ModelProcessorFeature implements Feature {
