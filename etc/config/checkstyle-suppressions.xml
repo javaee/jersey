@@ -58,4 +58,7 @@
     <suppress files="LinkedTransferQueue" checks=".*"/>
     <suppress files="TransferQueue" checks=".*"/>
     <suppress files="ThreadLocalRandom" checks=".*"/>
+
+    <!-- Suppress "no finalizer" check for client runtime. -->
+    <suppress files="ClientRuntime" checks="NoFinalizerCheck"/>
 </suppressions>

@@ -39,6 +39,9 @@
  */
 package org.glassfish.jersey.client;
 
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -46,12 +49,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
@@ -74,7 +76,9 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     private final ClientConfig config;
     private final HostnameVerifier hostnameVerifier;
     private final UnsafeValue<SSLContext, IllegalStateException> sslContext;
-    private final LinkedBlockingDeque<ShutdownHook> shutdownHooks = new LinkedBlockingDeque<ShutdownHook>();
+    private final LinkedBlockingDeque<WeakReference<JerseyClient.ShutdownHook>> shutdownHooks =
+                                        new LinkedBlockingDeque<WeakReference<JerseyClient.ShutdownHook>>();
+    private final ReferenceQueue<JerseyClient.ShutdownHook> shReferenceQueue = new ReferenceQueue<JerseyClient.ShutdownHook>();
 
     /**
      * Client instance shutdown hook.
@@ -138,12 +142,15 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     }
 
     private void release() {
-        ShutdownHook listener;
-        while ((listener = shutdownHooks.pollFirst()) != null) {
-            try {
-                listener.onShutdown();
-            } catch (Throwable t) {
-                LOG.log(Level.WARNING, LocalizationMessages.ERROR_SHUTDOWNHOOK_CLOSE(listener.getClass().getName()), t);
+        Reference<ShutdownHook> listenerRef;
+        while ((listenerRef = shutdownHooks.pollFirst()) != null) {
+            JerseyClient.ShutdownHook listener = listenerRef.get();
+            if (listener != null){
+                try {
+                    listener.onShutdown();
+                } catch (Throwable t) {
+                    LOG.log(Level.WARNING, LocalizationMessages.ERROR_SHUTDOWNHOOK_CLOSE(listenerRef.getClass().getName()), t);
+                }
             }
         }
     }
@@ -153,9 +160,28 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
      *
      * @param shutdownHook client shutdown hook.
      */
-    void registerShutdownHook(final ShutdownHook shutdownHook) {
+    /* package */ void registerShutdownHook(final ShutdownHook shutdownHook) {
         checkNotClosed();
-        shutdownHooks.push(shutdownHook);
+        shutdownHooks.push(new WeakReference<JerseyClient.ShutdownHook>(shutdownHook, shReferenceQueue));
+        cleanUpShutdownHooks();
+    }
+
+    /**
+     * Clean up shutdown hooks that have been garbage collected.
+     */
+    private void cleanUpShutdownHooks() {
+
+        Reference<? extends ShutdownHook> reference;
+
+        while ((reference = shReferenceQueue.poll()) != null) {
+
+            shutdownHooks.remove(reference);
+
+            final ShutdownHook shutdownHook = reference.get();
+            if (shutdownHook != null) { // close this one off if still accessible
+                shutdownHook.onShutdown();
+            }
+        }
     }
 
     /**
