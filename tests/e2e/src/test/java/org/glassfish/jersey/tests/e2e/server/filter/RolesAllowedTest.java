@@ -64,7 +64,9 @@ import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  *
@@ -77,29 +79,31 @@ public class RolesAllowedTest extends JerseyTest {
     @Priority(Priorities.AUTHENTICATION)
     public static class SecurityFilter implements ContainerRequestFilter {
 
-        public void filter(ContainerRequestContext request) {
-            String user = request.getHeaders().getFirst("X-USER");
+        public void filter(final ContainerRequestContext request) {
+            final String user = request.getHeaders().getFirst("X-USER");
             request.setSecurityContext(new Authenticator(user));
         }
 
         private static class Authenticator implements SecurityContext {
 
-            private Principal p;
+            private final Principal principal;
 
             Authenticator(final String name) {
-                p = new Principal() {
-                    public String getName() {
-                        return name;
-                    }
-                };
+                principal = name == null
+                        ? null
+                        : new Principal() {
+                            public String getName() {
+                                return name;
+                            }
+                        };
             }
 
             public Principal getUserPrincipal() {
-                return p;
+                return principal;
             }
 
-            public boolean isUserInRole(String role) {
-                return role.equals(p.getName()) || ("user".equals(role) && "admin".equals(p.getName()));
+            public boolean isUserInRole(final String role) {
+                return role.equals(principal.getName()) || ("user".equals(role) && "admin".equals(principal.getName()));
             }
 
             public boolean isSecure() {
@@ -124,7 +128,7 @@ public class RolesAllowedTest extends JerseyTest {
 
         @RolesAllowed("admin")
         @POST
-        public String post(String content) {
+        public String post(final String content) {
             return content;
         }
 
@@ -169,7 +173,7 @@ public class RolesAllowedTest extends JerseyTest {
 
     @Test
     public void testPostAsUser() {
-        Response cr = target().request().header("X-USER", "user").post(Entity.text("POST"));
+        final Response cr = target().request().header("X-USER", "user").post(Entity.text("POST"));
         assertEquals(403, cr.getStatus());
     }
 
@@ -186,5 +190,10 @@ public class RolesAllowedTest extends JerseyTest {
     @Test
     public void testPermitAll() {
         assertEquals("GET", target("sub/permit-all").request().header("X-USER", "xyz").get(String.class));
+    }
+
+    @Test
+    public void testNotAuthorized() {
+        assertThat("User should not be authorized.", target().request().get().getStatus(), is(401));
     }
 }
