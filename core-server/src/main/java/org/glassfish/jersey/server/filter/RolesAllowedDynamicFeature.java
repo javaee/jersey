@@ -43,6 +43,7 @@ package org.glassfish.jersey.server.filter;
 import java.io.IOException;
 
 import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -55,24 +56,28 @@ import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.AnnotatedMethod;
 
 /**
  * A {@link DynamicFeature} supporting the {@code javax.annotation.security.RolesAllowed},
  * {@code javax.annotation.security.PermitAll} and {@code javax.annotation.security.DenyAll}
  * on resource methods and sub-resource methods.
- * <p>
+ * <p/>
  * The {@link javax.ws.rs.core.SecurityContext} is utilized, using the
  * {@link javax.ws.rs.core.SecurityContext#isUserInRole(String) } method,
  * to ascertain if the user is in one
  * of the roles declared in by a {@code &#64;RolesAllowed}. If a user is in none of
  * the declared roles then a 403 (Forbidden) response is returned.
- * <p>
+ * <p/>
  * If the {@code &#64;DenyAll} annotation is declared then a 403 (Forbidden) response
  * is returned.
- * <p>
+ * <p/>
  * If the {@code &#64;PermitAll} annotation is declared and is not overridden then
  * this filter will not be applied.
+ * <p/>
+ * If a user is not authenticated and annotated method is restricted for certain roles then a 401
+ * (Not Authenticated) response is returned.
  *
  * @author Paul Sandoz
  * @author Martin Matula
@@ -81,7 +86,7 @@ public class RolesAllowedDynamicFeature implements DynamicFeature {
 
     @Override
     public void configure(final ResourceInfo resourceInfo, final FeatureContext configuration) {
-        AnnotatedMethod am = new AnnotatedMethod(resourceInfo.getResourceMethod());
+        final AnnotatedMethod am = new AnnotatedMethod(resourceInfo.getResourceMethod());
 
         // DenyAll on the method take precedence over RolesAllowed and PermitAll
         if (am.isAnnotationPresent(DenyAll.class)) {
@@ -113,6 +118,7 @@ public class RolesAllowedDynamicFeature implements DynamicFeature {
 
     @Priority(Priorities.AUTHORIZATION) // authorization filter - should go after any authentication filters
     private static class RolesAllowedRequestFilter implements ContainerRequestFilter {
+
         private final boolean denyAll;
         private final String[] rolesAllowed;
 
@@ -121,15 +127,20 @@ public class RolesAllowedDynamicFeature implements DynamicFeature {
             this.rolesAllowed = null;
         }
 
-        RolesAllowedRequestFilter(String[] rolesAllowed) {
+        RolesAllowedRequestFilter(final String[] rolesAllowed) {
             this.denyAll = false;
             this.rolesAllowed = (rolesAllowed != null) ? rolesAllowed : new String[] {};
         }
 
         @Override
-        public void filter(ContainerRequestContext requestContext) throws IOException {
+        public void filter(final ContainerRequestContext requestContext) throws IOException {
             if (!denyAll) {
-                for (String role : rolesAllowed) {
+                if (rolesAllowed.length > 0
+                        && requestContext.getSecurityContext().getUserPrincipal() == null) {
+                    throw new NotAuthorizedException(LocalizationMessages.USER_NOT_AUTHORIZED());
+                }
+
+                for (final String role : rolesAllowed) {
                     if (requestContext.getSecurityContext().isUserInRole(role)) {
                         return;
                     }
