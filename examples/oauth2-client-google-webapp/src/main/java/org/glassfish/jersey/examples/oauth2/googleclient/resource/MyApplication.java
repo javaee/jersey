@@ -40,8 +40,11 @@
 
 package org.glassfish.jersey.examples.oauth2.googleclient.resource;
 
+import java.util.logging.Logger;
+
 import javax.ws.rs.ApplicationPath;
 
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.mvc.mustache.MustacheMvcFeature;
 
@@ -60,6 +63,7 @@ public class MyApplication extends ResourceConfig {
         register(MustacheMvcFeature.class);
         property(MustacheMvcFeature.TEMPLATE_BASE_PATH, "/mustache");
 
+        register(new LoggingFilter(Logger.getLogger("example.server"), true));
     }
 
 }
