@@ -43,6 +43,7 @@ package org.glassfish.jersey.server.filter;
 import java.io.IOException;
 
 import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -56,6 +57,8 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
 import org.glassfish.jersey.server.model.AnnotatedMethod;
+
+import java.util.Arrays;
 
 /**
  * A {@link DynamicFeature} supporting the {@code javax.annotation.security.RolesAllowed},
@@ -128,6 +131,11 @@ public class RolesAllowedDynamicFeature implements DynamicFeature {
 
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
+
+            if (requestContext.getSecurityContext().getUserPrincipal() == null && rolesAllowed.length > 0) {
+                throw new NotAuthorizedException("Should provide user/pass");
+            }
+
             if (!denyAll) {
                 for (String role : rolesAllowed) {
                     if (requestContext.getSecurityContext().isUserInRole(role)) {
@@ -137,6 +145,7 @@ public class RolesAllowedDynamicFeature implements DynamicFeature {
             }
 
             throw new ForbiddenException();
+
         }
     }
 }
