@@ -193,7 +193,9 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
 
             // ServletContext.
             if (servletContext != null) {
-                final InputStream stream = servletContext.getResourceAsStream(template);
+                //"The path must begin with a "/"".
+                final String path = template.startsWith("/") ? template : "/" + template;
+                final InputStream stream = servletContext.getResourceAsStream(path);
                 reader = stream != null ? new InputStreamReader(stream) : null;
             }
 
