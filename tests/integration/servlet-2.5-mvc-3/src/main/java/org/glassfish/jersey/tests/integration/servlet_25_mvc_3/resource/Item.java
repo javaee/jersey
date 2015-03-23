@@ -51,7 +51,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.server.mvc.Viewable;
 
-import jersey.repackaged.com.google.common.base.Objects;
+import jersey.repackaged.com.google.common.base.MoreObjects;
 
 @Template
 @Produces("text/html")
@@ -98,7 +98,7 @@ public class Item {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(Item.class)
+        return MoreObjects.toStringHelper(Item.class)
                 .add("title", title)
                 .add("author", author)
                 .toString();

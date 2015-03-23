@@ -53,7 +53,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import jersey.repackaged.com.google.common.base.Objects;
+import jersey.repackaged.com.google.common.base.MoreObjects;
 
 /**
  * Entity class BookmarkEntity.
@@ -283,7 +283,7 @@ public class BookmarkEntity implements Serializable {
      */
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("bookmarkEntityPK", bookmarkEntityPK).toString();
+        return MoreObjects.toStringHelper(this).add("bookmarkEntityPK", bookmarkEntityPK).toString();
     }
 
 }
