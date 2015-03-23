@@ -91,18 +91,18 @@ public class TokenizerTest {
 
     @Test
     public void testUnqote() throws Exception {
-        assertEquals(null, Tokenizer.unqote(null));
-        assertEquals("", Tokenizer.unqote(""));
-        assertEquals("", Tokenizer.unqote("   "));
-        assertEquals("", Tokenizer.unqote("\"   "));
-        assertEquals("", Tokenizer.unqote(" \"\"  "));
-        assertEquals(" ", Tokenizer.unqote("\" \"  "));
-        assertEquals(" ", Tokenizer.unqote(" \" \"  "));
-        assertEquals("a b", Tokenizer.unqote(" \"a b\"  "));
-        assertEquals("a b", Tokenizer.unqote("\"a b\""));
-        assertEquals("a b", Tokenizer.unqote(" a b\"  "));
-        assertEquals("a b", Tokenizer.unqote("a b\""));
-        assertEquals("a b", Tokenizer.unqote(" \"a b  "));
-        assertEquals("a b", Tokenizer.unqote("\"a b"));
+        assertEquals(null, Tokenizer.unquote(null));
+        assertEquals("", Tokenizer.unquote(""));
+        assertEquals("", Tokenizer.unquote("   "));
+        assertEquals("", Tokenizer.unquote("\"   "));
+        assertEquals("", Tokenizer.unquote(" \"\"  "));
+        assertEquals(" ", Tokenizer.unquote("\" \"  "));
+        assertEquals(" ", Tokenizer.unquote(" \" \"  "));
+        assertEquals("a b", Tokenizer.unquote(" \"a b\"  "));
+        assertEquals("a b", Tokenizer.unquote("\"a b\""));
+        assertEquals("a b", Tokenizer.unquote(" a b\"  "));
+        assertEquals("a b", Tokenizer.unquote("a b\""));
+        assertEquals("a b", Tokenizer.unquote(" \"a b  "));
+        assertEquals("a b", Tokenizer.unquote("\"a b"));
     }
 }
