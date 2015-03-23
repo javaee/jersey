@@ -139,6 +139,49 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>declarative-linking</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <!--Uncomment as soon as we build Jersey with Java8 by default-->
+        <!--<dependency>-->
+            <!--<groupId>org.glassfish.jersey.examples</groupId>-->
+            <!--<artifactId>default-method-java8-webapp</artifactId>-->
+            <!--<version>${project.version}</version>-->
+            <!--<classifier>project-src</classifier>-->
+            <!--<type>zip</type>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.glassfish.jersey.examples</groupId>-->
+            <!--<artifactId>default-method-java8-webapp</artifactId>-->
+            <!--<version>${project.version}</version>-->
+            <!--<classifier>gf-project-src</classifier>-->
+            <!--<type>zip</type>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>entity-filtering</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>entity-filtering-security</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>entity-filtering-selectable</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>exception-mapping</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>
@@ -174,7 +217,21 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>groovy</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>helloworld</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>helloworld-benchmark</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>
             <type>zip</type>
@@ -195,16 +252,9 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
-            <artifactId>helloworld-webapp</artifactId>
+            <artifactId>helloworld-spring-annotations</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>
-            <type>zip</type>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.examples</groupId>
-            <artifactId>helloworld-webapp</artifactId>
-            <version>${project.version}</version>
-            <classifier>gf-project-src</classifier>
             <type>zip</type>
         </dependency>
         <dependency>
@@ -223,6 +273,34 @@
             <type>zip</type>
         </dependency>
         -->
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>helloworld-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>helloworld-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>helloworld-weld</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>http-patch</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>http-trace</artifactId>
@@ -282,6 +360,13 @@
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>json-jackson</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>json-jackson1</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>
             <type>zip</type>
@@ -372,6 +457,13 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>monitoring-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>multipart-webapp</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>
@@ -382,6 +474,20 @@
             <artifactId>multipart-webapp</artifactId>
             <version>${project.version}</version>
             <classifier>gf-project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>oauth-client-twitter</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+           <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>oauth2-client-google-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
             <type>zip</type>
         </dependency>
         <dependency>
@@ -403,6 +509,35 @@
             <artifactId>reload</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <!--Uncomment as soon as we build Jersey with Java8 by default-->
+        <!--<dependency>-->
+            <!--<groupId>org.glassfish.jersey.examples</groupId>-->
+            <!--<artifactId>rx-client-java8-webapp</artifactId>-->
+            <!--<version>${project.version}</version>-->
+            <!--<classifier>project-src</classifier>-->
+            <!--<type>zip</type>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.glassfish.jersey.examples</groupId>-->
+            <!--<artifactId>rx-client-java8-webapp</artifactId>-->
+            <!--<version>${project.version}</version>-->
+            <!--<classifier>gf-project-src</classifier>-->
+            <!--<type>zip</type>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>rx-client-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>rx-client-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
             <type>zip</type>
         </dependency>
         <dependency>
@@ -428,7 +563,49 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>server-sent-events</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>servlet3-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>servlet3-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>shortener-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>shortener-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>simple-console</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>sparklines</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>
             <type>zip</type>
@@ -463,11 +640,20 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>tone-generator</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>xml-moxy</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>
             <type>zip</type>
         </dependency>
+
+
     </dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>
@@ -520,6 +706,21 @@
                             <outputDirectory>${project.build.directory}/dependency/wls-examples</outputDirectory>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>unpack-wls1213-examples</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <stripVersion>true</stripVersion>
+                            <includeGroupIds>org.glassfish.jersey.examples</includeGroupIds>
+                            <classifier>wls1213-project-src</classifier>
+                            <type>zip</type>
+                            <failOnMissingClassifierArtifact>false</failOnMissingClassifierArtifact>
+                            <outputDirectory>${project.build.directory}/dependency/wls1213-examples</outputDirectory>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -529,6 +730,7 @@
                         <descriptor>src/main/assembly/examples-assembly.xml</descriptor>
                         <descriptor>src/main/assembly/gf-examples-assembly.xml</descriptor>
                         <descriptor>src/main/assembly/wls-examples-assembly.xml</descriptor>
+                        <descriptor>src/main/assembly/wls1213-examples-assembly.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>

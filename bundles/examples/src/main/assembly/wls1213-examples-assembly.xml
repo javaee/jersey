@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -38,16 +37,35 @@
     and therefore, elected the GPL Version 2 license, then the option applies
     only if the new code is made subject to such option by the copyright
     holder.
-
 -->
-
-<wls:weblogic-web-app xmlns:wls="http://xmlns.oracle.com/weblogic/weblogic-web-app"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://xmlns.oracle.com/weblogic/weblogic-web-app http://xmlns.oracle.com/weblogic/weblogic-web-app/1.0/weblogic-web-app.xsd">
-
-    <wls:library-ref>
-        <wls:library-name>jax-rs</wls:library-name>
-        <wls:specification-version>2.0</wls:specification-version>
-        <wls:exact-match>true</wls:exact-match>
-    </wls:library-ref>
-</wls:weblogic-web-app>
+<assembly>
+    <id>wls1213</id>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>target/dependency/wls1213-examples</directory>
+            <outputDirectory>wls1213/jersey/examples</outputDirectory>
+            <!-- exclude examples not working on WebLogic-->
+            <excludes>
+                <exclude>**/bookmark/**</exclude>                 <!-- uses persistence configured for GF -->
+                <exclude>**/https-server-glassfish/**</exclude>   <!-- GF only, no tests to run anyway -->
+                <exclude>**/managed-beans-webapp/**</exclude>     <!-- uses persistence configured for GF -->
+                <exclude>**/rx-client-java8-webapp/**</exclude>         <!-- Java8 -->
+                <exclude>**/default-method-java8-webapp/**</exclude>    <!-- Java8 -->
+            </excludes>
+        </fileSet>
+    </fileSets>
+    <files>
+        <file>
+            <source>../../LICENSE.txt</source>
+            <outputDirectory>.</outputDirectory>
+        </file>
+        <file>
+            <source>../../LICENSE.txt</source>
+            <outputDirectory>wls1213/jersey</outputDirectory>
+        </file>
+    </files>
+</assembly>

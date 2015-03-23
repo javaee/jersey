@@ -45,16 +45,6 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://xmlns.oracle.com/weblogic/weblogic-web-app http://xmlns.oracle.com/weblogic/weblogic-web-app/1.0/weblogic-web-app.xsd">
 
-    <wls:container-descriptor>
-        <wls:prefer-application-packages>
-            <!-- APIs -->
-            <wls:package-name>javax.validation.*</wls:package-name>
-
-            <!-- Hibernate Validator -->
-            <wls:package-name>org.hibernate.validator.*</wls:package-name>
-        </wls:prefer-application-packages>
-    </wls:container-descriptor>
-
     <wls:library-ref>
         <wls:library-name>jax-rs</wls:library-name>
         <wls:specification-version>2.0</wls:specification-version>

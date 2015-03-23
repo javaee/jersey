@@ -123,6 +123,33 @@
                                 </transformationSets>
                             </configuration>
                         </execution>
+                        <execution>
+                            <id>assemble-wls1213-src-zip</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>transform</goal>
+                            </goals>
+                            <configuration>
+                                <transformationSets>
+                                    <transformationSet>
+                                        <dir>${project.basedir}</dir>
+                                        <includes>
+                                            <include>pom.xml</include>
+                                        </includes>
+                                        <stylesheet>../etc/wls1213-project-src-pom.xsl</stylesheet>
+                                        <outputDir>${project.build.directory}/wls1213-pom-file</outputDir>
+                                    </transformationSet>
+                                    <transformationSet>
+                                        <dir>${project.basedir}</dir>
+                                        <includes>
+                                            <include>**/web.xml</include>
+                                        </includes>
+                                        <stylesheet>../etc/wls-project-src-web.xsl</stylesheet>
+                                        <outputDir>${project.build.directory}/wls1213-web-xml-file</outputDir>
+                                    </transformationSet>
+                                </transformationSets>
+                            </configuration>
+                        </execution>
                     </executions>
                 </plugin>
                 <plugin>
@@ -152,6 +179,19 @@
                                 <descriptorRefs>
                                     <!-- Reference to a descriptor in org.glassfish.jersey.examples:assemblies module -->
                                     <descriptorRef>weblogic-src-zip</descriptorRef>
+                                </descriptorRefs>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>assemble-wls1213-src-zip</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <configuration>
+                                <descriptorRefs>
+                                    <!-- Reference to a descriptor in org.glassfish.jersey.examples:assemblies module -->
+                                    <descriptorRef>weblogic1213-src-zip</descriptorRef>
                                 </descriptorRefs>
                             </configuration>
                         </execution>
