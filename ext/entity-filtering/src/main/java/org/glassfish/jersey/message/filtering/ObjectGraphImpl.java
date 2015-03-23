@@ -112,8 +112,12 @@ final class ObjectGraphImpl implements ObjectGraph {
             subgraphs = Maps.transformValues(contextSubgraphs, new Function<Class<?>, ObjectGraph>() {
 
                 @Override
-                public ObjectGraphImpl apply(final Class<?> clazz) {
-                    return new ObjectGraphImpl(classToGraph, classToGraph.get(clazz), filteringScopes);
+                public ObjectGraph apply(final Class<?> clazz) {
+                    final EntityGraph entityGraph = classToGraph.get(clazz);
+
+                    return entityGraph == null
+                        ? new EmptyObjectGraph(clazz)
+                        : new ObjectGraphImpl(classToGraph, entityGraph, filteringScopes);
                 }
             });
         }
