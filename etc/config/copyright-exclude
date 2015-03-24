@@ -53,4 +53,4 @@ build.readme
 /tests/e2e/src/test/resources/org/glassfish/jersey/tests/e2e/entity/xxe.txt
 /core-server/src/main/java/com/sun/research/ws/wadl
 /bundles/repackaged/jersey-jsr166e/src/main/java/jersey/repackaged/jsr166e
-/tests/performance/test-cases/src/data/MEASUREMENT_DATA
+/tests/performance/etc/data/MEASUREMENT_DATA
