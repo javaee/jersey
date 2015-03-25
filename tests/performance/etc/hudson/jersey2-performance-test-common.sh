@@ -52,13 +52,9 @@ WAIT_FOR_APP_STARTUP_SEC=20
 WAIT_FOR_APP_RUNNING_SEC=60
 CHECK_RUNNER_INTERVAL=5
 CHECK_TERM_INTERVAL=10
+
 JMX_URI_TEMPLATE="service:jmx:rmi:///jndi/rmi://SERVER_MACHINE:11112/jmxrmi"
 SAMPLES=30
-
-#WARM_UP_SECONDS=10
-#WAIT_FOR_APP_STARTUP_SEC=15
-#WAIT_FOR_APP_RUNNING_SEC=5
-#SAMPLES=3
 
 MODULES_TO_BUILD=""
 for app in ${APP_LIST[*]}; do
@@ -190,9 +186,9 @@ function testLoop {
   # MEASUREMENT_DATA is a boundary for the input data in the following format:
   # application directory name|command line to generate load on client machines|JMX URI for the application|MBean name|output filename
 
-  echo "########### Let's test it, reading from ~/MEASUREMENT_DATA file"
+  echo "########### Let's test it, reading from $MEASUREMENT_DATA file"
 
-  cat ~/MEASUREMENT_DATA | while IFS="\|" read app ab_cmdline app_class agent_param mbean filename
+  cat $MEASUREMENT_DATA | while IFS="\|" read app ab_cmdline app_class agent_param mbean filename
   do
     echo "========================================= DATA =============================================="
     echo "app       = $app"
@@ -244,12 +240,18 @@ function buildTestAppOnServers {
 }
 
 function cleanupServer {
-  echo "########### Kill all server processes"
+  echo "########### Kill java processes on server $1"
+  ssh -n jerseyrobot@$1 'if ! test -e `ps h o pid -Cjava`; then kill -s INT `ps h o pid -Cjava` ; fi'
+}
+
+function cleanupServers {
+  echo "########### Kill all java processes on each server"
   for SERVER_MACHINE in ${SERVER_LIST[@]}; do
-    ssh -n jerseyrobot@${SERVER_MACHINE} 'kill -15 -1'
+    cleanupServer ${SERVER_MACHINE}
   done
 }
 
 
-trap "rm -f $STATUS_DIR/.runner.* $STATUS_DIR/.group.*; cleanupServer" EXIT SIGTERM SIGINT
+trap "rm -f $STATUS_DIR/.runner.* $STATUS_DIR/.group.*; cleanupServers" EXIT SIGTERM SIGINT
+#uncomment for debug purposes
 #trap 'echo "[$BASH_SOURCE:$LINENO] $BASH_COMMAND" >> .debug; tail -10 .debug > .debug.swap; mv .debug.swap .debug' DEBUG

@@ -41,6 +41,8 @@
 TARGET=$PWD/target
 MW_HOME=`cat $TARGET/mw_home.txt`
 TEST_DOMAIN=$MW_HOME/hudson_test_domain
+DOMAIN_NAME=HudsonTestDomain
+SERVER_NAME=HudsonTestServer
 PID_FILE=$TARGET/wls.pid
 
 echo $TEST_DOMAIN > $TARGET/test_domain.txt
@@ -55,14 +57,19 @@ cd $TEST_DOMAIN
 rm -f $TARGET/autodeploy
 ln -s $TEST_DOMAIN/autodeploy $TARGET/autodeploy
 
+rm -f $TARGET/server.log
+rm -f $TARGET/domain.log
+ln -s $TEST_DOMAIN/servers/$SERVER_NAME/logs/$SERVER_NAME.log $TARGET/server.log
+ln -s $TEST_DOMAIN/servers/$SERVER_NAME/logs/$DOMAIN_NAME.log $TARGET/domain.log
+
 JAVA_OPTIONS="-javaagent:$HOME/jersey-perftest-agent.jar"
 
 yes | nohup java -server \
       -Xms1024m \
       -Xmx1024m \
       -XX:MaxPermSize=256m \
-      -Dweblogic.Domain=HudsonTestDomain \
-      -Dweblogic.Name=HudsonTestServer \
+      -Dweblogic.Domain=$DOMAIN_NAME \
+      -Dweblogic.Name=$SERVER_NAME \
       -Dweblogic.management.username=weblogic \
       -Dweblogic.management.password=weblogic1 \
       -Dweblogic.ListenPort=7001 \
