@@ -55,6 +55,7 @@
     <name>jersey-tests-integration</name>
 
     <modules>
+        <module>cdi-beanvalidation-webapp</module>
         <module>cdi-ejb-test-webapp</module>
         <module>cdi-iface-with-non-jaxrs-impl-test-webapp</module>
         <module>cdi-multipart-webapp</module>

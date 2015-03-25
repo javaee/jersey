@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,8 @@ package org.glassfish.jersey.server.validation.internal;
 
 import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.core.Response;
@@ -57,31 +59,48 @@ import javax.validation.metadata.MethodDescriptor;
 
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.spi.ValidationInterceptor;
+import org.glassfish.jersey.server.spi.ValidationInterceptorContext;
 
 /**
- * {@link ConfiguredValidator} implementation - delegates calls to the underlying {@link Validator}.
+ * Default {@link ConfiguredValidator} implementation - delegates calls to the underlying {@link Validator}.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-class ConfiguredValidatorImpl implements ConfiguredValidator {
+class DefaultConfiguredValidator implements ConfiguredValidator, ValidationInterceptor {
 
     private final Validator delegate;
     private final Configuration configuration;
     private final ValidateOnExecutionHandler validateOnExecutionHandler;
+    private final List<ValidationInterceptor> interceptors;
 
     /**
      * Create a configured validator instance.
      *
-     * @param delegate validator to delegate calls to.
-     * @param configuration configuration to obtain {@link ExecutableType executable types} configured in descriptor from.
+     * @param delegate                   validator to delegate calls to.
+     * @param configuration              configuration to obtain {@link ExecutableType executable types} configured in descriptor
+     *                                   from.
      * @param validateOnExecutionHandler handler for processing {@link javax.validation.executable.ValidateOnExecution}
-     * annotations.
+     *                                   annotations.
+     * @param interceptors               custom validation interceptors.
      */
-    ConfiguredValidatorImpl(final Validator delegate, final Configuration configuration,
-                            final ValidateOnExecutionHandler validateOnExecutionHandler) {
+    DefaultConfiguredValidator(final Validator delegate, final Configuration configuration,
+                               final ValidateOnExecutionHandler validateOnExecutionHandler,
+                               final Iterable<ValidationInterceptor> interceptors) {
         this.delegate = delegate;
         this.configuration = configuration;
         this.validateOnExecutionHandler = validateOnExecutionHandler;
+        this.interceptors = createInterceptorList(interceptors);
+    }
+
+    private List<ValidationInterceptor> createInterceptorList(Iterable<ValidationInterceptor> interceptors) {
+        List<ValidationInterceptor> result = new LinkedList<>();
+        for (ValidationInterceptor i : interceptors) {
+            result.add(i);
+        }
+        result.add(this);
+        return result;
     }
 
     @Override
@@ -117,7 +136,25 @@ class ConfiguredValidatorImpl implements ConfiguredValidator {
 
     @Override
     public void validateResourceAndInputParams(final Object resource, final Invocable resourceMethod, final Object[] args) {
-        final Set<ConstraintViolation<Object>> constraintViolations = new HashSet<ConstraintViolation<Object>>();
+
+        ValidationInterceptorExecutor validationExecutor = new ValidationInterceptorExecutor(
+                resource,
+                resourceMethod,
+                args,
+                interceptors.iterator());
+
+        validationExecutor.proceed();
+    }
+
+    // Invoked as the last validation interceptor method in the chain.
+    @Override
+    public void onValidate(final ValidationInterceptorContext ctx) {
+
+        final Object resource = ctx.getResource();
+        final Invocable resourceMethod = ctx.getInvocable();
+        final Object[] args = ctx.getArgs();
+
+        final Set<ConstraintViolation<Object>> constraintViolations = new HashSet<>();
         final BeanDescriptor beanDescriptor = getConstraintsForClass(resource.getClass());
 
         // Resource validation.
@@ -147,7 +184,7 @@ class ConfiguredValidatorImpl implements ConfiguredValidator {
     @Override
     public void validateResult(final Object resource, final Invocable resourceMethod, final Object result) {
         if (configuration.getBootstrapConfiguration().isExecutableValidationEnabled()) {
-            final Set<ConstraintViolation<Object>> constraintViolations = new HashSet<ConstraintViolation<Object>>();
+            final Set<ConstraintViolation<Object>> constraintViolations = new HashSet<>();
             final Method handlingMethod = resourceMethod.getHandlingMethod();
 
             final BeanDescriptor beanDescriptor = getConstraintsForClass(resource.getClass());

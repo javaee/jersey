@@ -51,6 +51,7 @@ import javax.inject.Inject;
 
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
@@ -79,18 +80,19 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
         ResourceMethodDispatcher resourceMethodDispatcher;
         if (Response.class.isAssignableFrom(returnType)) {
-            resourceMethodDispatcher = new ResponseOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
-// TODO should we support JResponse?
-//        } else if (JResponse.class.isAssignableFrom(returnType)) {
-//            return new JResponseOutInvoker(resourceMethod, pp, invocationHandler);
+            resourceMethodDispatcher =
+                    new ResponseOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
         } else if (returnType != void.class) {
             if (returnType == Object.class || GenericEntity.class.isAssignableFrom(returnType)) {
-                resourceMethodDispatcher = new ObjectOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
+                resourceMethodDispatcher =
+                        new ObjectOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
             } else {
-                resourceMethodDispatcher = new TypeOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
+                resourceMethodDispatcher =
+                        new TypeOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
             }
         } else {
-            resourceMethodDispatcher = new VoidOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
+            resourceMethodDispatcher
+                    = new VoidOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
         }
 
         // Inject validator.

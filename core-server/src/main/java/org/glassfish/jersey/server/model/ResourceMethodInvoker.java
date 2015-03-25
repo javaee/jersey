@@ -83,6 +83,7 @@ import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.internal.ResourceMethodDispatcherFactory;
 import org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
+import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 

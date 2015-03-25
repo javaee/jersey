@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.server.model.internal;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -51,7 +50,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import org.glassfish.jersey.message.internal.TracingLogger;
@@ -85,9 +83,9 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @param methodHandler  method invocation handler.
      * @param validator      input/output parameter validator.
      */
-    AbstractJavaResourceMethodDispatcher(Invocable resourceMethod,
-                                         InvocationHandler methodHandler,
-                                         ConfiguredValidator validator) {
+    AbstractJavaResourceMethodDispatcher(final Invocable resourceMethod,
+                                         final InvocationHandler methodHandler,
+                                         final ConfiguredValidator validator) {
         this.method = resourceMethod.getDefinitionMethod();
         this.methodHandler = methodHandler;
         this.resourceMethod = resourceMethod;
@@ -133,25 +131,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
         try {
             // Validate resource class & method input parameters.
             if (validator != null) {
-                try {
-                    validator.validateResourceAndInputParams(resource, resourceMethod, args);
-                } catch (ConstraintViolationException e) {
-                    // First check for a property
-                    if (ValidationResultUtil.hasValidationResultProperty(resource)) {
-                        final Method validationResultGetter = ValidationResultUtil.getValidationResultGetter(resource);
-                        ValidationResultUtil.updateValidationResultProperty(resource, validationResultGetter,
-                                e.getConstraintViolations());
-                    } else {
-                        // Then check for a field
-                        final Field validationResult = ValidationResultUtil.getValidationResultField(resource);
-                        if (validationResult != null) {
-                            ValidationResultUtil.updateValidationResultField(resource, validationResult,
-                                    e.getConstraintViolations());
-                        } else {
-                            throw e;
-                        }
-                    }
-                }
+                validator.validateResourceAndInputParams(resource, resourceMethod, args);
             }
 
             final PrivilegedAction invokeMethodAction = new PrivilegedAction() {

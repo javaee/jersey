@@ -51,6 +51,7 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 /**
