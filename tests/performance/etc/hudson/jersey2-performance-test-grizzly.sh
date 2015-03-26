@@ -50,6 +50,7 @@
 # createMachineFiles 1 1 server1 client1a client1b
 # createMachineFiles 1 2 server2 client2a client2b
 # SERVER_LIST=(server1 server2)
+# MEASUREMENT_DATA=~/MEASUREMENT_DATA
 #
 
 SERVER_PORT=8080
@@ -106,6 +107,8 @@ function singleTest() {
   echo -n "########### terminating Jersey app..."
   ssh jerseyrobot@$SERVER_MACHINE '(cd workspace/jersey/tests/performance/runners/jersey2-grizzly-runner && ./stop.sh)'
 
+  cleanupServer $SERVER_MACHINE
+
   releaseRunnerAndGroup $actual_runner $group_id
 }
 
@@ -124,8 +127,9 @@ for app in ${APP_LIST[*]}; do
   for SERVER_MACHINE in ${SERVER_LIST[@]}; do
     ssh -n jerseyrobot@${SERVER_MACHINE} 'cd workspace/jersey/tests/performance/test-cases/'$app'; mkdir -p lib;rm -f lib/*.jar && (cd lib; unzip ../target/*.zip)' &
   done
-  wait
 done
+
+wait
 
 echo "########### Build and package (lib dir) test runner"
 for SERVER_MACHINE in ${SERVER_LIST[@]}; do
@@ -133,6 +137,8 @@ for SERVER_MACHINE in ${SERVER_LIST[@]}; do
 done
 
 wait
+
+cleanupServers
 
 testLoop
 
