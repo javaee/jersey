@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,24 +40,23 @@
     holder.
 
 -->
-
-<wls:weblogic-web-app xmlns:wls="http://xmlns.oracle.com/weblogic/weblogic-web-app"
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+        xmlns:web="http://java.sun.com/xml/ns/javaee"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://xmlns.oracle.com/weblogic/weblogic-web-app http://xmlns.oracle.com/weblogic/weblogic-web-app/1.0/weblogic-web-app.xsd">
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+        version="1.0">
 
-    <wls:container-descriptor>
-        <wls:prefer-application-packages>
-            <!-- APIs -->
-            <wls:package-name>javax.validation.*</wls:package-name>
+    <xsl:template match="node()|@*">
+        <xsl:copy>
+            <xsl:apply-templates select="node()|@*"/>
+        </xsl:copy>
+    </xsl:template>
 
-            <!-- Hibernate Validator -->
-            <wls:package-name>org.hibernate.validator.*</wls:package-name>
-        </wls:prefer-application-packages>
-    </wls:container-descriptor>
+    <!-- fixes the hardcoded port in managed-client-webapp example's web.xml -->
+    <xsl:template match="//web:web-app/web:servlet/web:init-param[web:param-name='org.glassfish.jersey.examples.managedclient.ClientA.baseUri']/web:param-value">
+        <xsl:copy>
+            <xsl:text>http://localhost:7001/managed-client-webapp/internal</xsl:text>
+        </xsl:copy>
+    </xsl:template>
 
-    <wls:library-ref>
-        <wls:library-name>jax-rs</wls:library-name>
-        <wls:specification-version>2.0</wls:specification-version>
-        <wls:exact-match>true</wls:exact-match>
-    </wls:library-ref>
-</wls:weblogic-web-app>
+</xsl:stylesheet>

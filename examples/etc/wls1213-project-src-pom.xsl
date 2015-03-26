@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,6 @@
     <xsl:template
             match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core'
             or pom:groupId='org.glassfish.jersey.containers'
-            or pom:artifactId='jersey-bean-validation'
             or pom:artifactId='jersey-media-json-jackson'
             or pom:artifactId='jersey-media-json-jettison'
             or pom:artifactId='jersey-media-moxy'
@@ -69,7 +68,6 @@
     <xsl:template
             match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core'
             or pom:groupId='org.glassfish.jersey.containers'
-            or pom:artifactId='jersey-bean-validation'
             or pom:artifactId='jersey-media-json-jackson'
             or pom:artifactId='jersey-media-json-jettison'
             or pom:artifactId='jersey-media-moxy'
@@ -86,7 +84,8 @@
     </xsl:template>
 
     <xsl:template
-            match="pom:dependencies/pom:dependency[pom:artifactId='jersey-mvc-jsp'
+            match="pom:dependencies/pom:dependency[pom:artifactId='jersey-bean-validation'
+            or pom:artifactId='jersey-mvc-jsp'
             or pom:artifactId='jersey-mvc-freemarker'
             or pom:artifactId='jersey-media-json-processing']/pom:scope[text()!=test]">
         <exclusions>
@@ -110,7 +109,8 @@
     </xsl:template>
 
     <xsl:template
-            match="pom:dependencies/pom:dependency[pom:artifactId='jersey-mvc-jsp'
+            match="pom:dependencies/pom:dependency[pom:artifactId='jersey-bean-validation'
+            or pom:artifactId='jersey-mvc-jsp'
             or pom:artifactId='jersey-mvc-freemarker'
             or pom:artifactId='jersey-media-json-processing']">
         <xsl:copy>
