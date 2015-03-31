@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,22 +39,56 @@
  */
 package org.glassfish.jersey.tests.integration.tracing;
 
-import javax.annotation.Priority;
-import javax.ws.rs.Priorities;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 
 /**
- * @author Libor Kramolis (libor.kramolis at oracle.com)
- */
-@Priority(Priorities.USER)
-@Provider
-public class TestExceptionMapper implements ExceptionMapper<TestException> {
+* @author Libor Kramolis (libor.kramolis at oracle.com)
+*/
+@Path("/async")
+public class AsyncResource {
 
-    @Override
-    public Response toResponse(TestException throwable) {
-        return Response.status(501).build();
+    @Path("{name}")
+    @GET
+    public void get(@PathParam("name") String name, @Suspended final AsyncResponse asyncResponse) {
+        asyncResponse.resume(new Message(new StringBuffer(name).reverse().toString()));
+    }
+
+    @POST
+    public void post(Message post, @Suspended final AsyncResponse asyncResponse) {
+        asyncResponse.resume(new Message(new StringBuffer(post.getText()).reverse().toString()));
+    }
+
+    @Path("sub-resource-method")
+    @POST
+    public void postSub(Message post, @Suspended final AsyncResponse asyncResponse) {
+        asyncResponse.resume(new Message(new StringBuffer(post.getText()).reverse().toString()));
+    }
+
+    @Path("sub-resource-locator")
+    public AsyncSubResource getSubLoc() {
+        return new AsyncSubResource();
+    }
+
+    @Path("sub-resource-locator-null")
+    public AsyncSubResource getSubLocNull() {
+        return null;
+    }
+
+    @GET
+    @Path("runtime-exception")
+    public void getRuntimeException(@Suspended final AsyncResponse asyncResponse) {
+        asyncResponse.resume(new RuntimeException("Something does not work ..."));
+    }
+
+    @GET
+    @Path("mapped-exception")
+    public void getMappedException(@Suspended final AsyncResponse asyncResponse) {
+        asyncResponse.resume(new TestException("This could be client fault ..."));
     }
 
 }

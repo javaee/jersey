@@ -579,6 +579,16 @@ public class ServerRuntime {
 
                             if (mappedResponse != null) {
                                 // response successfully mapped
+                                if (LOGGER.isLoggable(Level.FINER)) {
+                                    final String message = String.format(
+                                            "Exception '%s' has been mapped by '%s' to response '%s' (%s:%s).",
+                                            throwable.getLocalizedMessage(),
+                                            mapper.getClass().getName(),
+                                            mappedResponse.getStatusInfo().getReasonPhrase(),
+                                            mappedResponse.getStatusInfo().getStatusCode(),
+                                            mappedResponse.getStatusInfo().getFamily());
+                                    LOGGER.log(Level.FINER, message);
+                                }
                                 return mappedResponse;
                             } else {
                                 return Response.noContent().build();
@@ -676,10 +686,10 @@ public class ServerRuntime {
                         connectionCallbackRunner.onDisconnect(processingContext.asyncContext());
                     }
                     throw mpe;
-                } finally {
-                    tracingLogger.log(ServerTraceEvent.FINISHED, response.getStatusInfo());
-                    tracingLogger.flush(response.getHeaders());
                 }
+                tracingLogger.log(ServerTraceEvent.FINISHED, response.getStatusInfo());
+                tracingLogger.flush(response.getHeaders());
+
                 setWrittenResponse(response);
 
             } catch (final Throwable ex) {

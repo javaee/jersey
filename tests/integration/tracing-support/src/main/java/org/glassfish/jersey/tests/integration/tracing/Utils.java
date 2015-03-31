@@ -39,12 +39,15 @@
  */
 package org.glassfish.jersey.tests.integration.tracing;
 
+import java.util.logging.Logger;
+
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Configurable;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
@@ -77,6 +80,7 @@ public final class Utils {
 //        configurable.register(TestExtendedExceptionMapperRuntime.class);
 //        configurable.register(Resource.class);
 //        configurable.register(SubResource.class);
+        configurable.register(new LoggingFilter(Logger.getAnonymousLogger(), true));
     }
 
     public static void configure(ClientConfig configurable) {
@@ -88,17 +92,44 @@ public final class Utils {
         configurable.register(ReaderInterceptor18.class);
         configurable.register(WriterInterceptor39.class);
         configurable.register(WriterInterceptor45.class);
-        configurable.register(MessageBodyReaderTestFormat.class);
+        configurable.register(new MessageBodyReaderTestFormat(false));
         configurable.register(MessageBodyReaderGeneric.class);
-        configurable.register(MessageBodyWriterTestFormat.class);
+        configurable.register(new MessageBodyWriterTestFormat(false));
         configurable.register(MessageBodyWriterGeneric.class);
     }
 
-    public static void throwException(ContainerRequestContext requestContext, Object fromContext,
-                                      TestAction throwWebApplicationException,
-                                      TestAction throwProcessingException,
-                                      TestAction throwAnyException) {
+    public static void throwException(final ContainerRequestContext requestContext,
+                                      final Object fromContext,
+                                      final TestAction throwWebApplicationException,
+                                      final TestAction throwProcessingException,
+                                      final TestAction throwAnyException) {
         final Utils.TestAction testAction = Utils.getTestAction(requestContext);
+        throwExceptionImpl(testAction, fromContext, throwWebApplicationException, throwProcessingException, throwAnyException);
+    }
+
+    public static void throwException(final String testActionName,
+                                      final Object fromContext,
+                                      final TestAction throwWebApplicationException,
+                                      final TestAction throwProcessingException,
+                                      final TestAction throwAnyException) {
+        Utils.TestAction testAction;
+        try {
+            testAction = TestAction.valueOf(testActionName);
+        } catch (IllegalArgumentException ex) {
+            try {
+                testAction = TestAction.valueOf(new StringBuffer(testActionName).reverse().toString());
+            } catch (IllegalArgumentException ex2) {
+                testAction = null;
+            }
+        }
+        throwExceptionImpl(testAction, fromContext, throwWebApplicationException, throwProcessingException, throwAnyException);
+    }
+
+    private static void throwExceptionImpl(final Utils.TestAction testAction,
+                                           final Object fromContext,
+                                           final TestAction throwWebApplicationException,
+                                           final TestAction throwProcessingException,
+                                           final TestAction throwAnyException) {
         final String message = "Test Exception from " + fromContext.getClass().getName();
         if (testAction == null) {
             // do nothing
@@ -123,7 +154,13 @@ public final class Utils {
     public static enum TestAction {
         PRE_MATCHING_REQUEST_FILTER_THROW_WEB_APPLICATION,
         PRE_MATCHING_REQUEST_FILTER_THROW_PROCESSING,
-        PRE_MATCHING_REQUEST_FILTER_THROW_ANY
+        PRE_MATCHING_REQUEST_FILTER_THROW_ANY,
+        MESSAGE_BODY_READER_THROW_WEB_APPLICATION,
+        MESSAGE_BODY_READER_THROW_PROCESSING,
+        MESSAGE_BODY_READER_THROW_ANY,
+        MESSAGE_BODY_WRITER_THROW_WEB_APPLICATION,
+        MESSAGE_BODY_WRITER_THROW_PROCESSING,
+        MESSAGE_BODY_WRITER_THROW_ANY;
         //TODO add other *_THROW_* actions to throw exception from other stages
     }
 }

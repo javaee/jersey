@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,6 +60,16 @@ import org.glassfish.jersey.message.MessageUtils;
 @Provider
 @Produces(Utils.APPLICATION_X_JERSEY_TEST)
 public class MessageBodyWriterTestFormat implements MessageBodyWriter<Message> {
+
+    boolean serverSide = true;
+
+    public MessageBodyWriterTestFormat() {
+    }
+
+    public MessageBodyWriterTestFormat(final boolean serverSide) {
+        this.serverSide = serverSide;
+    }
+
     @Override
     public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
                                final MediaType mediaType) {
@@ -76,6 +86,13 @@ public class MessageBodyWriterTestFormat implements MessageBodyWriter<Message> {
     public void writeTo(final Message message, final Class<?> type, final Type genericType, final Annotation[] annotations,
                         final MediaType mediaType, final MultivaluedMap<String, Object> httpHeaders,
                         final OutputStream entityStream) throws IOException, WebApplicationException {
+        if (serverSide) {
+            Utils.throwException(message.getText(), this,
+                    Utils.TestAction.MESSAGE_BODY_WRITER_THROW_WEB_APPLICATION,
+                    Utils.TestAction.MESSAGE_BODY_WRITER_THROW_PROCESSING,
+                    Utils.TestAction.MESSAGE_BODY_WRITER_THROW_ANY);
+        }
+
         final OutputStreamWriter writer = new OutputStreamWriter(entityStream, MessageUtils.getCharset(mediaType));
         writer.write(Utils.FORMAT_PREFIX);
         writer.write(message.getText());

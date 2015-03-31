@@ -62,6 +62,15 @@ import org.glassfish.jersey.message.MessageUtils;
 @Consumes(Utils.APPLICATION_X_JERSEY_TEST)
 public class MessageBodyReaderTestFormat implements MessageBodyReader<Message> {
 
+    boolean serverSide = true;
+
+    public MessageBodyReaderTestFormat() {
+    }
+
+    public MessageBodyReaderTestFormat(final boolean serverSide) {
+        this.serverSide = serverSide;
+    }
+
     @Override
     public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations,
                               final MediaType mediaType) {
@@ -79,7 +88,15 @@ public class MessageBodyReaderTestFormat implements MessageBodyReader<Message> {
             throw new WebApplicationException(
                     new IllegalArgumentException("Input content '" + line + "' is not in a valid format!"));
         }
+        final String text = line.substring(Utils.FORMAT_PREFIX.length(), line.length() - Utils.FORMAT_SUFFIX.length());
 
-        return new Message(line.substring(Utils.FORMAT_PREFIX.length(), line.length() - Utils.FORMAT_SUFFIX.length()));
+        if (serverSide) {
+            Utils.throwException(text, this,
+                    Utils.TestAction.MESSAGE_BODY_READER_THROW_WEB_APPLICATION,
+                    Utils.TestAction.MESSAGE_BODY_READER_THROW_PROCESSING,
+                    Utils.TestAction.MESSAGE_BODY_READER_THROW_ANY);
+        }
+
+        return new Message(text);
     }
 }
