@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,26 +65,30 @@ public final class Utils {
     /**
      * Store {@link org.glassfish.jersey.server.ResourceConfig resource config} as an attribute of given
      * {@link javax.servlet.ServletContext servlet context}. If {@code config} is {@code null} then the previously stored value
-     * (if any) is removed.
+     * (if any) is removed. The {@code configName} is used as an attribute name suffix.
      *
      * @param config resource config to be stored.
      * @param context servlet context to store the config in.
+     * @param configName name or id of the resource config.
      */
-    public static void store(final ResourceConfig config, final ServletContext context) {
-        context.setAttribute(RESOURCE_CONFIG, config);
+    public static void store(final ResourceConfig config, final ServletContext context, final String configName) {
+        final String attributeName = RESOURCE_CONFIG + "_" + configName;
+        context.setAttribute(attributeName, config);
     }
 
     /**
      * Load {@link org.glassfish.jersey.server.ResourceConfig resource config} from given
      * {@link javax.servlet.ServletContext servlet context}. If found then the resource config is also removed from servlet
-     * context.
+     * context. The {@code configName} is used as an attribute name suffix.
      *
      * @param context servlet context to load resource config from.
+     * @param configName name or id of the resource config.
      * @return previously stored resource config or {@code null} if no resource config has been stored.
      */
-    public static ResourceConfig retrieve(final ServletContext context) {
-        final ResourceConfig config = (ResourceConfig) context.getAttribute(RESOURCE_CONFIG);
-        context.removeAttribute(RESOURCE_CONFIG);
+    public static ResourceConfig retrieve(final ServletContext context, final String configName) {
+        final String attributeName = RESOURCE_CONFIG + "_" + configName;
+        final ResourceConfig config = (ResourceConfig) context.getAttribute(attributeName);
+        context.removeAttribute(attributeName);
         return config;
     }
 

@@ -465,7 +465,7 @@ public class WebComponent {
         final ServletContext servletContext = config.getServletContext();
 
         // check if ResourceConfig has already been created, if so use it
-        ResourceConfig resourceConfig = Utils.retrieve(config.getServletContext());
+        ResourceConfig resourceConfig = Utils.retrieve(config.getServletContext(), config.getName());
         if (resourceConfig != null) {
             return resourceConfig;
         }
