@@ -85,7 +85,7 @@ public class ByteBufferInputStreamTest {
                         }
                         data.clear();
                         for (int j = 0; j < data.capacity(); j++) {
-                            data.put((byte) (i % 128));
+                            data.put((byte) (i & 0xFF));
                         }
                         data.flip();
                         if (!bbis.put(data)) {
@@ -113,7 +113,7 @@ public class ByteBufferInputStreamTest {
                     Thread.yield(); // Give the other thread a chance to run.
                     continue;
                 }
-                assertEquals("At position: " + j, (byte) (i % 128), c);
+                assertEquals("At position: " + j, (byte) (i & 0xFF), (byte) (c & 0xFF));
                 if (++j % BUFFER_SIZE == 0) {
                     i++;
                     Thread.yield(); // Give the other thread a chance to run.
@@ -155,7 +155,7 @@ public class ByteBufferInputStreamTest {
                         }
                         data.clear();
                         for (int j = 0; j < data.capacity(); j++) {
-                            data.put((byte) (i % 128));
+                            data.put((byte) (i & 0xFF));
                         }
                         data.flip();
                         if (!bbis.put(data)) {
@@ -185,7 +185,7 @@ public class ByteBufferInputStreamTest {
                     continue;
                 }
                 for (int p = 0; p < c; p++) {
-                    assertEquals("At position: " + j, (byte) (i % 128), buffer[p]);
+                    assertEquals("At position: " + j, (byte) (i & 0xFF), (byte) buffer[p]);
                     if (++j % BUFFER_SIZE == 0) {
                         i++;
                         Thread.yield(); // Give the other thread a chance to run.
@@ -228,7 +228,7 @@ public class ByteBufferInputStreamTest {
                         }
                         data.clear();
                         for (int j = 0; j < data.capacity(); j++) {
-                            data.put((byte) (i % 128));
+                            data.put((byte) (i & 0xFF));
                         }
                         data.flip();
                         if (!bbis.put(data)) {
@@ -253,7 +253,7 @@ public class ByteBufferInputStreamTest {
             while ((c = bbis.read()) != -1) {
                 assertNotEquals("Should not read 'nothing' in blocking mode.", Integer.MIN_VALUE, c);
 
-                assertEquals("At position: " + j, (byte) (i % 128), c);
+                assertEquals("At position: " + j, (byte) (i & 0xFF), (byte) c);
                 if (++j % BUFFER_SIZE == 0) {
                     i++;
                     Thread.yield(); // Give the other thread a chance to run.
@@ -295,7 +295,7 @@ public class ByteBufferInputStreamTest {
                         }
                         data.clear();
                         for (int j = 0; j < data.capacity(); j++) {
-                            data.put((byte) (i % 128));
+                            data.put((byte) (i & 0xFF));
                         }
                         data.flip();
                         if (!bbis.put(data)) {
@@ -322,7 +322,7 @@ public class ByteBufferInputStreamTest {
                 assertNotEquals("Should not read 0 bytes in blocking mode.", 0, c);
 
                 for (int p = 0; p < c; p++) {
-                    assertEquals("At position: " + j, (byte) (i % 128), buffer[p]);
+                    assertEquals("At position: " + j, (byte) (i & 0xFF), buffer[p]);
                     if (++j % BUFFER_SIZE == 0) {
                         i++;
                         Thread.yield(); // Give the other thread a chance to run.
