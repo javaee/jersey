@@ -303,7 +303,7 @@ public final class ByteBufferInputStream extends NonBlockingInputStream {
             }
         }
 
-        return i;
+        return i == 0 && eof ? -1 : i;
     }
 
     private int tryRead(boolean block) throws IOException {
