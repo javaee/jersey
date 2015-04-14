@@ -42,6 +42,7 @@ APP_LIST=(mbw-text-plain \
           mbw-json-moxy mbw-json-jackson \
           mbw-xml-moxy mbw-xml-jaxb \
           mbw-custom-provider \
+          mbw-kryo \
           param-srl \
           filter-global filter-name filter-dynamic \
           interceptor-global interceptor-name interceptor-dynamic \

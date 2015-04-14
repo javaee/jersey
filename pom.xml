@@ -1553,6 +1553,11 @@
                 <artifactId>jmh-generator-annprocess</artifactId>
                 <version>${jmh.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.esotericsoftware</groupId>
+                <artifactId>kryo</artifactId>
+                <version>${kryo.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -1621,6 +1626,7 @@
         <jsp.version>2.0</jsp.version>
         <jstl.version>1.2</jstl.version>
         <jta.api.version>1.2</jta.api.version>
+        <kryo.version>3.0.1</kryo.version>
         <mimepull.version>1.9.5</mimepull.version>
         <moxy.version>2.6.0</moxy.version>
         <mustache.version>0.8.17</mustache.version>
