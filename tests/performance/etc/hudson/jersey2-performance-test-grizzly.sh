@@ -49,7 +49,6 @@
 # test machine sets: cfg#, group, server, clients
 # createMachineFiles 1 1 server1 client1a client1b
 # createMachineFiles 1 2 server2 client2a client2b
-# SERVER_LIST=(server1 server2)
 # MEASUREMENT_DATA=~/MEASUREMENT_DATA
 #
 
@@ -57,13 +56,11 @@ SERVER_PORT=8080
 
 function singleTest() {
   echo "================================================================================="
-  echo "===== SINGLE TEST RUN, SERVER=$SERVER_MACHINE, loader=$ab_cmdline, app=$app, JMX_URI=$JMX_URI ====="
+  echo "===== SINGLE TEST RUN, SERVER=$SERVER_MACHINE, loader=$ab_cmdline, app=$app, JMX_URI=$JMX_URI, group_id=$group_id ====="
   echo "================================================================================="
 
-  group_id=(`cat $STATUS_DIR/.runner.$actual_runner.group`)
-
   echo "########### going to start the test app $app"
-  ssh -n jerseyrobot@$SERVER_MACHINE '(cd workspace/jersey/tests/performance/runners/jersey2-grizzly-runner;rm -rf app;mkdir -p app;cp $HOME/workspace/jersey/tests/performance/test-cases/'$app'/lib/* app/; JAVA_OPTIONS="-javaagent:$HOME/jersey-perftest-agent.jar" ./start.sh '$app_class' http://0.0.0.0:8080/'$app'/ 4 8)' &
+  ssh -n jerseyrobot@${SERVER_MACHINE} '(cd workspace/jersey/tests/performance/runners/jersey2-grizzly-runner; rm -rf app; mkdir -p app; cp $HOME/workspace/jersey/tests/performance/test-cases/'$app'/target/runner/lib/* app/; JAVA_OPTIONS="-javaagent:$HOME/jersey-perftest-agent.jar" ./start.sh '$app_class' http://0.0.0.0:8080/'$app'/ 4 8)' &
 
   waitForGroupStatus $actual_runner $group_id "open"
 
@@ -104,8 +101,8 @@ function singleTest() {
     echo " done."
   done
 
-  echo -n "########### terminating Jersey app..."
-  ssh jerseyrobot@$SERVER_MACHINE '(cd workspace/jersey/tests/performance/runners/jersey2-grizzly-runner && ./stop.sh)'
+  echo "########### terminating test app..."
+  ssh jerseyrobot@${SERVER_MACHINE} '(cd workspace/jersey/tests/performance/runners/jersey2-grizzly-runner && ./stop.sh)'
 
   cleanupServer $SERVER_MACHINE
 
@@ -120,20 +117,20 @@ removeOldCapturedData
 
 retrieveJmxClient
 
+prepareClients
+
 buildTestAppOnServers
 
 echo "########### Package (lib dir) all test case applications"
-for app in ${APP_LIST[*]}; do
-  for SERVER_MACHINE in ${SERVER_LIST[@]}; do
-    ssh -n jerseyrobot@${SERVER_MACHINE} 'cd workspace/jersey/tests/performance/test-cases/'$app'; mkdir -p lib;rm -f lib/*.jar && (cd lib; unzip ../target/*.zip)' &
+for SERVER_MACHINE in ${SERVER_LIST[@]}; do
+  for app in ${APP_LIST[*]}; do
+    ssh jerseyrobot@${SERVER_MACHINE} '(cd workspace/jersey/tests/performance/test-cases/'$app'; mkdir -p target/runner/lib; cd target/runner/lib; unzip ../../*.zip)'
   done
 done
 
-wait
-
 echo "########### Build and package (lib dir) test runner"
 for SERVER_MACHINE in ${SERVER_LIST[@]}; do
-  ssh -n jerseyrobot@${SERVER_MACHINE} 'cd workspace/jersey; mvn -pl tests/performance/runners/jersey2-grizzly-runner clean install; cd tests/performance/runners/jersey2-grizzly-runner;mkdir -p lib;rm -f lib/*.jar && (cd lib; unzip ../target/*.zip)' &
+  ssh -n jerseyrobot@${SERVER_MACHINE} '(cd workspace/jersey; mvn -pl tests/performance/runners/jersey2-grizzly-runner clean install; cd tests/performance/runners/jersey2-grizzly-runner; mkdir -p lib; rm -f lib/*.jar; cd lib; unzip ../target/*.zip)' &
 done
 
 wait

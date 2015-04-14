@@ -49,7 +49,7 @@
         <version>2.18-SNAPSHOT</version>
     </parent>
 
-    <artifactId>xml-moxy-test</artifactId>
+    <artifactId>xml-moxy</artifactId>
     <packaging>jar</packaging>
 
     <name>jersey-tests-performance-xml-moxy-test</name>
