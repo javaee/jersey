@@ -124,6 +124,19 @@ public final class ApacheClientProperties {
     public static final String REQUEST_CONFIG = "jersey.config.apache.client.requestConfig";
 
     /**
+     * A value of {@code true} indicates the client should reuse the user token for subsequent requests. If client
+     * authentication is required, a value of {@code false} will cause a client to initiate a new SSL Handshake for
+     * every request.
+     * <p/>
+     * The value MUST be an instance of {@link java.lang.Boolean}.
+     * <p/>
+     * The default value is {@code true}.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    public static final String REUSE_USER_TOKEN = "jersey.config.apache.client.reuseUserToken";
+
+    /**
      * Get the value of the specified property.
      *
      * If the property is not set or the actual property value type is not compatible with the specified type, the method will

@@ -122,6 +122,7 @@ import org.apache.http.io.SessionOutputBuffer;
 import org.apache.http.util.TextUtils;
 import org.apache.http.util.VersionInfo;
 
+import jersey.repackaged.com.google.common.base.Objects;
 import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
 
 /**
@@ -245,6 +246,13 @@ class ApacheConnector implements Connector {
         if (credentialsProvider != null && (credentialsProvider instanceof CredentialsProvider)) {
             clientBuilder.setDefaultCredentialsProvider((CredentialsProvider) credentialsProvider);
         }
+
+        final Boolean reuseUserToken = ClientProperties.getValue(config.getProperties(), ApacheClientProperties.REUSE_USER_TOKEN,
+                Boolean.TRUE);
+        if (reuseUserToken) {
+            final UserTokenProvider userTokenProvider = new UserTokenProvider();
+            clientBuilder.addInterceptorLast((HttpRequestInterceptor) userTokenProvider)
+                    .addInterceptorLast((HttpResponseInterceptor) userTokenProvider);
 
         final Object proxyUri;
         proxyUri = config.getProperty(ClientProperties.PROXY_URI);
@@ -668,5 +676,31 @@ class ApacheConnector implements Connector {
             }
             return super.createOutputStream(len, outbuffer);
         }
+    }
+
+    private static class UserTokenProvider implements HttpRequestInterceptor, HttpResponseInterceptor {
+
+        private Object userToken;
+
+        @Override
+        public void process(HttpRequest request, HttpContext context) throws HttpException, IOException {
+            HttpClientContext clientContext = HttpClientContext.adapt(context);
+            if (clientContext.getUserToken() == null) {
+                if (userToken != null) {
+                    clientContext.setUserToken(userToken);
+                }
+            } else if (!Objects.equal(clientContext.getUserToken(), userToken)) {
+                userToken = clientContext.getUserToken();
+            }
+        }
+
+        @Override
+        public void process(HttpResponse response, HttpContext context) throws HttpException, IOException {
+            HttpClientContext clientContext = HttpClientContext.adapt(context);
+            if (!Objects.equal(userToken, clientContext.getUserToken())) {
+                userToken = clientContext.getUserToken();
+            }
+        }
+
     }
 }
