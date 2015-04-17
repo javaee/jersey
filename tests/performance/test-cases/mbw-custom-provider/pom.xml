@@ -48,7 +48,7 @@
         <version>2.18-SNAPSHOT</version>
     </parent>
 
-    <artifactId>custom-provider-test</artifactId>
+    <artifactId>custom-provider</artifactId>
     <packaging>jar</packaging>
 
     <name>jersey-tests-performance-custom-provider-test</name>

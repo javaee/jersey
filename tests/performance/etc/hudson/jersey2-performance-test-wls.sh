@@ -50,7 +50,6 @@
 # test machine sets: cfg#, group, server, clients
 # createMachineFiles 1 1 server1 client1a client1b
 # createMachineFiles 1 2 server2 client2a client2b
-# SERVER_LIST=(server1 server2)
 # MEASUREMENT_DATA=~/MEASUREMENT_DATA
 #
 
@@ -58,15 +57,10 @@ LOGS_DIR=$WORKSPACE/logs
 
 SERVER_PORT=7001
 
-# override defaults from jersey2-performance-test-common.sh
-WAIT_FOR_APP_STARTUP_SEC=40
-
 function singleTest() {
   echo "================================================================================="
-  echo "===== SINGLE TEST RUN, SERVER=$SERVER_MACHINE, loader=$ab_cmdline, app=$app, JMX_URI=$JMX_URI ====="
+  echo "===== SINGLE TEST RUN, SERVER=$SERVER_MACHINE, loader=$ab_cmdline, app=$app, JMX_URI=$JMX_URI, group_id=$group_id ====="
   echo "================================================================================="
-
-  group_id=(`cat $STATUS_DIR/.runner.$actual_runner.group`)
 
   echo "########### Start WLS server"
   ssh -n jerseyrobot@${SERVER_MACHINE} '(cd workspace/jersey/tests/performance/runners/jersey2-wls-runner; ./start.sh)' &
@@ -77,8 +71,8 @@ function singleTest() {
     echo "# ${SERVER_MACHINE}"
   done
 
-  echo "########### going to (auto)deploy the test app $app"
-  ssh -n jerseyrobot@${SERVER_MACHINE} '(cp workspace/jersey/tests/performance/test-cases/'$app'/'$app'.war workspace/jersey/tests/performance/runners/jersey2-wls-runner/target/autodeploy; ls -la workspace/jersey/tests/performance/runners/jersey2-wls-runner/target/autodeploy)' &
+  echo "########### going to deploy/start the test app $app"
+  ssh -n jerseyrobot@${SERVER_MACHINE} '(cd workspace/jersey/tests/performance/runners/jersey2-wls-runner; ./deploy.sh $PWD/../../test-cases/'$app'/target/runner/'$app'.war)'
 
   waitForGroupStatus $actual_runner $group_id "open"
 
@@ -119,8 +113,10 @@ function singleTest() {
     echo " done."
   done
 
-  echo "########### Stop WLS server"
-  ssh -n jerseyrobot@${SERVER_MACHINE} '(cd workspace/jersey/tests/performance/runners/jersey2-wls-runner; ./stop.sh)' &
+  echo "########### terminating test app..."
+  ssh jerseyrobot@${SERVER_MACHINE} '(cd workspace/jersey/tests/performance/runners/jersey2-wls-runner && ./stop.sh)'
+
+  echo "########### copy server and domain logs to hudson slave..."
   just_filename=`echo ${filename} | sed -e 's/\.[^.]*$//'`
   scp jerseyrobot@${SERVER_MACHINE}:workspace/jersey/tests/performance/runners/jersey2-wls-runner/target/server.log $LOGS_DIR/${just_filename}-server.log
   scp jerseyrobot@${SERVER_MACHINE}:workspace/jersey/tests/performance/runners/jersey2-wls-runner/target/domain.log $LOGS_DIR/${just_filename}-domain.log
@@ -141,16 +137,16 @@ removeOldCapturedData
 
 retrieveJmxClient
 
+prepareClients
+
 buildTestAppOnServers
 
 echo "########### Prepare war files of all test case applications"
-for app in ${APP_LIST[*]}; do
-  for SERVER_MACHINE in ${SERVER_LIST[@]}; do
-    ssh -n jerseyrobot@${SERVER_MACHINE} '(cd workspace/jersey/tests/performance/test-cases/'$app'; cp target/*.war '$app'.war)' &
+for SERVER_MACHINE in ${SERVER_LIST[@]}; do
+  for app in ${APP_LIST[*]}; do
+    ssh jerseyrobot@${SERVER_MACHINE} '(cd workspace/jersey/tests/performance/test-cases/'$app'; mkdir -p target/runner; cp target/*.war target/runner/'$app'.war)'
   done
 done
-
-wait
 
 echo "########### Install WLS server"
 for SERVER_MACHINE in ${SERVER_LIST[@]}; do

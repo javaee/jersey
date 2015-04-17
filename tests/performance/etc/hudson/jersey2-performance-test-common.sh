@@ -49,7 +49,7 @@ APP_LIST=(mbw-text-plain \
           proxy-injection)
 
 WARM_UP_SECONDS=300
-WAIT_FOR_APP_STARTUP_SEC=20
+WAIT_FOR_APP_STARTUP_SEC=5
 WAIT_FOR_APP_RUNNING_SEC=60
 CHECK_RUNNER_INTERVAL=5
 CHECK_TERM_INTERVAL=10
@@ -57,27 +57,24 @@ CHECK_TERM_INTERVAL=10
 JMX_URI_TEMPLATE="service:jmx:rmi:///jndi/rmi://SERVER_MACHINE:11112/jmxrmi"
 SAMPLES=30
 
+#uncomment for debug purposes:
+#WARM_UP_SECONDS=3
+#WAIT_FOR_APP_STARTUP_SEC=2
+#WAIT_FOR_APP_RUNNING_SEC=1
+#CHECK_RUNNER_INTERVAL=1
+#CHECK_TERM_INTERVAL=2
+#SAMPLES=3
+#/debug
+
 MODULES_TO_BUILD=""
 for app in ${APP_LIST[*]}; do
   MODULES_TO_BUILD="$MODULES_TO_BUILD,tests/performance/test-cases/$app"
 done
 MODULES_TO_BUILD=`echo $MODULES_TO_BUILD|sed -e's/,//'`
 
+SERVER_LIST=()
+CLIENT_LIST_ALL=()
 
-function seq() {
-  result=($1)
-  if test "$2" -eq "$1"; then
-    echo "$result"
-    return
-  fi
-  i=`expr $1 + 1`
-  while test $2 -gt $i; do
-    result="$result $i"
-    i=`expr $i + 1`
-  done
-  result="$result $i"
-  echo "${result}"
-}
 
 function waitForGroupStatus() {
   echo "########### Waiting for group status: $*"
@@ -87,7 +84,7 @@ function waitForGroupStatus() {
   shift
   STATUS=$1
 
-  echo "$RUNNER_ID|$GROUP_ID|$STATUS" > $STATUS_DIR/.runner.$RUNNER_ID.waiting.$GROUP_ID.$STATUS
+  echo "#`date`" > $STATUS_DIR/.runner.$RUNNER_ID.waiting.$GROUP_ID.$STATUS
   FILE="$STATUS_DIR/.group.$GROUP_ID.running.$RUNNER_ID.$STATUS"
 
   rm -f $STATUS_DIR/.group.$GROUP_ID.running.$RUNNER_ID.*
@@ -108,36 +105,36 @@ function releaseRunnerAndGroup() {
   shift
   GROUP_ID=$1
 
-  echo $RUNNER_ID > $STATUS_DIR/.runner.$RUNNER_ID.available
+  echo "#`date`" > $STATUS_DIR/.runner.$RUNNER_ID.available
   rm -f $STATUS_DIR/.group.$GROUP_ID.running.$RUNNER_ID.* $STATUS_DIR/.runner.$RUNNER_ID.running
 }
 
 function checkWaitingRunners() {
   echo "########### Check Waiting Runners"
   for waiting_file in `ls $STATUS_DIR/.runner.*.waiting.*.lock 2> /dev/null`; do
-    cat $waiting_file | IFS="\|" read runner_id group_id status
-    content_array=(`cat $waiting_file | tr "|" " "`)
-    runner_id=${content_array[0]}
-    group_id=${content_array[1]}
-    status=${content_array[2]}
+    filename_array=(`basename $waiting_file | tr "." " "`)
+
+    runner_id=${filename_array[1]}
+    group_id=${filename_array[3]}
+    status=${filename_array[4]}
 
     _files=($STATUS_DIR/.group.$group_id.running.*)
     if [ ! -f "${_files}" ]; then
-      echo "be careful" > "$STATUS_DIR/.group.$group_id.running.$runner_id.lock"
+      echo "#`date`" > "$STATUS_DIR/.group.$group_id.running.$runner_id.lock"
       rm $waiting_file
     fi
   done
 
   for waiting_file in `ls $STATUS_DIR/.runner.*.waiting.*.open 2> /dev/null`; do
-    cat $waiting_file | IFS="\|" read runner_id group_id status
-    content_array=(`cat $waiting_file | tr "|" " "`)
-    runner_id=${content_array[0]}
-    group_id=${content_array[1]}
-    status=${content_array[2]}
+    filename_array=(`basename $waiting_file | tr "." " "`)
+
+    runner_id=${filename_array[1]}
+    group_id=${filename_array[3]}
+    status=${filename_array[4]}
 
     _files=($STATUS_DIR/.group.$group_id.running.*.lock)
     if [ ! -f "${_files}" ]; then
-      echo "go go go" > "$STATUS_DIR/.group.$group_id.running.$runner_id.open"
+      echo "#`date`" > "$STATUS_DIR/.group.$group_id.running.$runner_id.open"
       rm $waiting_file
     fi
   done
@@ -154,9 +151,12 @@ function createMachineFiles {
   CLIENT_LIST=($@)
 
   echo ${GROUP_ID} > $STATUS_DIR/.runner.$RUNNER_ID.group
-  echo ${RUNNER_ID} > $STATUS_DIR/.runner.$RUNNER_ID.available
+  echo "#`date`" > $STATUS_DIR/.runner.$RUNNER_ID.available
   echo ${SERVER_MACHINE} > $STATUS_DIR/.runner.$RUNNER_ID.server
   echo ${CLIENT_LIST[@]} > $STATUS_DIR/.runner.$RUNNER_ID.clients
+
+  SERVER_LIST=("${SERVER_LIST[@]}" "$SERVER_MACHINE")
+  CLIENT_LIST_ALL=("${CLIENT_LIST_ALL[@]}" "${CLIENT_LIST[@]}")
 }
 
 function waitForTerminator {
@@ -184,22 +184,28 @@ function waitForTerminator {
 
 function testLoop {
   # Following is the main measurement loop
-  # MEASUREMENT_DATA is a boundary for the input data in the following format:
+  # MEASUREMENT_DATA is the input data in the following format:
   # application directory name|command line to generate load on client machines|JMX URI for the application|MBean name|output filename
 
   echo "########### Let's test it, reading from $MEASUREMENT_DATA file"
 
-  cat $MEASUREMENT_DATA | while IFS="\|" read app ab_cmdline app_class agent_param mbean filename
+  TOTAL_COUNT=`cat $MEASUREMENT_DATA | grep -v "^#" | grep "^." | wc -l | sed -e 's/ *//g'`
+  INDEX=0
+  cat $MEASUREMENT_DATA | grep -v "^#" | grep "^." | while IFS="\|" read app ab_cmdline app_class agent_param mbean filename
   do
-    echo "========================================= DATA =============================================="
+    INDEX=`expr $INDEX + 1`
+    echo "========================================= DATA [$INDEX/$TOTAL_COUNT] =============================================="
     echo "app       = $app"
+    echo "app_class = $app_class"
     echo "ab_cmdline= $ab_cmdline"
+
     spawned=false
     while [ "$spawned" != true ]; do
       for runner_file in `ls $STATUS_DIR/.runner.*.available 2> /dev/null`; do
         if [ "$spawned" != true ]; then
-          actual_runner=(`cat $runner_file`)
-          echo $actual_runner > $STATUS_DIR/.runner.$actual_runner.running
+          filename_array=(`basename $runner_file | tr "." " "`)
+          actual_runner=${filename_array[1]}
+          echo "#`date`" > $STATUS_DIR/.runner.$actual_runner.running
           rm $runner_file
 
           SERVER_MACHINE=`cat $STATUS_DIR/.runner.$actual_runner.server`
@@ -207,6 +213,15 @@ function testLoop {
           CLIENT_LIST=(`cat $STATUS_DIR/.runner.$actual_runner.clients`)
           ab_cmdline=`echo $ab_cmdline | sed -e"s/SERVER_MACHINE/$SERVER_MACHINE/" | sed -e"s/SERVER_PORT/$SERVER_PORT/" | sed -e"s/APP_CONTEXT/$APP_CONTEXT/"`
           JMX_URI=`echo $JMX_URI_TEMPLATE | sed -e"s/SERVER_MACHINE/$SERVER_MACHINE/"`
+          group_id=`cat $STATUS_DIR/.runner.$actual_runner.group`
+
+          echo "#[$INDEX/$TOTAL_COUNT]" >> $STATUS_DIR/.runner.$actual_runner.running
+          echo "$app" >> $STATUS_DIR/.runner.$actual_runner.running
+          echo "$app_class" >> $STATUS_DIR/.runner.$actual_runner.running
+          echo "$ab_cmdline" >> $STATUS_DIR/.runner.$actual_runner.running
+          echo "$filename" >> $STATUS_DIR/.runner.$actual_runner.running
+          echo "$mbean" >> $STATUS_DIR/.runner.$actual_runner.running
+          echo "$agent_param" >> $STATUS_DIR/.runner.$actual_runner.running
 
           spawned=true
           singleTest &
@@ -229,20 +244,33 @@ function retrieveJmxClient {
   scp jerseyrobot@${SERVER_LIST[0]}:jmxclient.jar .
 }
 
-function buildTestAppOnServers {
-  echo "########### Building test applications on each server"
-  # git fetch jersey on the server machine and build all apps there:
-  for SERVER_MACHINE in ${SERVER_LIST[@]}; do
-    ssh -n jerseyrobot@${SERVER_MACHINE} '(cd $HOME/workspace/jersey && '$GIT_FETCH_COMMAND' && mvn -pl '$MODULES_TO_BUILD' -am -Pskip-tests clean install)' &
+function prepareClients {
+  echo "########### Copy client files to each client"
+  for CLIENT_MACHINE in ${CLIENT_LIST_ALL[@]}; do
+    echo "... copy client files to ${CLIENT_MACHINE}"
+    scp $WORKSPACE/jersey2/tests/performance/etc/client/* jerseyrobot@${CLIENT_MACHINE}:. &
   done
-  # end of jersey build
 
   wait
 }
 
+function buildTestAppOnServers {
+  echo "########### Building test applications on each server"
+  # git fetch jersey on the server machine and build all apps there:
+  for SERVER_MACHINE in ${SERVER_LIST[@]}; do
+    ssh -n jerseyrobot@${SERVER_MACHINE} '(cd $HOME/workspace/jersey && '$GIT_FETCH_COMMAND' && mvn -pl '$MODULES_TO_BUILD' -am -Dskip.tests=true clean install)' &
+  done
+
+  wait
+}
+
+function cleanupHudsonSlave {
+  rm -f $STATUS_DIR/.runner.* $STATUS_DIR/.group.*
+}
+
 function cleanupServer {
   echo "########### Kill java processes on server $1"
-  ssh -n jerseyrobot@$1 'if ! test -e `ps h o pid -Cjava`; then kill -s INT `ps h o pid -Cjava` ; fi'
+  ssh -n jerseyrobot@$1 'if ! test -e `ps h o pid -Cjava`; then kill -s TERM `ps h o pid -Cjava` ; fi'
 }
 
 function cleanupServers {
@@ -253,6 +281,7 @@ function cleanupServers {
 }
 
 
-trap "rm -f $STATUS_DIR/.runner.* $STATUS_DIR/.group.*; cleanupServers" EXIT SIGTERM SIGINT
-#uncomment for debug purposes
+trap "cleanupHudsonSlave; cleanupServers" EXIT SIGTERM SIGINT
+
+#uncomment for debug purposes:
 #trap 'echo "[$BASH_SOURCE:$LINENO] $BASH_COMMAND" >> .debug; tail -10 .debug > .debug.swap; mv .debug.swap .debug' DEBUG
