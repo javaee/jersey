@@ -127,6 +127,7 @@
         <module>servlet-3-init-5</module>
         <module>servlet-3-init-6</module>
         <module>servlet-3-init-7</module>
+        <module>servlet-3-init-8</module>
         <module>servlet-3-init-provider</module>
         <module>servlet-3-params</module>
         <module>servlet-3-chunked-io</module>
