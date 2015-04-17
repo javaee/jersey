@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server.spi.internal;
 
 import java.lang.reflect.InvocationHandler;
+import java.util.List;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Request;
@@ -49,6 +50,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.spi.ValidationInterceptor;
 
 /**
  * A resource method dispatcher responsible for consuming a JAX-RS {@link Request request}

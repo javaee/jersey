@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model.internal;
+package org.glassfish.jersey.tests.cdi.bv;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -45,6 +45,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Set;
 
+import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
 
@@ -55,7 +56,7 @@ import javax.validation.ConstraintViolation;
  */
 public final class ValidationResultUtil {
 
-    private static final String VALIDATION_RESULT = "javax.mvc.validation.ValidationResult";
+    private static final String VALIDATION_RESULT = ValidationResult.class.getName();
 
     private ValidationResultUtil() {
         throw new AssertionError("Instantiation not allowed.");
@@ -106,6 +107,9 @@ public final class ValidationResultUtil {
             setter.invoke(obj, constraints);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             // ignore for now
+            System.out.println("Damn it...");
+        } catch (Throwable t) {
+            System.out.println("What the heck...");
         }
     }
 
@@ -121,6 +125,44 @@ public final class ValidationResultUtil {
      * @param constraints new set of constraints.
      */
     public static void updateValidationResultProperty(Object resource, Method getter,
+                                                      Set<ConstraintViolation<?>> constraints) {
+        try {
+            final Object obj = getter.invoke(resource);
+            Method setViolations;
+            try {
+                setViolations = obj.getClass().getMethod("setViolations", Set.class);
+            } catch (NoSuchMethodException e) {
+                setViolations = obj.getClass().getSuperclass().getMethod("setViolations", Set.class);
+            }
+            setViolations.invoke(obj, constraints);
+
+            final Method currentSetter = getValidationResultSetter(resource);
+            final Method parentSetter = getValidationResultSetter(resource.getClass().getSuperclass());
+
+            final Method effectiveSetter = (parentSetter != null) ? parentSetter : currentSetter;
+
+            if (effectiveSetter != null) {
+                effectiveSetter.invoke(resource, obj);
+            }
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            // ignore for now
+        }
+    }
+
+    /**
+     * Updates a {@code javax.mvc.validation.ValidationResult} property. In pseudo-code:
+     * <p/>
+     * obj = getter.invoke(resource);
+     * obj.setViolations(constraints);
+     * setter.invoke(resource, obj);
+     *
+     * @param beanManager bean manager.
+     * @param resource    resource instance.
+     * @param getter      getter to be used.
+     * @param constraints new set of constraints.
+     */
+    public static void updateValidationResultPropertyViaBeanManager(BeanManager beanManager,
+                                                                    Object resource, Method getter,
                                                       Set<ConstraintViolation<?>> constraints) {
         try {
             final Object obj = getter.invoke(resource);
@@ -191,7 +233,11 @@ public final class ValidationResultUtil {
      * @return setter or {@code null} if not available.
      */
     public static Method getValidationResultSetter(final Object resource) {
-        Class<?> clazz = resource.getClass();
+        return getValidationResultSetter(resource.getClass());
+    }
+
+    private static Method getValidationResultSetter(final Class<?> resourceClass) {
+        Class<?> clazz = resourceClass;
         do {
             for (Method m : clazz.getDeclaredMethods()) {
                 if (isValidationResultSetter(m)) {
@@ -213,7 +259,7 @@ public final class ValidationResultUtil {
     private static boolean isValidationResultSetter(Method m) {
         return m.getName().startsWith("set") && m.getParameterTypes().length == 1
                 && m.getParameterTypes()[0].getName().equals(VALIDATION_RESULT)
-                && m.getReturnType() == Void.TYPE && Modifier.isPublic(m.getModifiers())
-                && m.getAnnotation(Inject.class) != null;
+                && m.getReturnType() == Void.TYPE && Modifier.isPublic(m.getModifiers());
+//                && m.getAnnotation(Inject.class) != null;
     }
 }

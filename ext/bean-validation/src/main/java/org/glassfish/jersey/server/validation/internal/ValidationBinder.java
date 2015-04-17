@@ -67,12 +67,16 @@ import javax.validation.spi.ValidationProvider;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.model.internal.RankedComparator;
+import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
+import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.validation.ValidationConfig;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
@@ -185,6 +189,9 @@ public class ValidationBinder extends AbstractBinder {
     private static class ConfiguredValidatorProvider implements Factory<ConfiguredValidator> {
 
         @Inject
+        private ServiceLocator locator;
+
+        @Inject
         private Configuration validationConfig;
         @Inject
         private ValidatorFactory factory;
@@ -203,6 +210,7 @@ public class ValidationBinder extends AbstractBinder {
 
         @Override
         public ConfiguredValidator provide() {
+
             // Custom Configuration.
             final ContextResolver<ValidationConfig> contextResolver =
                     providers.getContextResolver(ValidationConfig.class, MediaType.WILDCARD_TYPE);
@@ -241,12 +249,19 @@ public class ValidationBinder extends AbstractBinder {
                     }
 
                     validatorCache.put(contextResolver,
-                            new ConfiguredValidatorImpl(context.getValidator(), this.validationConfig,
-                                    validateOnExecutionHandler));
+                            new DefaultConfiguredValidator(context.getValidator(), this.validationConfig,
+                                    validateOnExecutionHandler, getValidationInterceptors()));
                 }
 
                 return validatorCache.get(contextResolver);
             }
+        }
+
+        private Iterable<ValidationInterceptor> getValidationInterceptors() {
+            final Iterable<RankedProvider<ValidationInterceptor>> validationInterceptorIterable =
+                    org.glassfish.jersey.internal.inject.Providers.getAllRankedProviders(locator, ValidationInterceptor.class);
+            return org.glassfish.jersey.internal.inject.Providers.sortRankedProviders(
+                    new RankedComparator<ValidationInterceptor>(), validationInterceptorIterable);
         }
 
         /**
@@ -260,7 +275,8 @@ public class ValidationBinder extends AbstractBinder {
                         new ValidateOnExecutionHandler(validationConfig, !isValidateOnExecutableOverrideCheckDisabled());
                 final Validator validator = getDefaultValidatorContext(validateOnExecutionHandler).getValidator();
 
-                defaultValidator = new ConfiguredValidatorImpl(validator, validationConfig, validateOnExecutionHandler);
+                defaultValidator = new DefaultConfiguredValidator(validator, validationConfig,
+                        validateOnExecutionHandler, getValidationInterceptors());
             }
             return defaultValidator;
         }
