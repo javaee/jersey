@@ -41,9 +41,12 @@ package org.glassfish.jersey.internal.util.collection;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 
@@ -52,6 +55,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -60,6 +64,112 @@ import static org.junit.Assert.fail;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ByteBufferInputStreamTest {
+
+    @Test
+    public void testBlockingReadAByteEmptyStream() throws Exception {
+        final ByteBufferInputStream bbis = new ByteBufferInputStream();
+        bbis.closeQueue();
+        assertEquals(-1, bbis.read());
+    }
+
+    @Test
+    public void testNonBlockingReadAByteEmptyStream() throws Exception {
+        final ByteBufferInputStream bbis = new ByteBufferInputStream();
+        bbis.closeQueue();
+        assertEquals(-1, bbis.tryRead());
+    }
+
+    @Test
+    public void testBlockingReadByteArrayEmptyStream() throws Exception {
+        final ByteBufferInputStream bbis = new ByteBufferInputStream();
+        bbis.closeQueue();
+        byte[] buf = new byte[1024];
+        assertEquals(-1, bbis.read(buf));
+    }
+
+    @Test
+    public void testNonBlockingReadByteArrayEmptyStream() throws Exception {
+        final ByteBufferInputStream bbis = new ByteBufferInputStream();
+        bbis.closeQueue();
+        byte[] buf = new byte[1024];
+        assertEquals(-1, bbis.tryRead(buf));
+    }
+
+    @Test
+    public void testBlockingReadByteArrayFromFinishedExactLengthStream() throws Exception {
+        final ByteBufferInputStream bbis = new ByteBufferInputStream();
+        byte[] sourceData = new byte[1024];
+        new Random().nextBytes(sourceData);
+        ByteBuffer byteBuf = ByteBuffer.wrap(sourceData);
+        bbis.put(byteBuf);
+        bbis.closeQueue();
+        byte[] buf = new byte[1024];
+        assertEquals(1024, bbis.read(buf));
+        // no more data to read; so it should return -1
+        assertEquals(-1, bbis.read(buf));
+    }
+
+    @Test
+    public void testNonBlockingReadByteArrayFromFinishedExactLengthStream() throws Exception {
+        final ByteBufferInputStream bbis = new ByteBufferInputStream();
+        byte[] sourceData = new byte[1024];
+        new Random().nextBytes(sourceData);
+        ByteBuffer byteBuf = ByteBuffer.wrap(sourceData);
+        bbis.put(byteBuf);
+        byte[] buf = new byte[1024];
+        assertEquals(1024, bbis.tryRead(buf));
+        // the queue has not been close; so it should return 0
+        assertEquals(0, bbis.tryRead(buf));
+        bbis.closeQueue();
+    }
+
+    @Test
+    public void testBlockingReadByteArrayFromUnfinishedExactLengthStream() throws Exception {
+        final ByteBufferInputStream bbis = new ByteBufferInputStream();
+        byte[] sourceData = new byte[1024];
+        new Random().nextBytes(sourceData);
+        ByteBuffer byteBuf = ByteBuffer.wrap(sourceData);
+        bbis.put(byteBuf);
+        final byte[] buf = new byte[1024];
+        assertEquals(1024, bbis.read(buf));
+        final AtomicBoolean closed = new AtomicBoolean(false);
+        final Semaphore s = new Semaphore(1);
+        s.acquire();
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // it should return -1 since there is no more data
+                    assertEquals(-1, bbis.read(buf));
+                    // it should only reach here if the stream has been closed
+                    assertTrue(closed.get());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    s.release();
+                }
+            }
+        });
+        t.start();
+        Thread.sleep(500);
+        closed.set(true);
+        bbis.closeQueue();
+        // wait until the job is done
+        s.acquire();
+    }
+
+    @Test
+    public void testNonBlockingReadByteArrayFromUnfinishedExactLengthStream() throws Exception {
+        final ByteBufferInputStream bbis = new ByteBufferInputStream();
+        byte[] sourceData = new byte[1024];
+        new Random().nextBytes(sourceData);
+        ByteBuffer byteBuf = ByteBuffer.wrap(sourceData);
+        bbis.put(byteBuf);
+        bbis.closeQueue();
+        byte[] buf = new byte[1024];
+        assertEquals(1024, bbis.tryRead(buf));
+        assertEquals(-1, bbis.tryRead(buf));
+    }
 
     /**
      * Test for non blocking single-byte read of the stream.
@@ -85,7 +195,7 @@ public class ByteBufferInputStreamTest {
                         }
                         data.clear();
                         for (int j = 0; j < data.capacity(); j++) {
-                            data.put((byte) (i % 128));
+                            data.put((byte) (i & 0xFF));
                         }
                         data.flip();
                         if (!bbis.put(data)) {
@@ -113,7 +223,7 @@ public class ByteBufferInputStreamTest {
                     Thread.yield(); // Give the other thread a chance to run.
                     continue;
                 }
-                assertEquals("At position: " + j, (byte) (i % 128), c);
+                assertEquals("At position: " + j, (byte) (i & 0xFF), (byte) (c & 0xFF));
                 if (++j % BUFFER_SIZE == 0) {
                     i++;
                     Thread.yield(); // Give the other thread a chance to run.
@@ -155,7 +265,7 @@ public class ByteBufferInputStreamTest {
                         }
                         data.clear();
                         for (int j = 0; j < data.capacity(); j++) {
-                            data.put((byte) (i % 128));
+                            data.put((byte) (i & 0xFF));
                         }
                         data.flip();
                         if (!bbis.put(data)) {
@@ -185,7 +295,7 @@ public class ByteBufferInputStreamTest {
                     continue;
                 }
                 for (int p = 0; p < c; p++) {
-                    assertEquals("At position: " + j, (byte) (i % 128), buffer[p]);
+                    assertEquals("At position: " + j, (byte) (i & 0xFF), (byte) buffer[p]);
                     if (++j % BUFFER_SIZE == 0) {
                         i++;
                         Thread.yield(); // Give the other thread a chance to run.
@@ -228,7 +338,7 @@ public class ByteBufferInputStreamTest {
                         }
                         data.clear();
                         for (int j = 0; j < data.capacity(); j++) {
-                            data.put((byte) (i % 128));
+                            data.put((byte) (i & 0xFF));
                         }
                         data.flip();
                         if (!bbis.put(data)) {
@@ -253,7 +363,7 @@ public class ByteBufferInputStreamTest {
             while ((c = bbis.read()) != -1) {
                 assertNotEquals("Should not read 'nothing' in blocking mode.", Integer.MIN_VALUE, c);
 
-                assertEquals("At position: " + j, (byte) (i % 128), c);
+                assertEquals("At position: " + j, (byte) (i & 0xFF), (byte) c);
                 if (++j % BUFFER_SIZE == 0) {
                     i++;
                     Thread.yield(); // Give the other thread a chance to run.
@@ -295,7 +405,7 @@ public class ByteBufferInputStreamTest {
                         }
                         data.clear();
                         for (int j = 0; j < data.capacity(); j++) {
-                            data.put((byte) (i % 128));
+                            data.put((byte) (i & 0xFF));
                         }
                         data.flip();
                         if (!bbis.put(data)) {
@@ -322,7 +432,7 @@ public class ByteBufferInputStreamTest {
                 assertNotEquals("Should not read 0 bytes in blocking mode.", 0, c);
 
                 for (int p = 0; p < c; p++) {
-                    assertEquals("At position: " + j, (byte) (i % 128), buffer[p]);
+                    assertEquals("At position: " + j, (byte) (i & 0xFF), buffer[p]);
                     if (++j % BUFFER_SIZE == 0) {
                         i++;
                         Thread.yield(); // Give the other thread a chance to run.
