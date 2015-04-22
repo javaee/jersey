@@ -52,7 +52,11 @@
 
     <groupId>org.glassfish.jersey.media</groupId>
     <artifactId>jersey-media-kryo</artifactId>
-    <name>Jersey/JAX-RS Message Body Writer &amp; Reader using Kryo serialization framework</name>
+    <name>jersey-media-kryo</name>
+
+    <description>
+        Jersey/JAX-RS Message Body Writer and Reader using Kryo serialization framework
+    </description>
 
     <dependencies>
         <dependency>
