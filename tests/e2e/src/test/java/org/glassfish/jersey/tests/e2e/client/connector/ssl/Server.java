@@ -42,7 +42,6 @@ package org.glassfish.jersey.tests.e2e.client.connector.ssl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
@@ -66,7 +65,6 @@ final class Server {
 
     private static final String SERVER_TRUST_STORE = "truststore_server";
     private static final String SERVER_KEY_STORE = "keystore_server";
-    private static HttpServer webServer;
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
 
     /**
@@ -74,12 +72,14 @@ final class Server {
      */
     public static final URI BASE_URI = getBaseURI();
 
-    private Server() {
-        throw new AssertionError("Instantiation not allowed.");
+    private final HttpServer webServer;
+
+    private Server(final HttpServer webServer) {
+        this.webServer = webServer;
     }
 
     private static URI getBaseURI() {
-        return UriBuilder.fromUri("https://localhost/").port(getPort(4463)).build();
+        return UriBuilder.fromUri("https://localhost/").port(getPort(8463)).build();
     }
 
     private static int getPort(int defaultPort) {
@@ -100,8 +100,9 @@ final class Server {
      * Start SSL-secured HTTP test server.
      *
      * @throws IOException in case there is an error while reading server key store or trust store.
+     * @return an instance of the started SSL-secured HTTP test server.
      */
-    static void startServer() throws IOException {
+    public static Server start() throws IOException {
         final InputStream trustStore = Server.class.getResourceAsStream(SERVER_TRUST_STORE);
         final InputStream keyStore = Server.class.getResourceAsStream(SERVER_KEY_STORE);
 
@@ -118,27 +119,24 @@ final class Server {
         rc.register(new LoggingFilter(LOGGER, true));
         rc.registerClasses(RootResource.class, SecurityFilter.class, AuthenticationExceptionMapper.class);
 
-        try {
-            webServer = GrizzlyHttpServerFactory.createHttpServer(
-                    getBaseURI(),
-                    rc,
-                    true,
-                    new SSLEngineConfigurator(sslContext).setClientMode(false).setNeedClientAuth(true)
-            );
+        final HttpServer grizzlyServer = GrizzlyHttpServerFactory.createHttpServer(
+                getBaseURI(),
+                rc,
+                true,
+                new SSLEngineConfigurator(sslContext).setClientMode(false).setNeedClientAuth(true)
+        );
 
-            // start Grizzly embedded server //
-            LOGGER.info("Jersey app started. Try out " + BASE_URI + "\nHit CTRL + C to stop it...");
-            webServer.start();
+        // start Grizzly embedded server //
+        LOGGER.info("Jersey app started. Try out " + BASE_URI + "\nHit CTRL + C to stop it...");
+        grizzlyServer.start();
 
-        } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "Error while starting the server.", ex);
-        }
+        return new Server(grizzlyServer);
     }
 
     /**
      * Stop SSL-secured HTTP test server.
      */
-    static void stopServer() {
+    public void stop() {
         webServer.shutdownNow();
     }
 }

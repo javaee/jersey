@@ -90,7 +90,7 @@ public class SslConnectorConfigurationTest {
      */
     @Parameterized.Parameters(name = "{index}: {0}")
     public static Iterable<Object[]> testData() {
-        return Arrays.asList(new Object[][]{
+        return Arrays.asList(new Object[][] {
                 {new HttpUrlConnectorProvider()},
                 {new GrizzlyConnectorProvider()},
                 {new JettyConnectorProvider()},
@@ -101,14 +101,29 @@ public class SslConnectorConfigurationTest {
     @Parameterized.Parameter(0)
     public ConnectorProvider connectorProvider;
 
+    private final Object serverGuard = new Object();
+    private Server server = null;
+
     @Before
     public void setUp() throws Exception {
-        Server.startServer();
+        synchronized (serverGuard) {
+            if (server != null) {
+                throw new IllegalStateException(
+                        "Test run sync issue: Another instance of the SSL-secured HTTP test server has been already started.");
+            }
+            server = Server.start();
+        }
     }
 
     @After
     public void tearDown() throws Exception {
-        Server.stopServer();
+        synchronized (serverGuard) {
+            if (server == null) {
+                throw new IllegalStateException("Test run sync issue: There is no SSL-secured HTTP test server to stop.");
+            }
+            server.stop();
+            server = null;
+        }
     }
 
     private static SSLContext getSslContext() throws IOException {
