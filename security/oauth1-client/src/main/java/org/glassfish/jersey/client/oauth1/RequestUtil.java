@@ -46,7 +46,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 
-import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.core.GenericEntity;
@@ -92,8 +91,8 @@ final class RequestUtil {
 
     /**
      * Returns the form parameters from a request entity as a multi-valued map.
-     * If the request does not have a POST method, or the media type is not
-     * x-www-form-urlencoded, then null is returned.
+     * If the request does not have entity, or the media type is not
+     * x-www-form-urlencoded, empty map is returned.
      *
      * @param request the client request containing the entity to extract parameters from.
      * @return a {@link javax.ws.rs.core.MultivaluedMap} containing the entity form parameters.
@@ -106,9 +105,9 @@ final class RequestUtil {
         String method = request.getMethod();
         MediaType mediaType = request.getMediaType();
 
-        // no entity, not a post or not x-www-form-urlencoded: return empty map
-        if (entity == null || method == null || !HttpMethod.POST.equalsIgnoreCase(method)
-                || mediaType == null || !mediaType.equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
+        // no entity or not x-www-form-urlencoded: return empty map
+        if (entity == null || method == null || mediaType == null ||
+                !MediaType.APPLICATION_FORM_URLENCODED_TYPE.equals(mediaType)) {
             return new MultivaluedHashMap<String, String>();
         }
 
