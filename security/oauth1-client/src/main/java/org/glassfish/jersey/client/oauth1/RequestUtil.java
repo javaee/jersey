@@ -106,8 +106,8 @@ final class RequestUtil {
         MediaType mediaType = request.getMediaType();
 
         // no entity or not x-www-form-urlencoded: return empty map
-        if (entity == null || method == null || mediaType == null ||
-                !MediaType.APPLICATION_FORM_URLENCODED_TYPE.equals(mediaType)) {
+        if (entity == null || method == null
+                || !MediaType.APPLICATION_FORM_URLENCODED_TYPE.equals(mediaType)) {
             return new MultivaluedHashMap<String, String>();
         }
 
