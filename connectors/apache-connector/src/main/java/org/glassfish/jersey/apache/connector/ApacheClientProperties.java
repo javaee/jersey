@@ -82,6 +82,20 @@ public final class ApacheClientProperties {
     public static final String DISABLE_COOKIES = "jersey.config.apache.client.handleCookies";
 
     /**
+     * A value of (@code false} indices the client should handle retries upon failure
+     * automatically using HttpClient's DefaultHttpRequestRetryHandler policy.
+     *
+     * A value of {@code true} will cause the client not to retry upon failure
+     * <p/>
+     * The value MUST be an instance of {@link java.lang.Boolean}.
+     * <p/>
+     * The default value is {@code false}.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>
+     */
+    public static final String DISABLE_AUTOMATIC_RETRIES = "jersey.config.apache.client.disableAutomicRetries";
+
+    /**
      * A value of {@code true} indicates that a client should send an
      * authentication request even before the server gives a 401
      * response.
