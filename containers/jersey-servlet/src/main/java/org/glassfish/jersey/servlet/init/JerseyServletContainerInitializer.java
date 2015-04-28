@@ -298,7 +298,7 @@ public final class JerseyServletContainerInitializer implements ServletContainer
      * Enhance existing servlet configuration.
      */
     private static void addServletWithExistingRegistration(final ServletContext context,
-                                                           final ServletRegistration registration,
+                                                           ServletRegistration registration,
                                                            final Class<? extends Application> clazz,
                                                            final Set<Class<?>> classes) throws ServletException {
         // create a new servlet container for a given app.
@@ -306,24 +306,23 @@ public final class JerseyServletContainerInitializer implements ServletContainer
                 .addProperties(getInitParams(registration))
                 .addProperties(Utils.getContextParams(context));
 
-        final ServletRegistration.Dynamic dynamicRegistration;
         if (registration.getClassName() != null) {
             // class name present - complete servlet registration from container point of view
             Utils.store(resourceConfig, context, registration.getName());
-            dynamicRegistration = (ServletRegistration.Dynamic) registration;
         } else {
             // no class name - no complete servlet registration from container point of view
             final ServletContainer servlet = new ServletContainer(resourceConfig);
-            dynamicRegistration = context.addServlet(clazz.getName(), servlet);
+            final ServletRegistration.Dynamic dynamicRegistration = context.addServlet(clazz.getName(), servlet);
             dynamicRegistration.setAsyncSupported(true);
             dynamicRegistration.setLoadOnStartup(1);
+            registration = dynamicRegistration;
         }
-        if (dynamicRegistration.getMappings().isEmpty()) {
+        if (registration.getMappings().isEmpty()) {
             final ApplicationPath ap = clazz.getAnnotation(ApplicationPath.class);
             if (ap != null) {
                 final String mapping = createMappingPath(ap);
                 if (!mappingExists(context, mapping)) {
-                    dynamicRegistration.addMapping(mapping);
+                    registration.addMapping(mapping);
 
                     LOGGER.log(Level.CONFIG, LocalizationMessages.JERSEY_APP_REGISTERED_MAPPING(clazz.getName(), mapping));
                 } else {
