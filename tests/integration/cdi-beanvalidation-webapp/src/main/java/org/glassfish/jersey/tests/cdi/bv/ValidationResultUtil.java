@@ -136,45 +136,8 @@ public final class ValidationResultUtil {
             }
             setViolations.invoke(obj, constraints);
 
-            final Method currentSetter = getValidationResultSetter(resource);
-            final Method parentSetter = getValidationResultSetter(resource.getClass().getSuperclass());
-
-            final Method effectiveSetter = (parentSetter != null) ? parentSetter : currentSetter;
-
-            if (effectiveSetter != null) {
-                effectiveSetter.invoke(resource, obj);
-            }
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            // ignore for now
-        }
-    }
-
-    /**
-     * Updates a {@code javax.mvc.validation.ValidationResult} property. In pseudo-code:
-     * <p/>
-     * obj = getter.invoke(resource);
-     * obj.setViolations(constraints);
-     * setter.invoke(resource, obj);
-     *
-     * @param beanManager bean manager.
-     * @param resource    resource instance.
-     * @param getter      getter to be used.
-     * @param constraints new set of constraints.
-     */
-    public static void updateValidationResultPropertyViaBeanManager(BeanManager beanManager,
-                                                                    Object resource, Method getter,
-                                                      Set<ConstraintViolation<?>> constraints) {
-        try {
-            final Object obj = getter.invoke(resource);
-            Method setViolations;
-            try {
-                setViolations = obj.getClass().getMethod("setViolations", Set.class);
-            } catch (NoSuchMethodException e) {
-                setViolations = obj.getClass().getSuperclass().getMethod("setViolations", Set.class);
-            }
-            setViolations.invoke(obj, constraints);
-
             final Method setter = getValidationResultSetter(resource);
+
             if (setter != null) {
                 setter.invoke(resource, obj);
             }
@@ -259,7 +222,7 @@ public final class ValidationResultUtil {
     private static boolean isValidationResultSetter(Method m) {
         return m.getName().startsWith("set") && m.getParameterTypes().length == 1
                 && m.getParameterTypes()[0].getName().equals(VALIDATION_RESULT)
-                && m.getReturnType() == Void.TYPE && Modifier.isPublic(m.getModifiers());
-//                && m.getAnnotation(Inject.class) != null;
+                && m.getReturnType() == Void.TYPE && Modifier.isPublic(m.getModifiers())
+                && m.getAnnotation(Inject.class) != null;
     }
 }
