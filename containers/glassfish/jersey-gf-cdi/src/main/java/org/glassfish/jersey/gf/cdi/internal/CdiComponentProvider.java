@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.security.Provider;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -216,7 +217,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
                 final AnnotatedType<T> annotatedType = beanManager.createAnnotatedType(clazz);
                 final InjectionTarget<T> injectionTarget = beanManager.createInjectionTarget(annotatedType);
-                final CreationalContext creationalContext = beanManager.createCreationalContext(null);
+                final CreationalContext<T> creationalContext = beanManager.createCreationalContext(null);
 
                 @Override
                 public T getInstance(final Class<T> clazz) {
@@ -504,7 +505,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     private boolean isInjectionProvider(final Type injectedType) {
         return injectedType instanceof ParameterizedType
-                && ((ParameterizedType)injectedType).getRawType() == javax.inject.Provider.class;
+                && ((ParameterizedType)injectedType).getRawType() == Provider.class;
     }
 
     private boolean isProviderOfJerseyType(final ParameterizedType provider) {

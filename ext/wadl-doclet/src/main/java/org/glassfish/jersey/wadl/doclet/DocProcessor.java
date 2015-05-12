@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -87,7 +87,7 @@ public interface DocProcessor {
     void processClassDoc(ClassDoc classDoc, ClassDocType classDocType);
 
     /**
-     * Process the provided methodDoc and add your custom information to the methodDocType.<br/>
+     * Process the provided methodDoc and add your custom information to the methodDocType.<br>
      * Use e.g. {@link MethodDocType#getAny()} to store custom elements.
      * @param methodDoc the {@link MethodDoc} representing the docs of your method.
      * @param methodDocType the related {@link MethodDocType} that will later be processed by the

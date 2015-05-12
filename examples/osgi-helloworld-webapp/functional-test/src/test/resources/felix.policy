@@ -1,6 +1,6 @@
 // DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 //
-// Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+// Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
 //
 // The contents of this file are subject to the terms of either the GNU
 // General Public License Version 2 only ("GPL") or the Common Development
@@ -56,20 +56,22 @@ allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*war-bundle*"] 
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "local"] (java.security.AllPermission) } "allToLocal";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "local"] (org.osgi.framework.AdminPermission) } "adminToLocal";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "local"] (org.osgi.framework.PackagePermission) } "packageToLocal";
-allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (org.osgi.framework.AdminPermission "*" "class,resolve,resource") } "adminPermissionToJerseyCommon";
+allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (org.osgi.framework.AdminPermission "*" "class,listener,resolve,resource") } "adminPermissionToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (org.osgi.framework.PackagePermission) } "packagePermissionToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.lang.reflect.ReflectPermission "suppressAccessChecks") } "suppressAccessChecksToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.net.SocketPermission "*" "connect,resolve") } "socketPermissionToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.lang.RuntimePermission "accessDeclaredMembers") } "accessDeclaredMembersToJerseyCommon";
+allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.lang.RuntimePermission "accessClassInPackage.sun.misc") } "accessClassInPackageSunMisc";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.lang.RuntimePermission "getClassLoader") } "getCLToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.util.PropertyPermission "*" "read") } "propReadToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.io.FilePermission "<<ALL FILES>>" "read,write") } "fileReadToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-client*"] (java.security.AllPermission) } "allToJerseyClient";
-allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (org.osgi.framework.AdminPermission "*" "class,resolve,resource") } "adminPermissionToJerseyServer";
+allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (org.osgi.framework.AdminPermission "*" "class,listener,resolve,resource") } "adminPermissionToJerseyServer";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.lang.reflect.ReflectPermission "suppressAccessChecks") } "suppressAccessChecksToJerseyServer";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.lang.RuntimePermission "accessDeclaredMembers") } "accessDeclaredMembersToJerseyServer";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.lang.RuntimePermission "setContextClassLoader") } "setContextCLToJerseyServer";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.lang.RuntimePermission "getClassLoader") } "getClassLoaderToJerseyServer";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.util.PropertyPermission "*" "read") } "propReadToJerseyServer";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.io.FilePermission "<<ALL FILES>>" "read,write") } "fileReadToJerseyServer";
+allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.lang.RuntimePermission "modifyThread") } "modifyThreadToJerseyServer";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-container*"] (java.security.AllPermission) } "allToJerseyContainer";

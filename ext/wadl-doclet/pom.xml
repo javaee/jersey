@@ -2,7 +2,7 @@
 <!--
   ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
   ~
-  ~ Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+  ~ Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
   ~
   ~ The contents of this file are subject to the terms of either the GNU
   ~ General Public License Version 2 only ("GPL") or the Common Development
@@ -67,6 +67,21 @@
                     <groupId>com.sun</groupId>
                     <artifactId>tools</artifactId>
                     <version>1.7.0</version>
+                    <scope>system</scope>
+                    <systemPath>${java.home}/../lib/tools.jar</systemPath>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>jdk1.8</id>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.sun</groupId>
+                    <artifactId>tools</artifactId>
+                    <version>1.8.0</version>
                     <scope>system</scope>
                     <systemPath>${java.home}/../lib/tools.jar</systemPath>
                 </dependency>
