@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,21 +58,21 @@ import com.sun.javadoc.Parameter;
 public interface DocProcessor {
 
     /**
-     * Specify jaxb classes of instances that you add to the resourcedoc model.
+     * Specify jaxb classes of instances that you add to the {@code resourcedoc} model.
      * These classes are added to the list of classes when creating the jaxb context
-     * with <code>JAXBContext.newInstance( clazzes );</code>.
-     * @return a list of classes or <code>null</code>
+     * with {@code JAXBContext.newInstance( clazzes );}.
+     * @return a list of classes or {@code null}
      */
     Class<?>[] getRequiredJaxbContextClasses();
 
     /**
      * specify which of your elements you want to be handled as CDATA.
-     * The use of the '^' between the namespaceURI and the localname
+     * The use of the '^' between the {@code namespaceURI} and the {@code localname}
      * seems to be an implementation detail of the xerces code.
      * When processing xml that doesn't use namespaces, simply omit the
      * namespace prefix as shown in the third CDataElement below.
      *
-     * @return an Array of element descriptors or <code>null</code>
+     * @return an Array of element descriptors or {@code null}
      *
      */
     String[] getCDataElements();
@@ -81,17 +81,17 @@ public interface DocProcessor {
      * Use this method to extend the provided {@link ClassDocType} with the information from
      * the given {@link ClassDoc}.
      * @param classDoc the class javadoc
-     * @param classDocType the {@link ClassDocType} to extend. This will later be processed by the {@link org.glassfish.jersey
-     * .server.wadl.WadlGenerator}s.
+     * @param classDocType the {@link ClassDocType} to extend. This will later be processed by the
+     * {@link org.glassfish.jersey.server.wadl.WadlGenerator}s.
      */
     void processClassDoc(ClassDoc classDoc, ClassDocType classDocType);
 
     /**
-     * Process the provided methodDoc and add your custom information to the methodDocType.<br/>
+     * Process the provided methodDoc and add your custom information to the methodDocType.<br>
      * Use e.g. {@link MethodDocType#getAny()} to store custom elements.
      * @param methodDoc the {@link MethodDoc} representing the docs of your method.
-     * @param methodDocType the related {@link MethodDocType} that will later be processed by the {@link org.glassfish.jersey
-     * .server.wadl.WadlGenerator}s.
+     * @param methodDocType the related {@link MethodDocType} that will later be processed by the
+     * {@link org.glassfish.jersey.server.wadl.WadlGenerator}s.
      */
     void processMethodDoc(MethodDoc methodDoc, MethodDocType methodDocType);
 
@@ -100,8 +100,8 @@ public interface DocProcessor {
      * given {@link ParamTag} and {@link Parameter}.
      * @param paramTag the parameter javadoc
      * @param parameter the parameter (that is documented or not)
-     * @param paramDocType the {@link ParamDocType} to extend. This will later be processed by the {@link org.glassfish.jersey
-     * .server.wadl.WadlGenerator}s.
+     * @param paramDocType the {@link ParamDocType} to extend. This will later be processed by the
+     * {@link org.glassfish.jersey.server.wadl.WadlGenerator}s.
      */
     void processParamTag(ParamTag paramTag, Parameter parameter, ParamDocType paramDocType);
 

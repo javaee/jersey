@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.ProtocolException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -63,23 +65,25 @@ import javax.ws.rs.core.Response;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class JerseyInvocationTest {
+
     /**
      * Regression test for JERSEY-1257
      */
     @Test
     public void testOverrideHeadersWithMap() {
-        MultivaluedMap<String, Object> map = new MultivaluedHashMap<String, Object>();
+        final MultivaluedMap<String, Object> map = new MultivaluedHashMap<String, Object>();
         map.add("a-header", "b-header");
-        JerseyInvocation invocation = buildInvocationWithHeaders(map);
+        final JerseyInvocation invocation = buildInvocationWithHeaders(map);
         assertEquals(1, invocation.request().getHeaders().size());
         assertEquals("b-header", invocation.request().getHeaders().getFirst("a-header"));
     }
@@ -89,90 +93,90 @@ public class JerseyInvocationTest {
      */
     @Test
     public void testClearHeaders() {
-        JerseyInvocation invocation = buildInvocationWithHeaders(null);
+        final JerseyInvocation invocation = buildInvocationWithHeaders(null);
         assertTrue(invocation.request().getHeaders().isEmpty());
     }
 
-    private JerseyInvocation buildInvocationWithHeaders(MultivaluedMap<String, Object> headers) {
-        Client c = ClientBuilder.newClient();
-        Invocation.Builder builder = c.target("http://localhost:8080/mypath").request();
-        return (JerseyInvocation) builder
-                .header("unexpected-header", "unexpected-header").headers(headers)
-                .buildGet();
+    private JerseyInvocation buildInvocationWithHeaders(final MultivaluedMap<String, Object> headers) {
+        final Client c = ClientBuilder.newClient();
+        final Invocation.Builder builder = c.target("http://localhost:8080/mypath").request();
+        return (JerseyInvocation) builder.header("unexpected-header", "unexpected-header").headers(headers).buildGet();
     }
 
     /**
      * Checks that presence of request entity fo HTTP DELETE method does not fail in Jersey.
      * Instead, the request is propagated up to HttpURLConnection, where it fails with
      * {@code ProtocolException}.
-     *
+     * <p/>
      * See also JERSEY-1711.
      *
      * @see #overrideHttpMethodBasedComplianceCheckNegativeTest()
      */
     @Test
     public void overrideHttpMethodBasedComplianceCheckTest() {
-        Client c1 = ClientBuilder.newClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true);
+        final Client c1 = ClientBuilder.newClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true);
         try {
             c1.target("http://localhost:8080/myPath").request().method("DELETE", Entity.text("body"));
             fail("ProcessingException expected.");
-        } catch (ProcessingException ex) {
-            assertEquals(ProtocolException.class, ex.getCause().getClass());
+        } catch (final ProcessingException ex) {
+            assertThat(ex.getCause().getClass(), anyOf(CoreMatchers.<Class<?>>equalTo(ProtocolException.class),
+                    CoreMatchers.<Class<?>>equalTo(ConnectException.class)));
         }
 
-        Client c2 = ClientBuilder.newClient();
+        final Client c2 = ClientBuilder.newClient();
         try {
-            c2.target("http://localhost:8080/myPath").request()
-                    .property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true).method("DELETE", Entity.text("body"));
+            c2.target("http://localhost:8080/myPath").request().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION,
+                    true).method("DELETE", Entity.text("body"));
             fail("ProcessingException expected.");
-        } catch (ProcessingException ex) {
-            assertEquals(ProtocolException.class, ex.getCause().getClass());
+        } catch (final ProcessingException ex) {
+            assertThat(ex.getCause().getClass(), anyOf(CoreMatchers.<Class<?>>equalTo(ProtocolException.class),
+                    CoreMatchers.<Class<?>>equalTo(ConnectException.class)));
         }
 
-        Client c3 = ClientBuilder.newClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, false);
+        final Client c3 = ClientBuilder.newClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, false);
         try {
-            c3.target("http://localhost:8080/myPath").request()
-                    .property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true).method("DELETE", Entity.text("body"));
+            c3.target("http://localhost:8080/myPath").request().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION,
+                    true).method("DELETE", Entity.text("body"));
             fail("ProcessingException expected.");
-        } catch (ProcessingException ex) {
-            assertEquals(ProtocolException.class, ex.getCause().getClass());
+        } catch (final ProcessingException ex) {
+            assertThat(ex.getCause().getClass(), anyOf(CoreMatchers.<Class<?>>equalTo(ProtocolException.class),
+                    CoreMatchers.<Class<?>>equalTo(ConnectException.class)));
         }
     }
 
     /**
      * Checks that presence of request entity fo HTTP DELETE method fails in Jersey with {@code IllegalStateException}
      * if HTTP spec compliance is not suppressed by {@link ClientProperties#SUPPRESS_HTTP_COMPLIANCE_VALIDATION} property.
-     *
+     * <p/>
      * See also JERSEY-1711.
      *
      * @see #overrideHttpMethodBasedComplianceCheckTest()
      */
     @Test
     public void overrideHttpMethodBasedComplianceCheckNegativeTest() {
-        Client c1 = ClientBuilder.newClient();
+        final Client c1 = ClientBuilder.newClient();
         try {
             c1.target("http://localhost:8080/myPath").request().method("DELETE", Entity.text("body"));
             fail("IllegalStateException expected.");
-        } catch (IllegalStateException expected) {
+        } catch (final IllegalStateException expected) {
             // pass
         }
 
-        Client c2 = ClientBuilder.newClient();
+        final Client c2 = ClientBuilder.newClient();
         try {
-            c2.target("http://localhost:8080/myPath").request()
-                    .property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, false)
-                    .method("DELETE", Entity.text("body"));
+            c2.target("http://localhost:8080/myPath").request().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION,
+                    false).method("DELETE", Entity.text("body"));
             fail("IllegalStateException expected.");
-        } catch (IllegalStateException expected) {
+        } catch (final IllegalStateException expected) {
             // pass
         }
 
-        Client c3 = ClientBuilder.newClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true);
+        final Client c3 = ClientBuilder.newClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true);
         try {
-            c3.target("http://localhost:8080/myPath").request()
-                    .property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, false).method("DELETE", Entity.text("body"));
+            c3.target("http://localhost:8080/myPath").request().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION,
+                    false).method("DELETE", Entity.text("body"));
             fail("IllegalStateException expected.");
-        } catch (IllegalStateException expected) {
+        } catch (final IllegalStateException expected) {
             // pass
         }
     }
@@ -190,7 +194,7 @@ public class JerseyInvocationTest {
         final WebTarget target = client.target("http://localhost:8080/mypath");
 
         final Class<Response> responseType = null;
-        final String[] methods = new String[]{"GET", "PUT", "POST", "DELETE", "OPTIONS"};
+        final String[] methods = new String[] {"GET", "PUT", "POST", "DELETE", "OPTIONS"};
 
         for (final String method : methods) {
             final Invocation.Builder request = target.request();
@@ -198,31 +202,31 @@ public class JerseyInvocationTest {
             try {
                 request.method(method, responseType);
                 fail("IllegalArgumentException expected.");
-            } catch (IllegalArgumentException iae) {
+            } catch (final IllegalArgumentException iae) {
                 // OK.
             }
 
-            final Invocation build = "PUT".equals(method) ?
-                    request.build(method, Entity.entity("", MediaType.TEXT_PLAIN_TYPE)) : request.build(method);
+            final Invocation build = "PUT".equals(method) ? request.build(method, Entity.entity("",
+                    MediaType.TEXT_PLAIN_TYPE)) : request.build(method);
 
             try {
                 build.submit(responseType);
                 fail("IllegalArgumentException expected.");
-            } catch (IllegalArgumentException iae) {
+            } catch (final IllegalArgumentException iae) {
                 // OK.
             }
 
             try {
                 build.invoke(responseType);
                 fail("IllegalArgumentException expected.");
-            } catch (IllegalArgumentException iae) {
+            } catch (final IllegalArgumentException iae) {
                 // OK.
             }
 
             try {
                 request.async().method(method, responseType);
                 fail("IllegalArgumentException expected.");
-            } catch (IllegalArgumentException iae) {
+            } catch (final IllegalArgumentException iae) {
                 // OK.
             }
         }
@@ -234,9 +238,9 @@ public class JerseyInvocationTest {
         for (int i = 0; i < 1; i++) {
             final CountDownLatch latch = new CountDownLatch(1);
             final AtomicInteger ai = new AtomicInteger(0);
-            InvocationCallback<String> callback = new InvocationCallback<String>() {
+            final InvocationCallback<String> callback = new InvocationCallback<String>() {
                 @Override
-                public void completed(String arg0) {
+                public void completed(final String arg0) {
                     try {
                         ai.set(ai.get() + 1);
                     } finally {
@@ -245,7 +249,7 @@ public class JerseyInvocationTest {
                 }
 
                 @Override
-                public void failed(Throwable throwable) {
+                public void failed(final Throwable throwable) {
                     try {
 
                         int result = 10;
@@ -263,19 +267,18 @@ public class JerseyInvocationTest {
                 }
             };
 
-            Invocation invocation = builder.buildGet();
-            Future<String> future = invocation.submit(callback);
+            final Invocation invocation = builder.buildGet();
+            final Future<String> future = invocation.submit(callback);
             try {
                 future.get();
                 fail("future.get() should have failed.");
-            } catch (ExecutionException e) {
+            } catch (final ExecutionException e) {
                 final Throwable pe = e.getCause();
                 assertTrue("Execution exception cause is not a ProcessingException: " + pe.toString(),
                         pe instanceof ProcessingException);
                 final Throwable ioe = pe.getCause();
-                assertTrue("Execution exception cause is not an IOException: " + ioe.toString(),
-                        ioe instanceof IOException);
-            } catch (InterruptedException e) {
+                assertTrue("Execution exception cause is not an IOException: " + ioe.toString(), ioe instanceof IOException);
+            } catch (final InterruptedException e) {
                 throw new RuntimeException(e);
             }
 
@@ -286,20 +289,21 @@ public class JerseyInvocationTest {
     }
 
     public static class MyUnboundCallback<V> implements InvocationCallback<V> {
+
         private final CountDownLatch latch;
         private volatile Throwable throwable;
 
-        public MyUnboundCallback(CountDownLatch latch) {
+        public MyUnboundCallback(final CountDownLatch latch) {
             this.latch = latch;
         }
 
         @Override
-        public void completed(V v) {
+        public void completed(final V v) {
             latch.countDown();
         }
 
         @Override
-        public void failed(Throwable throwable) {
+        public void failed(final Throwable throwable) {
             this.throwable = throwable;
             latch.countDown();
         }
@@ -311,7 +315,7 @@ public class JerseyInvocationTest {
 
     @Test
     public void failedUnboundGenericCallback() throws InterruptedException {
-        Invocation invocation = ClientBuilder.newClient().target("http://localhost:888/").request().buildGet();
+        final Invocation invocation = ClientBuilder.newClient().target("http://localhost:888/").request().buildGet();
         final CountDownLatch latch = new CountDownLatch(1);
 
         final MyUnboundCallback<String> callback = new MyUnboundCallback<String>(latch);
@@ -319,13 +323,10 @@ public class JerseyInvocationTest {
 
         latch.await(1, TimeUnit.SECONDS);
 
-        assertThat(callback.getThrowable(),
-                CoreMatchers.instanceOf(ProcessingException.class));
-        assertThat(callback.getThrowable().getCause(),
-                CoreMatchers.instanceOf(IllegalArgumentException.class));
-        assertThat(callback.getThrowable().getCause().getMessage(),
-                CoreMatchers.allOf(
-                        CoreMatchers.containsString(MyUnboundCallback.class.getName()),
+        assertThat(callback.getThrowable(), CoreMatchers.instanceOf(ProcessingException.class));
+        assertThat(callback.getThrowable().getCause(), CoreMatchers.instanceOf(IllegalArgumentException.class));
+        assertThat(callback.getThrowable().getCause().getMessage(), CoreMatchers
+                .allOf(CoreMatchers.containsString(MyUnboundCallback.class.getName()),
                         CoreMatchers.containsString(InvocationCallback.class.getName())));
     }
 }

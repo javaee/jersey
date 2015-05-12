@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.server.model;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
@@ -57,17 +59,20 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Assert;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test matching of resources with ambiguous templates.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 public class AmbiguousTemplateTest {
 
     @Path("{abc}")
     public static class ResourceABC {
+
         @PathParam("abc")
         String param;
 
@@ -86,6 +91,7 @@ public class AmbiguousTemplateTest {
 
     @Path("{xyz}")
     public static class ResourceXYZ {
+
         @PathParam("xyz")
         String param;
 
@@ -107,7 +113,6 @@ public class AmbiguousTemplateTest {
         }
     }
 
-
     @Test
     public void testPathParamOnAmbiguousTemplate() throws ExecutionException, InterruptedException {
         final ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(ResourceABC.class,
@@ -125,7 +130,6 @@ public class AmbiguousTemplateTest {
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("x-xyz:test", response.getEntity());
     }
-
 
     @Test
     public void testPathParamOnAmbiguousTemplate3() throws ExecutionException, InterruptedException {
@@ -157,6 +161,7 @@ public class AmbiguousTemplateTest {
 
     @Path("locator")
     public static class SimpleLocator {
+
         @Path("{resource}")
         public Object locator(@PathParam("resource") String resource) {
             if ("xyz".equals(resource)) {
@@ -194,12 +199,11 @@ public class AmbiguousTemplateTest {
         Assert.assertEquals("subx-xyz:null:subxfoo", response.getEntity());
     }
 
-
     @Path("{xyz}")
     public static class ResourceWithLocator {
+
         @PathParam("xyz")
         String param;
-
 
         @Path("/")
         public SubResource locator() {
@@ -213,9 +217,12 @@ public class AmbiguousTemplateTest {
     }
 
     public static class SubResource {
+
         private final String str;
 
-        public SubResource(String str) {this.str = str;}
+        public SubResource(String str) {
+            this.str = str;
+        }
 
         @GET
         public String get() {
@@ -239,9 +246,9 @@ public class AmbiguousTemplateTest {
         Assert.assertEquals("uuu:test", response.getEntity());
     }
 
-
     @Path("{templateA}")
     public static class ResourceA {
+
         @GET
         public String getA() {
             return "getA";
@@ -250,6 +257,7 @@ public class AmbiguousTemplateTest {
 
     @Path("{templateB}")
     public static class ResourceB {
+
         @POST
         public String postB(String entity) {
             return "postB";
@@ -258,6 +266,7 @@ public class AmbiguousTemplateTest {
 
     @Path("resq")
     public static class ResourceQ {
+
         @GET
         @Path("{path}")
         public String getA() {
@@ -278,7 +287,10 @@ public class AmbiguousTemplateTest {
         final ContainerResponse containerResponse = app.apply(RequestContextBuilder.from("/aaa", "OPTIONS")
                 .accept(MediaType.TEXT_PLAIN).build()).get();
         Assert.assertEquals(200, containerResponse.getStatus());
-        Assert.assertEquals("POST, GET, OPTIONS, HEAD", containerResponse.getEntity());
+
+        final List<String> methods = Arrays.asList(containerResponse.getEntity().toString().split(", "));
+        assertThat(methods, hasItems("POST", "GET", "OPTIONS", "HEAD"));
+        assertThat(methods.size(), is(4));
     }
 
     @Test
@@ -291,7 +303,6 @@ public class AmbiguousTemplateTest {
         Assert.assertEquals("getA", containerResponse.getEntity());
     }
 
-
     @Test
     public void testOptionsOnChild() throws ExecutionException, InterruptedException {
         ResourceConfig resourceConfig = new ResourceConfig(ResourceA.class, ResourceB.class, ResourceQ.class);
@@ -299,7 +310,10 @@ public class AmbiguousTemplateTest {
         final ContainerResponse containerResponse = app.apply(RequestContextBuilder.from("/resq/c", "OPTIONS")
                 .accept(MediaType.TEXT_PLAIN).build()).get();
         Assert.assertEquals(200, containerResponse.getStatus());
-        Assert.assertEquals("GET, OPTIONS, HEAD, PUT", containerResponse.getEntity());
+
+        final List<String> methods = Arrays.asList(containerResponse.getEntity().toString().split(", "));
+        assertThat(methods, hasItems("PUT", "GET", "OPTIONS", "HEAD"));
+        assertThat(methods.size(), is(4));
     }
 
     @Test

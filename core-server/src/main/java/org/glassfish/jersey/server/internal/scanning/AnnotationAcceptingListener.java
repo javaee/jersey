@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,6 +54,7 @@ import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
@@ -110,7 +111,7 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
      * {@link javax.ws.rs.Path} or {@link javax.ws.rs.ext.Provider} annotated classes.
      */
     @SuppressWarnings({"unchecked"})
-    public static AnnotationAcceptingListener newJaxrsResourceAndProviderListener(ClassLoader classLoader) {
+    public static AnnotationAcceptingListener newJaxrsResourceAndProviderListener(final ClassLoader classLoader) {
         return new AnnotationAcceptingListener(classLoader, Path.class, Provider.class);
     }
 
@@ -121,7 +122,7 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
      * @param annotations the set of annotation classes to check on Java class
      *        files.
      */
-    public AnnotationAcceptingListener(Class<? extends Annotation>... annotations) {
+    public AnnotationAcceptingListener(final Class<? extends Annotation>... annotations) {
         this(AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA()), annotations);
     }
 
@@ -134,8 +135,8 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
      * @param annotations the set of annotation classes to check on Java class
      *        files.
      */
-    public AnnotationAcceptingListener(ClassLoader classloader,
-                                       Class<? extends Annotation>... annotations) {
+    public AnnotationAcceptingListener(final ClassLoader classloader,
+                                       final Class<? extends Annotation>... annotations) {
         this.classloader = classloader;
         this.classes = new LinkedHashSet<Class<?>>();
         this.annotations = getAnnotationSet(annotations);
@@ -151,27 +152,27 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
         return classes;
     }
 
-    private Set<String> getAnnotationSet(Class<? extends Annotation>... annotations) {
-        Set<String> a = new HashSet<String>();
-        for (Class c : annotations) {
+    private Set<String> getAnnotationSet(final Class<? extends Annotation>... annotations) {
+        final Set<String> a = new HashSet<String>();
+        for (final Class c : annotations) {
             a.add("L" + c.getName().replaceAll("\\.", "/") + ";");
         }
         return a;
     }
 
     // ScannerListener
-    public boolean accept(String name) {
+    public boolean accept(final String name) {
         return !(name == null || name.isEmpty()) && name.endsWith(".class");
 
     }
 
-    public void process(String name, InputStream in) throws IOException {
+    public void process(final String name, final InputStream in) throws IOException {
         new ClassReader(in).accept(classVisitor, 0);
     }
 
     //
 
-    private final class AnnotatedClassVisitor implements ClassVisitor {
+    private final class AnnotatedClassVisitor extends ClassVisitor {
 
         /**
          * The name of the visited class.
@@ -186,20 +187,24 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
          */
         private boolean isAnnotated;
 
-        public void visit(int version, int access, String name,
-                          String signature, String superName, String[] interfaces) {
+        private AnnotatedClassVisitor() {
+            super(Opcodes.ASM5);
+        }
+
+        public void visit(final int version, final int access, final String name,
+                          final String signature, final String superName, final String[] interfaces) {
             className = name;
             isScoped = (access & Opcodes.ACC_PUBLIC) != 0;
             isAnnotated = false;
         }
 
-        public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+        public AnnotationVisitor visitAnnotation(final String desc, final boolean visible) {
             isAnnotated |= annotations.contains(desc);
             return null;
         }
 
-        public void visitInnerClass(String name, String outerName,
-                                    String innerName, int access) {
+        public void visitInnerClass(final String name, final String outerName,
+                                    final String innerName, final int access) {
             // If the name of the class that was visited is equal
             // to the name of this visited inner class then
             // this access field needs to be used for checking the scope
@@ -220,34 +225,34 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
             }
         }
 
-        public void visitOuterClass(String string, String string0,
-                                    String string1) {
+        public void visitOuterClass(final String string, final String string0,
+                                    final String string1) {
             // Do nothing
         }
 
-        public FieldVisitor visitField(int i, String string,
-                                       String string0, String string1,
-                                       Object object) {
-            // Do nothing
-            return null;
-        }
-
-        public void visitSource(String string, String string0) {
-            // Do nothing
-        }
-
-        public void visitAttribute(Attribute attribute) {
-            // Do nothing
-        }
-
-        public MethodVisitor visitMethod(int i, String string,
-                                         String string0, String string1,
-                                         String[] string2) {
+        public FieldVisitor visitField(final int i, final String string,
+                                       final String string0, final String string1,
+                                       final Object object) {
             // Do nothing
             return null;
         }
 
-        private Class getClassForName(String className) {
+        public void visitSource(final String string, final String string0) {
+            // Do nothing
+        }
+
+        public void visitAttribute(final Attribute attribute) {
+            // Do nothing
+        }
+
+        public MethodVisitor visitMethod(final int i, final String string,
+                                         final String string0, final String string1,
+                                         final String[] string2) {
+            // Do nothing
+            return null;
+        }
+
+        private Class getClassForName(final String className) {
             try {
                 final OsgiRegistry osgiRegistry = ReflectionHelper.getOsgiRegistryInstance();
 
@@ -256,21 +261,15 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
                 } else {
                     return AccessController.doPrivileged(ReflectionHelper.classForNameWithExceptionPEA(className, classloader));
                 }
-            } catch (ClassNotFoundException ex) {
-                String s = "A class file of the class name, " +
-                        className +
-                        "is identified but the class could not be found";
-                throw new RuntimeException(s, ex);
-            } catch (PrivilegedActionException pae) {
+            } catch (final ClassNotFoundException ex) {
+                throw new RuntimeException(LocalizationMessages.ERROR_SCANNING_CLASS_NOT_FOUND(className), ex);
+            } catch (final PrivilegedActionException pae) {
                 final Throwable cause = pae.getCause();
                 if (cause instanceof ClassNotFoundException) {
-                    String s = "A class file of the class name, " +
-                        className +
-                        "is identified but the class could not be found";
-                    throw new RuntimeException(s, cause);
+                    throw new RuntimeException(LocalizationMessages.ERROR_SCANNING_CLASS_NOT_FOUND(className), cause);
                 } else if (cause instanceof RuntimeException) {
                     throw (RuntimeException) cause;
-                }else {
+                } else {
                     throw new RuntimeException(cause);
                 }
             }

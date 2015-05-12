@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,7 +43,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,6 +52,10 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.ext.ExceptionMapper;
 
 import javax.annotation.ManagedBean;
 import javax.annotation.Priority;
@@ -72,21 +75,22 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
-
 import javax.inject.Inject;
 import javax.inject.Qualifier;
 import javax.inject.Singleton;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.Interceptor;
 import javax.interceptor.InvocationContext;
-
 import javax.naming.InitialContext;
-
 import javax.transaction.Transactional;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.ext.ExceptionMapper;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.spi.ComponentProvider;
+import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -96,14 +100,6 @@ import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 import org.glassfish.hk2.utilities.cache.Cache;
 import org.glassfish.hk2.utilities.cache.Computable;
-
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
 /**
  * Jersey CDI integration implementation.
@@ -211,7 +207,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
                 final AnnotatedType<T> annotatedType = beanManager.createAnnotatedType(clazz);
                 final InjectionTarget<T> injectionTarget = beanManager.createInjectionTarget(annotatedType);
-                final CreationalContext creationalContext = beanManager.createCreationalContext(null);
+                final CreationalContext<T> creationalContext = beanManager.createCreationalContext(null);
 
                 @Override
                 public T getInstance(Class<T> clazz) {

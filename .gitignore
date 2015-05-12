@@ -21,3 +21,6 @@ nb-configuration.xml
 .settings/*
 .project
 .classpath
+
+#Maven plugins noise
+dependency-reduced-pom.xml
