@@ -545,11 +545,17 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             return;
         }
 
-        final int status = service(baseUri, requestUri, request, response).get();
+        final Value<Integer> statusValue = service(baseUri, requestUri, request, response);
 
         // If forwarding is configured and response is a 404 with no entity
         // body then call the next filter in the chain
-        if (webComponent.forwardOn404 && status == 404 && !response.isCommitted()) {
+
+        if (webComponent.forwardOn404 && !response.isCommitted()
+                // TODO when switched to servlet-api-3.0 and higher, use response.getStatus() to retrieve the status
+                // statusValue.get() forwards the call to
+                // org.glassfish.jersey.servlet.internal.ResponseWriter#getResponseContext() which may block the thread
+                // as a consequence, we must call it only if we're sure it will not block unintentionally
+                && statusValue.get() == 404) {
             // lets clear the response to OK before we forward to the next in the chain
             // as OK is the default set by servlet containers before filters/servlets do any wor
             // so lets hide our footsteps and pretend we were never in the chain at all and let the
