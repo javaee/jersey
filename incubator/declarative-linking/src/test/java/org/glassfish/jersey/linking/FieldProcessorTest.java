@@ -61,6 +61,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Resource;
@@ -83,6 +84,8 @@ public class FieldProcessorTest {
     ExtendedUriInfo mockUriInfo = new ExtendedUriInfo() {
 
         private static final String baseURI = "http://example.com/application/resources";
+
+        private MultivaluedMap queryParams = new MultivaluedStringMap();
 
         @Override
         public String getPath() {
@@ -136,22 +139,22 @@ public class FieldProcessorTest {
 
         @Override
         public MultivaluedMap<String, String> getPathParameters() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return new MultivaluedStringMap();
         }
 
         @Override
         public MultivaluedMap<String, String> getPathParameters(boolean decode) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return new MultivaluedStringMap();
         }
 
         @Override
         public MultivaluedMap<String, String> getQueryParameters() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return queryParams;
         }
 
         @Override
         public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return queryParams;
         }
 
         @Override
@@ -646,6 +649,13 @@ public class FieldProcessorTest {
         public String uri;
     }
 
+    public static class QueryResourceBeanNoBindings {
+        //query parameters will be populated from uriInfo
+        //JERSEY-2863
+        @InjectLink(resource = QueryResource.class, method = "getB")
+        public String uri;
+    }
+
     @Test
     public void testQueryResource() {
         LOG.info("QueryResource");
@@ -662,6 +672,20 @@ public class FieldProcessorTest {
         QueryResourceBean testClass = new QueryResourceBean("queryExample", "queryExample2");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
         assertEquals("/application/resources/a/b?query=queryExample&query2=queryExample2", testClass.uri);
+    }
+
+    @Test
+    public void testQueryResourceWithoutBindings() {
+        LOG.info("QueryResource");
+        FieldProcessor<QueryResourceBeanNoBindings> instance = new FieldProcessor(QueryResourceBeanNoBindings.class);
+        QueryResourceBeanNoBindings testClass = new QueryResourceBeanNoBindings();
+        mockUriInfo.getQueryParameters().putSingle("query", "queryExample");
+        mockUriInfo.getQueryParameters().putSingle("query2", "queryExample2");
+        assertEquals("queryExample", mockUriInfo.getQueryParameters().getFirst("query"));
+        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        assertEquals("/application/resources/a/b?query=queryExample&query2=queryExample2", testClass.uri);
+        //clean mock
+        mockUriInfo.getQueryParameters().clear();
     }
 
     public static class TestClassK {
