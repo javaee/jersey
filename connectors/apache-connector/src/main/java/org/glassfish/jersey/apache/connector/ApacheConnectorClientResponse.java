@@ -10,9 +10,6 @@ import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 
 /**
- * Fix for https://github.com/docker-java/docker-java/issues/196
- * 
- * https://java.net/jira/browse/JERSEY-2852
  * 
  * @author marcus
  * 
@@ -49,4 +46,5 @@ public class ApacheConnectorClientResponse extends ClientResponse {
 		}
 		super.close();
 	}
+	
 }
