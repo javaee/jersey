@@ -47,7 +47,7 @@ import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 
 /**
  * Preparations for OSGi support.
@@ -72,7 +72,7 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
         return new BundleSchemeScanner(uri);
     }
 
-    private class BundleSchemeScanner implements ResourceFinder {
+    private class BundleSchemeScanner extends AbstractResourceFinderAdapter {
 
         private BundleSchemeScanner(URI uri) {
             this.uri = uri;
@@ -105,11 +105,6 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
             }
 
             throw new NoSuchElementException();
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
         }
 
         @Override

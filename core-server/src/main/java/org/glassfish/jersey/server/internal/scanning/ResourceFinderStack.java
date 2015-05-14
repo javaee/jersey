@@ -45,6 +45,7 @@ import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 import org.glassfish.jersey.server.ResourceFinder;
 
 /**
@@ -54,7 +55,7 @@ import org.glassfish.jersey.server.ResourceFinder;
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class ResourceFinderStack implements ResourceFinder {
+public class ResourceFinderStack extends AbstractResourceFinderAdapter {
 
     private final Deque<ResourceFinder> stack = new LinkedList<ResourceFinder>();
     private ResourceFinder current = null;
@@ -88,11 +89,6 @@ public class ResourceFinderStack implements ResourceFinder {
         }
 
         throw new NoSuchElementException();
-    }
-
-    @Override
-    public void remove() {
-        current.remove();
     }
 
     @Override

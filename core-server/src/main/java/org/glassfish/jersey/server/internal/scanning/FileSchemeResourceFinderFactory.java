@@ -49,7 +49,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
 
-import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 
 /**
  * A "file" scheme URI scanner that recursively scans directories.
@@ -75,7 +75,7 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
         return new FileSchemeScanner(uri, recursive);
     }
 
-    private class FileSchemeScanner implements ResourceFinder {
+    private class FileSchemeScanner extends AbstractResourceFinderAdapter {
 
         private final ResourceFinderStack resourceFinderStack;
         private final boolean recursive;
@@ -98,11 +98,6 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
         }
 
         @Override
-        public void remove() {
-            resourceFinderStack.remove();
-        }
-
-        @Override
         public InputStream open() {
             return resourceFinderStack.open();
         }
@@ -113,7 +108,7 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
         }
 
         private void processFile(final File f) {
-            resourceFinderStack.push(new ResourceFinder() {
+            resourceFinderStack.push(new AbstractResourceFinderAdapter() {
 
                 Stack<File> files = new Stack<File>() {{
                     if (f.isDirectory()) {
@@ -156,11 +151,6 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
                     }
 
                     throw new NoSuchElementException();
-                }
-
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
                 }
 
                 @Override

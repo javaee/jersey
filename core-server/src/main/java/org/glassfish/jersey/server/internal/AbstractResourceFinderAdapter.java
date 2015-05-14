@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,69 +37,23 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.scanning;
+package org.glassfish.jersey.server.internal;
 
-import java.io.InputStream;
-import java.util.NoSuchElementException;
-
-import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 import org.glassfish.jersey.server.ResourceFinder;
 
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * This class provides partial default implementation of {@link org.glassfish.jersey.server.ResourceFinder}.
+ *
+ * @author Stepan Vavra (stepan.vavra at oracle.com)
+ * @since 2.18
  */
-public class ResourceFinderStackTest {
+public abstract class AbstractResourceFinderAdapter implements ResourceFinder {
 
-    public static class MyIterator extends AbstractResourceFinderAdapter {
-        boolean iterated = false;
-
-        @Override
-        public boolean hasNext() {
-            return !iterated;
-        }
-
-        @Override
-        public String next() {
-            if (!iterated) {
-                iterated = true;
-                return "value";
-            }
-
-            throw new NoSuchElementException();
-        }
-
-        @Override
-        public void reset() {
-        }
-
-        @Override
-        public InputStream open() {
-            return null;
-        }
-    }
-
-
-    @Test
-    public void test() {
-        ResourceFinder i = new MyIterator();
-        ResourceFinder j = new MyIterator();
-
-        ResourceFinderStack iteratorStack = new ResourceFinderStack();
-        iteratorStack.push(i);
-        iteratorStack.push(j);
-
-        assertEquals(iteratorStack.next(), "value");
-        assertEquals(iteratorStack.next(), "value");
-
-        try {
-            iteratorStack.next();
-            assertTrue(false);
-        } catch (NoSuchElementException nsee) {
-            assertTrue(true);
-        }
+    /**
+     * Default implementation of {@link #remove()} which complies with the defined contract.
+     */
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
     }
 }
