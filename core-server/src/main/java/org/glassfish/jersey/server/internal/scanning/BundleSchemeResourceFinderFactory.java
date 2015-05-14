@@ -79,16 +79,28 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
         }
 
         private URI uri;
+
+        /**
+         * Marks this iterator as iterated after execution of {@link #open()} method.
+         * Together with {@link #iterated}, this field determines a returned value of {@link #hasNext()}.
+         */
         private boolean accessed = false;
+
+        /**
+         * Marks this iterator as iterated after execution of {@link #next()} method.
+         * Together with {@link #accessed}, this field determines a returned value of {@link #hasNext()}.
+         */
+        private boolean iterated = false;
 
         @Override
         public boolean hasNext() {
-            return !accessed;
+            return !accessed && !iterated;
         }
 
         @Override
         public String next() {
-            if (!accessed) {
+            if (hasNext()) {
+                iterated = true;
                 return uri.getPath();
             }
 
