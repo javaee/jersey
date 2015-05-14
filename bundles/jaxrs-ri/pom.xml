@@ -285,15 +285,15 @@
                             org.glassfish.jersey.*;version=${project.version},
                             com.sun.research.ws.wadl.*;version=${project.version}
                         </Export-Package>
-                        <Import-Package>
+                        <Import-Package><![CDATA[
                             !org.objectweb.asm.*,
-                            javax.servlet.annotation.*;resolution:=optional;version="${range;[==,+);${servlet3.version}}",
-                            javax.servlet.descriptor.*;resolution:=optional;version="${range;[==,+);${servlet3.version}}",
+                            javax.servlet.annotation.*;resolution:=optional;version="$<range;[==,+);${servlet3.version}>",
+                            javax.servlet.descriptor.*;resolution:=optional;version="$<range;[==,+);${servlet3.version}>",
                             javax.servlet.*;version="[2.4,4.0)",
                             javax.persistence.*;resolution:=optional,
                             sun.misc.*;resolution:=optional,
                             *
-                        </Import-Package>
+                        ]]></Import-Package>
                         <Private-Package>
                             com.sun.research.ws.wadl
                         </Private-Package>
