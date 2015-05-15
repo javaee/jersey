@@ -68,7 +68,6 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -78,10 +77,7 @@ import org.osgi.service.condpermadmin.ConditionalPermissionUpdate;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -312,7 +308,7 @@ public abstract class AbstractWebAppTest {
      *
      * @throws Exception
      */
-    public void defaultWebAppTestMethod() throws Exception {
+    public WebTarget webAppTestTarget(String appRoot) throws Exception {
 
         LOGGER.info(bundleList());
 
@@ -331,27 +327,8 @@ public abstract class AbstractWebAppTest {
         final Client c = ClientBuilder.newClient();
 
         // server should be listening now and everything should be initialized
-        final WebTarget target = c.target(baseUri);
+        return c.target(baseUri + appRoot);
 
-        // send request and check response - helloworld resource
-        final String helloResult = target.path("/webresources/helloworld").request().build("GET").invoke().readEntity(
-                String.class);
-        LOGGER.info("HELLO RESULT = " + helloResult);
-        assertEquals("Hello World", helloResult);
-
-        // send request and check response - another resource
-        final String anotherResult = target.path("/webresources/another").request().build("GET").invoke()
-                .readEntity(String.class);
-
-        LOGGER.info("ANOTHER RESULT = " + anotherResult);
-        assertEquals("Another", anotherResult);
-
-        // send request and check response for the additional bundle - should fail now
-        final String additionalResult = target.path("/webresources/additional").request().build("GET").invoke()
-                .readEntity(String.class);
-
-        LOGGER.info("ADDITIONAL RESULT = " + additionalResult);
-        assertEquals("Additional Bundle!", additionalResult);
     }
 
     private Bundle lookupWarBundle() {
