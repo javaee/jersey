@@ -689,6 +689,12 @@
             <id>testsSkip</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
+                <!-- this is how to align back with maven standards where property 'skipTests' makes maven-surefire-plugin
+                (and also maven-failsafe-plugin) skip tests execution -->
+                <property>
+                    <name>skipTests</name>
+                    <value>true</value>
+                </property>
             </activation>
             <properties>
                 <skip.release.tests>-Dmaven.test.skip=true -Dskip.tests=true</skip.release.tests>
