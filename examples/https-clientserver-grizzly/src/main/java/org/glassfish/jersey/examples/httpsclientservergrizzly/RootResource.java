@@ -40,7 +40,8 @@
 
 package org.glassfish.jersey.examples.httpsclientservergrizzly;
 
-import org.glassfish.jersey.internal.util.Base64;
+import java.nio.charset.Charset;
+import javax.xml.bind.DatatypeConverter;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -73,7 +74,7 @@ public class RootResource {
         String auth = headers.getRequestHeader("authorization").get(0);
 
         auth = auth.substring("Basic ".length());
-        String[] values = new String(Base64.decodeAsString(auth)).split(":");
+        String[] values = new String(DatatypeConverter.parseBase64Binary(auth), Charset.forName("ASCII")).split(":");
 
         // String username = values[0];
         // String password = values[1];
