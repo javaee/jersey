@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -86,6 +86,7 @@ import org.apache.http.impl.conn.BasicClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HttpContext;
+import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -147,6 +148,52 @@ public class HelloWorldTest extends JerseyTest {
     public void testClientStringResponse() {
         String s = target().path(ROOT_PATH).request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
+    }
+
+    @Test
+    public void testConnectionPoolSharingEnabled() throws Exception {
+        _testConnectionPoolSharing(true);
+    }
+
+    @Test
+    public void testConnectionPoolSharingDisabled() throws Exception {
+        _testConnectionPoolSharing(false);
+    }
+
+    public void _testConnectionPoolSharing(final boolean sharingEnabled) throws Exception {
+
+        final HttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+
+        final ClientConfig cc = new ClientConfig();
+        cc.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
+        cc.property(ApacheClientProperties.CONNECTION_MANAGER_SHARED, sharingEnabled);
+        cc.connectorProvider(new ApacheConnectorProvider());
+
+        final Client clientOne = ClientBuilder.newClient(cc);
+        WebTarget target = clientOne.target(getBaseUri()).path(ROOT_PATH);
+        target.request().get();
+        clientOne.close();
+
+        final boolean exceptionExpected = !sharingEnabled;
+
+        final Client clientTwo = ClientBuilder.newClient(cc);
+        target = clientTwo.target(getBaseUri()).path(ROOT_PATH);
+        try {
+            target.request().get();
+            if (exceptionExpected) {
+                Assert.fail("Exception expected");
+            }
+        } catch (Exception e) {
+            if (!exceptionExpected) {
+                Assert.fail("Exception not expected");
+            }
+        } finally {
+            clientTwo.close();
+        }
+
+        if (sharingEnabled) {
+            connectionManager.shutdown();
+        }
     }
 
     @Test

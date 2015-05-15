@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -117,6 +117,28 @@ public final class ApacheClientProperties {
     public static final String CONNECTION_MANAGER = "jersey.config.apache.client.connectionManager";
 
     /**
+     * A value of {@code true} indicates that configured connection manager should be shared
+     * among multiple Jersey {@link org.glassfish.jersey.client.ClientRuntime} instances. It means that closing
+     * a particular {@link org.glassfish.jersey.client.ClientRuntime} instance does not shut down the underlying
+     * connection manager automatically. In such case, the connection manager life-cycle
+     * should be fully managed by the application code. To release all allocated resources,
+     * caller code should especially ensure {@link org.apache.http.conn.HttpClientConnectionManager#shutdown()} gets
+     * invoked eventually.
+     * <p>
+     * This property may only be set prior to constructing Apache connector using {@link ApacheConnectorProvider}.
+     * <p/>
+     * The value MUST be an instance of {@link java.lang.Boolean}.
+     * <p/>
+     * The default value is {@code false}.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @since 2.5.2 (on 2.5.x branch, since 2.18 on the master branch)
+     */
+    public static final String CONNECTION_MANAGER_SHARED = "jersey.config.apache.client.connectionManagerShared";
+
+    /**
+     * Request configuration for the {@link org.apache.http.client.HttpClient}.
      * Http parameters which will be used to create {@link org.apache.http.client.HttpClient}.
      * <p/>
      * The value MUST be an instance of {@link org.apache.http.params.HttpParams}.

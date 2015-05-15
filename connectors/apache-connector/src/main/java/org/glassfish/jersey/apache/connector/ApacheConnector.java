@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -257,6 +257,9 @@ public class ApacheConnector implements Connector {
         final HttpClientBuilder clientBuilder = HttpClientBuilder.create();
 
         clientBuilder.setConnectionManager(getConnectionManager(config, sslContext));
+        clientBuilder.setConnectionManagerShared(
+                PropertiesHelper.getValue(config.getProperties(), ApacheClientProperties.CONNECTION_MANAGER_SHARED,
+                        false, Boolean.class));
         clientBuilder.setSslcontext(sslContext);
 
         RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
