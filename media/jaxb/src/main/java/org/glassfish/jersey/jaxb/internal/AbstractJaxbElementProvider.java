@@ -85,21 +85,32 @@ import org.glassfish.jersey.message.internal.EntityInputStream;
  */
 public abstract class AbstractJaxbElementProvider extends AbstractJaxbProvider<JAXBElement<?>> {
 
-    public AbstractJaxbElementProvider(Providers ps) {
-        super(ps);
+    /**
+     * Inheritance constructor.
+     *
+     * @param providers JAX-RS providers.
+     */
+    public AbstractJaxbElementProvider(Providers providers) {
+        super(providers);
     }
 
-    public AbstractJaxbElementProvider(Providers ps, MediaType mt) {
-        super(ps, mt);
+    /**
+     * Inheritance constructor.
+     *
+     * @param providers         JAX-RS providers.
+     * @param resolverMediaType JAXB component context resolver media type to be used.
+     */
+    public AbstractJaxbElementProvider(Providers providers, MediaType resolverMediaType) {
+        super(providers, resolverMediaType);
     }
 
     @Override
-    public boolean isReadable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
+    public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         return type == JAXBElement.class && genericType instanceof ParameterizedType && isSupported(mediaType);
     }
 
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
+    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         return JAXBElement.class.isAssignableFrom(type) && isSupported(mediaType);
     }
 
@@ -107,7 +118,7 @@ public abstract class AbstractJaxbElementProvider extends AbstractJaxbProvider<J
     public final JAXBElement<?> readFrom(
             Class<JAXBElement<?>> type,
             Type genericType,
-            Annotation annotations[],
+            Annotation[] annotations,
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
             InputStream inputStream) throws IOException {
@@ -129,15 +140,28 @@ public abstract class AbstractJaxbElementProvider extends AbstractJaxbProvider<J
         }
     }
 
-    protected abstract JAXBElement<?> readFrom(Class<?> type, MediaType mediaType, Unmarshaller u, InputStream entityStream)
-            throws JAXBException;
+    /**
+     * Read JAXB element from an entity stream.
+     *
+     * @param type         the type that is to be read from the entity stream.
+     * @param mediaType    the media type of the HTTP entity.
+     * @param unmarshaller JAXB unmarshaller to be used.
+     * @param entityStream the {@link InputStream} of the HTTP entity. The
+     *                     caller is responsible for ensuring that the input stream ends when the
+     *                     entity has been consumed. The implementation should not close the input
+     *                     stream.
+     * @return JAXB element representing the entity.
+     * @throws JAXBException in case entity unmarshalling fails.
+     */
+    protected abstract JAXBElement<?> readFrom(
+            Class<?> type, MediaType mediaType, Unmarshaller unmarshaller, InputStream entityStream) throws JAXBException;
 
     @Override
     public final void writeTo(
             JAXBElement<?> t,
             Class<?> type,
             Type genericType,
-            Annotation annotations[],
+            Annotation[] annotations,
             MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders,
             OutputStream entityStream) throws IOException {
@@ -154,7 +178,22 @@ public abstract class AbstractJaxbElementProvider extends AbstractJaxbProvider<J
         }
     }
 
-    protected abstract void writeTo(JAXBElement<?> t, MediaType mediaType, Charset c,
-                                    Marshaller m, OutputStream entityStream)
-            throws JAXBException;
+    /**
+     * Write JAXB element to an entity stream.
+     *
+     * @param element      JAXB element to be written to an entity stream.
+     * @param mediaType    the media type of the HTTP entity.
+     * @param charset      character set to be used.
+     * @param marshaller   JAXB unmarshaller to be used.
+     * @param entityStream the {@link InputStream} of the HTTP entity. The
+     *                     caller is responsible for ensuring that the input stream ends when the
+     *                     entity has been consumed. The implementation should not close the input
+     *                     stream.
+     * @throws JAXBException in case entity marshalling fails.
+     */
+    protected abstract void writeTo(JAXBElement<?> element,
+                                    MediaType mediaType,
+                                    Charset charset,
+                                    Marshaller marshaller,
+                                    OutputStream entityStream) throws JAXBException;
 }
