@@ -54,7 +54,7 @@ import javax.net.ssl.SSLContext;
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.spi.Container;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -250,7 +250,7 @@ public final class JdkHttpServerFactory {
         }
 
         final int port = (uri.getPort() == -1)
-                ? (isHttp ? ConfigHelper.DEFAULT_HTTP_PORT : ConfigHelper.DEFAULT_HTTPS_PORT)
+                ? (isHttp ? Container.DEFAULT_HTTP_PORT : Container.DEFAULT_HTTPS_PORT)
                 : uri.getPort();
 
         final HttpServer server;

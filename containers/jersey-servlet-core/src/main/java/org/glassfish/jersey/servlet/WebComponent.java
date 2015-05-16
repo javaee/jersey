@@ -89,8 +89,8 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.BackgroundSchedulerLiteral;
 import org.glassfish.jersey.server.internal.InternalServerProperties;
-import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.PersistenceUnitBinder;
@@ -185,7 +185,8 @@ public class WebComponent {
         private final Map<String, Object> applicationProperties;
 
         /**
-         * Create binder for {@link WebComponent} passing a map of properties to determine whether certain features are allowed or
+         * Create binder for {@link WebComponent} passing a map of properties to determine whether certain features are allowed
+         * or
          * not.
          *
          * @param applicationProperties map of properties to determine whether certain features are allowed or not.
@@ -338,13 +339,13 @@ public class WebComponent {
         this.appHandler = new ApplicationHandler(resourceConfig, webComponentBinder, locator);
 
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
-        this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig)
+        this.forwardOn404 = webConfig.getConfigType() == WebConfig.ConfigType.FilterConfig
                 && resourceConfig.isProperty(ServletProperties.FILTER_FORWARD_ON_404);
         this.queryParamsAsFormParams = !resourceConfig.isProperty(ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED);
         this.configSetStatusOverSendError = ServerProperties.getValue(resourceConfig.getProperties(),
                 ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, false, Boolean.class);
         this.backgroundTaskScheduler = appHandler.getServiceLocator()
-                .getService(ScheduledExecutorService.class, new RuntimeExecutorsBinder.BackgroundSchedulerLiteral());
+                .getService(ScheduledExecutorService.class, BackgroundSchedulerLiteral.INSTANCE);
     }
 
     /**
@@ -514,7 +515,7 @@ public class WebComponent {
      * @throws ServletException if an error has occurred.
      */
     private static void configure(final ResourceConfig resourceConfig) throws ServletException {
-        final ServletContainerProvider[] allServletContainerProviders = //TODO check if META-INF/services lookup is enabled
+        final ServletContainerProvider[] allServletContainerProviders =
                 ServletContainerProviderFactory.getAllServletContainerProviders();
         for (final ServletContainerProvider servletContainerProvider : allServletContainerProviders) {
             servletContainerProvider.configure(resourceConfig);
@@ -524,7 +525,7 @@ public class WebComponent {
     /**
      * Copy request headers present in {@code request} into {@code requestContext} ignoring {@code null} values.
      *
-     * @param request http servlet request to copy headers from.
+     * @param request        http servlet request to copy headers from.
      * @param requestContext container request to copy headers to.
      */
     @SuppressWarnings("unchecked")
@@ -565,7 +566,7 @@ public class WebComponent {
      * {@value org.glassfish.jersey.server.internal.InternalServerProperties#FORM_DECODED_PROPERTY} property (as {@link Form}
      * instance).
      *
-     * @param servletRequest http servlet request to extract params from.
+     * @param servletRequest   http servlet request to extract params from.
      * @param containerRequest container request to put {@link Form} property to.
      */
     private void filterFormParameters(final HttpServletRequest servletRequest, final ContainerRequest containerRequest) {
@@ -610,7 +611,7 @@ public class WebComponent {
      * From given list of values remove values that represents values of query params of the same name as the processed form
      * parameter.
      *
-     * @param name name of form/query parameter.
+     * @param name   name of form/query parameter.
      * @param values values of form/query parameter.
      * @param params collection of unprocessed query parameters.
      * @return list of form param values for given name without values of query param of the same name.

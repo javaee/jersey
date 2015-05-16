@@ -39,40 +39,52 @@
  */
 package org.glassfish.jersey.tests.e2e;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import org.glassfish.jersey.client.ClientAsyncExecutor;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ManagedAsync;
+import org.glassfish.jersey.server.ManagedAsyncExecutor;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.RequestExecutorProvider;
+import org.glassfish.jersey.spi.ExecutorServiceProvider;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 import jersey.repackaged.com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.util.concurrent.ForwardingExecutorService;
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * {@link org.glassfish.jersey.spi.RequestExecutorProvider} E2E tests.
+ * {@link org.glassfish.jersey.spi.ExecutorServiceProvider} E2E tests.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class RequestExecutorProviderTest extends JerseyTest {
+public class ExecutorServiceProviderTest extends JerseyTest {
+
     @Path("resource")
     @Produces("text/plain")
-    public static class Resource {
+    public static class TestResourceA {
+
         @GET
         public String getSync() {
             return "resource";
@@ -82,40 +94,109 @@ public class RequestExecutorProviderTest extends JerseyTest {
         @Path("async")
         @ManagedAsync
         public String getAsync() {
-            return "async-resource";
+            return "async-resource-" + ExecutorServiceProviderTest.getResponseOnThread();
         }
     }
 
-    public static class CustomExecutorProvider implements RequestExecutorProvider {
+    // A separate resource class for the custom-async sub-path to ensure that
+    // the named ExecutorService injection is only performed for the "/resource/custom-async" path.
+    @Path("resource")
+    @Produces("text/plain")
+    public static class TestResourceB {
+
+        @Inject
+        @Named("custom")
+        ExecutorService executorService;
+
+        @GET
+        @Path("custom-async")
+        public void getCustomAsync(@Suspended final AsyncResponse asyncResponse) {
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    asyncResponse.resume("custom-async-resource-" + ExecutorServiceProviderTest.getResponseOnThread());
+                }
+            });
+        }
+    }
+
+    static String getResponseOnThread() {
+        final String threadName = Thread.currentThread().getName();
+        if (threadName.startsWith("async-request-")) {
+            return "passed";
+        } else {
+            return "error - unexpected custom thread name: " + threadName;
+        }
+    }
+
+    @ClientAsyncExecutor
+    @ManagedAsyncExecutor
+    @Named("custom")
+    public static class CustomExecutorProvider implements ExecutorServiceProvider {
+
         private final Set<ExecutorService> executors = Sets.newIdentityHashSet();
         private volatile int executorCreationCount = 0;
         private volatile int executorReleaseCount = 0;
 
-        @Override
-        public ExecutorService getRequestingExecutor() {
-            executorCreationCount++;
-            final ExecutorService executor =
-                    Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
-                            .setNameFormat("async-request-%d")
-                            .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
-                            .build());
-
-            executors.add(executor);
-
-            return executor;
-        }
-
-        @Override
-        public void releaseRequestingExecutor(ExecutorService executor) {
-            executorReleaseCount++;
-            executors.remove(executor);
-            executor.shutdownNow();
-        }
-
         public void reset() {
+            for (ExecutorService executor : executors) {
+                executor.shutdownNow();
+            }
+
+            executors.clear();
             executorCreationCount = 0;
             executorReleaseCount = 0;
-            executors.clear();
+        }
+
+        @Override
+        public ExecutorService getExecutorService() {
+            return new CustomExecutorService();
+        }
+
+        @Override
+        public void dispose(final ExecutorService executorService) {
+            executorService.shutdownNow();
+        }
+
+        private class CustomExecutorService extends ForwardingExecutorService {
+
+            private final ExecutorService delegate;
+            private final AtomicBoolean isCleanedUp;
+
+            public CustomExecutorService() {
+                this.isCleanedUp = new AtomicBoolean(false);
+                this.delegate = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
+                        .setNameFormat("async-request-%d")
+                        .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                        .build());
+
+                executorCreationCount++;
+                executors.add(this);
+            }
+
+            @Override
+            protected ExecutorService delegate() {
+                return delegate;
+            }
+
+            @Override
+            public void shutdown() {
+                tryCleanUp();
+                super.shutdown();
+            }
+
+            @Override
+            public List<Runnable> shutdownNow() {
+                tryCleanUp();
+                return super.shutdownNow();
+            }
+
+            private void tryCleanUp() {
+                if (isCleanedUp.compareAndSet(false, true)) {
+                    executors.remove(this);
+                    executorReleaseCount++;
+                }
+            }
         }
     }
 
@@ -123,9 +204,9 @@ public class RequestExecutorProviderTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-//        enable(TestProperties.LOG_TRAFFIC);
-//        enable(TestProperties.DUMP_ENTITY);
-        return new ResourceConfig(Resource.class).register(serverExecutorProvider);
+        // enable(TestProperties.LOG_TRAFFIC);
+        // enable(TestProperties.DUMP_ENTITY);
+        return new ResourceConfig(TestResourceA.class, TestResourceB.class).register(serverExecutorProvider);
     }
 
     /**
@@ -134,7 +215,7 @@ public class RequestExecutorProviderTest extends JerseyTest {
      * @throws Exception in case of a test error.
      */
     @Test
-    public void testCustomClientExecutorsReleasing() throws Exception {
+    public void testCustomClientExecutorsInjectionAndReleasing() throws Exception {
         final CustomExecutorProvider provider = new CustomExecutorProvider();
         Client client = ClientBuilder.newClient().register(provider);
 
@@ -161,7 +242,6 @@ public class RequestExecutorProviderTest extends JerseyTest {
         assertEquals("Unexpected number of client executors stored in the set.",
                 1, provider.executors.size());
 
-
         client.close();
 
         // the created executor needs to be released by now; no more executors should be created
@@ -177,7 +257,7 @@ public class RequestExecutorProviderTest extends JerseyTest {
      * @throws Exception in case of a test error.
      */
     @Test
-    public void testCustomServerExecutorsReleasing() throws Exception {
+    public void testCustomServerExecutorsInjectionAndReleasing() throws Exception {
         // reset server executor statistics to avoid data pollution from other test methods
         serverExecutorProvider.reset();
 
@@ -189,18 +269,18 @@ public class RequestExecutorProviderTest extends JerseyTest {
         // no executors should be created or released at this point yet
         assertEquals("Unexpected number of created server executors", 0, serverExecutorProvider.executorCreationCount);
         assertEquals("Unexpected number of released server executors", 0, serverExecutorProvider.executorReleaseCount);
-        assertEquals("Unexpected number of client executors stored in the set.",
+        assertEquals("Unexpected number of server executors stored in the set.",
                 0, serverExecutorProvider.executors.size());
 
         response = target("resource/async").request().get();
 
         assertEquals(200, response.getStatus());
-        assertEquals("async-resource", response.readEntity(String.class));
+        assertEquals("async-resource-passed", response.readEntity(String.class));
 
         // single executor should be created but not released at this point yet
         assertEquals("Unexpected number of created server executors", 1, serverExecutorProvider.executorCreationCount);
         assertEquals("Unexpected number of released server executors", 0, serverExecutorProvider.executorReleaseCount);
-        assertEquals("Unexpected number of client executors stored in the set.",
+        assertEquals("Unexpected number of server executors stored in the set.",
                 1, serverExecutorProvider.executors.size());
 
         tearDown(); // stopping test container
@@ -208,9 +288,40 @@ public class RequestExecutorProviderTest extends JerseyTest {
         // the created executor needs to be released by now; no more executors should be created
         assertEquals("Unexpected number of created server executors", 1, serverExecutorProvider.executorCreationCount);
         assertEquals("Unexpected number of released server executors", 1, serverExecutorProvider.executorReleaseCount);
-        assertEquals("Unexpected number of client executors stored in the set.",
+        assertEquals("Unexpected number of server executors stored in the set.",
                 0, serverExecutorProvider.executors.size());
 
-        setUp(); // re-starting test container to ensure proper tearDown.
+        setUp(); // re-starting test container to ensure proper post-test tearDown.
+    }
+
+    /**
+     * Test named custom executor injection and release mechanism.
+     *
+     * @throws Exception in case of a test error.
+     */
+    @Test
+    public void testCustomNamedServerExecutorsInjectionAndReleasing() throws Exception {
+        serverExecutorProvider.reset();
+
+        Response response = target("resource/custom-async").request().get();
+
+        assertEquals(200, response.getStatus());
+        assertEquals("custom-async-resource-passed", response.readEntity(String.class));
+
+        // single executor should be created but not released at this point yet
+        assertEquals("Unexpected number of created server executors", 1, serverExecutorProvider.executorCreationCount);
+        assertEquals("Unexpected number of released server executors", 0, serverExecutorProvider.executorReleaseCount);
+        assertEquals("Unexpected number of server executors stored in the set.",
+                1, serverExecutorProvider.executors.size());
+
+        tearDown(); // stopping test container
+
+        // the created executor needs to be released by now; no more executors should be created
+        assertEquals("Unexpected number of created server executors", 1, serverExecutorProvider.executorCreationCount);
+        assertEquals("Unexpected number of released server executors", 1, serverExecutorProvider.executorReleaseCount);
+        assertEquals("Unexpected number of server executors stored in the set.",
+                0, serverExecutorProvider.executors.size());
+
+        setUp(); // re-starting test container to ensure proper post-test tearDown.
     }
 }

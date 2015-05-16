@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,50 +37,28 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.server;
 
-package org.glassfish.jersey.server.model.internal;
-
-import javax.ws.rs.Path;
+import org.glassfish.hk2.api.AnnotationLiteral;
 
 /**
- * Common model helper methods.
+ * {@link BackgroundScheduler} annotation literal.
+ * <p>
+ * This class provides a {@link #INSTANCE constant instance} of the {@code @BackgroundScheduler} annotation to be used
+ * in method calls that require use of annotation instances.
+ * </p>
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
- * @author Constantino Cronemberger (ccronemberger at yahoo.com.br)
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ * @since 2.18
  */
-public final class ModelHelper {
+@SuppressWarnings("ClassExplicitlyAnnotation")
+public final class BackgroundSchedulerLiteral extends AnnotationLiteral<BackgroundScheduler> implements BackgroundScheduler {
 
     /**
-     * Get the class in the provided resource class ancestor hierarchy that
-     * is actually annotated with the {@link javax.ws.rs.Path &#64;Path} annotation.
-     *
-     * @param resourceClass resource class.
-     * @return resource class or it's ancestor that is annotated with the {@link javax.ws.rs.Path &#64;Path}
-     *         annotation.
+     * {@code BackgroundScheduler} annotation instance.
      */
-    public static Class<?> getAnnotatedResourceClass(Class<?> resourceClass) {
+    public static final BackgroundScheduler INSTANCE = new BackgroundSchedulerLiteral();
 
-        // traverse the class hierarchy to find the annotation
-        Class<?> cls = resourceClass;
-        do {
-            if (cls.isAnnotationPresent(Path.class)) {
-                return cls;
-            }
-
-            for (Class<?> i : cls.getInterfaces()) {
-                if (i.isAnnotationPresent(Path.class)) {
-                    return i;
-                }
-            }
-        } while ((cls = cls.getSuperclass()) != null);
-
-        return resourceClass;
-    }
-
-    /**
-     * Prevent instantiation.
-     */
-    private ModelHelper() {
-        throw new AssertionError("Instantiation not allowed.");
+    private BackgroundSchedulerLiteral() {
     }
 }

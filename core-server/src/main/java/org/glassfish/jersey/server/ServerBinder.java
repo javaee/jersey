@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,7 +62,6 @@ import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
-import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
 import org.glassfish.jersey.server.internal.process.ServerProcessingBinder;
@@ -105,7 +104,6 @@ class ServerBinder extends AbstractBinder {
                 new JaxrsProviders.Binder(),
                 new ProcessingProviders.Binder(),
                 new ResourceModelBinder(),
-                new RuntimeExecutorsBinder(),
                 new ServiceFinderBinder<>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
                 new JerseyResourceContext.Binder(),
                 new ServiceFinderBinder<>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER),

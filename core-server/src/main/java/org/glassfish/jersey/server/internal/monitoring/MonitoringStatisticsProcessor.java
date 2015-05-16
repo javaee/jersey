@@ -55,8 +55,8 @@ import javax.ws.rs.core.Configuration;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.BackgroundSchedulerLiteral;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
@@ -97,8 +97,8 @@ final class MonitoringStatisticsProcessor {
         final ResourceModel resourceModel = serviceLocator.getService(ExtendedResourceContext.class).getResourceModel();
         this.statisticsBuilder = new MonitoringStatisticsImpl.Builder(resourceModel);
         this.statisticsCallbackList = serviceLocator.getAllServices(MonitoringStatisticsListener.class);
-        this.scheduler = serviceLocator.getService(ScheduledExecutorService.class,
-                new RuntimeExecutorsBinder.BackgroundSchedulerLiteral());
+        this.scheduler =
+                serviceLocator.getService(ScheduledExecutorService.class, BackgroundSchedulerLiteral.INSTANCE);
         this.interval = PropertiesHelper.getValue(serviceLocator.getService(Configuration.class).getProperties(),
                 ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL, DEFAULT_INTERVAL,
                 Collections.<String, String>emptyMap());

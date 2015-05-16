@@ -70,10 +70,8 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
@@ -323,7 +321,6 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     }
 
     private volatile ApplicationHandler appHandler;
-    private volatile ContainerLifecycleListener containerListener;
 
     /**
      * Create a new Grizzly HTTP container.
@@ -332,7 +329,6 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      */
     GrizzlyHttpContainer(final Application application) {
         this.appHandler = new ApplicationHandler(application, new GrizzlyBinder());
-        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
         cacheConfigSetStatusOverSendError();
     }
 
@@ -340,19 +336,17 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      * Create a new Grizzly HTTP container.
      *
      * @param application   JAX-RS / Jersey application to be deployed on Grizzly HTTP container.
-     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to becaome a parent of the locator used
-     *                      in {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param parentLocator parent HK2 service locator.
      */
     GrizzlyHttpContainer(final Application application, final ServiceLocator parentLocator) {
         this.appHandler = new ApplicationHandler(application, new GrizzlyBinder(), parentLocator);
-        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
         cacheConfigSetStatusOverSendError();
     }
 
     @Override
     public void start() {
         super.start();
-        containerListener.onStartup(this);
+        appHandler.onStartup(this);
     }
 
     @Override
@@ -396,11 +390,11 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
     @Override
     public void reload(final ResourceConfig configuration) {
-        this.containerListener.onShutdown(this);
+        appHandler.onShutdown(this);
+
         appHandler = new ApplicationHandler(configuration, new GrizzlyBinder());
-        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
-        containerListener.onReload(this);
-        containerListener.onStartup(this);
+        appHandler.onReload(this);
+        appHandler.onStartup(this);
         cacheConfigSetStatusOverSendError();
     }
 
@@ -412,7 +406,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     @Override
     public void destroy() {
         super.destroy();
-        containerListener.onShutdown(this);
+        appHandler.onShutdown(this);
         appHandler = null;
     }
 

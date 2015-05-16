@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,34 +37,29 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.client;
 
-package org.glassfish.jersey.server.gae.internal;
-
-import org.glassfish.jersey.spi.RuntimeThreadProvider;
-
-import java.util.concurrent.ThreadFactory;
-import java.util.logging.Logger;
+import org.glassfish.hk2.api.AnnotationLiteral;
 
 /**
- * This class implements Jersey's SPI {@link RuntimeThreadProvider} to get {@link ThreadFactory} instance by
- * GAE specific {@code ThreadFactory} provider - {@link com.google.appengine.api.ThreadManager}.
+ * {@link org.glassfish.jersey.client.ClientAsyncExecutor} annotation literal.
+ * <p>
+ * This class provides a {@link #INSTANCE constant instance} of the {@code @ClientAsyncExecutor} annotation to be used
+ * in method calls that require use of annotation instances.
+ * </p>
  *
- * @author Libor Kramolis (libor.kramolis at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ * @since 2.18
  */
-public class GaeRuntimeThreadProvider implements RuntimeThreadProvider {
+@SuppressWarnings("ClassExplicitlyAnnotation")
+public final class ClientAsyncExecutorLiteral extends AnnotationLiteral<ClientAsyncExecutor> implements ClientAsyncExecutor {
 
-    private static final Logger LOGGER = Logger.getLogger(GaeRuntimeThreadProvider.class.getName());
+    /**
+     * An {@link org.glassfish.jersey.client.ClientAsyncExecutor} annotation instance.
+     */
+    public static final ClientAsyncExecutor INSTANCE = new ClientAsyncExecutorLiteral();
 
-    @Override
-    public ThreadFactory getRequestThreadFactory() {
-        LOGGER.entering(this.getClass().getName(), "getRequestThreadFactory");
-        return com.google.appengine.api.ThreadManager.currentRequestThreadFactory();
+    private ClientAsyncExecutorLiteral() {
+        // prevents instantiation from the outside.
     }
-
-    @Override
-    public ThreadFactory getBackgroundThreadFactory() {
-        LOGGER.entering(this.getClass().getName(), "getBackgroundThreadFactory");
-        return com.google.appengine.api.ThreadManager.backgroundThreadFactory();
-    }
-
 }

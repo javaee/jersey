@@ -54,7 +54,7 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
+import org.glassfish.jersey.internal.inject.CustomAnnotationLiteral;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
@@ -152,7 +152,7 @@ public class JsonEntityFilteringClientTest extends JerseyTest {
                 .post(Entity.entity(
                                 OneFilteringOnClassEntity.INSTANCE,
                                 MediaType.APPLICATION_JSON_TYPE,
-                                new Annotation[] {new CustomAnnotationImpl()}),
+                                new Annotation[] {CustomAnnotationLiteral.INSTANCE}),
                         OneFilteringOnClassEntity.class);
 
         _testEmptyEntity(entity);
@@ -170,7 +170,7 @@ public class JsonEntityFilteringClientTest extends JerseyTest {
 
     @Test
     public void testConfigurationMultipleViews() throws Exception {
-        _testPrimaryViewEntity(retrieveEntity(PrimaryDetailedView.Factory.get(), new CustomAnnotationImpl()));
+        _testPrimaryViewEntity(retrieveEntity(PrimaryDetailedView.Factory.get(), CustomAnnotationLiteral.INSTANCE));
     }
 
     private OneFilteringOnClassEntity retrieveEntity(final Annotation... annotations) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,8 +37,36 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.client;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import javax.inject.Qualifier;
 
 /**
- * Internal implementation of Google App Engine integration support.
+ * Injection qualifier that can be used to inject an {@link java.util.concurrent.ExecutorService}
+ * instance used by Jersey client runtime to execute {@link javax.ws.rs.client.Invocation.Builder#async() asynchronous}
+ * client requests.
+ * <p>
+ * The asynchronous client request executor service instance injected using this injection qualifier can be customized
+ * by registering a custom {@link org.glassfish.jersey.spi.ExecutorServiceProvider} implementation that is itself annotated
+ * with the {@code &#64;ClientAsyncExecutor} annotation.
+ * </p>
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ * @see org.glassfish.jersey.client.ClientAsyncExecutorLiteral
+ * @since 2.18
  */
-package org.glassfish.jersey.server.gae.internal;
+@Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@Qualifier
+public @interface ClientAsyncExecutor {
+
+}

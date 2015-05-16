@@ -57,6 +57,9 @@ import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -83,7 +86,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
     private final ClientConfig config;
 
     private final RequestScope requestScope;
-    private final ClientAsyncExecutorFactory asyncExecutorsFactory;
+    private final LazyValue<ExecutorService> asyncRequestExecutor;
 
     private final ServiceLocator locator;
     private final Iterable<ClientLifecycleListener> lifecycleListeners;
@@ -113,9 +116,12 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
 
         this.requestScope = locator.getService(RequestScope.class);
 
-        int asyncThreadPoolSize = ClientProperties.getValue(config.getProperties(), ClientProperties.ASYNC_THREADPOOL_SIZE, 0);
-        asyncThreadPoolSize = (asyncThreadPoolSize < 0) ? 0 : asyncThreadPoolSize;
-        this.asyncExecutorsFactory = new ClientAsyncExecutorFactory(locator, asyncThreadPoolSize);
+        this.asyncRequestExecutor = Values.lazy(new Value<ExecutorService>() {
+            @Override
+            public ExecutorService get() {
+                return locator.getService(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE);
+            }
+        });
 
         this.locator = locator;
 
@@ -141,7 +147,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
      * @param callback asynchronous response callback.
      */
     public void submit(final ClientRequest request, final ResponseCallback callback) {
-        submit(asyncExecutorsFactory.getExecutor(), new Runnable() {
+        submit(asyncRequestExecutor.get(), new Runnable() {
 
             @Override
             public void run() {
@@ -285,8 +291,12 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
      * or via JerseyClient onShutdown hook, whatever comes first.
      */
     @Override
-    protected void finalize() {
-        close();
+    protected void finalize() throws Throwable {
+        try {
+            close();
+        } finally {
+            super.finalize();
+        }
     }
 
     @Override
@@ -308,11 +318,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
                 try {
                     connector.close();
                 } finally {
-                    try {
-                        asyncExecutorsFactory.close();
-                    } finally {
-                        Injections.shutdownLocator(locator);
-                    }
+                    Injections.shutdownLocator(locator);
                 }
             }
         }
