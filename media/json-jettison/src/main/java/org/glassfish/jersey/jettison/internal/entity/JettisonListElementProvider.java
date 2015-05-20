@@ -119,8 +119,8 @@ public class JettisonListElementProvider extends AbstractCollectionJaxbProvider 
     }
 
     @Override
-    public final void writeList(Class<?> elementType, Collection<?> t, MediaType mediaType, Charset c, Marshaller m,
-                                OutputStream entityStream) throws JAXBException, IOException {
+    public final void writeCollection(Class<?> elementType, Collection<?> t, MediaType mediaType, Charset c, Marshaller m,
+                                      OutputStream entityStream) throws JAXBException, IOException {
         final OutputStreamWriter osw = new OutputStreamWriter(entityStream, c);
 
         JettisonConfig origJsonConfig = JettisonConfig.DEFAULT;

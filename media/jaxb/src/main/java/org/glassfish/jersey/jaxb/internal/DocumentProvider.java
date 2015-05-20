@@ -62,10 +62,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider;
+
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
-
-import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider;
 
 /**
  * Provider for marshalling/un-marshalling {@link Document XML document} instances.
@@ -92,7 +92,7 @@ public final class DocumentProvider extends AbstractMessageReaderWriterProvider<
     public Document readFrom(
             Class<Document> type,
             Type genericType,
-            Annotation annotations[],
+            Annotation[] annotations,
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
             InputStream entityStream) throws IOException {
@@ -115,7 +115,7 @@ public final class DocumentProvider extends AbstractMessageReaderWriterProvider<
             Document t,
             Class<?> type,
             Type genericType,
-            Annotation annotations[],
+            Annotation[] annotations,
             MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders,
             OutputStream entityStream) throws IOException {

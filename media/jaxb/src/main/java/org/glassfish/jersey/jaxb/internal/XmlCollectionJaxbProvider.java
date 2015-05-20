@@ -143,9 +143,9 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
     }
 
     @Override
-    public final void writeList(Class<?> elementType, Collection<?> t,
-                                MediaType mediaType, Charset c,
-                                Marshaller m, OutputStream entityStream)
+    public final void writeCollection(Class<?> elementType, Collection<?> t,
+                                      MediaType mediaType, Charset c,
+                                      Marshaller m, OutputStream entityStream)
             throws JAXBException, IOException {
         final String rootElement = getRootElementName(elementType);
         final String cName = c.name();

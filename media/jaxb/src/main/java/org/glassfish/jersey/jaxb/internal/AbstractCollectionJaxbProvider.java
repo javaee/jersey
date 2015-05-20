@@ -77,18 +77,10 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.EntityInputStream;
 
 /**
- * Base class for implementing JAXB collection readers and writers.
- *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- */
-
-/**
- * An abstract provider for <code>T[]</code>, <code>Collection&lt;T&gt;</code>,
+ * An abstract provider for {@code T[]}, {@code Collection&lt;T&gt;},
  * and its subtypes as long as they have the public default constructor or
  * are interfaces implemented by one the following classes:
  * <ul>
@@ -98,26 +90,30 @@ import org.glassfish.jersey.message.internal.EntityInputStream;
  * <li>{@link TreeSet}</li>
  * <li>{@link Stack}</li>
  * </ul>
- * <code>T</code> must be a JAXB type annotated with
- * {@link XmlRootElement}.
+ * {@code T} must be a JAXB type annotated with {@link XmlRootElement}.
  * <p>
  * Implementing classes may extend this class to provide specific marshalling
  * and unmarshalling behaviour.
+ * </p>
  * <p>
  * When unmarshalling a {@link UnmarshalException} will result in a
  * {@link WebApplicationException} being thrown with a status of 400
  * (Client error), and a {@link JAXBException} will result in a
  * {@link WebApplicationException} being thrown with a status of 500
  * (Internal Server error).
+ * </p>
  * <p>
  * When marshalling a {@link JAXBException} will result in a
  * {@link WebApplicationException} being thrown with a status of 500
  * (Internal Server error).
+ * </p>
  *
  * @author Paul Sandoz
  * @author Martin Matula
  */
 public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvider<Object> {
+
+    private static final Logger LOGGER = Logger.getLogger(AbstractCollectionJaxbProvider.class.getName());
 
     private static final Class<?>[] DEFAULT_IMPLS = new Class[] {
             ArrayList.class,
@@ -156,24 +152,20 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
     }
 
     @Override
-    public boolean isReadable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
+    public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         if (verifyCollectionSubclass(type)) {
             return verifyGenericType(genericType) && isSupported(mediaType);
-        } else if (type.isArray()) {
-            return verifyArrayType(type) && isSupported(mediaType);
         } else {
-            return false;
+            return type.isArray() && verifyArrayType(type) && isSupported(mediaType);
         }
     }
 
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
+    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         if (Collection.class.isAssignableFrom(type)) {
             return verifyGenericType(genericType) && isSupported(mediaType);
-        } else if (type.isArray()) {
-            return verifyArrayType(type) && isSupported(mediaType);
         } else {
-            return false;
+            return type.isArray() && verifyArrayType(type) && isSupported(mediaType);
         }
     }
 
@@ -188,9 +180,9 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
                 return !Modifier.isAbstract(type.getModifiers()) && Modifier.isPublic(type.getConstructor().getModifiers());
             }
         } catch (NoSuchMethodException ex) {
-            Logger.getLogger(AbstractCollectionJaxbProvider.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.WARNING, LocalizationMessages.NO_PARAM_CONSTRUCTOR_MISSING(type.getName()), ex);
         } catch (SecurityException ex) {
-            Logger.getLogger(AbstractCollectionJaxbProvider.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.WARNING, LocalizationMessages.UNABLE_TO_ACCESS_METHODS_OF_CLASS(type.getName()), ex);
         }
         return false;
     }
@@ -259,7 +251,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
             Object t,
             Class<?> type,
             Type genericType,
-            Annotation annotations[],
+            Annotation[] annotations,
             MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders,
             OutputStream entityStream) throws IOException {
@@ -277,7 +269,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
                 m.setProperty(Marshaller.JAXB_ENCODING, charsetName);
             }
             setHeader(m, annotations);
-            writeList(elementType, c, mediaType, charset, m, entityStream);
+            writeCollection(elementType, c, mediaType, charset, m, entityStream);
         } catch (JAXBException ex) {
             throw new InternalServerErrorException(ex);
         }
@@ -287,17 +279,17 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
      * Write a collection of JAXB objects as child elements of the root element.
      *
      * @param elementType  the element type in the collection.
-     * @param t            the collecton to marshall
+     * @param t            the collection to marshall
      * @param mediaType    the media type
      * @param c            the charset
      * @param m            the marshaller
      * @param entityStream the output stream to marshall the collection
-     * @throws javax.xml.bind.JAXBException
-     * @throws IOException
+     * @throws javax.xml.bind.JAXBException in case the marshalling of element collection fails.
+     * @throws IOException                  in case of any other I/O error while marshalling the collection of JAXB objects.
      */
-    public abstract void writeList(Class<?> elementType, Collection<?> t,
-                                   MediaType mediaType, Charset c,
-                                   Marshaller m, OutputStream entityStream)
+    public abstract void writeCollection(Class<?> elementType, Collection<?> t,
+                                         MediaType mediaType, Charset c,
+                                         Marshaller m, OutputStream entityStream)
             throws JAXBException, IOException;
 
     @Override
@@ -305,7 +297,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
     public final Object readFrom(
             Class<Object> type,
             Type genericType,
-            Annotation annotations[],
+            Annotation[] annotations,
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
             InputStream inputStream) throws IOException {
@@ -334,9 +326,11 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
                                 l = (Collection<Object>) c.newInstance();
                                 break;
                             } catch (InstantiationException ex) {
-                                Logger.getLogger(AbstractCollectionJaxbProvider.class.getName()).log(Level.SEVERE, null, ex);
+                                LOGGER.log(Level.WARNING, LocalizationMessages.UNABLE_TO_INSTANTIATE_CLASS(c.getName()), ex);
                             } catch (IllegalAccessException ex) {
-                                Logger.getLogger(AbstractCollectionJaxbProvider.class.getName()).log(Level.SEVERE, null, ex);
+                                LOGGER.log(Level.WARNING, LocalizationMessages.UNABLE_TO_INSTANTIATE_CLASS(c.getName()), ex);
+                            } catch (SecurityException ex) {
+                                LOGGER.log(Level.WARNING, LocalizationMessages.UNABLE_TO_INSTANTIATE_CLASS(c.getName()), ex);
                             }
                         }
                     }
@@ -399,15 +393,14 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
     }
 
     /**
-     * Get the XMLStreamReader for unmarshalling.
+     * Get the {@link XMLStreamReader} for unmarshalling.
      *
      * @param elementType  the individual element type.
      * @param mediaType    the media type.
      * @param unmarshaller the unmarshaller as a carrier of possible config options.
      * @param entityStream the input stream.
      * @return the XMLStreamReader.
-     * @throws javax.xml.stream.XMLStreamException
-     *
+     * @throws javax.xml.stream.XMLStreamException in case {@code XMLStreamReader} retrieval fails.
      */
     protected abstract XMLStreamReader getXMLStreamReader(Class<?> elementType, MediaType mediaType, Unmarshaller unmarshaller,
                                                           InputStream entityStream)
@@ -416,7 +409,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
     protected static Class getElementClass(Class<?> type, Type genericType) {
         Type ta;
         if (genericType instanceof ParameterizedType) {
-            // List case
+            // Collection case
             ta = ((ParameterizedType) genericType).getActualTypeArguments()[0];
         } else if (genericType instanceof GenericArrayType) {
             // GenericArray case
@@ -438,6 +431,12 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
         return name.replace("$", "_");
     }
 
+    /**
+     * Construct the name of the root element from it's Java type name.
+     *
+     * @param elementType element Java type.
+     * @return constructed root element name for a given element Java type.
+     */
     protected final String getRootElementName(Class<?> elementType) {
         if (isXmlRootElementProcessing()) {
             return convertToXmlName(inflector.pluralize(inflector.demodulize(getElementName(elementType))));
@@ -446,10 +445,22 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
         }
     }
 
-    protected static final String getElementName(Class<?> elementType) {
+    /**
+     * Get the element name for a given Java type.
+     * <p>
+     * In case the element is annotated with a {@link javax.xml.bind.annotation.XmlRootElement} annotation
+     * and the {@link javax.xml.bind.annotation.XmlRootElement#name() specified element name} is not default,
+     * the method returns the specified element name in the annotation. Otherwise, the method returns the name of
+     * the element class instead.
+     * </p>
+     *
+     * @param elementType element Java type.
+     * @return element name for a given element Java type.
+     */
+    protected static String getElementName(Class<?> elementType) {
         String name = elementType.getName();
         XmlRootElement xre = elementType.getAnnotation(XmlRootElement.class);
-        if (xre != null && !xre.name().equals("##default")) {
+        if (xre != null && !"##default".equals(xre.name())) {
             name = xre.name();
         }
         return name;
