@@ -359,7 +359,8 @@ public class WebComponent {
      * @param servletResponse the {@link javax.servlet.http.HttpServletResponse} object that
      *                        contains the response the Web component returns
      *                        to the client.
-     * @return lazily initialized response status code {@link Value value provider}.
+     * @return lazily initialized response status code {@link Value value provider}. If not resolved in the moment of call to
+     * {@link Value#get()}, {@code -1} is returned.
      * @throws java.io.IOException            if an input or output error occurs
      *                                        while the Web component is handling the
      *                                        HTTP request.
@@ -404,7 +405,7 @@ public class WebComponent {
             return Values.lazy(new Value<Integer>() {
                 @Override
                 public Integer get() {
-                    return responseWriter.getResponseStatus();
+                    return responseWriter.responseContextResolved() ? responseWriter.getResponseStatus() : -1;
                 }
             });
         } catch (final HeaderValueException hve) {

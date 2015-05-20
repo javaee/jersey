@@ -40,14 +40,9 @@
 
 package org.glassfish.jersey.tests.integration.jersey2730;
 
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.glassfish.jersey.tests.integration.async.AbstractAsyncJerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -60,23 +55,13 @@ import static org.junit.Assert.assertFalse;
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
-public class Jersey2730ITCase extends JerseyTest {
-
-    @Override
-    protected Application configure() {
-        return new ResourceConfig(TestApplication.class);
-    }
-
-    @Override
-    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
-        return new ExternalTestContainerFactory();
-    }
+public class Jersey2730ITCase extends AbstractAsyncJerseyTest {
 
     private void assertLastThreadNotStuck() {
         final boolean lastThreadGotStuck = target("exception/rpc/lastthreadstuck").request().get(boolean.class);
 
         assertFalse("Thread processing last request got stuck while processing the request for "
-                + TestExceptionResource.class.getCanonicalName(),
+                        + TestExceptionResource.class.getCanonicalName(),
                 lastThreadGotStuck);
     }
 

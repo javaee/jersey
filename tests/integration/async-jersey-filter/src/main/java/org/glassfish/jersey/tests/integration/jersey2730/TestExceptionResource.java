@@ -47,7 +47,6 @@ import javax.ws.rs.container.Suspended;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
-
 import org.glassfish.jersey.tests.integration.jersey2730.exception.MappedException;
 import org.glassfish.jersey.tests.integration.jersey2730.exception.UnmappedException;
 import org.glassfish.jersey.tests.integration.jersey2730.exception.UnmappedRuntimeException;

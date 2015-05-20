@@ -373,7 +373,8 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * @param response   the {@link javax.servlet.http.HttpServletResponse} object that
      *                   contains the response the Web component returns
      *                   to the client.
-     * @return lazily initialized response status code {@link Value value provider}.
+     * @return lazily initialized response status code {@link Value value provider}. If not resolved in the moment of call to
+     * {@link Value#get()}, {@code -1} is returned.
      * @throws IOException      if an input or output error occurs
      *                          while the Web component is handling the
      *                          HTTP request.
@@ -548,11 +549,14 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
 
         // If forwarding is configured and response is a 404 with no entity
         // body then call the next filter in the chain
-        if (webComponent.forwardOn404 && !response.isCommitted()
+
+        if (webComponent.forwardOn404
+                && !response.isCommitted()
                 // TODO when switched to servlet-api-3.0 and higher, use response.getStatus() to retrieve the status
                 // statusValue.get() forwards the call to
-                // org.glassfish.jersey.servlet.internal.ResponseWriter#getResponseContext() which may block the thread
-                // as a consequence, we must call it only if we're sure it will not block unintentionally
+                // org.glassfish.jersey.servlet.internal.ResponseWriter#getResponseContext() which may block the thread.
+                // As a consequence, we must call it only if we're sure it will not block.
+                // See Jersey2730ITCase and Jersey2812ITCase tests.
                 && statusValue.get() == Response.Status.NOT_FOUND.getStatusCode()) {
             // lets clear the response to OK before we forward to the next in the chain
             // as OK is the default set by servlet containers before filters/servlets do any wor

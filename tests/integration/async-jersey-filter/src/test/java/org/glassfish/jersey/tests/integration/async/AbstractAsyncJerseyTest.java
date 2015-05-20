@@ -37,25 +37,28 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.tests.integration.async;
 
-package org.glassfish.jersey.tests.integration.jersey2730;
-
-import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.jersey.tests.integration.jersey2730.exception.MappedExceptionMapper;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 /**
- * Jersey application for JERSEY-2730.
- *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
-@ApplicationPath("/")
-public class TestApplication extends ResourceConfig {
+public class AbstractAsyncJerseyTest extends JerseyTest {
 
-    public TestApplication() {
-        register(TestExceptionResource.class);
-        register(MappedExceptionMapper.class);
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(TestApplication.class);
+    }
+
+    @Override
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
     }
 }
