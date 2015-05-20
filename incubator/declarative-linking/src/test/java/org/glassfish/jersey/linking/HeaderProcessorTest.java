@@ -49,6 +49,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.linking.InjectLink.Extension;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
@@ -114,19 +115,19 @@ public class HeaderProcessorTest {
         }
 
         public MultivaluedMap<String, String> getPathParameters() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return new MultivaluedStringMap();
         }
 
         public MultivaluedMap<String, String> getPathParameters(boolean decode) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return new MultivaluedStringMap();
         }
 
         public MultivaluedMap<String, String> getQueryParameters() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return new MultivaluedStringMap();
         }
 
         public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return new MultivaluedStringMap();
         }
 
         public List<String> getMatchedURIs() {
