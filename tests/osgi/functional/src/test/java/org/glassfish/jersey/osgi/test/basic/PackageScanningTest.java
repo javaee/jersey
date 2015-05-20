@@ -110,7 +110,7 @@ public class PackageScanningTest {
         final ResourceConfig resourceConfig = new ResourceConfig().packages(SimpleResource.class.getPackage().getName());
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
-        _testSimpleResource(server);
+        _testScannedResources(server);
     }
 
     @Test
@@ -134,14 +134,15 @@ public class PackageScanningTest {
         }
         // END of workaround - when grizzly updated to more recent version, only the inner line of try clause should remain:
 
-        _testSimpleResource(server);
+        _testScannedResources(server);
     }
 
-    private void _testSimpleResource(final HttpServer server) throws Exception {
+    private void _testScannedResources(final HttpServer server) throws Exception {
         final Client client = ClientBuilder.newClient();
-        final String response = client.target(baseUri).path("/simple").request().get(String.class);
 
-        assertEquals("OK", response);
+        assertEquals("OK", client.target(baseUri).path("/simple").request().get(String.class));
+        // resources in subpackages aren't supported yet because the osgi recursive scanning is set to false
+//        assertEquals("sub-OK", client.target(baseUri).path("/sub-packaged").request().get(String.class));
 
         server.shutdownNow();
     }

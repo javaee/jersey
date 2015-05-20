@@ -313,7 +313,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         for (final Bundle bundle : bundleContext.getBundles()) {
             // Look for resources at the given <packagePath> and at WEB-INF/classes/<packagePath> in case a WAR is being examined.
             for (final String bundlePackagePath : new String[] {packagePath, "WEB-INF/classes/" + packagePath}) {
-                final Enumeration<URL> enumeration = findEntries(bundle, bundlePackagePath, "*", false);
+                final Enumeration<URL> enumeration = findEntries(bundle, bundlePackagePath, "*.class", false);
 
                 if (enumeration != null) {
                     while (enumeration.hasMoreElements()) {
