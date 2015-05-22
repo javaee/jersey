@@ -48,7 +48,7 @@ import java.util.NoSuchElementException;
 import java.util.Stack;
 
 import org.glassfish.jersey.internal.util.Tokenizer;
-import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 
 /**
  * A scanner that recursively scans directories and jar files.
@@ -56,7 +56,7 @@ import org.glassfish.jersey.server.ResourceFinder;
  *
  * @author Paul Sandoz
  */
-public class FilesScanner implements ResourceFinder {
+public class FilesScanner extends AbstractResourceFinderAdapter {
 
     private ResourceFinderStack resourceFinderStack = new ResourceFinderStack();
 
@@ -92,7 +92,7 @@ public class FilesScanner implements ResourceFinder {
             }
 
         } else {
-            resourceFinderStack.push(new ResourceFinder() {
+            resourceFinderStack.push(new AbstractResourceFinderAdapter() {
 
                 Stack<File> files = new Stack<File>() {{
                     if (f.isDirectory()) {
@@ -140,11 +140,6 @@ public class FilesScanner implements ResourceFinder {
                 }
 
                 @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-
-                @Override
                 public InputStream open() {
                     try {
                         return new FileInputStream(current);
@@ -168,11 +163,6 @@ public class FilesScanner implements ResourceFinder {
     @Override
     public String next() {
         return resourceFinderStack.next();
-    }
-
-    @Override
-    public void remove() {
-        resourceFinderStack.remove();
     }
 
     @Override

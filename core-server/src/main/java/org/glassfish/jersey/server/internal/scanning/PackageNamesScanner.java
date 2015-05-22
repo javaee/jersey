@@ -53,7 +53,7 @@ import java.util.Map;
 import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
-import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
@@ -85,7 +85,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class PackageNamesScanner implements ResourceFinder {
+public class PackageNamesScanner extends AbstractResourceFinderAdapter {
 
     private final boolean recursive;
     private final String[] packages;
@@ -168,11 +168,6 @@ public class PackageNamesScanner implements ResourceFinder {
     @Override
     public String next() {
         return resourceFinderStack.next();
-    }
-
-    @Override
-    public void remove() {
-        resourceFinderStack.remove();
     }
 
     @Override

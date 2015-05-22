@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,7 @@ import java.util.Set;
 
 import javax.servlet.ServletContext;
 
-import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 import org.glassfish.jersey.server.internal.scanning.JarFileScanner;
 import org.glassfish.jersey.server.internal.scanning.ResourceFinderException;
 import org.glassfish.jersey.server.internal.scanning.ResourceFinderStack;
@@ -58,7 +58,7 @@ import org.glassfish.jersey.server.internal.scanning.ResourceFinderStack;
  *
  * @author Paul Sandoz
  */
-class WebAppResourcesScanner implements ResourceFinder {
+class WebAppResourcesScanner extends AbstractResourceFinderAdapter {
 
 //    private final String[] paths;
     private final ServletContext sc;
@@ -85,7 +85,7 @@ class WebAppResourcesScanner implements ResourceFinder {
                 break;
             }
 
-            resourceFinderStack.push(new ResourceFinder() {
+            resourceFinderStack.push(new AbstractResourceFinderAdapter() {
 
                 private Deque<String> resourcePathsStack = new LinkedList<String>() {
 
@@ -133,11 +133,6 @@ class WebAppResourcesScanner implements ResourceFinder {
                 }
 
                 @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-
-                @Override
                 public InputStream open() {
                     return sc.getResourceAsStream(current);
                 }
@@ -159,11 +154,6 @@ class WebAppResourcesScanner implements ResourceFinder {
     @Override
     public String next() {
         return resourceFinderStack.next();
-    }
-
-    @Override
-    public void remove() {
-        resourceFinderStack.remove();
     }
 
     @Override

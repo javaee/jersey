@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 import org.glassfish.jersey.server.ResourceFinder;
 
 /**
@@ -78,7 +79,7 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
         return new VfsResourceFinder(uri, recursive);
     }
 
-    private static class VfsResourceFinder implements ResourceFinder {
+    private static class VfsResourceFinder extends AbstractResourceFinderAdapter {
         private Object current;
         private Object next;
         private final Method openStream;
@@ -191,11 +192,6 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
             current = next;
             next = null;
             return invoke(current, getName, String.class);
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
         }
     }
 }
