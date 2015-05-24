@@ -51,9 +51,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -82,10 +84,13 @@ import org.glassfish.ejb.deployment.descriptor.EjbBundleDescriptorImpl;
 import org.glassfish.ejb.deployment.descriptor.EjbDescriptor;
 import org.glassfish.internal.data.ApplicationInfo;
 import org.glassfish.internal.data.ModuleInfo;
+import org.glassfish.internal.data.ApplicationRegistry;
 
 import com.sun.ejb.containers.BaseContainer;
 import com.sun.ejb.containers.EjbContainerUtil;
 import com.sun.ejb.containers.EjbContainerUtilImpl;
+import com.sun.enterprise.config.serverbeans.Application;
+import com.sun.enterprise.config.serverbeans.Applications;
 
 /**
  * EJB component provider.
@@ -155,13 +160,50 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
         Injections.addBinding(Injections.newBinder(this).to(ResourceMethodInvocationHandlerProvider.class), configuration);
         configuration.commit();
     }
+    
+    private ApplicationInfo getApplicationInfo(EjbContainerUtil ejbUtil) throws NamingException
+    {
+      ApplicationRegistry appRegistry = ejbUtil.getServices().getService(ApplicationRegistry.class);
+      Applications applications = ejbUtil.getServices().getService(Applications.class);
+      String appNamePrefix = (String) initialContext.lookup("java:app/AppName");
+      Set<String> appNames = appRegistry.getAllApplicationNames();
+      Set<String> disabledApps = new TreeSet<>();
+      for (String appName : appNames) {
+        if (appName.startsWith(appNamePrefix)) {
+            Application appDesc = applications.getApplication(appName);
+            if (appDesc != null && !ejbUtil.getDeployment().isAppEnabled(appDesc)) {
+                // skip disabled version of the app
+                disabledApps.add(appName);
+            }
+            else
+            {
+                return ejbUtil.getDeployment().get(appName);
+            }
+        }
+      }
+    
+      // grab the latest one, there is no way to make
+      // sure which one the user is actually enabling,
+      // so use the best case, i.e. upgrade
+      Iterator<String> it = disabledApps.iterator();
+      String lastDisabledApp = null;
+      while(it.hasNext())
+      {
+        lastDisabledApp = it.next();
+      }
+      if(lastDisabledApp != null) {
+        return ejbUtil.getDeployment().get(lastDisabledApp);
+      }
+    
+      throw new NamingException("Application Information Not Found");
+  }
 
     private void registerEjbInterceptor() {
         try {
             final Object interceptor = new EjbComponentInterceptor(locator);
             initialContext = getInitialContext();
             final EjbContainerUtil ejbUtil = EjbContainerUtilImpl.getInstance();
-            final ApplicationInfo appInfo = ejbUtil.getDeployment().get((String) initialContext.lookup("java:app/AppName"));
+            final ApplicationInfo appInfo = getApplicationInfo(ejbUtil);
             final List<String> tempLibNames = new LinkedList<>();
             for (ModuleInfo moduleInfo : appInfo.getModuleInfos()) {
                 final String jarName = moduleInfo.getName();
