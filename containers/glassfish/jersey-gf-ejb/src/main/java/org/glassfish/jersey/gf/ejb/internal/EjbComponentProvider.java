@@ -40,6 +40,11 @@
 
 package org.glassfish.jersey.gf.ejb.internal;
 
+import com.sun.ejb.containers.BaseContainer;
+import com.sun.ejb.containers.EjbContainerUtil;
+import com.sun.ejb.containers.EjbContainerUtilImpl;
+import com.sun.enterprise.config.serverbeans.Application;
+import com.sun.enterprise.config.serverbeans.Applications;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -59,38 +64,27 @@ import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.ws.rs.ext.ExceptionMapper;
-
 import javax.annotation.Priority;
 import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.inject.Singleton;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-
+import javax.ws.rs.ext.ExceptionMapper;
+import org.glassfish.ejb.deployment.descriptor.EjbBundleDescriptorImpl;
+import org.glassfish.ejb.deployment.descriptor.EjbDescriptor;
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
+import org.glassfish.internal.data.ApplicationInfo;
+import org.glassfish.internal.data.ApplicationRegistry;
+import org.glassfish.internal.data.ModuleInfo;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
-
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
-
-import org.glassfish.ejb.deployment.descriptor.EjbBundleDescriptorImpl;
-import org.glassfish.ejb.deployment.descriptor.EjbDescriptor;
-import org.glassfish.internal.data.ApplicationInfo;
-import org.glassfish.internal.data.ModuleInfo;
-import org.glassfish.internal.data.ApplicationRegistry;
-
-import com.sun.ejb.containers.BaseContainer;
-import com.sun.ejb.containers.EjbContainerUtil;
-import com.sun.ejb.containers.EjbContainerUtilImpl;
-import com.sun.enterprise.config.serverbeans.Application;
-import com.sun.enterprise.config.serverbeans.Applications;
 
 /**
  * EJB component provider.
@@ -160,43 +154,39 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
         Injections.addBinding(Injections.newBinder(this).to(ResourceMethodInvocationHandlerProvider.class), configuration);
         configuration.commit();
     }
-    
-    private ApplicationInfo getApplicationInfo(EjbContainerUtil ejbUtil) throws NamingException
-    {
-      ApplicationRegistry appRegistry = ejbUtil.getServices().getService(ApplicationRegistry.class);
-      Applications applications = ejbUtil.getServices().getService(Applications.class);
-      String appNamePrefix = (String) initialContext.lookup("java:app/AppName");
-      Set<String> appNames = appRegistry.getAllApplicationNames();
-      Set<String> disabledApps = new TreeSet<>();
-      for (String appName : appNames) {
-        if (appName.startsWith(appNamePrefix)) {
-            Application appDesc = applications.getApplication(appName);
-            if (appDesc != null && !ejbUtil.getDeployment().isAppEnabled(appDesc)) {
-                // skip disabled version of the app
-                disabledApps.add(appName);
-            }
-            else
-            {
-                return ejbUtil.getDeployment().get(appName);
+
+    private ApplicationInfo getApplicationInfo(EjbContainerUtil ejbUtil) throws NamingException {
+        ApplicationRegistry appRegistry = ejbUtil.getServices().getService(ApplicationRegistry.class);
+        Applications applications = ejbUtil.getServices().getService(Applications.class);
+        String appNamePrefix = (String) initialContext.lookup("java:app/AppName");
+        Set<String> appNames = appRegistry.getAllApplicationNames();
+        Set<String> disabledApps = new TreeSet<>();
+        for (String appName : appNames) {
+            if (appName.startsWith(appNamePrefix)) {
+                Application appDesc = applications.getApplication(appName);
+                if (appDesc != null && !ejbUtil.getDeployment().isAppEnabled(appDesc)) {
+                    // skip disabled version of the app
+                    disabledApps.add(appName);
+                } else {
+                    return ejbUtil.getDeployment().get(appName);
+                }
             }
         }
-      }
-    
-      // grab the latest one, there is no way to make
-      // sure which one the user is actually enabling,
-      // so use the best case, i.e. upgrade
-      Iterator<String> it = disabledApps.iterator();
-      String lastDisabledApp = null;
-      while(it.hasNext())
-      {
-        lastDisabledApp = it.next();
-      }
-      if(lastDisabledApp != null) {
-        return ejbUtil.getDeployment().get(lastDisabledApp);
-      }
-    
-      throw new NamingException("Application Information Not Found");
-  }
+
+        // grab the latest one, there is no way to make
+        // sure which one the user is actually enabling,
+        // so use the best case, i.e. upgrade
+        Iterator<String> it = disabledApps.iterator();
+        String lastDisabledApp = null;
+        while (it.hasNext()) {
+            lastDisabledApp = it.next();
+        }
+        if (lastDisabledApp != null) {
+            return ejbUtil.getDeployment().get(lastDisabledApp);
+        }
+
+        throw new NamingException("Application Information Not Found");
+    }
 
     private void registerEjbInterceptor() {
         try {
