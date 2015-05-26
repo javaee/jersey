@@ -92,6 +92,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     private static final String REQUEST_PREFIX = "> ";
     private static final String RESPONSE_PREFIX = "< ";
     private static final String ENTITY_LOGGER_PROPERTY = LoggingFilter.class.getName() + ".entityLogger";
+    private static final String LOGGING_ID_PROPERTY = LoggingFilter.class.getName() + ".id";
 
     private static final Comparator<Map.Entry<String, List<String>>> COMPARATOR =
             new Comparator<Map.Entry<String, List<String>>>() {
@@ -228,6 +229,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     @Override
     public void filter(final ClientRequestContext context) throws IOException {
         final long id = this._id.incrementAndGet();
+        context.setProperty(LOGGING_ID_PROPERTY, id);
         final StringBuilder b = new StringBuilder();
 
         printRequestLine(b, "Sending client request", id, context.getMethod(), context.getUri());
@@ -246,7 +248,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     @Override
     public void filter(final ClientRequestContext requestContext, final ClientResponseContext responseContext)
             throws IOException {
-        final long id = this._id.incrementAndGet();
+        final long id = (Long) requestContext.getProperty(LOGGING_ID_PROPERTY);
         final StringBuilder b = new StringBuilder();
 
         printResponseLine(b, "Client response received", id, responseContext.getStatus());
@@ -263,6 +265,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     @Override
     public void filter(final ContainerRequestContext context) throws IOException {
         final long id = this._id.incrementAndGet();
+        context.setProperty(LOGGING_ID_PROPERTY, id);
         final StringBuilder b = new StringBuilder();
 
         printRequestLine(b, "Server has received a request", id, context.getMethod(), context.getUriInfo().getRequestUri());
@@ -279,7 +282,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     @Override
     public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
             throws IOException {
-        final long id = this._id.incrementAndGet();
+        long id = (Long) requestContext.getProperty(LOGGING_ID_PROPERTY);
         final StringBuilder b = new StringBuilder();
 
         printResponseLine(b, "Server responded with a response", id, responseContext.getStatus());
