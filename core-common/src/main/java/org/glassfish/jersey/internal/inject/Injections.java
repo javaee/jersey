@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -139,7 +139,7 @@ public class Injections {
 
     private static ServiceLocator _createLocator(String name, ServiceLocator parent, Binder... binders) {
 
-        final ServiceLocator result = factory.create(name, parent, generator);
+        final ServiceLocator result = factory.create(name, parent, generator, ServiceLocatorFactory.CreatePolicy.DESTROY);
 
         result.setNeutralContextClassLoader(false);
         ServiceLocatorUtilities.enablePerThreadScope(result);
@@ -275,4 +275,18 @@ public class Injections {
     public static <T> ScopedBindingBuilder<T> newBinder(T service) {
         return BindingBuilderFactory.newBinder(service);
     }
+
+    /**
+     * Shutdown {@link org.glassfish.hk2.api.ServiceLocator} - either via service locator factory (if possible) or directly by
+     * calling shutdown method.
+     *
+     * @param locator locator to be shut down.
+     */
+     public static void shutdownLocator(final ServiceLocator locator) {
+         if (factory.find(locator.getName()) != null) {
+             factory.destroy(locator.getName());
+         } else {
+             locator.shutdown();
+         }
+     }
 }

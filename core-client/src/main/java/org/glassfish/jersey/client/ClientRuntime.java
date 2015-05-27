@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,6 +65,7 @@ import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
 
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -311,8 +312,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
                     try {
                         asyncExecutorsFactory.close();
                     } finally {
-                        locator.shutdown();
-//                        Injections.shutdownLocator(locator);
+                        Injections.shutdownLocator(locator);
                     }
                 }
             }
