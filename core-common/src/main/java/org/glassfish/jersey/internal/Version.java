@@ -57,6 +57,10 @@ public final class Version {
         _initiateProperties();
     }
 
+    private Version() {
+        throw new AssertionError("Instantiation not allowed.");
+    }
+
     private static void _initiateProperties() {
         final InputStream in = getIntputStream();
         if (in != null) {

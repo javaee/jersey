@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,45 +37,35 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.spi;
+package org.glassfish.jersey.server;
 
-import java.util.concurrent.ThreadFactory;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import javax.inject.Qualifier;
 
 /**
- * An extension contract for providing pluggable thread factory providers that produce thread
- * factories used by Jersey runtime whenever a new thread factory is needed to create Jersey
- * runtime threads.
+ * Injection qualifier that can be used to inject an {@link java.util.concurrent.ExecutorService}
+ * instance used by Jersey to execute {@link org.glassfish.jersey.server.ManagedAsync managed asynchronous requests}.
  * <p>
- * This mechanism allows Jersey to run in environments that have specific thread management and
- * provisioning requirements, such as application servers etc. Dedicated Jersey extension modules
- * or applications running in such environment may provide a custom implementation of the
- * {@code RuntimeThreadProvider} interface to customize the Jersey runtime thread management
- * & provisioning strategy to comply with the threading requirements, models and policies
- * specific to each particular environment.
- * </p>
- * <p>
- * Note that only a single thread factory provider can be registered in each application.
+ * The managed asynchronous request executor service instance injected using this injection qualifier can be customized
+ * by registering a custom {@link org.glassfish.jersey.spi.ExecutorServiceProvider} implementation that is itself annotated
+ * with the {@code &#64;ManagedAsyncExecutor} annotation.
  * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @see ManagedAsyncExecutorLiteral
+ * @since 2.18
  */
-@Contract
-public interface RuntimeThreadProvider {
-    /**
-     * Get a {@code ThreadFactory} that will be used to create threads scoped to the current request.
-     * <p>
-     * The method is not used by Jersey runtime at the moment but may be required in the future.
-     * </p>
-     *
-     * @return a thread factory to be used to create current request scoped threads.
-     */
-    public ThreadFactory getRequestThreadFactory();
+@Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@Qualifier
+public @interface ManagedAsyncExecutor {
 
-    /**
-     * Get a {@code ThreadFactory} that will create threads that will be used for running background
-     * tasks, independently of current request scope.
-     *
-     * @return a thread factory to be used to create background runtime task threads.
-     */
-    public ThreadFactory getBackgroundThreadFactory();
 }

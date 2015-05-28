@@ -46,7 +46,6 @@ import org.glassfish.jersey.internal.util.PropertiesClass;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.PropertyAlias;
 
-
 /**
  * Jersey client implementation configuration properties.
  *
@@ -59,49 +58,60 @@ public final class ClientProperties {
     /**
      * Automatic redirection. A value of {@code true} declares that the client
      * will automatically redirect to the URI declared in 3xx responses.
-     *
+     * <p>
      * The value MUST be an instance convertible to {@link java.lang.Boolean}.
-     * <p />
+     * </p>
+     * <p>
      * The default value is {@code true}.
-     * <p />
+     * </p>
+     * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
      */
     public static final String FOLLOW_REDIRECTS = "jersey.config.client.followRedirects";
 
     /**
      * Read timeout interval, in milliseconds.
-     *
+     * <p>
      * The value MUST be an instance convertible to {@link java.lang.Integer}. A
      * value of zero (0) is equivalent to an interval of infinity.
-     *
-     * <p />
+     * </p>
+     * <p>
      * The default value is infinity (0).
-     * <p />
+     * </p>
+     * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
      */
     public static final String READ_TIMEOUT = "jersey.config.client.readTimeout";
 
     /**
      * Connect timeout interval, in milliseconds.
-     *
+     * <p>
      * The value MUST be an instance convertible to {@link java.lang.Integer}. A
      * value of zero (0) is equivalent to an interval of infinity.
-     * <p />
+     * </p>
+     * <p>
      * The default value is infinity (0).
-     * <p />
+     * </p>
+     * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
      */
     public static final String CONNECT_TIMEOUT = "jersey.config.client.connectTimeout";
 
     /**
      * The value MUST be an instance convertible to {@link java.lang.Integer}.
-     * <p />
+     * <p>
      * The property defines the size of the chunk in bytes. The property does not enable
      * chunked encoding (it is controlled by {@link #REQUEST_ENTITY_PROCESSING} property).
-     * <p />
+     * </p>
+     * <p>
      * A default value is {@value #DEFAULT_CHUNK_SIZE} (since Jersey 2.16).
-     * <p />
+     * </p>
+     * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
      */
     public static final String CHUNKED_ENCODING_SIZE = "jersey.config.client.chunkedEncodingSize";
     /**
@@ -113,8 +123,9 @@ public final class ClientProperties {
 
     /**
      * Asynchronous thread pool size.
-     *
+     * <p>
      * The value MUST be an instance of {@link java.lang.Integer}.
+     * </p>
      * <p>
      * If the property is absent then thread pool used for async requests will
      * be initialized as default cached thread pool, which creates new thread
@@ -123,8 +134,9 @@ public final class ClientProperties {
      * number of threads will be utilized. Zero or negative values will be ignored.
      * </p>
      * <p>
-     * Note that the property is ignored if a custom {@link org.glassfish.jersey.spi.RequestExecutorProvider}
-     * is configured in the client runtime.
+     * Note that the property may be ignored if a custom {@link org.glassfish.jersey.spi.ExecutorServiceProvider}
+     * is configured to execute asynchronous requests in the client runtime (see
+     * {@link org.glassfish.jersey.client.ClientAsyncExecutor}).
      * </p>
      * <p>
      * A default value is not set.
@@ -139,10 +151,15 @@ public final class ClientProperties {
      * If {@link org.glassfish.jersey.client.filter.EncodingFilter} is
      * registered, this property indicates the value of Content-Encoding
      * property the filter should be adding.
-     *
-     * <p>The value MUST be an instance of {@link String}.</p>
-     * <p>The default value is {@code null}.</p>
-     * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
+     * <p>
+     * The value MUST be an instance of {@link String}.
+     * </p>
+     * <p>
+     * The default value is {@code null}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
      */
     public static final String USE_ENCODING = "jersey.config.client.useEncoding";
 
@@ -220,9 +237,8 @@ public final class ClientProperties {
     /**
      * If {@code true} then disable META-INF/services lookup on client.
      * <p>
-     * By default Jersey lookups SPI implementations described by
-     * META-INF/services/* files. Then you can register appropriate provider
-     * classes by {@link javax.ws.rs.core.Application}.
+     * By default Jersey looks up SPI implementations described by {@code META-INF/services/*} files.
+     * Then you can register appropriate provider  classes by {@link javax.ws.rs.core.Application}.
      * </p>
      * <p>
      * The default value is {@code false}.
@@ -391,17 +407,17 @@ public final class ClientProperties {
 
     /**
      * Get the value of the specified property.
-     *
+     * <p>
      * If the property is not set or the real value type is not compatible with
      * {@code defaultValue} type, the specified {@code defaultValue} is returned. Calling this method is equivalent to calling
-     * {@code ClientProperties.getValue(properties, key, defaultValue, (Class&lt;T&gt;) defaultValue.getClass())}
+     * <tt>ClientProperties.getValue(properties, key, defaultValue, (Class&lt;T&gt;) defaultValue.getClass())</tt>.
+     * </p>
      *
      * @param properties   Map of properties to get the property value from.
      * @param key          Name of the property.
      * @param defaultValue Default value if property is not registered
      * @param <T>          Type of the property value.
      * @return Value of the property or {@code null}.
-     *
      * @since 2.8
      */
     public static <T> T getValue(final Map<String, ?> properties, final String key, final T defaultValue) {
@@ -410,7 +426,7 @@ public final class ClientProperties {
 
     /**
      * Get the value of the specified property.
-     *
+     * <p/>
      * If the property is not set or the real value type is not compatible with the specified value type,
      * returns {@code defaultValue}.
      *
@@ -420,7 +436,6 @@ public final class ClientProperties {
      * @param type         Type to retrieve the value as.
      * @param <T>          Type of the property value.
      * @return Value of the property or {@code null}.
-     *
      * @since 2.8
      */
     public static <T> T getValue(final Map<String, ?> properties, final String key, final T defaultValue, final Class<T> type) {
@@ -429,7 +444,7 @@ public final class ClientProperties {
 
     /**
      * Get the value of the specified property.
-     *
+     * <p/>
      * If the property is not set or the actual property value type is not compatible with the specified type, the method will
      * return {@code null}.
      *
@@ -438,7 +453,6 @@ public final class ClientProperties {
      * @param type       Type to retrieve the value as.
      * @param <T>        Type of the property value.
      * @return Value of the property or {@code null}.
-     *
      * @since 2.8
      */
     public static <T> T getValue(final Map<String, ?> properties, final String key, final Class<T> type) {

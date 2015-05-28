@@ -65,6 +65,8 @@ import javax.inject.Qualifier;
  * </p>
  *
  * @author Miroslav Fuksa
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ * @see org.glassfish.jersey.internal.inject.CustomAnnotationLiteral
  */
 @Qualifier
 @Retention(RetentionPolicy.RUNTIME)

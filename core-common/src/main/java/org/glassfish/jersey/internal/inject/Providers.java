@@ -198,7 +198,7 @@ public final class Providers {
      * @return set of all available service provider instances for the contract.
      */
     public static <T> Set<T> getCustomProviders(final ServiceLocator locator, final Class<T> contract) {
-        final Collection<ServiceHandle<T>> hk2Providers = getServiceHandles(locator, contract, new CustomAnnotationImpl());
+        final Collection<ServiceHandle<T>> hk2Providers = getServiceHandles(locator, contract, CustomAnnotationLiteral.INSTANCE);
         return getClasses(hk2Providers);
     }
 
@@ -225,7 +225,7 @@ public final class Providers {
      * @return iterable of all available ranked service providers for the contract. Return value is never null.
      */
     public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(final ServiceLocator locator, final Class<T> contract) {
-        final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract, new CustomAnnotationImpl());
+        final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract, CustomAnnotationLiteral.INSTANCE);
         providers.addAll(getServiceHandles(locator, contract));
 
         final LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>> providerMap =
@@ -330,7 +330,7 @@ public final class Providers {
      * @return set of all available service provider instances for the contract
      */
     public static <T> Collection<ServiceHandle<T>> getAllServiceHandles(final ServiceLocator locator, final Class<T> contract) {
-        final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract, new CustomAnnotationImpl());
+        final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract, CustomAnnotationLiteral.INSTANCE);
         providers.addAll(getServiceHandles(locator, contract));
 
         final LinkedHashMap<ActiveDescriptor, ServiceHandle<T>> providerMap =
@@ -466,7 +466,6 @@ public final class Providers {
         final ConstrainedTo constrainedTo = component.getAnnotation(ConstrainedTo.class);
         final RuntimeType componentConstraint = constrainedTo == null ? null : constrainedTo.value();
         if (Feature.class.isAssignableFrom(component)) {
-            // TODO: solve after implementation
             return true;
         }
 
@@ -485,11 +484,12 @@ public final class Providers {
 
                 if (componentConstraint != null) {
                     if (contractConstraint != componentConstraint) {
+                        //noinspection ConstantConditions
                         warnings.append(LocalizationMessages.WARNING_PROVIDER_CONSTRAINED_TO_WRONG_PACKAGE(
                                 component.getName(),
                                 componentConstraint.name(),
                                 contract.getName(),
-                                contractConstraint.name()))
+                                contractConstraint.name())) // is never null
                                 .append(" ");
                     } else {
                         foundComponentCompatible = true;
@@ -498,9 +498,10 @@ public final class Providers {
             }
 
             if (!foundComponentCompatible) {
+                //noinspection ConstantConditions
                 warnings.append(LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_WRONG_PACKAGE(
                         component.getName(),
-                        componentConstraint.name()))
+                        componentConstraint.name())) // is never null
                         .append(" ");
                 logProviderSkipped(warnings, component, isResource);
                 return false;

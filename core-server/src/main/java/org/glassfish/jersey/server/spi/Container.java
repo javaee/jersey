@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,6 +59,19 @@ import org.glassfish.jersey.spi.Contract;
 @Contract
 @ConstrainedTo(RuntimeType.SERVER)
 public interface Container {
+
+    /**
+     * Default container port number for HTTP protocol.
+     *
+     * @since 2.18
+     */
+    public static final int DEFAULT_HTTP_PORT = 80;
+    /**
+     * Default container port number for HTTPS protocol.
+     *
+     * @since 2.18
+     */
+    public static final int DEFAULT_HTTPS_PORT = 443;
 
     /**
      * Return an immutable representation of the current {@link ResourceConfig

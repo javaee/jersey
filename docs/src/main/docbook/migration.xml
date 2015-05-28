@@ -171,6 +171,26 @@
                 </itemizedlist>
             </para>
         </section>
+
+        <section xml:id="mig-2.18-breaking-changes">
+            <title>Breaking Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Integration of executor providers for Jersey runtime has been unified and refactored. As a result,
+                            the  <literal>org.glassfish.jersey.spi.RequestExecutorProvider</literal> and
+                            <literal>org.glassfish.jersey.spi.RuntimeThreadProvider</literal> SPIs have been removed from Jersey.
+                            A new, common &amp; generic executor service providers have been introduced instead:
+                            &jersey.common.spi.ExecutorServiceProvider; and &jersey.common.spi.ScheduledExecutorServiceProvider;.
+                            These new providers are used to support custom qualified executor service injection, including the
+                            refactored use cases of client asynchronous request execution, server-side managed asynchronous
+                            request processing as well as server-side background task scheduler.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
     </section>
 
     <section xml:id="mig-2.17">
@@ -1092,10 +1112,12 @@ public class Bookstore { ... }</programlisting>
                     </para></listitem>
                     <listitem><para>
                         <literal>org.glassfish.jersey.spi.RequestsExecutorsProvider</literal> contract has been renamed to
-                        &jersey.common.spi.RequestExecutorProvider;. It has been also extended with an additional
-                        <literal>releaseRequestingExecutor</literal> method to address executor shutdown handling issues
-                        reported in <link xlink:href='https://java.net/jira/browse/JERSEY-2205'>JERSEY-2205</link>. As such,
-                        any custom implementation of the SPI is now required to implement the new method.
+                        <literal>org.glassfish.jersey.spi.RequestsExecutorsProvider</literal>. It has been also extended with
+                        an additional <literal>releaseRequestingExecutor</literal> method to address executor shutdown handling
+                        issues reported in <link xlink:href='https://java.net/jira/browse/JERSEY-2205'>JERSEY-2205</link>.
+                        As such, any custom implementation of the SPI is now required to implement the new method.
+                        (Note that the SPI has been removed in Jersey 2.18 - see the Jersey 2.18 release migration guide section
+                        for more details.)
                     </para></listitem>
                 </itemizedlist>
             </para>

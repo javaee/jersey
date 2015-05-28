@@ -48,6 +48,7 @@ import org.glassfish.jersey.grizzly2.httpserver.internal.LocalizationMessages;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.spi.Container;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -78,15 +79,12 @@ import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
  */
 public final class GrizzlyHttpServerFactory {
 
-    private static final int DEFAULT_HTTP_PORT = 80;
-
     /**
      * Create new {@link HttpServer} instance.
      *
      * @param uri uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used as
      *            context path, the rest will be ignored.
      * @return newly created {@code HttpServer}.
-     *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
     public static HttpServer createHttpServer(final URI uri) {
@@ -101,7 +99,6 @@ public final class GrizzlyHttpServerFactory {
      * @param start if set to false, server will not get started, which allows to configure the underlying transport
      *              layer, see above for details.
      * @return newly created {@code HttpServer}.
-     *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
     public static HttpServer createHttpServer(final URI uri, final boolean start) {
@@ -115,7 +112,6 @@ public final class GrizzlyHttpServerFactory {
      *                      used as context path, the rest will be ignored.
      * @param configuration web application configuration.
      * @return newly created {@code HttpServer}.
-     *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) {
@@ -137,7 +133,6 @@ public final class GrizzlyHttpServerFactory {
      * @param start         if set to false, server will not get started, which allows to configure the underlying
      *                      transport layer, see above for details.
      * @return newly created {@code HttpServer}.
-     *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration, final boolean start) {
@@ -158,7 +153,6 @@ public final class GrizzlyHttpServerFactory {
      * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
      * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
      * @return newly created {@code HttpServer}.
-     *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
     public static HttpServer createHttpServer(final URI uri,
@@ -184,7 +178,6 @@ public final class GrizzlyHttpServerFactory {
      * @param start                 if set to false, server will not get started, which allows to configure the
      *                              underlying transport, see above for details.
      * @return newly created {@code HttpServer}.
-     *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
     public static HttpServer createHttpServer(final URI uri,
@@ -211,7 +204,6 @@ public final class GrizzlyHttpServerFactory {
      * @param parentLocator         {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
      *                              {@link org.glassfish.jersey.server.ApplicationHandler}
      * @return newly created {@code HttpServer}.
-     *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      * @see GrizzlyHttpContainer
      * @see org.glassfish.hk2.api.ServiceLocator
@@ -234,7 +226,6 @@ public final class GrizzlyHttpServerFactory {
      * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
      *                      {@link org.glassfish.jersey.server.ApplicationHandler}
      * @return newly created {@code HttpServer}.
-     *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      * @see GrizzlyHttpContainer
      * @see org.glassfish.hk2.api.ServiceLocator
@@ -257,7 +248,6 @@ public final class GrizzlyHttpServerFactory {
      * @param start                 if set to false, server will not get started, this allows end users to set
      *                              additional properties on the underlying listener.
      * @return newly created {@code HttpServer}.
-     *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      * @see GrizzlyHttpContainer
      */
@@ -268,7 +258,9 @@ public final class GrizzlyHttpServerFactory {
                                               final boolean start) {
 
         final String host = (uri.getHost() == null) ? NetworkListener.DEFAULT_NETWORK_HOST : uri.getHost();
-        final int port = (uri.getPort() == -1) ? DEFAULT_HTTP_PORT : uri.getPort();
+        final int port = (uri.getPort() == -1)
+                ? (secure ? Container.DEFAULT_HTTP_PORT : Container.DEFAULT_HTTPS_PORT)
+                : uri.getPort();
 
         final NetworkListener listener = new NetworkListener("grizzly", host, port);
 

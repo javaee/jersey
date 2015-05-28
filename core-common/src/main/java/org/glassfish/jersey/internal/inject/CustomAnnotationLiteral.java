@@ -37,54 +37,27 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.internal.inject;
 
-package org.glassfish.jersey.spi;
-
-import java.util.concurrent.ExecutorService;
+import org.glassfish.hk2.api.AnnotationLiteral;
 
 /**
- * Pluggable provider of {@link ExecutorService executor service} instance used to run
- * different parts of Jersey request and response processing code.
+ * {@link Custom} annotation literal.
  * <p>
- * During Jersey runtime initialization, Jersey invokes the registered executor provider
- * to get the {@link #getRequestingExecutor() requesting executor} that will be used
- * to run the request pre-processing and request-to-response transformation code.
- * </p>
- * <p>
- * The custom provider implementing this interface should be registered in the standard way on the server.
- * The client must be created with configuration containing the provider, later registrations will be ignored.
+ * This class provides a {@link #INSTANCE constant instance} of the {@code @Custom} annotation to be used
+ * in method calls that require use of annotation instances.
  * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Miroslav Fuksa
  */
-@Contract
-public interface RequestExecutorProvider {
-    /**
-     * Get request processing executor.
-     *
-     * This method is called only once at Jersey initialization, before the
-     * first request is processed.
-     *
-     * @return request processing executor. Must not return {@code null}.
-     */
-    public ExecutorService getRequestingExecutor();
+@SuppressWarnings("ClassExplicitlyAnnotation")
+public final class CustomAnnotationLiteral extends AnnotationLiteral<Custom> implements Custom {
 
     /**
-     * Release the executor previously retrieved via {@link #getRequestingExecutor} call.
-     *
-     * This method is called when the Jersey runtime does not need the executor anymore.
-     * After this method has been called, the executor will not be used by the Jersey runtime
-     * anymore.
-     * <p>
-     * The decision how the executor is released is left upon the provider implementation.
-     * In most typical scenarios, the executor may be simply shutdown. However in cases when
-     * the provider is implemented to re-use same executors across multiple components or Jersey
-     * runtimes, the executor release logic may require more sophisticated implementation.
-     * </p>
-     *
-     * @param executor executor instance to be released.
-     * @since 2.5
+     * {@code Custom} annotation instance to use for injection bindings and related queries.
      */
-    public void releaseRequestingExecutor(ExecutorService executor);
+    public static final Custom INSTANCE = new CustomAnnotationLiteral();
+
+    private CustomAnnotationLiteral() {
+    }
 }

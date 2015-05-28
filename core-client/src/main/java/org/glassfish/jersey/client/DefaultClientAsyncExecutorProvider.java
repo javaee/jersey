@@ -38,73 +38,65 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.internal.process;
+package org.glassfish.jersey.client;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
-import javax.inject.Inject;
-
-import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
-import org.glassfish.jersey.process.internal.RequestExecutorFactory;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.spi.RequestExecutorProvider;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
+import org.glassfish.jersey.spi.ThreadPoolExecutorProvider;
 
 /**
- * {@link org.glassfish.jersey.process.internal.RequestExecutorFactory Executors factory}
- * used on the server side for managed asynchronous request invocations.
+ * Default {@link org.glassfish.jersey.spi.ExecutorServiceProvider} used on the client side for asynchronous request processing.
  *
- * @author Miroslav Fuksa
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ServerManagedAsyncExecutorFactory extends RequestExecutorFactory implements ContainerLifecycleListener {
+@ClientAsyncExecutor
+class DefaultClientAsyncExecutorProvider extends ThreadPoolExecutorProvider {
+
+    private static final Logger LOGGER = Logger.getLogger(DefaultClientAsyncExecutorProvider.class.getName());
+
+    private final LazyValue<Integer> asyncThreadPoolSize;
 
     /**
      * Creates a new instance.
      *
-     * @param locator HK2 service locator.
+     * @param poolSize size of the default executor thread pool (if used). Zero or negative values are ignored.
+     *                 See also {@link org.glassfish.jersey.client.ClientProperties#ASYNC_THREADPOOL_SIZE}.
      */
-    @Inject
-    public ServerManagedAsyncExecutorFactory(ServiceLocator locator) {
-        super(locator);
-    }
+    public DefaultClientAsyncExecutorProvider(final int poolSize) {
+        super("jersey-client-async-executor");
 
-    @Override
-    protected RequestExecutorProvider getDefaultProvider(Object... initArgs) {
-        return new RequestExecutorProvider() {
-
+        this.asyncThreadPoolSize = Values.lazy(new Value<Integer>() {
             @Override
-            public ExecutorService getRequestingExecutor() {
-                return Executors.newCachedThreadPool(new ThreadFactoryBuilder()
-                        .setNameFormat("jersey-server-managed-async-executor-%d")
-                        .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
-                        .build());
+            public Integer get() {
+                if (poolSize <= 0) {
+                    LOGGER.config(LocalizationMessages.IGNORED_ASYNC_THREADPOOL_SIZE(poolSize));
+                    // using default
+                    return Integer.MAX_VALUE;
+                } else {
+                    LOGGER.config(LocalizationMessages.USING_FIXED_ASYNC_THREADPOOL(poolSize));
+                    return poolSize;
+                }
             }
-
-            @Override
-            public void releaseRequestingExecutor(ExecutorService executor) {
-                executor.shutdownNow();
-            }
-        };
+        });
     }
 
     @Override
-    public void onStartup(Container container) {
-        // do nothing
+    protected int getMaximumPoolSize() {
+        return asyncThreadPoolSize.get();
     }
 
     @Override
-    public void onReload(Container container) {
-        // do nothing
-    }
-
-    @Override
-    public void onShutdown(Container container) {
-        close();
+    protected int getCorePoolSize() {
+        // Mimicking the Executors.newCachedThreadPool and newFixedThreadPool configuration values.
+        final Integer maximumPoolSize = getMaximumPoolSize();
+        if (maximumPoolSize != Integer.MAX_VALUE) {
+            return maximumPoolSize;
+        } else {
+            return 0;
+        }
     }
 }

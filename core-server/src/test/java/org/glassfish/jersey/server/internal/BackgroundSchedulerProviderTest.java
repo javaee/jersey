@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,8 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.RuntimeThreadProvider;
+import org.glassfish.jersey.server.BackgroundScheduler;
+import org.glassfish.jersey.spi.ScheduledThreadPoolExecutorProvider;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -66,7 +67,7 @@ import static org.junit.Assert.assertEquals;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class RuntimeExecutorsBinderTest {
+public class BackgroundSchedulerProviderTest {
 
     private ApplicationHandler createApplication(Class<?>... classes) {
         final ResourceConfig resourceConfig = new ResourceConfig(classes);
@@ -75,70 +76,48 @@ public class RuntimeExecutorsBinderTest {
     }
 
     public static final class CustomThread extends Thread {
-        private final boolean background;
-
-        public CustomThread(Runnable target, boolean background) {
+        public CustomThread(Runnable target) {
             super(target);
-            this.background = background;
-        }
-
-        public boolean isBackground() {
-            return background;
         }
     }
 
-    public static final class CustomThreadProvider implements RuntimeThreadProvider {
+    @BackgroundScheduler
+    public static final class CustomThreadProvider extends ScheduledThreadPoolExecutorProvider {
 
-        @Override
-        public ThreadFactory getRequestThreadFactory() {
-            return new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable r) {
-                    return new CustomThread(r, false);
-                }
-            };
+        public CustomThreadProvider() {
+            super("custom-scheduler");
         }
 
         @Override
-        public ThreadFactory getBackgroundThreadFactory() {
+        public ThreadFactory getBackingThreadFactory() {
             return new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable r) {
-                    return new CustomThread(r, true);
+                    return new CustomThread(r);
                 }
             };
         }
     }
 
     @Path("executors-test")
-    public static final class ExecutorsTestResource {
-        @Inject
-        private RuntimeThreadProvider rtp;
-
+    public static final class TestResource {
         @Inject
         @BackgroundScheduler
         private ScheduledExecutorService bs;
 
         @GET
         public int getTestResult() throws ExecutionException, InterruptedException {
-            int result = 0;
-
-            if (rtp instanceof CustomThreadProvider) {
-                result += 1;
-            }
+            int result = 1; // method invoked
 
             final Future<Integer> future = bs.submit(new Producer<Integer>() {
                 @Override
                 public Integer call() {
-                    int result = 0;
-
                     final Thread thread = Thread.currentThread();
                     if (thread instanceof CustomThread) {
-                        result += 10;
-                        result += ((CustomThread) thread).isBackground() ? 100 : 0;
+                        return 10; // CustomThreadProvider used to provide BackgroundScheduler executor service
                     }
 
-                    return result;
+                    return 0;
                 }
             });
 
@@ -150,11 +129,11 @@ public class RuntimeExecutorsBinderTest {
 
     @Test
     public void testCustomRuntimeThreadProviderSupport() throws ExecutionException, InterruptedException {
-        ApplicationHandler ah = createApplication(CustomThreadProvider.class, ExecutorsTestResource.class);
+        ApplicationHandler ah = createApplication(CustomThreadProvider.class, TestResource.class);
 
         final ContainerResponse response = ah.apply(RequestContextBuilder.from("/executors-test", "GET").build()).get();
 
         assertEquals(200, response.getStatus());
-        assertEquals("Some executor test assertions failed.", 111, response.getEntity());
+        assertEquals("Some executor test assertions failed.", 11, response.getEntity());
     }
 }

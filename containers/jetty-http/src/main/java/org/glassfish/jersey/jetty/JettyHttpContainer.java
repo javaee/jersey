@@ -73,10 +73,8 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
@@ -160,7 +158,6 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     }
 
     private volatile ApplicationHandler appHandler;
-    private volatile ContainerLifecycleListener containerListener;
 
     @Override
     public void handle(final String target, final Request request, final HttpServletRequest httpServletRequest,
@@ -400,11 +397,11 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
 
     @Override
     public void reload(final ResourceConfig configuration) {
-        containerListener.onShutdown(this);
+        appHandler.onShutdown(this);
+
         appHandler = new ApplicationHandler(configuration.register(new JettyBinder()));
-        containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
-        containerListener.onReload(this);
-        containerListener.onStartup(this);
+        appHandler.onReload(this);
+        appHandler.onStartup(this);
         cacheConfigSetStatusOverSendError();
     }
 
@@ -422,7 +419,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        containerListener.onStartup(this);
+        appHandler.onStartup(this);
     }
 
     /**
@@ -434,13 +431,18 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     @Override
     public void doStop() throws Exception {
         super.doStop();
-        containerListener.onShutdown(this);
+        appHandler.onShutdown(this);
         appHandler = null;
     }
 
+    /**
+     * Create a new Jetty HTTP container.
+     *
+     * @param application JAX-RS / Jersey application to be deployed on Jetty HTTP container.
+     * @param parentLocator parent HK2 service locator.
+     */
     JettyHttpContainer(final Application application, final ServiceLocator parentLocator) {
         this.appHandler = new ApplicationHandler(application, new JettyBinder(), parentLocator);
-        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
     }
 
     /**
@@ -450,7 +452,6 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
      */
     JettyHttpContainer(final Application application) {
         this.appHandler = new ApplicationHandler(application, new JettyBinder());
-        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
 
         cacheConfigSetStatusOverSendError();
     }

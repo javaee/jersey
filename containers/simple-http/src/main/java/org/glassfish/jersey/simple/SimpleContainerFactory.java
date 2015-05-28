@@ -52,7 +52,6 @@ import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.simple.internal.LocalizationMessages;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -127,7 +126,7 @@ public final class SimpleContainerFactory {
      * @param address the URI to create the http server. The URI scheme must be
      *                equal to {@code https}. The URI user information and host
      *                are ignored. If the URI port is not present then port
-     *                {@value org.glassfish.jersey.server.internal.ConfigHelper#DEFAULT_HTTPS_PORT} will be
+     *                {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
      *                used. The URI path, query and fragment components are ignored.
      * @param context this is the SSL context used for SSL connections.
      * @param config  the resource configuration.
@@ -147,7 +146,7 @@ public final class SimpleContainerFactory {
      * @param address the URI to create the http server. The URI scheme must be
      *                equal to {@code https}. The URI user information and host
      *                are ignored. If the URI port is not present then port
-     *                {@value org.glassfish.jersey.server.internal.ConfigHelper#DEFAULT_HTTPS_PORT} will be
+     *                {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
      *                used. The URI path, query and fragment components are ignored.
      * @param context this is the SSL context used for SSL connections.
      * @param config  the resource configuration.
@@ -170,7 +169,7 @@ public final class SimpleContainerFactory {
      * @param address   the URI to create the http server. The URI scheme must be
      *                  equal to {@code https}. The URI user information and host
      *                  are ignored. If the URI port is not present then port
-     *                  {@value org.glassfish.jersey.server.internal.ConfigHelper#DEFAULT_HTTPS_PORT} will be
+     *                  {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
      *                  used. The URI path, query and fragment components are ignored.
      * @param context   this is the SSL context used for SSL connections.
      * @param container the container that handles all HTTP requests.
@@ -197,7 +196,7 @@ public final class SimpleContainerFactory {
      * @param address the URI to create the http server. The URI scheme must be
      *                equal to {@code https}. The URI user information and host
      *                are ignored. If the URI port is not present then port
-     *                {@value org.glassfish.jersey.server.internal.ConfigHelper#DEFAULT_HTTPS_PORT} will be
+     *                {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
      *                used. The URI path, query and fragment components are ignored.
      * @param context this is the SSL context used for SSL connections.
      * @param config  the resource configuration.
@@ -226,7 +225,7 @@ public final class SimpleContainerFactory {
      * @param address   the URI to create the http server. The URI scheme must be
      *                  equal to {@code https}. The URI user information and host
      *                  are ignored. If the URI port is not present then port
-     *                  {@value org.glassfish.jersey.server.internal.ConfigHelper#DEFAULT_HTTPS_PORT} will be
+     *                  {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
      *                  used. The URI path, query and fragment components are ignored.
      * @param context   this is the SSL context used for SSL connections.
      * @param container the container that handles all HTTP requests.
@@ -258,7 +257,7 @@ public final class SimpleContainerFactory {
             throw new IllegalArgumentException(LocalizationMessages.URI_CANNOT_BE_NULL());
         }
         final String scheme = address.getScheme();
-        int defaultPort = ConfigHelper.DEFAULT_HTTP_PORT;
+        int defaultPort = org.glassfish.jersey.server.spi.Container.DEFAULT_HTTP_PORT;
 
         if (context == null) {
             if (!scheme.equalsIgnoreCase("http")) {
@@ -268,7 +267,7 @@ public final class SimpleContainerFactory {
             if (!scheme.equalsIgnoreCase("https")) {
                 throw new IllegalArgumentException(LocalizationMessages.WRONG_SCHEME_WHEN_USING_HTTPS());
             }
-            defaultPort = ConfigHelper.DEFAULT_HTTPS_PORT;
+            defaultPort = org.glassfish.jersey.server.spi.Container.DEFAULT_HTTPS_PORT;
         }
         int port = address.getPort();
 

@@ -44,14 +44,15 @@ package org.glassfish.jersey.server.spi;
  * This is to allow integration with other DI providers that
  * define their own request scope. Any such provider should implement
  * this to properly open/finish the scope.
- *
+ * <p>
  * An implementation must be registered via META-INF/services mechanism.
  * Only one implementation will be utilized during runtime.
  * If more than one implementation is registered, no one will get used and
  * a warning log message will be written out.
+ * </p>
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @param <T> external request context type
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public interface ExternalRequestScope<T> extends AutoCloseable {
 

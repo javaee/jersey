@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,7 @@ import javax.inject.Inject;
 import javax.inject.Scope;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
+import org.glassfish.jersey.internal.inject.CustomAnnotationLiteral;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -200,7 +200,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
                 @SuppressWarnings("unchecked")
                 AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
                 aliasDescriptor.setScope(scope.getName());
-                aliasDescriptor.addQualifierAnnotation(new CustomAnnotationImpl());
+                aliasDescriptor.addQualifierAnnotation(CustomAnnotationLiteral.INSTANCE);
 
                 dc.bind(aliasDescriptor);
             }
@@ -214,7 +214,6 @@ public class JerseyResourceContext implements ExtendedResourceContext {
         final Collection<Class<? extends Annotation>> scopes =
                 ReflectionHelper.getAnnotationTypes(resourceClass, Scope.class);
 
-        // TODO warn about multiple scopes
         return scopes.isEmpty() ? RequestScoped.class : scopes.iterator().next();
     }
 
@@ -249,7 +248,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
                 AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
                 aliasDescriptor.setScope(scope.getName());
                 aliasDescriptor.setRanking(providerModel.getPriority(contract));
-                aliasDescriptor.addQualifierAnnotation(new CustomAnnotationImpl());
+                aliasDescriptor.addQualifierAnnotation(CustomAnnotationLiteral.INSTANCE);
 
                 dc.bind(aliasDescriptor);
             }

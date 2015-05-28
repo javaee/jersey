@@ -48,7 +48,7 @@ import org.glassfish.jersey.jetty.internal.LocalizationMessages;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.spi.Container;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -226,7 +226,7 @@ public final class JettyHttpContainerFactory {
      * @param uri               the URI to create the http server. The URI scheme must be
      *                          equal to {@code https}. The URI user information and host
      *                          are ignored. If the URI port is not present then port
-     *                          {@value org.glassfish.jersey.server.internal.ConfigHelper#DEFAULT_HTTPS_PORT} will be
+     *                          {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
      *                          used. The URI path, query and fragment components are ignored.
      * @param sslContextFactory this is the SSL context factory used to configure SSL connector
      * @param config            the resource configuration.
@@ -249,7 +249,7 @@ public final class JettyHttpContainerFactory {
      * @param uri               the URI to create the http server. The URI scheme must be
      *                          equal to {@code https}. The URI user information and host
      *                          are ignored. If the URI port is not present then port
-     *                          {@value org.glassfish.jersey.server.internal.ConfigHelper#DEFAULT_HTTPS_PORT} will be
+     *                          {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
      *                          used. The URI path, query and fragment components are ignored.
      * @param sslContextFactory this is the SSL context factory used to configure SSL connector
      * @param handler           the container that handles all HTTP requests
@@ -269,7 +269,7 @@ public final class JettyHttpContainerFactory {
             throw new IllegalArgumentException(LocalizationMessages.URI_CANNOT_BE_NULL());
         }
         final String scheme = uri.getScheme();
-        int defaultPort = ConfigHelper.DEFAULT_HTTP_PORT;
+        int defaultPort = Container.DEFAULT_HTTP_PORT;
 
         if (sslContextFactory == null) {
             if (!"http".equalsIgnoreCase(scheme)) {
@@ -279,7 +279,7 @@ public final class JettyHttpContainerFactory {
             if (!"https".equalsIgnoreCase(scheme)) {
                 throw new IllegalArgumentException(LocalizationMessages.WRONG_SCHEME_WHEN_USING_HTTPS());
             }
-            defaultPort = ConfigHelper.DEFAULT_HTTPS_PORT;
+            defaultPort = Container.DEFAULT_HTTPS_PORT;
         }
         final int port = (uri.getPort() == -1) ? defaultPort : uri.getPort();
 

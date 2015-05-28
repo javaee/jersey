@@ -63,6 +63,7 @@ import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.spi.ExecutorServiceProvider;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.TypeLiteral;
@@ -77,7 +78,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  */
 class ClientBinder extends AbstractBinder {
 
-    private final Map<String, Object> applicationProperties;
+    private final Map<String, Object> clientRuntimeProperties;
 
     private static class RequestContextInjectionFactory extends ReferencingFactory<ClientRequest> {
 
@@ -107,8 +108,13 @@ class ClientBinder extends AbstractBinder {
         }
     }
 
-    ClientBinder(Map<String, Object> applicationProperties) {
-        this.applicationProperties = applicationProperties;
+    /**
+     * Create new client binder for a new client runtime instance.
+     *
+     * @param clientRuntimeProperties map of client runtime properties.
+     */
+    ClientBinder(Map<String, Object> clientRuntimeProperties) {
+        this.clientRuntimeProperties = clientRuntimeProperties;
     }
 
     @Override
@@ -117,12 +123,12 @@ class ClientBinder extends AbstractBinder {
                 new JerseyErrorService.Binder(),
                 new ContextInjectionResolver.Binder(),
                 new JerseyClassAnalyzer.Binder(),
-                new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.CLIENT),
+                new MessagingBinders.MessageBodyProviders(clientRuntimeProperties, RuntimeType.CLIENT),
                 new MessagingBinders.HeaderDelegateProviders(),
                 new MessageBodyFactory.Binder(),
                 new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, RuntimeType.CLIENT));
+                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, clientRuntimeProperties, RuntimeType.CLIENT));
 
         bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);
@@ -138,5 +144,10 @@ class ClientBinder extends AbstractBinder {
 
         // ChunkedInput entity support
         bind(ChunkedInputReader.class).to(MessageBodyReader.class).in(Singleton.class);
+
+        // Default async request executors support
+        int asyncThreadPoolSize = ClientProperties.getValue(clientRuntimeProperties, ClientProperties.ASYNC_THREADPOOL_SIZE, 0);
+        asyncThreadPoolSize = (asyncThreadPoolSize < 0) ? 0 : asyncThreadPoolSize;
+        bind(new DefaultClientAsyncExecutorProvider(asyncThreadPoolSize)).to(ExecutorServiceProvider.class);
     }
 }

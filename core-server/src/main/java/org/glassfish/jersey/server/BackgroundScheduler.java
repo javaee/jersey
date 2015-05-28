@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal;
+package org.glassfish.jersey.server;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -50,10 +50,11 @@ import javax.inject.Qualifier;
 /**
  * Injection qualifier that can be used to inject a {@link java.util.concurrent.ScheduledExecutorService}
  * instance used by Jersey to execute background timed/scheduled tasks.
- *
- * A scheduled executor service instance injected using this injection qualifier is using the threads
- * created by a pluggable {@link org.glassfish.jersey.spi.RuntimeThreadProvider#getBackgroundThreadFactory()
- * background thread factory}.
+ * <p>
+ * A scheduled executor service instance injected using this injection qualifier can be customized by registering
+ * a custom {@link org.glassfish.jersey.spi.ScheduledExecutorServiceProvider} implementation that is itself annotated
+ * with the {@code &#64;BackgroundScheduler} annotation.
+ * </p>
  * <p>
  * Typically, when facing a need to execute a scheduled background task, you would be creating a new
  * standalone executor service that would be using a new standalone thread pool. This would however break
@@ -64,10 +65,13 @@ import javax.inject.Qualifier;
  * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @see BackgroundSchedulerLiteral
+ * @since 2.18
  */
-@Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD})
+@Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Qualifier
 public @interface BackgroundScheduler {
+
 }
