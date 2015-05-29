@@ -146,7 +146,7 @@ public class PackageNamesScanner extends AbstractResourceFinderAdapter {
 
                 @Override
                 public Enumeration<URL> getResources(String packagePath, ClassLoader classLoader) throws IOException {
-                    return osgiRegistry.getPackageResources(packagePath, classLoader);
+                    return osgiRegistry.getPackageResources(packagePath, classLoader, recursive);
                 }
             });
         }
