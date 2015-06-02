@@ -46,7 +46,6 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -55,13 +54,15 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.examples.shortener.webapp.domain.ShortenedLink;
 import org.glassfish.jersey.examples.shortener.webapp.service.ShortenerService;
 import org.glassfish.jersey.server.validation.ValidationError;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.ServletDeploymentContext;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Assert;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.MustacheFactory;
@@ -74,11 +75,12 @@ public class ResourcesTest extends JerseyTest {
     private static final MustacheFactory factory = new DefaultMustacheFactory();
 
     @Override
-    protected Application configure() {
+    protected DeploymentContext configureDeployment() {
         enable(TestProperties.DUMP_ENTITY);
         enable(TestProperties.LOG_TRAFFIC);
 
-        return new ShortenerApplication();
+        return ServletDeploymentContext.builder(ShortenerApplication.class)
+                .contextPath("shortener-webapp").servletPath("/").build();
     }
 
     @Test
@@ -86,7 +88,7 @@ public class ResourcesTest extends JerseyTest {
         final Response response = target().request("text/html").get();
 
         assertThat(response.getStatus(), equalTo(200));
-        Assert.assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
+        assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
 
         assertThat(response.readEntity(String.class),
                 equalTo(resolveTemplate("mustache/form.mustache", Collections.singletonMap("greeting", "Link Shortener"))));
@@ -98,7 +100,7 @@ public class ResourcesTest extends JerseyTest {
         final Response response = target().request("text/html").post(Entity.form(form));
 
         assertThat(response.getStatus(), equalTo(200));
-        Assert.assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
+        assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
 
         assertThat(response.readEntity(String.class),
                 equalTo(resolveTemplate("mustache/short-link.mustache",
@@ -111,7 +113,7 @@ public class ResourcesTest extends JerseyTest {
         final Response response = target().request("text/html").post(Entity.form(form));
 
         assertThat(response.getStatus(), equalTo(400));
-        Assert.assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
+        assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
 
         assertThat(response.readEntity(String.class),
                 equalTo(resolveTemplate("mustache/error-form.mustache", getCreateFormValidationErrors())));

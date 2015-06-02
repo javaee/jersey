@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,6 +58,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.validation.ValidationConfig;
 import org.glassfish.jersey.server.validation.internal.InjectingConstraintValidatorFactory;
 
+import org.eclipse.persistence.jaxb.BeanValidationMode;
+import org.eclipse.persistence.jaxb.MarshallerProperties;
+
 /**
  * ContactCard application configuration.
  *
@@ -74,7 +77,10 @@ public class MyApplication extends ResourceConfig {
 
         // Providers - JSON.
         register(MoxyJsonFeature.class);
-        register(JsonConfiguration.class);
+        register(new MoxyJsonConfig().setFormattedOutput(true)
+                // Turn off BV otherwise the entities on server would be validated by MOXy as well.
+                .property(MarshallerProperties.BEAN_VALIDATION_MODE, BeanValidationMode.NONE)
+                .resolver());
     }
 
     /**
@@ -121,19 +127,6 @@ public class MyApplication extends ResourceConfig {
                 }
                 return nameProvider.getParameterNames(method);
             }
-        }
-    }
-
-    /**
-     * Configuration for {@link org.eclipse.persistence.jaxb.rs.MOXyJsonProvider} - outputs formatted JSON.
-     */
-    public static class JsonConfiguration implements ContextResolver<MoxyJsonConfig> {
-
-        @Override
-        public MoxyJsonConfig getContext(final Class<?> type) {
-            final MoxyJsonConfig config = new MoxyJsonConfig();
-            config.setFormattedOutput(true);
-            return config;
         }
     }
 }

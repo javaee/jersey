@@ -93,9 +93,7 @@ public class ContactCardTest extends JerseyTest {
         enable(TestProperties.LOG_TRAFFIC);
         enable(TestProperties.DUMP_ENTITY);
 
-        final MyApplication application = new MyApplication();
-        application.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
-        return application;
+        return new MyApplication().property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
     }
 
     @Override

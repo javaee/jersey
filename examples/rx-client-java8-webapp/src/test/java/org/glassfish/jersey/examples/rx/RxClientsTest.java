@@ -47,9 +47,7 @@ import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.ServletDeploymentContext;
 
-import org.junit.FixMethodOrder;
 import org.junit.Test;
-import org.junit.runners.MethodSorters;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -62,7 +60,8 @@ public class RxClientsTest extends JerseyTest {
 
     @Override
     protected DeploymentContext configureDeployment() {
-        return ServletDeploymentContext.builder(RxApplication.class).contextPath("rx").build();
+        return ServletDeploymentContext.builder(RxApplication.class)
+                .contextPath("rx-client-java8-webapp").contextPath("rx").build();
     }
 
     @Test
