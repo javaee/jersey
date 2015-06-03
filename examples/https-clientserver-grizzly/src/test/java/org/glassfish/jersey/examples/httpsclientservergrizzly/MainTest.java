@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,19 +68,35 @@ import static org.junit.Assert.assertTrue;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class MainTest {
+
     private static final String TRUSTORE_CLIENT_FILE = "./truststore_client";
     private static final String TRUSTSTORE_CLIENT_PWD = "asdfgh";
     private static final String KEYSTORE_CLIENT_FILE = "./keystore_client";
     private static final String KEYSTORE_CLIENT_PWD = "asdfgh";
 
+    private final Object serverGuard = new Object();
+    private Server server = null;
+
     @Before
     public void setUp() throws Exception {
-        Server.startServer();
+        synchronized (serverGuard) {
+            if (server != null) {
+                throw new IllegalStateException(
+                        "Test run sync issue: Another instance of the SSL-secured HTTP test server has been already started.");
+            }
+            server = Server.start();
+        }
     }
 
     @After
     public void tearDown() throws Exception {
-        Server.stopServer();
+        synchronized (serverGuard) {
+            if (server == null) {
+                throw new IllegalStateException("Test run sync issue: There is no SSL-secured HTTP test server to stop.");
+            }
+            server.stop();
+            server = null;
+        }
     }
 
     @Test
@@ -159,7 +175,7 @@ public class MainTest {
         WebTarget target = client.target(Server.BASE_URI);
         target.register(new LoggingFilter());
 
-        Response response = null;
+        Response response;
 
         try {
             response = target.path("/").request().get(Response.class);
