@@ -380,7 +380,8 @@ public final class WebResourceFactory implements InvocationHandler {
 
     @Override
     public int hashCode() {
-        //every call to static "WebResourceFactory.newResource(...)" creates a new instance of WebResourceFactory internally ==> unique hashCode
+        //every call to static "WebResourceFactory.newResource(...)" creates
+        //a new instance of WebResourceFactory internally ==> unique hashCode
         return super.hashCode();
     }
 
