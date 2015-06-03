@@ -282,6 +282,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-media-kryo/dependencies.html">
+    jersey-media-kryo
+</link>
+</entry>
+<entry>Jersey/JAX-RS Message Body Writer and Reader using Kryo serialization framework</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-media-moxy/dependencies.html">
     jersey-media-moxy
 </link>
@@ -840,14 +848,6 @@
 </row>
 <row>
 <entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/default-method-java8-webapp/dependencies.html">
-    default-method-java8-webapp
-</link>
-</entry>
-<entry>Jersey App Using Java8 Default Methods Example.</entry>
-</row>
-<row>
-<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/entity-filtering/dependencies.html">
     entity-filtering
 </link>
@@ -1023,6 +1023,14 @@
 </link>
 </entry>
 <entry>Jersey HTTPS server on GlassFish example.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/java8-webapp/dependencies.html">
+    java8-webapp
+</link>
+</entry>
+<entry>Java 8 Types WebApp Example.</entry>
 </row>
 <row>
 <entry>
