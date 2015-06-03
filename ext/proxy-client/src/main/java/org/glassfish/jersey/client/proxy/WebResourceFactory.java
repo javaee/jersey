@@ -163,6 +163,10 @@ public final class WebResourceFactory implements InvocationHandler {
             return toString();
         }
 
+        if (args == null && method.getName().equals("hashCode")) {
+            return hashCode();
+        }
+
         // get the interface describing the resource
         final Class<?> proxyIfc = proxy.getClass().getInterfaces()[0];
 
@@ -372,6 +376,12 @@ public final class WebResourceFactory implements InvocationHandler {
     @Override
     public String toString() {
         return target.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        //every call to static "WebResourceFactory.newResource(...)" creates a new instance of WebResourceFactory internally ==> unique hashCode
+        return super.hashCode();
     }
 
     private static String getHttpMethodName(final AnnotatedElement ae) {
