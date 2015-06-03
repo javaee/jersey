@@ -52,7 +52,7 @@
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <version>2.18</version>
+    <version>2.19-SNAPSHOT</version>
     <name>jersey</name>
     <description>
         Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339)
@@ -155,7 +155,7 @@
         <connection>scm:git:git://java.net/jersey~code</connection>
         <developerConnection>scm:git:ssh://git.java.net/jersey~code</developerConnection>
         <url>http://java.net/projects/jersey/sources/code/show</url>
-        <tag>2.18</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <organization>
