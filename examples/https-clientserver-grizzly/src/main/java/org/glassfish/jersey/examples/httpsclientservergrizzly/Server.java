@@ -42,6 +42,7 @@ package org.glassfish.jersey.examples.httpsclientservergrizzly;
 import java.io.IOException;
 import java.net.URI;
 import java.security.AccessController;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -54,20 +55,30 @@ import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 
 /**
+ * A simple SSL-secured HTTP server.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class Server {
+
+    private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
+
     private static final String KEYSTORE_SERVER_FILE = "./keystore_server";
     private static final String KEYSTORE_SERVER_PWD = "asdfgh";
     private static final String TRUSTORE_SERVER_FILE = "./truststore_server";
     private static final String TRUSTORE_SERVER_PWD = "asdfgh";
-    private static HttpServer webServer;
 
     public static final URI BASE_URI = getBaseURI();
     public static final String CONTENT = "JERSEY HTTPS EXAMPLE\n";
 
+    private final HttpServer webServer;
+
+    private Server(final HttpServer webServer) {
+        this.webServer = webServer;
+    }
+
     private static URI getBaseURI() {
-        return UriBuilder.fromUri("https://localhost/").port(getPort(4463)).build();
+        return UriBuilder.fromUri("https://localhost/").port(getPort(8463)).build();
     }
 
     private static int getPort(int defaultPort) {
@@ -77,7 +88,7 @@ public class Server {
             try {
                 return Integer.parseInt(port);
             } catch (NumberFormatException e) {
-                System.out.println("Value of jersey.config.test.container.port property"
+                LOGGER.warning("Value of jersey.config.test.container.port property"
                         + " is not a valid positive integer [" + port + "]."
                         + " Reverting to default [" + defaultPort + "].");
             }
@@ -85,8 +96,13 @@ public class Server {
         return defaultPort;
     }
 
-    protected static void startServer() {
-
+    /**
+     * Start SSL-secured HTTP test server.
+     *
+     * @throws IOException in case there is an error while reading server key store or trust store.
+     * @return an instance of the started SSL-secured HTTP test server.
+     */
+    public static Server start() throws IOException {
         // Grizzly ssl configuration
         SSLContextConfigurator sslContext = new SSLContextConfigurator();
 
@@ -99,31 +115,30 @@ public class Server {
         ResourceConfig rc = new ResourceConfig();
         rc.registerClasses(RootResource.class, SecurityFilter.class, AuthenticationExceptionMapper.class);
 
-        try {
-            webServer = GrizzlyHttpServerFactory.createHttpServer(
-                    getBaseURI(),
-                    rc,
-                    true,
-                    new SSLEngineConfigurator(sslContext).setClientMode(false).setNeedClientAuth(true)
-            );
+        final HttpServer grizzlyServer = GrizzlyHttpServerFactory.createHttpServer(
+                getBaseURI(),
+                rc,
+                true,
+                new SSLEngineConfigurator(sslContext).setClientMode(false).setNeedClientAuth(true)
+        );
 
-            // start Grizzly embedded server //
-            System.out.println("Jersey app started. Try out " + BASE_URI + "\nHit CTRL + C to stop it...");
-            webServer.start();
+        // start Grizzly embedded server //
+        LOGGER.info("Jersey app started. Try out " + BASE_URI + "\nHit CTRL + C to stop it...");
+        grizzlyServer.start();
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            System.out.println(ex.getMessage());
-        }
+        return new Server(grizzlyServer);
     }
 
-    protected static void stopServer() {
+    /**
+     * Stop SSL-secured HTTP test server.
+     */
+    public void stop() {
         webServer.shutdownNow();
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void main(String[] args) throws InterruptedException, IOException {
-        startServer();
+        start();
 
         System.in.read();
     }
