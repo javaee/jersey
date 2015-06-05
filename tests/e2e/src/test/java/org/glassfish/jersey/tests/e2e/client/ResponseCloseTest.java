@@ -49,6 +49,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 /**
@@ -160,10 +162,10 @@ public class ResponseCloseTest extends JerseyTest {
         final Response response = target().path("simple").request().get(Response.class);
         response.close();
         try {
-            response.hasEntity();
-            fail("IllegalStateException expected when reading a buffered entity after response has been closed.");
+            boolean hasEntity = response.hasEntity();
+            assertFalse("Should return false when the connection is already closed", hasEntity);
         } catch (IllegalStateException ex) {
-            // expected
+            fail("IllegalStateException should have been caught inside hasEntity.");
         }
     }
 }
