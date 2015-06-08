@@ -81,8 +81,8 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
 
             this.server = GrizzlyHttpServerFactory.createHttpServer(this.baseUri, context.getResourceConfig(), false);
 
-            if(configurator != null) {
-               configurator.configureServer(this.server.getServerConfiguration());
+            if (configurator != null) {
+               configurator.configureServer(server);
             }
         }
 
@@ -152,10 +152,11 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
      */
     public static interface GrizzlyServerConfigurator {
         /**
-         * This is called right after the HttpServer has been created.
+         * This is called right after the HttpServer has been created, and allows the test case to
+         * make custom configurations such as add-ons or adjusting the ServerConfiguration.
          *
-         * @param grizzlyServerConfiguration
+         * @param grizzlyServer
          */
-        void configureServer(ServerConfiguration grizzlyServerConfiguration);
+        void configureServer(HttpServer grizzlyServer);
     }
 }
