@@ -106,9 +106,13 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
                     checkToken(st, ";");
                     String n = st.nextToken().trim();
                     checkToken(st, "=");
-                    checkToken(st, "\"");
-                    String v = st.nextToken();
-                    checkToken(st, "\"");
+
+                    String v = nextNonEmptyToken(st);
+                    if (v.equals("\"")) {
+                        v = st.nextToken();
+                        checkToken(st, "\"");
+                    }
+
                     lb.param(n, v);
                 }
             }
@@ -122,6 +126,17 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
             throw new IllegalArgumentException("Unable to parse link " + value);
         }
         return lb;
+    }
+
+    private static String nextNonEmptyToken(StringTokenizer st) throws IllegalArgumentException {
+        String token = null;
+        do {
+            token = st.nextToken().trim();
+        } while (token.length() == 0);
+        if (token == null) {
+            throw new IllegalArgumentException("Non-Empty token not found");
+        }
+        return token;
     }
 
     private static void checkToken(StringTokenizer st, String expected) throws IllegalArgumentException {
