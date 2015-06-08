@@ -139,6 +139,7 @@ public class Injections {
 
         result.setNeutralContextClassLoader(false);
         ServiceLocatorUtilities.enablePerThreadScope(result);
+        ServiceLocatorUtilities.enableImmediateScope(result);
 
         for (final Binder binder : binders) {
             bind(result, binder);
