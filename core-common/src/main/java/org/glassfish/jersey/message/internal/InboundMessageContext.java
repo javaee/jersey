@@ -653,7 +653,9 @@ public abstract class InboundMessageContext {
         try {
             Set<Link> result = new HashSet<Link>(links.size());
             for (String l : links) {
-                result.add(Link.valueOf(l));
+                for (String p : l.split(",")) {
+                    result.add(Link.valueOf(p.trim()));
+                }
             }
             return result;
         } catch (IllegalArgumentException e) {

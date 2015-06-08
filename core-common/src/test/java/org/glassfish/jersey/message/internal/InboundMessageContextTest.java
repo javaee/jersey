@@ -196,6 +196,17 @@ public class InboundMessageContextTest {
     }
 
     @Test
+    public void testGetLinksWithMultipleLinksInOneHeader() {
+        InboundMessageContext r = createInboundMessageContext();
+        Link link1 = Link.fromUri("https://example.org/one/api/groups?page=2").rel("next").build();
+        Link link2 = Link.fromUri("https://example.org/one/api/groups?page=39").rel("last").build();
+        r.header("Link", "<https://example.org/one/api/groups?page=2>; rel=\"next\", <https://example.org/one/api/groups?page=39>; rel=\"last\"");
+        assertEquals(2, r.getLinks().size());
+        assertTrue(r.getLinks().contains(link1));
+        assertTrue(r.getLinks().contains(link2));
+    }
+
+    @Test
     public void testGetLink() {
         InboundMessageContext r = createInboundMessageContext();
         Link link1 = Link.fromUri("http://example.org/app/link1").param("produces", "application/json").param("method",
