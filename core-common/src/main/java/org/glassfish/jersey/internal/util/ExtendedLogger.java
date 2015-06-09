@@ -52,6 +52,7 @@ import java.util.logging.Logger;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@SuppressWarnings("deprecation")
 public final class ExtendedLogger {
 
     @SuppressWarnings("NonConstantLogger")

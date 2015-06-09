@@ -158,7 +158,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     private transient Pattern staticContentPattern;
     private transient String filterContextPath;
 
-    private volatile ContainerLifecycleListener containerListener;
+    private transient volatile ContainerLifecycleListener containerListener;
 
     /**
      * Initiate the Web component.
