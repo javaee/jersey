@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,63 +40,24 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
-        <groupId>org.glassfish.jersey</groupId>
+        <groupId>org.glassfish.jersey.tests.memleaks</groupId>
         <artifactId>project</artifactId>
         <version>2.20-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.glassfish.jersey.tests</groupId>
+    <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <name>jersey-tests</name>
+    <name>jersey-tests-memleak-maven</name>
 
-    <description>
-        Test modules containing test scenario types that involve multiple implementation
-        modules (integration, functional, etc. tests).
-    </description>
+    <description>Jersey test framework Maven project</description>
 
     <modules>
-        <module>e2e</module>
-        <module>e2e-testng</module>
-        <module>integration</module>
-        <module>mem-leaks</module>
-        <module>osgi</module>
-        <module>performance</module>
+        <module>container-runner-maven-plugin</module>
+        <module>custom-enforcer-rules</module>
     </modules>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.glassfish.jersey</groupId>
-                <artifactId>jersey-bom</artifactId>
-                <version>${project.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

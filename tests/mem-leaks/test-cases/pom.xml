@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.glassfish.jersey.tests.memleaks</groupId>
+        <artifactId>project</artifactId>
+        <version>2.20-SNAPSHOT</version>
+    </parent>
+
+    <groupId>org.glassfish.jersey.tests.memleaks.testcases</groupId>
+    <artifactId>project</artifactId>
+    <packaging>pom</packaging>
+    <name>jersey-tests-memleak-testcase</name>
+
+    <description>
+        Memory leaks test cases.
+
+        Tests in this maven submodule can be either:
+
+        [1] Simple tests executed by maven-surefire-plugin in a dedicated JVM. These tests should attempt to cause a memory leak
+        directly. The heap can be configured by means of 'memleak.jvm.maxheap' property. It can be combined with other
+        infrastructure which is described bellow.
+
+        [2] Integration tests executed by maven-surefire-plugin. These tests should test against Jersey application deployed to a
+        servlet container. The state of the servlet container (e.g., whether OutOfMemoryError occurred) should be inspected by
+        infrastructure described bellow.
+
+        TEST INFRASTRUCTURE
+
+        The test infrastructure is configured from Maven and the tests should be executed by Maven. Normally, test-cases shall
+        override maven properties defined in this pom and declare required maven plugins in their build section. All the maven
+        plugin executions will be configured from this pom.
+
+        [a] Container Runners (org.glassfish.jersey.test-framework.maven:container-runner-maven-plugin) feature Weblogic and
+        Glassfish4 with functionality: download, start, deploy and stop.
+
+        [b] Maven Enforce Custom Rules (org.glassfish.jersey.test-framework.maven:custom-enforcer-rules) that can enforce
+        non-existent Java Heap dumps files in a certain path or no OutOfMemoryError errors in a log file.
+
+        [c] Jetty execution in a dedicated JVM with configured to dump heap on OutOfMemoryError errors.
+
+        [d] Common Memleak JUnit test infrastructure that provides means to stop a test after a certain period of time and mark
+        the test as successful as well as to perform heap dumps from the Java code or to inspect log files for OutOfMemoryError
+        errors.
+
+        EXAMPLE OF EXECUTION
+
+        mvn clean install -amd -pl
+        :memleak-test-common,org.glassfish.jersey.test-framework.maven:project,org.glassfish.jersey.tests.memleaks.testcases:project
+        -P gf4,memleak-test-cases -fae
+
+        mvn clean install -amd -pl
+        :memleak-test-common,org.glassfish.jersey.tests.memleaks.maven:project,org.glassfish.jersey.tests.memleaks.testcases:project
+        -P gf4,memleak-test-cases -fae
+    </description>
+
+    <modules>
+        <module>bean-param-leak</module>
+        <module>shutdown-hook-leak</module>
+        <module>shutdown-hook-leak-client</module>
+        <module>leaking-test-app</module>
+    </modules>
+
+    <properties>
+        <memleak.test.timeout>300000</memleak.test.timeout>
+        <memleak.jetty.maxheap>${memleak.jvm.maxheap}</memleak.jetty.maxheap>
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <configuration>
+                        <systemPropertyVariables>
+                            <jersey.config.test.memleak.timeout>${memleak.test.timeout}</jersey.config.test.memleak.timeout>
+                            <jersey.config.test.container.factory>${external.container.factory}
+                            </jersey.config.test.container.factory>
+                            <jersey.config.test.container.port>${external.container.port}</jersey.config.test.container.port>
+                            <jersey.config.test.container.contextRoot>${external.container.contextRoot}
+                            </jersey.config.test.container.contextRoot>
+                            <jersey.config.test.container.logfile>${external.container.logFile}
+                            </jersey.config.test.container.logfile>
+                        </systemPropertyVariables>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <systemPropertyVariables>
+                            <jersey.config.test.memleak.timeout>${memleak.test.timeout}</jersey.config.test.memleak.timeout>
+                            <jersey.config.test.memleak.heapDumpPath>${project.build.directory}
+                            </jersey.config.test.memleak.heapDumpPath>
+                            <jersey.config.test.container.factory>${external.container.factory}
+                            </jersey.config.test.container.factory>
+                            <jersey.config.test.container.port>${external.container.port}</jersey.config.test.container.port>
+                            <jersey.config.test.container.contextRoot>${external.container.contextRoot}
+                            </jersey.config.test.container.contextRoot>
+                        </systemPropertyVariables>
+                        <argLine>-Xmx${memleak.jvm.maxheap} -XX:+HeapDumpOnOutOfMemoryError
+                            -XX:HeapDumpPath=${memleak.jvm.heapdumpdir}
+                        </argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.mortbay.jetty</groupId>
+                    <artifactId>jetty-maven-plugin</artifactId>
+                    <configuration>
+                        <skip>${skip.tests}</skip>
+                        <scanIntervalSeconds>10</scanIntervalSeconds>
+                        <stopPort>9999</stopPort>
+                        <stopKey>STOP</stopKey>
+                        <contextPath>/${external.container.contextRoot}</contextPath>
+                        <jvmArgs>-Xms64m -Xmx${memleak.jetty.maxheap} -XX:PermSize=128m -XX:MaxPermSize=256m
+                            -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${memleak.jvm.heapdumpdir}
+                            -Djetty.port=${external.container.port} -Djersey.config.test.memleak.jetty.magicRunnerIdentifier
+                            -Dorg.slf4j.simpleLogger.logFile=${external.container.logFile}
+                        </jvmArgs>
+                        <waitForChild>false</waitForChild>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>start-jetty</id>
+                            <phase>pre-integration-test</phase>
+                            <goals>
+                                <goal>run-forked</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>stop-jetty</id>
+                            <phase>post-integration-test</phase>
+                            <goals>
+                                <goal>stop</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.slf4j</groupId>
+                            <artifactId>slf4j-simple</artifactId>
+                            <version>1.7.5</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <artifactId>custom-enforcer-rules</artifactId>
+                            <version>${project.version}</version>
+                        </dependency>
+                    </dependencies>
+                    <executions>
+                        <execution>
+                            <id>enforce-out-of-memory-did-not-occur</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <phase>post-integration-test</phase>
+                            <configuration>
+                                <rules>
+                                    <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.FilePatternDoesNotExistRule">
+                                        <files>
+                                            <file>${memleak.jvm.heapdumpdir}/java_pid*.hprof</file>
+                                        </files>
+                                    </rule>
+                                    <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.PatternNotMatchedInFileRule">
+                                        <file>${external.container.logFile}</file>
+                                        <pattern>.*java\.lang\.OutOfMemoryError.*</pattern>
+                                    </rule>
+                                </rules>
+                                <fail>true</fail>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>gf4</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.mortbay.jetty</groupId>
+                            <artifactId>jetty-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>start-jetty</id>
+                                    <phase>none</phase>
+                                </execution>
+                                <execution>
+                                    <id>stop-jetty</id>
+                                    <phase>none</phase>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
+        <profile>
+            <id>wls</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.mortbay.jetty</groupId>
+                            <artifactId>jetty-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>start-jetty</id>
+                                    <phase>none</phase>
+                                </execution>
+                                <execution>
+                                    <id>stop-jetty</id>
+                                    <phase>none</phase>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
+        <profile>
+            <id>tomcat</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.mortbay.jetty</groupId>
+                            <artifactId>jetty-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>start-jetty</id>
+                                    <phase>none</phase>
+                                </execution>
+                                <execution>
+                                    <id>stop-jetty</id>
+                                    <phase>none</phase>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
+    </profiles>
+
+</project>
