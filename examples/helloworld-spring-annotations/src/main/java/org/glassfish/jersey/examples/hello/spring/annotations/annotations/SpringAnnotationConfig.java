@@ -39,6 +39,9 @@
  */
 package org.glassfish.jersey.examples.hello.spring.annotations.annotations;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
@@ -50,4 +53,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ComponentScan(basePackageClasses = {GreetingService.class})
 public class SpringAnnotationConfig {
+
+	@Bean(name = "atomicCounter")
+	public AtomicInteger getCounter() {
+		return new AtomicInteger();
+	}
+	
 }

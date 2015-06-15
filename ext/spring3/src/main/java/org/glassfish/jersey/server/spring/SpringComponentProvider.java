@@ -111,6 +111,7 @@ public class SpringComponentProvider implements ComponentProvider {
 
         // register Spring @Autowired annotation handler with HK2 ServiceLocator
         ServiceLocatorUtilities.addOneConstant(locator, new AutowiredInjectResolver(ctx));
+		ServiceLocatorUtilities.addOneConstant(locator, new ResourceInjectResolver(ctx));
         ServiceLocatorUtilities.addOneConstant(locator, ctx, "SpringContext", ApplicationContext.class);
         LOGGER.config(LocalizationMessages.SPRING_COMPONENT_PROVIDER_INITIALIZED());
     }
