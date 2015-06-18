@@ -139,7 +139,8 @@ public class ResponseWriter implements ContainerResponseWriter {
 
         //Test if the response is sent before trying to write the response
         if (response.isCommitted()){
-            LOGGER.log(Level.WARNING, "Unable to write on commited http response. Verify response usage. Your Response container can not be sent.");
+            LOGGER.log(Level.WARNING, "Unable to write on commited http response. Verify response usage. "
+                    + "Your Response container will be sent.");
             try {
                 return response.getOutputStream();
             } catch (final IOException e) {
