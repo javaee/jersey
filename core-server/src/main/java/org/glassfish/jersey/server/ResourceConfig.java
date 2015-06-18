@@ -95,6 +95,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
     private transient Set<Object> cachedSingletons = null;
     private transient Set<Object> cachedSingletonsView = null;
 
+    private transient boolean resetFinders = false;
+
     private volatile State state;
 
     private static class State extends CommonConfig implements ServerConfig {
@@ -609,6 +611,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         if (resourceFinder == null) {
             return this;
         }
+        invalidateCache();
 
         this.state.registerFinder(resourceFinder);
         return this;
@@ -708,8 +711,11 @@ public class ResourceConfig extends Application implements Configurable<Resource
         this.cachedSingletonsView = null;
 
         // Reset ResourceFinders to make sure the next package scanning is successful.
-        for (final ResourceFinder finder : this.state.resourceFinders) {
-            finder.reset();
+        if (resetFinders) {
+            for (final ResourceFinder finder : this.state.resourceFinders) {
+                finder.reset();
+            }
+            resetFinders = false;
         }
     }
 
@@ -863,6 +869,9 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
         final ResourceConfig.State _state = state;
         final Set<ResourceFinder> rfs = Sets.newHashSet(_state.getResourceFinders());
+
+        // In case new entity is registered the available finders should be reset.
+        resetFinders = true;
 
         // classes registered via configuration property
         final String[] classNames = parsePropertyValue(ServerProperties.PROVIDER_CLASSNAMES);

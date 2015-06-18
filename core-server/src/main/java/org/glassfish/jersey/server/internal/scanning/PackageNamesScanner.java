@@ -85,14 +85,14 @@ import org.glassfish.jersey.uri.UriComponent;
  * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class PackageNamesScanner extends AbstractResourceFinderAdapter {
+public final class PackageNamesScanner extends AbstractResourceFinderAdapter {
 
     private final boolean recursive;
     private final String[] packages;
     private final ClassLoader classloader;
     private final Map<String, UriSchemeResourceFinderFactory> finderFactories;
 
-    private ResourceFinderStack resourceFinderStack;
+    private CompositeResourceFinder compositeResourceFinder;
 
     /**
      * Scan a set of packages using a context {@link ClassLoader}.
@@ -145,7 +145,7 @@ public class PackageNamesScanner extends AbstractResourceFinderAdapter {
             setResourcesProvider(new PackageNamesScanner.ResourcesProvider() {
 
                 @Override
-                public Enumeration<URL> getResources(String packagePath, ClassLoader classLoader) throws IOException {
+                public Enumeration<URL> getResources(final String packagePath, final ClassLoader classLoader) throws IOException {
                     return osgiRegistry.getPackageResources(packagePath, classLoader, recursive);
                 }
             });
@@ -155,33 +155,39 @@ public class PackageNamesScanner extends AbstractResourceFinderAdapter {
     }
 
     private void add(final UriSchemeResourceFinderFactory uriSchemeResourceFinderFactory) {
-        for (final String s : uriSchemeResourceFinderFactory.getSchemes()) {
-            finderFactories.put(s.toLowerCase(), uriSchemeResourceFinderFactory);
+        for (final String scheme : uriSchemeResourceFinderFactory.getSchemes()) {
+            finderFactories.put(scheme.toLowerCase(), uriSchemeResourceFinderFactory);
         }
     }
 
     @Override
     public boolean hasNext() {
-        return resourceFinderStack.hasNext();
+        return compositeResourceFinder.hasNext();
     }
 
     @Override
     public String next() {
-        return resourceFinderStack.next();
+        return compositeResourceFinder.next();
     }
 
     @Override
     public InputStream open() {
-        return resourceFinderStack.open();
+        return compositeResourceFinder.open();
+    }
+
+    @Override
+    public void close() {
+        compositeResourceFinder.close();
     }
 
     @Override
     public void reset() {
+        close();
         init();
     }
 
     private void init() {
-        resourceFinderStack = new ResourceFinderStack();
+        compositeResourceFinder = new CompositeResourceFinder();
 
         for (final String p : packages) {
             try {
@@ -190,11 +196,11 @@ public class PackageNamesScanner extends AbstractResourceFinderAdapter {
                 while (urls.hasMoreElements()) {
                     try {
                         addResourceFinder(toURI(urls.nextElement()));
-                    } catch (URISyntaxException e) {
+                    } catch (final URISyntaxException e) {
                         throw new ResourceFinderException("Error when converting a URL to a URI", e);
                     }
                 }
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new ResourceFinderException("IO error when package scanning jar", e);
             }
         }
@@ -219,7 +225,7 @@ public class PackageNamesScanner extends AbstractResourceFinderAdapter {
                         provider = result = new ResourcesProvider() {
 
                             @Override
-                            public Enumeration<URL> getResources(String name, ClassLoader cl)
+                            public Enumeration<URL> getResources(final String name, final ClassLoader cl)
                                     throws IOException {
                                 return cl.getResources(name);
                             }
@@ -232,10 +238,10 @@ public class PackageNamesScanner extends AbstractResourceFinderAdapter {
             return result;
         }
 
-        private static void setInstance(ResourcesProvider provider) throws SecurityException {
-            SecurityManager security = System.getSecurityManager();
+        private static void setInstance(final ResourcesProvider provider) throws SecurityException {
+            final SecurityManager security = System.getSecurityManager();
             if (security != null) {
-                ReflectPermission rp = new ReflectPermission("suppressAccessChecks");
+                final ReflectPermission rp = new ReflectPermission("suppressAccessChecks");
                 security.checkPermission(rp);
             }
             synchronized (ResourcesProvider.class) {
@@ -266,14 +272,14 @@ public class PackageNamesScanner extends AbstractResourceFinderAdapter {
      * @param provider the resources provider.
      * @throws SecurityException if the resources provider cannot be set.
      */
-    public static void setResourcesProvider(ResourcesProvider provider) throws SecurityException {
+    public static void setResourcesProvider(final ResourcesProvider provider) throws SecurityException {
         ResourcesProvider.setInstance(provider);
     }
 
     private void addResourceFinder(final URI u) {
         final UriSchemeResourceFinderFactory finderFactory = finderFactories.get(u.getScheme().toLowerCase());
         if (finderFactory != null) {
-            resourceFinderStack.push(finderFactory.create(u, recursive));
+            compositeResourceFinder.push(finderFactory.create(u, recursive));
         } else {
             throw new ResourceFinderException("The URI scheme " + u.getScheme()
                     + " of the URI " + u
@@ -285,10 +291,10 @@ public class PackageNamesScanner extends AbstractResourceFinderAdapter {
         }
     }
 
-    private URI toURI(URL url) throws URISyntaxException {
+    private URI toURI(final URL url) throws URISyntaxException {
         try {
             return url.toURI();
-        } catch (URISyntaxException e) {
+        } catch (final URISyntaxException e) {
             // Work around bug where some URLs are incorrectly encoded.
             // This can occur when certain class loaders are utilized
             // to obtain URLs for resources.
@@ -296,7 +302,7 @@ public class PackageNamesScanner extends AbstractResourceFinderAdapter {
         }
     }
 
-    private String toExternalForm(URL u) {
+    private String toExternalForm(final URL u) {
 
         // pre-compute length of StringBuffer
         int len = u.getProtocol().length() + 1;
@@ -313,7 +319,7 @@ public class PackageNamesScanner extends AbstractResourceFinderAdapter {
             len += 1 + u.getRef().length();
         }
 
-        StringBuilder result = new StringBuilder(len);
+        final StringBuilder result = new StringBuilder(len);
         result.append(u.getProtocol());
         result.append(":");
         if (u.getAuthority() != null && u.getAuthority().length() > 0) {

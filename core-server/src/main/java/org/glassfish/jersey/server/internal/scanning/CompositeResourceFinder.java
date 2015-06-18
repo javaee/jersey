@@ -40,66 +40,90 @@
 package org.glassfish.jersey.server.internal.scanning;
 
 import java.io.InputStream;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 import org.glassfish.jersey.server.ResourceFinder;
-
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
+ * {@link Stack} of {@link ResourceFinder} instances.
+ * <p/>
+ * Used to combine various finders into one instance.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class ResourceFinderStackTest {
+public final class CompositeResourceFinder extends AbstractResourceFinderAdapter {
 
-    public static class MyIterator extends AbstractResourceFinderAdapter {
-        boolean iterated = false;
+    private static final Logger LOGGER = Logger.getLogger(CompositeResourceFinder.class.getName());
 
-        @Override
-        public boolean hasNext() {
-            return !iterated;
-        }
+    private final Deque<ResourceFinder> stack = new LinkedList<>();
+    private ResourceFinder current = null;
 
-        @Override
-        public String next() {
-            if (!iterated) {
-                iterated = true;
-                return "value";
+    @Override
+    public boolean hasNext() {
+        if (current == null) {
+            if (!stack.isEmpty()) {
+                current = stack.pop();
+            } else {
+                return false;
             }
-
-            throw new NoSuchElementException();
         }
 
-        @Override
-        public void reset() {
-        }
-
-        @Override
-        public InputStream open() {
-            return null;
+        if (current.hasNext()) {
+            return true;
+        } else {
+            if (!stack.isEmpty()) {
+                current = stack.pop();
+                return hasNext();
+            } else {
+                return false;
+            }
         }
     }
 
-
-    @Test
-    public void test() {
-        ResourceFinder i = new MyIterator();
-        ResourceFinder j = new MyIterator();
-
-        ResourceFinderStack iteratorStack = new ResourceFinderStack();
-        iteratorStack.push(i);
-        iteratorStack.push(j);
-
-        assertEquals(iteratorStack.next(), "value");
-        assertEquals(iteratorStack.next(), "value");
-
-        try {
-            iteratorStack.next();
-            assertTrue(false);
-        } catch (NoSuchElementException nsee) {
-            assertTrue(true);
+    @Override
+    public String next() {
+        if (hasNext()) {
+            return current.next();
         }
+
+        throw new NoSuchElementException();
+    }
+
+    @Override
+    public InputStream open() {
+        return current.open();
+    }
+
+    @Override
+    public void close() {
+        if (current != null) {
+            // Insert the currently processed resource finder at the top of the stack.
+            stack.addFirst(current);
+            current = null;
+        }
+        for (final ResourceFinder finder : stack) {
+            try {
+                finder.close();
+            } catch (final RuntimeException e) {
+                LOGGER.log(Level.CONFIG, LocalizationMessages.ERROR_CLOSING_FINDER(finder.getClass()), e);
+            }
+        }
+        stack.clear();
+    }
+
+    @Override
+    public void reset() {
+        throw new UnsupportedOperationException();
+    }
+
+    public void push(final ResourceFinder iterator) {
+        stack.push(iterator);
     }
 }

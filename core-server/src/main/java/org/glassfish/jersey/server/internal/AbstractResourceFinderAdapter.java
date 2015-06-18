@@ -50,10 +50,18 @@ import org.glassfish.jersey.server.ResourceFinder;
 public abstract class AbstractResourceFinderAdapter implements ResourceFinder {
 
     /**
-     * Default implementation of {@link #remove()} which complies with the defined contract.
+     * Default implementation of {@code #remove()} which complies with the defined contract.
      */
     @Override
     public void remove() {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Default implementation of {@code #close()} which does nothing.
+     */
+    @Override
+    public void close() {
+        // NO-OP.
     }
 }

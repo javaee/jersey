@@ -155,9 +155,11 @@
                 <configuration>
                     <argLine>${surefire.security.argline}</argLine>
                     <!-- Execute test classes in parallel - 1 thread per CPU core. -->
-                    <parallel>classesAndMethods</parallel>
+                    <parallel>classes</parallel>
                     <perCoreThreadCount>true</perCoreThreadCount>
                     <threadCount>1</threadCount>
+                    <forkCount>1C</forkCount>
+                    <reuseForks>true</reuseForks>
                 </configuration>
             </plugin>
          </plugins>
@@ -222,6 +224,11 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

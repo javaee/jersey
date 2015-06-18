@@ -456,6 +456,7 @@
 <!ENTITY jersey.server.Resource "<link xlink:href='&jersey.javadoc.uri.prefix;/server/model/Resource.html'>Resource</link>">
 <!ENTITY jersey.server.Resource.getParent "<link xlink:href='&jersey.javadoc.uri.prefix;/server/model/Resource.html#getParent()'>Resource.getParent()</link>">
 <!ENTITY jersey.server.ResourceConfig "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ResourceConfig.html'>ResourceConfig</link>">
+<!ENTITY jersey.server.ResourceFinder "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ResourceFinder.html'>ResourceFinder</link>">
 <!ENTITY jersey.server.ResponseErrorMapper "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ResponseErrorMapper.html'>ResponseErrorMapper</link>">
 <!ENTITY jersey.server.RolesAllowedDynamicFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/server/filter/RolesAllowedDynamicFeature.html'>RolesAllowedDynamicFeature</link>">
 <!ENTITY jersey.server.ServerProperties "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html'>ServerProperties</link>">
@@ -884,6 +885,7 @@
 <!ENTITY lit.jersey.server.ManagedAsyncExecutorLiteral "<literal>ManagedAsyncExecutorLiteral</literal>">
 <!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">
 <!ENTITY lit.jersey.server.ResourceConfig "<literal>ResourceConfig</literal>">
+<!ENTITY lit.jersey.server.ResourceFinder "<literal>ResourceFinder</literal>">
 <!ENTITY lit.jersey.server.ResponseErrorMapper "<literal>ResponseErrorMapper</literal>">
 <!ENTITY lit.jersey.server.RolesAllowedDynamicFeature "<literal>RolesAllowedDynamicFeature</literal>">
 <!ENTITY lit.jersey.server.ServerProperties "<literal>ServerProperties</literal>" >

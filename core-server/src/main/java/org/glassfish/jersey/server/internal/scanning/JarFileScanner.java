@@ -48,6 +48,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
  * A utility class that scans entries in jar files.
@@ -68,9 +69,9 @@ public final class JarFileScanner extends AbstractResourceFinderAdapter {
      * Create new JAR file scanner.
      *
      * @param inputStream JAR file input stream
-     * @param parent JAR file entry prefix.
-     * @param recursive if ({@code true} the packages will be scanned recursively together with any nested packages, if
-     * {@code false} only the explicitly listed packages will be scanned.
+     * @param parent      JAR file entry prefix.
+     * @param recursive   if ({@code true} the packages will be scanned recursively together with any nested packages, if
+     *                    {@code false} only the explicitly listed packages will be scanned.
      * @throws IOException if wrapping given input stream into {@link JarInputStream} failed.
      */
     public JarFileScanner(final InputStream inputStream, final String parent, final boolean recursive) throws IOException {
@@ -97,21 +98,14 @@ public final class JarFileScanner extends AbstractResourceFinderAdapter {
                         }
                     }
                 } while (true);
-            } catch (final IOException e) {
-                LOGGER.log(Level.CONFIG, "Unable to read the next jar entry.", e);
-                return false;
-            } catch (final SecurityException e) {
-                LOGGER.log(Level.CONFIG, "Unable to read the next jar entry.", e);
+            } catch (final IOException | SecurityException e) {
+                LOGGER.log(Level.CONFIG, LocalizationMessages.JAR_SCANNER_UNABLE_TO_READ_ENTRY(), e);
                 return false;
             }
         }
 
         if (next == null) {
-            try {
-                jarInputStream.close();
-            } catch (final IOException e) {
-                LOGGER.log(Level.FINE, "Unable to close jar file.", e);
-            }
+            close();
 
             return false;
         }
@@ -137,6 +131,7 @@ public final class JarFileScanner extends AbstractResourceFinderAdapter {
 
     @Override
     public InputStream open() {
+        //noinspection NullableProblems
         return new InputStream() {
 
             @Override
@@ -184,6 +179,15 @@ public final class JarFileScanner extends AbstractResourceFinderAdapter {
                 return jarInputStream.markSupported();
             }
         };
+    }
+
+    @Override
+    public void close() {
+        try {
+            jarInputStream.close();
+        } catch (final IOException ioe) {
+            LOGGER.log(Level.FINE, LocalizationMessages.JAR_SCANNER_UNABLE_TO_CLOSE_FILE(), ioe);
+        }
     }
 }
 

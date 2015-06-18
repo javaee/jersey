@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,31 +44,45 @@ import java.util.Iterator;
 
 /**
  * An interface used for finding and opening (loading) new resources.
- *
+ * <p/>
  * {@link ResourceConfig} will use all registered finders to obtain classes
  * to be used as resource classes and/or providers. Method {@link #open()} doesn't
  * need to be called on all returned resource names, {@link ResourceConfig} can ignore
  * some of them.
- *
+ * <p/>
  * Currently, all resource names ending with ".class" will be accepted and processed (opened).
+ * <p/>
+ * Extends {@link AutoCloseable} since version 2.19. The {@link #close()} method is used to release
+ * allocated/opened resources (such as streams). When a resource finder is closed no other method should be
+ * invoked on it.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public interface ResourceFinder extends Iterator<String> {
+public interface ResourceFinder extends Iterator<String>, AutoCloseable {
 
     /**
      * Open current resource.
      *
      * @return input stream from which current resource can be loaded.
      */
-    InputStream open();
+    public InputStream open();
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Release allocated/opened resources (such as streams). When the resource finder is closed
+     * no other method should be invoked on it.
+     *
+     * @since 2.19
+     */
+    public void close();
 
     /**
      * Reset the {@link ResourceFinder} instance.
      * <p/>
      * Upon calling this method the implementing class MUST reset its internal state to the initial state.
      */
-    void reset();
+    public void reset();
 
     /**
      * {@inheritDoc}
@@ -77,5 +91,5 @@ public interface ResourceFinder extends Iterator<String> {
      * when invoked.
      */
     @Override
-    void remove();
+    public void remove();
 }

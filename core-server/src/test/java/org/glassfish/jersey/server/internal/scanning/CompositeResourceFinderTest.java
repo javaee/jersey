@@ -40,68 +40,66 @@
 package org.glassfish.jersey.server.internal.scanning;
 
 import java.io.InputStream;
-import java.util.Deque;
-import java.util.LinkedList;
 import java.util.NoSuchElementException;
-import java.util.Stack;
 
-import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
- * {@link Stack} of {@link ResourceFinder} instances.
- *
- * Used to combine various finders into one instance.
- *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class ResourceFinderStack extends AbstractResourceFinderAdapter {
+public class CompositeResourceFinderTest {
 
-    private final Deque<ResourceFinder> stack = new LinkedList<ResourceFinder>();
-    private ResourceFinder current = null;
+    public static class MyIterator extends AbstractResourceFinderAdapter {
 
-    @Override
-    public boolean hasNext() {
-        if (current == null) {
-            if (!stack.isEmpty()) {
-                current = stack.pop();
-            } else {
-                return false;
+        boolean iterated = false;
+
+        @Override
+        public boolean hasNext() {
+            return !iterated;
+        }
+
+        @Override
+        public String next() {
+            if (!iterated) {
+                iterated = true;
+                return "value";
             }
+
+            throw new NoSuchElementException();
         }
 
-        if (current.hasNext()) {
-            return true;
-        } else {
-            if (!stack.isEmpty()) {
-                current = stack.pop();
-                return hasNext();
-            } else {
-                return false;
-            }
+        @Override
+        public void reset() {
+        }
+
+        @Override
+        public InputStream open() {
+            return null;
         }
     }
 
-    @Override
-    public String next() {
-        if (hasNext()) {
-            return current.next();
+    @Test
+    public void test() {
+        final ResourceFinder i = new MyIterator();
+        final ResourceFinder j = new MyIterator();
+
+        final CompositeResourceFinder iteratorStack = new CompositeResourceFinder();
+        iteratorStack.push(i);
+        iteratorStack.push(j);
+
+        assertEquals(iteratorStack.next(), "value");
+        assertEquals(iteratorStack.next(), "value");
+
+        try {
+            iteratorStack.next();
+            assertTrue(false);
+        } catch (final NoSuchElementException nsee) {
+            assertTrue(true);
         }
-
-        throw new NoSuchElementException();
-    }
-
-    @Override
-    public InputStream open() {
-        return current.open();
-    }
-
-    public void push(ResourceFinder iterator) {
-        stack.push(iterator);
-    }
-
-    @Override
-    public void reset() {
-        throw new UnsupportedOperationException();
     }
 }
