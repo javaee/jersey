@@ -63,6 +63,16 @@ public class ResponseWriterTest {
         Assert.assertNull(writer.writeResponseStatusAndHeaders(10, null));
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testOnGoodSentResponse(){
+        HttpServletResponse response = new HttpServletResponseImpl(false);
+        ScheduledExecutorService timeoutTaskExecutor = new ScheduledExecutorServiceImpl();
+        ResponseWriter writer = new ResponseWriter(false , false , response , null , timeoutTaskExecutor);
+
+
+        Assert.assertNull(writer.writeResponseStatusAndHeaders(10, null));
+    }
+
 
 
 }
