@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,30 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld;
-
-import java.util.concurrent.atomic.AtomicInteger;
+package org.glassfish.jersey.examples.cdi.resources;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 /**
- * Application scoped CDI based resource.
+ * Request scoped CDI bean to demonstrate no dynamic proxy is being injected
+ * for JAX-RS request scoped URI info.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oralcle.com)
  */
-@Path("app")
-@ApplicationScoped
-public class AppScopedResource {
+@RequestScoped
+@Path("ui-req")
+public class RequestScopedResource {
 
-    AtomicInteger counter = new AtomicInteger();
+    @Context UriInfo uiField;
 
+    @Path("{p}")
     @GET
-    @Path("count")
-    @Produces("text/plain")
-    public int getCount() {
-        return counter.incrementAndGet();
+    public String getUri(@Context UriInfo uiParam) {
+        if (uiParam != uiField) {
+            throw new IllegalStateException("No dynamic proxy expected in the uiField");
+        }
+        return uiField.getRequestUri().getPath();
     }
 }
