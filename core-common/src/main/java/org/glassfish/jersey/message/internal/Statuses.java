@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.Response.StatusType;
 
@@ -53,9 +53,9 @@ public final class Statuses {
 
     private static final class StatusImpl implements StatusType {
 
-        private int code;
-        private String reason;
-        private Family family;
+        private final int code;
+        private final String reason;
+        private final Family family;
 
         private StatusImpl(int code, String reason) {
             this.code = code;
@@ -82,17 +82,74 @@ public final class Statuses {
         public Family getFamily() {
             return family;
         }
+
+        @Override
+        @SuppressWarnings("RedundantIfStatement")
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof StatusType)) {
+                return false;
+            }
+
+            final StatusType status = (StatusType) o;
+
+            if (code != status.getStatusCode()) {
+                return false;
+            }
+            if (family != status.getFamily()) {
+                return false;
+            }
+            if (reason != null ? !reason.equals(status.getReasonPhrase()) : status.getReasonPhrase() != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = code;
+            result = 31 * result + (reason != null ? reason.hashCode() : 0);
+            result = 31 * result + family.hashCode();
+            return result;
+        }
     }
 
+    /**
+     * Create a new status type instance.
+     * <p>
+     * For standard status codes listed in {@link javax.ws.rs.core.Response.Status} enum, the default reason phrase
+     * is used. For any other status code an empty string is used as a reason phrase.
+     * </p>
+     *
+     * @param code response status code.
+     * @return new status type instance representing a given response status code.
+     */
     public static StatusType from(int code) {
-        StatusType result = Status.fromStatusCode(code);
+        StatusType result = Response.Status.fromStatusCode(code);
         return (result != null) ? result : new StatusImpl(code, "");
     }
 
+    /**
+     * Create a new status type instance with a custom reason phrase.
+     *
+     * @param code   response status code.
+     * @param reason custom response status reason phrase.
+     * @return new status type instance representing a given response status code and custom reason phrase.
+     */
     public static StatusType from(int code, String reason) {
         return new StatusImpl(code, reason);
     }
 
+    /**
+     * Create a new status type instance with a custom reason phrase.
+     *
+     * @param status response status type.
+     * @param reason custom response status reason phrase.
+     * @return new status type instance representing a given response status code and custom reason phrase.
+     */
     public static StatusType from(StatusType status, String reason) {
         return new StatusImpl(status.getStatusCode(), reason);
     }
@@ -101,5 +158,6 @@ public final class Statuses {
      * Prevents instantiation.
      */
     private Statuses() {
+        throw new AssertionError("Instantiation not allowed.");
     }
 }
