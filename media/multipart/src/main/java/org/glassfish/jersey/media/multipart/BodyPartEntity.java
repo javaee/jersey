@@ -44,6 +44,10 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.glassfish.jersey.media.multipart.internal.LocalizationMessages;
 
 import org.jvnet.mimepull.MIMEPart;
 
@@ -62,7 +66,10 @@ import org.jvnet.mimepull.MIMEPart;
  */
 public class BodyPartEntity implements Closeable {
 
+    private static final Logger LOGGER = Logger.getLogger(BodyPartEntity.class.getName());
+
     private final MIMEPart mimePart;
+    private volatile File file;
 
     /**
      * Constructs a new {@code BodyPartEntity} with a {@link MIMEPart}.
@@ -87,6 +94,15 @@ public class BodyPartEntity implements Closeable {
      */
     public void cleanup() {
         mimePart.close();
+
+        if (file != null) {
+            final boolean deleted = file.delete();
+            if (!deleted) {
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.log(Level.FINE, LocalizationMessages.TEMP_FILE_NOT_DELETED(file.getAbsolutePath()));
+                }
+            }
+        }
     }
 
     /**
@@ -103,5 +119,9 @@ public class BodyPartEntity implements Closeable {
      */
     public void moveTo(final File file) {
         mimePart.moveTo(file);
+
+        // Remember the file where the mime-part object should be stored. Mimepull would not be able to delete it after
+        // it's moved.
+        this.file = file;
     }
 }

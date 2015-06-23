@@ -64,6 +64,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Context;
@@ -656,16 +657,29 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     }
 
     @Path("/FileResource")
+    @Consumes("multipart/form-data")
+    @Produces("text/plain")
     public static class FileResource {
 
         @POST
-        @Consumes("multipart/form-data")
-        @Produces("text/plain")
-        public String put(@FormDataParam("file") final File file) {
+        @Path("InjectedFileNotCopied")
+        public String injectedFileNotCopied(@FormDataParam("file") final File file) {
             final String path = file.getAbsolutePath();
             //noinspection ResultOfMethodCallIgnored
             file.delete();
             return path;
+        }
+
+        @POST
+        @Path("ExceptionInMethod")
+        public String exceptionInMethod(@FormDataParam("file") final File file) {
+            throw new WebApplicationException(Response.serverError().entity(file.getAbsolutePath()).build());
+        }
+
+        @POST
+        @Path("SuccessfulMethod")
+        public String successfulMethod(@FormDataParam("file") final File file) {
+            return file.getAbsolutePath();
         }
     }
 
@@ -680,7 +694,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
                 "CONTENT");
         multipart.bodyPart(bodypart);
 
-        final Response response = target().path("FileResource")
+        final Response response = target().path("FileResource").path("InjectedFileNotCopied")
                 .request()
                 .post(Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA));
 
@@ -689,6 +703,46 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
             entity.moveTo(withInstanceOf(File.class));
             times = 1;
         }};
+
+        // Make sure that the temp file has been removed.
+        final String pathname = response.readEntity(String.class);
+        assertThat("Temporary file, " + pathname + ", on the server has not been removed",
+                new File(pathname).exists(), is(false));
+    }
+
+    /**
+     * JERSEY-2846 reproducer. Make sure that temporary file created by MIMEPull deleted after a successful request.
+     */
+    @Test
+    public void tempFileDeletedAfterSuccessfulProcessing() throws Exception {
+        final FormDataMultiPart multipart = new FormDataMultiPart();
+        final FormDataBodyPart bodypart = new FormDataBodyPart(FormDataContentDisposition.name("file").fileName("file").build(),
+                "CONTENT");
+        multipart.bodyPart(bodypart);
+
+        final Response response = target().path("FileResource").path("SuccessfulMethod")
+                .request()
+                .post(Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA));
+
+        // Make sure that the temp file has been removed.
+        final String pathname = response.readEntity(String.class);
+        assertThat("Temporary file, " + pathname + ", on the server has not been removed",
+                new File(pathname).exists(), is(false));
+    }
+
+    /**
+     * JERSEY-2846 reproducer. Make sure that temporary file created by MIMEPull deleted after an unsuccessful request.
+     */
+    @Test
+    public void tempFileDeletedAfterExceptionInMethod() throws Exception {
+        final FormDataMultiPart multipart = new FormDataMultiPart();
+        final FormDataBodyPart bodypart = new FormDataBodyPart(FormDataContentDisposition.name("file").fileName("file").build(),
+                "CONTENT");
+        multipart.bodyPart(bodypart);
+
+        final Response response = target().path("FileResource").path("ExceptionInMethod")
+                .request()
+                .post(Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA));
 
         // Make sure that the temp file has been removed.
         final String pathname = response.readEntity(String.class);
@@ -711,7 +765,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
      * Mocked JERSEY-2794 reproducer. Real test is under integration tests.
      */
     @Test
-    public void mimeTempFileRemoved(@Mocked final MIMEMessage message) throws Exception {
+    public void mimeTempFileRemovedAfterAbortedUpload(@Mocked final MIMEMessage message) throws Exception {
         new Expectations() {{
             message.getAttachments();
             result = new MIMEParsingException();

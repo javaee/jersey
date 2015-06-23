@@ -100,6 +100,7 @@
         <module>jersey-2704</module>
         <module>jersey-2776</module>
         <module>jersey-2794</module>
+        <module>jersey-2846</module>
         <module>portability-jersey-1</module>
         <module>portability-jersey-2</module>
         <module>property-check</module>

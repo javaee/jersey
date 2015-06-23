@@ -38,19 +38,25 @@
  * holder.
  */
 
-package org.glassfish.jersey.tests.integration.jersey2794;
+package org.glassfish.jersey.tests.integration.jersey2846;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
@@ -63,11 +69,11 @@ import static org.junit.Assert.assertThat;
 import jersey.repackaged.com.google.common.collect.Iterators;
 
 /**
- * JERSEY-2794 reproducer.
+ * JERSEY-2846 reproducer.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class Jersey2794ITCase extends JerseyTest {
+public class Jersey2846ITCase extends JerseyTest {
 
     @Override
     protected Application configure() {
@@ -79,50 +85,62 @@ public class Jersey2794ITCase extends JerseyTest {
         return new ExternalTestContainerFactory();
     }
 
+    @Override
+    protected void configureClient(final ClientConfig config) {
+        config.register(MultiPartFeature.class);
+    }
+
     @Test
-    public void mimeTempFileRemoved() throws Exception {
+    public void tempFileDeletedAfterSuccessfulProcessing() throws Exception {
+        _testSmall("SuccessfulMethod", 200);
+    }
+
+    @Test
+    public void tempFileDeletedAfterExceptionInMethod() throws Exception {
+        _testSmall("ExceptionInMethod", 500);
+    }
+
+    @Test
+    public void tempFileDeletedAfterSuccessfulProcessingBigEntity() throws Exception {
+        _testBig("SuccessfulMethod", 200);
+    }
+
+    @Test
+    public void tempFileDeletedAfterExceptionInMethodBigEntity() throws Exception {
+        _testBig("ExceptionInMethod", 500);
+    }
+
+    public void _testBig(final String path, final int status) throws Exception {
+        final byte[] array = new byte[8196];
+        Arrays.fill(array, (byte) 52);
+
+        _test(path, status, array);
+    }
+
+    public void _testSmall(final String path, final int status) throws Exception {
+        _test(path, status, "CONTENT");
+    }
+
+    public void _test(final String path, final int status, final Object entity) throws Exception {
         final String tempDir = System.getProperty("java.io.tmpdir");
 
         // Get number of matching MIME*tmp files (the number should be the same at the end of the test).
         final int expectedTempFiles = matchingTempFiles(tempDir);
 
-        final URL url = new URL(getBaseUri().toString());
-        final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        final FormDataMultiPart multipart = new FormDataMultiPart();
+        final FormDataBodyPart bodypart = new FormDataBodyPart(FormDataContentDisposition.name("file").fileName("file").build(),
+                entity, MediaType.TEXT_PLAIN_TYPE);
+        multipart.bodyPart(bodypart);
 
-        connection.setRequestMethod("PUT");
-        connection.setRequestProperty("Accept", "text/plain");
-        connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=XXXX_YYYY");
-
-        connection.setDoOutput(true);
-        connection.connect();
-
-        final OutputStream outputStream = connection.getOutputStream();
-        outputStream.write("--XXXX_YYYY".getBytes());
-        outputStream.write('\n');
-        outputStream.write("Content-Type: text/plain".getBytes());
-        outputStream.write('\n');
-        outputStream.write("Content-Disposition: form-data; name=\"big-part\"".getBytes());
-        outputStream.write('\n');
-        outputStream.write('\n');
-
-        // Send big chunk of data.
-        for (int i = 0; i < 16 * 4096; i++) {
-            outputStream.write('E');
-            if (i % 1024 == 0) {
-                outputStream.flush();
-            }
-        }
-
-        // Do NOT send end of the MultiPart message to simulate the issue.
+        final Response response = target().path(path)
+                .request()
+                .post(Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA));
 
         // Get Response ...
-        assertThat("Bad Request expected", connection.getResponseCode(), is(400));
+        assertThat(response.getStatus(), is(status));
 
-        // Make sure that the Mimepull message and it's parts have been closed and temporary files deleted.
-        assertThat("Temporary mimepull files were not deleted", matchingTempFiles(tempDir), is(expectedTempFiles));
-
-        // ... Disconnect.
-        connection.disconnect();
+        // Make sure that the message and it's parts have been closed and temporary files deleted.
+        assertThat("Temporary files were not deleted", matchingTempFiles(tempDir), is(expectedTempFiles));
     }
 
     private int matchingTempFiles(final String tempDir) throws IOException {
@@ -130,7 +148,8 @@ public class Jersey2794ITCase extends JerseyTest {
             @Override
             public boolean accept(final Path path) throws IOException {
                 final String name = path.getFileName().toString();
-                return name.startsWith("MIME") && name.endsWith("tmp");
+                return (name.startsWith("rep") || name.startsWith("MIME"))
+                        && name.endsWith("tmp");
             }
         }).iterator());
     }
