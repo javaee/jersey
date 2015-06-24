@@ -118,4 +118,12 @@ public class LinkProviderTest {
         Link l2 = Link.valueOf("<http://example.org/app/link1>; foo1=\"bar1\"; foo2 = \"bar2\"");
         assertEquals(l1, l2);
     }
+
+    @Test
+    public void testWithoutDoubleQuotes() {
+        Link l1 = Link.fromUri("http://example.org/app/link1").param("foo1", "bar1").param("foo2", "bar2").build();
+        assertEquals(l1, Link.valueOf(l1.toString()));
+        Link l2 = Link.valueOf("<http://example.org/app/link1>; foo1=bar1; foo2 = bar2");
+        assertEquals(l1, l2);
+    }
 }
