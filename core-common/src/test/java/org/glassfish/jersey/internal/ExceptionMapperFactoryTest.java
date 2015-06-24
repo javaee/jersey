@@ -1,61 +1,82 @@
+/*
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+ *
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ *
+ * The contents of this file are subject to the terms of either the GNU
+ * General Public License Version 2 only ("GPL") or the Common Development
+ * and Distribution License("CDDL") (collectively, the "License").  You
+ * may not use this file except in compliance with the License.  You can
+ * obtain a copy of the License at
+ * http://glassfish.java.net/public/CDDL+GPL_1_1.html
+ * or packager/legal/LICENSE.txt.  See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ * When distributing the software, include this License Header Notice in each
+ * file and include the License file at packager/legal/LICENSE.txt.
+ *
+ * GPL Classpath Exception:
+ * Oracle designates this particular file as subject to the "Classpath"
+ * exception as provided by Oracle in the GPL Version 2 section of the License
+ * file that accompanied this code.
+ *
+ * Modifications:
+ * If applicable, add the following below the License Header, with the fields
+ * enclosed by brackets [] replaced by your own identifying information:
+ * "Portions Copyright [year] [name of copyright owner]"
+ *
+ * Contributor(s):
+ * If you wish your version of this file to be governed by only the CDDL or
+ * only the GPL Version 2, indicate your decision by adding "[Contributor]
+ * elects to include this software in this distribution under the [CDDL or GPL
+ * Version 2] license."  If you don't indicate a single choice of license, a
+ * recipient has the option to distribute your version of this file under
+ * either the CDDL, the GPL Version 2 or to extend the choice of license to
+ * its licensees as provided above.  However, if you add GPL Version 2 code
+ * and therefore, elected the GPL Version 2 license, then the option applies
+ * only if the new code is made subject to such option by the copyright
+ * holder.
+ */
+
 package org.glassfish.jersey.internal;
 
-import org.glassfish.hk2.api.ActiveDescriptor;
-import org.glassfish.hk2.api.Descriptor;
-import org.glassfish.hk2.api.Filter;
-import org.glassfish.hk2.api.Injectee;
-import org.glassfish.hk2.api.MultiException;
-import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.ServiceLocatorState;
-import org.glassfish.hk2.api.Unqualified;
-import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * Unit test of {@link ExceptionMapperFactory}.
  */
 public class ExceptionMapperFactoryTest {
 
-    private IllegalArgumentExceptionMapper illegalArgumentExceptionMapper;
-    private IllegalStateExceptionMapper illegalStateExceptionMapper;
-    private RuntimeExceptionMapper runtimeExceptionMapper;
+    private static class ExtendedExceptionMappers extends AbstractBinder {
 
-    private ServiceHandle<?> iaeServiceHandle;
-    private ServiceHandle<?> iseServiceHandle;
-    private ServiceHandle<?> rteServiceHandle;
+        @Override
+        protected void configure() {
+            bind(IllegalArgumentExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class);
+            bind(IllegalStateExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class);
+        }
 
-    @Before
-    public void setup() {
-        ActiveDescriptorStub<IllegalArgumentExceptionMapper> iaeDescriptor =
-                new ActiveDescriptorStub<IllegalArgumentExceptionMapper>(new IllegalArgumentExceptionMapper());
-        ActiveDescriptorStub<IllegalStateExceptionMapper> iseDescriptor =
-                new ActiveDescriptorStub<IllegalStateExceptionMapper>(new IllegalStateExceptionMapper());
-        ActiveDescriptorStub<RuntimeExceptionMapper> rteDescriptor =
-                new ActiveDescriptorStub<RuntimeExceptionMapper>(new RuntimeExceptionMapper());
-
-        illegalArgumentExceptionMapper = new IllegalArgumentExceptionMapper();
-        illegalStateExceptionMapper = new IllegalStateExceptionMapper();
-        runtimeExceptionMapper = new RuntimeExceptionMapper();
-
-        iaeServiceHandle = new ServiceHandleStub<IllegalArgumentExceptionMapper>(illegalArgumentExceptionMapper,
-                true, iaeDescriptor);
-        iseServiceHandle = new ServiceHandleStub<IllegalStateExceptionMapper>(illegalStateExceptionMapper, true, iseDescriptor);
-        rteServiceHandle = new ServiceHandleStub<RuntimeExceptionMapper>(runtimeExceptionMapper, true, rteDescriptor);
     }
+
+    private static class AllMappers extends AbstractBinder {
+
+        @Override
+        protected void configure() {
+            bind(IllegalArgumentExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class);
+            bind(IllegalStateExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class);
+            bind(RuntimeExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class);
+        }
+
+    }
+
 
     /**
      * Test spec:
@@ -80,11 +101,13 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindMappingExtendedExceptions() throws Exception {
-        List<ServiceHandle<?>> serviceHandles = Arrays.asList(iaeServiceHandle, iseServiceHandle);
-        ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(new ServiceLocatorStub(serviceHandles));
+        ServiceLocator serviceLocator = Injections.createLocator(new ExtendedExceptionMappers());
+        ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
 
-        ExceptionMapper<IllegalArgumentException> mapper = mapperFactory.findMapping(new IllegalArgumentException());
-        Assert.assertEquals("IllegalArgumentExceptionMapper should be returned", illegalArgumentExceptionMapper, mapper);
+        ExceptionMapper mapper = mapperFactory.findMapping(new IllegalArgumentException());
+
+        Assert.assertTrue("IllegalArgumentExceptionMapper should be returned",
+                mapper instanceof IllegalArgumentExceptionMapper);
     }
 
     /**
@@ -108,11 +131,12 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindMapping() throws Exception {
-        List<ServiceHandle<?>> serviceHandles = Arrays.asList(rteServiceHandle, iaeServiceHandle, iseServiceHandle);
-        ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(new ServiceLocatorStub(serviceHandles));
+        ServiceLocator serviceLocator = Injections.createLocator(new AllMappers());
+        ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
 
         ExceptionMapper<RuntimeException> mapper = mapperFactory.findMapping(new RuntimeException());
-        Assert.assertEquals("RuntimeExceptionMapper should be returned", runtimeExceptionMapper, mapper);
+
+        Assert.assertTrue("RuntimeExceptionMapper should be returned", mapper instanceof RuntimeExceptionMapper);
     }
 
     /**
@@ -137,13 +161,14 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindExtendedExceptions() throws Exception {
-        List<ServiceHandle<?>> serviceHandles = Arrays.asList(iaeServiceHandle, iseServiceHandle);
-        ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(new ServiceLocatorStub(serviceHandles));
+        ServiceLocator serviceLocator = Injections.createLocator(new ExtendedExceptionMappers());
+        ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
 
-        ExceptionMapper<IllegalArgumentException> mapper = mapperFactory.find(IllegalArgumentException.class);
-        Assert.assertEquals("IllegalStateExceptionMapper should be returned", illegalStateExceptionMapper, mapper);
+        ExceptionMapper mapper = mapperFactory.find(IllegalArgumentException.class);
+
+        Assert.assertTrue("IllegalStateExceptionMapper should be returned",
+                mapper instanceof IllegalStateExceptionMapper);
     }
-
 
     /**
      * Extended Exception Mapper which has RuntimeException as generic type and isMappable returns true if the
@@ -197,354 +222,5 @@ public class ExceptionMapperFactoryTest {
                     .build();
         }
 
-    }
-
-
-    /**
-     * Stub implementation -- reason for this is to control the order of list of services in ServiceLocator.
-     *
-     * @param <T>
-     */
-    private static class ActiveDescriptorStub<T> extends AbstractActiveDescriptor<T> {
-
-        private final T impl;
-
-        public ActiveDescriptorStub(T impl) {
-            this.impl = impl;
-        }
-
-
-        @Override
-        public Class<?> getImplementationClass() {
-            return impl.getClass();
-        }
-
-        @Override
-        public T create(ServiceHandle<?> serviceHandle) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            if (!super.equals(o)) return false;
-            ActiveDescriptorStub<?> that = (ActiveDescriptorStub<?>) o;
-            return Objects.equals(impl, that.impl);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(super.hashCode(), impl);
-        }
-    }
-
-    /**
-     * Stub implementation -- reason for this is to control the order of list of services in ServiceLocator.
-     *
-     * @param <T>
-     */
-    private static class ServiceHandleStub<T> implements ServiceHandle<T> {
-
-        private final T service;
-        private final boolean active;
-        private final ActiveDescriptor<T> descriptor;
-
-        private Object serviceData;
-
-        public ServiceHandleStub(T service, boolean active, ActiveDescriptor<T> descriptor) {
-            this.service = service;
-            this.active = active;
-            this.descriptor = descriptor;
-        }
-
-        @Override
-        public T getService() {
-            return service;
-        }
-
-        @Override
-        public ActiveDescriptor<T> getActiveDescriptor() {
-            return descriptor;
-        }
-
-        @Override
-        public boolean isActive() {
-            return active;
-        }
-
-        @Override
-        public void destroy() {
-            // no op
-        }
-
-        @Override
-        public void setServiceData(Object serviceData) {
-            this.serviceData = serviceData;
-        }
-
-        @Override
-        public Object getServiceData() {
-            return serviceData;
-        }
-
-    }
-
-    /**
-     * Stub implementation -- reason for this is to control the order of list of services.
-     */
-    private static class ServiceLocatorStub implements ServiceLocator {
-
-        private final List<ServiceHandle<?>> serviceHandles;
-
-        private ServiceLocatorStub(List<ServiceHandle<?>> serviceHandles) {
-            this.serviceHandles = serviceHandles;
-        }
-
-        @Override
-        public <T> T getService(Class<T> aClass, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> T getService(Type type, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> T getService(Class<T> aClass, String s, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> T getService(Type type, String s, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> List<T> getAllServices(Class<T> aClass, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> List<T> getAllServices(Type type, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> List<T> getAllServices(Annotation annotation, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public List<?> getAllServices(Filter filter) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> ServiceHandle<T> getServiceHandle(Class<T> aClass, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> ServiceHandle<T> getServiceHandle(Type type, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> ServiceHandle<T> getServiceHandle(Class<T> aClass, String s, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> ServiceHandle<T> getServiceHandle(Type type, String s, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public <T> List<ServiceHandle<T>> getAllServiceHandles(Class<T> aClass, Annotation... annotations) throws MultiException {
-            if (annotations != null && annotations.length == 0) {
-                List<ServiceHandle<T>> handles = new ArrayList<ServiceHandle<T>>();
-                for (ServiceHandle serviceHandle : serviceHandles) {
-                    handles.add((ServiceHandle<T>) serviceHandle);
-                }
-                return handles;
-            }
-            return Collections.emptyList();
-        }
-
-        @Override
-        public List<ServiceHandle<?>> getAllServiceHandles(Type type, Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public List<ServiceHandle<?>> getAllServiceHandles(Annotation annotation,
-                                                           Annotation... annotations) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public List<ServiceHandle<?>> getAllServiceHandles(Filter filter) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public List<ActiveDescriptor<?>> getDescriptors(Filter filter) {
-            return null;
-        }
-
-        @Override
-        public ActiveDescriptor<?> getBestDescriptor(Filter filter) {
-            return null;
-        }
-
-        @Override
-        public ActiveDescriptor<?> reifyDescriptor(Descriptor descriptor,
-                                                   Injectee injectee) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public ActiveDescriptor<?> reifyDescriptor(Descriptor descriptor)
-                throws MultiException {
-            return null;
-        }
-
-        @Override
-        public ActiveDescriptor<?> getInjecteeDescriptor(Injectee injectee)
-                throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> ServiceHandle<T> getServiceHandle(ActiveDescriptor<T> activeDescriptor,
-                                                     Injectee injectee) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> ServiceHandle<T> getServiceHandle(ActiveDescriptor<T> activeDescriptor)
-                throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> T getService(ActiveDescriptor<T> activeDescriptor,
-                                ServiceHandle<?> serviceHandle) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public <T> T getService(ActiveDescriptor<T> activeDescriptor,
-                                ServiceHandle<?> serviceHandle, Injectee injectee) throws MultiException {
-            return null;
-        }
-
-        @Override
-        public String getDefaultClassAnalyzerName() {
-            return null;
-        }
-
-        @Override
-        public void setDefaultClassAnalyzerName(String s) {
-
-        }
-
-        @Override
-        public Unqualified getDefaultUnqualified() {
-            return null;
-        }
-
-        @Override
-        public void setDefaultUnqualified(Unqualified unqualified) {
-
-        }
-
-        @Override
-        public String getName() {
-            return null;
-        }
-
-        @Override
-        public long getLocatorId() {
-            return 0;
-        }
-
-        @Override
-        public ServiceLocator getParent() {
-            return null;
-        }
-
-        @Override
-        public void shutdown() {
-
-        }
-
-        @Override
-        public ServiceLocatorState getState() {
-            return null;
-        }
-
-        @Override
-        public boolean getNeutralContextClassLoader() {
-            return false;
-        }
-
-        @Override
-        public void setNeutralContextClassLoader(boolean b) {
-
-        }
-
-        @Override
-        public <T> T create(Class<T> aClass) {
-            return null;
-        }
-
-        @Override
-        public <T> T create(Class<T> aClass, String s) {
-            return null;
-        }
-
-        @Override
-        public void inject(Object o) {
-
-        }
-
-        @Override
-        public void inject(Object o, String s) {
-
-        }
-
-        @Override
-        public void postConstruct(Object o) {
-
-        }
-
-        @Override
-        public void postConstruct(Object o, String s) {
-
-        }
-
-        @Override
-        public void preDestroy(Object o) {
-
-        }
-
-        @Override
-        public void preDestroy(Object o, String s) {
-
-        }
-
-        @Override
-        public <U> U createAndInitialize(Class<U> aClass) {
-            return null;
-        }
-
-        @Override
-        public <U> U createAndInitialize(Class<U> aClass, String s) {
-            return null;
-        }
     }
 }
