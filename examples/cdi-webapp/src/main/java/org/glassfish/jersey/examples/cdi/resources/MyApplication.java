@@ -61,6 +61,8 @@ public class MyApplication extends Application {
         classes.add(EchoParamResource.class);
         classes.add(EchoParamFieldResource.class);
         classes.add(EchoParamConstructorResource.class);
+        classes.add(ProxyInjectedAppScopedResource.class);
+        classes.add(RequestScopedResource.class);
         return classes;
     }
 }

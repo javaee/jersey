@@ -59,6 +59,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 
@@ -91,6 +92,7 @@ import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2InjectedTarget;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionTargetListener;
 import org.glassfish.jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
+import org.glassfish.jersey.internal.inject.ForeignRequestScopeBridge;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.model.Parameter;
@@ -147,6 +149,12 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     private final Set<Type> jaxrsInjectableTypes = new HashSet<>();
     private final Set<Type> hk2ProvidedTypes = Collections.synchronizedSet(new HashSet<Type>());
     private final Set<Type> jerseyVetoedTypes = Collections.synchronizedSet(new HashSet<Type>());
+
+    /**
+     * set of request scoped components
+     */
+    private final Set<Class<?>> requestScopedComponents = new HashSet<>();
+
 
     private final Cache<Class<?>, Boolean> jaxRsComponentCache = new Cache<>(new Computable<Class<?>, Boolean>() {
         @Override
@@ -299,14 +307,25 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         final boolean isManagedBean = isManagedBean(clazz);
         final boolean isJaxRsComponent = isJaxRsComponentType(clazz);
 
+
         if (!isCdiManaged && !isManagedBean && !isJaxRsComponent) {
             return false;
         }
 
+        final boolean isJaxRsApp = isJaxRsComponent && Application.class.isAssignableFrom(clazz);
+
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
 
+        final Class<? extends Annotation> beanScopeAnnotation = CdiUtil.getBeanScope(clazz, beanManager);
+        final boolean isRequestScoped = beanScopeAnnotation == RequestScoped.class
+                                        || beanScopeAnnotation == Dependent.class && !isJaxRsApp;
+
+        Factory beanFactory = isRequestScoped
+                ? new RequestScopedCdiBeanHk2Factory(clazz, locator, beanManager, isCdiManaged)
+                : new GenericCdiBeanHk2Factory(clazz, locator, beanManager, isCdiManaged);
+
         final ServiceBindingBuilder bindingBuilder =
-                Injections.newFactoryBinder(new CdiBeanHk2Factory(clazz, locator, beanManager, isCdiManaged));
+                    Injections.newFactoryBinder(beanFactory);
 
         bindingBuilder.to(clazz);
         for (final Class contract : providerContracts) {
@@ -317,6 +336,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         dc.commit();
 
+        if (isRequestScoped) {
+            requestScopedComponents.add(clazz);
+        }
+
         if (LOGGER.isLoggable(Level.CONFIG)) {
             LOGGER.config(LocalizationMessages.CDI_CLASS_BOUND_WITH_CDI(clazz));
         }
@@ -326,6 +349,14 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     @Override
     public void done() {
+        final DynamicConfiguration dc = Injections.getConfiguration(locator);
+        Injections.addBinding(Injections.newBinder(new ForeignRequestScopeBridge() {
+            @Override
+            public Set<Class<?>> getRequestScopedComponents() {
+                return requestScopedComponents;
+            }
+        }).to(ForeignRequestScopeBridge.class), dc);
+        dc.commit();
     }
 
     private boolean isCdiComponent(final Class<?> component) {

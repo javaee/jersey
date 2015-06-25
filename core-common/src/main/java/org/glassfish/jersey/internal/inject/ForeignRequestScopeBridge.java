@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,30 +37,27 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld;
+package org.glassfish.jersey.internal.inject;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import java.util.Set;
 
 /**
- * Application scoped CDI based resource.
+ * Internal service to help determine
+ * which HK2 factory provided components should be treated
+ * as request scoped. This is to help avoid having
+ * dynamic proxies of request scoped components injected into
+ * factory created components managed by 3rd party component
+ * providers
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * Jakub Podlesak (jakub.podlesak at oracle.com).
  */
-@Path("app")
-@ApplicationScoped
-public class AppScopedResource {
+public interface ForeignRequestScopeBridge {
 
-    AtomicInteger counter = new AtomicInteger();
-
-    @GET
-    @Path("count")
-    @Produces("text/plain")
-    public int getCount() {
-        return counter.incrementAndGet();
-    }
+    /**
+     * Get me a set of classes that are managed outside of HK2
+     * and should be treated as if HK2 request scoped.
+     *
+     * @return set of classes representing foreign request scoped components.
+     */
+    Set<Class<?>> getRequestScopedComponents();
 }

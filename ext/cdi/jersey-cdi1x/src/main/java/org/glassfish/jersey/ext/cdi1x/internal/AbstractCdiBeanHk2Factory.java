@@ -54,12 +54,15 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * HK2 factory to provide CDI components obtained from CDI bean manager.
+ * Abstract HK2 factory to provide CDI components obtained from CDI bean manager.
  * The factory handles CDI managed components as well as non-contextual managed beans.
+ * To specify HK2 scope of provided CDI beans, an extension of this factory
+ * should implement properly annotated {@link Factory#provide()} method that
+ * could just delegate to the existing {@link #_provide()} method.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public final class CdiBeanHk2Factory<T> implements Factory<T> {
+public abstract class AbstractCdiBeanHk2Factory<T> implements Factory<T> {
 
     private interface InstanceManager<T> {
 
@@ -84,8 +87,7 @@ public final class CdiBeanHk2Factory<T> implements Factory<T> {
     final Annotation[] qualifiers;
 
     @SuppressWarnings(value = "unchecked")
-    @Override
-    public T provide() {
+    /* package */ T _provide() {
         final T instance = referenceProvider.getInstance(clazz);
         if (instance != null) {
             return instance;
@@ -106,8 +108,8 @@ public final class CdiBeanHk2Factory<T> implements Factory<T> {
      * @param beanManager current bean manager to get references from.
      * @param cdiManaged  set to {@code true} if the component should be managed by CDI.
      */
-    public CdiBeanHk2Factory(final Class<T> rawType, final ServiceLocator locator, final BeanManager beanManager,
-                             final boolean cdiManaged) {
+    public AbstractCdiBeanHk2Factory(final Class<T> rawType, final ServiceLocator locator, final BeanManager beanManager,
+                                     final boolean cdiManaged) {
 
         this.clazz = rawType;
         this.qualifiers = CdiUtil.getQualifiers(clazz.getAnnotations());

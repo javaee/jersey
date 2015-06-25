@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,30 +37,59 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld;
+package org.glassfish.jersey.examples.cdi.resources;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
+import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.client.WebTarget;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertThat;
 
 /**
- * Application scoped CDI based resource.
+ * Ensure CDI and JAX-RS scopes are well aligned, so that dynamic proxies
+ * are only created when needed.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Path("app")
-@ApplicationScoped
-public class AppScopedResource {
+@RunWith(Parameterized.class)
+public class ProxyScopeAlignmentTest extends CdiTest {
 
-    AtomicInteger counter = new AtomicInteger();
+    @Parameterized.Parameters
+    public static List<Object[]> testData() {
+        return Arrays.asList(new Object[][] {
+                {"one"},
+                {"too"},
+                {"much"}
+        });
+    }
 
-    @GET
-    @Path("count")
-    @Produces("text/plain")
-    public int getCount() {
-        return counter.incrementAndGet();
+    final String p;
+
+    /**
+     * Create a new test case based on the above defined parameters.
+     *
+     * @param p path parameter value
+     */
+    public ProxyScopeAlignmentTest(String p) {
+        this.p = p;
+    }
+
+    @Test
+    public void testUiInjection() {
+
+        final WebTarget app = target().path("ui-app").path(p);
+        final WebTarget req = target().path("ui-req").path(p);
+
+        String ar = app.request().get(String.class);
+        String rr = req.request().get(String.class);
+
+        assertThat(ar, containsString(p));
+        assertThat(rr, containsString(p));
     }
 }

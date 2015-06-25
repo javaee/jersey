@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,30 +37,29 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld;
+package org.glassfish.jersey.ext.cdi1x.internal;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Vetoed;
+import javax.enterprise.inject.spi.BeanManager;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Application scoped CDI based resource.
+ * HK2 factory to provide CDI managed components where
+ * there is no clear mapping between the CDI and HK2 scopes.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Path("app")
-@ApplicationScoped
-public class AppScopedResource {
+@Vetoed
+public final class GenericCdiBeanHk2Factory extends AbstractCdiBeanHk2Factory {
 
-    AtomicInteger counter = new AtomicInteger();
+    public GenericCdiBeanHk2Factory(Class rawType, ServiceLocator locator, BeanManager beanManager, boolean cdiManaged) {
+        super(rawType, locator, beanManager, cdiManaged);
+    }
 
-    @GET
-    @Path("count")
-    @Produces("text/plain")
-    public int getCount() {
-        return counter.incrementAndGet();
+    @Override
+    public Object provide() {
+        return _provide();
     }
 }

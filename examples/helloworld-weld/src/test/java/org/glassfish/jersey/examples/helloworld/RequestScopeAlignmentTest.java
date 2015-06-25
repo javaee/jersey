@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,28 +39,62 @@
  */
 package org.glassfish.jersey.examples.helloworld;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
+import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.client.WebTarget;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.jboss.weld.environment.se.Weld;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.junit.Assert.assertThat;
 
 /**
- * Application scoped CDI based resource.
+ * Test for the request scoped managed bean resource.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Path("app")
-@ApplicationScoped
-public class AppScopedResource {
+public class RequestScopeAlignmentTest extends JerseyTest {
 
-    AtomicInteger counter = new AtomicInteger();
+    static Weld weld;
 
-    @GET
-    @Path("count")
-    @Produces("text/plain")
-    public int getCount() {
-        return counter.incrementAndGet();
+    @BeforeClass
+    public static void before() throws Exception {
+        weld = new Weld();
+        weld.initialize();
+    }
+
+    @AfterClass
+    public static void after() throws Exception {
+        weld.shutdown();
+    }
+
+    @Override
+    protected ResourceConfig configure() {
+        return App.createJaxRsApp();
+    }
+
+    @Test
+    public void testUriInfoPropagatesToApp() {
+
+        for (String d : new String[]{"one", "two", "three"}) {
+
+            final WebTarget fieldTarget = target().path("req/ui/jax-rs-field").path(d);
+            final WebTarget appFieldTarget = target().path("req/ui/jax-rs-app-field").path(d);
+
+            String f = fieldTarget.request().get(String.class);
+            assertThat(f, containsString(fieldTarget.getUri().toString()));
+            String af = appFieldTarget.request().get(String.class);
+            assertThat(af, containsString(appFieldTarget.getUri().toString()));
+        }
     }
 }

@@ -53,6 +53,8 @@ import javax.ws.rs.container.Suspended;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 /**
  * JAX-RS resource class backed by a request scoped CDI bean.
@@ -65,6 +67,7 @@ public class RequestScopedResource {
 
     @Inject
     AppScopedResource appResource;
+
     @Inject
     RequestScopedBean bean;
 
@@ -113,5 +116,27 @@ public class RequestScopedResource {
                 response.resume("this will never make it to the client");
             }
         });
+    }
+
+    @Context
+    UriInfo uriInfo;
+
+    @Inject App.JaxRsApplication jaxRsApplication;
+
+    @GET
+    @Path("ui/jax-rs-field/{d}")
+    public String getJaxRsInjectedUIUri() {
+
+        if (uriInfo == jaxRsApplication.uInfo) {
+            throw new IllegalStateException("UriInfo injected into req scoped cdi bean should not get proxied.");
+        }
+
+        return uriInfo.getRequestUri().toString();
+    }
+
+    @GET
+    @Path("ui/jax-rs-app-field/{d}")
+    public String getCdiInjectedJaxRsAppUri() {
+        return jaxRsApplication.uInfo.getRequestUri().toString();
     }
 }
