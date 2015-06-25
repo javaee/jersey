@@ -706,6 +706,9 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
 
         // Make sure that the temp file has been removed.
         final String pathname = response.readEntity(String.class);
+        // Wait a second to make sure the file doesn't exist.
+        Thread.sleep(1000);
+
         assertThat("Temporary file, " + pathname + ", on the server has not been removed",
                 new File(pathname).exists(), is(false));
     }
@@ -726,6 +729,9 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
 
         // Make sure that the temp file has been removed.
         final String pathname = response.readEntity(String.class);
+        // Wait a second to make sure the file doesn't exist.
+        Thread.sleep(1000);
+
         assertThat("Temporary file, " + pathname + ", on the server has not been removed",
                 new File(pathname).exists(), is(false));
     }
@@ -746,6 +752,9 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
 
         // Make sure that the temp file has been removed.
         final String pathname = response.readEntity(String.class);
+        // Wait a second to make sure the file doesn't exist.
+        Thread.sleep(1000);
+
         assertThat("Temporary file, " + pathname + ", on the server has not been removed",
                 new File(pathname).exists(), is(false));
     }
