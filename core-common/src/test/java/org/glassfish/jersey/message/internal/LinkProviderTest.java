@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,7 +68,7 @@ public class LinkProviderTest {
 
     @Test
     public void testValueOf() {
-        Link l1 = Link.fromUri("http://example.org/app/link1").build();
+        final Link l1 = Link.fromUri("http://example.org/app/link1").build();
         Link l2 = Link.valueOf("<http://example.org/app/link1>");
         assertEquals(l1, l2);
         l2 = Link.valueOf(" <http://example.org/app/link1>");
@@ -82,17 +82,17 @@ public class LinkProviderTest {
         int nOfExceptions = 0;
         try {
             Link.valueOf("http://example.org/app/link1>");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             nOfExceptions++;
         }
         try {
             Link.valueOf("<http://example.org/app/link1");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             nOfExceptions++;
         }
         try {
             Link.valueOf("http://example.org/app/link1");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             nOfExceptions++;
         }
         assertEquals(nOfExceptions, 3);
@@ -100,7 +100,7 @@ public class LinkProviderTest {
 
     @Test
     public void testValueOfParams() {
-        Link l1 = Link.fromUri("http://example.org/app/link1").param("foo1", "bar1").param("foo2", "bar2").build();
+        final Link l1 = Link.fromUri("http://example.org/app/link1").param("foo1", "bar1").param("foo2", "bar2").build();
         Link l2 = Link.valueOf("<http://example.org/app/link1>; foo1=\"bar1\"; foo2 = \"bar2\"");
         assertEquals(l1, l2);
         l2 = Link.valueOf("<http://example.org/app/link1>; foo2=\"bar2\"; foo1= \"bar1\"");
@@ -113,17 +113,17 @@ public class LinkProviderTest {
 
     @Test
     public void testRoundTrip() {
-        Link l1 = Link.fromUri("http://example.org/app/link1").param("foo1", "bar1").param("foo2", "bar2").build();
+        final Link l1 = Link.fromUri("http://example.org/app/link1").param("foo1", "bar1").param("foo2", "bar2").build();
         assertEquals(l1, Link.valueOf(l1.toString()));
-        Link l2 = Link.valueOf("<http://example.org/app/link1>; foo1=\"bar1\"; foo2 = \"bar2\"");
+        final Link l2 = Link.valueOf("<http://example.org/app/link1>; foo1=\"bar1\"; foo2 = \"bar2\"");
         assertEquals(l1, l2);
     }
 
     @Test
     public void testWithoutDoubleQuotes() {
-        Link l1 = Link.fromUri("http://example.org/app/link1").param("foo1", "bar1").param("foo2", "bar2").build();
+        final Link l1 = Link.fromUri("http://example.org/app/link1").param("foo1", "bar1").param("foo2", "bar2").build();
         assertEquals(l1, Link.valueOf(l1.toString()));
-        Link l2 = Link.valueOf("<http://example.org/app/link1>; foo1=bar1; foo2 = bar2");
+        final Link l2 = Link.valueOf("<http://example.org/app/link1>; foo1=bar1; foo2 = bar2");
         assertEquals(l1, l2);
     }
 }
