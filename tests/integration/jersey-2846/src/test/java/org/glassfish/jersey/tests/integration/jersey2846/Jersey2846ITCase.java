@@ -138,6 +138,8 @@ public class Jersey2846ITCase extends JerseyTest {
 
         // Get Response ...
         assertThat(response.getStatus(), is(status));
+        // Wait a second to make sure the files don't exist.
+        Thread.sleep(1000);
 
         // Make sure that the message and it's parts have been closed and temporary files deleted.
         assertThat("Temporary files were not deleted", matchingTempFiles(tempDir), is(expectedTempFiles));
