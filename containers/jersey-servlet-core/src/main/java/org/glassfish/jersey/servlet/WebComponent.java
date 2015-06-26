@@ -409,6 +409,9 @@ public class WebComponent {
                 }
             });
         } catch (final HeaderValueException hve) {
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, "Bad resuest: " + hve.getMessage());
+            }
             final Response.Status status = Response.Status.BAD_REQUEST;
             if (configSetStatusOverSendError) {
                 servletResponse.reset();
