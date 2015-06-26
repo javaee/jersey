@@ -45,6 +45,8 @@ import java.util.List;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -91,7 +93,13 @@ public class SingletonBeanTest extends CdiTest {
 
     @Test
     public void testCounter() {
+
         final WebTarget counter = target().path("jcdibean/singleton").path(p).queryParam("x", x).path("counter");
+
+        if (!ExternalTestContainerFactory.class.isAssignableFrom(getTestContainerFactory().getClass())) {
+             // TODO: remove this workaround once JERSEY-2744 is resolved
+            counter.request().put(Entity.text("10"));
+        }
 
         String c10 = counter.request().get(String.class);
         assertThat(c10, containsString("10"));
