@@ -160,8 +160,15 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         @Override
         public Boolean compute(final Class<?> clazz) {
             return Application.class.isAssignableFrom(clazz)
-                    || Providers.isJaxRsProvider(clazz)
+                    || jaxRsProvidersCache.compute(clazz)
                     || Resource.from(clazz) != null;
+        }
+    });
+
+    private final Cache<Class<?>, Boolean> jaxRsProvidersCache = new Cache<>(new Computable<Class<?>, Boolean>() {
+        @Override
+        public Boolean compute(final Class<?> clazz) {
+            return Providers.isJaxRsProvider(clazz);
         }
     });
 
@@ -313,12 +320,13 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
 
         final boolean isJaxRsApp = isJaxRsComponent && Application.class.isAssignableFrom(clazz);
+        final boolean isJaxRsProvider = jaxRsProvidersCache.compute(clazz);
 
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
 
         final Class<? extends Annotation> beanScopeAnnotation = CdiUtil.getBeanScope(clazz, beanManager);
         final boolean isRequestScoped = beanScopeAnnotation == RequestScoped.class
-                                        || beanScopeAnnotation == Dependent.class && !isJaxRsApp;
+                                        || (beanScopeAnnotation == Dependent.class && !isJaxRsApp && !isJaxRsProvider);
 
         Factory beanFactory = isRequestScoped
                 ? new RequestScopedCdiBeanHk2Factory(clazz, locator, beanManager, isCdiManaged)
