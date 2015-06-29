@@ -62,6 +62,7 @@ import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
+import org.glassfish.jersey.process.internal.ExecutorProviders;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -409,6 +410,9 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
 
             // Bind providers.
             ProviderBinder.bindProviders(runtimeCfgState.getComponentBag(), RuntimeType.CLIENT, null, locator);
+
+            // Bind executors.
+            ExecutorProviders.createInjectionBindings(locator);
 
             final ClientConfig configuration = new ClientConfig(runtimeCfgState);
             final Connector connector = connectorProvider.getConnector(client, configuration);

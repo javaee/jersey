@@ -70,6 +70,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
+import org.glassfish.jersey.client.ClientResponse;
 import org.junit.Test;
 
 /**
@@ -151,7 +152,7 @@ public class CharsetTest extends AbstractTypeTester {
         for (String charset : CHARSETS) {
             Response r = t.path(charset).request().post(Entity.entity(in, "text/plain;charset=" + charset));
 
-            byte[] inBytes = requestEntity;
+            byte[] inBytes = getRequestEntity();
             byte[] outBytes = getEntityAsByteArray(r);
 
             _verify(inBytes, outBytes);
@@ -272,7 +273,7 @@ public class CharsetTest extends AbstractTypeTester {
         WebTarget t = target("/JAXBBeanResource");
         for (String charset : CHARSETS) {
             Response rib = t.request().post(Entity.entity(in, "application/json;charset=" + charset));
-            byte[] inBytes = requestEntity;
+            byte[] inBytes = getRequestEntity();
             byte[] outBytes = getEntityAsByteArray(rib);
             _verify(inBytes, outBytes);
         }
@@ -288,7 +289,7 @@ public class CharsetTest extends AbstractTypeTester {
         WebTarget t = target("/ReaderResource");
         for (String charset : CHARSETS) {
             Response rib = t.request().post(Entity.entity(new StringReader(CONTENT), "text/plain;charset=" + charset));
-            byte[] inBytes = requestEntity;
+            byte[] inBytes = getRequestEntity();
             byte[] outBytes = getEntityAsByteArray(rib);
             _verify(inBytes, outBytes);
         }
@@ -307,7 +308,7 @@ public class CharsetTest extends AbstractTypeTester {
             p.put("charset", charset);
             MediaType _m = new MediaType(m.getType(), m.getSubtype(), p);
             Response rib = t.request().post(Entity.entity(in, _m));
-            byte[] inBytes = requestEntity;
+            byte[] inBytes = getRequestEntity();
             byte[] outBytes = getEntityAsByteArray(rib);
             _verify(inBytes, outBytes);
         }

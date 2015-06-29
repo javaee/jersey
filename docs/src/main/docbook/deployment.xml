@@ -1090,7 +1090,7 @@ public class StatelessEjbResource implements LocalEjb {
                 <para>
                   Since both CDI and HK2 use the same injection annotation, Jersey could get confused in certain
                   cases, which could lead to nasty runtime issues. The get better control over what Jersey evaluates
-                  as HK2 injection, end-users could take advantage of newly introduced, &jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider;, SPI.
+                  as HK2 injection, end-users could take advantage of newly introduced, &jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider;, SPI.
                   Please see the linked javadoc to get detailed information on how to use the SPI in your application.
                 </para>
             </section>

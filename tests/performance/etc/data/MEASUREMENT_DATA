@@ -1,0 +1,63 @@
+#
+# File format:
+# application directory name|command line to generate load on client machines|JMX URI for the application|MBean name|output filename
+#
+
+mbw-text-plain|wrk -c64 -t16 -d800s  http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.text.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-text-get.properties
+mbw-text-plain|wrk -c64 -t16 -d800s -s text-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.text.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-text-put.properties
+mbw-text-plain|wrk -c64 -t16 -d800s -s text-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.text.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-text-post.properties
+
+mbw-json-moxy|wrk -c64 -t16 -d800s  http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.json.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-json-moxy-get.properties
+mbw-json-moxy|wrk -c64 -t16 -d800s -s json-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.json.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-json-moxy-put.properties
+mbw-json-moxy|wrk -c64 -t16 -d800s -s json-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.json.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-json-moxy-post.properties
+
+mbw-json-jackson|wrk -c64 -t16 -d800s  http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.json.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-json-jackson-get.properties
+mbw-json-jackson|wrk -c64 -t16 -d800s -s json-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.json.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-json-jackson-put.properties
+mbw-json-jackson|wrk -c64 -t16 -d800s -s json-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.json.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-json-jackson-post.properties
+
+mbw-kryo|wrk -c64 -t16 -d800s  http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.kryo.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-kryo-get.properties
+mbw-kryo|wrk -c64 -t16 -d800s -s kryo-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.kryo.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-kryo-put.properties
+mbw-kryo|wrk -c64 -t16 -d800s -s kryo-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.kryo.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-kryo-post.properties
+
+mbw-xml-moxy|wrk -c64 -t16 -d800s  http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.xml.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-xml-moxy-get.properties
+mbw-xml-moxy|wrk -c64 -t16 -d800s -s xml-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.xml.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-xml-moxy-post.properties
+mbw-xml-moxy|wrk -c64 -t16 -d800s -s xml-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.xml.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-xml-moxy-put.properties
+
+mbw-xml-jaxb|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.xml.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-xml-jaxb-get.properties
+mbw-xml-jaxb|wrk -c64 -t16 -d800s -s xml-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.xml.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-xml-jaxb-post.properties
+mbw-xml-jaxb|wrk -c64 -t16 -d800s -s xml-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.xml.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-xml-jaxb-put.properties
+
+mbw-custom-provider|wrk -c64 -t16 -d800s -s person-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.custom.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-custom-post.properties
+mbw-custom-provider|wrk -c64 -t16 -d800s -s person-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.custom.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-custom-put.properties
+mbw-custom-provider|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.mbw.custom.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|mbw-custom-get.properties
+
+param-srl|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/srl/jednaBedna\;m=bedna\?q=jedna|org.glassfish.jersey.tests.performance.param.srl.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|param-srl-get.properties
+param-srl|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/srm/jednaBedna\;m=bedna\?q=jedna|org.glassfish.jersey.tests.performance.param.srl.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|param-srm-get.properties
+
+filter-global|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.filter.global.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|filter-global-get.properties
+filter-global|wrk -c64 -t16 -d800s -s text-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.filter.global.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|filter-global-put.properties
+filter-global|wrk -c64 -t16 -d800s -s text-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.filter.global.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|filter-global-post.properties
+
+filter-name|wrk -c64 -t16 -d800s -s text-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.filter.name.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|filter-name-post.properties
+filter-name|wrk -c64 -t16 -d800s -s text-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.filter.name.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|filter-name-put.properties
+filter-name|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.filter.name.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|filter-name-get.properties
+
+filter-dynamic|wrk -c64 -t16 -d800s -s text-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.filter.dynamic.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|filter-dynamic-post.properties
+filter-dynamic|wrk -c64 -t16 -d800s -s text-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.filter.dynamic.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|filter-dynamic-put.properties
+filter-dynamic|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.filter.dynamic.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|filter-dynamic-get.properties
+
+interceptor-global|wrk -c64 -t16 -d800s -s text-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.interceptor.global.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|interceptor-global-post.properties
+interceptor-global|wrk -c64 -t16 -d800s -s text-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.interceptor.global.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|interceptor-global-put.properties
+interceptor-global|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.interceptor.global.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|interceptor-global-get.properties
+
+interceptor-name|wrk -c64 -t16 -d800s -s text-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.interceptor.name.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|interceptor-name-post.properties
+interceptor-name|wrk -c64 -t16 -d800s -s text-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.interceptor.name.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|interceptor-name-put.properties
+interceptor-name|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.interceptor.name.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|interceptor-name-get.properties
+
+interceptor-dynamic|wrk -c64 -t16 -d800s -s text-post.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.interceptor.dynamic.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|interceptor-dynamic-post.properties
+interceptor-dynamic|wrk -c64 -t16 -d800s -s text-put.lua http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.interceptor.dynamic.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|interceptor-dynamic-put.properties
+interceptor-dynamic|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/|org.glassfish.jersey.tests.performance.interceptor.dynamic.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|interceptor-dynamic-get.properties
+
+proxy-injection|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/method-injected/without-parameters|org.glassfish.jersey.tests.performance.proxy.injection.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|proxy-injection-raw-gets.properties
+proxy-injection|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/method-injected/all-parameters|org.glassfish.jersey.tests.performance.proxy.injection.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|proxy-injection-method-params.properties
+proxy-injection|wrk -c64 -t16 -d800s http://SERVER_MACHINE:SERVER_PORT/APP_CONTEXT/field-injected/without-parameters|org.glassfish.jersey.tests.performance.proxy.injection.JaxRsApplication||metrics:name=org.glassfish.jersey.server.ApplicationHandler.handle|proxy-injection-field-params.properties

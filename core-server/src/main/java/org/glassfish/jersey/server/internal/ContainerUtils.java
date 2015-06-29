@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,36 +39,43 @@
  */
 package org.glassfish.jersey.server.internal;
 
-import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
-
 /**
  * Utility methods used by container implementations.
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public class ContainerUtils {
+    private static final String[] TOKENS = {
+            "{", "}", "\\", "^", "|", "`"
+    };
+
+    private static final String[] REPLACEMENTS = {
+            "%7B", "%7D", "%5C", "%5E", "%7C", "%60"
+    };
 
     /**
      * Encodes (predefined subset of) unsafe/unwise URI characters with the percent-encoding.
-     * <p/>
-     * <p>Replaces the predefined set of unsafe URI characters in the query string with its percent-encoded counterparts. The
-     * reserved characters (as defined by the RFC) are automatically encoded by browsers, but some characters are in the "gray
-     * zone" - are not explicitly forbidden, but not recommended and known to cause issues.</p>
-     * <p/>
-     * <p>Currently, the method only encodes the curly brackets ({@code \{} and {@code \}}),
-     * if any, to allow URI request parameters to contain JSON.</p>
+     *
+     * <p>Replaces the predefined set of unsafe URI characters in the query string with its percent-encoded
+     * counterparts. The reserved characters (as defined by the RFC) are automatically encoded by browsers, but some
+     * characters are in the "gray zone" - are not explicitly forbidden, but not recommended and known to cause
+     * issues.</p>
      *
      * @param originalQueryString URI query string (the part behind the question mark character).
-     * @return the same string with unsafe characters (currently only curly brackets) eventually percent encoded.
+     * @return the same string with unsafe characters percent encoded.
      */
-    public static String encodeUnsafeCharacters(String originalQueryString) {
+    public static String encodeUnsafeCharacters(final String originalQueryString) {
         if (originalQueryString == null) {
             return null;
         }
-        if (originalQueryString.contains("{") || originalQueryString.contains("}")) {
-            return originalQueryString.replace("{", "%7B").replace("}", "%7D");
+
+        String result = originalQueryString;
+        for (int i = 0; i < TOKENS.length; i++) {
+            if (originalQueryString.contains(TOKENS[i])) {
+                result = result.replace(TOKENS[i], REPLACEMENTS[i]);
+            }
         }
-        return originalQueryString;
+
+        return result;
     }
 }

@@ -73,6 +73,7 @@
 <!ENTITY heroku.link "<link xlink:href='&heroku.uri;'>Heroku</link>">
 <!ENTITY hk2.javadoc.uri "https://hk2.java.net/apidocs">
 <!ENTITY hk2.link "<link xlink:href='http://hk2.java.net/'>HK2</link>">
+<!ENTITY hk2.spring-bridge.link "<link xlink:href='https://hk2.java.net/spring-bridge/'>The Spring/HK2 Bridge</link>">
 <!ENTITY jaxb.release.uri "http://jaxb.java.net/nonav/&jaxb-api-jar.version;">
 <!ENTITY jaxb.javadoc.uri "&jaxb.release.uri;/docs/api/javax/xml/bind">
 <!ENTITY jaxrs.release.uri "http://jax-rs-spec.java.net/nonav/&jax-rs.version;">
@@ -301,6 +302,8 @@
 <!ENTITY jersey.apache.ApacheConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/apache/connector/ApacheConnectorProvider.html'>ApacheConnectorProvider</link>">
 <!ENTITY jersey.client.ChunkParser "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ChunkParser.html'>ChunkParser</link>">
 <!ENTITY jersey.client.ChunkedInput "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ChunkedInput.html'>ChunkedInput</link>">
+<!ENTITY jersey.client.ClientAsyncExecutor "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientAsyncExecutor.html'>@ClientAsyncExecutor</link>">
+<!ENTITY jersey.client.ClientAsyncExecutorLiteral "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientAsyncExecutorLiteral.html'>ClientAsyncExecutorLiteral</link>">
 <!ENTITY jersey.client.ClientConfig "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientConfig.html'>ClientConfig</link>">
 <!ENTITY jersey.client.ClientProperties "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html'>ClientProperties</link>">
 <!ENTITY jersey.client.ClientProperties.ASYNC_THREADPOOL_SIZE "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#ASYNC_THREADPOOL_SIZE'>ClientProperties.ASYNC_THREADPOOL_SIZE</link>" >
@@ -321,6 +324,7 @@
 <!ENTITY jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#REQUEST_ENTITY_PROCESSING'>ClientProperties.REQUEST_ENTITY_PROCESSING</link>" >
 <!ENTITY jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#SUPPRESS_HTTP_COMPLIANCE_VALIDATION'>ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION</link>" >
 <!ENTITY jersey.client.ClientProperties.USE_ENCODING "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#USE_ENCODING'>ClientProperties.USE_ENCODING</link>" >
+<!ENTITY jersey.client.ClientLifecycleListener "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientLifecycleListener.html'>ClientLifecycleListener</link>">
 <!ENTITY jersey.client.Connector "<link xlink:href='&jersey.javadoc.uri.prefix;/client/spi/Connector.html'>Connector</link>">
 <!ENTITY jersey.client.ConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/client/spi/ConnectorProvider.html'>ConnectorProvider</link>">
 <!ENTITY jersey.client.CsrfProtectionFilter "<link xlink:href='&jersey.javadoc.uri.prefix;/client/filter/CsrfProtectionFilter.html'>CsrfProtectionFilter</link>">
@@ -351,8 +355,12 @@
 <!ENTITY jersey.common.CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<link xlink:href='&jersey.javadoc.uri.prefix;/CommonProperties.html#OUTBOUND_CONTENT_LENGTH_BUFFER'>CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</link>" >
 <!ENTITY jersey.common.ServiceLocatorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/ServiceLocatorProvider.html'>ServiceLocatorProvider</link>">
 <!ENTITY jersey.common.SslConfigurator "<link xlink:href='&jersey.javadoc.uri.prefix;/SslConfigurator.html'>SslConfigurator</link>">
+<!ENTITY jersey.common.spi.AbstractThreadPoolProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/AbstractThreadPoolProvider.html>AbstractThreadPoolProvider</link>">
 <!ENTITY jersey.common.spi.ContentEncoder "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/ContentEncoder.html'>ContentEncoder</link>">
-<!ENTITY jersey.common.spi.RequestExecutorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/RequestExecutorProvider.html'>RequestExecutorProvider</link>">
+<!ENTITY jersey.common.spi.ExecutorServiceProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/ExecutorServiceProvider.html'>ExecutorServiceProvider</link>">
+<!ENTITY jersey.common.spi.ScheduledExecutorServiceProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/ScheduledExecutorServiceProvider.html'>ScheduledExecutorServiceProvider</link>">
+<!ENTITY jersey.common.spi.ScheduledThreadPoolProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/ScheduledThreadPoolProvider.html>ScheduledThreadPoolProvider</link>">
+<!ENTITY jersey.common.spi.ThreadPoolProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/ThreadPoolProvider.html'>ThreadPoolProvider</link>">
 <!ENTITY jersey.common.uri.UriTemplate "<link xlink:href='&jersey.javadoc.uri.prefix;/uri/UriTemplate.html'>UriTemplate</link>">
 <!ENTITY jersey.common.JerseyPriorities.JERSEY_AUTO_DISCOVERABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/common/JerseyPriorities.html#JERSEY_AUTO_DISCOVERABLE'>JerseyPriorities.JERSEY_AUTO_DISCOVERABLE</link>">
 <!ENTITY jersey.ext.ValidationConfig "<link xlink:href='&jersey.javadoc.uri.prefix;/server/validation/ValidationConfig.html'>ValidationConfig</link>">
@@ -379,7 +387,7 @@
 <!ENTITY jersey.ext.rx.client.jsr166e.RxCompletableFutureInvoker "<link xlink:href='&jersey.javadoc.uri.prefix;/client/rx/jsr166e/RxCompletableFutureInvoker.html'>RxCompletableFutureInvoker</link>">
 <!ENTITY jersey.ext.rx.client.rxjava.RxObservable "<link xlink:href='&jersey.javadoc.uri.prefix;/client/rx/rxjava/RxObservable.html'>RxObservable</link>">
 <!ENTITY jersey.ext.rx.client.rxjava.RxObservableInvoker "<link xlink:href='&jersey.javadoc.uri.prefix;/client/rx/rxjava/RxObservableInvoker.html'>RxObservableInvoker</link>">
-<!ENTITY jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/gf/cdi/spi/Hk2CustomBoundTypesProvider.html'>Hk2CustomBoundTypesProvider</link>">
+<!ENTITY jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/ext/cdi1x/spi/Hk2CustomBoundTypesProvider.html'>Hk2CustomBoundTypesProvider</link>">
 <!ENTITY jersey.grizzly.GrizzlyConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly/connector/GrizzlyConnectorProvider.html'>GrizzlyConnectorProvider</link>">
 <!ENTITY jersey.grizzly.GrizzlyHttpContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly2/httpserver/GrizzlyHttpContainer.html'>GrizzlyHttpContainer</link>">
 <!ENTITY jersey.grizzly.GrizzlyHttpContainerProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly2/httpserver/GrizzlyHttpContainerProvider.html'>GrizzlyHttpContainerProvider</link>">
@@ -431,6 +439,8 @@
 <!ENTITY jersey.message.filtering.SecurityEntityFilteringFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/message/filtering/SecurityEntityFilteringFeature.html'>SecurityEntityFilteringFeature</link>">
 <!ENTITY jersey.message.filtering.SelectableEntityFilteringFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/message/filtering/SelectableEntityFilteringFeature.html'>SelectableEntityFilteringFeature</link>">
 <!ENTITY jersey.server.ApplicationHandler "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ApplicationHandler.html'>ApplicationHandler</link>">
+<!ENTITY jersey.server.BackgroundScheduler "<link xlink:href='&jersey.javadoc.uri.prefix;/server/BackgroundScheduler.html'>@BackgroundScheduler</link>">
+<!ENTITY jersey.server.BackgroundSchedulerLiteral "<link xlink:href='&jersey.javadoc.uri.prefix;/server/BackgroundSchedulerLiteral.html'>BackgroundSchedulerLiteral</link>">
 <!ENTITY jersey.server.Broadcaster "<link xlink:href='&jersey.javadoc.uri.prefix;/server/Broadcaster.html'>Broadcaster</link>">
 <!ENTITY jersey.server.BroadcasterListener "<link xlink:href='&jersey.javadoc.uri.prefix;/server/BroadcasterListener.html'>BroadcasterListener</link>">
 <!ENTITY jersey.server.ChunkedOutput "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ChunkedOutput.html'>ChunkedOutput</link>">
@@ -440,11 +450,13 @@
 <!ENTITY jersey.server.ExtendedResource "<link xlink:href='&jersey.javadoc.uri.prefix;/server/model/ExtendedResource.html'>@ExtendedResource</link>">
 <!ENTITY jersey.server.HttpMethodOverrideFilter "<link xlink:href='&jersey.javadoc.uri.prefix;/server/filter/HttpMethodOverrideFilter.html'>HttpMethodOverrideFilter</link>">
 <!ENTITY jersey.server.JSONP "<link xlink:href='&jersey.javadoc.uri.prefix;/server/JSONP.html'>@JSONP</link>">
-<!ENTITY jersey.server.ModelProcessor "<link xlink:href='&jersey.javadoc.uri.prefix;/server/model/ModelProcessor.html'>ModelProcessor</link>">
+<!ENTITY jersey.server.ManagedAsyncExecutor "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ManagedAsyncExecutor.html'>@ManagedAsyncExecutor</link>">
+<!ENTITY jersey.server.ManagedAsyncExecutorLiteral "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ManagedAsyncExecutorLiteral.html'>ManagedAsyncExecutorLiteral</link>">
 <!ENTITY jersey.server.ModelProcessor "<link xlink:href='&jersey.javadoc.uri.prefix;/server/model/ModelProcessor.html'>ModelProcessor</link>">
 <!ENTITY jersey.server.Resource "<link xlink:href='&jersey.javadoc.uri.prefix;/server/model/Resource.html'>Resource</link>">
 <!ENTITY jersey.server.Resource.getParent "<link xlink:href='&jersey.javadoc.uri.prefix;/server/model/Resource.html#getParent()'>Resource.getParent()</link>">
 <!ENTITY jersey.server.ResourceConfig "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ResourceConfig.html'>ResourceConfig</link>">
+<!ENTITY jersey.server.ResourceFinder "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ResourceFinder.html'>ResourceFinder</link>">
 <!ENTITY jersey.server.ResponseErrorMapper "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ResponseErrorMapper.html'>ResponseErrorMapper</link>">
 <!ENTITY jersey.server.RolesAllowedDynamicFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/server/filter/RolesAllowedDynamicFeature.html'>RolesAllowedDynamicFeature</link>">
 <!ENTITY jersey.server.ServerProperties "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html'>ServerProperties</link>">
@@ -554,6 +566,8 @@
 <!ENTITY jersey.test.TestProperties "<link xlink:href='&jersey.javadoc.uri.prefix;/test/TestProperties.html'>TestProperties</link>">
 <!ENTITY jersey.test.spi.TestContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/test/spi/TestContainer.html'>TestContainer</link>">
 <!ENTITY jersey.test.spi.TestContainerFactory "<link xlink:href='&jersey.javadoc.uri.prefix;/test/spi/TestContainerFactory.html'>TestContainerFactory</link>">
+<!ENTITY jersey.test.util.ContainerRequestBuilder "<link xlink:href='&jersey.javadoc.uri.prefix;/test/util/server/ContainerRequestBuilder.html'>ContainerRequestBuilder</link>">
+<!ENTITY jersey.test.util.LoopBackConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/test/util/client/LoopBackConnectorProvider.html'>LoopBackConnectorProvider</link>">
 
 <!-- Common Literals -->
 <!ENTITY lit.null "<literal>null</literal>">
@@ -751,6 +765,8 @@
 <!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">
 <!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">
 <!ENTITY lit.jersey.client.ChunkedInput "<literal>ChunkedInput</literal>">
+<!ENTITY lit.jersey.client.ClientAsyncExecutor "<literal>@ClientAsyncExecutor</literal>">
+<!ENTITY lit.jersey.client.ClientAsyncExecutorLiteral "<literal>ClientAsyncExecutorLiteral</literal>">
 <!ENTITY lit.jersey.client.ClientConfig "<literal>ClientConfig</literal>">
 <!ENTITY lit.jersey.client.ClientProperties "<literal>ClientProperties</literal>" >
 <!ENTITY lit.jersey.client.ClientProperties.ASYNC_THREADPOOL_SIZE "<literal>ClientProperties.ASYNC_THREADPOOL_SIZE</literal>" >
@@ -771,6 +787,7 @@
 <!ENTITY lit.jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING "<literal>ClientProperties.REQUEST_ENTITY_PROCESSING</literal>" >
 <!ENTITY lit.jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION "<literal>ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION</literal>" >
 <!ENTITY lit.jersey.client.ClientProperties.USE_ENCODING "<literal>ClientProperties.USE_ENCODING</literal>" >
+<!ENTITY lit.jersey.client.ClientLifecycleListener "<literal>ClientLifecycleListener</literal>">
 <!ENTITY lit.jersey.client.Connector "<literal>Connector</literal>">
 <!ENTITY lit.jersey.client.ConnectorProvider "<literal>ConnectorProvider</literal>">
 <!ENTITY lit.jersey.client.CsrfProtectionFilter "<literal>CsrfProtectionFilter</literal>">
@@ -798,8 +815,12 @@
 <!ENTITY lit.jersey.common.CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<literal>CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</literal>" >
 <!ENTITY lit.jersey.common.ServiceLocatorProvider "<literal>ServiceLocatorProvider</literal>">
 <!ENTITY lit.jersey.common.SslConfigurator "<literal>SslConfigurator</literal>">
+<!ENTITY lit.jersey.common.spi.AbstractThreadPoolProvider "<literal>AbstractThreadPoolProvider</literal>">
 <!ENTITY lit.jersey.common.spi.ContentEncoder "<literal>ContentEncoder</literal>">
-<!ENTITY lit.jersey.common.spi.RequestExecutorProvider "<literal>RequestExecutorProvider</literal>">
+<!ENTITY lit.jersey.common.spi.ExecutorServiceProvider "<literal>ExecutorServiceProvider</literal>">
+<!ENTITY lit.jersey.common.spi.ScheduledExecutorServiceProvider "<literal>ScheduledExecutorServiceProvider</literal>">
+<!ENTITY lit.jersey.common.spi.ScheduledThreadPoolProvider "<literal>ScheduledThreadPoolProvider</literal>">
+<!ENTITY lit.jersey.common.spi.ThreadPoolProvider "<literal>ThreadPoolProvider</literal>">
 <!ENTITY lit.jersey.common.uri.UriTemplate "<literal>UriTemplate</literal>">
 <!ENTITY lit.jersey.ext.ValidationConfig "<literal>ValidationConfig</literal>">
 <!ENTITY lit.jersey.ext.ValidationError "<literal>ValidationError</literal>">
@@ -850,6 +871,8 @@
 <!ENTITY lit.jersey.message.filtering.EntityFilteringFeature "<literal>EntityFilteringFeature</literal>">
 <!ENTITY lit.jersey.message.filtering.SecurityEntityFilteringFeature "<literal>SecurityEntityFilteringFeature</literal>">
 <!ENTITY lit.jersey.server.ApplicationHandler "<literal>ApplicationHandler</literal>">
+<!ENTITY lit.jersey.server.BackgroundScheduler "<literal>@BackgroundScheduler</literal>">
+<!ENTITY lit.jersey.server.BackgroundSchedulerLiteral "<literal>BackgroundSchedulerLiteral</literal>">
 <!ENTITY lit.jersey.server.Broadcaster "<literal>Broadcaster</literal>">
 <!ENTITY lit.jersey.server.BroadcasterListener "<literal>BroadcasterListener</literal>">
 <!ENTITY lit.jersey.server.ChunkedOutput "<literal>ChunkedOutput</literal>">
@@ -858,10 +881,11 @@
 <!ENTITY lit.jersey.server.ContainerResponse "<literal>ContainerResponse</literal>">
 <!ENTITY lit.jersey.server.ExtendedResource "<literal>@ExtendedResource</literal>">
 <!ENTITY lit.jersey.server.JSONP "<literal>@JSONP</literal>">
-<!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">
+<!ENTITY lit.jersey.server.ManagedAsyncExecutor "<literal>@ManagedAsyncExecutor</literal>">
+<!ENTITY lit.jersey.server.ManagedAsyncExecutorLiteral "<literal>ManagedAsyncExecutorLiteral</literal>">
 <!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">
 <!ENTITY lit.jersey.server.ResourceConfig "<literal>ResourceConfig</literal>">
-<!ENTITY lit.jersey.server.ResourceConfig "<literal>ResourceConfig</literal>">
+<!ENTITY lit.jersey.server.ResourceFinder "<literal>ResourceFinder</literal>">
 <!ENTITY lit.jersey.server.ResponseErrorMapper "<literal>ResponseErrorMapper</literal>">
 <!ENTITY lit.jersey.server.RolesAllowedDynamicFeature "<literal>RolesAllowedDynamicFeature</literal>">
 <!ENTITY lit.jersey.server.ServerProperties "<literal>ServerProperties</literal>" >
@@ -963,3 +987,5 @@
 <!ENTITY lit.jersey.test.TestProperties "<literal>TestProperties</literal>">
 <!ENTITY lit.jersey.test.spi.TestContainer "<literal>TestContainer</literal>">
 <!ENTITY lit.jersey.test.spi.TestContainerFactory "<literal>TestContainerFactory</literal>">
+<!ENTITY lit.jersey.test.util.LoopBackConnectorProvider "<literal>LoopBackConnectorProvider</literal>">
+<!ENTITY lit.jersey.test.util.ContainerRequestBuilder "<literal>ContainerRequestBuilder</literal>">

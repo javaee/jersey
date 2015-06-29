@@ -42,23 +42,24 @@ package org.glassfish.jersey.server.internal.scanning;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 
 /**
  * Preparations for OSGi support.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
+final class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
+
+    private static final Set<String> SCHEMES = Collections.singleton("bundle");
 
     @Override
     public Set<String> getSchemes() {
-        return new HashSet<>(Arrays.asList("bundle"));
+        return SCHEMES;
     }
 
     /**
@@ -68,36 +69,43 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
     }
 
     @Override
-    public BundleSchemeScanner create(URI uri, boolean recursive) {
+    public BundleSchemeScanner create(final URI uri, final boolean recursive) {
         return new BundleSchemeScanner(uri);
     }
 
-    private class BundleSchemeScanner implements ResourceFinder {
+    private class BundleSchemeScanner extends AbstractResourceFinderAdapter {
 
-        private BundleSchemeScanner(URI uri) {
+        private BundleSchemeScanner(final URI uri) {
             this.uri = uri;
         }
 
-        private URI uri;
+        private final URI uri;
+
+        /**
+         * Marks this iterator as iterated after execution of {@link #open()} method.
+         * Together with {@link #iterated}, this field determines a returned value of {@link #hasNext()}.
+         */
         private boolean accessed = false;
+
+        /**
+         * Marks this iterator as iterated after execution of {@link #next()} method.
+         * Together with {@link #accessed}, this field determines a returned value of {@link #hasNext()}.
+         */
+        private boolean iterated = false;
 
         @Override
         public boolean hasNext() {
-            return !accessed;
+            return !accessed && !iterated;
         }
 
         @Override
         public String next() {
-            if (!accessed) {
+            if (hasNext()) {
+                iterated = true;
                 return uri.getPath();
             }
 
             throw new NoSuchElementException();
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -106,7 +114,7 @@ class BundleSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
                 try {
                     accessed = true;
                     return uri.toURL().openStream();
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     throw new ResourceFinderException(e);
                 }
             }

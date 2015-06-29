@@ -66,7 +66,6 @@ import org.apache.http.client.HttpClient;
  * <li>{@link org.glassfish.jersey.client.ClientProperties#REQUEST_ENTITY_PROCESSING}
  * - default value is {@link org.glassfish.jersey.client.RequestEntityProcessing#CHUNKED}</li>
  * <li>{@link ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>
- * <li>{@link ApacheClientProperties#SSL_CONFIG}</li>
  * </ul>
  * </p>
  * <p>

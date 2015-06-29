@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -61,6 +61,7 @@
             <excludes>
                 <exclude>pom.xml</exclude>
                 <exclude>**/WEB-INF/web.xml</exclude>
+                <exclude>**/WEB-INF/weblogic.xml</exclude>
                 <exclude>**/target/**</exclude>
                 <exclude>**/*.iml</exclude>
                 <exclude>**/glassfish-web.xml</exclude>
@@ -72,6 +73,8 @@
             <outputDirectory>/</outputDirectory>
         </fileSet>
         <fileSet>
+            <!-- will copy everything from /examples/etc/wls/main/webapp/WEB-INF -->
+            <!-- currently the directory is empty -->
             <directory>${project.basedir}/target/wls-web-xml-file/src/main/webapp/WEB-INF</directory>
             <outputDirectory>/src/main/webapp/WEB-INF</outputDirectory>
         </fileSet>

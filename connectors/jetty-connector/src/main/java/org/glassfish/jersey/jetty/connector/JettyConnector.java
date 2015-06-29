@@ -66,13 +66,11 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.net.ssl.SSLContext;
 
-import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
 import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
 import org.glassfish.jersey.message.internal.HeaderUtils;
@@ -116,7 +114,6 @@ import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
  * <li>{@link ClientProperties#PROXY_USERNAME}</li>
  * <li>{@link ClientProperties#PROXY_PASSWORD}</li>
  * <li>{@link ClientProperties#PROXY_PASSWORD}</li>
- * <li>{@link JettyClientProperties#SSL_CONFIG}</li>
  * <li>{@link JettyClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>
  * <li>{@link JettyClientProperties#DISABLE_COOKIES}</li>
  * </ul>
@@ -165,8 +162,7 @@ class JettyConnector implements Connector {
      * @param config client configuration.
      */
     JettyConnector(final Client jaxrsClient, final Configuration config) {
-
-        final SSLContext sslContext = getSslContext(jaxrsClient, config);
+        final SSLContext sslContext = jaxrsClient.getSslContext();
         final SslContextFactory sslContextFactory = new SslContextFactory();
         sslContextFactory.setSslContext(sslContext);
         this.client = new HttpClient(sslContextFactory);
@@ -208,16 +204,6 @@ class JettyConnector implements Connector {
             throw new ProcessingException("Failed to start the client.", e);
         }
         this.cookieStore = client.getCookieStore();
-    }
-
-    private SSLContext getSslContext(final Client client, final Configuration config) {
-        final SslConfigurator sslConfigurator = PropertiesHelper.getValue(
-                config.getProperties(),
-                JettyClientProperties.SSL_CONFIG,
-                SslConfigurator.class,
-                null);
-
-        return sslConfigurator != null ? sslConfigurator.createSSLContext() : client.getSslContext();
     }
 
     @SuppressWarnings("ChainOfInstanceofChecks")
@@ -289,7 +275,7 @@ class JettyConnector implements Connector {
             final MultivaluedMap<String, String> headers = jerseyResponse.getHeaders();
             List<String> list = headers.get(headerName);
             if (list == null) {
-                list = new ArrayList<String>();
+                list = new ArrayList<>();
             }
             list.add(header.getValue());
             headers.put(headerName, list);
@@ -325,9 +311,9 @@ class JettyConnector implements Connector {
     }
 
     private static Map<String, String> writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final Request request) {
-        Map<String, String> stringHeaders = HeaderUtils.asStringHeadersSingleValue(headers);
+        final Map<String, String> stringHeaders = HeaderUtils.asStringHeadersSingleValue(headers);
 
-        for (Map.Entry<String, String> e : stringHeaders.entrySet()) {
+        for (final Map.Entry<String, String> e : stringHeaders.entrySet()) {
             request.getHeaders().add(e.getKey(), e.getValue());
         }
         return stringHeaders;
@@ -404,7 +390,7 @@ class JettyConnector implements Connector {
                     }
                 }
             });
-            final AtomicReference<ClientResponse> jerseyResponse = new AtomicReference<ClientResponse>();
+            final AtomicReference<ClientResponse> jerseyResponse = new AtomicReference<>();
             final ByteBufferInputStream entityStream = new ByteBufferInputStream();
             jettyRequest.send(new Response.Listener.Adapter() {
 

@@ -80,7 +80,7 @@
             </simplelist>
             Client filters:
             <simplelist>
-                <member>&jaxrs.client.ClientResponseFilter;
+                <member>&jaxrs.client.ClientRequestFilter;
                 </member>
                 <member>&jaxrs.client.ClientResponseFilter;
                 </member>

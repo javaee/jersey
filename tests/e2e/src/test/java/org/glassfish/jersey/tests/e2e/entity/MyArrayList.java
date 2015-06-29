@@ -44,15 +44,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- *
  * @author Martin Matula
  */
 public class MyArrayList<T> extends ArrayList<T> {
+
     public MyArrayList() {
 
     }
 
-    public MyArrayList(Collection<T> a) {
+    public MyArrayList(final Collection<T> a) {
         super(a);
     }
 

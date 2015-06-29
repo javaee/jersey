@@ -154,7 +154,7 @@ public class JaxbStringReaderProvider {
      */
     public static class RootElementProvider extends JaxbStringReaderProvider implements ParamConverterProvider {
 
-        private Provider<SAXParserFactory> spfProvider;
+        private final Provider<SAXParserFactory> spfProvider;
 
         /**
          * Creates new instance.

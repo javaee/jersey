@@ -87,22 +87,33 @@ import org.glassfish.jersey.message.internal.EntityInputStream;
  */
 public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvider<Object> {
 
-    public AbstractRootElementJaxbProvider(Providers ps) {
-        super(ps);
+    /**
+     * Inheritance constructor.
+     *
+     * @param providers JAX-RS providers.
+     */
+    public AbstractRootElementJaxbProvider(Providers providers) {
+        super(providers);
     }
 
-    public AbstractRootElementJaxbProvider(Providers ps, MediaType mt) {
-        super(ps, mt);
+    /**
+     * Inheritance constructor.
+     *
+     * @param providers JAX-RS providers.
+     * @param resolverMediaType JAXB component context resolver media type to be used.
+     */
+    public AbstractRootElementJaxbProvider(Providers providers, MediaType resolverMediaType) {
+        super(providers, resolverMediaType);
     }
 
     @Override
-    public boolean isReadable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
+    public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         return (type.getAnnotation(XmlRootElement.class) != null
                 || type.getAnnotation(XmlType.class) != null) && isSupported(mediaType);
     }
 
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
+    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         return type.getAnnotation(XmlRootElement.class) != null && isSupported(mediaType);
     }
 
@@ -110,7 +121,7 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
     public final Object readFrom(
             Class<Object> type,
             Type genericType,
-            Annotation annotations[],
+            Annotation[] annotations,
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
             InputStream inputStream) throws IOException {
@@ -138,7 +149,7 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
      * @param u            the unmarshaller to use for unmarshalling.
      * @param entityStream the input stream to unmarshal from.
      * @return an instance of the JAXB type.
-     * @throws javax.xml.bind.JAXBException
+     * @throws javax.xml.bind.JAXBException in case the JAXB unmarshalling fails.
      */
     protected Object readFrom(Class<Object> type, MediaType mediaType,
                               Unmarshaller u, InputStream entityStream)
@@ -155,7 +166,7 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
             Object t,
             Class<?> type,
             Type genericType,
-            Annotation annotations[],
+            Annotation[] annotations,
             MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders,
             OutputStream entityStream) throws IOException {
@@ -178,11 +189,11 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
      * Implementing classes may override this method.
      *
      * @param t            the instance of the JAXB type.
-     * @param mediaType    the meida type.
+     * @param mediaType    the media type.
      * @param c            the character set to serialize characters to.
      * @param m            the marshaller to marshaller the instance of the JAXB type.
      * @param entityStream the output stream to marshal to.
-     * @throws javax.xml.bind.JAXBException
+     * @throws javax.xml.bind.JAXBException in case the JAXB marshalling fails.
      */
     protected void writeTo(Object t, MediaType mediaType, Charset c,
                            Marshaller m, OutputStream entityStream)

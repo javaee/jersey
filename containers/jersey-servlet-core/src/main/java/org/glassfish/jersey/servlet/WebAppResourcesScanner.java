@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,26 +48,26 @@ import java.util.Set;
 
 import javax.servlet.ServletContext;
 
-import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 import org.glassfish.jersey.server.internal.scanning.JarFileScanner;
 import org.glassfish.jersey.server.internal.scanning.ResourceFinderException;
-import org.glassfish.jersey.server.internal.scanning.ResourceFinderStack;
+import org.glassfish.jersey.server.internal.scanning.CompositeResourceFinder;
 
 /**
  * A scanner that recursively scans resources within a Web application.
  *
  * @author Paul Sandoz
  */
-class WebAppResourcesScanner implements ResourceFinder {
+final class WebAppResourcesScanner extends AbstractResourceFinderAdapter {
 
-//    private final String[] paths;
+    private static final String[] paths = new String[] {"/WEB-INF/lib/", "/WEB-INF/classes/"};
+
     private final ServletContext sc;
-    private ResourceFinderStack resourceFinderStack = new ResourceFinderStack();
-    private static String[] paths = new String[]{"/WEB-INF/lib/", "/WEB-INF/classes/"};
+    private CompositeResourceFinder compositeResourceFinder = new CompositeResourceFinder();
 
     /**
      * Scan from a set of web resource paths.
-     * <p>
+     * <p/>
      *
      * @param sc {@link ServletContext}.
      */
@@ -77,7 +77,7 @@ class WebAppResourcesScanner implements ResourceFinder {
         processPaths(paths);
     }
 
-    private void processPaths(String... paths) {
+    private void processPaths(final String... paths) {
         for (final String path : paths) {
 
             final Set<String> resourcePaths = sc.getResourcePaths(path);
@@ -85,18 +85,19 @@ class WebAppResourcesScanner implements ResourceFinder {
                 break;
             }
 
-            resourceFinderStack.push(new ResourceFinder() {
+            compositeResourceFinder.push(new AbstractResourceFinderAdapter() {
 
-                private Deque<String> resourcePathsStack = new LinkedList<String>() {
+                private final Deque<String> resourcePathsStack = new LinkedList<String>() {
 
                     private static final long serialVersionUID = 3109256773218160485L;
 
                     {
-                        for (String resourcePath : resourcePaths) {
+                        for (final String resourcePath : resourcePaths) {
                             push(resourcePath);
                         }
                     }
                 };
+
                 private String current;
                 private String next;
 
@@ -110,8 +111,8 @@ class WebAppResourcesScanner implements ResourceFinder {
                             next = null;
                         } else if (next.endsWith(".jar")) {
                             try {
-                                resourceFinderStack.push(new JarFileScanner(sc.getResourceAsStream(next), "", true));
-                            } catch (IOException ioe) {
+                                compositeResourceFinder.push(new JarFileScanner(sc.getResourceAsStream(next), "", true));
+                            } catch (final IOException ioe) {
                                 throw new ResourceFinderException(ioe);
                             }
                             next = null;
@@ -133,11 +134,6 @@ class WebAppResourcesScanner implements ResourceFinder {
                 }
 
                 @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-
-                @Override
                 public InputStream open() {
                     return sc.getResourceAsStream(current);
                 }
@@ -153,27 +149,27 @@ class WebAppResourcesScanner implements ResourceFinder {
 
     @Override
     public boolean hasNext() {
-        return resourceFinderStack.hasNext();
+        return compositeResourceFinder.hasNext();
     }
 
     @Override
     public String next() {
-        return resourceFinderStack.next();
-    }
-
-    @Override
-    public void remove() {
-        resourceFinderStack.remove();
+        return compositeResourceFinder.next();
     }
 
     @Override
     public InputStream open() {
-        return resourceFinderStack.open();
+        return compositeResourceFinder.open();
+    }
+
+    @Override
+    public void close() {
+        compositeResourceFinder.close();
     }
 
     @Override
     public void reset() {
-        resourceFinderStack = new ResourceFinderStack();
+        compositeResourceFinder = new CompositeResourceFinder();
         processPaths(paths);
     }
 }

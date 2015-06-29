@@ -49,7 +49,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
 
-import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 
 /**
  * A "file" scheme URI scanner that recursively scans directories.
@@ -57,11 +57,13 @@ import org.glassfish.jersey.server.ResourceFinder;
  *
  * @author Paul Sandoz
  */
-class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
+final class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
+
+    private static final Set<String> SCHEMES = Collections.singleton("file");
 
     @Override
     public Set<String> getSchemes() {
-        return Collections.singleton("file");
+        return SCHEMES;
     }
 
     /**
@@ -71,17 +73,17 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
     }
 
     @Override
-    public FileSchemeScanner create(URI uri, boolean recursive) {
+    public FileSchemeScanner create(final URI uri, final boolean recursive) {
         return new FileSchemeScanner(uri, recursive);
     }
 
-    private class FileSchemeScanner implements ResourceFinder {
+    private class FileSchemeScanner extends AbstractResourceFinderAdapter {
 
-        private final ResourceFinderStack resourceFinderStack;
+        private final CompositeResourceFinder compositeResourceFinder;
         private final boolean recursive;
 
-        private FileSchemeScanner(final URI uri, boolean recursive) {
-            this.resourceFinderStack = new ResourceFinderStack();
+        private FileSchemeScanner(final URI uri, final boolean recursive) {
+            this.compositeResourceFinder = new CompositeResourceFinder();
             this.recursive = recursive;
 
             processFile(new File(uri.getPath()));
@@ -89,22 +91,22 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
 
         @Override
         public boolean hasNext() {
-            return resourceFinderStack.hasNext();
+            return compositeResourceFinder.hasNext();
         }
 
         @Override
         public String next() {
-            return resourceFinderStack.next();
-        }
-
-        @Override
-        public void remove() {
-            resourceFinderStack.remove();
+            return compositeResourceFinder.next();
         }
 
         @Override
         public InputStream open() {
-            return resourceFinderStack.open();
+            return compositeResourceFinder.open();
+        }
+
+        @Override
+        public void close() {
+            compositeResourceFinder.close();
         }
 
         @Override
@@ -113,13 +115,13 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
         }
 
         private void processFile(final File f) {
-            resourceFinderStack.push(new ResourceFinder() {
+            compositeResourceFinder.push(new AbstractResourceFinderAdapter() {
 
                 Stack<File> files = new Stack<File>() {{
                     if (f.isDirectory()) {
                         final File[] subDirFiles = f.listFiles();
                         if (subDirFiles != null) {
-                            for (File file : subDirFiles) {
+                            for (final File file : subDirFiles) {
                                 push(file);
                             }
                         }
@@ -159,15 +161,10 @@ class FileSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory 
                 }
 
                 @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-
-                @Override
                 public InputStream open() {
                     try {
                         return new FileInputStream(current);
-                    } catch (FileNotFoundException e) {
+                    } catch (final FileNotFoundException e) {
                         throw new ResourceFinderException(e);
                     }
                 }

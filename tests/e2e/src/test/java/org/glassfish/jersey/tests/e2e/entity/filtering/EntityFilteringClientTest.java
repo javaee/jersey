@@ -52,20 +52,23 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
+import org.glassfish.jersey.internal.inject.CustomAnnotationLiteral;
 import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 import org.glassfish.jersey.tests.e2e.entity.filtering.domain.ManyFilteringsOnClassEntity;
 import org.glassfish.jersey.tests.e2e.entity.filtering.domain.OneFilteringOnClassEntity;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@RunWith(ConcurrentRunner.class)
 public class EntityFilteringClientTest extends EntityFilteringTest {
 
     public static final MediaType ENTITY_FILTERING = new MediaType("entity", "filtering");
@@ -129,7 +132,7 @@ public class EntityFilteringClientTest extends EntityFilteringTest {
                 .post(Entity.entity(
                                 new OneFilteringOnClassEntity(),
                                 ENTITY_FILTERING,
-                                new Annotation[] {new CustomAnnotationImpl()}),
+                                new Annotation[] {CustomAnnotationLiteral.INSTANCE}),
                         String.class);
 
         assertThat(fields, equalTo(""));
@@ -150,7 +153,7 @@ public class EntityFilteringClientTest extends EntityFilteringTest {
     public void testConfigurationMultipleViews() throws Exception {
         testConfiguration("field,accessor,property,subEntities.field2,subEntities.property2,subEntities.property1,"
                         + "subEntities.field1,defaultEntities.field,defaultEntities.property", PrimaryDetailedView.Factory.get(),
-                new CustomAnnotationImpl());
+                CustomAnnotationLiteral.INSTANCE);
     }
 
     private void testConfiguration(final String expected, final Annotation... annotations) {

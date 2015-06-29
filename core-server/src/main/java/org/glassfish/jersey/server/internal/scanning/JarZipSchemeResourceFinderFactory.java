@@ -46,26 +46,29 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
- *  A "jar", "zip" and "wsjar" scheme URI scanner that recursively jar files.
+ * A "jar", "zip" and "wsjar" scheme URI scanner that recursively jar files.
  * Jar entries are reported to a {@link ResourceProcessor}.
  *
  * @author Paul Sandoz
- * @author Gerard Davison (gerard.davison@oracle.com)
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
-class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
+final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
+
+    private static final Set<String> SCHEMES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("jar", "zip", "wsjar")));
 
     @Override
     public Set<String> getSchemes() {
-        return new HashSet<String>(Arrays.asList("jar", "zip", "wsjar"));
+        return SCHEMES;
     }
 
     /**
@@ -75,24 +78,25 @@ class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
     }
 
     @Override
-    public JarZipSchemeScanner create(final URI uri, boolean recursive) {
+    public JarZipSchemeScanner create(final URI uri, final boolean recursive) {
         final String ssp = uri.getRawSchemeSpecificPart();
         final String jarUrlString = ssp.substring(0, ssp.lastIndexOf('!'));
         final String parent = ssp.substring(ssp.lastIndexOf('!') + 2);
 
         try {
             return new JarZipSchemeScanner(getInputStream(jarUrlString), parent, recursive);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new ResourceFinderException(e);
         }
     }
 
-    private class JarZipSchemeScanner implements ResourceFinder {
+    private class JarZipSchemeScanner extends AbstractResourceFinderAdapter {
 
-        private InputStream inputStream;
-        private JarFileScanner jarFileScanner;
+        private final InputStream inputStream;
+        private final JarFileScanner jarFileScanner;
 
-        private JarZipSchemeScanner(InputStream inputStream, String parent, boolean recursive) throws IOException {
+        private JarZipSchemeScanner(final InputStream inputStream, final String parent, final boolean recursive)
+                throws IOException {
             this.inputStream = inputStream;
             this.jarFileScanner = new JarFileScanner(inputStream, parent, recursive);
         }
@@ -103,7 +107,7 @@ class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
             if (!hasNext) {
                 try {
                     inputStream.close();
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     Logger.getLogger(JarZipSchemeScanner.class.getName()).log(Level.FINE, "Unable to close jar file.", e);
                 }
                 return false;
@@ -118,13 +122,13 @@ class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
         }
 
         @Override
-        public void remove() {
-            jarFileScanner.remove();
+        public InputStream open() {
+            return jarFileScanner.open();
         }
 
         @Override
-        public InputStream open() {
-            return jarFileScanner.open();
+        public void close() {
+            jarFileScanner.close();
         }
 
         @Override
@@ -139,8 +143,8 @@ class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
      * For most platforms the format for the zip or jar follows the form of
      * the <a href="http://docs.sun.com/source/819-0913/author/jar.html#jarprotocol"jar protcol.</a></p>
      * <ul>
-     *   <li><code>jar:file:///tmp/fishfingers.zip!/example.txt</code></li>
-     *   <li><code>zip:http://www.example.com/fishfingers.zip!/example.txt</code></li>
+     * <li><code>jar:file:///tmp/fishfingers.zip!/example.txt</code></li>
+     * <li><code>zip:http://www.example.com/fishfingers.zip!/example.txt</code></li>
      * </ul>
      * <p>
      * On versions of the WebLogic application server a proprietary format is
@@ -148,10 +152,10 @@ class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
      * the local file system:
      * </p>
      * <ul>
-     *   <li><code>zip:/tmp/fishfingers.zip!/example.txt</code></li>
-     *   <li><code>zip:d:/tempfishfingers.zip!/example.txt</code></li>
+     * <li><code>zip:/tmp/fishfingers.zip!/example.txt</code></li>
+     * <li><code>zip:d:/tempfishfingers.zip!/example.txt</code></li>
      * </ul>
-     * <p>
+     * <p/>
      * This method will first attempt to create a {@link InputStream} as follows:
      * <pre>
      *   new URL(jarUrlString).openStream();
@@ -164,14 +168,14 @@ class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
      * </pre>
      *
      * @param jarUrlString the raw scheme specific part of a URI minus the jar
-     *        entry
+     *                     entry
      * @return a {@link InputStream}.
      * @throws IOException if there is an error opening the stream.
      */
-    private InputStream getInputStream(String jarUrlString) throws IOException {
+    private InputStream getInputStream(final String jarUrlString) throws IOException {
         try {
             return new URL(jarUrlString).openStream();
-        } catch (MalformedURLException e) {
+        } catch (final MalformedURLException e) {
             return new FileInputStream(
                     UriComponent.decode(jarUrlString, UriComponent.Type.PATH));
         }

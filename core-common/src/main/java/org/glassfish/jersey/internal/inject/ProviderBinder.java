@@ -173,7 +173,7 @@ public class ProviderBinder {
         for (final Class contract : model.getContracts()) {
             final ScopedBindingBuilder bindingBuilder = Injections.newBinder(providerClass)
                     .in(model.getScope())
-                    .qualifiedBy(new CustomAnnotationImpl());
+                    .qualifiedBy(CustomAnnotationLiteral.INSTANCE);
 
             //noinspection unchecked
             bindingBuilder.to(contract);
@@ -203,7 +203,7 @@ public class ProviderBinder {
 
         for (final Class contract : model.getContracts()) {
             final ScopedBindingBuilder bindingBuilder = Injections
-                    .newBinder(providerInstance).qualifiedBy(new CustomAnnotationImpl());
+                    .newBinder(providerInstance).qualifiedBy(CustomAnnotationLiteral.INSTANCE);
 
             //noinspection unchecked
             bindingBuilder.to(contract);
@@ -311,7 +311,7 @@ public class ProviderBinder {
     @SuppressWarnings("unchecked")
     private <T> void bindInstance(final T instance, final DynamicConfiguration dc) {
         for (final Class contract : Providers.getProviderContracts(instance.getClass())) {
-            Injections.addBinding(Injections.newBinder(instance).to(contract).qualifiedBy(new CustomAnnotationImpl()), dc);
+            Injections.addBinding(Injections.newBinder(instance).to(contract).qualifiedBy(CustomAnnotationLiteral.INSTANCE), dc);
         }
     }
 
@@ -328,13 +328,13 @@ public class ProviderBinder {
             for (final Class contract : Providers.getProviderContracts(clazz)) {
                 final AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
                 aliasDescriptor.setScope(scope.getName());
-                aliasDescriptor.addQualifierAnnotation(new CustomAnnotationImpl());
+                aliasDescriptor.addQualifierAnnotation(CustomAnnotationLiteral.INSTANCE);
 
                 dc.bind(aliasDescriptor);
             }
         } else {
             final ScopedBindingBuilder<T> bindingBuilder =
-                    Injections.newBinder(clazz).in(scope).qualifiedBy(new CustomAnnotationImpl());
+                    Injections.newBinder(clazz).in(scope).qualifiedBy(CustomAnnotationLiteral.INSTANCE);
             for (final Class contract : Providers.getProviderContracts(clazz)) {
                 bindingBuilder.to(contract);
             }

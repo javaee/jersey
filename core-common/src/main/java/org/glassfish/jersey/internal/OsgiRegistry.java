@@ -94,6 +94,7 @@ import org.osgi.framework.SynchronousBundleListener;
  */
 public final class OsgiRegistry implements SynchronousBundleListener {
 
+    private static final String WEB_INF_CLASSES = "WEB-INF/classes/";
     private static final String CoreBundleSymbolicNAME = "org.glassfish.jersey.core.jersey-common";
     private static final Logger LOGGER = Logger.getLogger(OsgiRegistry.class.getName());
 
@@ -300,30 +301,96 @@ public final class OsgiRegistry implements SynchronousBundleListener {
     }
 
     /**
+     * Translates bundle entry path as returned from {@link org.osgi.framework.Bundle#findEntries(String, String, boolean)} to
+     * fully qualified class name that resides in given package path (directly or indirectly in its subpackages).
+     *
+     * @param packagePath     The package path where the class is located (even recursively)
+     * @param bundleEntryPath The bundle path to translate.
+     * @return Fully qualified class name.
+     */
+    public static String bundleEntryPathToClassName(String packagePath, String bundleEntryPath) {
+        // normalize packagePath
+        packagePath = normalizedPackagePath(packagePath);
+
+        // remove WEB-INF/classes from bundle entry path
+        if (bundleEntryPath.contains(WEB_INF_CLASSES)) {
+            bundleEntryPath = bundleEntryPath.substring(bundleEntryPath.indexOf(WEB_INF_CLASSES) + WEB_INF_CLASSES.length());
+        }
+
+        final int packageIndex = bundleEntryPath.indexOf(packagePath);
+
+        String normalizedClassNamePath = packageIndex > -1
+                // the package path was found in the bundle path
+                ? bundleEntryPath.substring(packageIndex)
+                // the package path is not included in the bundle entry path
+                // fall back to the original implementation of the translation which does not consider recursion
+                : packagePath + bundleEntryPath.substring(bundleEntryPath.lastIndexOf('/') + 1);
+
+        return (normalizedClassNamePath.startsWith("/") ? normalizedClassNamePath.substring(1) : normalizedClassNamePath)
+                .replace('/', '.').replace(".class", "");
+    }
+
+    /**
+     * Returns whether the given entry path is located directly in the provided package path. That is,
+     * if the entry is located in a sub-package, then {@code false} is returned.
+     *
+     * @param packagePath Package path which the entry is compared to
+     * @param entryPath Entry path
+     * @return Whether the given entry path is located directly in the provided package path.
+     */
+    public static boolean isPackageLevelEntry(String packagePath, final String entryPath) {
+        // normalize packagePath
+        packagePath = normalizedPackagePath(packagePath);
+
+        // if the package path is contained in the jar entry name, subtract it
+        String entryWithoutPackagePath = entryPath.contains(packagePath)
+                ? entryPath.substring(entryPath.indexOf(packagePath) + packagePath.length())
+                : entryPath;
+
+        return !(entryWithoutPackagePath.startsWith("/") ? entryWithoutPackagePath.substring(1)
+                         : entryWithoutPackagePath)
+                .contains("/");
+    }
+
+    /**
+     * Normalized package returns path that does not start with '/' character and ends with '/' character.
+     * If the argument is '/' then returned value is empty string "".
+     *
+     * @param packagePath package path to normalize.
+     * @return Normalized package path.
+     */
+    public static String normalizedPackagePath(String packagePath) {
+        packagePath = packagePath.startsWith("/") ? packagePath.substring(1) : packagePath;
+        packagePath = packagePath.endsWith("/") ? packagePath : packagePath + "/";
+        packagePath = "/".equals(packagePath) ? "" : packagePath;
+        return packagePath;
+    }
+
+    /**
      * Get URLs of resources from a given package.
      *
      * @param packagePath package.
      * @param classLoader resource class loader.
+     * @param recursive   whether the given package path should be scanned recursively by OSGi
      * @return URLs of the located resources.
      */
     @SuppressWarnings("unchecked")
-    public Enumeration<URL> getPackageResources(final String packagePath, final ClassLoader classLoader) {
+    public Enumeration<URL> getPackageResources(final String packagePath,
+                                                final ClassLoader classLoader,
+                                                final boolean recursive) {
         final List<URL> result = new LinkedList<URL>();
 
         for (final Bundle bundle : bundleContext.getBundles()) {
             // Look for resources at the given <packagePath> and at WEB-INF/classes/<packagePath> in case a WAR is being examined.
-            for (final String bundlePackagePath : new String[] {packagePath, "WEB-INF/classes/" + packagePath}) {
-                final Enumeration<URL> enumeration = findEntries(bundle, bundlePackagePath, "*", false);
+            for (final String bundlePackagePath : new String[] {packagePath, WEB_INF_CLASSES + packagePath}) {
+                final Enumeration<URL> enumeration = findEntries(bundle, bundlePackagePath, "*.class", recursive);
 
                 if (enumeration != null) {
                     while (enumeration.hasMoreElements()) {
                         final URL url = enumeration.nextElement();
                         final String path = url.getPath();
 
-                        final String className = (packagePath + path.substring(path.lastIndexOf('/')))
-                                .replace('/', '.').replace(".class", "");
-
-                        classToBundleMapping.put(className, bundle);
+                        classToBundleMapping.put(bundleEntryPathToClassName(packagePath, path), bundle);
                         result.add(url);
                     }
                 }
@@ -356,8 +423,21 @@ public final class OsgiRegistry implements SynchronousBundleListener {
                         JarEntry jarEntry;
                         while ((jarEntry = jarInputStream.getNextJarEntry()) != null) {
                             final String jarEntryName = jarEntry.getName();
+                            final String jarEntryNameLeadingSlash = jarEntryName.startsWith("/")
+                                    ? jarEntryName : "/" + jarEntryName;
 
-                            if (jarEntryName.endsWith(".class") && jarEntryName.contains(packagePath)) {
+                            if (jarEntryName.endsWith(".class")
+                                    // Added leading and trailing slashes '/' to package path (e.g. '/com/') helps us to not
+                                    // accidentally match sub-strings of the package path (e.g., if package path 'com' was used
+                                    // for scanning, package 'whatever.foo.telecom' would be matched because of word 'tele[com]').
+                                    // Note that we cannot avoid all corner cases with accidental matches since jar
+                                    // entry name might be almost anything (e.g., if package path 'telecom' was used, package
+                                    // 'whatever.foo.telecom' will be matched and there is no way to avoid it unless user
+                                    // explicitly instructs us to do so somehow (not implemented)
+                                    && jarEntryNameLeadingSlash.contains("/" + normalizedPackagePath(packagePath))) {
+                                if (!recursive && !isPackageLevelEntry(packagePath, jarEntryName)) {
+                                    continue;
+                                }
                                 classToBundleMapping.put(jarEntryName.replace(".class", "").replace('/', '.'), bundle);
                                 result.add(bundle.getResource(jarEntryName));
                             }

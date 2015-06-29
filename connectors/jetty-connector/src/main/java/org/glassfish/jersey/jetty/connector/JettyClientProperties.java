@@ -56,23 +56,8 @@ public final class JettyClientProperties {
      * Prevents instantiation.
      */
     private JettyClientProperties() {
+        throw new AssertionError("No instances allowed.");
     }
-
-    /**
-     * Support for specifying SSL configuration for HTTPS connections.
-     * Used only when making HTTPS requests.
-     *
-     * <p>The value MUST be an instance of {@link org.glassfish.jersey.SslConfigurator}.</p>
-     *
-     * <p>A default value is not set.</p>
-     *
-     * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
-     *
-     * @deprecated Set the SSL configuration on the JAX-RS {@link javax.ws.rs.client.ClientBuilder}.
-     */
-    @Deprecated
-    public static final String SSL_CONFIG =
-            "jersey.config.jetty.client.ssl.sslConfig";
 
     /**
      * A value of {@code false} indicates the client should handle cookies
@@ -115,7 +100,7 @@ public final class JettyClientProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties, final String key, final Class<T> type) {
         return PropertiesHelper.getValue(properties, key, type, null);
     }
 

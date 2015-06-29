@@ -1,1 +1,1 @@
-{"prop":"testProp","cats":[{"nickName":"Kitty","name":"Foo"},{"nickName":"Puss","name":"Bar"}]}
+{"cats":[{"name":"Foo","nickName":"Kitty"},{"name":"Bar","nickName":"Puss"}],"prop":"testProp"}

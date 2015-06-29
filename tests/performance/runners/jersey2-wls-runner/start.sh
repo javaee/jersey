@@ -41,6 +41,8 @@
 TARGET=$PWD/target
 MW_HOME=`cat $TARGET/mw_home.txt`
 TEST_DOMAIN=$MW_HOME/hudson_test_domain
+DOMAIN_NAME=HudsonTestDomain
+SERVER_NAME=HudsonTestServer
 PID_FILE=$TARGET/wls.pid
 
 echo $TEST_DOMAIN > $TARGET/test_domain.txt
@@ -48,18 +50,26 @@ echo $TEST_DOMAIN > $TARGET/test_domain.txt
 cd $MW_HOME
 . $MW_HOME/wlserver/server/bin/setWLSEnv.sh
 
+rm -rf $TEST_DOMAIN
 mkdir -p $TEST_DOMAIN
 cd $TEST_DOMAIN
 
-JAVA_OPTIONS="-javaagent:$HOME/jersey-perftest-agent.jar"
-
+rm -f $TARGET/autodeploy
 ln -s $TEST_DOMAIN/autodeploy $TARGET/autodeploy
 
+rm -f $TARGET/server.log
+rm -f $TARGET/domain.log
+ln -s $TEST_DOMAIN/servers/$SERVER_NAME/logs/$SERVER_NAME.log $TARGET/server.log
+ln -s $TEST_DOMAIN/servers/$SERVER_NAME/logs/$DOMAIN_NAME.log $TARGET/domain.log
+
+JAVA_OPTIONS="-javaagent:$HOME/jersey-perftest-agent.jar"
+
 yes | nohup java -server \
+      -Xms1024m \
       -Xmx1024m \
       -XX:MaxPermSize=256m \
-      -Dweblogic.Domain=HudsonTestDomain \
-      -Dweblogic.Name=HudsonTestServer \
+      -Dweblogic.Domain=$DOMAIN_NAME \
+      -Dweblogic.Name=$SERVER_NAME \
       -Dweblogic.management.username=weblogic \
       -Dweblogic.management.password=weblogic1 \
       -Dweblogic.ListenPort=7001 \
@@ -77,5 +87,8 @@ echo $! > $PID_FILE
 
 # wait for server to start
 echo "******** WAITING FOR SERVER TO START"
-while ! netstat -na | grep 7001; do sleep 5; echo "."; done
+while [ ! `wget -q --server-response --no-proxy http://localhost:7001 2>&1 | awk '/^  HTTP/{print $2}'` ]; do
+  sleep 5
+  echo "*"
+done
 echo "******** SERVER IS READY"

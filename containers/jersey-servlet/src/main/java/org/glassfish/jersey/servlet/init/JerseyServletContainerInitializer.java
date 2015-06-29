@@ -248,7 +248,7 @@ public final class JerseyServletContainerInitializer implements ServletContainer
 
             if (registration.getClassName() != null) {
                 // class name present - complete servlet registration from container point of view
-                Utils.store(resourceConfig, context);
+                Utils.store(resourceConfig, context, registration.getName());
             } else {
                 // no class name - no complete servlet registration from container point of view
                 final ServletContainer servlet = new ServletContainer(resourceConfig);
@@ -298,7 +298,7 @@ public final class JerseyServletContainerInitializer implements ServletContainer
      * Enhance existing servlet configuration.
      */
     private static void addServletWithExistingRegistration(final ServletContext context,
-                                                           final ServletRegistration registration,
+                                                           ServletRegistration registration,
                                                            final Class<? extends Application> clazz,
                                                            final Set<Class<?>> classes) throws ServletException {
         // create a new servlet container for a given app.
@@ -308,33 +308,33 @@ public final class JerseyServletContainerInitializer implements ServletContainer
 
         if (registration.getClassName() != null) {
             // class name present - complete servlet registration from container point of view
-            Utils.store(resourceConfig, context);
+            Utils.store(resourceConfig, context, registration.getName());
         } else {
             // no class name - no complete servlet registration from container point of view
             final ServletContainer servlet = new ServletContainer(resourceConfig);
             final ServletRegistration.Dynamic dynamicRegistration = context.addServlet(clazz.getName(), servlet);
             dynamicRegistration.setAsyncSupported(true);
             dynamicRegistration.setLoadOnStartup(1);
+            registration = dynamicRegistration;
+        }
+        if (registration.getMappings().isEmpty()) {
+            final ApplicationPath ap = clazz.getAnnotation(ApplicationPath.class);
+            if (ap != null) {
+                final String mapping = createMappingPath(ap);
+                if (!mappingExists(context, mapping)) {
+                    registration.addMapping(mapping);
 
-            if (dynamicRegistration.getMappings().isEmpty()) {
-                final ApplicationPath ap = clazz.getAnnotation(ApplicationPath.class);
-                if (ap != null) {
-                    final String mapping = createMappingPath(ap);
-                    if (!mappingExists(context, mapping)) {
-                        dynamicRegistration.addMapping(mapping);
-
-                        LOGGER.log(Level.CONFIG, LocalizationMessages.JERSEY_APP_REGISTERED_MAPPING(clazz.getName(), mapping));
-                    } else {
-                        LOGGER.log(Level.WARNING, LocalizationMessages.JERSEY_APP_MAPPING_CONFLICT(clazz.getName(), mapping));
-                    }
+                    LOGGER.log(Level.CONFIG, LocalizationMessages.JERSEY_APP_REGISTERED_MAPPING(clazz.getName(), mapping));
                 } else {
-                    // Error
-                    LOGGER.log(Level.WARNING, LocalizationMessages.JERSEY_APP_NO_MAPPING_OR_ANNOTATION(clazz.getName(),
-                            ApplicationPath.class.getSimpleName()));
+                    LOGGER.log(Level.WARNING, LocalizationMessages.JERSEY_APP_MAPPING_CONFLICT(clazz.getName(), mapping));
                 }
             } else {
-                LOGGER.log(Level.CONFIG, LocalizationMessages.JERSEY_APP_REGISTERED_APPLICATION(clazz.getName()));
+                // Error
+                LOGGER.log(Level.WARNING, LocalizationMessages.JERSEY_APP_NO_MAPPING_OR_ANNOTATION(clazz.getName(),
+                        ApplicationPath.class.getSimpleName()));
             }
+        } else {
+            LOGGER.log(Level.CONFIG, LocalizationMessages.JERSEY_APP_REGISTERED_APPLICATION(clazz.getName()));
         }
     }
 

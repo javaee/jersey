@@ -47,8 +47,11 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.ManagedBean;
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
@@ -89,8 +92,11 @@ public class App {
     /**
      * JAX-RS application defined as a CDI bean.
      */
-    @ApplicationScoped
+    @ManagedBean
     public static class JaxRsApplication extends Application {
+
+        @Context
+        UriInfo uInfo;
 
         static final Set<Class<?>> appClasses = new HashSet<>();
 

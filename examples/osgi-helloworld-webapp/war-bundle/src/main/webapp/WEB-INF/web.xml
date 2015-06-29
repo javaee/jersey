@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,8 @@
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
+
+    <!-- Jersey APP that has enabled recursive scanning (the default value) -->
     <servlet>
         <servlet-name>Jersey Web Application</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
@@ -63,5 +65,30 @@
     <servlet-mapping>
         <servlet-name>Jersey Web Application</servlet-name>
         <url-pattern>/webresources/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- Jersey APP with disabled recursive scanning -->
+    <servlet>
+        <servlet-name>Jersey Web Non-recursive Application</servlet-name>
+        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>jersey.config.server.provider.packages</param-name>
+            <param-value>
+                org.glassfish.jersey.examples.osgi.helloworld.resource,
+                org.glassfish.jersey.examples.osgi.helloworld.additional.resource,
+                <!-- 'package' package path prevents regression in matching packages implemented in OsgiRegistry as it matches
+                string 'org.glassfish.jersey.examples.osgi.helloworld.resource.sub[package]' -->
+                package
+            </param-value>
+        </init-param>
+        <init-param>
+            <param-name>jersey.config.server.provider.scanning.recursive</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Jersey Web Non-recursive Application</servlet-name>
+        <url-pattern>/n-webresources/*</url-pattern>
     </servlet-mapping>
 </web-app>

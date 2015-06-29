@@ -39,9 +39,14 @@
  */
 package org.glassfish.jersey.jaxb.internal;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.ws.rs.core.Configuration;
 
 import javax.inject.Inject;
+import javax.xml.XMLConstants;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 
 import org.glassfish.hk2.api.Factory;
@@ -53,6 +58,8 @@ import org.glassfish.hk2.api.Factory;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class TransformerFactoryInjectionProvider extends AbstractXmlFactory implements Factory<TransformerFactory> {
+
+    private static final Logger LOGGER = Logger.getLogger(TransformerFactoryInjectionProvider.class.getName());
 
     /**
      * Create new transformer factory provider.
@@ -67,13 +74,17 @@ public class TransformerFactoryInjectionProvider extends AbstractXmlFactory impl
 
     @Override
     public TransformerFactory provide() {
-        TransformerFactory f = TransformerFactory.newInstance();
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
         if (!isXmlSecurityDisabled()) {
-            // TODO ?
+            try {
+                transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            } catch (TransformerConfigurationException e) {
+                LOGGER.log(Level.CONFIG, LocalizationMessages.UNABLE_TO_SECURE_XML_TRANSFORMER_PROCESSING(), e);
+            }
         }
 
-        return f;
+        return transformerFactory;
     }
 
     @Override

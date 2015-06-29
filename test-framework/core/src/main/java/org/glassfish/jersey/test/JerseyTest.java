@@ -646,7 +646,7 @@ public abstract class JerseyTest {
      *
      * @return the configured test client.
      */
-    /* package */ Client getClient() {
+    protected Client getClient() {
         return client.get();
     }
 
@@ -656,7 +656,7 @@ public abstract class JerseyTest {
      * @param client the configured test client.
      * @return old configured test client.
      */
-    /* package */ Client setClient(final Client client) {
+    protected Client setClient(final Client client) {
         return this.client.getAndSet(client);
     }
 

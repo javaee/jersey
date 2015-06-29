@@ -56,21 +56,6 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
 public final class ApacheClientProperties {
 
     /**
-     * Support for specifying SSL configuration for HTTPS connections.
-     * Used only when making HTTPS requests.
-     * <p/>
-     * The value MUST be an instance of {@link org.glassfish.jersey.SslConfigurator}.
-     * <p/>
-     * A default value is not set.
-     * <p/>
-     * The name of the configuration property is <tt>{@value}</tt>.
-     *
-     * @deprecated Set the SSL configuration on the JAX-RS {@link javax.ws.rs.client.ClientBuilder}.
-     */
-    @Deprecated
-    public static final String SSL_CONFIG = "jersey.config.apache.client.ssl.sslConfig";
-
-    /**
      * The credential provider that should be used to retrieve
      * credentials from a user. Credentials needed for proxy authentication
      * are stored here as well.
@@ -126,7 +111,29 @@ public final class ApacheClientProperties {
     public static final String CONNECTION_MANAGER = "jersey.config.apache.client.connectionManager";
 
     /**
+     * A value of {@code true} indicates that configured connection manager should be shared
+     * among multiple Jersey {@link org.glassfish.jersey.client.ClientRuntime} instances. It means that closing
+     * a particular {@link org.glassfish.jersey.client.ClientRuntime} instance does not shut down the underlying
+     * connection manager automatically. In such case, the connection manager life-cycle
+     * should be fully managed by the application code. To release all allocated resources,
+     * caller code should especially ensure {@link org.apache.http.conn.HttpClientConnectionManager#shutdown()} gets
+     * invoked eventually.
+     * <p>
+     * This property may only be set prior to constructing Apache connector using {@link ApacheConnectorProvider}.
+     * <p/>
+     * The value MUST be an instance of {@link java.lang.Boolean}.
+     * <p/>
+     * The default value is {@code false}.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @since 2.18
+     */
+    public static final String CONNECTION_MANAGER_SHARED = "jersey.config.apache.client.connectionManagerShared";
+
+    /**
      * Request configuration for the {@link org.apache.http.client.HttpClient}.
+     * Http parameters which will be used to create {@link org.apache.http.client.HttpClient}.
      * <p/>
      * The value MUST be an instance of {@link org.apache.http.client.config.RequestConfig}.
      * <p/>
@@ -138,10 +145,6 @@ public final class ApacheClientProperties {
      */
     public static final String REQUEST_CONFIG = "jersey.config.apache.client.requestConfig";
 
-    private ApacheClientProperties() {
-        // prevents instantiation
-    }
-
     /**
      * Get the value of the specified property.
      *
@@ -152,11 +155,18 @@ public final class ApacheClientProperties {
      * @param key           Name of the property.
      * @param type          Type to retrieve the value as.
      * @param <T>           Type of the property value.
-     * @return              Value of the property or {@code null}.
+     * @return Value of the property or {@code null}.
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties, final String key, final Class<T> type) {
         return PropertiesHelper.getValue(properties, key, type, null);
+    }
+
+    /**
+     * Prevents instantiation.
+     */
+    private ApacheClientProperties() {
+        throw new AssertionError("No instances allowed.");
     }
 }

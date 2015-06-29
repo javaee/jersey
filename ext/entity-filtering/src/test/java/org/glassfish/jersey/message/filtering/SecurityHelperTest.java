@@ -48,7 +48,7 @@ import javax.ws.rs.core.SecurityContext;
 
 import javax.annotation.security.RolesAllowed;
 
-import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
+import org.glassfish.jersey.internal.inject.CustomAnnotationLiteral;
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 
 import org.junit.Test;
@@ -74,12 +74,12 @@ public class SecurityHelperTest {
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(Collections.<String>emptySet()));
 
         // Not security annotations.
-        annotations = new Annotation[] {new CustomAnnotationImpl(), new CustomAnnotationImpl()};
+        annotations = new Annotation[] {CustomAnnotationLiteral.INSTANCE, CustomAnnotationLiteral.INSTANCE};
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(Collections.<String>emptySet()));
 
         // Mixed.
-        annotations = new Annotation[] {new CustomAnnotationImpl(), SecurityAnnotations
-                .rolesAllowed("manager"), new CustomAnnotationImpl()};
+        annotations = new Annotation[] {CustomAnnotationLiteral.INSTANCE, SecurityAnnotations
+                .rolesAllowed("manager"), CustomAnnotationLiteral.INSTANCE};
         expected = Sets.newHashSet(RolesAllowed.class.getName() + "_manager");
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(expected));
 
@@ -109,12 +109,12 @@ public class SecurityHelperTest {
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(Collections.<String>emptySet()));
 
         // Not security annotations.
-        annotations = new Annotation[] {new CustomAnnotationImpl(), new CustomAnnotationImpl()};
+        annotations = new Annotation[] {CustomAnnotationLiteral.INSTANCE, CustomAnnotationLiteral.INSTANCE};
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(Collections.<String>emptySet()));
 
         // Mixed.
-        annotations = new Annotation[] {new CustomAnnotationImpl(), SecurityAnnotations
-                .rolesAllowed("manager"), new CustomAnnotationImpl()};
+        annotations = new Annotation[] {CustomAnnotationLiteral.INSTANCE, SecurityAnnotations
+                .rolesAllowed("manager"), CustomAnnotationLiteral.INSTANCE};
         expected = Sets.newHashSet(RolesAllowed.class.getName() + "_manager");
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(expected));
 

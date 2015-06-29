@@ -63,6 +63,7 @@ grant codebase "file:${project.build.directory}/test-classes/-" {
   permission java.lang.RuntimePermission "accessDeclaredMembers";
   permission java.lang.RuntimePermission "createClassLoader";
   permission java.lang.RuntimePermission "setContextClassLoader";
+  permission java.lang.RuntimePermission "getClassLoader";
   permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
   permission java.io.FilePermission "<<ALL FILES>>", "read,write,delete";
   permission java.util.PropertyPermission "*", "read";

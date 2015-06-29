@@ -48,7 +48,7 @@ import java.util.NoSuchElementException;
 import java.util.Stack;
 
 import org.glassfish.jersey.internal.util.Tokenizer;
-import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 
 /**
  * A scanner that recursively scans directories and jar files.
@@ -56,12 +56,12 @@ import org.glassfish.jersey.server.ResourceFinder;
  *
  * @author Paul Sandoz
  */
-public class FilesScanner implements ResourceFinder {
-
-    private ResourceFinderStack resourceFinderStack = new ResourceFinderStack();
+public final class FilesScanner extends AbstractResourceFinderAdapter {
 
     private final File[] files;
     private final boolean recursive;
+
+    private CompositeResourceFinder compositeResourceFinder;
 
     /**
      * Scan from a set of packages.
@@ -70,35 +70,33 @@ public class FilesScanner implements ResourceFinder {
      * @param recursive flag indicating whether sub-directories of any directories in the list of
      *                  files should be included in the scanning ({@code true}) or not ({@code false}).
      */
-    public FilesScanner(final String[] fileNames, boolean recursive) {
+    public FilesScanner(final String[] fileNames, final boolean recursive) {
         this.recursive = recursive;
         this.files = new File[Tokenizer.tokenize(fileNames, Tokenizer.COMMON_DELIMITERS).length];
         for (int i = 0; i < files.length; i++) {
             files[i] = new File(fileNames[i]);
         }
 
-        for (final File f : files) {
-            processFile(f);
-        }
+        init();
     }
 
     private void processFile(final File f) {
         if (f.getName().endsWith(".jar") || f.getName().endsWith(".zip")) {
             try {
-                resourceFinderStack.push(new JarFileScanner(new FileInputStream(f), "", true));
-            } catch (IOException e) {
+                compositeResourceFinder.push(new JarFileScanner(new FileInputStream(f), "", true));
+            } catch (final IOException e) {
                 // logging might be sufficient in this case
                 throw new ResourceFinderException(e);
             }
 
         } else {
-            resourceFinderStack.push(new ResourceFinder() {
+            compositeResourceFinder.push(new AbstractResourceFinderAdapter() {
 
                 Stack<File> files = new Stack<File>() {{
                     if (f.isDirectory()) {
                         final File[] subDirFiles = f.listFiles();
                         if (subDirFiles != null) {
-                            for (File file : subDirFiles) {
+                            for (final File file : subDirFiles) {
                                 push(file);
                             }
                         }
@@ -140,21 +138,17 @@ public class FilesScanner implements ResourceFinder {
                 }
 
                 @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-
-                @Override
                 public InputStream open() {
                     try {
                         return new FileInputStream(current);
-                    } catch (FileNotFoundException e) {
+                    } catch (final FileNotFoundException e) {
                         throw new ResourceFinderException(e);
                     }
                 }
 
                 @Override
                 public void reset() {
+                    throw new UnsupportedOperationException();
                 }
             });
         }
@@ -162,30 +156,35 @@ public class FilesScanner implements ResourceFinder {
 
     @Override
     public boolean hasNext() {
-        return resourceFinderStack.hasNext();
+        return compositeResourceFinder.hasNext();
     }
 
     @Override
     public String next() {
-        return resourceFinderStack.next();
-    }
-
-    @Override
-    public void remove() {
-        resourceFinderStack.remove();
+        return compositeResourceFinder.next();
     }
 
     @Override
     public InputStream open() {
-        return resourceFinderStack.open();
+        return compositeResourceFinder.open();
+    }
+
+    @Override
+    public void close() {
+        compositeResourceFinder.close();
     }
 
     @Override
     public void reset() {
-        this.resourceFinderStack = new ResourceFinderStack();
+        close();
+        init();
+    }
 
-        for (File f : files) {
-            processFile(f);
+    private void init() {
+        this.compositeResourceFinder = new CompositeResourceFinder();
+
+        for (final File file : files) {
+            processFile(file);
         }
     }
 }

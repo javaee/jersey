@@ -72,8 +72,10 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -85,6 +87,7 @@ import static org.junit.Assert.assertEquals;
  * @author Miroslav Fuksa
  *
  */
+@RunWith(ConcurrentRunner.class)
 public class ExceptionMapperPropagationTest extends JerseyTest {
 
     public static final String EXCEPTION_TYPE = "exception-type";

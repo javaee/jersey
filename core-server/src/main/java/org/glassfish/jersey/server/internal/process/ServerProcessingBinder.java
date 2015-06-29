@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,13 +54,18 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.inject.ReferenceTransformingFactory;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestExecutorFactory;
 import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.BackgroundScheduler;
+import org.glassfish.jersey.server.BackgroundSchedulerLiteral;
 import org.glassfish.jersey.server.CloseableService;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.server.ManagedAsyncExecutor;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.spi.ExecutorServiceProvider;
+import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
+import org.glassfish.jersey.spi.ScheduledThreadPoolExecutorProvider;
+import org.glassfish.jersey.spi.ThreadPoolExecutorProvider;
 
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -71,6 +76,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ServerProcessingBinder extends AbstractBinder {
+
     @Override
     protected void configure() {
         // Bind non-proxiable Ref<RequestProcessingContext> injection point
@@ -92,13 +98,11 @@ public class ServerProcessingBinder extends AbstractBinder {
                 .proxy(true).proxyForSameScope(false)
                 .in(RequestScoped.class);
 
-
         // Bind proxiable UriInfo, ExtendedUriInfo and ResourceInfo injection points
         bindFactory(UriRoutingContextFactory.class)
                 .to(UriInfo.class).to(ExtendedUriInfo.class).to(ResourceInfo.class)
                 .proxy(true).proxyForSameScope(false)
                 .in(RequestScoped.class);
-
 
         // Bind proxiable SecurityContext injection point.
         // NOTE:
@@ -117,7 +121,6 @@ public class ServerProcessingBinder extends AbstractBinder {
                 .proxy(true).proxyForSameScope(false)
                 .in(RequestScoped.class);
 
-
         // Bind proxiable AsyncContext and AsyncResponse injection points.
         // TODO maybe we can get rid of these completely? Or at least for AsyncContext?
         bindFactory(AsyncContextFactory.class)
@@ -125,18 +128,23 @@ public class ServerProcessingBinder extends AbstractBinder {
                 .to(AsyncResponse.class)
                 .in(RequestScoped.class);
 
-        bind(ServerManagedAsyncExecutorFactory.class)
-                .to(RequestExecutorFactory.class)
-                .to(ContainerLifecycleListener.class)
+        // Bind default runtime processing executor providers
+        // Default background scheduler provider
+        bind(DefaultBackgroundSchedulerProvider.class)
+                .to(ScheduledExecutorServiceProvider.class)
+                .qualifiedBy(BackgroundSchedulerLiteral.INSTANCE)
                 .in(Singleton.class);
-
+        // Default managed async executor provider
+        bind(DefaultManagedAsyncExecutorProvider.class)
+                .to(ExecutorServiceProvider.class)
+                .in(Singleton.class);
 
         // Bind request-scoped references initializer.
         bindAsContract(ReferencesInitializer.class);
     }
 
-    private static class ContainerRequestFactory extends
-            ReferenceTransformingFactory<RequestProcessingContext, ContainerRequest> {
+    private static class ContainerRequestFactory
+            extends ReferenceTransformingFactory<RequestProcessingContext, ContainerRequest> {
 
         @Inject
         protected ContainerRequestFactory(final Provider<Ref<RequestProcessingContext>> refProvider) {
@@ -155,8 +163,8 @@ public class ServerProcessingBinder extends AbstractBinder {
         }
     }
 
-    private static class UriRoutingContextFactory extends
-            ReferenceTransformingFactory<RequestProcessingContext, UriRoutingContext> {
+    private static class UriRoutingContextFactory
+            extends ReferenceTransformingFactory<RequestProcessingContext, UriRoutingContext> {
 
         @Inject
         protected UriRoutingContextFactory(final Provider<Ref<RequestProcessingContext>> refProvider) {
@@ -175,8 +183,8 @@ public class ServerProcessingBinder extends AbstractBinder {
         }
     }
 
-    private static class CloseableServiceFactory extends
-            ReferenceTransformingFactory<RequestProcessingContext, CloseableService> {
+    private static class CloseableServiceFactory
+            extends ReferenceTransformingFactory<RequestProcessingContext, CloseableService> {
 
         @Inject
         protected CloseableServiceFactory(final Provider<Ref<RequestProcessingContext>> refProvider) {
@@ -195,8 +203,8 @@ public class ServerProcessingBinder extends AbstractBinder {
         }
     }
 
-    private static class AsyncContextFactory extends
-            ReferenceTransformingFactory<RequestProcessingContext, AsyncContext> {
+    private static class AsyncContextFactory
+            extends ReferenceTransformingFactory<RequestProcessingContext, AsyncContext> {
 
         @Inject
         protected AsyncContextFactory(final Provider<Ref<RequestProcessingContext>> refProvider) {
@@ -213,5 +221,38 @@ public class ServerProcessingBinder extends AbstractBinder {
         public AsyncContext provide() {
             return super.provide();
         }
+    }
+
+    /**
+     * Default {@link org.glassfish.jersey.spi.ScheduledExecutorServiceProvider} used on the server side for
+     * providing the scheduled executor service that runs background tasks.
+     */
+    @BackgroundScheduler
+    private static class DefaultBackgroundSchedulerProvider extends ScheduledThreadPoolExecutorProvider {
+
+        public DefaultBackgroundSchedulerProvider() {
+            super("jersey-background-task-scheduler");
+        }
+
+        @Override
+        protected int getCorePoolSize() {
+            return 1;
+        }
+    }
+
+    /**
+     * Default {@link org.glassfish.jersey.spi.ExecutorServiceProvider} used on the server side for managed asynchronous
+     * request processing.
+     */
+    @ManagedAsyncExecutor
+    private static class DefaultManagedAsyncExecutorProvider extends ThreadPoolExecutorProvider {
+
+        /**
+         * Create new instance for the default managed async executor provider.
+         */
+        public DefaultManagedAsyncExecutorProvider() {
+            super("jersey-server-managed-async-executor");
+        }
+
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -96,10 +96,10 @@ public final class MethodList implements Iterable<AnnotatedMethod> {
         this(declaredMethods ? getAllDeclaredMethods(c) : getMethods(c));
     }
 
-    private static List<Method> getAllDeclaredMethods(Class c) {
-        List<Method> l = new ArrayList<Method>();
+    private static List<Method> getAllDeclaredMethods(Class<?> c) {
+        List<Method> l = new ArrayList<>();
         while (c != null && c != Object.class) {
-            l.addAll(Arrays.asList(AccessController.doPrivileged(ReflectionHelper.getDeclaredMethodsPA(c))));
+            l.addAll(AccessController.doPrivileged(ReflectionHelper.getDeclaredMethodsPA(c)));
             c = c.getSuperclass();
         }
         return l;
@@ -118,7 +118,7 @@ public final class MethodList implements Iterable<AnnotatedMethod> {
      * @param methods methods to be included in the method list.
      */
     public MethodList(Collection<Method> methods) {
-        List<AnnotatedMethod> l = new ArrayList<AnnotatedMethod>(methods.size());
+        List<AnnotatedMethod> l = new ArrayList<>(methods.size());
         for (Method m : methods) {
             if (!m.isBridge() && m.getDeclaringClass() != Object.class) {
                 l.add(new AnnotatedMethod(m));
@@ -344,7 +344,7 @@ public final class MethodList implements Iterable<AnnotatedMethod> {
      * @return new filtered method list.
      */
     public MethodList filter(Filter filter) {
-        List<AnnotatedMethod> result = new ArrayList<AnnotatedMethod>();
+        List<AnnotatedMethod> result = new ArrayList<>();
         for (AnnotatedMethod m : methods) {
             if (filter.keep(m)) {
                 result.add(m);

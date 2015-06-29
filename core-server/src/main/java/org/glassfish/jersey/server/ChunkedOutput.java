@@ -193,7 +193,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                     boolean shouldClose;
                     T t;
 
-                    synchronized (this) {
+                    synchronized (ChunkedOutput.this) {
                         if (flushing) {
                             // if another thread is already flushing the queue, we don't have to do anything
                             return null;
@@ -254,7 +254,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                         }
                         t = queue.poll();
                         if (t == null) {
-                            synchronized (this) {
+                            synchronized (ChunkedOutput.this) {
                                 // queue seems empty
                                 // check again in the synchronized block before clearing the flushing flag
                                 // first remember the closed flag (this has to be before polling the queue,

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,7 +53,6 @@ public class Resource {
     @Path("{name}")
     @GET
     public Message get(@PathParam("name") String name) {
-        //System.out.println("*** Resource.get: " + name);
         return new Message(new StringBuffer(name).reverse().toString());
     }
 
@@ -81,14 +80,13 @@ public class Resource {
     @GET
     @Path("runtime-exception")
     public Message getRuntimeException() {
-        //System.out.println("*** Resource.getRuntimeException");
         throw new RuntimeException("Something does not work ...");
     }
 
     @GET
     @Path("mapped-exception")
     public Message getMappedException() {
-        //System.out.println("*** Resource.getMappedException");
         throw new TestException("This could be client fault ...");
     }
+
 }

@@ -102,10 +102,15 @@ public class FilteringMessageBodyProvider implements MessageBodyReader<Object>, 
     public Object readFrom(final Class<Object> type, final Type genericType, final Annotation[] annotations,
                            final MediaType mediaType, final MultivaluedMap<String, String> httpHeaders,
                            final InputStream entityStream) throws IOException, WebApplicationException {
-        final ObjectGraph objectGraph = provider.get()
-                .getFilteringObject(FilteringHelper.getEntityClass(genericType), false, annotations);
+        try {
+            final ObjectGraph objectGraph = provider.get()
+                    .getFilteringObject(FilteringHelper.getEntityClass(genericType), false, annotations);
 
-        return objectGraphToString(objectGraph);
+            return objectGraphToString(objectGraph);
+        } catch (final Throwable t) {
+            LOGGER.log(Level.WARNING, "Error during reading an object graph.", t);
+            return "ERROR: " + t.getMessage();
+        }
     }
 
     @Override
@@ -117,12 +122,12 @@ public class FilteringMessageBodyProvider implements MessageBodyReader<Object>, 
 
         try {
             entityStream.write(objectGraphToString(objectGraph).getBytes());
-        } catch (final Throwable e) {
-            LOGGER.log(Level.WARNING, "Error during writing an object graph to string.", e);
+        } catch (final Throwable t) {
+            LOGGER.log(Level.WARNING, "Error during writing an object graph.", t);
         }
     }
 
-    private String objectGraphToString(final ObjectGraph objectGraph) {
+    private static String objectGraphToString(final ObjectGraph objectGraph) {
         final StringBuilder sb = new StringBuilder();
         for (final String field : objectGraphToFields("", objectGraph)) {
             if (!field.contains("Transient")) {
@@ -135,7 +140,7 @@ public class FilteringMessageBodyProvider implements MessageBodyReader<Object>, 
         return sb.toString();
     }
 
-    private List<String> objectGraphToFields(final String prefix, final ObjectGraph objectGraph) {
+    private static List<String> objectGraphToFields(final String prefix, final ObjectGraph objectGraph) {
         final List<String> fields = Lists.newArrayList();
 
         // Fields.

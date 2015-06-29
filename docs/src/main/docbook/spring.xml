@@ -99,7 +99,7 @@ public class SomeResource {
 
         <para>
             If you want to use Jersey Spring DI support
-            you will need to add the &jersey.ext.spring3.deps.link; module into the list of your dependencies:
+            you will need to add the <literal>jersey-spring3</literal> module into the list of your dependencies:
 
             <programlisting language="xml">&lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
@@ -109,8 +109,10 @@ public class SomeResource {
         </para>
 
         <para>
-            The above module does not add any transitive dependency to Spring modules, so you will need to add
-            Spring 3 dependencies explicitly into your dependency list.
+            The above module adds transitive dependencies on Spring modules.
+            See &jersey.ext.spring3.deps.link; module dependencies for more details about list and scope of dependencies.
+            Please note the module depends on &hk2.spring-bridge.link; that is used to inject Spring services into HK2 services
+            or inject HK2 services into Spring services.
         </para>
 
     </section>

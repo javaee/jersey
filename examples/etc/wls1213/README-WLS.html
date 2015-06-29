@@ -1,0 +1,107 @@
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>WLS 12.1.3 Shared Library installation steps.</title>
+
+        <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css">
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="row">
+                <h1>Weblogic 12.1.3 Shared Library Installation Steps</h1>
+
+                <p>
+                    Before deploying an JAX-RS 2.0 application into WLS 12.1.3 you need to install (deploy) the JAX-RS 2.0 shared
+                    library that provides necessary dependencies and configuration. This library is located at
+                    <code>MW_HOME\wlserver\common\deployable-libraries\jax-rs-2.0.war</code>.
+                </p>
+                <p>
+                    There are two ways, how you can deploy this library:
+                    <ul>
+                        <li>Using WLS console</li>
+                        <li>Using WLST</li>
+                    </ul>
+                </p>
+
+                <h2>Deploying shared library using WLS console</h2>
+
+                <ol>
+                    <li>Log into WLS console at <code>http://&lt;host&gt;:&lt;port&gt;/console</code> (e.g. <code>http://localhost:7001/console</code>)</li>
+                    <li>Click on <em>Deployments</em></li>
+                    <li>Find Shared Library WAR (located at <code>MW_HOME\wlserver\common\deployable-libraries\jax-rs-2.0.war</code>)</li>
+                    <li>Click on <em>Next</em></li>
+                    <li>Choose <em>Deploy as Library</em></li>
+                    <li>Click on <em>Next</em></li>
+                    <li>Click on <em>Finish</em></li>
+                </ol>
+
+                <h2>Deploying shared library using WLST</h2>
+
+                <p>Lets assume that WLS is running and your domain is located in <code>MW_HOME</code> (<code>MW_HOME\domain</code>).</p>
+
+                <p>Setup your shell and enter the WLST console:</p>
+
+<pre>
+> # bash prompt
+> cd $MW_HOME\domain
+> . ./bin/setDomainEnv.sh
+> java weblogic.WLST
+</pre>
+
+                <p>Deploy the library:</p>
+
+<pre>
+> # WLST console
+> connect('user', 'pass', 'host')
+> deploy('jax-rs', '../wlserver/common/deployable-libraries/jax-rs-2.0.war', libraryModule='true')
+> exit()
+</pre>
+
+
+            </div>
+        </div>
+    </body>
+</html>

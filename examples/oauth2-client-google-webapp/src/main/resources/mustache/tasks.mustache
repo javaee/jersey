@@ -2,7 +2,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -56,20 +56,30 @@
             <div class="row">
                 <div class="col-lg-offset-2 col-lg-8">
                     <header class="page-header">
-                        <h1>Tasks</h1>
+                        <h1>Open Tasks</h1>
                     </header>
-                     {{#taskListModels}}
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">{{title}}</h3>
-                        </div>
-                        {{#tasks}}
-                            <div class="panel-body">
-                                {{title}}
+                    {{#taskListModels}}
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">{{title}}</h3>
                             </div>
-                        {{/tasks}}
-                    </div>
-                   {{/taskListModels}}
+                            {{#tasks}}
+                                <div class="panel-body">
+                                    {{title}}
+                                </div>
+                            {{/tasks}}
+                            {{^tasks}}
+                                <div class="panel-body alert alert-warning">
+                                    No open tasks were found. Define some tasks.
+                                </div>
+                            {{/tasks}}
+                        </div>
+                    {{/taskListModels}}
+                    {{^taskListModels}}
+                        <div class="panel-heading alert alert-warning">
+                            No task list were found. Create some list.
+                        </div>
+                    {{/taskListModels}}
                 </div>
             </div>
         </div>

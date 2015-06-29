@@ -57,8 +57,8 @@ import javax.inject.Qualifier;
 import javax.interceptor.Interceptor;
 import javax.transaction.TransactionalException;
 
-import org.glassfish.jersey.ext.cdi1x.internal.CdiBeanHk2Factory;
 import org.glassfish.jersey.ext.cdi1x.internal.CdiUtil;
+import org.glassfish.jersey.ext.cdi1x.internal.GenericCdiBeanHk2Factory;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 
@@ -114,7 +114,7 @@ public class TransactionalExceptionInterceptorProvider implements ComponentProvi
     private void bindWaeRestoringExceptionMapper() {
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
         final ServiceBindingBuilder bindingBuilder = Injections.newFactoryBinder(
-                new CdiBeanHk2Factory(TransactionalExceptionMapper.class, locator, beanManager, true));
+                new GenericCdiBeanHk2Factory(TransactionalExceptionMapper.class, locator, beanManager, true));
         bindingBuilder.to(ExceptionMapper.class);
         Injections.addBinding(bindingBuilder, dc);
         dc.commit();

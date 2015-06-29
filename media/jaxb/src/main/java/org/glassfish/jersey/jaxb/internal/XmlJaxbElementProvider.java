@@ -129,8 +129,8 @@ public abstract class XmlJaxbElementProvider extends AbstractJaxbElementProvider
 
     @Override
     protected final JAXBElement<?> readFrom(Class<?> type, MediaType mediaType,
-                                            Unmarshaller u, InputStream entityStream) throws JAXBException {
-        return u.unmarshal(getSAXSource(spf.provide(), entityStream), type);
+                                            Unmarshaller unmarshaller, InputStream entityStream) throws JAXBException {
+        return unmarshaller.unmarshal(getSAXSource(spf.provide(), entityStream), type);
     }
 
     @Override

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,12 +56,17 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
+import org.glassfish.jersey.test.util.runner.RunSeparately;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(ConcurrentRunner.class)
 public class HelloWorldTest extends JerseyTest {
 
     @Override
@@ -185,6 +190,7 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    @RunSeparately
     public void testLoggingFilterClientClass() {
         Client client = client();
         client.register(CustomLoggingFilter.class).property("foo", "bar");
@@ -196,6 +202,7 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    @RunSeparately
     public void testLoggingFilterClientInstance() {
         Client client = client();
         client.register(new CustomLoggingFilter()).property("foo", "bar");
@@ -207,6 +214,7 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    @RunSeparately
     public void testLoggingFilterTargetClass() {
         WebTarget target = target().path(App.ROOT_PATH);
         target.register(CustomLoggingFilter.class).property("foo", "bar");
@@ -218,6 +226,7 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    @RunSeparately
     public void testLoggingFilterTargetInstance() {
         WebTarget target = target().path(App.ROOT_PATH);
         target.register(new CustomLoggingFilter()).property("foo", "bar");
@@ -229,6 +238,7 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Test
+    @RunSeparately
     public void testConfigurationUpdate() {
         Client client1 = client();
         client1.register(CustomLoggingFilter.class).property("foo", "bar");

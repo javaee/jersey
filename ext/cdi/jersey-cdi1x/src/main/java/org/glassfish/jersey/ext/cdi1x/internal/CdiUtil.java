@@ -166,10 +166,28 @@ public final class CdiUtil {
         return null;
     }
 
-    private static <T> T getBeanReference(final Class<T> clazz, final Bean extensionBean, final BeanManager beanManager) {
-        final CreationalContext<?> creationalContext = beanManager.createCreationalContext(extensionBean);
-        final Object result = beanManager.getReference(extensionBean, clazz, creationalContext);
+    private static <T> T getBeanReference(final Class<T> clazz, final Bean bean, final BeanManager beanManager) {
+        final CreationalContext<?> creationalContext = beanManager.createCreationalContext(bean);
+        final Object result = beanManager.getReference(bean, clazz, creationalContext);
 
         return clazz.cast(result);
+    }
+
+    /**
+     * Get me scope of a bean corresponding to given class.
+     *
+     * @param beanClass bean class in question.
+     * @param beanManager actual bean manager.
+     * @return actual bean scope or null, if the scope could not be determined.
+     */
+    public static Class<? extends Annotation> getBeanScope(final Class<?> beanClass, final BeanManager beanManager) {
+        final Set<Bean<?>> beans = beanManager.getBeans(beanClass);
+        if (beans.isEmpty()) {
+            return null;
+        }
+        for (Bean b : beans) {
+            return b.getScope();
+        }
+        return null;
     }
 }

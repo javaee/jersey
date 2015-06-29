@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,6 +57,9 @@ import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -82,10 +86,12 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
     private final ClientConfig config;
 
     private final RequestScope requestScope;
-    private final ClientAsyncExecutorFactory asyncExecutorsFactory;
+    private final LazyValue<ExecutorService> asyncRequestExecutor;
 
     private final ServiceLocator locator;
     private final Iterable<ClientLifecycleListener> lifecycleListeners;
+
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     /**
      * Create new client request processing runtime.
@@ -110,9 +116,12 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
 
         this.requestScope = locator.getService(RequestScope.class);
 
-        int asyncThreadPoolSize = ClientProperties.getValue(config.getProperties(), ClientProperties.ASYNC_THREADPOOL_SIZE, 0);
-        asyncThreadPoolSize = (asyncThreadPoolSize < 0) ? 0 : asyncThreadPoolSize;
-        this.asyncExecutorsFactory = new ClientAsyncExecutorFactory(locator, asyncThreadPoolSize);
+        this.asyncRequestExecutor = Values.lazy(new Value<ExecutorService>() {
+            @Override
+            public ExecutorService get() {
+                return locator.getService(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE);
+            }
+        });
 
         this.locator = locator;
 
@@ -138,7 +147,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
      * @param callback asynchronous response callback.
      */
     public void submit(final ClientRequest request, final ResponseCallback callback) {
-        submit(asyncExecutorsFactory.getExecutor(), new Runnable() {
+        submit(asyncRequestExecutor.get(), new Runnable() {
 
             @Override
             public void run() {
@@ -273,22 +282,41 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
         return config;
     }
 
+    /**
+     * This will be used as the last resort to clean things up
+     * in the case that this instance gets garbage collected
+     * before the client itself gets released.
+     *
+     * Close will be invoked either via finalizer
+     * or via JerseyClient onShutdown hook, whatever comes first.
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            close();
+        } finally {
+            super.finalize();
+        }
+    }
+
     @Override
     public void onShutdown() {
-        try {
-            for (final ClientLifecycleListener listener : lifecycleListeners) {
-                try {
-                    listener.onClose();
-                } catch (final Throwable t) {
-                    LOG.log(Level.WARNING, LocalizationMessages.ERROR_LISTENER_CLOSE(listener.getClass().getName()), t);
-                }
-            }
-        } finally {
+        close();
+    }
+
+    private void close() {
+        if (closed.compareAndSet(false, true)) {
             try {
-                connector.close();
+                for (final ClientLifecycleListener listener : lifecycleListeners) {
+                    try {
+                        listener.onClose();
+                    } catch (final Throwable t) {
+                        LOG.log(Level.WARNING, LocalizationMessages.ERROR_LISTENER_CLOSE(listener.getClass().getName()), t);
+                    }
+                }
             } finally {
                 try {
-                    asyncExecutorsFactory.close();
+                    connector.close();
                 } finally {
                     Injections.shutdownLocator(locator);
                 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,7 @@ import java.net.URI;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -53,10 +54,11 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.glassfish.jersey.server.ResourceFinder;
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 
 /**
  * A JBoss-based "vfsfile", "vfs" and "vfszip" scheme URI scanner.
- *
+ * <p/>
  * This approach uses reflection to allow for zero-deps and support
  * for both the v2 (EAP5, AS5) and v3 VFS APIs (AS6, AS7, EAP6 & WildFly)
  * which are not binary compatible.
@@ -64,21 +66,25 @@ import org.glassfish.jersey.server.ResourceFinder;
  * @author Jason T. Greene
  * @author Paul Sandoz
  */
-class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
+final class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
+
+    private static final Set<String> SCHEMES = Collections
+            .unmodifiableSet(new HashSet<>(Arrays.asList("vfsfile", "vfszip", "vfs")));
 
     public Set<String> getSchemes() {
-        return new HashSet<String>(Arrays.asList("vfsfile", "vfszip", "vfs"));
+        return SCHEMES;
     }
 
     VfsSchemeResourceFinderFactory() {
     }
 
     @Override
-    public ResourceFinder create(final URI uri, boolean recursive) {
+    public ResourceFinder create(final URI uri, final boolean recursive) {
         return new VfsResourceFinder(uri, recursive);
     }
 
-    private static class VfsResourceFinder implements ResourceFinder {
+    private static class VfsResourceFinder extends AbstractResourceFinderAdapter {
+
         private Object current;
         private Object next;
         private final Method openStream;
@@ -86,18 +92,18 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
         private final Method isLeaf;
         private final Iterator<?> iterator;
 
-        public VfsResourceFinder(URI uri, boolean recursive) {
-            Object directory = bindDirectory(uri);
+        public VfsResourceFinder(final URI uri, final boolean recursive) {
+            final Object directory = bindDirectory(uri);
             this.openStream = bindMethod(directory, "openStream");
             this.getName = bindMethod(directory, "getName");
             this.isLeaf = bindMethod(directory, "isLeaf");
             this.iterator = getChildren(directory, recursive);
         }
 
-        private Iterator<?> getChildren(Object directory, boolean recursive) {
-            Method getChildren = bindMethod(directory, recursive ? "getChildrenRecursively" : "getChildren");
+        private Iterator<?> getChildren(final Object directory, final boolean recursive) {
+            final Method getChildren = bindMethod(directory, recursive ? "getChildrenRecursively" : "getChildren");
 
-            List<?> list = invoke(directory, getChildren, List.class);
+            final List<?> list = invoke(directory, getChildren, List.class);
             if (list == null) {
                 throw new ResourceFinderException("VFS object returned null when accessing children");
             }
@@ -117,29 +123,29 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
             return bindMethod0(object, name);
         }
 
-        private <T> T invoke(Object instance, Method method, Class<T> type) {
+        private <T> T invoke(final Object instance, final Method method, final Class<T> type) {
             try {
                 return type.cast(method.invoke(instance));
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 throw new ResourceFinderException("VFS object could not be invoked upon");
             }
         }
 
-        private Method bindMethod0(Object object, String name) {
-            Class<?> clazz = object.getClass();
+        private Method bindMethod0(final Object object, final String name) {
+            final Class<?> clazz = object.getClass();
 
             try {
                 return clazz.getMethod(name);
-            } catch (NoSuchMethodException e) {
+            } catch (final NoSuchMethodException e) {
                 throw new ResourceFinderException("VFS object did not have a valid signature");
             }
         }
 
-        private Object bindDirectory(URI uri) {
+        private Object bindDirectory(final URI uri) {
             Object directory = null;
             try {
                 directory = uri.toURL().getContent();
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 // Eat
             }
 
@@ -152,7 +158,7 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
 
         @Override
         public InputStream open() {
-            Object current = this.current;
+            final Object current = this.current;
             if (current == null) {
                 throw new IllegalStateException("next() must be called before open()");
             }
@@ -167,7 +173,7 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
 
         public boolean advance() {
             while (iterator.hasNext()) {
-                Object next = iterator.next();
+                final Object next = iterator.next();
                 if (invoke(next, isLeaf, Boolean.class)) {
                     this.next = next;
                     return true;
@@ -191,11 +197,6 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
             current = next;
             next = null;
             return invoke(current, getName, String.class);
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
         }
     }
 }

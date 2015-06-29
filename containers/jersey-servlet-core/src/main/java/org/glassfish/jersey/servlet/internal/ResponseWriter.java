@@ -268,6 +268,10 @@ public class ResponseWriter implements ContainerResponseWriter {
         return getResponseContext().getStatus();
     }
 
+    public boolean responseContextResolved() {
+        return responseContext.isDone();
+    }
+
     private ContainerResponse getResponseContext() {
         try {
             return responseContext.get();

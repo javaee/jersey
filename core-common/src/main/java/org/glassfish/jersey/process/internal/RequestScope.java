@@ -60,7 +60,7 @@ import org.glassfish.hk2.api.Context;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-import jersey.repackaged.com.google.common.base.Objects;
+import jersey.repackaged.com.google.common.base.MoreObjects;
 import jersey.repackaged.com.google.common.collect.Sets;
 
 import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
@@ -556,7 +556,7 @@ public class RequestScope implements Context<RequestScoped> {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("id", id.value()).add("referenceCounter", referenceCounter.get())
+            return MoreObjects.toStringHelper(this).add("id", id.value()).add("referenceCounter", referenceCounter.get())
                     .add("store size", store.size()).toString();
         }
     }

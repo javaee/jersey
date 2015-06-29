@@ -67,6 +67,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
@@ -88,7 +89,8 @@ public class JdkHttpsServerTest extends AbstractJdkHttpServerTester {
     private static final String TRUSTSTORE_SERVER_PWD = "asdfgh";
 
     private HttpServer server;
-    private final URI uri = UriBuilder.fromUri("https://localhost/").port(getPort()).build();
+    private final URI httpsUri = UriBuilder.fromUri("https://localhost/").port(getPort()).build();
+    private final URI httpUri = UriBuilder.fromUri("http://localhost/").port(getPort()).build();
     private final ResourceConfig rc = new ResourceConfig(TestResource.class);
 
     @Path("/testHttps")
@@ -99,68 +101,104 @@ public class JdkHttpsServerTest extends AbstractJdkHttpServerTester {
         }
     }
 
+    /**
+     * Test, that {@link HttpsServer} instance is returned when providing empty SSLContext (but not starting).
+     * @throws Exception
+     */
     @Test
     public void testCreateHttpsServerNoSslContext() throws Exception {
-        server = JdkHttpServerFactory.createHttpServer(uri, rc, (SSLContext) null, false);
+        server = JdkHttpServerFactory.createHttpServer(httpsUri, rc, null, false);
         assertThat(server, instanceOf(HttpsServer.class));
     }
 
+    /**
+     * Test, that exception is thrown when attempting to start a {@link HttpsServer} with empty SSLContext.
+     * @throws Exception
+     */
     @Test(expected = IllegalArgumentException.class)
     public void testStartHttpServerNoSslContext() throws Exception {
-        server = JdkHttpServerFactory.createHttpServer(uri, rc, (SSLContext) null, true);
+        server = JdkHttpServerFactory.createHttpServer(httpsUri, rc, null, true);
     }
 
+    /**
+     * Test, that {@link javax.net.ssl.SSLHandshakeException} is thrown when attepmting to connect to server with client
+     * not configured correctly.
+     * @throws Exception
+     */
     @Test(expected = SSLHandshakeException.class)
     public void testCreateHttpsServerDefaultSslContext() throws Throwable {
-        server = JdkHttpServerFactory.createHttpServer(uri, rc, SSLContext.getDefault(), true);
+        server = JdkHttpServerFactory.createHttpServer(httpsUri, rc, SSLContext.getDefault(), true);
         assertThat(server, instanceOf(HttpsServer.class));
 
         // access the https server with not configured client
         final Client client = ClientBuilder.newBuilder().newClient();
         try {
-            client.target(uri).path("testHttps").request().get(String.class);
+            client.target(httpsUri).path("testHttps").request().get(String.class);
         } catch (final ProcessingException e) {
             throw e.getCause();
         }
     }
 
+    /**
+     * Test, that {@link HttpsServer} can be manually started even with (empty) SSLContext, but will throw an exception
+     * on request.
+     * @throws Exception
+     */
     @Test(expected = IOException.class)
     public void testHttpsServerNoSslContextDelayedStart() throws Throwable {
-        server = JdkHttpServerFactory.createHttpServer(uri, rc, (SSLContext) null, false);
+        server = JdkHttpServerFactory.createHttpServer(httpsUri, rc, null, false);
         assertThat(server, instanceOf(HttpsServer.class));
         server.start();
 
         final Client client = ClientBuilder.newBuilder().newClient();
         try {
-            client.target(uri).path("testHttps").request().get(String.class);
+            client.target(httpsUri).path("testHttps").request().get(String.class);
         } catch (final ProcessingException e) {
             throw e.getCause();
         }
     }
 
+    /**
+     * Test, that {@link HttpsServer} cannot be configured with {@link HttpsConfigurator} after it has started.
+     * @throws Exception
+     */
     @Test(expected = IllegalStateException.class)
     public void testConfigureSslContextAfterStart() throws Throwable {
-        server = JdkHttpServerFactory.createHttpServer(uri, rc, (SSLContext) null, false);
+        server = JdkHttpServerFactory.createHttpServer(httpsUri, rc, null, false);
         assertThat(server, instanceOf(HttpsServer.class));
         server.start();
         ((HttpsServer) server).setHttpsConfigurator(new HttpsConfigurator(getServerSslContext()));
     }
 
-
+    /**
+     * Tests a client to server roundtrip with correctly configured SSL on both sides.
+     * @throws IOException
+     */
     @Test
     public void testCreateHttpsServerRoundTrip() throws IOException {
         final SSLContext serverSslContext = getServerSslContext();
 
-        server = JdkHttpServerFactory.createHttpServer(uri, rc, serverSslContext, true);
+        server = JdkHttpServerFactory.createHttpServer(httpsUri, rc, serverSslContext, true);
 
         final SSLContext foundContext = ((HttpsServer) server).getHttpsConfigurator().getSSLContext();
         assertEquals(serverSslContext, foundContext);
 
         final SSLContext clientSslContext = getClientSslContext();
         final Client client = ClientBuilder.newBuilder().sslContext(clientSslContext).build();
-        final String response = client.target(uri).path("testHttps").request().get(String.class);
+        final String response = client.target(httpsUri).path("testHttps").request().get(String.class);
 
         assertEquals("test", response);
+    }
+
+    /**
+     * Test, that if URI uses http scheme instead of https, SSLContext is ignored.
+     * @throws IOException
+     */
+    @Test
+    public void testHttpWithSsl() throws IOException {
+        server = JdkHttpServerFactory.createHttpServer(httpUri, rc, getServerSslContext(), true);
+        assertThat(server, instanceOf(HttpServer.class));
+        assertThat(server, not(instanceOf(HttpsServer.class)));
     }
 
     private SSLContext getClientSslContext() throws IOException {

@@ -47,10 +47,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -122,35 +120,29 @@ public class ExceptionMapperFactory implements ExceptionMappers {
 
     @SuppressWarnings("unchecked")
     private <T extends Throwable> ExceptionMapper<T> find(final Class<T> type, final T exceptionInstance) {
-
-        final Map<Integer, ExceptionMapper<T>> orderedMappers = new TreeMap<Integer, ExceptionMapper<T>>();
-
+        ExceptionMapper<T> mapper = null;
+        int minDistance = Integer.MAX_VALUE;
         for (final ExceptionMapperType mapperType : exceptionMapperTypes) {
             final int d = distance(type, mapperType.exceptionType);
-            if (d >= 0) {
-                orderedMappers.put(d, mapperType.mapper.getService());
-            }
-        }
-
-        if (orderedMappers.size() == 0) {
-            return null;
-        }
-
-        if (exceptionInstance != null) {
-            for (final ExceptionMapper<T> mapper : orderedMappers.values()) {
-                if (mapper instanceof ExtendedExceptionMapper) {
-                    final boolean mappable = ((ExtendedExceptionMapper<T>) mapper).isMappable(exceptionInstance);
-                    if (mappable) {
+            if (d >= 0 && d <= minDistance) {
+                final ExceptionMapper<T> candidateMapper = mapperType.mapper.getService();
+                if (isMappable(exceptionInstance, candidateMapper)) {
+                    mapper = candidateMapper;
+                    minDistance = d;
+                    if (d == 0) {
+                        // slight optimization: if the distance is 0, it is already the best case, so we can exit
                         return mapper;
                     }
-                } else {
-                    return mapper;
                 }
             }
-            return null;
-        } else {
-            return orderedMappers.values().iterator().next();
         }
+        return mapper;
+    }
+
+    private <T extends Throwable> boolean isMappable(T exceptionInstance, ExceptionMapper<T> mapper) {
+        return exceptionInstance == null
+                || !(mapper instanceof ExtendedExceptionMapper)
+                || ((ExtendedExceptionMapper<T>) mapper).isMappable(exceptionInstance);
     }
 
     /**

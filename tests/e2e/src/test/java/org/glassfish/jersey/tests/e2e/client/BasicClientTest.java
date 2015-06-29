@@ -44,8 +44,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.GET;
@@ -68,14 +66,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
-import static javax.ws.rs.client.Entity.text;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.glassfish.jersey.client.ClientAsyncExecutor;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.RequestExecutorProvider;
+import org.glassfish.jersey.spi.ThreadPoolExecutorProvider;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -87,7 +84,8 @@ import static org.junit.Assert.fail;
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Collections2;
 import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import static javax.ws.rs.client.Entity.text;
 
 /**
  * Tests sync and async client invocations.
@@ -96,10 +94,11 @@ import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class BasicClientTest extends JerseyTest {
+
     @Override
     protected Application configure() {
-//        enable(TestProperties.LOG_TRAFFIC);
-//        enable(TestProperties.DUMP_ENTITY);
+        //        enable(TestProperties.LOG_TRAFFIC);
+        //        enable(TestProperties.DUMP_ENTITY);
         return new ResourceConfig(Resource.class);
     }
 
@@ -119,7 +118,6 @@ public class BasicClientTest extends JerseyTest {
         runCustomExecutorTestAsync(client);
     }
 
-
     @Test
     public void testCustomExecutorsSync() throws ExecutionException, InterruptedException {
         ClientConfig jerseyConfig = new ClientConfig();
@@ -127,7 +125,6 @@ public class BasicClientTest extends JerseyTest {
         Client client = ClientBuilder.newClient(jerseyConfig);
         runCustomExecutorTestSync(client);
     }
-
 
     @Test
     public void testCustomExecutorsInstanceSync() throws ExecutionException, InterruptedException {
@@ -143,7 +140,7 @@ public class BasicClientTest extends JerseyTest {
         Future<Response> f1 = async.post(text("post"));
         final Response response = f1.get();
         final String entity = response.readEntity(String.class);
-        assertEquals("async-request-post", entity);
+        assertEquals("custom-async-request-post", entity);
     }
 
     private void runCustomExecutorTestSync(Client client) {
@@ -151,7 +148,7 @@ public class BasicClientTest extends JerseyTest {
         final Response response = target.request().post(text("post"));
 
         final String entity = response.readEntity(String.class);
-        assertNotSame("async-request-post", entity);
+        assertNotSame("custom-async-request-post", entity);
     }
 
     @Test
@@ -379,19 +376,14 @@ public class BasicClientTest extends JerseyTest {
         return client.target("http://any.web:888");
     }
 
-    public static class CustomExecutorProvider implements RequestExecutorProvider {
+    @ClientAsyncExecutor
+    public static class CustomExecutorProvider extends ThreadPoolExecutorProvider {
 
-        @Override
-        public ExecutorService getRequestingExecutor() {
-            return Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
-                    .setNameFormat("async-request")
-                    .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
-                    .build());
-        }
-
-        @Override
-        public void releaseRequestingExecutor(ExecutorService executor) {
-            executor.shutdownNow();
+        /**
+         * Create a new instance of the thread pool executor provider.
+         */
+        public CustomExecutorProvider() {
+            super("custom-async-request");
         }
     }
 
@@ -399,13 +391,17 @@ public class BasicClientTest extends JerseyTest {
 
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
-            context.setEntity(Thread.currentThread().getName() + "-" + context.getEntity());
+            final String name = Thread.currentThread().getName(); // e.g. custom-async-request-0
+            final int lastIndexOfDash = name.lastIndexOf('-');
+            context.setEntity(
+                    name.substring(0, lastIndexOfDash < 0 ? name.length() : lastIndexOfDash) + "-" + context.getEntity());
             context.proceed();
         }
     }
 
     @Path("resource")
     public static class Resource {
+
         @GET
         @Path("error")
         public String getError() {
@@ -461,6 +457,7 @@ public class BasicClientTest extends JerseyTest {
 
     @XmlRootElement
     public static class JaxbString {
+
         public String value;
 
         public JaxbString() {

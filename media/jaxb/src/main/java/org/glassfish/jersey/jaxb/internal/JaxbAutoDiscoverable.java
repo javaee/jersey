@@ -40,26 +40,27 @@
 
 package org.glassfish.jersey.jaxb.internal;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
 
 import javax.inject.Inject;
-import javax.ws.rs.RuntimeType;
+
+import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.ServiceLocator;
 
-import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
-
 /**
- * JAX-B {@link ForcedAutoDiscoverable} that registers all necessary JAXB features
+ * JAXB {@link ForcedAutoDiscoverable} that registers all necessary JAXB features
  * into the service locator directly.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class JaxbAutoDiscoverable implements ForcedAutoDiscoverable {
 
-    @Inject ServiceLocator locator;
+    @Inject
+    private ServiceLocator locator;
 
     @Override
     public void configure(final FeatureContext context) {
@@ -74,7 +75,7 @@ public final class JaxbAutoDiscoverable implements ForcedAutoDiscoverable {
 
         final RuntimeType runtime = context.getConfiguration().getRuntimeType();
 
-        if (RuntimeType.SERVER.equals(runtime)) {
+        if (RuntimeType.SERVER == runtime) {
             final JaxbParamConverterBinder jaxbParamConverterBinder = new JaxbParamConverterBinder();
             jaxbParamConverterBinder.bind(dc);
         }

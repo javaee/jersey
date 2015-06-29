@@ -41,14 +41,16 @@ package org.glassfish.jersey.servlet.async;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.glassfish.jersey.servlet.init.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
-
 
 /**
  * Servlet 3.x container response writer async extension and related extension factory implementation.
@@ -57,6 +59,8 @@ import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class AsyncContextDelegateProviderImpl implements AsyncContextDelegateProvider {
+
+    private static final Logger LOGGER = Logger.getLogger(AsyncContextDelegateProviderImpl.class.getName());
 
     @Override
     public final AsyncContextDelegate createDelegate(final HttpServletRequest request, final HttpServletResponse response) {
@@ -75,7 +79,7 @@ public class AsyncContextDelegateProviderImpl implements AsyncContextDelegatePro
         /**
          * Create a Servlet 3.x {@link AsyncContextDelegate} with given {@code request} and {@code response}.
          *
-         * @param request request to create {@link AsyncContext} for.
+         * @param request  request to create {@link AsyncContext} for.
          * @param response response to create {@link AsyncContext} for.
          */
         private ExtensionImpl(final HttpServletRequest request, final HttpServletResponse response) {
@@ -89,13 +93,27 @@ public class AsyncContextDelegateProviderImpl implements AsyncContextDelegatePro
         public void suspend() throws IllegalStateException {
             // Suspend only if not completed and not suspended before.
             if (!completed.get() && asyncContextRef.get() == null) {
-                final AsyncContext asyncContext = request.startAsync(request, response);
+                asyncContextRef.set(getAsyncContext());
+            }
+        }
 
+        private AsyncContext getAsyncContext() {
+            final AsyncContext asyncContext;
+            if (request.isAsyncStarted()) {
+                asyncContext = request.getAsyncContext();
+                try {
+                    asyncContext.setTimeout(NEVER_TIMEOUT_VALUE);
+                } catch (IllegalStateException ex) {
+                    // Let's hope the time out is set properly, otherwise JAX-RS AsyncResponse time-out support
+                    // may not work as expected... At least we can log this at fine level...
+                    LOGGER.log(Level.FINE, LocalizationMessages.SERVLET_ASYNC_CONTEXT_ALREADY_STARTED(), ex);
+                }
+            } else {
+                asyncContext = request.startAsync(request, response);
                 // Tell underlying asyncContext to never time out.
                 asyncContext.setTimeout(NEVER_TIMEOUT_VALUE);
-
-                asyncContextRef.set(asyncContext);
             }
+            return asyncContext;
         }
 
         @Override

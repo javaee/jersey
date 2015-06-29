@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -79,7 +79,6 @@ public class ResponseCloseTest extends JerseyTest {
         return new ResourceConfig(SimpleResource.class);
     }
 
-
     @Test
     public void testReadAfterClose() {
         final Response response = target().path("simple").request().get(Response.class);
@@ -87,7 +86,7 @@ public class ResponseCloseTest extends JerseyTest {
         try {
             response.readEntity(String.class);
             fail("IllegalStateException expected when reading entity after response has been closed.");
-        } catch (IllegalStateException ex) {
+        } catch (final IllegalStateException ex) {
             // expected
         }
     }
@@ -99,7 +98,7 @@ public class ResponseCloseTest extends JerseyTest {
         try {
             response.readEntity(String.class);
             fail("IllegalStateException expected when reading entity after response has been closed.");
-        } catch (IllegalStateException ex) {
+        } catch (final IllegalStateException ex) {
             // expected
         }
     }
@@ -113,7 +112,7 @@ public class ResponseCloseTest extends JerseyTest {
         try {
             response.readEntity(String.class);
             fail("IllegalStateException expected when reading entity after response has been closed.");
-        } catch (IllegalStateException ex) {
+        } catch (final IllegalStateException ex) {
             // expected
         }
     }
@@ -126,7 +125,7 @@ public class ResponseCloseTest extends JerseyTest {
         try {
             response.readEntity(String.class);
             fail("IllegalStateException expected when reading a buffered entity after response has been closed.");
-        } catch (IllegalStateException ex) {
+        } catch (final IllegalStateException ex) {
             // expected
         }
     }
@@ -138,7 +137,7 @@ public class ResponseCloseTest extends JerseyTest {
         try {
             response.bufferEntity();
             fail("IllegalStateException expected when reading a buffered entity after response has been closed.");
-        } catch (IllegalStateException ex) {
+        } catch (final IllegalStateException ex) {
             // expected
         }
     }
@@ -150,7 +149,7 @@ public class ResponseCloseTest extends JerseyTest {
         try {
             response.getEntity();
             fail("IllegalStateException expected when reading a buffered entity after response has been closed.");
-        } catch (IllegalStateException ex) {
+        } catch (final IllegalStateException ex) {
             // expected
         }
     }
@@ -161,8 +160,8 @@ public class ResponseCloseTest extends JerseyTest {
         response.close();
         try {
             response.hasEntity();
-            fail("IllegalStateException expected when reading a buffered entity after response has been closed.");
-        } catch (IllegalStateException ex) {
+            fail("IllegalStateException should have been caught inside hasEntity.");
+        } catch (final IllegalStateException ex) {
             // expected
         }
     }

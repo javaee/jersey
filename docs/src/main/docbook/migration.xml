@@ -52,6 +52,166 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.19">
+        <title>Migrating from Jersey 2.18 to 2.19</title>
+
+        <section xml:id="mig-2.19-breaking-changes">
+            <title>Breaking Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            New method, <literal>close</literal>, has been added to &jersey.server.ResourceFinder;. It's
+                            intention is to release allocated/opened resources (such as streams) without a need to iterate through
+                            the whole &lit.jersey.server.ResourceFinder;.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="mig-2.18">
+        <title>Migrating from Jersey 2.17 to 2.18</title>
+
+        <section xml:id="mig-2.18-highlights">
+            <title>Release 2.18 Highlights</title>
+
+            <section>
+                <title>Updated to MOXy 2.6</title>
+                <para>
+                    Jersey has updated version of MOXy (XML/JSON provider) to version 2.6. Among some bug fixes there are other
+                    notable changes (some of them breaking) that you should be aware of:
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                <link xlink:href='https://wiki.eclipse.org/EclipseLink/DesignDocs/459464'>Redesign of type property in JSON processing</link> -
+                                Special handling of JSON <literal>type</literal> property is deprecated. If there is need to
+                                identify type of JSON object - due to missing root element or some special inheritance
+                                requirements, it is necessary to specify fully qualified type property with
+                                <literal>http://www.w3.org/2001/XMLSchema-instance</literal> namespace.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <link xlink:href='https://bugs.eclipse.org/bugs/attachment.cgi?id=241506'>Bean Validation in MOXy</link>
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <link xlink:href='https://wiki.eclipse.org/EclipseLink/DesignDocs/405161'>MOXy support for for Java API for JSON Processing (JSR-353)</link>
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+            </section>
+            <section>
+                <title>Promoted Public Beta APIs</title>
+
+                <para>
+                    Several experimental Jersey APIs have matured enough and as such we have decided to promote them
+                    from &jersey.common.Beta; status, namely:
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                Jersey Reactive Client API. Also Reactive Client moved from incubator to extension (umbrella)
+                                module.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey client-side &jersey.client.ClientLifecycleListener; SPI.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey server-side &jersey.server.ContainerLifecycleListener; SPI.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey server-side (MVC) &jersey.server.mvc.ErrorTemplate; annotation.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey test framework (client-side) &jersey.test.util.LoopBackConnectorProvider; connector.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey test framework (server-side) &jersey.test.util.ContainerRequestBuilder; class.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+
+                    These APIs are now part of the official public Jersey 2.x API.
+                </para>
+            </section>
+        </section>
+
+        <section xml:id="mig-2.18-removed-deprecated">
+            <title>Removed deprecated APIs</title>
+            <para>Following, already deprecated, APIs were removed:</para>
+
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.apache.connector.ApacheClientProperties</literal> - constant
+                            <literal>SSL_CONFIG</literal> has been removed. Use &jaxrs.client.ClientBuilder; methods to configure
+                            SSL in a &jaxrs.client.Client; instance.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.jetty.connector.JettyClientProperties</literal> - constant
+                            <literal>SSL_CONFIG</literal> has been removed. Use &jaxrs.client.ClientBuilder; methods to configure
+                            SSL in a &jaxrs.client.Client; instance.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>FreemarkerMvcFeature.TEMPLATES_BASE_PATH</literal> - constant has been unified across MVC
+                            modules and the deprecated one has been removed.
+                            Use <literal>FreemarkerMvcFeature.TEMPLATE_BASE_PATH</literal> or property
+                            <literal>jersey.config.server.mvc.templateBasePath.freemarker</literal> instead.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>JspMvcFeature.TEMPLATES_BASE_PATH</literal> - constant has been unified across MVC modules
+                            and the deprecated one has been removed. Use <literal>JspMvcFeature.TEMPLATE_BASE_PATH</literal> or
+                            property <literal>jersey.config.server.mvc.templateBasePath.jsp</literal> instead.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+
+        <section xml:id="mig-2.18-breaking-changes">
+            <title>Breaking Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Integration of executor providers for Jersey runtime has been unified and refactored. As a result,
+                            the  <literal>org.glassfish.jersey.spi.RequestExecutorProvider</literal> and
+                            <literal>org.glassfish.jersey.spi.RuntimeThreadProvider</literal> SPIs have been removed from Jersey.
+                            A new, common &amp; generic executor service providers have been introduced instead:
+                            &jersey.common.spi.ExecutorServiceProvider; and &jersey.common.spi.ScheduledExecutorServiceProvider;.
+                            These new providers are used to support custom qualified executor service injection, including the
+                            refactored use cases of client asynchronous request execution, server-side managed asynchronous
+                            request processing as well as server-side background task scheduler.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
     <section xml:id="mig-2.17">
         <title>Migrating from Jersey 2.16 to 2.17</title>
         <section xml:id="mig-2.17-highlights">
@@ -971,10 +1131,12 @@ public class Bookstore { ... }</programlisting>
                     </para></listitem>
                     <listitem><para>
                         <literal>org.glassfish.jersey.spi.RequestsExecutorsProvider</literal> contract has been renamed to
-                        &jersey.common.spi.RequestExecutorProvider;. It has been also extended with an additional
-                        <literal>releaseRequestingExecutor</literal> method to address executor shutdown handling issues
-                        reported in <link xlink:href='https://java.net/jira/browse/JERSEY-2205'>JERSEY-2205</link>. As such,
-                        any custom implementation of the SPI is now required to implement the new method.
+                        <literal>org.glassfish.jersey.spi.RequestsExecutorsProvider</literal>. It has been also extended with
+                        an additional <literal>releaseRequestingExecutor</literal> method to address executor shutdown handling
+                        issues reported in <link xlink:href='https://java.net/jira/browse/JERSEY-2205'>JERSEY-2205</link>.
+                        As such, any custom implementation of the SPI is now required to implement the new method.
+                        (Note that the SPI has been removed in Jersey 2.18 - see the Jersey 2.18 release migration guide section
+                        for more details.)
                     </para></listitem>
                 </itemizedlist>
             </para>

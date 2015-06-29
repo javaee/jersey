@@ -59,7 +59,7 @@
     <title>Reactive Jersey Client API</title>
 
     <para>
-        Reactive Jersey Client API is quite a qeneric API allowing end users to utilize the popular reactive programming model
+        Reactive Jersey Client API is quite a generic API allowing end users to utilize the popular reactive programming model
         when using Jersey Client. Several extensions come out of the box with Jersey that bring support for several existing
         3rd party libraries for reactive programming. Along with describing the API itself, this section also covers
         existing extension modules and provides hints to implement a custom extension if needed.
@@ -1067,7 +1067,7 @@ RxTarget&lt;RxCompletableFutureInvoker&gt; rxWebTarget = RxCompletableFuture.fro
                 <example xml:id="rx.client.rxinvoker">
                     <title>RxInvoker snippet</title>
 
-                    <programlisting language="java" linenumbering="numbered">@Beta public interface RxInvoker&lt;T&gt; {
+                    <programlisting language="java" linenumbering="numbered">public interface RxInvoker&lt;T&gt; {
 
     public &lt;T&gt; get();
 

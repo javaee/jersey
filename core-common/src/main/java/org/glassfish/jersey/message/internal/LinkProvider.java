@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,19 +68,19 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
     private static final Logger LOGGER = Logger.getLogger(LinkProvider.class.getName());
 
     @Override
-    public boolean supports(Class<?> type) {
+    public boolean supports(final Class<?> type) {
         return Link.class.isAssignableFrom(type);
     }
 
     @Override
-    public Link fromString(String value) throws IllegalArgumentException {
+    public Link fromString(final String value) throws IllegalArgumentException {
         return initBuilder(new JerseyLink.Builder(), value).build();
     }
 
     /**
      * Initialize an existing Jersey link builder with the link data provided in a form of a string.
      *
-     * @param lb link builder to be initialized.
+     * @param lb    link builder to be initialized.
      * @param value link data as a string.
      * @return initialized link builder.
      */
@@ -88,9 +88,9 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
         throwIllegalArgumentExceptionIfNull(value, LocalizationMessages.LINK_IS_NULL());
         try {
             value = value.trim();
-            String params;
+            final String params;
             if (value.startsWith("<")) {
-                int gtIndex = value.indexOf('>');
+                final int gtIndex = value.indexOf('>');
                 if (gtIndex != -1) {
                     lb.uri(value.substring(1, gtIndex).trim());
                     params = value.substring(gtIndex + 1).trim();
@@ -100,19 +100,22 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
             } else {
                 throw new IllegalArgumentException("Missing starting token < in " + value);
             }
-            if (params != null) {
-                StringTokenizer st = new StringTokenizer(params, ";=\"", true);
-                while (st.hasMoreTokens()) {
-                    checkToken(st, ";");
-                    String n = st.nextToken().trim();
-                    checkToken(st, "=");
+
+            final StringTokenizer st = new StringTokenizer(params, ";=\"", true);
+            while (st.hasMoreTokens()) {
+                checkToken(st, ";");
+                final String n = st.nextToken().trim();
+                checkToken(st, "=");
+
+                String v = nextNonEmptyToken(st);
+                if (v.equals("\"")) {
+                    v = st.nextToken();
                     checkToken(st, "\"");
-                    String v = st.nextToken();
-                    checkToken(st, "\"");
-                    lb.param(n, v);
                 }
+
+                lb.param(n, v);
             }
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             if (LOGGER.isLoggable(Level.FINER)) {
                 LOGGER.log(Level.FINER, "Error parsing link value '" + value + "'", e);
             }
@@ -124,7 +127,16 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
         return lb;
     }
 
-    private static void checkToken(StringTokenizer st, String expected) throws IllegalArgumentException {
+    private static String nextNonEmptyToken(final StringTokenizer st) throws IllegalArgumentException {
+        String token;
+        do {
+            token = st.nextToken().trim();
+        } while (token.length() == 0);
+
+        return token;
+    }
+
+    private static void checkToken(final StringTokenizer st, final String expected) throws IllegalArgumentException {
         String token;
         do {
             token = st.nextToken().trim();
@@ -135,7 +147,7 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
     }
 
     @Override
-    public String toString(Link value) {
+    public String toString(final Link value) {
         return stringfy(value);
     }
 
@@ -145,14 +157,14 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
      * @param value link instance to be stringified.
      * @return string version of a given link instance.
      */
-    static String stringfy(Link value) {
+    static String stringfy(final Link value) {
         throwIllegalArgumentExceptionIfNull(value, LocalizationMessages.LINK_IS_NULL());
 
-        Map<String, String> map = value.getParams();
-        StringBuilder sb = new StringBuilder();
+        final Map<String, String> map = value.getParams();
+        final StringBuilder sb = new StringBuilder();
         sb.append('<').append(value.getUri()).append('>');
 
-        for (Map.Entry<String, String> entry : map.entrySet()) {
+        for (final Map.Entry<String, String> entry : map.entrySet()) {
             sb.append("; ").append(entry.getKey()).append("=\"").append(entry.getValue()).append("\"");
         }
         return sb.toString();
