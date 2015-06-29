@@ -657,20 +657,14 @@ public abstract class InboundMessageContext {
             StringBuilder linkString;
             for (String link : links) {
                 linkString = new StringBuilder();                
-                StringTokenizer st = new StringTokenizer(link, "<>=,;", true);
+                StringTokenizer st = new StringTokenizer(link, "<>,", true);
                 boolean linkOpen = false;
-                boolean nextValue = false;
-                boolean inValue;
                 while (st.hasMoreTokens()) {
                     String n = st.nextToken();
-                    inValue = nextValue;
-                    nextValue = false;
-                    if (!inValue && n.equals("<")) {
+                    if (n.equals("<")) {
                         linkOpen = true;
-                    } else if (!inValue && n.equals(">")) {
+                    } else if (n.equals(">")) {
                         linkOpen = false;
-                    } else if (!linkOpen && n.equals("=")) {
-                        nextValue = true;
                     } else if (!linkOpen && n.equals(",")) {
                         result.add(Link.valueOf(linkString.toString().trim()));
                         linkString = new StringBuilder();
