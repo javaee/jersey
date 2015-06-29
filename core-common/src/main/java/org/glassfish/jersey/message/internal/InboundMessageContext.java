@@ -59,6 +59,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Cookie;
@@ -652,9 +654,34 @@ public abstract class InboundMessageContext {
 
         try {
             Set<Link> result = new HashSet<Link>(links.size());
-            for (String l : links) {
-                for (String p : l.split(",")) {
-                    result.add(Link.valueOf(p.trim()));
+            StringBuilder linkString;
+            for (String link : links) {
+                linkString = new StringBuilder();                
+                StringTokenizer st = new StringTokenizer(link, "<>=,;", true);
+                boolean linkOpen = false;
+                boolean nextValue = false;
+                boolean inValue;
+                while (st.hasMoreTokens()) {
+                    String n = st.nextToken();
+                    inValue = nextValue;
+                    nextValue = false;
+                    if (!inValue && n.equals("<")) {
+                        linkOpen = true;
+                    } else if (!inValue && n.equals(">")) {
+                        linkOpen = false;
+                    } else if (!linkOpen && n.equals("=")) {
+                        nextValue = true;
+                    } else if (!linkOpen && n.equals(",")) {
+                        result.add(Link.valueOf(linkString.toString().trim()));
+                        linkString = new StringBuilder();
+                        continue; // don't add the ","
+                    }
+
+                    linkString.append(n);
+                }
+                
+                if (linkString.length() > 0) {
+                    result.add(Link.valueOf(linkString.toString().trim()));
                 }
             }
             return result;
