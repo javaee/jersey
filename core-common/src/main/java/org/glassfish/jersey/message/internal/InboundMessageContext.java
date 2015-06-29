@@ -656,7 +656,7 @@ public abstract class InboundMessageContext {
             Set<Link> result = new HashSet<Link>(links.size());
             StringBuilder linkString;
             for (String link : links) {
-                linkString = new StringBuilder();                
+                linkString = new StringBuilder();
                 StringTokenizer st = new StringTokenizer(link, "<>,", true);
                 boolean linkOpen = false;
                 while (st.hasMoreTokens()) {
@@ -673,7 +673,7 @@ public abstract class InboundMessageContext {
 
                     linkString.append(n);
                 }
-                
+
                 if (linkString.length() > 0) {
                     result.add(Link.valueOf(linkString.toString().trim()));
                 }

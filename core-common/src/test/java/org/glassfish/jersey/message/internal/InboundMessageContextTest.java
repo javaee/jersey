@@ -194,7 +194,7 @@ public class InboundMessageContextTest {
         assertTrue(r.getLinks().contains(link1));
         assertTrue(r.getLinks().contains(link2));
     }
-    
+
     @Test
     public void testGetLinksWithCommaInUri() {
         InboundMessageContext r = createInboundMessageContext();
@@ -204,7 +204,7 @@ public class InboundMessageContextTest {
         assertEquals(1, r.getLinks().size());
         assertTrue(r.getLinks().contains(link1));
     }
-    
+
     @Test
     public void testGetLinksWithMultipleLinksInOneHeaderAndCommaInUri() {
         InboundMessageContext r = createInboundMessageContext();
@@ -215,7 +215,7 @@ public class InboundMessageContextTest {
         assertTrue(r.getLinks().contains(link1));
         assertTrue(r.getLinks().contains(link2));
     }
-    
+
     @Test
     public void testGetLinksWithMultipleLinksInOneHeader() {
         InboundMessageContext r = createInboundMessageContext();
@@ -226,7 +226,7 @@ public class InboundMessageContextTest {
         assertTrue(r.getLinks().contains(link1));
         assertTrue(r.getLinks().contains(link2));
     }
-    
+
     @Test
     public void testGetLinksWithMultipleLinksInOneHeaderWithLtInValue() {
         InboundMessageContext r = createInboundMessageContext();
@@ -237,7 +237,7 @@ public class InboundMessageContextTest {
         assertTrue(r.getLinks().contains(link1));
         assertTrue(r.getLinks().contains(link2));
     }
-    
+
     @Test
     public void testGetLink() {
         InboundMessageContext r = createInboundMessageContext();
