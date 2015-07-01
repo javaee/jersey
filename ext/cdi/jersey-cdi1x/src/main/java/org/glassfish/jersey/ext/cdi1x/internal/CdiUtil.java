@@ -166,9 +166,18 @@ public final class CdiUtil {
         return null;
     }
 
-    private static <T> T getBeanReference(final Class<T> clazz, final Bean bean, final BeanManager beanManager) {
-        final CreationalContext<?> creationalContext = beanManager.createCreationalContext(bean);
-        final Object result = beanManager.getReference(bean, clazz, creationalContext);
+    /**
+     * Obtain a bean reference of given type from the bean manager.
+     *
+     * @param clazz         type of the bean to get reference to.
+     * @param extensionBean the {@link Bean} object representing the bean.
+     * @param beanManager   bean manager used to obtain an instance of the requested bean.
+     * @param <T>           type of the bean to be returned.
+     * @return a bean reference or {@code null} if a bean instance cannot be found.
+     */
+    static <T> T getBeanReference(final Class<T> clazz, final Bean extensionBean, final BeanManager beanManager) {
+        final CreationalContext<?> creationalContext = beanManager.createCreationalContext(extensionBean);
+        final Object result = beanManager.getReference(extensionBean, clazz, creationalContext);
 
         return clazz.cast(result);
     }
