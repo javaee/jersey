@@ -64,7 +64,7 @@ public interface ApplicationEvent {
      */
     public static enum Type {
         /**
-         * Initialization of the application has started. In this point no all the event properties
+         * Initialization of the application has started. At this point not all of the event properties
          * are initialized yet.
          */
         INITIALIZATION_START,
@@ -83,7 +83,7 @@ public interface ApplicationEvent {
          */
         INITIALIZATION_FINISHED,
         /**
-         * Application has been destroyed (stopped). In this point the application cannot process any new requests.
+         * Application has been destroyed (stopped). At this point the application cannot process any new requests.
          */
         DESTROY_FINISHED,
         /**
