@@ -93,10 +93,18 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     private static final Logger LOGGER = Logger.getLogger(JerseyInvocation.class.getName());
 
     private final ClientRequest requestContext;
+    // Copy request context when invoke or submit methods are invoked.
+    private final boolean copyRequestContext;
 
     private JerseyInvocation(final Builder builder) {
+        this(builder, false);
+    }
+
+    private JerseyInvocation(final Builder builder, final boolean copyRequestContext) {
         validateHttpMethodAndEntity(builder.requestContext);
+
         this.requestContext = new ClientRequest(builder.requestContext);
+        this.copyRequestContext = copyRequestContext;
     }
 
     private enum EntityPresence {
@@ -185,40 +193,40 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         @Override
         public JerseyInvocation build(final String method) {
             requestContext.setMethod(method);
-            return new JerseyInvocation(this);
+            return new JerseyInvocation(this, true);
         }
 
         @Override
         public JerseyInvocation build(final String method, final Entity<?> entity) {
             requestContext.setMethod(method);
             storeEntity(entity);
-            return new JerseyInvocation(this);
+            return new JerseyInvocation(this, true);
         }
 
         @Override
         public JerseyInvocation buildGet() {
             requestContext.setMethod("GET");
-            return new JerseyInvocation(this);
+            return new JerseyInvocation(this, true);
         }
 
         @Override
         public JerseyInvocation buildDelete() {
             requestContext.setMethod("DELETE");
-            return new JerseyInvocation(this);
+            return new JerseyInvocation(this, true);
         }
 
         @Override
         public JerseyInvocation buildPost(final Entity<?> entity) {
             requestContext.setMethod("POST");
             storeEntity(entity);
-            return new JerseyInvocation(this);
+            return new JerseyInvocation(this, true);
         }
 
         @Override
         public JerseyInvocation buildPut(final Entity<?> entity) {
             requestContext.setMethod("PUT");
             storeEntity(entity);
-            return new JerseyInvocation(this);
+            return new JerseyInvocation(this, true);
         }
 
         @Override
@@ -661,6 +669,10 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
     }
 
+    private ClientRequest requestForCall(final ClientRequest requestContext) {
+        return copyRequestContext ? new ClientRequest(requestContext) : requestContext;
+    }
+
     @Override
     public Response invoke() throws ProcessingException, WebApplicationException {
         final ClientRuntime runtime = request().getClientRuntime();
@@ -668,7 +680,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         return requestScope.runInScope(new Producer<Response>() {
             @Override
             public Response call() throws ProcessingException {
-                return new InboundJaxrsResponse(runtime.invoke(requestContext), requestScope);
+                return new InboundJaxrsResponse(runtime.invoke(requestForCall(requestContext)), requestScope);
             }
         });
     }
@@ -684,7 +696,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             @Override
             public T call() throws ProcessingException {
                 try {
-                    return translate(runtime.invoke(requestContext), requestScope, responseType);
+                    return translate(runtime.invoke(requestForCall(requestContext)), requestScope, responseType);
                 } catch (final ProcessingException ex) {
                     if (ex.getCause() instanceof WebApplicationException) {
                         throw (WebApplicationException) ex.getCause();
@@ -706,7 +718,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             @Override
             public T call() throws ProcessingException {
                 try {
-                    return translate(runtime.invoke(requestContext), requestScope, responseType);
+                    return translate(runtime.invoke(requestForCall(requestContext)), requestScope, responseType);
                 } catch (final ProcessingException ex) {
                     if (ex.getCause() instanceof WebApplicationException) {
                         throw (WebApplicationException) ex.getCause();
@@ -720,7 +732,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public Future<Response> submit() {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
-        request().getClientRuntime().submit(requestContext, new ResponseCallback() {
+        request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
 
             @Override
             public void completed(final ClientResponse response, final RequestScope scope) {
@@ -748,7 +760,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
         }
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        request().getClientRuntime().submit(requestContext, new ResponseCallback() {
+        request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
 
             @Override
             public void completed(final ClientResponse response, final RequestScope scope) {
@@ -806,7 +818,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
         }
         final SettableFuture<T> responseFuture = SettableFuture.create();
-        request().getClientRuntime().submit(requestContext, new ResponseCallback() {
+        request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
 
             @Override
             public void completed(final ClientResponse response, final RequestScope scope) {
@@ -937,7 +949,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     }
                 }
             };
-            request().getClientRuntime().submit(requestContext, responseCallback);
+            request().getClientRuntime().submit(requestForCall(requestContext), responseCallback);
         } catch (final Throwable error) {
             final ProcessingException ce;
             if (error instanceof ProcessingException) {
