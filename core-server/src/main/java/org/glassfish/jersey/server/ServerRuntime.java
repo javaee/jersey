@@ -160,11 +160,11 @@ public class ServerRuntime {
         }
 
         @Override
-        public void suspend(ExternalRequestContext<Object> o) {
+        public void suspend(final ExternalRequestContext<Object> o) {
         }
 
         @Override
-        public void resume(ExternalRequestContext<Object> o) {
+        public void resume(final ExternalRequestContext<Object> o) {
         }
     };
 
@@ -327,7 +327,6 @@ public class ServerRuntime {
      * Get the Jersey server runtime background scheduler.
      *
      * @return server runtime background scheduler.
-     *
      * @see BackgroundScheduler
      */
     ScheduledExecutorService getBackgroundScheduler() {
@@ -336,7 +335,7 @@ public class ServerRuntime {
 
     /**
      * Ensure that the value a {@value HttpHeaders#LOCATION} header is an absolute URI, if present among headers.
-     *
+     * <p/>
      * Relative URI value will be made absolute using a base request URI.
      *
      * @param location location URI; value of the HTTP {@value HttpHeaders#LOCATION} response header.
@@ -558,6 +557,9 @@ public class ServerRuntime {
                     if (throwable instanceof WebApplicationException) {
                         final WebApplicationException webApplicationException = (WebApplicationException) throwable;
 
+                        // set mapped throwable
+                        processingContext.routingContext().setMappedThrowable(throwable);
+
                         waeResponse = webApplicationException.getResponse();
                         if (waeResponse.hasEntity()) {
                             LOGGER.log(Level.FINE, LocalizationMessages
@@ -579,6 +581,9 @@ public class ServerRuntime {
                                         timestamp, mapper, throwable, throwable.getLocalizedMessage(),
                                         mappedResponse != null ? mappedResponse.getStatusInfo() : "-no-response-");
                             }
+
+                            // set mapped throwable
+                            processingContext.routingContext().setMappedThrowable(throwable);
 
                             if (mappedResponse != null) {
                                 // response successfully mapped
@@ -1105,7 +1110,7 @@ public class ServerRuntime {
 
     /**
      * Abstract composite callback runner.
-     *
+     * <p/>
      * The runner supports registering multiple callbacks of a specific type and the execute the callback method
      * on all the registered callbacks.
      *
