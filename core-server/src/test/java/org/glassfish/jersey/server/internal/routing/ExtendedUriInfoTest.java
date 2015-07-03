@@ -63,12 +63,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
 /**
- * Test getting matched resources from {@link ExtendedUriInfo}.
+ * {@link ExtendedUriInfo} unit tests - testing e.g. getting matched resources, mapped throwable, etc.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @author Miroslav Fuksa
  */
-public class ResourcePushingTest {
+public class ExtendedUriInfoTest {
 
     private ApplicationHandler getApplication() {
         return new ApplicationHandler(new ResourceConfig(SimpleResource.class, ResourceWithLocator.class));
@@ -183,10 +183,10 @@ public class ResourcePushingTest {
         final String requestUri = "/locator-test";
         final String expectedResourceList = "<no-path>;/locator\\-test";
 
-        _test(requestUri, expectedResourceList);
+        _testResourceList(requestUri, expectedResourceList);
     }
 
-    private void _test(final String requestUri, final String expectedResourceList) throws InterruptedException,
+    private void _testResourceList(final String requestUri, final String expectedResourceList) throws InterruptedException,
             ExecutionException {
         final ApplicationHandler applicationHandler = getApplication();
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from(requestUri, "GET").build()).get();
@@ -197,27 +197,27 @@ public class ResourcePushingTest {
 
     @Test
     public void testLocatorChild() throws ExecutionException, InterruptedException {
-        _test("/locator-test/subget", "/subget;<no-path>;/locator\\-test");
+        _testResourceList("/locator-test/subget", "/subget;<no-path>;/locator\\-test");
     }
 
     @Test
     public void testSubResourceLocator() throws ExecutionException, InterruptedException {
-        _test("/locator-test/sublocator", "<no-path>;/sublocator;/locator\\-test");
+        _testResourceList("/locator-test/sublocator", "<no-path>;/sublocator;/locator\\-test");
     }
 
     @Test
     public void testSubResourceLocatorSubGet() throws ExecutionException, InterruptedException {
-        _test("/locator-test/sublocator/subget", "/subget;<no-path>;/sublocator;/locator\\-test");
+        _testResourceList("/locator-test/sublocator/subget", "/subget;<no-path>;/sublocator;/locator\\-test");
     }
 
     @Test
     public void testSubResourceLocatorRecursive() throws ExecutionException, InterruptedException {
-        _test("/locator-test/sublocator/sub", "<no-path>;/sub;<no-path>;/sublocator;/locator\\-test");
+        _testResourceList("/locator-test/sublocator/sub", "<no-path>;/sub;<no-path>;/sublocator;/locator\\-test");
     }
 
     @Test
     public void testSubResourceLocatorRecursive2() throws ExecutionException, InterruptedException {
-        _test("/locator-test/sublocator/sub/sub/subget", "/subget;<no-path>;/sub;<no-path>;/sub;<no-path>;/sublocator;"
-                + "/locator\\-test");
+        _testResourceList("/locator-test/sublocator/sub/sub/subget",
+                "/subget;<no-path>;/sub;<no-path>;/sub;<no-path>;/sublocator;/locator\\-test");
     }
 }

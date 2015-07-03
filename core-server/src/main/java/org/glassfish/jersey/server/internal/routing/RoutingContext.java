@@ -102,8 +102,7 @@ public interface RoutingContext extends ResourceInfo, ExtendedUriInfo {
      * May be empty but is never {@code null}.
      * </p>
      *
-     * @return final matching group of the last successful request URI routing
-     *         pattern match result.
+     * @return final matching group of the last successful request URI routing pattern match result.
      */
     public String getFinalMatchingGroup();
 
@@ -167,4 +166,12 @@ public interface RoutingContext extends ResourceInfo, ExtendedUriInfo {
      * @param subResourceFromLocator Resource constructed from result of sub resource locator method.
      */
     public void pushLocatorSubResource(Resource subResourceFromLocator);
+
+    /**
+     * Set the throwable that was mapped to a response.
+     *
+     * @param throwable throwable that was mapped to a response.
+     * @see #getMappedThrowable()
+     */
+    public void setMappedThrowable(Throwable throwable);
 }
