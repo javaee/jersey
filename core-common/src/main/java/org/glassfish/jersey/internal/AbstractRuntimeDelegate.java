@@ -77,25 +77,29 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
     private final Map<Class<?>, HeaderDelegate<?>> map;
 
     /**
-     * Initialization constructor.
+     * Initialization constructor. The service locator will be shut down.
      *
      * @param serviceLocator HK2 service locator.
      */
     protected AbstractRuntimeDelegate(final ServiceLocator serviceLocator) {
-        hps = Providers.getProviders(serviceLocator, HeaderDelegateProvider.class);
+        try {
+            hps = Providers.getProviders(serviceLocator, HeaderDelegateProvider.class);
 
-        /**
-         * Construct a map for quick look up of known header classes
-         */
-        map = new WeakHashMap<Class<?>, HeaderDelegate<?>>();
-        map.put(EntityTag.class, _createHeaderDelegate(EntityTag.class));
-        map.put(MediaType.class, _createHeaderDelegate(MediaType.class));
-        map.put(CacheControl.class, _createHeaderDelegate(CacheControl.class));
-        map.put(NewCookie.class, _createHeaderDelegate(NewCookie.class));
-        map.put(Cookie.class, _createHeaderDelegate(Cookie.class));
-        map.put(URI.class, _createHeaderDelegate(URI.class));
-        map.put(Date.class, _createHeaderDelegate(Date.class));
-        map.put(String.class, _createHeaderDelegate(String.class));
+            /**
+             * Construct a map for quick look up of known header classes
+             */
+            map = new WeakHashMap<Class<?>, HeaderDelegate<?>>();
+            map.put(EntityTag.class, _createHeaderDelegate(EntityTag.class));
+            map.put(MediaType.class, _createHeaderDelegate(MediaType.class));
+            map.put(CacheControl.class, _createHeaderDelegate(CacheControl.class));
+            map.put(NewCookie.class, _createHeaderDelegate(NewCookie.class));
+            map.put(Cookie.class, _createHeaderDelegate(Cookie.class));
+            map.put(URI.class, _createHeaderDelegate(URI.class));
+            map.put(Date.class, _createHeaderDelegate(Date.class));
+            map.put(String.class, _createHeaderDelegate(String.class));
+        } finally {
+            serviceLocator.shutdown();
+        }
     }
 
     @Override
