@@ -933,6 +933,16 @@
                 </plugins>
             </reporting>
         </profile>
+        <profile>
+            <id>ide</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.ow2.asm</groupId>
+                    <artifactId>asm-debug-all</artifactId>
+                    <optional>true</optional>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
     <reporting>
