@@ -327,7 +327,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      *
      * @param application JAX-RS / Jersey application to be deployed on Grizzly HTTP container.
      */
-    GrizzlyHttpContainer(final Application application) {
+    /* package */ GrizzlyHttpContainer(final Application application) {
         this.appHandler = new ApplicationHandler(application, new GrizzlyBinder());
         cacheConfigSetStatusOverSendError();
     }
@@ -338,7 +338,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      * @param application   JAX-RS / Jersey application to be deployed on Grizzly HTTP container.
      * @param parentLocator parent HK2 service locator.
      */
-    GrizzlyHttpContainer(final Application application, final ServiceLocator parentLocator) {
+    /* package */ GrizzlyHttpContainer(final Application application, final ServiceLocator parentLocator) {
         this.appHandler = new ApplicationHandler(application, new GrizzlyBinder(), parentLocator);
         cacheConfigSetStatusOverSendError();
     }

@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.AmbiguousResolutionException;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Qualifier;
@@ -114,7 +113,7 @@ public final class CdiUtil {
      */
     static Hk2LocatorManager createHk2LocatorManager() {
         final Hk2LocatorManager manager = lookupService(Hk2LocatorManager.class);
-        return manager != null ? manager : new DefaultHk2LocatorManager();
+        return manager != null ? manager : new SingleHk2LocatorManager();
     }
 
     /**
@@ -140,44 +139,15 @@ public final class CdiUtil {
     /**
      * Obtain a bean reference of given type from the bean manager.
      *
-     * @param beanClass   type of the bean to get reference to.
-     * @param beanManager bean manager used to obtain an instance of the requested bean.
-     * @param <T>         type of the bean to be returned.
-     * @return a bean reference or {@code null} if a bean instance cannot be found.
-     */
-    public static <T> T getBeanReference(final Class<T> beanClass, final BeanManager beanManager) {
-        final Set<Bean<?>> beans = beanManager.getBeans(beanClass);
-        if (beans.isEmpty()) {
-            return null;
-        }
-
-        try {
-            return getBeanReference(beanClass, beanManager.resolve(beans), beanManager);
-        } catch (final AmbiguousResolutionException ex) {
-            // try to resolve the instance directly by looking at which one has already been initialized
-            for (final Bean<?> b : beans) {
-                final T reference = getBeanReference(beanClass, b, beanManager);
-                if (reference != null) {
-                    return reference;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Obtain a bean reference of given type from the bean manager.
-     *
      * @param clazz         type of the bean to get reference to.
-     * @param extensionBean the {@link Bean} object representing the bean.
+     * @param bean          the {@link Bean} object representing the managed bean.
      * @param beanManager   bean manager used to obtain an instance of the requested bean.
      * @param <T>           type of the bean to be returned.
      * @return a bean reference or {@code null} if a bean instance cannot be found.
      */
-    static <T> T getBeanReference(final Class<T> clazz, final Bean extensionBean, final BeanManager beanManager) {
-        final CreationalContext<?> creationalContext = beanManager.createCreationalContext(extensionBean);
-        final Object result = beanManager.getReference(extensionBean, clazz, creationalContext);
+    static <T> T getBeanReference(final Class<T> clazz, final Bean bean, final BeanManager beanManager) {
+        final CreationalContext<?> creationalContext = beanManager.createCreationalContext(bean);
+        final Object result = beanManager.getReference(bean, clazz, creationalContext);
 
         return clazz.cast(result);
     }

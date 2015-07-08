@@ -38,36 +38,43 @@
  * holder.
  */
 
-package org.glassfish.jersey.ext.cdi1x.internal;
+package org.glassfish.jersey.tests.integration.multimodule.cdi.lib;
 
-import javax.ws.rs.WebApplicationException;
-
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import javax.enterprise.context.RequestScoped;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 /**
- * Default {@link org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager locator manager} that assumes only one
- * {@link org.glassfish.hk2.api.ServiceLocator service locator} per application is used.
+ * CDI managed bean, that gets JAX-RS injected. This bean is being consumed
+ * by all web apps within an EAR packaged enterprise application.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
- * @since 2.17
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-final class DefaultHk2LocatorManager implements Hk2LocatorManager {
+@RequestScoped
+public class JaxRsInjectedRequestScopedBean {
 
-    private volatile ServiceLocator locator;
+    @Context
+    UriInfo uriInfo;
 
-    @Override
-    public void registerLocator(final ServiceLocator locator) {
-        if (this.locator == null) {
-            this.locator = locator;
-        } else if (this.locator != locator) {
-            throw new WebApplicationException(LocalizationMessages.CDI_MULTIPLE_LOCATORS_INTO_SIMPLE_APP());
-        }
+    @HeaderParam("x-test")
+    String testHeader;
+
+    /**
+     * Get me the actual JAX-RS request URI info.
+     *
+     * @return actual request URI info.
+     */
+    public UriInfo getUriInfo() {
+        return uriInfo;
     }
 
-    @Override
-    public ServiceLocator getEffectiveLocator() {
-        return locator;
+    /**
+     * Get me the actual request test header.
+     *
+     * @return actual request URI info.
+     */
+    public String getTestHeader() {
+        return testHeader;
     }
 }

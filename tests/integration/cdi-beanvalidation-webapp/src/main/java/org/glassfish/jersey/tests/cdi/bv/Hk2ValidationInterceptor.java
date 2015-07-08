@@ -43,6 +43,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import javax.enterprise.inject.Vetoed;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -60,6 +61,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 /**
  * HK2 managed validation interceptor.
  */
+@Vetoed
 public class Hk2ValidationInterceptor implements ValidationInterceptor {
 
 

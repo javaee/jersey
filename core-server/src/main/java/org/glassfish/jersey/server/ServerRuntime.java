@@ -151,7 +151,7 @@ public class ServerRuntime {
     /*package */ static final ExternalRequestScope<Object> NOOP_EXTERNAL_REQ_SCOPE = new ExternalRequestScope<Object>() {
 
         @Override
-        public ExternalRequestContext<Object> open() {
+        public ExternalRequestContext<Object> open(ServiceLocator serviceLocator) {
             return null;
         }
 
@@ -160,11 +160,11 @@ public class ServerRuntime {
         }
 
         @Override
-        public void suspend(final ExternalRequestContext<Object> o) {
+        public void suspend(ExternalRequestContext<Object> o, ServiceLocator serviceLocator) {
         }
 
         @Override
-        public void resume(final ExternalRequestContext<Object> o) {
+        public void resume(ExternalRequestContext<Object> o, ServiceLocator serviceLocator) {
         }
     };
 
@@ -285,7 +285,8 @@ public class ServerRuntime {
         final Responder responder = new Responder(context, ServerRuntime.this);
         final RequestScope.Instance requestScopeInstance = requestScope.createInstance();
         final AsyncResponderHolder asyncResponderHolder =
-                new AsyncResponderHolder(responder, externalRequestScope, requestScopeInstance, externalRequestScope.open());
+                new AsyncResponderHolder(responder, externalRequestScope,
+                        requestScopeInstance, externalRequestScope.open(locator));
         context.initAsyncContext(asyncResponderHolder);
 
         requestScope.runInScope(requestScopeInstance, new Runnable() {
@@ -310,7 +311,7 @@ public class ServerRuntime {
                     if (!asyncResponderHolder.isAsync()) {
                         responder.process(response);
                     } else {
-                        externalRequestScope.suspend(asyncResponderHolder.externalContext);
+                        externalRequestScope.suspend(asyncResponderHolder.externalContext, locator);
                     }
                 } catch (final Throwable throwable) {
                     responder.process(throwable);
@@ -860,7 +861,7 @@ public class ServerRuntime {
                         @Override
                         public void run() {
                             try {
-                                requestScopeListener.resume(foreignScopeInstance);
+                                requestScopeListener.resume(foreignScopeInstance, responder.runtime.locator);
                                 final Response response = producer.call();
                                 if (response != null) {
                                     resume(response);
@@ -894,7 +895,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
-                        requestScopeListener.resume(foreignScopeInstance);
+                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.locator);
                         final Response jaxrsResponse =
                                 (response instanceof Response) ? (Response) response : Response.ok(response).build();
                         ServerRuntime.ensureAbsolute(
@@ -913,7 +914,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
-                        requestScopeListener.resume(foreignScopeInstance);
+                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.locator);
                         responder.process(new MappableException(error));
                     } catch (final Throwable error) {
                         // Ignore the exception - already resumed but may be rethrown by ContainerResponseWriter#failure.
@@ -992,7 +993,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
-                        requestScopeListener.resume(foreignScopeInstance);
+                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.locator);
                         final Response response = responseValue.get();
                         responder.process(new ContainerResponse(responder.processingContext.request(), response));
                     } catch (final Throwable t) {

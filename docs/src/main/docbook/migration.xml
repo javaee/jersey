@@ -52,6 +52,25 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.20">
+        <title>Migrating from Jersey 2.19 to 2.20</title>
+
+        <section xml:id="mig-2.20-breaking-changes">
+            <title>Breaking Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            New parameter, <literal>org.glassfish.hk2.api.ServiceLocator</literal>, has been added to &jersey.server.spi.ExternalRequestScope; methods.
+                            This is to allow 3rd party component providers to hook up with the actual HK2 locator in case of multiple Jersey applications
+                            are running in paralell within a single 3rd party component container. The change was driven by CDI/Servlet requirements.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
     <section xml:id="mig-2.19">
         <title>Migrating from Jersey 2.18 to 2.19</title>
 

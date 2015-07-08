@@ -57,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Singleton;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.RuntimeType;
@@ -75,8 +76,6 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
-
-import javax.inject.Singleton;
 
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.Errors;
@@ -488,14 +487,14 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             componentBag = runtimeConfig.getComponentBag();
             final Class<ExternalRequestScope>[] extScopes = ServiceFinder.find(ExternalRequestScope.class, true).toClassArray();
 
-            boolean extScopesFound = false;
+            boolean extScopeBound = false;
 
             if (extScopes.length == 1) {
                 for (final ComponentProvider p : componentProviders) {
                     if (p.bind(extScopes[0], new HashSet<Class<?>>() {{
                         add(ExternalRequestScope.class);
                     }})) {
-                        extScopesFound = true;
+                        extScopeBound = true;
                         break;
                     }
                 }
@@ -509,7 +508,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 }
             }
 
-            if (!extScopesFound) {
+            if (!extScopeBound) {
                 final DynamicConfiguration configuration = Injections.getConfiguration(locator);
                 final ScopedBindingBuilder<ExternalRequestScope> binder = Injections
                         .newBinder((ExternalRequestScope) ServerRuntime.NOOP_EXTERNAL_REQ_SCOPE)

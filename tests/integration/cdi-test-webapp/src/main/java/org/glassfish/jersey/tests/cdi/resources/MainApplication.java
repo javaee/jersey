@@ -60,15 +60,15 @@ import javax.ws.rs.core.Application;
  *
  * @author Jonathan Benoit (jonathan.benoit at oracle.com)
  */
-@ApplicationPath("/*")
+@ApplicationPath("main")
 @ApplicationScoped
-public class MyApplication extends Application {
+public class MainApplication extends Application {
 
     static AtomicInteger postConstructCounter = new AtomicInteger();
 
     @Inject BeanManager bm;
 
-    private static final Logger LOGGER = Logger.getLogger(MyApplication.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MainApplication.class.getName());
 
     @Override
     public Set<Class<?>> getClasses() {
@@ -88,6 +88,7 @@ public class MyApplication extends Application {
         classes.add(CounterResource.class);
         classes.add(ConstructorInjectedResource.class);
         classes.add(ProducerResource.class);
+        classes.add(FirstNonJaxRsBeanInjectedResource.class);
         return classes;
     }
 

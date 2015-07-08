@@ -231,6 +231,11 @@
                 <artifactId>jersey-cdi1x-transaction</artifactId>
                 <version>${project.version}</version>
             </dependency>
+             <dependency>
+                <groupId>org.glassfish.jersey.ext.cdi</groupId>
+                <artifactId>jersey-cdi1x-validation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.ext.cdi</groupId>
                 <artifactId>jersey-cdi1x-servlet</artifactId>

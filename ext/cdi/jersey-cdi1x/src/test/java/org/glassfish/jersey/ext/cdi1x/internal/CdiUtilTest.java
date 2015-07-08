@@ -151,6 +151,6 @@ public class CdiUtilTest {
             }
         };
 
-        assertThat(CdiUtil.createHk2LocatorManager(), instanceOf(DefaultHk2LocatorManager.class));
+        assertThat(CdiUtil.createHk2LocatorManager(), instanceOf(SingleHk2LocatorManager.class));
     }
 }

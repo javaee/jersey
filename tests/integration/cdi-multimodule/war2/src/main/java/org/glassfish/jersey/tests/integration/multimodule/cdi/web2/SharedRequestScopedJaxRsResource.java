@@ -37,45 +37,55 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.cdi.bv;
 
-import java.net.URI;
+package org.glassfish.jersey.tests.integration.multimodule.cdi.web2;
 
-import javax.ws.rs.core.Application;
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.jboss.weld.environment.se.Weld;
+import org.glassfish.jersey.tests.integration.multimodule.cdi.lib.JaxRsInjectedDependentBean;
+import org.glassfish.jersey.tests.integration.multimodule.cdi.lib.JaxRsInjectedRequestScopedBean;
 
 /**
- * Validation result test for CDI environment.
+ * JAX-RS resource backed by a request scoped CDI bean.
+ * This one is being shared between the two JAX-RS apps
+ * {@link JaxRsAppOne} and {@link JaxRsAppTwo}.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- */
-public class CdiTest extends BaseValidationTest {
+  */
+@Path("request-scoped")
+@RequestScoped
+public class SharedRequestScopedJaxRsResource {
 
-    Weld weld;
+    @Inject
+    JaxRsInjectedDependentBean dependentBean;
 
-    @Override
-    public void setUp() throws Exception {
-        weld = new Weld();
-        weld.initialize();
-        super.setUp();
+    @Inject
+    JaxRsInjectedRequestScopedBean reqScopedBean;
+
+    @Path("req/header")
+    @GET
+    public String getReqHeader() {
+        return reqScopedBean.getTestHeader();
     }
 
-    @Override
-    public void tearDown() throws Exception {
-        weld.shutdown();
-        super.tearDown();
+    @Path("dependent/header")
+    @GET
+    public String getDependentHeader() {
+        return dependentBean.getTestHeader();
     }
 
-    @Override
-    protected Application configure() {
-        return ResourceConfig.forApplicationClass(CdiApplication.class);
+    @Path("req/uri/{p}")
+    @GET
+    public String getReqUri() {
+        return reqScopedBean.getUriInfo().getRequestUri().toString();
     }
 
-    @Override
-    public String getAppPath() {
-        return "cdi";
+    @Path("dependent/uri/{p}")
+    @GET
+    public String getAppUri() {
+        return dependentBean.getUriInfo().getRequestUri().toString();
     }
 }

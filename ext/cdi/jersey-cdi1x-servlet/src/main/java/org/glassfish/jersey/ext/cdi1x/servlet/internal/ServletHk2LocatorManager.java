@@ -40,18 +40,7 @@
 
 package org.glassfish.jersey.ext.cdi1x.servlet.internal;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ConcurrentMap;
-
-import javax.enterprise.inject.spi.BeanManager;
-import javax.servlet.ServletContext;
-
-import org.glassfish.jersey.ext.cdi1x.internal.CdiUtil;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2InjectedTarget;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionTargetListener;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
-import org.glassfish.jersey.internal.util.collection.DataStructures;
+import org.glassfish.jersey.ext.cdi1x.internal.GenericHk2LocatorManager;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -60,73 +49,13 @@ import org.glassfish.hk2.api.ServiceLocator;
  * enables WAR and EAR to be deployed on a servlet container and be properly injected.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @since 2.17
  */
-public class ServletHk2LocatorManager implements Hk2LocatorManager, InjectionTargetListener {
-
-    private final ConcurrentMap<String, ServiceLocator> locatorsByContextPath;
-    private final ConcurrentMap<ClassLoader, List<Hk2InjectedTarget>> injectionTargetsByAppClassLoader;
-
-    private volatile BeanManager beanManager;
-
-    private volatile ServiceLocator locator;
-    private volatile ServletContext servletContext;
-
-    private volatile boolean multipleLocators = false;
-
-    public ServletHk2LocatorManager() {
-        locatorsByContextPath = DataStructures.createConcurrentMap();
-        injectionTargetsByAppClassLoader = DataStructures.createConcurrentMap();
-    }
+public class ServletHk2LocatorManager extends GenericHk2LocatorManager {
 
     @Override
-    public void registerLocator(final ServiceLocator locator) {
-        if (this.locator == null) {
-            this.locator = locator;
-        } else {
-            multipleLocators = true;
-            // We will get a dynamic proxy here.
-            servletContext = CdiUtil.getBeanReference(ServletContext.class, getBeanManager());
-        }
-
-        // Store given locator under particular context path.
-        final javax.servlet.ServletConfig hk2ServletConfig = locator.getService(javax.servlet.ServletConfig.class);
-        final ServletContext hk2ServletContext = hk2ServletConfig != null
-                ? hk2ServletConfig.getServletContext()                      // servlet
-                : locator.getService(javax.servlet.ServletContext.class);   // servlet filter
-
-        locatorsByContextPath.put(hk2ServletContext.getContextPath(), locator);
-
-        // Set effective locator to all injection targets with the same class loader.
-        final ClassLoader webappClassLoader = hk2ServletContext.getClassLoader();
-        final List<Hk2InjectedTarget> targets = injectionTargetsByAppClassLoader.get(webappClassLoader);
-        if (targets != null) {
-            for (final Hk2InjectedTarget target : targets) {
-                target.setLocator(locator);
-            }
-        }
-    }
-
-    private BeanManager getBeanManager() {
-        if (beanManager == null) {
-            beanManager = CdiUtil.getBeanManager();
-        }
-        return beanManager;
-    }
-
-    @Override
-    public ServiceLocator getEffectiveLocator() {
-        return locator == null
-                ? null
-                : !multipleLocators ? locator : locatorsByContextPath.get(servletContext.getContextPath());
-    }
-
-    @Override
-    public void notify(final Hk2InjectedTarget target) {
-        final List<Hk2InjectedTarget> newList = new LinkedList<>();
-        final List<Hk2InjectedTarget> existingList = injectionTargetsByAppClassLoader
-                .putIfAbsent(target.getInjectionTargetClassLoader(), newList);
-
-        ((existingList != null) ? existingList : newList).add(target);
+    public ServiceLocator lookupLocator() {
+        return CdiExternalRequestScope.actualServiceLocator.get();
     }
 }

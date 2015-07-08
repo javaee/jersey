@@ -37,29 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.cdi.bv;
+package org.glassfish.jersey.tests.cdi.resources;
 
-import javax.ws.rs.core.Application;
-
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.jboss.weld.environment.se.Weld;
-import org.junit.Ignore;
+import javax.enterprise.context.RequestScoped;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 /**
- * Validation result test for raw HK2 environment.
- *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * This is to be JAX-RS injected at runtime.
+ * The bean is fully CDI managed, contains JAX-RS injection points and is getting injected into JAX-RS
+ * resources included in two distinct JAX-RS applications running in parallel.
  */
-public class Hk2Test extends BaseValidationTest {
+@RequestScoped
+public class JaxRsInjectedBean {
 
-    @Override
-    protected Application configure() {
-        return ResourceConfig.forApplicationClass(Hk2Application.class);
+    @HeaderParam("x-test")
+    String testHeader;
+
+    @Context
+    UriInfo uriInfo;
+
+    public UriInfo getUriInfo() {
+        return uriInfo;
     }
 
-    @Override
-    public String getAppPath() {
-        return "hk2";
+    public String getTestHeader() {
+        return testHeader;
     }
 }

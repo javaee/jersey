@@ -53,16 +53,9 @@ import org.glassfish.hk2.api.ServiceLocator;
 public interface Hk2InjectedTarget extends InjectionTarget {
 
     /**
-     * Get class-loader of component managed by CDI that is supposed to be co-injected by HK2.
-     *
-     * @return class-loader of CDI injection target.
-     */
-    public ClassLoader getInjectionTargetClassLoader();
-
-    /**
      * Set the locator to be used to co-inject this injection target.
      *
      * @param locator effective HK2 locator.
      */
-    public void setLocator(ServiceLocator locator);
+    void setLocator(ServiceLocator locator);
 }

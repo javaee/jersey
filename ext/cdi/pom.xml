@@ -61,6 +61,7 @@
         <module>jersey-cdi1x-ban-custom-hk2-binding</module>
         <module>jersey-cdi1x-servlet</module>
         <module>jersey-cdi1x-transaction</module>
+        <module>jersey-cdi1x-validation</module>
         <module>jersey-weld2-se</module>
     </modules>
 

@@ -59,14 +59,11 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.enterprise.context.RequestScoped;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
-
 import javax.annotation.ManagedBean;
 import javax.annotation.Priority;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
+import javax.enterprise.context.RequestScoped;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
@@ -85,13 +82,23 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
+import javax.enterprise.inject.spi.WithAnnotations;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Qualifier;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2InjectedTarget;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionTargetListener;
 import org.glassfish.jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
 import org.glassfish.jersey.internal.inject.ForeignRequestScopeBridge;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -160,15 +167,15 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         @Override
         public Boolean compute(final Class<?> clazz) {
             return Application.class.isAssignableFrom(clazz)
-                    || jaxRsProvidersCache.compute(clazz)
-                    || Resource.from(clazz) != null;
+                    || Providers.isJaxRsProvider(clazz)
+                    || jaxRsResourceCache.compute(clazz);
         }
     });
 
-    private final Cache<Class<?>, Boolean> jaxRsProvidersCache = new Cache<>(new Computable<Class<?>, Boolean>() {
+    private final Cache<Class<?>, Boolean> jaxRsResourceCache = new Cache<>(new Computable<Class<?>, Boolean>() {
         @Override
         public Boolean compute(final Class<?> clazz) {
-            return Providers.isJaxRsProvider(clazz);
+            return Resource.from(clazz) != null;
         }
     });
 
@@ -314,19 +321,17 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         final boolean isManagedBean = isManagedBean(clazz);
         final boolean isJaxRsComponent = isJaxRsComponentType(clazz);
 
-
         if (!isCdiManaged && !isManagedBean && !isJaxRsComponent) {
             return false;
         }
 
-        final boolean isJaxRsApp = isJaxRsComponent && Application.class.isAssignableFrom(clazz);
-        final boolean isJaxRsProvider = jaxRsProvidersCache.compute(clazz);
+        final boolean isJaxRsResource = jaxRsResourceCache.compute(clazz);
 
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
 
         final Class<? extends Annotation> beanScopeAnnotation = CdiUtil.getBeanScope(clazz, beanManager);
         final boolean isRequestScoped = beanScopeAnnotation == RequestScoped.class
-                                        || (beanScopeAnnotation == Dependent.class && !isJaxRsApp && !isJaxRsProvider);
+                                        || (beanScopeAnnotation == Dependent.class && isJaxRsResource);
 
         Factory beanFactory = isRequestScoped
                 ? new RequestScopedCdiBeanHk2Factory(clazz, locator, beanManager, isCdiManaged)
@@ -357,14 +362,20 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     @Override
     public void done() {
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        Injections.addBinding(Injections.newBinder(new ForeignRequestScopeBridge() {
-            @Override
-            public Set<Class<?>> getRequestScopedComponents() {
-                return requestScopedComponents;
+        if (requestScopedComponents.size() > 0) {
+            final DynamicConfiguration dc = Injections.getConfiguration(locator);
+            Injections.addBinding(Injections.newBinder(new ForeignRequestScopeBridge() {
+                @Override
+                public Set<Class<?>> getRequestScopedComponents() {
+                    return requestScopedComponents;
+                }
+            }).to(ForeignRequestScopeBridge.class), dc);
+            dc.commit();
+            if (LOGGER.isLoggable(Level.CONFIG)) {
+                LOGGER.config(LocalizationMessages.CDI_REQUEST_SCOPED_COMPONENTS_RECOGNIZED(
+                        listElements(new StringBuilder().append("\n"), requestScopedComponents).toString()));
             }
-        }).to(ForeignRequestScopeBridge.class), dc);
-        dc.commit();
+        }
     }
 
     private boolean isCdiComponent(final Class<?> component) {
@@ -483,7 +494,17 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     @SuppressWarnings("unused")
-    private void processAnnotatedType(@Observes final ProcessAnnotatedType processAnnotatedType) {
+    private void processAnnotatedType(@Observes
+                                      @WithAnnotations({
+                                              Context.class,
+                                              ApplicationPath.class,
+                                              HeaderParam.class,
+                                              QueryParam.class,
+                                              FormParam.class,
+                                              MatrixParam.class,
+                                              BeanParam.class,
+                                              PathParam.class})
+                                      final ProcessAnnotatedType processAnnotatedType) {
         final AnnotatedType<?> annotatedType = processAnnotatedType.getAnnotatedType();
 
         // if one of the JAX-RS annotations is present in the currently seen class, add it to the "whitelist"
@@ -605,7 +626,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     private void afterTypeDiscovery(@Observes final AfterTypeDiscovery afterTypeDiscovery) {
         if (LOGGER.isLoggable(Level.CONFIG) && !jerseyVetoedTypes.isEmpty()) {
             LOGGER.config(LocalizationMessages.CDI_TYPE_VETOED(customHk2TypesProvider,
-                    listTypes(new StringBuilder().append("\n"), jerseyVetoedTypes).toString()));
+                    listElements(new StringBuilder().append("\n"), jerseyVetoedTypes).toString()));
         }
     }
 
@@ -632,7 +653,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         Hk2InjectedCdiTarget target = null;
         if (isJerseyOrDependencyType(componentClass)) {
-            target = new Hk2InjectedCdiTarget(it, componentClass.getClassLoader()) {
+            target = new Hk2InjectedCdiTarget(componentClass, it) {
 
                 @Override
                 public Set<InjectionPoint> getInjectionPoints() {
@@ -643,7 +664,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             };
         } else if (isJaxRsComponentType(componentClass)
                 || jaxrsInjectableTypes.contains(event.getAnnotatedType().getBaseType())) {
-            target = new Hk2InjectedCdiTarget(it, componentClass.getClassLoader()) {
+            target = new Hk2InjectedCdiTarget(componentClass, it) {
 
                 @Override
                 public Set<InjectionPoint> getInjectionPoints() {
@@ -846,8 +867,8 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         dc.commit();
     }
 
-    private StringBuilder listTypes(final StringBuilder logMsgBuilder, final Collection<Type> types) {
-        for (final Type t : types) {
+    private StringBuilder listElements(final StringBuilder logMsgBuilder, final Collection<? extends Object> elements) {
+        for (final Object t : elements) {
             logMsgBuilder.append(String.format(" - %s%n", t));
         }
         return logMsgBuilder;
@@ -856,34 +877,30 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @SuppressWarnings("unchecked")
     private abstract class Hk2InjectedCdiTarget implements Hk2InjectedTarget {
 
+        private final Class<?> componentClass;
         private final InjectionTarget delegate;
         private final ClassLoader targetClassLoader;
 
         private volatile ServiceLocator effectiveLocator;
 
-        public Hk2InjectedCdiTarget(final InjectionTarget delegate,
-                                    final ClassLoader targetClassLoader) {
+        public Hk2InjectedCdiTarget(final Class<?> componentClass,
+                                    final InjectionTarget delegate) {
+            this.componentClass = componentClass;
             this.delegate = delegate;
-            this.targetClassLoader = targetClassLoader;
+            this.targetClassLoader = componentClass.getClassLoader();
         }
 
         @Override
         public abstract Set<InjectionPoint> getInjectionPoints();
 
         @Override
-        public ClassLoader getInjectionTargetClassLoader() {
-            return targetClassLoader;
-        }
-
-        @Override
         public void inject(final Object t, final CreationalContext cc) {
             delegate.inject(t, cc);
 
-            if (effectiveLocator == null) {
-                effectiveLocator = getEffectiveLocator();
-            }
-            if (effectiveLocator != null) {
-                effectiveLocator.inject(t, CdiComponentProvider.CDI_CLASS_ANALYZER);
+            final ServiceLocator injectingLocator = (effectiveLocator != null) ? effectiveLocator : getEffectiveLocator();
+
+            if (injectingLocator != null) {
+                injectingLocator.inject(t, CdiComponentProvider.CDI_CLASS_ANALYZER);
             }
         }
 
