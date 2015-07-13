@@ -65,7 +65,13 @@ public class App {
      */
     static HttpServer startServer() throws IOException {
         // create a new server listening at port 8080
-        HttpServer server = HttpServer.create(new InetSocketAddress(getBaseURI().getPort()), 0);
+        final HttpServer server = HttpServer.create(new InetSocketAddress(getBaseURI().getPort()), 0);
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                server.stop(0);
+            }
+        }));
 
         // create a handler wrapping the JAX-RS application
         HttpHandler handler = RuntimeDelegate.getInstance().createEndpoint(new JaxRsApplication(), HttpHandler.class);
@@ -79,17 +85,16 @@ public class App {
         return server;
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("\"Hello World\" Jersey Example Application");
 
-        HttpServer server = startServer();
+        startServer();
 
         System.out.println("Application started.\n"
                 + "Try accessing " + getBaseURI() + "helloworld in the browser.\n"
                 + "Hit enter to stop the application...");
-        System.in.read();
-        server.stop(0);
+
+        Thread.currentThread().join();
     }
 
     private static int getPort(int defaultPort) {

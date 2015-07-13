@@ -84,18 +84,25 @@ public class App {
         try {
             System.out.println("HTTP TRACE Support Jersey Example App");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
             System.out.println(String.format(
                     "Application started.\n"
                             + "To test TRACE with a programmatic resource, send HTTP TRACE request to:%n  %s%s%n"
                             + "To test TRACE with an annotated resource, send HTTP TRACE request to:%n  %s%s%n"
-                            + "Hit enter to stop it...",
+                            + "Stop the application using CTRL+C",
                     BASE_URI, ROOT_PATH_PROGRAMMATIC,
                     BASE_URI, ROOT_PATH_ANNOTATED));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

@@ -202,7 +202,7 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>org.glassfish.jersey.examples.cdi.GrizzlyApp</mainClass>
+                    <mainClass>org.glassfish.jersey.examples.cdi.App</mainClass>
                     <classpathScope>test</classpathScope>
                 </configuration>
             </plugin>

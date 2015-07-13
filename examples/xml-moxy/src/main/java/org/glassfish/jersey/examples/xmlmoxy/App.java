@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,18 +57,24 @@ public class App {
 
     private static final URI BASE_URI = URI.create("http://localhost:8080/xml-moxy/");
 
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
     public static void main(String[] args) {
         try {
             System.out.println("XML with MOXy Jersey Example App");
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...",
+            System.out.println(String.format("Application started.%nTry out %s%nStop the application using CTRL+C",
                     BASE_URI + "/customer"));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

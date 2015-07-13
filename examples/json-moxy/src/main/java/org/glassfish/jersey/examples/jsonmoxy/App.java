@@ -62,17 +62,23 @@ public class App {
 
     private static final URI BASE_URI = URI.create("http://localhost:9998/jsonmoxy/");
 
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
     public static void main(String[] args) {
         try {
             System.out.println("JSON with MOXy Jersey Example App");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
-            System.out.println(String.format("Application started.%nHit enter to stop it..."));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
+            System.out.println(String.format("Application started.%nStop the application using CTRL+C"));
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

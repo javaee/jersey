@@ -70,7 +70,7 @@ public class App {
         try {
             System.out.println("Extended WADL web application example");
 
-            Map<String, String> initParams = new HashMap<String, String>();
+            Map<String, String> initParams = new HashMap<>();
 
             initParams.put(
                     ServletProperties.JAXRS_APPLICATION_CLASS,
@@ -80,12 +80,18 @@ public class App {
                     + ".SampleWadlGeneratorConfig");
 
             final HttpServer server = GrizzlyWebContainerFactory.create(BASE_URI, ServletContainer.class, initParams);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
 
-            System.out.println(String.format("Application started.%nTry out %s%s%nHit enter to stop it...",
+            System.out.println(String.format("Application started.%nTry out %s%s%nStop the application using CTRL+C",
                     BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
