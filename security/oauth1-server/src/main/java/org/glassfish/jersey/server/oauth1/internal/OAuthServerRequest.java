@@ -55,6 +55,7 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.oauth1.signature.OAuth1Request;
@@ -80,7 +81,7 @@ public class OAuthServerRequest implements OAuth1Request {
                 public MultivaluedMap<String, String> get() {
                     MultivaluedMap<String, String> params = null;
                     final MediaType mediaType = context.getMediaType();
-                    if (mediaType != null && mediaType.equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
+                    if (mediaType != null && MediaTypes.typeEqual(mediaType, MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
                         final ContainerRequest jerseyRequest = (ContainerRequest) context;
                         jerseyRequest.bufferEntity();
                         final Form form = jerseyRequest.readEntity(Form.class);
