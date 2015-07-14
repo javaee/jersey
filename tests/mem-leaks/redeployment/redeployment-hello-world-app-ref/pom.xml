@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.glassfish.jersey.tests.memleaks.redeployment</groupId>
+        <artifactId>project</artifactId>
+        <version>2.20-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>redeployment-hello-world-app-ref</artifactId>
+    <name>jersey-tests-memleak-redeployment-hello-world-app-ref</name>
+
+    <description>
+        Maven module that tests :helloworld-webapp:war in order to prevent regression of a problem where a repetitive redeployment
+        may have caused memory leaks.
+
+        To run this test, execute from Jersey root dir:
+
+        [1] Glassfish: mvn install -am -pl :redeployment-hello-world-app-ref -P gf4,memleak-redeployment
+
+        [2] Weblogic: mvn install -am -pl :redeployment-hello-world-app-ref -P wls,memleak-redeployment
+
+        [3] Tomcat: mvn install -am -pl :redeployment-hello-world-app-ref -P tomcat,memleak-redeployment
+    </description>
+
+    <properties>
+        <memleak.jvm.maxheap>256m</memleak.jvm.maxheap>
+        <memleak.tomcat.maxheap>56m</memleak.tomcat.maxheap>
+
+        <external.container.warPath>${org.glassfish.jersey.examples:helloworld-webapp:war}</external.container.warPath>
+        <external.container.contextRoot>helloworld-webapp</external.container.contextRoot>
+
+        <memleak.redeploy.count>200</memleak.redeploy.count>
+        <memleak.redeploy.expectedStatus>200</memleak.redeploy.expectedStatus>
+        <memleak.redeploy.requestPathQuery>${external.container.contextRoot}/helloworld</memleak.redeploy.requestPathQuery>
+
+        <helloword-webapp.version>${memleak.jersey.version}</helloword-webapp.version>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>tomcat</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>enforce-threadlocals-left-cleaned</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <phase>post-integration-test</phase>
+                                <configuration>
+                                    <!-- assure that Tomcat ThreadLocal memory leak detection messages weren't included in the Tomcat output.
+                                    If so, ThreadLocals aren't kept clean and that's what users do not like (see JERSEY-2890). -->
+                                    <rules>
+                                        <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.PatternNotMatchedInFileRule">
+                                            <file>${external.container.logFile}</file>
+                                            <pattern>
+                                                <![CDATA[.*SEVERE.*The web application.*created a ThreadLocal with key.*avoid a probable memory leak.*]]></pattern>
+                                            <maxMatchedLines>3</maxMatchedLines>
+                                        </rule>
+                                    </rules>
+                                    <fail>true</fail>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>memory-leak-reproducer</id>
+            <properties>
+                <memleak.jersey.version>2.19</memleak.jersey.version>
+            </properties>
+        </profile>
+    </profiles>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                <artifactId>container-runner-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>resolve-maven-dependencies</id>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>helloworld-webapp</artifactId>
+            <type>war</type>
+            <version>${helloword-webapp.version}</version>
+        </dependency>
+    </dependencies>
+
+</project>
