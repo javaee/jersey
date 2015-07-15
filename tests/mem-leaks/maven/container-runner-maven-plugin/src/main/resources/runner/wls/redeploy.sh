@@ -83,7 +83,12 @@ if [ "$SKIP_REDEPLOY" = "true" ]; then
 fi
 
 # It is impossible to easilly set the context root in Weblogic besides changing the war name
-ln -s "$WAR_PATH" "$RENAMED_WAR_PATH"
+if [ "${WAR_PATH##*/}" != "${RENAMED_WAR_PATH##*/}" ]; then
+    [ -f "$RENAMED_WAR_PATH" ] && rm "$RENAMED_WAR_PATH"
+    ln -s "$WAR_PATH" "$RENAMED_WAR_PATH"
+else
+    RENAMED_WAR_PATH="$WAR_PATH"
+fi
 
 set +e
 
@@ -108,7 +113,5 @@ EOF
 
 EXIT_CODE=$?
 echo Deployment finished with $EXIT_CODE
-
-rm "$RENAMED_WAR_PATH"
 
 exit $EXIT_CODE

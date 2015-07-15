@@ -125,8 +125,12 @@ fi
 
 # It is impossible to easilly set the context root in Weblogic besides changing the war name
 RENAMED_WAR_PATH="$MW_HOME"/$CONTEXT_ROOT.${WAR_PATH##*.}
-[ -f "$RENAMED_WAR_PATH" ] && rm "$RENAMED_WAR_PATH"
-ln -s "$WAR_PATH" "$RENAMED_WAR_PATH"
+if [ "${WAR_PATH##*/}" != "${RENAMED_WAR_PATH##*/}" ]; then
+    [ -f "$RENAMED_WAR_PATH" ] && rm "$RENAMED_WAR_PATH"
+    ln -s "$WAR_PATH" "$RENAMED_WAR_PATH"
+else
+    RENAMED_WAR_PATH="$WAR_PATH"
+fi
 
 set +e
 
