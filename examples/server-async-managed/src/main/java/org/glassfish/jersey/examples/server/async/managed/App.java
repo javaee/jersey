@@ -61,25 +61,28 @@ public class App {
     private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
     public static final String ASYNC_LONG_RUNNING_MANAGED_OP_PATH = "managedasync/longrunning";
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void main(String[] args) {
         try {
             System.out.println("\"Custom Executor Managed Async Resources\" Jersey Example App");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
             System.out.println(String.format("Application started.\n"
                     + "To test long-running asynchronous operation resource, try %s%s\n"
                     + "To test async chat resource, try %s%s\n"
-                    + "Hit enter to stop it...", BASE_URI, ASYNC_LONG_RUNNING_MANAGED_OP_PATH, BASE_URI, "chat"));
+                    + "Stop the application using CTRL+C", BASE_URI, ASYNC_LONG_RUNNING_MANAGED_OP_PATH, BASE_URI, "chat"));
 
-            System.in.read();
-
-            server.shutdownNow();
-        } catch (IOException ex) {
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 
     public static ResourceConfig create() {

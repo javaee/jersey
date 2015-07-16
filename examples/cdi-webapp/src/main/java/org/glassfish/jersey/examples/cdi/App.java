@@ -56,7 +56,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 /**
  * Hello world!
  */
-public class GrizzlyApp {
+public class App {
 
     private static final URI BASE_URI = URI.create("http://localhost:8080/cdi-webapp/");
 
@@ -64,18 +64,25 @@ public class GrizzlyApp {
         try {
             System.out.println("Jersey CDI Example App");
 
-            Weld weld = new Weld();
+            final Weld weld = new Weld();
             weld.initialize();
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createJaxRsApp(), true);
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createJaxRsApp(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                    weld.shutdown();
+                }
+            }));
+            server.start();
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
+            System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C",
                     BASE_URI, "application.wadl"));
-            System.in.read();
-            server.shutdownNow();
-            weld.shutdown();
-        } catch (IOException ex) {
-            Logger.getLogger(GrizzlyApp.class.getName()).log(Level.SEVERE, null, ex);
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }

@@ -81,17 +81,24 @@ public class App {
                 .packages("org.glassfish.jersey.examples.console");
     }
 
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
     public static void main(String[] args) {
         try {
             System.out.println("Simple Console Jersey Example App");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(getBaseURI(), createApp());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(getBaseURI(), createApp(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
-            System.out.println(String.format("Application started.%nTry out %s%nHit enter to stop it...", BASE_URI + "/form"));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
+            System.out.println(
+                    String.format("Application started.%nTry out %s%nStop the application using CTRL+C", BASE_URI + "/form"));
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

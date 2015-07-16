@@ -63,7 +63,14 @@ public final class App {
             System.out.println("Jersey Entity Data Filtering Example.");
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI,
-                    new SecurityEntityFilteringApplication());
+                    new SecurityEntityFilteringApplication(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
             System.out.println("Application started.\nTry out one of these URIs:");
             for (final String path : new String[] {"unrestricted-resource", "restricted-resource/denyAll",
@@ -71,12 +78,10 @@ public final class App {
                     "restricted-resource/runtimeRolesAllowed?roles=manager,user"}) {
                 System.out.println(BASE_URI + path);
             }
-            System.out.println("Hit enter to stop it...");
+            System.out.println("Stop the application using CTRL+C");
 
-            System.in.read();
-
-            server.shutdownNow();
-        } catch (IOException ex) {
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName())
                     .log(Level.SEVERE, "I/O error occurred during reading from an system input stream.", ex);
         }

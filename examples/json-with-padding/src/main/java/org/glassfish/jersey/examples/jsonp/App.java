@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,17 +61,24 @@ public class App {
     private static final URI BASE_URI = URI.create("http://localhost:8080/jsonp/");
     public static final String ROOT_PATH = "changes";
 
-    @SuppressWarnings({"ResultOfMethodCallIgnored"})
     public static void main(String[] args) {
         try {
             System.out.println("JSONP Jersey Example App");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
-            System.out.println(String.format("Application started.%nTry out %s%s%nHit enter to stop it...", BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
+            System.out.println(
+                    String.format("Application started.%nTry out %s%s%nStop the application using CTRL+C", BASE_URI, ROOT_PATH));
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
 
