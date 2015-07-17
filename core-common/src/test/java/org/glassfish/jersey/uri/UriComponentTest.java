@@ -389,4 +389,5 @@ public class UriComponentTest {
         assertEquals(true, UriComponent.valid("/x20y", UriComponent.Type.PATH));
         assertEquals(true, UriComponent.valid("/x%20y", UriComponent.Type.PATH));
     }
+
 }

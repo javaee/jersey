@@ -515,4 +515,5 @@ public class BeanParamTest extends JerseyTest {
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals(bean.toString(), response.readEntity(String.class));
     }
+
 }

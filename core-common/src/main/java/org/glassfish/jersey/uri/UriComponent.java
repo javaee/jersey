@@ -937,4 +937,5 @@ public class UriComponent {
 
         return uri.getRawPath() + (query != null && query.length() > 0 ? "?" + query : "");
     }
+
 }
