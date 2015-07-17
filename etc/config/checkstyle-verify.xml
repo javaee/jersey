@@ -84,7 +84,7 @@
         </module>
 
         <module name="NeedBraces">
-            <property name="allowSingleLineIf" value="true"/>
+            <property name="allowSingleLineStatement" value="true"/>
         </module>
         <module name="LeftCurly">
             <property name="maxLineLength" value="130"/>

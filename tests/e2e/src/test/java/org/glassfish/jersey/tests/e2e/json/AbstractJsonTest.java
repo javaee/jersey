@@ -47,6 +47,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -72,16 +74,16 @@ import org.glassfish.jersey.test.TestProperties;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
- * Common functionality for JSON tests that are using multiple JSON providers (e.g. MOXy, Jackson, Jettison)
- .*
+ * Common functionality for JSON tests that are using multiple JSON providers (e.g. MOXy, Jackson, Jettison).
+ *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public abstract class AbstractJsonTest extends JerseyTest {
 
     private static final String PKG_NAME = "org/glassfish/jersey/tests/e2e/json/entity/";
+    private static final Logger LOGGER = Logger.getLogger(AbstractJsonTest.class.getName());
 
     /**
      * Helper class representing configuration for one test case.
@@ -194,9 +196,14 @@ public abstract class AbstractJsonTest extends JerseyTest {
                                 }
                             }
 
-                            assertEquals(json, retrievedJson);
+                            if (!json.equals(retrievedJson)) {
+                                LOGGER.log(Level.SEVERE, "Expected: " + json);
+                                LOGGER.log(Level.SEVERE, "Actual:   " + retrievedJson);
+
+                                return Response.ok("{\"error\":\"JSON values doesn't match.\"}").build();
+                            }
                         } catch (final IOException e) {
-                            fail("Cannot find original JSON file.");
+                            return Response.ok("{\"error\":\"Cannot find original JSON file.\"}").build();
                         }
 
                         final Object testBean = containerRequest.readEntity(jsonTestSetup.getEntityClass());
@@ -239,8 +246,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     /**
-     * Returns entity path part for given {@link JsonTestSetup} (based on the name of the entity)
-     .*
+     * Returns entity path part for given {@link JsonTestSetup} (based on the name of the entity).
+     *
      * @return entity path part.
      */
     protected static String getEntityPathPart(final JsonTestSetup jsonTestSetup) {
@@ -248,7 +255,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     /**
-     * Creates new {@link ContextResolver} of {@link JAXBContext} instance for given {@link JsonTestProvider} and an entity class.
+     * Creates new {@link ContextResolver} of {@link JAXBContext} instance for given {@link JsonTestProvider} and an entity
+     * class.
      *
      * @param jsonProvider provider to create a context resolver for.
      * @param clazz        JAXB element class for JAXB context.
@@ -284,8 +292,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     /**
-     * Returns entity path part for current test case (based on the name of the entity)
-     .*
+     * Returns entity path part for current test case (based on the name of the entity).
+     *
      * @return entity path part.
      */
     protected String getEntityPathPart() {
@@ -293,8 +301,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     /**
-     * Returns provider path part for current test case (based on the name of the {@link JsonTestProvider})
-     .*
+     * Returns provider path part for current test case (based on the name of the {@link JsonTestProvider}).
+     *
      * @return provider path part.
      */
     protected String getProviderPathPart() {
@@ -302,8 +310,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     /**
-     * Returns provider path part for given {@link JsonTestSetup} (based on the name of the {@link JsonTestProvider})
-     .*
+     * Returns provider path part for given {@link JsonTestSetup} (based on the name of the {@link JsonTestProvider}).
+     *
      * @return provider path part.
      */
     protected static String getProviderPathPart(final JsonTestSetup jsonTestSetup) {

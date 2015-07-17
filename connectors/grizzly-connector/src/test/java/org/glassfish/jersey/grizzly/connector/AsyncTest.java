@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,6 +70,7 @@ import static org.junit.Assert.assertThat;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class AsyncTest extends JerseyTest {
+
     private static final Logger LOGGER = Logger.getLogger(AsyncTest.class.getName());
     private static final String PATH = "async";
 
@@ -78,6 +79,7 @@ public class AsyncTest extends JerseyTest {
      */
     @Path(PATH)
     public static class AsyncResource {
+
         /**
          * Typical long-running operation duration.
          */
@@ -96,7 +98,7 @@ public class AsyncTest extends JerseyTest {
 
                 @Override
                 public void run() {
-                    String result = veryExpensiveOperation();
+                    final String result = veryExpensiveOperation();
                     asyncResponse.resume(result);
                 }
 
@@ -105,7 +107,7 @@ public class AsyncTest extends JerseyTest {
                     try {
                         Thread.sleep(OPERATION_DURATION);
                         return "DONE-" + id;
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();
                         return "INTERRUPTED-" + id;
                     } finally {
@@ -127,7 +129,7 @@ public class AsyncTest extends JerseyTest {
             asyncResponse.setTimeoutHandler(new TimeoutHandler() {
 
                 @Override
-                public void handleTimeout(AsyncResponse asyncResponse) {
+                public void handleTimeout(final AsyncResponse asyncResponse) {
                     asyncResponse.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE)
                             .entity("Operation time out.").build());
                 }
@@ -138,7 +140,7 @@ public class AsyncTest extends JerseyTest {
 
                 @Override
                 public void run() {
-                    String result = veryExpensiveOperation();
+                    final String result = veryExpensiveOperation();
                     asyncResponse.resume(result);
                 }
 
@@ -148,7 +150,7 @@ public class AsyncTest extends JerseyTest {
                     try {
                         Thread.sleep(5 * OPERATION_DURATION);
                         return "DONE";
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();
                         return "INTERRUPTED";
                     } finally {
@@ -167,14 +169,14 @@ public class AsyncTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig config) {
+    protected void configureClient(final ClientConfig config) {
         config.register(new LoggingFilter(LOGGER, true));
         config.connectorProvider(new GrizzlyConnectorProvider());
     }
 
     /**
      * Test asynchronous POST.
-     *
+     * <p/>
      * Send 3 async POST requests and wait to receive the responses. Check the response content and
      * assert that the operation did not take more than twice as long as a single long operation duration
      * (this ensures async request execution).
