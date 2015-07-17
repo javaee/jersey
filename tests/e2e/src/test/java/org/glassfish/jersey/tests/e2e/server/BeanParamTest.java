@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.server;
 
 import java.util.Arrays;
@@ -70,7 +69,6 @@ import org.junit.Test;
  * Tests {@link BeanParam bean param injections}.
  *
  * @author Miroslav Fuksa
- *
  */
 public class BeanParamTest extends JerseyTest {
 
@@ -121,25 +119,22 @@ public class BeanParamTest extends JerseyTest {
         Assert.assertEquals(fullBean.toString() + " / " + smallBean.toString(), response.readEntity(String.class));
     }
 
-
     @Test
     public void testEncodedBean() {
         FullBean fullBean = getFullBean();
         fullBean.setQueryParam("encoded/a?&&+./?");
         fullBean.setMatrixParam("not-encoded/a?&&+./?");
 
-
         Response response = doRequest(fullBean, "resource/encodedBean");
         Assert.assertEquals(200, response.getStatus());
 
-        EncodedBean bean = new EncodedBean("not-encoded/a?&&+./?", "encoded/a?%26%26%2B./?");
+        EncodedBean bean = new EncodedBean("not-encoded/a?&&+./?", "encoded%2Fa%3F%26%26%2B.%2F%3F");
         Assert.assertEquals(bean.toString(), response.readEntity(String.class));
     }
 
-
     private Response doRequest(FullBean bean, String path) {
         final Form form = new Form();
-        form.asMap().put("form", Arrays.asList(new String[]{bean.getFormParam()}));
+        form.asMap().put("form", Arrays.asList(bean.getFormParam()));
 
         return target().path(path).path(bean.getPathParam()).matrixParam("matrix",
                 bean.getMatrixParam()).queryParam("query",
@@ -161,19 +156,18 @@ public class BeanParamTest extends JerseyTest {
 
     @Path("resource")
     public static class Resouce {
+
         @POST
         @Path("singleBean/{path}")
         public String postBeanParam(@BeanParam FullBean bean) {
             return bean == null ? "fail: bean param is null!!!" : bean.toString();
         }
 
-
         @POST
         @Path("constructorBean/{path}")
         public String constructorBeanParam(@BeanParam ConstructorInitializedBean bean) {
             return bean == null ? "fail: bean param is null!!!" : bean.toString();
         }
-
 
         @POST
         @Path("compareBean/{path}")
@@ -188,7 +182,6 @@ public class BeanParamTest extends JerseyTest {
 
             return String.valueOf(bean.toString().equals(newBean.toString()));
         }
-
 
         @POST
         @Path("twoBeans/{path}")
@@ -222,8 +215,8 @@ public class BeanParamTest extends JerseyTest {
 
     }
 
-
     public static class SmallBean {
+
         @HeaderParam("header")
         private String headerParam;
 
@@ -247,8 +240,8 @@ public class BeanParamTest extends JerseyTest {
         }
     }
 
-
     public static class EncodedBean {
+
         @MatrixParam("matrix")
         private String matrixParam;
 
@@ -260,7 +253,6 @@ public class BeanParamTest extends JerseyTest {
             this.matrixParam = matrixParam;
             this.queryParam = queryParam;
         }
-
 
         public EncodedBean() {
         }
@@ -275,6 +267,7 @@ public class BeanParamTest extends JerseyTest {
     }
 
     public static class FullBean {
+
         @HeaderParam("header")
         private String headerParam;
 
@@ -295,7 +288,6 @@ public class BeanParamTest extends JerseyTest {
 
         @Context
         private Request request;
-
 
         private boolean overrideRequestNull;
 
@@ -388,8 +380,8 @@ public class BeanParamTest extends JerseyTest {
         }
     }
 
-
     public static class ConstructorInitializedBean {
+
         private String headerParam;
         private String pathParam;
         private String matrixParam;
@@ -412,7 +404,6 @@ public class BeanParamTest extends JerseyTest {
         }
 
         private boolean overrideRequestNull;
-
 
         public String getCookie() {
             return cookie;
@@ -502,6 +493,7 @@ public class BeanParamTest extends JerseyTest {
 
     @Path("resource-setter")
     public static class ResourceInitializedBySetter {
+
         private FullBean fullBean;
 
         @BeanParam
