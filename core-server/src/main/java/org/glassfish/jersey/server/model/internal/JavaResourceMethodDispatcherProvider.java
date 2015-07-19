@@ -50,14 +50,13 @@ import javax.ws.rs.core.Response;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
-import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 
 /**
  * An implementation of {@link ResourceMethodDispatcher.Provider} that

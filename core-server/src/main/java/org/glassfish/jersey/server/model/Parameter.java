@@ -81,7 +81,7 @@ public class Parameter implements AnnotatedElement {
     /**
      * Parameter injection sources type.
      */
-    public static enum Source {
+    public enum Source {
 
         /**
          * Context parameter injection source.
@@ -133,7 +133,7 @@ public class Parameter implements AnnotatedElement {
         UNKNOWN
     }
 
-    private static interface ParamAnnotationHelper<T extends Annotation> {
+    private interface ParamAnnotationHelper<T extends Annotation> {
 
         public String getValueOf(T a);
 
@@ -270,20 +270,21 @@ public class Parameter implements AnnotatedElement {
     /**
      * Create a parameter model.
      *
-     * @param concreteClass  concrete resource method handler implementation class.
-     * @param declaringClass declaring class of the method the parameter belongs to.
-     * @param keepEncoded    set to {@code true} to disable automatic decoding
-     *                       of all the constructor parameters. (See {@link Encoded}.
-     * @param rawType        raw Java parameter type.
-     * @param type           generic Java parameter type.
-     * @param annotations    parameter annotations.
+     * @param concreteClass   concrete resource method handler implementation class.
+     * @param declaringClass  declaring class of the method the parameter belongs to or field that this parameter represents.
+     * @param encodeByDefault flag indicating whether the parameter should be encoded by default or not. Note that a presence
+     *                        of {@link Encoded} annotation in the list of the parameter {@code annotations} will override any
+     *                        value set in the flag to {@code true}.
+     * @param rawType         raw Java parameter type.
+     * @param type            generic Java parameter type.
+     * @param annotations     parameter annotations.
      * @return new parameter model.
      */
     @SuppressWarnings("unchecked")
     public static Parameter create(
             Class concreteClass,
             Class declaringClass,
-            boolean keepEncoded,
+            boolean encodeByDefault,
             Class<?> rawType,
             Type type,
             Annotation[] annotations) {
@@ -295,7 +296,7 @@ public class Parameter implements AnnotatedElement {
         Annotation paramAnnotation = null;
         Parameter.Source paramSource = null;
         String paramName = null;
-        boolean paramEncoded = keepEncoded;
+        boolean paramEncoded = encodeByDefault;
         String paramDefault = null;
 
         /**
@@ -350,7 +351,7 @@ public class Parameter implements AnnotatedElement {
             Type[] genericParameterTypes,
             Annotation[][] parameterAnnotations) {
 
-        final List<Parameter> parameters = new ArrayList<Parameter>(parameterTypes.length);
+        final List<Parameter> parameters = new ArrayList<>(parameterTypes.length);
 
         for (int i = 0; i < parameterTypes.length; i++) {
             final Parameter parameter = Parameter.create(
@@ -531,7 +532,7 @@ public class Parameter implements AnnotatedElement {
      * If {@code true}, the injected parameter value should remain encoded.
      *
      * @return {@code true} if the parameter value should remain encoded,
-     *         {@code false} otherwise.
+     * {@code false} otherwise.
      */
     public boolean isEncoded() {
         return encoded;
@@ -541,7 +542,7 @@ public class Parameter implements AnnotatedElement {
      * Check if the parameter has a default value set.
      *
      * @return {@code true} if the default parameter value has been set,
-     *         {@code false} otherwise.
+     * {@code false} otherwise.
      */
     public boolean hasDefaultValue() {
         return defaultValue != null;
@@ -551,7 +552,7 @@ public class Parameter implements AnnotatedElement {
      * Get the default parameter value.
      *
      * @return default parameter value or {@code null} if no default value has
-     *         been set for the parameter.
+     * been set for the parameter.
      */
     public String getDefaultValue() {
         return defaultValue;

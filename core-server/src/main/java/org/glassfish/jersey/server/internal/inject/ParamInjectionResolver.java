@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -146,7 +146,7 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
 
         // if injectee is method or constructor, check its parameters
         if (isConstructor || isMethod) {
-            Annotation annotations[];
+            Annotation[] annotations;
             if (isMethod) {
                 annotations = ((Method) element).getParameterAnnotations()[injectee.getPosition()];
             } else {

@@ -102,7 +102,7 @@ public class WadlGeneratorImpl implements WadlGenerator {
         wadlMethod.setName(m.getHttpMethod());
         wadlMethod.setId(m.getInvocable().getDefinitionMethod().getName());
         if (m.isExtended()) {
-            wadlMethod.getAny().add(WadlApplicationContextImpl.extendedElement);
+            wadlMethod.getAny().add(WadlApplicationContextImpl.EXTENDED_ELEMENT);
         }
         return wadlMethod;
     }
@@ -195,7 +195,7 @@ public class WadlGeneratorImpl implements WadlGenerator {
 
         if (resource.isExtended()) {
 
-            wadlResource.getAny().add(WadlApplicationContextImpl.extendedElement);
+            wadlResource.getAny().add(WadlApplicationContextImpl.EXTENDED_ELEMENT);
         }
 
         return wadlResource;

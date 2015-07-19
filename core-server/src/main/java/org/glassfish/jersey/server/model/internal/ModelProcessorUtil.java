@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.server.model.internal;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -57,7 +57,6 @@ import org.glassfish.jersey.server.model.RuntimeResource;
 
 import jersey.repackaged.com.google.common.collect.Sets;
 
-
 /**
  * Helper class with methods supporting processing resource model by {@link org.glassfish.jersey.server.model.ModelProcessor
  * model processors}.
@@ -65,7 +64,12 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * @author Miroslav Fuksa
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ModelProcessorUtil {
+public final class ModelProcessorUtil {
+
+    private ModelProcessorUtil() {
+        throw new AssertionError("Instantiation not allowed.");
+    }
+
     /**
      * Return allowed methods for the given {@code resource}. OPTIONS and HEAD are always returned in the result.
      *
@@ -145,7 +149,7 @@ public class ModelProcessorUtil {
          */
         public Method(String path, String httpMethod, MediaType consumes, MediaType produces,
                       Class<? extends Inflector<ContainerRequestContext, Response>> inflector) {
-            this(path, httpMethod, Arrays.asList(consumes), Arrays.asList(produces), inflector);
+            this(path, httpMethod, Collections.singletonList(consumes), Collections.singletonList(produces), inflector);
         }
 
         /**
@@ -223,7 +227,7 @@ public class ModelProcessorUtil {
          */
         public Method(String path, String httpMethod, MediaType consumes, MediaType produces,
                       Inflector<ContainerRequestContext, Response> inflector) {
-            this(path, httpMethod, Arrays.asList(consumes), Arrays.asList(produces), inflector);
+            this(path, httpMethod, Collections.singletonList(consumes), Collections.singletonList(produces), inflector);
         }
 
         /**
@@ -254,10 +258,12 @@ public class ModelProcessorUtil {
     }
 
     /**
-     * Enhance {@code resourceModel} by list of methods. The {@code resourceModel} is traversed and for each available endpoint
-     * URI in the model {@code methods} are added. In case of method conflicts currently existing methods will
-     * never be 'overridden' by any method from {@code methods}. Overriding check takes into account media types of methods so
-     * that new resource methods with same HTTP method can define only more specific media type.
+     * Enhance {@code resourceModel} with a list of additional methods.
+     *
+     * The {@code resourceModel} is traversed and for each available runtime resource URI in the model {@code methods} are added.
+     * In case of method conflicts, the existing resource methods will be preserved and will not be 'overridden' by any new
+     * method from the {@code methods} list. Overriding check takes into account media types of methods so
+     * that new resource methods with same HTTP method can be defined only for a more more specific media type.
      *
      * @param resourceModel Resource model to be enhanced.
      * @param subResourceModel {@code true} if the {@code resourceModel} to be enhanced is a sub resource model, {@code false}
@@ -278,7 +284,21 @@ public class ModelProcessorUtil {
         return newModelBuilder;
     }
 
-    public static void enhanceResource(RuntimeResource resource, ResourceModel.Builder newModelBuilder,
+    /**
+     * Enhance the runtime resource referenced by {@code resource} parameter with a list of additional methods.
+     *
+     * The new {@code methods} are added to the runtime resource. In case of method conflicts, the existing resource methods
+     * will be preserved and will not be 'overridden' by any new method from the {@code methods} list.
+     * Overriding check takes into account media types of methods so that new resource methods with same HTTP method
+     * can be defined only for a more more specific media type.
+     *
+     * @param resource Runtime resource to be enhanced.
+     * @param enhancedModelBuilder Builder for the enhanced resource model to be used.
+     * @param methods List of enhancing methods.
+     * @param extended This flag will initialize the property
+     *                  {@link org.glassfish.jersey.server.model.ResourceMethod#isExtended()}.
+     */
+    public static void enhanceResource(RuntimeResource resource, ResourceModel.Builder enhancedModelBuilder,
                                        List<Method> methods, boolean extended) {
         final Resource firstResource = resource.getResources().get(0);
 
@@ -323,16 +343,16 @@ public class ModelProcessorUtil {
                     if (parentResource != null) {
                         final Resource.Builder parentBuilder = Resource.builder(parentResource.getPath());
                         parentBuilder.addChildResource(newResource);
-                        newModelBuilder.addResource(parentBuilder.build());
+                        enhancedModelBuilder.addResource(parentBuilder.build());
                     } else {
-                        newModelBuilder.addResource(newResource);
+                        enhancedModelBuilder.addResource(newResource);
                     }
                 }
             }
         }
 
         for (RuntimeResource child : resource.getChildRuntimeResources()) {
-            enhanceResource(child, newModelBuilder, methods, extended);
+            enhanceResource(child, enhancedModelBuilder, methods, extended);
         }
     }
 
@@ -344,7 +364,7 @@ public class ModelProcessorUtil {
      * @return {@code true} if methods can enhance the resource, {@code false} otherwise.
      */
     private static boolean methodsSuitableForResource(final Resource resource, final List<Method> methods) {
-        if (resource.getResourceMethods().size() > 0) {
+        if (!resource.getResourceMethods().isEmpty()) {
             return true;
         }
 

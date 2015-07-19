@@ -113,11 +113,11 @@ class TemplateModelProcessor implements ModelProcessor {
         /**
          * Create enhancing template {@link Inflector inflector} method.
          *
-         * @param templateName template name for the produced {@link org.glassfish.jersey.server.mvc.Viewable viewable}.
-         * @param resourceClass model class for the produced {@link org.glassfish.jersey.server.mvc.Viewable viewable}.
-         * Should not be {@code null}.
+         * @param templateName     template name for the produced {@link org.glassfish.jersey.server.mvc.Viewable viewable}.
+         * @param resourceClass    model class for the produced {@link org.glassfish.jersey.server.mvc.Viewable viewable}.
+         *                         Should not be {@code null}.
          * @param resourceInstance model for the produced {@link org.glassfish.jersey.server.mvc.Viewable viewable}. May be
-         * {@code null}.
+         *                         {@code null}.
          */
         private TemplateInflectorImpl(final String templateName, final Class<?> resourceClass,
                                       final Object resourceInstance) {
@@ -178,10 +178,10 @@ class TemplateModelProcessor implements ModelProcessor {
          * <p/>
          * Order of template names to be resolved is as follows:
          * <ul>
-         *     <li>{{@value #IMPLICIT_VIEW_PATH_PARAMETER}} value</li>
-         *     <li>{@link org.glassfish.jersey.server.mvc.Template#name()}</li>
-         *     <li>last sub-resource locator path</li>
-         *     <li>index</li>
+         * <li>{{@value #IMPLICIT_VIEW_PATH_PARAMETER}} value</li>
+         * <li>{@link org.glassfish.jersey.server.mvc.Template#name()}</li>
+         * <li>last sub-resource locator path</li>
+         * <li>index</li>
          * </ul>
          *
          * @param requestContext request context to obtain {@link #IMPLICIT_VIEW_PATH_PARAMETER} value from.
@@ -229,7 +229,8 @@ class TemplateModelProcessor implements ModelProcessor {
     /**
      * Create a {@code TemplateModelProcessor} instance.
      *
-     * @param resourceContext (injected) resource context.
+     * @param resourceContext         (injected) resource context.
+     * @param validatorProvider       Jersey extension of BeanValidation Validator.
      * @param extendedUriInfoProvider (injected) extended uri info provider.
      */
     @Inject
@@ -252,11 +253,11 @@ class TemplateModelProcessor implements ModelProcessor {
     }
 
     /**
-     * Enhance {@link org.glassfish.jersey.server.model.RuntimeResource runtime resources} of given
-     * {@link org.glassfish.jersey.server.model.ResourceModel resource model} with methods obtained with
+     * Enhance {@link org.glassfish.jersey.server.model.RuntimeResource runtime resources} from the given
+     * {@link org.glassfish.jersey.server.model.ResourceModel resource model} with methods obtained via
      * {@link #getEnhancingMethods(org.glassfish.jersey.server.model.RuntimeResource)}.
      *
-     * @param resourceModel resource model to enhance runtime resources of.
+     * @param resourceModel    resource model with runtime resources to enhance.
      * @param subResourceModel determines whether the resource model represents sub-resource.
      * @return enhanced resource model.
      */
@@ -275,10 +276,8 @@ class TemplateModelProcessor implements ModelProcessor {
      * {@link org.glassfish.jersey.server.model.Invocable#getRoutingResponseType() routing response types}
      * as {@link Viewable} for all methods annotated with {@link Template}.
      *
-     * @param resourceModel resource model to process.
+     * @param resourceModel    resource model to process.
      * @param subResourceModel determines whether the resource model represents sub-resource.
-     * @return enhanced resource model.
-     *
      * @return Modified resource model.
      */
     private ResourceModel.Builder processTemplateAnnotatedInvocables(ResourceModel resourceModel,
@@ -311,7 +310,8 @@ class TemplateModelProcessor implements ModelProcessor {
     }
 
     /**
-     * Returns a list of enhancing methods for a given {@link org.glassfish.jersey.server.model.RuntimeResource runtime resource}.
+     * Returns a list of enhancing methods for a given {@link org.glassfish.jersey.server.model.RuntimeResource runtime
+     * resource}.
      *
      * @param runtimeResource runtime resource to create enhancing methods for.
      * @return list of enhancing methods.
@@ -362,9 +362,9 @@ class TemplateModelProcessor implements ModelProcessor {
     /**
      * Creates enhancing methods for given resource.
      *
-     * @param resourceClass resource class for which enhancing methods should be created.
+     * @param resourceClass    resource class for which enhancing methods should be created.
      * @param resourceInstance resource instance for which enhancing methods should be created. May be {@code null}.
-     * @param newMethods list to store new methods into.
+     * @param newMethods       list to store new methods into.
      */
     private void createEnhancingMethods(final Class<?> resourceClass, final Object resourceInstance,
                                         final List<ModelProcessorUtil.Method> newMethods) {

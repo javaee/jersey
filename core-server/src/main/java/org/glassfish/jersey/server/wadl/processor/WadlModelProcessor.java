@@ -90,6 +90,9 @@ public class WadlModelProcessor implements ModelProcessor {
 
     private final List<ModelProcessorUtil.Method> methodList;
 
+    /**
+     * Create new WADL model processor instance.
+     */
     public WadlModelProcessor() {
         methodList = Lists.newArrayList();
         methodList.add(new ModelProcessorUtil.Method(HttpMethod.OPTIONS, MediaType.WILDCARD_TYPE, MediaTypes.WADL_TYPE,
@@ -116,6 +119,9 @@ public class WadlModelProcessor implements ModelProcessor {
 
     }
 
+    /**
+     * OPTIONS resource method handler that serves resource WADL.
+     */
     public static class OptionsHandler implements Inflector<ContainerRequestContext, Response> {
         private final String lastModified =
                 new SimpleDateFormat(WadlResource.HTTPDATEFORMAT).format(new Date());

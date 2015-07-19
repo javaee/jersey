@@ -81,7 +81,7 @@ public interface WadlGenerator {
 
     /**
      * Invoked before all methods related to wadl-building are invoked. This method is used in a
-     * decorator like manner, and therefore has to invoke <code>this.delegate.init()</code>.
+     * decorator like manner, and therefore has to invoke {@code this.delegate.init()}.
      *
      * @throws IllegalStateException
      * @throws JAXBException
@@ -90,71 +90,74 @@ public interface WadlGenerator {
 
     /**
      * The jaxb context path that is used when the generated wadl application is marshalled
-     * to a file.<br/>
-     * This method is used in a decorator like manner.<br/>
+     * to a file.
+     *
+     * This method is used in a decorator like manner.
      * The result return the path (or a colon-separated list of package names) containing
      * jaxb-beans that are added to wadl elements by this WadlGenerator, additionally to
      * the context path of the decorated WadlGenerator (set by {@link #setWadlGeneratorDelegate(WadlGenerator)}.<br/>
-     * If you do not use custom jaxb beans, then simply return <code>_delegate.getRequiredJaxbContextPath()</code>,
+     * If you do not use custom jaxb beans, then simply return {@code _delegate.getRequiredJaxbContextPath()},
      * otherwise return the delegate's #getRequiredJaxbContextPath() together with
      * your required context path (separated by a colon):<br/>
-     * <pre><code>_delegate.getRequiredJaxbContextPath() == null
+     * <pre>_delegate.getRequiredJaxbContextPath() == null
      ? ${yourContextPath}
-     : _delegate.getRequiredJaxbContextPath() + ":" + ${yourContextPath};</code></pre>
+     : _delegate.getRequiredJaxbContextPath() + ":" + ${yourContextPath};</pre>
      *
      * If you add the path for your custom jaxb beans, don't forget to add an
      * ObjectFactory (annotated with {@link XmlRegistry}) to this package.
-     * @return simply the {@link #getRequiredJaxbContextPath()} of the delegate or the
-     * #getRequiredJaxbContextPath() + ":" + ${yourContextPath}.
+     * @return simply the {@code getRequiredJaxbContextPath()} of the delegate or the
+     * {@code getRequiredJaxbContextPath() + ":" + ${yourContextPath}}.
      */
     String getRequiredJaxbContextPath();
 
     // ================  methods for building the wadl application =============
 
-    public Application createApplication();
+    Application createApplication();
 
-    public Resources createResources();
+    Resources createResources();
 
-    public Resource createResource(org.glassfish.jersey.server.model.Resource r,
+    Resource createResource(org.glassfish.jersey.server.model.Resource r,
                                    String path);
 
-    public com.sun.research.ws.wadl.Method createMethod(org.glassfish.jersey.server.model.Resource r,
+    com.sun.research.ws.wadl.Method createMethod(org.glassfish.jersey.server.model.Resource r,
                                                         org.glassfish.jersey.server.model.ResourceMethod m);
 
-    public Request createRequest(org.glassfish.jersey.server.model.Resource r,
+    Request createRequest(org.glassfish.jersey.server.model.Resource r,
                                  org.glassfish.jersey.server.model.ResourceMethod m);
 
-    public Representation createRequestRepresentation(org.glassfish.jersey.server.model.Resource r,
+    Representation createRequestRepresentation(org.glassfish.jersey.server.model.Resource r,
                                                       org.glassfish.jersey.server.model.ResourceMethod m,
                                                       MediaType mediaType);
 
-    public List<Response> createResponses(org.glassfish.jersey.server.model.Resource r,
+    List<Response> createResponses(org.glassfish.jersey.server.model.Resource r,
                                           org.glassfish.jersey.server.model.ResourceMethod m);
 
-    public Param createParam(org.glassfish.jersey.server.model.Resource r,
+    Param createParam(org.glassfish.jersey.server.model.Resource r,
                              org.glassfish.jersey.server.model.ResourceMethod m,
                              Parameter p);
 
     // ================ methods for post build actions =======================
 
     /**
-     * Call back interface that the create external grammar can use
-     * to allow other parts of the code to attach the correct grammar information
+     * Call back interface that the created external grammar can use
+     * to allow other parts of the code to attach the correct grammar information.
      */
-    public interface Resolver {
+    interface Resolver {
 
         /**
-         * @param type The type of the class
+         * Resolve a Class type to a QName.
+         *
+         * @param type The type of the class.
          * @return The schema type of the class if defined, null if not.
          */
-        public QName resolve(Class type);
+        QName resolve(Class type);
     }
 
     /**
      * And internal storage object to store the grammar definitions and
      * any type resolvers that are created along the way.
      */
-    public class ExternalGrammarDefinition {
+    class ExternalGrammarDefinition {
 
         // final public field to make a property was thinking about encapsulation
         // but decided code much simpler without
@@ -188,15 +191,14 @@ public interface WadlGenerator {
     /**
      * Perform any post create functions such as generating grammars.
      * @return A map of extra files to the content of those file encoded in UTF-8
-     * @throws Exception
      */
-    public ExternalGrammarDefinition createExternalGrammar();
+    ExternalGrammarDefinition createExternalGrammar();
 
     /**
      * Process the elements in the WADL definition to attach schema types
      * as required.
      * @param description The root description used to resolve these entries
      */
-    public void attachTypes(ApplicationDescription description);
+    void attachTypes(ApplicationDescription description);
 
 }

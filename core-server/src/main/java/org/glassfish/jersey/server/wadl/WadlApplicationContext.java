@@ -76,6 +76,7 @@ public interface WadlApplicationContext {
      *
      * @param ui the URI information from which the base URI is set on the
      *           WADL application.
+     * @param detailedWadl flag indicating whether or not detailed WADL should be generated.
      * @return the application description, the contents may be modified.
      */
     ApplicationDescription getApplication(UriInfo ui, boolean detailedWadl);
@@ -87,6 +88,7 @@ public interface WadlApplicationContext {
      * @param info     the URI information from which the base URI is set on the
      *                 WADL application.
      * @param resource the resource to build the Application for
+     * @param detailedWadl flag indicating whether or not detailed WADL should be generated.
      * @return the application for this resource
      */
     Application getApplication(UriInfo info,

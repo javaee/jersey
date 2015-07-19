@@ -47,10 +47,10 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import javax.inject.Inject;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -82,25 +82,38 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
 
     private static final Logger LOGGER = Logger.getLogger(WadlApplicationContextImpl.class.getName());
 
+    /**
+     * Jersey WADL extension XML namespace.
+     */
     static final String WADL_JERSEY_NAMESPACE = "http://jersey.java.net/";
-    public static final JAXBElement extendedElement = new JAXBElement<>(
-            new QName(WADL_JERSEY_NAMESPACE, "extended", "jersey"), String.class, "true");
+    /**
+     * Jersey WADL extension XML element.
+     */
+    static final JAXBElement EXTENDED_ELEMENT =
+            new JAXBElement<>(new QName(WADL_JERSEY_NAMESPACE, "extended", "jersey"), String.class, "true");
 
-    @Context
-    private ExtendedResourceContext resourceContext;
-
+    private final ExtendedResourceContext resourceContext;
     private final ServiceLocator serviceLocator;
-
-
-    private boolean wadlGenerationEnabled = true;
-
     private final WadlGeneratorConfig wadlGeneratorConfig;
-
     private final JAXBContext jaxbContext;
 
-    public WadlApplicationContextImpl(@Context final Configuration configuration, @Context final ServiceLocator serviceLocator) {
+    private volatile boolean wadlGenerationEnabled = true;
+
+    /**
+     * Injection constructor.
+     *
+     * @param serviceLocator  HK2 service locator.
+     * @param configuration   runtime application configuration.
+     * @param resourceContext extended resource context.
+     */
+    @Inject
+    public WadlApplicationContextImpl(
+            final ServiceLocator serviceLocator,
+            final Configuration configuration,
+            final ExtendedResourceContext resourceContext) {
         this.serviceLocator = serviceLocator;
         this.wadlGeneratorConfig = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(configuration.getProperties());
+        this.resourceContext = resourceContext;
 
         // TODO perhaps this should be done another way for the moment
         // create a temporary generator just to do this one task
@@ -110,7 +123,7 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
 
         final ClassLoader contextClassLoader = AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA());
         try {
-            // Nasty ClassLoader magic. JAXB-API has some strange limitation about what classloader can
+            // Nasty ClassLoader magic. JAXB-API has some strange limitation about what class loader can
             // be used in OSGi environment - it must be same as context ClassLoader. Following code just
             // workarounds this limitation
             // see JERSEY-1818
@@ -187,7 +200,6 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
         return application;
     }
 
-    // TODO probably no longer required
     @Override
     public JAXBContext getJAXBContext() {
         return jaxbContext;
@@ -230,12 +242,10 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
                         .build();
             }
 
-
             final String root = application.getResources().get(0).getBase();
             final UriBuilder extendedPath = root != null
                     ? UriBuilder.fromPath(root).path("/application.wadl/") : UriBuilder.fromPath("./application.wadl/");
             final URI rootURI = root != null ? UriBuilder.fromPath(root).build() : null;
-
 
             // Add a reference to this grammar
             //

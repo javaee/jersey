@@ -99,8 +99,9 @@ final class IntrospectionModeller {
 
     /**
      * Create a new resource model builder for the introspected class.
-     *
+     * <p>
      * The model returned is filled with the introspected data.
+     * </p>
      *
      * @return new resource model builder for the introspected class.
      */
@@ -133,8 +134,9 @@ final class IntrospectionModeller {
 
         final MethodList methodList = new MethodList(handlerClass);
 
-        checkResourceClassSetters(methodList, keepEncodedParams);
-        checkResourceClassFields(keepEncodedParams, InvocableValidator.isSingleton(handlerClass));
+        final List<Parameter> resourceClassParameters = new LinkedList<>();
+        checkResourceClassSetters(methodList, keepEncodedParams, resourceClassParameters);
+        checkResourceClassFields(keepEncodedParams, InvocableValidator.isSingleton(handlerClass), resourceClassParameters);
 
         Resource.Builder resourceBuilder;
 
@@ -152,11 +154,11 @@ final class IntrospectionModeller {
 
         resourceBuilder.name(handlerClass.getName());
 
-        addResourceMethods(resourceBuilder, methodList, keepEncodedParams,
+        addResourceMethods(resourceBuilder, methodList, resourceClassParameters, keepEncodedParams,
                 defaultConsumedTypes, defaultProducedTypes, defaultNameBindings, extended);
-        addSubResourceMethods(resourceBuilder, methodList, keepEncodedParams,
+        addSubResourceMethods(resourceBuilder, methodList, resourceClassParameters, keepEncodedParams,
                 defaultConsumedTypes, defaultProducedTypes, defaultNameBindings, extended);
-        addSubResourceLocators(resourceBuilder, methodList, keepEncodedParams, extended);
+        addSubResourceLocators(resourceBuilder, methodList, resourceClassParameters, keepEncodedParams, extended);
 
         if (LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest(LocalizationMessages.NEW_AR_CREATED_BY_INTROSPECTION_MODELER(
@@ -174,19 +176,22 @@ final class IntrospectionModeller {
                 .withoutAnnotation(Path.class).isNotPublic()) {
             Errors.warning(handlerClass, LocalizationMessages.NON_PUB_RES_METHOD(m.getMethod().toGenericString()));
         }
-        // non-public subres methods
+        // non-public sub-resource methods
         for (AnnotatedMethod m : allDeclaredMethods.withMetaAnnotation(HttpMethod.class)
                 .withAnnotation(Path.class).isNotPublic()) {
             Errors.warning(handlerClass, LocalizationMessages.NON_PUB_SUB_RES_METHOD(m.getMethod().toGenericString()));
         }
-        // non-public subres locators
+        // non-public sub-resource locators
         for (AnnotatedMethod m : allDeclaredMethods.withoutMetaAnnotation(HttpMethod.class)
                 .withAnnotation(Path.class).isNotPublic()) {
             Errors.warning(handlerClass, LocalizationMessages.NON_PUB_SUB_RES_LOC(m.getMethod().toGenericString()));
         }
     }
 
-    private void checkResourceClassSetters(final MethodList methodList, final boolean encodedFlag) {
+    private void checkResourceClassSetters(final MethodList methodList,
+                                           final boolean encodedFlag,
+                                           Collection<Parameter> injectableParameters) {
+
         for (AnnotatedMethod method : methodList.withoutMetaAnnotation(HttpMethod.class)
                 .withoutAnnotation(Path.class)
                 .hasNumParams(1)
@@ -202,11 +207,19 @@ final class IntrospectionModeller {
             if (null != p) {
                 ResourceMethodValidator.validateParameter(p, method.getMethod(), method.getMethod().toGenericString(), "1",
                         InvocableValidator.isSingleton(handlerClass));
+
+                // we do not inject entity parameters into class instance fields and properties.
+                if (p.getSource() != Parameter.Source.ENTITY) {
+                    injectableParameters.add(p);
+                }
             }
         }
     }
 
-    private void checkResourceClassFields(final boolean encodedFlag, boolean isInSingleton) {
+    private void checkResourceClassFields(final boolean encodedFlag,
+                                          boolean isInSingleton,
+                                          Collection<Parameter> injectableParameters) {
+
         for (Field field : AccessController.doPrivileged(ReflectionHelper.getDeclaredFieldsPA(handlerClass))) {
             if (field.getDeclaredAnnotations().length > 0) {
                 Parameter p = Parameter.create(
@@ -219,13 +232,17 @@ final class IntrospectionModeller {
                 if (null != p) {
                     ResourceMethodValidator.validateParameter(p, field, field.toGenericString(), field.getName(),
                             isInSingleton);
+                    // we do not inject entity and unknown parameters into class instance fields and properties.
+                    if (p.getSource() != Parameter.Source.ENTITY) {
+                        injectableParameters.add(p);
+                    }
                 }
             }
         }
     }
 
     private List<Method> getAllDeclaredMethods(final Class<?> clazz) {
-        final List<Method> result = new LinkedList<Method>();
+        final List<Method> result = new LinkedList<>();
 
         AccessController.doPrivileged(new PrivilegedAction<Object>() {
 
@@ -274,7 +291,7 @@ final class IntrospectionModeller {
             return Collections.emptyList();
         }
 
-        final List<MediaType> types = new ArrayList<MediaType>(values.length);
+        final List<MediaType> types = new ArrayList<>(values.length);
         for (final String mtEntry : values) {
             for (final String mt : Tokenizer.tokenize(mtEntry, ",")) {
                 types.add(MediaType.valueOf(mt));
@@ -302,6 +319,7 @@ final class IntrospectionModeller {
     private void addResourceMethods(
             final Resource.Builder resourceBuilder,
             final MethodList methodList,
+            final List<Parameter> resourceClassParameters, // parameters derived from fields and setters on the resource class
             final boolean encodedParameters,
             final List<MediaType> defaultConsumedTypes,
             final List<MediaType> defaultProducedTypes,
@@ -318,6 +336,7 @@ final class IntrospectionModeller {
                             .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod())
                             .handlingMethod(am.getDeclaredMethod())
+                            .handlerParameters(resourceClassParameters)
                             .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
 
             introspectAsyncFeatures(am, methodBuilder);
@@ -327,6 +346,7 @@ final class IntrospectionModeller {
     private void addSubResourceMethods(
             final Resource.Builder resourceBuilder,
             final MethodList methodList,
+            final List<Parameter> resourceClassParameters, // parameters derived from fields and setters on the resource class
             final boolean encodedParameters,
             final List<MediaType> defaultConsumedTypes,
             final List<MediaType> defaultProducedTypes,
@@ -346,6 +366,7 @@ final class IntrospectionModeller {
                             .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod())
                             .handlingMethod(am.getDeclaredMethod())
+                            .handlerParameters(resourceClassParameters)
                             .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
 
             introspectAsyncFeatures(am, methodBuilder);
@@ -353,15 +374,16 @@ final class IntrospectionModeller {
     }
 
     private void addSubResourceLocators(
-            Resource.Builder resourceBuilder,
-            MethodList methodList,
-            boolean encodedParameters,
+            final Resource.Builder resourceBuilder,
+            final MethodList methodList,
+            final List<Parameter> resourceClassParameters, // parameters derived from fields and setters on the resource class
+            final boolean encodedParameters,
             final boolean extended) {
 
         for (AnnotatedMethod am : methodList.withoutMetaAnnotation(HttpMethod.class).withAnnotation(Path.class)) {
             final String path = am.getAnnotation(Path.class).value();
             Resource.Builder builder = resourceBuilder;
-            if (path != null && !path.isEmpty() && !path.equals("/")) {
+            if (path != null && !path.isEmpty() && !"/".equals(path)) {
                 builder = resourceBuilder.addChildResource(path);
             }
 
@@ -369,6 +391,7 @@ final class IntrospectionModeller {
                     .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                     .handledBy(handlerClass, am.getMethod())
                     .handlingMethod(am.getDeclaredMethod())
+                    .handlerParameters(resourceClassParameters)
                     .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
         }
     }
