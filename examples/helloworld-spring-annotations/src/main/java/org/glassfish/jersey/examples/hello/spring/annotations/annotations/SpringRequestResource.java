@@ -52,6 +52,7 @@ import javax.ws.rs.core.MediaType;
 
 import javax.inject.Singleton;
 
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -67,7 +68,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class SpringRequestResource {
 
-    AtomicInteger counter = new AtomicInteger();
+	@Resource(name = "atomicCounter")
+    AtomicInteger counter;
 
     @Autowired
     private GreetingService greetingService;
