@@ -42,8 +42,8 @@ package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Miroslav Fuksa
@@ -55,7 +55,7 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void test() {
         final long now = System.currentTimeMillis();
-        TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(1000, TimeUnit.MILLISECONDS, now);
+        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(1000, TimeUnit.MILLISECONDS, now);
         builder.addRequest(now, 30);
         builder.addRequest(now + 300, 100);
         builder.addRequest(now + 600, 150);
@@ -71,7 +71,7 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void test10() {
         final long now = 0;
-        TimeWindowStatisticsImpl.Builder builder
+        final TimeWindowStatisticsImpl.Builder builder
                 = new TimeWindowStatisticsImpl.Builder(10000, TimeUnit.MILLISECONDS, now);
         builder.addRequest(now, 30);
         builder.addRequest(now + 300, 100);
@@ -97,7 +97,7 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void test3s() {
         final long now = 0;
-        TimeWindowStatisticsImpl.Builder builder
+        final TimeWindowStatisticsImpl.Builder builder
                 = new TimeWindowStatisticsImpl.Builder(3000, TimeUnit.MILLISECONDS, now);
         builder.addRequest(now, 99);
         builder.addRequest(now + 300, 98);
@@ -121,7 +121,7 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void testLongPause() {
         final long now = 0;
-        TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(60, TimeUnit.SECONDS, now);
+        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(60, TimeUnit.SECONDS, now);
         builder.addRequest(now, 99);
         final long time = now + 1000 * 60 * 60 * 23;
         builder.addRequest(time, 95);
@@ -129,30 +129,35 @@ public class TimeWindowStatisticsImplTest {
         check(builder, time + 20000, 2, 5, 95, 50, 0.03333);
     }
 
-    private void check(TimeWindowStatisticsImpl.Builder builder, long buildTime, int totalCount, int minimumExecTime,
-                       int maximumExecTime, long average, double requestsPerSecond) {
-        TimeWindowStatisticsImpl stat = builder.build(buildTime);
+    private void check(final TimeWindowStatisticsImpl.Builder builder,
+                       final long buildTime,
+                       final int totalCount,
+                       final int minimumExecTime,
+                       final int maximumExecTime,
+                       final long average,
+                       final double requestsPerSecond) {
+        final TimeWindowStatisticsImpl stat = builder.build(buildTime);
 
-        Assert.assertEquals("Total count does not match!", totalCount, stat.getRequestCount());
-        Assert.assertEquals("Min exec time does not match!", minimumExecTime, stat.getMinimumDuration());
-        Assert.assertEquals("Max exec time does not match!", maximumExecTime, stat.getMaximumDuration());
-        Assert.assertEquals("Average exec time does not match!", average, stat.getAverageDuration());
-        Assert.assertEquals("Requests per seconds does not match!", requestsPerSecond, stat.getRequestsPerSecond(), DELTA);
+        assertEquals("Total count does not match!", totalCount, stat.getRequestCount());
+        assertEquals("Min exec time does not match!", minimumExecTime, stat.getMinimumDuration());
+        assertEquals("Max exec time does not match!", maximumExecTime, stat.getMaximumDuration());
+        assertEquals("Average exec time does not match!", average, stat.getAverageDuration());
+        assertEquals("Requests per seconds does not match!", requestsPerSecond, stat.getRequestsPerSecond(), DELTA);
     }
 
     @Test
     public void testGeneric() {
-        TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(10, TimeUnit.SECONDS, 0);
+        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(10, TimeUnit.SECONDS, 0);
         for (int i = 0; i < 100; i++) {
             final int requestTime = i * 10000;
             builder.addRequest(requestTime + 1, i);
             for (int j = 11; j < 100; j++) {
                 try {
-                    TimeWindowStatisticsImpl stat = builder.build(requestTime + j * 100);
-                    Assert.assertEquals(1, stat.getRequestCount());
-                    Assert.assertEquals(i, stat.getMinimumDuration());
-                    Assert.assertEquals(i, stat.getMaximumDuration());
-                } catch (AssertionError e) {
+                    final TimeWindowStatisticsImpl stat = builder.build(requestTime + j * 100);
+                    assertEquals(1, stat.getRequestCount());
+                    assertEquals(i, stat.getMinimumDuration());
+                    assertEquals(i, stat.getMaximumDuration());
+                } catch (final AssertionError e) {
                     System.out.println(i + " / " + j);
                     throw e;
                 }
@@ -162,13 +167,21 @@ public class TimeWindowStatisticsImplTest {
 
     @Test
     public void testUnlimited() {
-        TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(0, TimeUnit.MILLISECONDS, 0);
+        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(0, TimeUnit.MILLISECONDS, 0);
+
+        check(builder, 0, 0, 0, 0, 0, 0);
+        check(builder, 10000, 0, 0, 0, 0, 0);
+
         builder.addRequest(0, 10);
+
+        check(builder, 50, 1, 10, 10, 10, 20.0);
+
         builder.addRequest(100 + 300, 20);
         builder.addRequest(1000 + 600, 30);
         builder.addRequest(1587 + 800, 40);
         builder.addRequest(5544 + 999, 60);
         builder.addRequest(9998 + 1000, 50);
+
         check(builder, 10000, 6, 10, 60, 35, 0.6);
     }
 

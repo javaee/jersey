@@ -60,7 +60,6 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
     static class Builder {
 
         private static final int DEFAULT_UNITS_PER_INTERVAL = 100;
-        private static final int MINIMUM_UNIT_SIZE = 1000;
 
         /**
          * Total interval for which these statistics are calculated (eg. last 15 seconds, last one minute) converted to ms
@@ -127,14 +126,14 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
                 this.duration = duration;
             }
 
-            private static Unit EMPTY_UNIT = new Unit(0, -1, -1, 0);
+            private static final Unit EMPTY_UNIT = new Unit(0, -1, -1, 0);
         }
 
         /**
          * Create a new builder instance.
          *
          * @param timeWindowSize Size of time window.
-         * @param timeUnit Time units of {@code timeWindowSize}.
+         * @param timeUnit       Time units of {@code timeWindowSize}.
          */
         Builder(final long timeWindowSize, final TimeUnit timeUnit) {
             this(timeWindowSize, timeUnit, System.currentTimeMillis());
@@ -144,8 +143,8 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
          * Create a new builder instance. A constructor is used mainly for testing purposes.
          *
          * @param timeWindowSize Size of time window.
-         * @param timeUnit Time units of {@code timeWindowSize}.
-         * @param now Current time.
+         * @param timeUnit       Time units of {@code timeWindowSize}.
+         * @param now            Current time.
          */
         Builder(final long timeWindowSize, final TimeUnit timeUnit, final long now) {
             startTime = now;
@@ -177,7 +176,7 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
          * Add request execution.
          *
          * @param requestTime Time of execution.
-         * @param duration Duration of request processing.
+         * @param duration    Duration of request processing.
          */
         void addRequest(final long requestTime, final long duration) {
             closeLastUnitIfNeeded(requestTime);
@@ -266,16 +265,16 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
          */
         TimeWindowStatisticsImpl build(final long currentTime) {
             final long diff = currentTime - startTime;
+
+            // Unlimited time scale.
             if (interval == 0) {
-                if (diff < MINIMUM_UNIT_SIZE) {
+                if (lastUnitCount == 0) {
                     return TimeWindowStatisticsImpl.EMPTY.get(0L);
                 } else {
                     final double requestsPerSecond = (double) (1000 * lastUnitCount) / diff;
-                    final long avg = lastUnitCount == 0 ? -1 : lastUnitDuration / lastUnitCount;
+                    final long avg = lastUnitDuration / lastUnitCount;
 
-                    return lastUnitCount == 0
-                            ? TimeWindowStatisticsImpl.EMPTY.get(0L)
-                            : new TimeWindowStatisticsImpl(0, requestsPerSecond, lastUnitMin, lastUnitMax, avg, lastUnitCount);
+                    return new TimeWindowStatisticsImpl(0, requestsPerSecond, lastUnitMin, lastUnitMax, avg, lastUnitCount);
                 }
             }
 
