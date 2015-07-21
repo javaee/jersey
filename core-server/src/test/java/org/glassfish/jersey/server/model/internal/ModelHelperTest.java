@@ -55,35 +55,35 @@ public class ModelHelperTest {
 
     @Test
     public void testClass() {
-        Class cls = ModelHelper.getAnnotatedResourceClass(MyAnnotatedClass.class);
+        final Class cls = ModelHelper.getAnnotatedResourceClass(MyAnnotatedClass.class);
         Assert.assertSame(MyAnnotatedClass.class, cls);
     }
 
     @Test
     public void testSubClass() {
         // Spring with CGLIB proxies creates sub-classes
-        Object obj = new MyAnnotatedClass() {};
+        final Object obj = new MyAnnotatedClass() {};
         Assert.assertNotSame(MyAnnotatedClass.class, obj.getClass());
-        Class cls = ModelHelper.getAnnotatedResourceClass(obj.getClass());
+        final Class cls = ModelHelper.getAnnotatedResourceClass(obj.getClass());
         Assert.assertSame(MyAnnotatedClass.class, cls);
     }
 
     @Test
     public void testProxyClass() throws Exception {
         // Spring can also create proxies for beans
-        Object obj = Proxy
+        final Object obj = Proxy
                 .newProxyInstance(getClass().getClassLoader(), new Class[] {MyServiceInterface.class}, new InvocationHandler() {
                     @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
                         return null;
                     }
                 });
-        Class cls = ModelHelper.getAnnotatedResourceClass(obj.getClass());
+        final Class cls = ModelHelper.getAnnotatedResourceClass(obj.getClass());
         Assert.assertSame(MyServiceInterface.class, cls);
     }
 
     @Path("test")
-    public static interface MyServiceInterface {}
+    public interface MyServiceInterface {}
 
     @Path("test")
     public static class MyAnnotatedClass implements MyServiceInterface {}
