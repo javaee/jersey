@@ -50,6 +50,8 @@ import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Providers;
 
 import javax.inject.Inject;
@@ -84,7 +86,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ValidationBinder extends AbstractBinder {
+public final class ValidationBinder extends AbstractBinder {
 
     private static final Logger LOGGER = Logger.getLogger(ValidationBinder.class.getName());
 
@@ -96,6 +98,10 @@ public class ValidationBinder extends AbstractBinder {
         bindFactory(DefaultValidatorProvider.class, Singleton.class).to(Validator.class).in(Singleton.class);
 
         bindFactory(ConfiguredValidatorProvider.class, Singleton.class).to(ConfiguredValidator.class).in(PerLookup.class);
+
+        // Custom Exception Mapper and Writer - registering in binder to make possible for users register their own providers.
+        bind(ValidationExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class);
+        bind(ValidationErrorMessageBodyWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
     }
 
     /**
@@ -304,7 +310,7 @@ public class ValidationBinder extends AbstractBinder {
          * beans.
          *
          * @param delegate resolver to be wrapped into the custom traversable resolver.
-         * @param handler handler to create traversable resolver for.
+         * @param handler  handler to create traversable resolver for.
          * @return custom traversable resolver.
          */
         private ValidateOnExecutionTraversableResolver getTraversableResolver(TraversableResolver delegate,

@@ -60,8 +60,11 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Assert;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests that {@link WebApplicationException} is logged on the correct level.
@@ -69,12 +72,13 @@ import org.junit.Test;
  * @author Miroslav Fuksa
  */
 public class WebApplicationExceptionLoggingTest extends JerseyTest {
+
     @Path("/test")
     public static class StatusResource {
 
         @GET
         @Produces("text/plain")
-        public String test(@NotNull @QueryParam("id") String id) {
+        public String test(@NotNull @QueryParam("id") final String id) {
             return "ok";
         }
 
@@ -97,21 +101,20 @@ public class WebApplicationExceptionLoggingTest extends JerseyTest {
     public static class ValidationExceptionMapper implements ExceptionMapper<ValidationException> {
 
         @Override
-        public Response toResponse(ValidationException ex) {
+        public Response toResponse(final ValidationException ex) {
             return Response.status(200).entity("Error mapped: " + ex.toString()).type("text/plain").build();
         }
     }
 
     @Override
     protected Application configure() {
-        super.set(TestProperties.RECORD_LOG_LEVEL, Level.FINER.intValue());
-        ResourceConfig resourceConfig = new ResourceConfig(StatusResource.class, ValidationExceptionMapper.class);
-        return resourceConfig;
+        set(TestProperties.RECORD_LOG_LEVEL, Level.FINER.intValue());
+
+        return new ResourceConfig(StatusResource.class, ValidationExceptionMapper.class);
     }
 
-
-    private LogRecord getLogRecord(String messagePrefix) {
-        for (LogRecord logRecord : getLoggedRecords()) {
+    private LogRecord getLogRecord(final String messagePrefix) {
+        for (final LogRecord logRecord : getLoggedRecords()) {
             if (logRecord.getMessage() != null && logRecord.getMessage().startsWith(messagePrefix)) {
                 return logRecord;
             }
@@ -121,20 +124,21 @@ public class WebApplicationExceptionLoggingTest extends JerseyTest {
 
     @Test
     public void testValidationException() {
-        Response response = target().path("test").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        String entity = response.readEntity(String.class);
-        Assert.assertTrue(entity.startsWith("Error mapped:"));
+        final Response response = target().path("test").request().get();
+        assertEquals(200, response.getStatus());
+
+        final String entity = response.readEntity(String.class);
+        assertTrue(entity.startsWith("Error mapped:"));
 
         // check logs
-        LogRecord logRecord = this.getLogRecord("Starting mapping of the exception");
-        Assert.assertNotNull(logRecord);
-        Assert.assertEquals(Level.FINER, logRecord.getLevel());
+        final LogRecord logRecord = this.getLogRecord("Starting mapping of the exception");
+        assertNotNull(logRecord);
+        assertEquals(Level.FINER, logRecord.getLevel());
 
         // check that there is no exception logged on the level higher than FINE
-        for (LogRecord record : getLoggedRecords()) {
+        for (final LogRecord record : getLoggedRecords()) {
             if (record.getThrown() != null) {
-                Assert.assertTrue(record.getLevel().intValue() <= Level.FINE.intValue());
+                assertTrue(record.getLevel().intValue() <= Level.FINE.intValue());
             }
         }
 
@@ -142,39 +146,38 @@ public class WebApplicationExceptionLoggingTest extends JerseyTest {
 
     @Test
     public void testWAEWithEntity() {
-        Response response = target().path("test/WAE-entity").request().get();
-        Assert.assertEquals(400, response.getStatus());
-        String entity = response.readEntity(String.class);
-        Assert.assertEquals("WAE with entity", entity);
+        final Response response = target().path("test/WAE-entity").request().get();
+        assertEquals(400, response.getStatus());
+        final String entity = response.readEntity(String.class);
+        assertEquals("WAE with entity", entity);
 
         // check logs
         LogRecord logRecord = this.getLogRecord("Starting mapping of the exception");
-        Assert.assertNotNull(logRecord);
-        Assert.assertEquals(Level.FINER, logRecord.getLevel());
+        assertNotNull(logRecord);
+        assertEquals(Level.FINER, logRecord.getLevel());
 
         logRecord = this.getLogRecord("WebApplicationException (WAE) with non-null entity thrown.");
-        Assert.assertNotNull(logRecord);
-        Assert.assertEquals(Level.FINE, logRecord.getLevel());
-        Assert.assertTrue(logRecord.getThrown() instanceof WebApplicationException);
+        assertNotNull(logRecord);
+        assertEquals(Level.FINE, logRecord.getLevel());
+        assertTrue(logRecord.getThrown() instanceof WebApplicationException);
         logRecord.getThrown().printStackTrace();
     }
 
-
     @Test
     public void testWAEWithoutEntity() {
-        Response response = target().path("test/WAE-no-entity").request().get();
-        Assert.assertEquals(400, response.getStatus());
-        Assert.assertFalse(response.hasEntity());
+        final Response response = target().path("test/WAE-no-entity").request().get();
+        assertEquals(400, response.getStatus());
+        assertFalse(response.hasEntity());
 
         // check logs
         LogRecord logRecord = this.getLogRecord("Starting mapping of the exception");
-        Assert.assertNotNull(logRecord);
-        Assert.assertEquals(Level.FINER, logRecord.getLevel());
+        assertNotNull(logRecord);
+        assertEquals(Level.FINER, logRecord.getLevel());
 
         logRecord = this.getLogRecord("WebApplicationException (WAE) with no entity thrown and no");
-        Assert.assertNotNull(logRecord);
-        Assert.assertEquals(Level.FINE, logRecord.getLevel());
-        Assert.assertTrue(logRecord.getThrown() instanceof WebApplicationException);
+        assertNotNull(logRecord);
+        assertEquals(Level.FINE, logRecord.getLevel());
+        assertTrue(logRecord.getThrown() instanceof WebApplicationException);
         logRecord.getThrown().printStackTrace();
     }
 }

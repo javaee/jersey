@@ -53,7 +53,7 @@ import org.glassfish.jersey.server.spi.ValidationInterceptorContext;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class ValidationInterceptorExecutor implements ValidationInterceptorContext {
+final class ValidationInterceptorExecutor implements ValidationInterceptorContext {
 
     private Object resource;
     private Object[] args;
@@ -88,7 +88,7 @@ public class ValidationInterceptorExecutor implements ValidationInterceptorConte
     }
 
     @Override
-    public void setResource(Object resource) {
+    public void setResource(final Object resource) {
         this.resource = resource;
     }
 
@@ -103,13 +103,13 @@ public class ValidationInterceptorExecutor implements ValidationInterceptorConte
     }
 
     @Override
-    public void setArgs(Object[] args) {
+    public void setArgs(final Object[] args) {
         this.args = args;
     }
 
     @Override
     public void proceed() throws ValidationException {
-        ValidationInterceptor validationInterceptor = iterator.next();
+        final ValidationInterceptor validationInterceptor = iterator.next();
         validationInterceptor.onValidate(this);
     }
 }

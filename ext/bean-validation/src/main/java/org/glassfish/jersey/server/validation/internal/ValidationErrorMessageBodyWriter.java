@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,14 +45,13 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.message.MessageUtils;
 import org.glassfish.jersey.server.validation.ValidationError;
@@ -63,8 +62,7 @@ import org.glassfish.jersey.server.validation.ValidationError;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@Provider
-public class ValidationErrorMessageBodyWriter implements MessageBodyWriter<Object> {
+final class ValidationErrorMessageBodyWriter implements MessageBodyWriter<Object> {
 
     @Override
     public boolean isWriteable(final Class<?> type,
@@ -110,8 +108,9 @@ public class ValidationErrorMessageBodyWriter implements MessageBodyWriter<Objec
         final Collection<ValidationError> errors;
 
         if (entity instanceof ValidationError) {
-            errors = Arrays.asList((ValidationError) entity);
+            errors = Collections.singleton((ValidationError) entity);
         } else {
+            //noinspection unchecked
             errors = (Collection<ValidationError>) entity;
         }
 
