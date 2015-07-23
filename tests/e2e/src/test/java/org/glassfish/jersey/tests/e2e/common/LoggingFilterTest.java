@@ -40,41 +40,47 @@
 
 package org.glassfish.jersey.tests.e2e.common;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThan;
 
 /**
+ * {@link LoggingFilter} end-to-end tests.
+ *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class LoggingFilterTest extends JerseyTest {
-
-    @Override
-    protected Application configure() {
-        set(TestProperties.RECORD_LOG_LEVEL, Level.INFO.intValue());
-
-        return new ResourceConfig(MyResource.class);
-    }
-
-    @Override
-    protected void configureClient(final ClientConfig config) {
-        config.register(LoggingFilter.class);
-    }
+@RunWith(Suite.class)
+@Suite.SuiteClasses({
+        LoggingFilterTest.ClientTest.class,
+        LoggingFilterTest.ContainerTest.class,
+        LoggingFilterTest.ContainerRequestFilterTest.class,
+        LoggingFilterTest.ContainerResponseFilterTest.class
+})
+public class LoggingFilterTest {
 
     @Path("/")
     public static class MyResource {
@@ -92,33 +98,161 @@ public class LoggingFilterTest extends JerseyTest {
         }
     }
 
-    @Test
-    public void testOrderOfHeadersOnClient() throws Exception {
-        final Response response = target().request().get();
-        assertThat(response.readEntity(String.class), equalTo("ok"));
+    /**
+     * General client side tests.
+     */
+    public static class ClientTest extends JerseyTest {
 
-        final LogRecord record = getLoggingFilterResponseLogRecord();
-        final String message = record.getMessage();
+        @Override
+        protected Application configure() {
+            set(TestProperties.RECORD_LOG_LEVEL, Level.INFO.intValue());
 
-        int i = 1;
-        do {
-            final String h1 = "00" + i++;
-            final String h2 = "00" + i;
+            return new ResourceConfig(MyResource.class);
+        }
 
-            int i1 = message.indexOf(h1);
-            int i2 = message.indexOf(h2);
+        @Test
+        public void testFilterAsClientRequestFilter() throws Exception {
+            final Response response = target()
+                    .register(LoggingFilter.class, ClientRequestFilter.class)
+                    .request()
+                    .get();
 
-            assertThat("Header " + h1 + " has been logged sooner than header " + h2, i1, lessThan(i2));
-        } while (i < 5);
+            // Correct response status.
+            assertThat(response.getStatus(), is(Response.Status.OK.getStatusCode()));
+            // Check logs for proper id.
+            assertThat(getLoggingFilterRequestLogRecord(getLoggedRecords()).getMessage(), containsString("1 *"));
+        }
+
+        @Test
+        public void testFilterAsClientResponseFilter() throws Exception {
+            final Response response = target()
+                    .register(LoggingFilter.class, ClientResponseFilter.class)
+                    .request()
+                    .get();
+
+            // Correct response status.
+            assertThat(response.getStatus(), is(Response.Status.OK.getStatusCode()));
+            // Check logs for proper id.
+            assertThat(getLoggingFilterResponseLogRecord(getLoggedRecords()).getMessage(), containsString("1 *"));
+        }
+
+        @Test
+        public void testOrderOfHeadersOnClient() throws Exception {
+            final Response response = target().register(LoggingFilter.class).request().get();
+            assertThat(response.readEntity(String.class), equalTo("ok"));
+
+            final LogRecord record = getLoggingFilterResponseLogRecord(getLoggedRecords());
+            final String message = record.getMessage();
+
+            int i = 1;
+            do {
+                final String h1 = "00" + i++;
+                final String h2 = "00" + i;
+
+                final int i1 = message.indexOf(h1);
+                final int i2 = message.indexOf(h2);
+
+                assertThat("Header " + h1 + " has been logged sooner than header " + h2, i1, lessThan(i2));
+            } while (i < 5);
+        }
     }
 
-    private LogRecord getLoggingFilterResponseLogRecord() {
-        for (final LogRecord record : getLoggedRecords()) {
-            if (LoggingFilter.class.getName().equals(record.getLoggerName())
-                    && record.getMessage().contains("response")) {
+    /**
+     * General client side tests.
+     */
+    public static class ContainerTest extends JerseyTest {
+
+        @Override
+        protected Application configure() {
+            set(TestProperties.RECORD_LOG_LEVEL, Level.INFO.intValue());
+
+            return new ResourceConfig(MyResource.class).register(LoggingFilter.class);
+        }
+
+        @Test
+        public void testFilterAsContainerFilter() throws Exception {
+            // Correct response status.
+            assertThat(target().request().get().getStatus(), is(Response.Status.OK.getStatusCode()));
+
+            // Check logs for proper id.
+            assertThat(getLoggingFilterRequestLogRecord(getLoggedRecords()).getMessage(), containsString("1 *"));
+            assertThat(getLoggingFilterResponseLogRecord(getLoggedRecords()).getMessage(), containsString("1 *"));
+        }
+    }
+
+    /**
+     * Container tests where logging filter is registered only as container response filter.
+     */
+    public static class ContainerResponseFilterTest extends JerseyTest {
+
+        @Override
+        protected Application configure() {
+            set(TestProperties.RECORD_LOG_LEVEL, Level.INFO.intValue());
+
+            return new ResourceConfig(MyResource.class)
+                    .register(LoggingFilter.class, ContainerResponseFilter.class);
+        }
+
+        @Test
+        public void testFilterAsContainerResponseFilter() throws Exception {
+            // Correct response status.
+            assertThat(target().request().get().getStatus(), is(Response.Status.OK.getStatusCode()));
+
+            // Check logs for proper id.
+            assertThat(getLoggingFilterResponseLogRecord(getLoggedRecords()).getMessage(), containsString("1 *"));
+        }
+    }
+
+    /**
+     * Container tests where logging filter is registered only as container request filter.
+     */
+    public static class ContainerRequestFilterTest extends JerseyTest {
+
+        @Override
+        protected Application configure() {
+            set(TestProperties.RECORD_LOG_LEVEL, Level.INFO.intValue());
+
+            return new ResourceConfig(MyResource.class)
+                    .register(LoggingFilter.class, ContainerRequestFilter.class);
+        }
+
+        @Test
+        public void testFilterAsContainerRequestFilter() throws Exception {
+            // Correct response status.
+            assertThat(target().request().get().getStatus(), is(Response.Status.OK.getStatusCode()));
+
+            // Check logs for proper id.
+            assertThat(getLoggingFilterRequestLogRecord(getLoggedRecords()).getMessage(), containsString("1 *"));
+        }
+    }
+
+    private static LogRecord getLoggingFilterRequestLogRecord(final List<LogRecord> records) {
+        return getLoggingFilterLogRecord(records, true);
+    }
+
+    private static LogRecord getLoggingFilterResponseLogRecord(final List<LogRecord> records) {
+        return getLoggingFilterLogRecord(records, false);
+    }
+
+    private static LogRecord getLoggingFilterLogRecord(final List<LogRecord> records, final boolean requestQuery) {
+        for (final LogRecord record : getLoggingFilterLogRecord(records)) {
+            if (record.getMessage().contains(requestQuery ? "request" : "response")) {
                 return record;
             }
         }
-        return null;
+
+        throw new AssertionError("Unable to find proper log record.");
+    }
+
+    private static List<LogRecord> getLoggingFilterLogRecord(final List<LogRecord> records) {
+        final List<LogRecord> loggingFilterRecords = new ArrayList<>(records.size());
+
+        for (final LogRecord record : records) {
+            if (LoggingFilter.class.getName().equals(record.getLoggerName())) {
+                loggingFilterRecords.add(record);
+            }
+        }
+
+        return loggingFilterRecords;
     }
 }

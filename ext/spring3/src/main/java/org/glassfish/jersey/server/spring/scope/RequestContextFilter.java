@@ -63,7 +63,7 @@ import org.springframework.web.context.request.RequestContextHolder;
  */
 @Provider
 @PreMatching
-public class RequestContextFilter implements ContainerRequestFilter, ContainerResponseFilter {
+public final class RequestContextFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     private static final String REQUEST_ATTRIBUTES_PROPERTY = RequestContextFilter.class.getName() + ".REQUEST_ATTRIBUTES";
 
@@ -71,11 +71,11 @@ public class RequestContextFilter implements ContainerRequestFilter, ContainerRe
 
     private static final SpringAttributeController EMPTY_ATTRIBUTE_CONTROLLER = new SpringAttributeController() {
         @Override
-        public void setAttributes(ContainerRequestContext requestContext) {
+        public void setAttributes(final ContainerRequestContext requestContext) {
         }
 
         @Override
-        public void resetAttributes(ContainerRequestContext requestContext) {
+        public void resetAttributes(final ContainerRequestContext requestContext) {
         }
     };
 
@@ -88,11 +88,12 @@ public class RequestContextFilter implements ContainerRequestFilter, ContainerRe
 
     /**
      * Create a new request context filter instance.
+     *
      * @param locator HK2 service locator.
      */
     @Inject
-    public RequestContextFilter(ServiceLocator locator) {
-        ApplicationContext ctx = locator.getService(ApplicationContext.class);
+    public RequestContextFilter(final ServiceLocator locator) {
+        final ApplicationContext ctx = locator.getService(ApplicationContext.class);
         attributeController = (ctx != null) ? new SpringAttributeController() {
 
             @Override
@@ -104,7 +105,7 @@ public class RequestContextFilter implements ContainerRequestFilter, ContainerRe
 
             @Override
             public void resetAttributes(final ContainerRequestContext requestContext) {
-                JaxrsRequestAttributes attributes = (JaxrsRequestAttributes) requestContext
+                final JaxrsRequestAttributes attributes = (JaxrsRequestAttributes) requestContext
                         .getProperty(REQUEST_ATTRIBUTES_PROPERTY);
                 RequestContextHolder.resetRequestAttributes();
                 attributes.requestCompleted();
