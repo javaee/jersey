@@ -80,9 +80,9 @@ public final class MessagingBinders {
          * Create new message body providers injection binder.
          *
          * @param applicationProperties map containing application properties. May be {@code null}.
-         * @param runtimeType runtime (client or server) where the binder is used.
+         * @param runtimeType           runtime (client or server) where the binder is used.
          */
-        public MessageBodyProviders(Map<String, Object> applicationProperties, RuntimeType runtimeType) {
+        public MessageBodyProviders(final Map<String, Object> applicationProperties, final RuntimeType runtimeType) {
             this.applicationProperties = applicationProperties;
             this.runtimeType = runtimeType;
         }
@@ -118,7 +118,7 @@ public final class MessagingBinders {
 
         }
 
-        private <T extends MessageBodyReader & MessageBodyWriter> void bindSingletonWorker(Class<T> worker) {
+        private <T extends MessageBodyReader & MessageBodyWriter> void bindSingletonWorker(final Class<T> worker) {
             bind(worker).to(MessageBodyReader.class).to(MessageBodyWriter.class).in(Singleton.class);
         }
     }

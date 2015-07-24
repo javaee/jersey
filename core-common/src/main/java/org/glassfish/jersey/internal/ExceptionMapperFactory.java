@@ -105,7 +105,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         }
     }
 
-    private Set<ExceptionMapperType> exceptionMapperTypes = new LinkedHashSet<ExceptionMapperType>();
+    private final Set<ExceptionMapperType> exceptionMapperTypes = new LinkedHashSet<ExceptionMapperType>();
 
     @Override
     @SuppressWarnings("unchecked")
@@ -122,12 +122,14 @@ public class ExceptionMapperFactory implements ExceptionMappers {
     private <T extends Throwable> ExceptionMapper<T> find(final Class<T> type, final T exceptionInstance) {
         ExceptionMapper<T> mapper = null;
         int minDistance = Integer.MAX_VALUE;
+
         for (final ExceptionMapperType mapperType : exceptionMapperTypes) {
             final int d = distance(type, mapperType.exceptionType);
             if (d >= 0 && d <= minDistance) {
-                final ExceptionMapper<T> candidateMapper = mapperType.mapper.getService();
-                if (isMappable(exceptionInstance, candidateMapper)) {
-                    mapper = candidateMapper;
+                final ExceptionMapper<T> candidate = mapperType.mapper.getService();
+
+                if (isPreferredCandidate(exceptionInstance, candidate, d == minDistance)) {
+                    mapper = candidate;
                     minDistance = d;
                     if (d == 0) {
                         // slight optimization: if the distance is 0, it is already the best case, so we can exit
@@ -139,10 +141,27 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         return mapper;
     }
 
-    private <T extends Throwable> boolean isMappable(T exceptionInstance, ExceptionMapper<T> mapper) {
-        return exceptionInstance == null
-                || !(mapper instanceof ExtendedExceptionMapper)
-                || ((ExtendedExceptionMapper<T>) mapper).isMappable(exceptionInstance);
+    /**
+     * Determines whether the currently considered candidate should be preferred over the previous one.
+     *
+     * @param exceptionInstance exception to be mapped.
+     * @param candidate         mapper able to map given exception type.
+     * @param sameDistance      flag indicating whether this and the previously considered candidate are in the same distance.
+     * @param <T>               exception type.
+     * @return {@code true} if the given candidate is preferred over the previous one with the same or lower distance,
+     * {@code false} otherwise.
+     */
+    private <T extends Throwable> boolean isPreferredCandidate(final T exceptionInstance, final ExceptionMapper<T> candidate,
+                                                               final boolean sameDistance) {
+        if (exceptionInstance == null) {
+            return true;
+        }
+        if (candidate instanceof ExtendedExceptionMapper) {
+            return !sameDistance
+                    && ((ExtendedExceptionMapper<T>) candidate).isMappable(exceptionInstance);
+        } else {
+            return !sameDistance;
+        }
     }
 
     /**
@@ -158,25 +177,24 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         final Collection<ServiceHandle<ExceptionMapper>> mapperHandles =
                 Providers.getAllServiceHandles(locator, ExceptionMapper.class);
 
-        for (ServiceHandle<ExceptionMapper> mapperHandle : mapperHandles) {
-
+        for (final ServiceHandle<ExceptionMapper> mapperHandle : mapperHandles) {
             final ExceptionMapper mapper = mapperHandle.getService();
 
             if (Proxy.isProxyClass(mapper.getClass())) {
-
-                SortedSet<Class<? extends ExceptionMapper>> mapperTypes
+                final SortedSet<Class<? extends ExceptionMapper>> mapperTypes
                         = new TreeSet<Class<? extends ExceptionMapper>>(new Comparator<Class<? extends ExceptionMapper>>() {
 
                     @Override
-                    public int compare(Class<? extends ExceptionMapper> o1, Class<? extends ExceptionMapper> o2) {
+                    public int compare(final Class<? extends ExceptionMapper> o1, final Class<? extends ExceptionMapper> o2) {
                         return o1.isAssignableFrom(o2) ? -1 : 1;
                     }
                 });
 
                 final Set<Type> contracts = mapperHandle.getActiveDescriptor().getContractTypes();
-                for (Type contract : contracts) {
+                for (final Type contract : contracts) {
                     if (contract instanceof Class
                             && ExceptionMapper.class.isAssignableFrom((Class<?>) contract) && contract != ExceptionMapper.class) {
+                        //noinspection unchecked
                         mapperTypes.add((Class<? extends ExceptionMapper>) contract);
                     }
                 }
