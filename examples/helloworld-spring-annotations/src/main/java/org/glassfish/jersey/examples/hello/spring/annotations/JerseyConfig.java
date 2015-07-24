@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,57 +37,22 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.exception;
+package org.glassfish.jersey.examples.hello.spring.annotations;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
 
 /**
- * Hello world!
+ * A simple package based configuration
+ *
+ * @author Geoffroy Warin (http://geowarin.github.io)
  */
-public class App {
+public class JerseyConfig extends ResourceConfig {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "exception";
-
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Exception Mapping\" Jersey Example App");
-
-            final ResourceConfig resourceConfig = new ResourceConfig(
-                    ExceptionResource.class,
-                    ExceptionResource.MyResponseFilter.class,
-                    ExceptionResource.WebApplicationExceptionFilter.class,
-                    Exceptions.MyExceptionMapper.class,
-                    Exceptions.MySubExceptionMapper.class,
-                    Exceptions.WebApplicationExceptionMapper.class);
-
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig, false);
-            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    server.shutdownNow();
-                }
-            }));
-            server.start();
-
-            System.out.println(String.format(
-                    "Application started.%n"
-                    + "Try out %s%s%n"
-                    + "Stop the application using CTRL+C",
-                    BASE_URI, ROOT_PATH));
-
-            Thread.currentThread().join();
-        } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+    public JerseyConfig() {
+        register(RequestContextFilter.class);
+        packages("org.glassfish.jersey.examples.hello.spring.annotations");
+        register(LoggingFilter.class);
     }
 }

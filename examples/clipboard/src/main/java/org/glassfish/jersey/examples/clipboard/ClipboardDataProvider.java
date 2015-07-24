@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,8 +43,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
@@ -63,8 +65,6 @@ import org.glassfish.jersey.message.MessageUtils;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public abstract class ClipboardDataProvider implements MessageBodyWriter, MessageBodyReader {
-
-    private static final Logger LOG = Logger.getLogger(ClipboardDataProvider.class.getName());
 
     @Provider
     @Consumes("text/plain")
@@ -114,11 +114,13 @@ public abstract class ClipboardDataProvider implements MessageBodyWriter, Messag
     @Override
     public boolean isWriteable(final Class type, final Type genericType, final Annotation[] annotations,
                                final MediaType mediaType) {
-        return isKnownType(type);
+        return isKnownType(type, genericType);
     }
 
-    private boolean isKnownType(final Class<?> type) {
-        return type.isAssignableFrom(ClipboardData.class);
+    private boolean isKnownType(final Class<?> type, final Type genericType) {
+        return type.isAssignableFrom(ClipboardData.class)
+                || (Collection.class.isAssignableFrom(type)
+                    && (((ParameterizedType) genericType).getActualTypeArguments()[0]).equals(String.class));
     }
 
     @Override
@@ -130,7 +132,7 @@ public abstract class ClipboardDataProvider implements MessageBodyWriter, Messag
     @Override
     public boolean isReadable(final Class type, final Type genericType, final Annotation[] annotations,
                               final MediaType mediaType) {
-        return isKnownType(type);
+        return isKnownType(type, genericType);
     }
 
     private static String readStringFromStream(final InputStream entityStream, Charset charset) throws IOException {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,54 +37,44 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.clipboard;
+package org.glassfish.jersey.examples.hello.spring.annotations;
 
-import java.util.Objects;
+import javax.ws.rs.core.Application;
+
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
+ * Testing our service with our annotation context being passed directly to jersey-spring
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Geoffroy Warin (http://geowarin.github.io)
  */
-public class ClipboardData {
-
-    private String content;
-
-    public ClipboardData(String content) {
-        this.content = content;
-    }
+public class SpringRequestResourceTest extends JerseyTest {
 
     @Override
-    public String toString() {
-        return content;
+    protected Application configure() {
+        ApplicationContext context = new AnnotationConfigApplicationContext(SpringAnnotationConfig.class);
+        return new JerseyConfig()
+                .property("contextConfig", context);
     }
 
-    boolean isEmpty() {
-        return "".equals(content);
+    @Test
+    public void testGreet() throws Exception {
+        final String greeting = target("spring-resource").request().get(String.class);
+        Assert.assertEquals("hello, world 1!", greeting);
+        final String greeting2 = target("spring-resource").request().get(String.class);
+        Assert.assertEquals("hello, world 2!", greeting2);
     }
 
-    ClipboardData append(ClipboardData addition) {
-        content = content + addition.content;
-        return this;
-    }
-
-    void clear() {
-        content = "";
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof ClipboardData)) {
-            return false;
-        }
-        final ClipboardData that = (ClipboardData) o;
-        return Objects.equals(content, that.content);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(content);
+    @Test
+    public void testGoodbye() {
+        final String goodbye = target("spring-resource").path("goodbye").request().get(String.class);
+        Assert.assertEquals("goodbye, cruel world!", goodbye);
+        final String norwegianGoodbye = target("spring-resource").path("norwegian-goodbye").request().get(String.class);
+        Assert.assertEquals("hadet, på badet!", norwegianGoodbye);
     }
 }
