@@ -64,6 +64,21 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <configuration>
+                        <!--
+                            Excluding only *.tests.* packages for this module. At least one class has to exist in non-excluded
+                            packages to generate proper -javadoc.jar file. See https://jira.codehaus.org/browse/MJAVADOC-329
+                          -->
+                        <excludePackageNames>*.tests.*</excludePackageNames>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -115,17 +130,6 @@
                         <Export-Package>org.glassfish.jersey.jaxb.*;version=${project.version}</Export-Package>
                     </instructions>
                     <unpackBundle>true</unpackBundle>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <!--
-                        Excluding only *.tests.* packages for this module. At least one class has to exist in non-excluded
-                        packages to generate proper -javadoc.jar file. See https://jira.codehaus.org/browse/MJAVADOC-329
-                      -->
-                    <excludePackageNames>*.tests.*</excludePackageNames>
                 </configuration>
             </plugin>
         </plugins>
