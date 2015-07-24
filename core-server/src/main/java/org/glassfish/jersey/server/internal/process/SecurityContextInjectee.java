@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,7 @@ import javax.ws.rs.core.SecurityContext;
 
 import javax.inject.Inject;
 
-import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
  * Proxiable wrapper for request scoped {@link SecurityContext} instance.
@@ -113,11 +113,7 @@ class SecurityContextInjectee implements SecurityContext {
     public boolean equals(Object that) {
         checkState();
 
-        if (!(that instanceof SecurityContext)) {
-            return false;
-        }
-
-        return that.equals(requestContext.getSecurityContext());
+        return that instanceof SecurityContext && that.equals(requestContext.getSecurityContext());
     }
 
     private void checkState() {
