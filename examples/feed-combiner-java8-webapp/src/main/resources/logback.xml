@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,50 +40,20 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.glassfish.jersey</groupId>
-        <artifactId>project</artifactId>
-        <version>2.20-SNAPSHOT</version>
-    </parent>
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+        </encoder>
+    </appender>
 
-    <groupId>org.glassfish.jersey.archetypes</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-archetypes</name>
-    <description>
-        A module containing archetypes for generating Jersey-based applications.
-    </description>
+    <logger name="org.glassfish.jersey.servlet.WebComponent" level="OFF" additivity="false"/>
 
-    <modules>
-        <module>jersey-heroku-webapp</module>
-        <module>jersey-quickstart-grizzly2</module>
-        <module>jersey-quickstart-webapp</module>
-        <module>jersey-example-java8-webapp</module>
-    </modules>
+    <logger name="org.glassfish.jersey.examples.feedcombiner" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
 
-    <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.1</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifact</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-</project>
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

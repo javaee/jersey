@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,50 +39,58 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.glassfish.jersey</groupId>
-        <artifactId>project</artifactId>
-        <version>2.20-SNAPSHOT</version>
-    </parent>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <groupId>org.glassfish.jersey.archetypes</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-archetypes</name>
-    <description>
-        A module containing archetypes for generating Jersey-based applications.
-    </description>
+    <title>Feed Entries</title>
 
-    <modules>
-        <module>jersey-heroku-webapp</module>
-        <module>jersey-quickstart-grizzly2</module>
-        <module>jersey-quickstart-webapp</module>
-        <module>jersey-example-java8-webapp</module>
-    </modules>
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
 
-    <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.1</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifact</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-</project>
+    <!-- Bootstrap theme -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <header class="page-header" style="padding-left: 15px">
+        <div style="text-align: right; padding-right: 15px;">
+            <a href="/combiner" class="btn btn-info" role="button"><< BACK</a>
+        </div>
+        <h1 style="">${model.title}</h1>
+        <blockquote>
+            <p>${model.description}</p>
+        </blockquote>
+    </header>
+    <div>
+        <div>
+        <#if model.feedEntries?has_content>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Publish Date</th>
+                    <th>Link</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <#list model.feedEntries as i>
+                    <tr>
+                        <td>${i.publishDate?datetime}</td>
+                        <td>${i.title}</td>
+                        <td><a href="${i.link}">${i.link}</a></td>
+                    </tr>
+                    </#list>
+                </tbody>
+            </table>
+        <#else>
+            <div class="alert alert-warning" role="alert">
+                <strong>Warning!</strong> There are no entries!
+            </div>
+        </#if>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -36,54 +35,42 @@
     either the CDDL, the GPL Version 2 or to extend the choice of license to
     its licensees as provided above.  However, if you add GPL Version 2 code
     and therefore, elected the GPL Version 2 license, then the option applies
+    and therefore, elected the GPL Version 2 license, then the option applies
     only if the new code is made subject to such option by the copyright
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.glassfish.jersey</groupId>
-        <artifactId>project</artifactId>
-        <version>2.20-SNAPSHOT</version>
-    </parent>
 
-    <groupId>org.glassfish.jersey.archetypes</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-archetypes</name>
-    <description>
-        A module containing archetypes for generating Jersey-based applications.
-    </description>
+Jersey (Java8) WebApp Example Archetype.
+==========================================================
 
-    <modules>
-        <module>jersey-heroku-webapp</module>
-        <module>jersey-quickstart-grizzly2</module>
-        <module>jersey-quickstart-webapp</module>
-        <module>jersey-example-java8-webapp</module>
-    </modules>
+This module defines skeleton maven project (archetype) for developing new Java SE-based and Servlet-based examples for Jersey.
 
-    <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.1</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifact</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-</project>
+Instructions
+------------
+
+- install this archetype into your local repository, `maven-archetype-plugin` updates your local `archetype-catalog.xml` 
+which is located in `.m2` directory.
+
+>     mvn clean install
+
+- run generation your new project using:
+
+>     mvn archetype:generate -DarchetypeCatalog=local
+
+- maven provides you a set of your local installed maven archetypes, choose this one
+`org.glassfish.jersey.archetypes:jersey-example-java8-webapp`
+
+- fill in all input fields properly, e.g.
+
+```
+groupId: org.glassfish.jersey.examples (default value)
+artifactId: my-example
+version: Just use a release version - e.g. "2.20"
+package: Use org.glassfish.jersey.examples.my-example
+projectAuthor: Use "Name Surname (name.surname at mycompany.com)"
+projectDescription: "My New Example using Jersey."
+projectName: "My Jersey Example"
+```
+
+- confirm the project generation and feel free to start coding!
