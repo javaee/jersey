@@ -129,6 +129,34 @@ public class TimeWindowStatisticsImplTest {
         check(builder, time + 20000, 2, 5, 95, 50, 0.03333);
     }
 
+    /**
+     * Tests JERSEY-2848
+     */
+    @Test
+    public void testGapGreaterThanTimeWindowPause() {
+        final long now = 0;
+        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(10, TimeUnit.SECONDS, now);
+        builder.addRequest(now, 91);
+        builder.addRequest(now + 1000, 92);
+        builder.addRequest(now + 2000, 93);
+
+        // we need to add the time of last request + the whole time windows pause + additional time that is greater than unit time
+        // which is 1000
+        final long time = now + 2000 + 10000 + 1001;
+
+        // this request addition causes the queue to reset; however, the original implementation didn't reset the total count
+        // and total duration; as a result, the stats in that window became corrupted
+        builder.addRequest(time, 94);
+
+        builder.addRequest(time + 1000, 95);
+        builder.addRequest(time + 2000, 96);
+
+        check(builder, time + 3000, 3, 94, 96, 95, 0.3);
+
+        // this line would pass before JERSEY-2848 was fixed; apparently, the values in this window became corrupted
+        // check(builder, time + 3000, 5, 94, 96, 93, 0.5);
+    }
+
     private void check(final TimeWindowStatisticsImpl.Builder builder,
                        final long buildTime,
                        final int totalCount,

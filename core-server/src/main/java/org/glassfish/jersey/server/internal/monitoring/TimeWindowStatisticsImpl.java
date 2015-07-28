@@ -242,6 +242,9 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
             lastUnitEnd = requestTime + unit;
             resetLastUnit();
 
+            totalCount = 0;
+            totalDuration = 0;
+
             // fill with empty unit to keep result consistent
             for (int i = 0; i < unitsPerInterval; i++) {
                 unitQueue.add(Unit.EMPTY_UNIT);
