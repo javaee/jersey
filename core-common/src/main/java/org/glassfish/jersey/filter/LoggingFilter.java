@@ -142,12 +142,12 @@ public final class LoggingFilter implements ContainerRequestFilter, ClientReques
      * @param logger        the logger to log requests and responses.
      * @param maxEntitySize maximum number of entity bytes to be logged (and buffered) - if the entity is larger,
      *                      logging filter will print (and buffer in memory) only the specified number of bytes
-     *                      and print "...more..." string at the end.
+     *                      and print "...more..." string at the end. Negative values are interpreted as zero.
      */
     public LoggingFilter(final Logger logger, final int maxEntitySize) {
         this.logger = logger;
         this.printEntity = true;
-        this.maxEntitySize = maxEntitySize;
+        this.maxEntitySize = Math.max(0, maxEntitySize);
     }
 
     private void log(final StringBuilder b) {
