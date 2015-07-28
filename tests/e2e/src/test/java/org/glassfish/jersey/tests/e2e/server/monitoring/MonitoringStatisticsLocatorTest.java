@@ -347,7 +347,6 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
     }
 
     @Test
-    @Ignore //J-396 reproducer
     public void testResourceClassStatisticsWadlOptions() {
         final Response response = target().path("resource/resourceClassStatisticsWadlOptionsTest").request().get();
         assertEquals(200, response.getStatus());
@@ -355,7 +354,6 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
     }
 
     @Test
-    @Ignore //J-396 reproducer
     public void testResourceClassStatisticsGenericOptions() {
         final Response response = target().path("resource/resourceClassStatisticsGenericOptionsTest").request().get();
         assertEquals(200, response.getStatus());
@@ -363,7 +361,6 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
     }
 
     @Test
-    @Ignore //J-396 reproducer
     public void testResourceClassStatisticsPlainTextOptions() {
         final Response response = target().path("resource/resourceClassStatisticsPlainTextOptionsTest").request().get();
         assertEquals(200, response.getStatus());
