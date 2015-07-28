@@ -41,6 +41,7 @@ package org.glassfish.jersey.examples.extendedwadl.resources;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -67,7 +68,7 @@ public class ItemResource {
     }
 
     /**
-     * Returns the item if existing. Please be aware that this method is extremely
+     * Typically returns the item if it exists. Please be aware that this method is extremely
      * expensive, so we can't guarantee that getting items is all the time possible.
      *
      * @response.representation.200.qname {http://www.example.com}item
@@ -92,6 +93,42 @@ public class ItemResource {
         }
         return Response.ok(_item).build();
     }
+
+    /**
+     * Tries hard to return the item if it exists. If "Try-Hard" header is set to "true", the method is guaranteed to always
+     * complete successfully if the item exists.
+     *
+     * @request.param {@name Try-Hard}
+     *                  {@style header}
+     *                  {@type {http://www.w3.org/2001/XMLSchema}string}
+     *                  {@doc If set to "true", the call will always succeed provided the item exists.}
+     *
+     * @response.representation.200.qname {http://www.example.com}item
+     * @response.representation.200.mediaType application/xml
+     * @response.representation.200.doc This is the representation returned by default
+     *                                  (if we have an even number of millis since 1970...:)
+     * @response.representation.200.example {@link org.glassfish.jersey.examples.extendedwadl.util.Examples#SAMPLE_ITEM}
+     *
+     * @response.representation.503.mediaType text/plain
+     * @response.representation.503.example You'll get some explanation why this service is not available.
+     *
+     * @return the requested item if it exists and the "Try-Hard" header is set to "true", otherwise a 503.
+     */
+    // Method added to reproduce OWLS-24243 issue.
+    @GET
+    @Produces({"application/xml", "text/plain"})
+    @Path("try-hard")
+    public Response getItem(@HeaderParam("Try-Hard") boolean tryHard) {
+        if (!tryHard) {
+            return Response.status(Status.SERVICE_UNAVAILABLE)
+                    .entity("Sorry, but right now we can't process this request,"
+                            + " try again and set the \"Try-Hard\" header to \"true\"")
+                    .type(MediaType.TEXT_PLAIN)
+                    .build();
+        }
+        return Response.ok(_item).build();
+    }
+
 
     /**
      * Returns the item if existing.

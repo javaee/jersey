@@ -45,6 +45,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
@@ -62,27 +63,10 @@ public class MethodDocType {
 
     private String methodName;
 
+    @XmlElement(required = false, nillable = false)
+    protected String methodSignature;
+
     protected String commentText;
-
-    /**
-     * Gets the value of the commentText property.
-     *
-     * @return the commentText
-     *
-     */
-    public String getCommentText() {
-        return commentText;
-    }
-
-    /**
-     * Sets the value of the commentText property.
-     *
-     * @param value the commentText
-     *
-     */
-    public void setCommentText(String value) {
-        this.commentText = value;
-    }
 
     private String returnDoc;
     private String returnTypeExample;
@@ -95,7 +79,7 @@ public class MethodDocType {
 
     public List<ParamDocType> getParamDocs() {
         if (paramDoc == null) {
-            paramDoc = new ArrayList<ParamDocType>();
+            paramDoc = new ArrayList<>();
         }
         return this.paramDoc;
     }
@@ -105,23 +89,68 @@ public class MethodDocType {
 
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }
 
     /**
-     * @return the className
+     * Get the method name.
+     *
+     * @return the method name.
      */
     public String getMethodName() {
         return methodName;
     }
 
     /**
-     * @param methodName the className to set
+     * Set the method name.
+     *
+     * @param methodName the method name to set.
      */
     public void setMethodName(String methodName) {
         this.methodName = methodName;
+    }
+
+    /**
+     * Get the method signature, or {@code null} if no method signature has been set for the method.
+     * <p>
+     * This string uniquely identifies the method in case there are multiple methods in the class with the same name.
+     * </p>
+     *
+     * @return unique method signature within a class.
+     * @since 2.20
+     */
+    public String getMethodSignature() {
+        return methodSignature;
+    }
+
+    /**
+     * Set the unique method signature, including method parameters, if any.
+     *
+     * @param methodSignature method signature string to set.
+     * @since 2.20
+     */
+    public void setMethodSignature(final String methodSignature) {
+        this.methodSignature = methodSignature;
+    }
+
+    /**
+     * Gets the value of the commentText property.
+     *
+     * @return the commentText
+     */
+    public String getCommentText() {
+        return commentText;
+    }
+
+    /**
+     * Sets the value of the commentText property.
+     *
+     * @param value the commentText
+     */
+    public void setCommentText(String value) {
+        this.commentText = value;
     }
 
     /**

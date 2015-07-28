@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,30 +37,17 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.examples.extendedwadl.resources;
-
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.examples.extendedwadl.SampleWadlGeneratorConfig;
 import org.glassfish.jersey.examples.extendedwadl.util.Examples;
+import org.glassfish.jersey.server.ResourceConfig;
 
 /**
- *
  * @author Jonathan Benoit
  */
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-        // register root resources/providers
-        classes.add(ItemResource.class);
-        classes.add(ItemsResource.class);
-        classes.add(Examples.class);
-        classes.add(SampleWadlGeneratorConfig.class);
-        return classes;
+public class MyApplication extends ResourceConfig {
+    public MyApplication() {
+        super(ItemResource.class, ItemsResource.class, Examples.class, SampleWadlGeneratorConfig.class);
     }
 }
