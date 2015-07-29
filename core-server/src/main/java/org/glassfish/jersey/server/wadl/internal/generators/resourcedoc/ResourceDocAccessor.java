@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,10 @@ package org.glassfish.jersey.server.wadl.internal.generators.resourcedoc;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model.AnnotationDocType;
 import org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model.ClassDocType;
@@ -60,6 +63,8 @@ import org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model.Re
  */
 public class ResourceDocAccessor {
 
+    private static final Logger LOGGER = Logger.getLogger(ResourceDocAccessor.class.getName());
+
     private ResourceDocType _resourceDoc;
 
     public ResourceDocAccessor(ResourceDocType resourceDoc) {
@@ -67,6 +72,10 @@ public class ResourceDocAccessor {
     }
 
     public ClassDocType getClassDoc(Class<?> resourceClass) {
+        if (resourceClass == null) {
+            return null;
+        }
+
         for (ClassDocType classDocType : _resourceDoc.getDocs()) {
             if (resourceClass.getName().equals(classDocType.getClassName())) {
                 return classDocType;
@@ -76,19 +85,50 @@ public class ResourceDocAccessor {
     }
 
     public MethodDocType getMethodDoc(Class<?> resourceClass, Method method) {
+        if (resourceClass == null || method == null) {
+            return null;
+        }
+
         final ClassDocType classDoc = getClassDoc(resourceClass);
-        if (classDoc != null) {
-            for (MethodDocType methodDocType : classDoc.getMethodDocs()) {
-                if (method != null && method.getName().equals(methodDocType.getMethodName())) {
+        if (classDoc == null) {
+            return null;
+        }
+
+        MethodDocType candidate = null;
+        int candidateCount = 0;
+
+        final String methodName = method.getName();
+        final String methodSignature = computeSignature(method);
+        for (MethodDocType methodDocType : classDoc.getMethodDocs()) {
+            if (methodName.equals(methodDocType.getMethodName())) {
+                candidateCount++;
+                if (candidate == null) {
+                    candidate = methodDocType;
+                }
+                final String docMethodSignature = methodDocType.getMethodSignature();
+                if (docMethodSignature != null && docMethodSignature.equals(methodSignature)) {
                     return methodDocType;
                 }
             }
         }
-        return null;
+
+        if (candidate != null && candidateCount > 1 && LOGGER.isLoggable(Level.CONFIG)) {
+            LOGGER.config(LocalizationMessages.WADL_RESOURCEDOC_AMBIGUOUS_METHOD_ENTRIES(
+                    resourceClass.getName(),
+                    methodName,
+                    methodSignature,
+                    candidateCount));
+        }
+
+        return candidate;
+    }
+
+    private String computeSignature(final Method method) {
+        final String methodAsString = method.toGenericString();
+        return methodAsString.substring(methodAsString.indexOf('('), methodAsString.lastIndexOf(')') + 1);
     }
 
     /**
-     *
      * @param resourceClass
      * @param method
      * @param p

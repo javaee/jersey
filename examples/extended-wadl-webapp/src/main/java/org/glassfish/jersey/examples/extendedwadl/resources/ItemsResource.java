@@ -72,9 +72,16 @@ public class ItemsResource {
 
     public ItemsResource() {
         _sequence = new AtomicInteger();
-        _repository = new HashMap<Integer, Item>();
+        _repository = new HashMap<>();
     }
 
+    /**
+     * Get an item resource for an item from the list of managed items based on the assigned id extracted from the path parameter.
+     *
+     * @param id The ID of the item to retrieve.
+     * @return respective items resource.
+     *
+     */
     @Path("{id}")
     public ItemResource getItem(@PathParam("id") final Integer id) {
         final Item item = _repository.get(id);

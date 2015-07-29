@@ -93,8 +93,8 @@ import com.sun.javadoc.SeeTag;
 import com.sun.javadoc.Tag;
 
 /**
- * Creates a resourcedoc xml file.
- *
+ * Creates a resourcedoc XML file.
+ * <p/>
  * <p>
  * The ResourceDoc file contains the javadoc documentation
  * of resource classes, so that this can be used for extending generated wadl with useful
@@ -105,7 +105,7 @@ import com.sun.javadoc.Tag;
  */
 public class ResourceDoclet {
 
-    private static final Pattern PATTERN_RESPONSE_REPRESENATION = Pattern.compile("@response\\.representation\\.([\\d]+)\\..*");
+    private static final Pattern PATTERN_RESPONSE_REPRESENTATION = Pattern.compile("@response\\.representation\\.([\\d]+)\\..*");
     private static final String OPTION_OUTPUT = "-output";
     private static final String OPTION_CLASSPATH = "-classpath";
     private static final String OPTION_DOC_PROCESSORS = "-processors";
@@ -158,6 +158,7 @@ public class ResourceDoclet {
 
                     final MethodDocType methodDocType = new MethodDocType();
                     methodDocType.setMethodName(methodDoc.name());
+                    methodDocType.setMethodSignature(methodDoc.signature());
                     methodDocType.setCommentText(methodDoc.commentText());
                     docProcessor.processMethodDoc(methodDoc, methodDocType);
 
@@ -382,7 +383,7 @@ public class ResourceDoclet {
     private static Map<String, List<Tag>> getResponseRepresentationTags(final MethodDoc methodDoc) {
         final Map<String, List<Tag>> tagsByStatus = new HashMap<>();
         for (final Tag tag : methodDoc.tags()) {
-            final Matcher matcher = PATTERN_RESPONSE_REPRESENATION.matcher(tag.name());
+            final Matcher matcher = PATTERN_RESPONSE_REPRESENTATION.matcher(tag.name());
             if (matcher.matches()) {
                 final String status = matcher.group(1);
                 List<Tag> tags = tagsByStatus.get(status);
@@ -399,6 +400,7 @@ public class ResourceDoclet {
     /**
      * Searches an <code>@link</code> tag within the inline tags of the specified tag
      * and serializes the referenced instance.
+     *
      * @param tag the tag containing the inline tags to be searched.
      * @return the {@code String} representation of the {@link com.sun.javadoc.Tag} or null if the parameter is null.
      */
@@ -602,7 +604,7 @@ public class ResourceDoclet {
     /**
      * Validate options.
      *
-     * @param options options to be validated
+     * @param options  options to be validated
      * @param reporter {@link com.sun.javadoc.DocErrorReporter} for collecting eventual errors
      * @return if the specified options are valid
      */
