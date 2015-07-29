@@ -84,7 +84,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 /**
  * Bean Validation provider injection binder.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public final class ValidationBinder extends AbstractBinder {
 

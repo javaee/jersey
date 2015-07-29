@@ -58,7 +58,7 @@ import rx.Observable;
  * The observables produced by method calls are cold observables. That means that request to the service is invoked only when a
  * subscriber is subscribed to the observable.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 public interface RxObservableInvoker extends RxInvoker<Observable> {

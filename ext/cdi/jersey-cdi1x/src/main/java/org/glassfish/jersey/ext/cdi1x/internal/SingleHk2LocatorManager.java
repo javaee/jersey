@@ -50,7 +50,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * Default {@link org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager locator manager} that assumes only one
  * {@link org.glassfish.hk2.api.ServiceLocator service locator} per application is used.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.17
  */
 final class SingleHk2LocatorManager implements Hk2LocatorManager {

@@ -62,7 +62,7 @@ import org.glassfish.jersey.media.multipart.MultiPart;
  * Resource file for {@link MultiPartReaderWriterTest}.
  *
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("/multipart")
 public class MultiPartResource {

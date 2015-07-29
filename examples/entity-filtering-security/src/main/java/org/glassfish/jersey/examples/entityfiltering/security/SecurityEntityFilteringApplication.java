@@ -49,7 +49,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 /**
  * Entity Data Filtering application using security annotations.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @ApplicationPath("/")
 public class SecurityEntityFilteringApplication extends ResourceConfig {

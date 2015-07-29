@@ -50,7 +50,7 @@ import org.glassfish.jersey.tests.e2e.entity.filtering.SecondaryDetailedView;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 /**
-* @author Michal Gajdos (michal.gajdos at oracle.com)
+* @author Michal Gajdos
 */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.ANY)
 @XmlAccessorType(XmlAccessType.PROPERTY)

@@ -51,7 +51,7 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
 /**
  * Common (server/client) Jersey configuration properties.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 @PropertiesClass

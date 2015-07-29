@@ -78,7 +78,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Common functionality for JSON tests that are using multiple JSON providers (e.g. MOXy, Jackson, Jettison).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public abstract class AbstractJsonTest extends JerseyTest {
 

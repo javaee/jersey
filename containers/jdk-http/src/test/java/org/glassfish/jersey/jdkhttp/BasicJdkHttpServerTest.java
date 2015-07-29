@@ -58,7 +58,7 @@ import com.sun.net.httpserver.HttpsServer;
 /**
  * Jdk Http Server basic tests.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class BasicJdkHttpServerTest extends AbstractJdkHttpServerTester {
 

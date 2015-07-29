@@ -64,7 +64,7 @@ import org.eclipse.persistence.jaxb.MarshallerProperties;
 /**
  * ContactCard application configuration.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class MyApplication extends ResourceConfig {
 

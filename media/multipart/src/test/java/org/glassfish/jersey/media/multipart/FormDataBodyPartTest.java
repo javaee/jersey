@@ -57,7 +57,7 @@ import static org.junit.Assert.fail;
  * @author Craig McClanahan
  * @author Imran M Yousuf (imran at smartitengineering.com)
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class FormDataBodyPartTest extends BodyPartTest {
 

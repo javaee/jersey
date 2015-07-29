@@ -62,7 +62,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
 /**
  * Bean Validation tests for programmatically created resources.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ProgrammaticValidationTest extends JerseyTest {
 

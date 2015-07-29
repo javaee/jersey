@@ -49,7 +49,7 @@ import org.glassfish.jersey.tests.e2e.json.JsonTestHelper;
 
 /**
  * @author mchenryc
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @SuppressWarnings("UnusedDeclaration")
 @XmlRootElement(name = "listEmptyBean")

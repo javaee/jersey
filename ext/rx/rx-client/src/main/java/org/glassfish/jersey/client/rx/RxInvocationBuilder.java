@@ -57,7 +57,7 @@ import javax.ws.rs.core.MultivaluedMap;
  * {@link org.glassfish.jersey.client.rx.RxInvoker reactive invoker} that provide means to invoke reactive client requests.
  *
  * @param <RX> the concrete reactive invocation type.
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @see javax.ws.rs.client.Invocation.Builder Invocation.Builder
  * @see org.glassfish.jersey.client.rx.RxInvoker RxInvoker

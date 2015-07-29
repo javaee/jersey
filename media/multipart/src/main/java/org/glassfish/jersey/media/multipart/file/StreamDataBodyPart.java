@@ -62,7 +62,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
  * name.
  *
  * @author Pedro Kowalski (pallipp at gmail.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  *
  * @see FileDataBodyPart
  */

@@ -71,7 +71,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @RunWith(ConcurrentRunner.class)
 public class JsonProcessingTest extends JerseyTest {

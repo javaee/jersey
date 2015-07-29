@@ -51,7 +51,7 @@ import org.glassfish.jersey.client.rx.RxInvoker;
 /**
  * Reactive invoker providing support for {@link java.util.concurrent.CompletionStage CompletionStage} from Java 8.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 public interface RxCompletionStageInvoker extends RxInvoker<CompletionStage> {

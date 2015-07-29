@@ -50,7 +50,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 /**
-* @author Michal Gajdos (michal.gajdos at oracle.com)
+* @author Michal Gajdos
 */
 public class TerminalClientRequestFilter implements ClientRequestFilter {
 

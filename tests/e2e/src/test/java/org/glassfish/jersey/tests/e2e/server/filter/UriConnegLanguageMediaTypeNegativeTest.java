@@ -65,7 +65,7 @@ import static org.junit.Assert.assertEquals;
  * {@value org.glassfish.jersey.server.ServerProperties#MEDIA_TYPE_MAPPINGS}) is set into {@link ResourceConfig} which should
  * lead to point that {@link org.glassfish.jersey.server.filter.UriConnegFilter} is not registered.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class UriConnegLanguageMediaTypeNegativeTest extends JerseyTest {
 

@@ -74,7 +74,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
 /**
  * Jersey specific {@link MOXyJsonProvider} that can be configured via {@code ContextResolver<JsonMoxyConfiguration>} instance.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Singleton
 public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {

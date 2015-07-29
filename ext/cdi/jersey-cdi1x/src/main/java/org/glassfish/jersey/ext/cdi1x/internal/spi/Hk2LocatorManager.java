@@ -50,7 +50,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * instance acknowledges the manager about new service locator and manager is supposed to return the effective service locator
  * for the current context (based on the Servlet context, for example).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.17
  */
 public interface Hk2LocatorManager {

@@ -62,7 +62,7 @@ import static org.junit.Assert.assertThat;
 /**
  * {@link Invocation} E2E API tests.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ClientInvocationTest extends JerseyTest {
 

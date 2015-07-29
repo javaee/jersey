@@ -53,7 +53,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 /**
  * Primary detailed view ONLY.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.ANY)
 @XmlAccessorType(XmlAccessType.PROPERTY)

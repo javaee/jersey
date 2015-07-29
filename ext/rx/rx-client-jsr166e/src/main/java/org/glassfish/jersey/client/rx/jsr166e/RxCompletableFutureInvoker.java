@@ -52,7 +52,7 @@ import jersey.repackaged.jsr166e.CompletableFuture;
  * Reactive invoker providing support for {@link jersey.repackaged.jsr166e.CompletableFuture CompletableFuture} from JSR-166e
  * (pre-Java 8).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 public interface RxCompletableFutureInvoker extends RxInvoker<CompletableFuture> {

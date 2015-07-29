@@ -48,7 +48,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * User entity class. Fields {@code projects} and {@code tasks} are available only in detailed view (defined via
  * {@link UserDetailedView} on getters).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @SuppressWarnings({"UnusedDeclaration", "JavaDoc"})
 @XmlRootElement

@@ -60,7 +60,7 @@ import org.glassfish.jersey.server.validation.ValidationError;
  * {@link MessageBodyWriter} providing support for (collections of) {@link ValidationError}
  * that is able to output instances to {@code text/plain}/{@code text/html}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class ValidationErrorMessageBodyWriter implements MessageBodyWriter<Object> {
 

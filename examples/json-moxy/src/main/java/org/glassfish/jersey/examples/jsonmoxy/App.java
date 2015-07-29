@@ -56,7 +56,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class App {
 

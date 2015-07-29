@@ -58,7 +58,7 @@ import org.codehaus.jackson.jaxrs.JsonParseExceptionMapper;
  * Feature used to register Jackson (1.x) JSON providers.
  *
  * @author Stepan Kopriva
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public final class Jackson1Feature implements Feature {
 

@@ -77,7 +77,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * Test-suite ensuring the correct functionality of name binding.
  *
  * @author Miroslav Fuksa
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @RunWith(ConcurrentRunner.class)
 public class NameBindingTest extends JerseyTest {

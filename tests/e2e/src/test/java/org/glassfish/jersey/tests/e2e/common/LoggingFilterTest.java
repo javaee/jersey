@@ -71,7 +71,7 @@ import static org.hamcrest.Matchers.lessThan;
 /**
  * {@link LoggingFilter} end-to-end tests.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({

@@ -65,7 +65,7 @@ import org.glassfish.jersey.server.spi.ValidationInterceptorContext;
 /**
  * Default {@link ConfiguredValidator} implementation - delegates calls to the underlying {@link Validator}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 class DefaultConfiguredValidator implements ConfiguredValidator, ValidationInterceptor {

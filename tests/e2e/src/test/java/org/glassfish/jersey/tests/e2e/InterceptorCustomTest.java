@@ -79,7 +79,7 @@ import static org.junit.Assert.fail;
  * Tests interceptors.
  *
  * @author Miroslav Fuksa
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class InterceptorCustomTest extends JerseyTest {
 

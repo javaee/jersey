@@ -56,7 +56,7 @@ import org.testng.annotations.BeforeMethod;
 /**
  * Parent class for testing JAX-RS and Jersey-based applications using Jersey test framework and TestNG framework.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  *
  * @see org.glassfish.jersey.test.JerseyTest
  * @see org.glassfish.jersey.test.spi.TestNgStrategy

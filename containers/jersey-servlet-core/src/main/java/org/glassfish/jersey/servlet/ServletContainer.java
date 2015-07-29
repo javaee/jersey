@@ -143,7 +143,7 @@ import org.glassfish.jersey.uri.UriComponent;
  *
  * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class ServletContainer extends HttpServlet implements Filter, Container {

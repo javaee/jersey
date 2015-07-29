@@ -65,7 +65,7 @@ import static org.junit.Assert.assertNull;
 /**
  * {@link ExtendedUriInfo} unit tests - testing e.g. getting matched resources, mapped throwable, etc.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Miroslav Fuksa
  */
 public class ExtendedUriInfoTest {

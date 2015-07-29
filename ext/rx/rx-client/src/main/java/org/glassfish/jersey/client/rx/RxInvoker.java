@@ -61,7 +61,7 @@ import javax.ws.rs.core.GenericType;
  *
  * @param <T> the asynchronous/event-based completion aware type. The given type should be parametrized with the actual
  *            response type.
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @see javax.ws.rs.client.SyncInvoker SyncInvoker
  * @see org.glassfish.jersey.client.rx.spi.RxInvokerProvider RxInvokerProvider

@@ -58,7 +58,7 @@ import java.lang.annotation.Target;
  * Note: The {@link ErrorTemplate} annotation can be used even in case when neither {@link Viewable viewable} is used as return
  * value of a resource method nor {@link Template} annotation is used to annotate the resource method or resource class.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @see Template
  * @see org.glassfish.jersey.server.mvc.spi.AbstractErrorTemplateMapper
  * @since 2.3

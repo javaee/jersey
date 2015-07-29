@@ -64,7 +64,7 @@ import org.glassfish.jersey.spi.ExtendedExceptionMapper;
  * further processing.
  *
  * @param <T> A type of the exception processed by the exception mapper.
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.3
  */
 @Singleton

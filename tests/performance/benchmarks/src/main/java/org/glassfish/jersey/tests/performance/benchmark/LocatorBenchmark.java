@@ -69,7 +69,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 /**
  * Locator {@link org.glassfish.jersey.server.ApplicationHandler} benchmark.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)

@@ -49,7 +49,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 /**
  * Application for illustrating some of the features of Java 8 in JAX-RS.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @ApplicationPath("j8")
 public class Java8Application extends ResourceConfig {

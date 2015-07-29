@@ -49,7 +49,7 @@ import org.glassfish.jersey.client.rx.spi.RxInvokerProvider;
 /**
  * Invoker provider for invokers based on RxJava's {@code Observable}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 public final class RxObservableInvokerProvider implements RxInvokerProvider {

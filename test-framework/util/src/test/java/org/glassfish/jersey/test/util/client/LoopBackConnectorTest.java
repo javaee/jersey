@@ -62,7 +62,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Basic {@link org.glassfish.jersey.test.util.client.LoopBackConnector} unit tests.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class LoopBackConnectorTest {
 

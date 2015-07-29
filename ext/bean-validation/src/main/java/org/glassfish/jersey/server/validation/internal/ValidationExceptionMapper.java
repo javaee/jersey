@@ -69,7 +69,7 @@ import org.glassfish.jersey.server.validation.ValidationError;
  * {@code application/json}/{@code application/xml} (in appropriate provider is registered on server) or
  * {@code text/html}/{@code text/plain} (via custom {@link ValidationErrorMessageBodyWriter}).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public final class ValidationExceptionMapper implements ExceptionMapper<ValidationException> {
 

@@ -62,7 +62,7 @@ import rx.subscriptions.Subscriptions;
  * to retrieve data when a subscriber is subscribed. When an executor service is provided a sync call is invoked on a thread
  * provided on from this service.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 final class JerseyRxObservableInvoker extends AbstractRxInvoker<Observable> implements RxObservableInvoker {

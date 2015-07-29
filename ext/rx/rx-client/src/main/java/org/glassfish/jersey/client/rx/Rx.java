@@ -50,7 +50,7 @@ import javax.ws.rs.client.WebTarget;
  * Main entry point to the Reactive Client API used to bootstrap {@link org.glassfish.jersey.client.rx.RxClient reactive client}
  * or {@link org.glassfish.jersey.client.rx.RxWebTarget reactive client target} instances.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @since 2.13
  */

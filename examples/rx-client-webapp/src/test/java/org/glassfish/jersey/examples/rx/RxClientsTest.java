@@ -56,7 +56,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Invoke clients in Agent part of the application.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RxClientsTest extends JerseyTest {

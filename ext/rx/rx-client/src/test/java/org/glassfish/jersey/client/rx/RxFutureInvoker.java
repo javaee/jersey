@@ -47,7 +47,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public interface RxFutureInvoker extends RxInvoker<Future> {
 

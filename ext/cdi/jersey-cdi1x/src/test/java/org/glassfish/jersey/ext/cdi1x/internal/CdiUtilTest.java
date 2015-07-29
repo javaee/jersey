@@ -62,7 +62,7 @@ import mockit.Verifications;
 /**
  * Unit tests for {@link org.glassfish.jersey.ext.cdi1x.internal.CdiUtil}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class CdiUtilTest {
 

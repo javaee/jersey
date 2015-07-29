@@ -56,7 +56,7 @@ import org.glassfish.jersey.moxy.json.internal.FilteringMoxyJsonProvider;
  * Feature used to register MOXy JSON providers.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class MoxyJsonFeature implements Feature {
 

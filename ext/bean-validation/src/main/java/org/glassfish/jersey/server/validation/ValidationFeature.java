@@ -53,7 +53,7 @@ import org.glassfish.jersey.server.validation.internal.ValidationBinder;
 /**
  * {@code ValidationFeature} used to add Bean Validation (JSR-349) support to the server.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @ConstrainedTo(RuntimeType.SERVER)
 public final class ValidationFeature implements Feature {

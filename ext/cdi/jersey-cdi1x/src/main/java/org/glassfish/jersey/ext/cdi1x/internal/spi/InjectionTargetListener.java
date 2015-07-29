@@ -46,7 +46,7 @@ package org.glassfish.jersey.ext.cdi1x.internal.spi;
  * is processed by {@link org.glassfish.jersey.ext.cdi1x.internal.CdiComponentProvider}. Locator managers can then set the
  * effective service locator to the processed {@link org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2InjectedTarget target}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public interface InjectionTargetListener {
 

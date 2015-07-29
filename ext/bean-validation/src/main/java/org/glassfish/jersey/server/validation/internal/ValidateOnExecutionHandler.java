@@ -69,7 +69,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * Handler providing methods to determine whether an executable should be validated during the validation process based on the
  * presence of {@link ValidateOnExecution} annotation.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 class ValidateOnExecutionHandler {
 

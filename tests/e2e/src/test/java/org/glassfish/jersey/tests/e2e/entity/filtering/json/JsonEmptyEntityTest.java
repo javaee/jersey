@@ -73,7 +73,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 /**
  * Use-cases to check whether empty class causes problems (JERSEY-2824 reproducer).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @RunWith(Parameterized.class)
 public class JsonEmptyEntityTest extends JerseyTest {

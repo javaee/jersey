@@ -56,7 +56,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 /**
  * Feature providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @ConstrainedTo(RuntimeType.SERVER)
 public final class FormDataParamInjectionFeature implements Feature {

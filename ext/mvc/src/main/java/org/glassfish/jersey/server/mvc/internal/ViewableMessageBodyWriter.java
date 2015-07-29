@@ -83,7 +83,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * entities.
  *
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Provider
 @ConstrainedTo(RuntimeType.SERVER)

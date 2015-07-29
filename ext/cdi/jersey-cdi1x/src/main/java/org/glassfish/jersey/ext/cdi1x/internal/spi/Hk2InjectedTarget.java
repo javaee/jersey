@@ -48,7 +48,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * CDI {@link javax.enterprise.inject.spi.InjectionTarget injection target} that is co-injected by HK2. The injection by HK2 is
  * done via given {@link org.glassfish.hk2.api.ServiceLocator service locator}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public interface Hk2InjectedTarget extends InjectionTarget {
 

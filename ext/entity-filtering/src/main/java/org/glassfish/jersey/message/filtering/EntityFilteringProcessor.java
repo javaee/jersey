@@ -55,7 +55,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
 /**
  * Entity processor handling entity-filtering annotations.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Singleton
 @Priority(Integer.MAX_VALUE - 2000)

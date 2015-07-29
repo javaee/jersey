@@ -69,7 +69,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * {@link PersonResource} unit tests.
  *
  * @author Andy Pemberton (pembertona at gmail.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @RunWith(Parameterized.class)
 public class PersonResourceTest extends JerseyTest {

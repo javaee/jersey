@@ -72,7 +72,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * entity into a resource method.
  *
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class FormDataMultiPartBufferTest extends MultiPartJerseyTest {
 

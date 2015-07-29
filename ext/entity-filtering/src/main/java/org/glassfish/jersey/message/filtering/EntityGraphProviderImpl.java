@@ -53,7 +53,7 @@ import org.glassfish.jersey.message.filtering.spi.ObjectGraph;
 /**
  * Provides {@link EntityGraph entity graph} and {@link ObjectGraph object graph} instances.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class EntityGraphProviderImpl implements EntityGraphProvider {
 

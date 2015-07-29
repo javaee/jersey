@@ -77,7 +77,7 @@ import com.fasterxml.jackson.jaxrs.json.JsonEndpointConfig;
 /**
  * Entity Data Filtering provider based on Jackson JSON provider.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Singleton
 public final class FilteringJacksonJaxbJsonProvider extends JacksonJaxbJsonProvider {

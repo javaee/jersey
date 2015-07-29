@@ -54,7 +54,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * This is to make sure two Jersey wars are separated well in a single ear.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ContextPathTest extends JerseyTest {
 

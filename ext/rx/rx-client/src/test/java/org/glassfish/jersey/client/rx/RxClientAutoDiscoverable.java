@@ -47,7 +47,7 @@ import javax.ws.rs.core.FeatureContext;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @ConstrainedTo(RuntimeType.CLIENT)
 public class RxClientAutoDiscoverable implements AutoDiscoverable {

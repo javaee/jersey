@@ -51,7 +51,7 @@ import javax.ws.rs.Produces;
  * Resource class for {@link Project projects}. Provides methods to retrieve projects in "default" view ({@link #getProjects()}
  * and in "detailed" view ({@link #getDetailedProjects()}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("projects")
 @Produces("application/json")

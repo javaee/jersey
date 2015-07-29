@@ -54,7 +54,7 @@ import org.glassfish.jersey.test.TestProperties;
 /**
  * Common parent class for MultiPart test cases.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 abstract class MultiPartJerseyTest extends JerseyTest {
 

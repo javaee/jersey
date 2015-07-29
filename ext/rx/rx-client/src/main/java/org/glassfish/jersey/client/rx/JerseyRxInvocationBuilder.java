@@ -65,7 +65,7 @@ import org.glassfish.jersey.internal.ServiceFinder;
  * contract, extension of JAX-RS {@link javax.ws.rs.client.Invocation.Builder client request invocation builder} contract.
  *
  * @param <RX> the concrete reactive invocation type.
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class JerseyRxInvocationBuilder<RX extends RxInvoker> implements RxInvocationBuilder<RX> {
 

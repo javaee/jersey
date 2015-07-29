@@ -62,7 +62,7 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
  * Loop-Back connector used for testing/benchmarking purposes. It returns a response that contains the same data (headers, entity)
  * as the processed request. The status of the response is {@code 600}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.17
  */
 final class LoopBackConnector implements Connector {

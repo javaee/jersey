@@ -75,7 +75,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Various MessageBodyWriter tests.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class MessageBodyWriterTest extends JerseyTest {

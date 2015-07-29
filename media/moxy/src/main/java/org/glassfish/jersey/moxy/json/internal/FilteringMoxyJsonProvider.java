@@ -61,7 +61,7 @@ import org.eclipse.persistence.jaxb.ObjectGraph;
 /**
  * Entity Data Filtering provider based on MOXy JSON provider.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Singleton
 public class FilteringMoxyJsonProvider extends ConfigurableMoxyJsonProvider {

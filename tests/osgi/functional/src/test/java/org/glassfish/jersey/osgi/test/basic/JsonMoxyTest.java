@@ -57,7 +57,7 @@ import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class JsonMoxyTest extends AbstractJsonOsgiIntegrationTest {
 
