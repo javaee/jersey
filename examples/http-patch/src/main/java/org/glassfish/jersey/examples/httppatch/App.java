@@ -84,7 +84,7 @@ public final class App {
             }));
             server.start();
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C",
+            System.out.println(String.format("Application started.\nTry out %s/%s\nStop the application using CTRL+C",
                     BASE_URI,
                     ROOT_PATH));
 
