@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType;
  * {@code RxWebTarget} extension overrides methods of JAX-RS client target to give user a way to access the reactive contracts.
  *
  * @param <RX> the concrete reactive invocation type.
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @see javax.ws.rs.client.WebTarget WebTarget
  * @see org.glassfish.jersey.client.rx.RxInvoker RxInvoker

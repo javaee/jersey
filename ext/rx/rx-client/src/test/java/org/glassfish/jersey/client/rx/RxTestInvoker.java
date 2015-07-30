@@ -53,7 +53,7 @@ import org.glassfish.jersey.client.rx.spi.AbstractRxInvoker;
 import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 class RxTestInvoker extends AbstractRxInvoker<Future> implements RxFutureInvoker {
 

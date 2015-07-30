@@ -78,7 +78,7 @@ import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
  * Obtain information about visited (destination) and recommended (destination, forecast, price) places for "Async" user. Uses
  * standard JAX-RS async approach to obtain the data.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("agent/async")
 @Produces("application/json")

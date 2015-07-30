@@ -53,7 +53,7 @@ import org.glassfish.jersey.server.mvc.spi.ResolvedViewable;
  * {@link RequestDispatcher Request dispatcher wrapper} for setting attributes (e.g. {@code it}).
  *
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class RequestDispatcherWrapper implements RequestDispatcher {
 

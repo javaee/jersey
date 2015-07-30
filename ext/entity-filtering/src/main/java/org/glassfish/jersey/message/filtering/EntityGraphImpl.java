@@ -56,7 +56,7 @@ import jersey.repackaged.com.google.common.collect.Table;
 /**
  * Default implementation of {@link EntityGraph}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class EntityGraphImpl implements EntityGraph {
 

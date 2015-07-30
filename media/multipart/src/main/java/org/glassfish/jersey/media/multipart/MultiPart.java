@@ -53,7 +53,7 @@ import javax.ws.rs.core.MediaType;
  *
  * @author Craig McClanahan
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class MultiPart extends BodyPart implements Closeable {
 

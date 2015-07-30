@@ -70,7 +70,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * Class responsible for inspecting entity classes. This class invokes all available {@link EntityProcessor entity processors} in
  * different {@link EntityProcessorContext contexts}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Singleton
 final class EntityInspectorImpl implements EntityInspector {

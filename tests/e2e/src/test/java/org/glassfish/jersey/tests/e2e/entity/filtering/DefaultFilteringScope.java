@@ -45,7 +45,7 @@ import org.glassfish.jersey.message.filtering.EntityFiltering;
 import org.glassfish.hk2.api.AnnotationLiteral;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class DefaultFilteringScope extends AnnotationLiteral<EntityFiltering> implements EntityFiltering {
 

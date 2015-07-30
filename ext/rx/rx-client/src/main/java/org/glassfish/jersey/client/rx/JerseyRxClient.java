@@ -57,7 +57,7 @@ import javax.net.ssl.SSLContext;
  * {@link javax.ws.rs.client.Client client} contract.
  *
  * @param <RX> the concrete reactive invocation type.
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class JerseyRxClient<RX extends RxInvoker> implements RxClient<RX> {
 

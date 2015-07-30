@@ -57,7 +57,7 @@ import com.fasterxml.jackson.databind.ser.FilterProvider;
 /**
  * {@link Feature} adding support for Entity Data Filtering into Jackson media module.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public final class JacksonFilteringFeature implements Feature {
 

@@ -57,7 +57,7 @@ import org.glassfish.jersey.jettison.internal.entity.JettisonRootElementProvider
 /**
  * Feature used to register Jettison JSON providers.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class JettisonFeature implements Feature {
 

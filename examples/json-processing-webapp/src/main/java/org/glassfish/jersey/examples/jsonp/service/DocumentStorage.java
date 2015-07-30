@@ -51,7 +51,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
 /**
  * Storage of documents.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public final class DocumentStorage {
 

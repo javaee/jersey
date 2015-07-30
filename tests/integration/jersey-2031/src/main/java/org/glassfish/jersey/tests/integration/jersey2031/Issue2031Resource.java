@@ -50,7 +50,7 @@ import org.glassfish.jersey.server.mvc.Viewable;
 /**
  * Test resource.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("/")
 public class Issue2031Resource {

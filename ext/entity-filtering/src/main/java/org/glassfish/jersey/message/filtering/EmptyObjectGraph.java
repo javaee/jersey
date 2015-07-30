@@ -49,7 +49,7 @@ import org.glassfish.jersey.message.filtering.spi.ObjectGraph;
 /**
  * Object graph representing empty domain classes.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class EmptyObjectGraph implements ObjectGraph {
 

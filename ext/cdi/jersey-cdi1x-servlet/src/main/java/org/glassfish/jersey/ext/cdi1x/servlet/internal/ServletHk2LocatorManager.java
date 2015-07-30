@@ -48,7 +48,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * {@link org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager Locator manager} for servlet based containers. The provider
  * enables WAR and EAR to be deployed on a servlet container and be properly injected.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @since 2.17
  */

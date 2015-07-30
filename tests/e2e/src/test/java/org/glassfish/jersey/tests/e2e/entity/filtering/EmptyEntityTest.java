@@ -57,7 +57,7 @@ import org.junit.Test;
 /**
  * Use-cases to check whether empty class causes problems (JERSEY-2824 reproducer).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class EmptyEntityTest extends EntityFilteringTest {
 

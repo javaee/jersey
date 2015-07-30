@@ -62,7 +62,7 @@ import javax.validation.constraints.Null;
 import javax.validation.constraints.Size;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("beanvalidation")
 public class BasicResource {

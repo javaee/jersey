@@ -45,7 +45,7 @@ import javax.ws.rs.Path;
 /**
  * Common model helper methods.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Constantino Cronemberger (ccronemberger at yahoo.com.br)
  */
 public final class ModelHelper {

@@ -125,11 +125,6 @@
             <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
         <developer>
-            <name>Michal Gajdos</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com/</organizationUrl>
-        </developer>
-        <developer>
             <name>Libor Kramolis</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com</organizationUrl>
@@ -151,7 +146,11 @@
         </developer>
     </developers>
 
-    <!--contributors></contributors-->
+    <contributors>
+        <contributor>
+            <name>Michal Gajdos</name>
+        </contributor>
+    </contributors>
 
     <licenses>
         <license>

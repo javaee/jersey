@@ -66,7 +66,7 @@ import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import rx.Subscriber;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class RxObservableTest {
 

@@ -42,7 +42,7 @@ package org.glassfish.jersey.tests.integration.jersey2673;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class SampleBean {
 

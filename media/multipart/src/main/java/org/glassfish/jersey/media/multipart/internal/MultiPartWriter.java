@@ -74,7 +74,7 @@ import org.glassfish.jersey.message.MessageUtils;
  *
  * @author Craig McClanahan
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Singleton
 @Produces("multipart/*")

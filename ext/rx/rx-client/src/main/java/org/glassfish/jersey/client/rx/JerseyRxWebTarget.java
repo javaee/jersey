@@ -54,7 +54,7 @@ import javax.ws.rs.core.UriBuilder;
  * {@link javax.ws.rs.client.WebTarget client target} contract.
  *
  * @param <RX> the concrete reactive invocation type.
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class JerseyRxWebTarget<RX extends RxInvoker> implements RxWebTarget<RX> {
 

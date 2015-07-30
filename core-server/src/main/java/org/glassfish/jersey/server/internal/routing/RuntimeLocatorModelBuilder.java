@@ -72,7 +72,7 @@ import jersey.repackaged.com.google.common.cache.LoadingCache;
 /**
  * Base for sub-resource locator runtime model builder.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class RuntimeLocatorModelBuilder {
 

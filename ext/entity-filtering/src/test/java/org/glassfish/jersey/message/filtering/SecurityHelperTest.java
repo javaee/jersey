@@ -60,7 +60,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
 /**
  * {@link org.glassfish.jersey.message.filtering.SecurityHelper} unit tests.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class SecurityHelperTest {
 

@@ -47,7 +47,7 @@ import javax.ws.rs.core.Response;
 import javax.validation.Valid;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("/")
 @Produces("application/json")

@@ -51,7 +51,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
 /**
  * Java application class starting Grizzly2 server with Entity Data Filtering app deployed.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public final class App {
 

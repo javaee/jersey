@@ -65,7 +65,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 /**
  * {@link org.glassfish.jersey.server.ContainerRequest Container request context} used for testing/benchmarking purposes.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.17
  */
 final class TestContainerRequest extends ContainerRequest {

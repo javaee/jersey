@@ -71,7 +71,7 @@ import freemarker.template.TemplateException;
  * {@link org.glassfish.jersey.server.mvc.spi.TemplateProcessor Template processor} providing support for Freemarker templates.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Jeff Wilde (jeff.wilde at complicatedrobot.com)
  */
 final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> {

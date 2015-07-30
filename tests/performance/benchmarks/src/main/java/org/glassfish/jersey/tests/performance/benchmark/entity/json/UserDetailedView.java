@@ -53,7 +53,7 @@ import org.glassfish.hk2.api.AnnotationLiteral;
 /**
  * Entity-filtering annotation used to define detailed view on returned {@link User} entities.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

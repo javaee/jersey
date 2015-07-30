@@ -146,7 +146,7 @@ import org.glassfish.jersey.server.model.ParamQualifier;
  *
  * @author Craig McClanahan
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

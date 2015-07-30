@@ -80,7 +80,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @RunWith(Parameterized.class)
 public class JsonEntityFilteringClientTest extends JerseyTest {

@@ -49,7 +49,7 @@ import org.glassfish.jersey.spi.Contract;
 /**
  * Configured validator for Jersey validation purposes.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Contract
 public interface ConfiguredValidator extends Validator {

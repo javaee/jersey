@@ -58,7 +58,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
 /**
  * Default implementation of {@link ObjectGraph}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class ObjectGraphImpl implements ObjectGraph {
 

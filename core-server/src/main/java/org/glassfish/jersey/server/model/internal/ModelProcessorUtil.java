@@ -62,7 +62,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * model processors}.
  *
  * @author Miroslav Fuksa
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public final class ModelProcessorUtil {
 

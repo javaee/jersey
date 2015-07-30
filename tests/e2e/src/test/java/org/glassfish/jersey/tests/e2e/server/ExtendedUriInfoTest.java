@@ -71,7 +71,7 @@ import static org.junit.Assert.assertThat;
 /**
  * {@link ExtendedUriInfo} e2e tests - testing e.g. getting matched resources, mapped throwable, etc.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ExtendedUriInfoTest extends JerseyTest {
 

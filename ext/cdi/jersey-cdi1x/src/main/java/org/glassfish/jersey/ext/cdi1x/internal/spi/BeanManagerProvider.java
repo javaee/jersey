@@ -46,7 +46,7 @@ import javax.enterprise.inject.spi.BeanManager;
  * Provider SPI for CDI {@link javax.enterprise.inject.spi.BeanManager} for the current context.
  * Implementations can decide how to obtain bean manager (e.g. {@link javax.naming.InitialContext}, CDI 1.1 API, ...).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.17
  */
 public interface BeanManagerProvider {

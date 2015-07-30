@@ -50,7 +50,7 @@ import org.glassfish.jersey.server.ResourceConfig;
  * Entity Data Filtering application using request parameters.
  *
  * @author Andy Pemberton (pembertona at gmail.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @ApplicationPath("/")
 public class SelectableEntityFilteringApplication extends ResourceConfig {

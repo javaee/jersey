@@ -49,7 +49,7 @@ import javax.ws.rs.core.FeatureContext;
  * {@link Feature} used to add support for Entity Data Filtering feature for entity-filtering annotations based on
  * {@link EntityFiltering} meta-annotation.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public final class EntityFilteringFeature implements Feature {
 

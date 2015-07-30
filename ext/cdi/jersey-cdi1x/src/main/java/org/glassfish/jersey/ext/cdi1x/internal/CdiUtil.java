@@ -61,7 +61,7 @@ import org.glassfish.jersey.model.internal.RankedProvider;
  * Common CDI utility methods.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public final class CdiUtil {
 

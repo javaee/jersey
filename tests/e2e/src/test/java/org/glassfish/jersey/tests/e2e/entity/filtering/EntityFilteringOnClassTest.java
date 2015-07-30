@@ -61,7 +61,7 @@ import org.junit.Test;
 /**
  * Use-cases with entity-filtering annotations on class.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class EntityFilteringOnClassTest extends EntityFilteringTest {
 

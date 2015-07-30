@@ -41,7 +41,7 @@
 package org.glassfish.jersey.ext.cdi1x.internal;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public interface MyService {
 }

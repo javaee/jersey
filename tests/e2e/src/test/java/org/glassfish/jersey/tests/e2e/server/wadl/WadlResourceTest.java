@@ -130,7 +130,7 @@ import com.sun.research.ws.wadl.Resources;
  *
  * @author Marc Hadley
  * @author Miroslav Fuksa
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

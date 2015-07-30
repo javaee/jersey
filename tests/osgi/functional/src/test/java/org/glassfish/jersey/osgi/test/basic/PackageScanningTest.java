@@ -69,7 +69,7 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
  * NOTE: This test is excluded on JDK6 as it requires Servlet 3.1 API that is built against JDK 7.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @RunWith(PaxExam.class)
 public class PackageScanningTest {

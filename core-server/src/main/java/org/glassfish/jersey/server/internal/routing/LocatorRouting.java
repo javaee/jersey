@@ -44,7 +44,7 @@ import org.glassfish.jersey.server.model.ResourceModel;
 /**
  * A pair of sub-resource locator model and a corresponding model router.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class LocatorRouting {
 

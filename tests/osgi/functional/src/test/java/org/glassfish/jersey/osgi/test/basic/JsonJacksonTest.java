@@ -52,7 +52,7 @@ import org.ops4j.pax.exam.Option;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class JsonJacksonTest extends AbstractJsonOsgiIntegrationTest {
 

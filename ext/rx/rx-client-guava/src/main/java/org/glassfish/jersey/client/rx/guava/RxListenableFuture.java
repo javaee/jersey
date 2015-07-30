@@ -54,7 +54,7 @@ import org.glassfish.jersey.client.rx.RxWebTarget;
  * or {@link org.glassfish.jersey.client.rx.RxWebTarget reactive client target} instances based on Guava's
  * {@link com.google.common.util.concurrent.ListenableFuture listenable future}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @see org.glassfish.jersey.client.rx.Rx
  * @since 2.13
  */

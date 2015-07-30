@@ -55,7 +55,7 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
  * and {@link ContainerResponseWriter#setSuspendTimeout(long, TimeUnit)} handler that can be used in
  * {@link ContainerResponseWriter} implementations instead of the underlying infrastructure.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyRequestTimeoutHandler {

@@ -50,7 +50,7 @@ import static org.junit.Assert.assertTrue;
  * Test case for {@link MultiPartMediaTypes}.
  *
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class MultiPartMediaTypesTest {
 

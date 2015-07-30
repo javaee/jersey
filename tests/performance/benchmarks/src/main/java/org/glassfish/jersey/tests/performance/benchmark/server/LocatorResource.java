@@ -47,7 +47,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("resource")
 @Produces("text/plain")

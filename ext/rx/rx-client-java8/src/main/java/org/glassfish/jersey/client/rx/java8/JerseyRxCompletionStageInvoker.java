@@ -53,7 +53,7 @@ import org.glassfish.jersey.client.rx.spi.AbstractRxInvoker;
 /**
  * Implementation of Reactive Invoker for {@code CompletionStage}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 final class JerseyRxCompletionStageInvoker extends AbstractRxInvoker<CompletionStage> implements RxCompletionStageInvoker {

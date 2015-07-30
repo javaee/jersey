@@ -54,7 +54,7 @@ import org.glassfish.jersey.ext.cdi1x.internal.spi.BeanManagerProvider;
  * At first the implementation tries to lookup the bean manager in JNDI, then via CDI 1.1 API. If not found {@code null} is
  * returned.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.17
  */
 final class DefaultBeanManagerProvider implements BeanManagerProvider {

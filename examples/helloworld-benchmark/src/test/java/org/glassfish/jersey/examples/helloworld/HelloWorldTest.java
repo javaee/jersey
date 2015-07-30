@@ -53,7 +53,7 @@ import static org.junit.Assert.assertThat;
 /**
  * {@link org.glassfish.jersey.examples.helloworld.HelloWorldResource} tests.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class HelloWorldTest extends JerseyTest {
 

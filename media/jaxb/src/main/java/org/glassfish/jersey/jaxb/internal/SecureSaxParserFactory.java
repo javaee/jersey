@@ -71,7 +71,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * Secure SAX parser factory wrapper.
  *
  * @author Martin Matula
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class SecureSaxParserFactory extends SAXParserFactory {
 

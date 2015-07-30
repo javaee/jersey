@@ -48,7 +48,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 /**
  * Jersey application for JERSEY-2846.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @ApplicationPath("/")
 public class TestApplication extends ResourceConfig {

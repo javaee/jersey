@@ -48,7 +48,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author James Strachan
  * @author Naresh
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ItemTest extends TestSupport {
 

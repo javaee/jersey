@@ -51,7 +51,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 /**
  * Reactive invoker providing support for {@link com.google.common.util.concurrent.ListenableFuture ListenableFuture} from Guava.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 public interface RxListenableFutureInvoker extends RxInvoker<ListenableFuture> {

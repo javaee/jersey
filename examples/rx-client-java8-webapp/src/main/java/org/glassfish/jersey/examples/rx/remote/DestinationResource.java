@@ -62,7 +62,7 @@ import com.google.common.collect.Lists;
 /**
  * Obtain a list of visited / recommended places for a given user.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Singleton
 @Path("remote/destination")

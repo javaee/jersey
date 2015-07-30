@@ -78,7 +78,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  *
  * @author Miroslav Fuksa
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ProviderBinder {
 

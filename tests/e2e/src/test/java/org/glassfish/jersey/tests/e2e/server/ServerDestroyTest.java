@@ -80,7 +80,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * Assert that pre destroy method on application, resources and providers is invoked.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ServerDestroyTest extends JerseyTest {
 

@@ -81,7 +81,7 @@ import org.glassfish.jersey.message.internal.MediaTypes;
  * @author Craig McClanahan
  * @author Imran M Yousuf (imran at smartitengineering.com)
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class FormDataBodyPart extends BodyPart {
 

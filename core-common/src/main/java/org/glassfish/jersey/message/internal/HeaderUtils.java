@@ -66,7 +66,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
  * Utility class supporting the processing of message headers.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public final class HeaderUtils {

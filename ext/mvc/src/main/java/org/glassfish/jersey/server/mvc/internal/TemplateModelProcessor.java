@@ -81,7 +81,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * <p/>
  * Note: Resource classes has to be annotated with {@link Template} annotation in order to be enhanced by this model processor.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @see Template
  */
 class TemplateModelProcessor implements ModelProcessor {

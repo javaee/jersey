@@ -63,7 +63,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * {@link org.glassfish.jersey.examples.entityfiltering.security.resource.UnrestrictedResource} unit tests.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @RunWith(Parameterized.class)
 public class UnrestrictedResourceTest extends JerseyTest {

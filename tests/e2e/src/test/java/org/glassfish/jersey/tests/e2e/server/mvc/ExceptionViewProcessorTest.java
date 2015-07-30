@@ -66,7 +66,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ExceptionViewProcessorTest extends JerseyTest {
 

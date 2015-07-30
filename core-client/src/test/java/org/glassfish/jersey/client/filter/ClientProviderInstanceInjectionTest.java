@@ -62,7 +62,7 @@ import static org.junit.Assert.assertEquals;
  * Tests injections into provider instances.
  *
  * @author Miroslav Fuksa
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ClientProviderInstanceInjectionTest {
 

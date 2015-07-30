@@ -62,7 +62,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Test various combinations of enabling/disabling: auto-discovery, bean validation, validation feature.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class PropertyValidationTest {

@@ -43,7 +43,7 @@ package org.glassfish.jersey.examples.rx.domain;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @XmlRootElement
 public class Forecast {

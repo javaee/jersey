@@ -53,7 +53,7 @@ import jersey.repackaged.jsr166e.CompletableFuture;
 /**
  * Implementation of Reactive Invoker for {@code CompletableFuture}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 final class JerseyRxCompletableFutureInvoker extends AbstractRxInvoker<CompletableFuture> implements RxCompletableFutureInvoker {

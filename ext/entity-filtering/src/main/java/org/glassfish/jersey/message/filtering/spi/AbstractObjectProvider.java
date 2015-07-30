@@ -61,7 +61,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * </p>
  *
  * @param <T> representation of entity data filtering requested by provider.
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public abstract class AbstractObjectProvider<T> implements ObjectProvider<T>, ObjectGraphTransformer<T> {
 

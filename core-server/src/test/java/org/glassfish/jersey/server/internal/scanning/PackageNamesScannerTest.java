@@ -62,7 +62,7 @@ import mockit.Verifications;
  * Unit tests for {@link PackageNamesScanner}.
  *
  * @author Eric Navarro
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class PackageNamesScannerTest {
 

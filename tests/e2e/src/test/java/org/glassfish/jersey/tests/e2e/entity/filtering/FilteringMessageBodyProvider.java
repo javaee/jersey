@@ -68,7 +68,7 @@ import org.glassfish.jersey.message.filtering.spi.ObjectProvider;
 import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Provider
 @Consumes("entity/filtering")

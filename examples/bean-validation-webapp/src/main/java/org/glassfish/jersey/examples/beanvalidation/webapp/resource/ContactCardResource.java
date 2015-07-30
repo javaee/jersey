@@ -66,7 +66,7 @@ import org.glassfish.jersey.examples.beanvalidation.webapp.service.StorageServic
  * <p/>
  * See validation annotations (input method parameters, field, return values).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("contact")
 @Produces("application/json")

@@ -64,7 +64,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * {@link org.glassfish.jersey.examples.entityfiltering.resource.TasksResource} unit tests.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @RunWith(Parameterized.class)
 public class TaskResourceTest extends JerseyTest {

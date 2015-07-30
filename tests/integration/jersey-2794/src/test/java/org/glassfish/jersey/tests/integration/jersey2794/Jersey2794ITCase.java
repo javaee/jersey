@@ -65,7 +65,7 @@ import jersey.repackaged.com.google.common.collect.Iterators;
 /**
  * JERSEY-2794 reproducer.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class Jersey2794ITCase extends JerseyTest {
 
