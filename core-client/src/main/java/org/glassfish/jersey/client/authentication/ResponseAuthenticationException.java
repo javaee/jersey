@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,43 +37,47 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.client.authentication;
 
-package org.glassfish.jersey.tests.e2e.entity;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.client.ResponseProcessingException;
-
-import org.junit.Test;
-import static org.junit.Assert.fail;
+import javax.ws.rs.core.Response;
 
 /**
- * @author Martin Matula
+ * Exception thrown by security response authentication.
+ *
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class InvalidEntityTest extends AbstractTypeTester {
-    @Path("/")
-    public static class TestResource {
-        @GET
-        @Produces("foo/bar")
-        public String getFooBar() {
-            return "foo/bar";
-        }
+public class ResponseAuthenticationException extends ResponseProcessingException {
+
+    /**
+     * Creates new instance of this exception with exception cause.
+     *
+     * @param response the response instance for which the processing failed.
+     * @param cause Exception cause.
+     */
+    public ResponseAuthenticationException(Response response, Throwable cause) {
+        super(response, cause);
     }
 
-    @Test
-    public void testInvalidEntity() {
-        Throwable exception = null;
-        try {
-            target().request("foo/bar").get(Integer.class);
-        } catch (Exception e) {
-            exception = e;
-        }
-        if (!(exception instanceof ResponseProcessingException)) {
-            if (exception != null) {
-                exception.printStackTrace();
-            }
-            fail();
-        }
+    /**
+     * Creates new instance of this exception with exception message.
+     *
+     * @param response the response instance for which the processing failed.
+     * @param message Exception message.
+     */
+    public ResponseAuthenticationException(Response response, String message) {
+        super(response, message);
     }
+
+    /**
+     * Creates new instance of this exception with exception message and exception cause.
+     *
+     * @param response the response instance for which the processing failed.
+     * @param message Exception message.
+     * @param cause Exception cause.
+     */
+    public ResponseAuthenticationException(Response response, String message, Throwable cause) {
+        super(response, message, cause);
+    }
+
 }

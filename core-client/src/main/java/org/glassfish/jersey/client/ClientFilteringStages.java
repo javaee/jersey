@@ -45,6 +45,7 @@ import java.io.IOException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.inject.Providers;
@@ -139,7 +140,8 @@ class ClientFilteringStages {
                     filter.filter(responseContext.getRequestContext(), responseContext);
                 }
             } catch (IOException ex) {
-                throw new ProcessingException(ex);
+                InboundJaxrsResponse response = new InboundJaxrsResponse(responseContext, null);
+                throw new ResponseProcessingException(response, ex);
             }
 
             return Continuation.of(responseContext, getDefaultNext());
