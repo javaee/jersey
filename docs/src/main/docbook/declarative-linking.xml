@@ -87,7 +87,7 @@
 
             <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.web&lt;/groupId&gt;
-    &lt;artifactId&gt;javax-el&lt;/artifactId&gt;
+    &lt;artifactId&gt;javax.el&lt;/artifactId&gt;
     &lt;version&gt;&javax-el-impl.version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
