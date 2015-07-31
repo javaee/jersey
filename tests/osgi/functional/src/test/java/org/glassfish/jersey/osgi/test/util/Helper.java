@@ -59,7 +59,7 @@ import static org.ops4j.pax.exam.CoreOptions.systemProperty;
  * Helper class to be used by individual tests.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class Helper {
 

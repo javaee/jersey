@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.server.spi;
 
+import org.glassfish.hk2.api.ServiceLocator;
+
 /**
  * This is to allow integration with other DI providers that
  * define their own request scope. Any such provider should implement
@@ -48,11 +50,12 @@ package org.glassfish.jersey.server.spi;
  * An implementation must be registered via META-INF/services mechanism.
  * Only one implementation will be utilized during runtime.
  * If more than one implementation is registered, no one will get used and
- * a warning log message will be written out.
+ * an error message will be logged out.
  * </p>
  *
  * @param <T> external request context type
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @since 2.15
  */
 public interface ExternalRequestScope<T> extends AutoCloseable {
 
@@ -61,27 +64,30 @@ public interface ExternalRequestScope<T> extends AutoCloseable {
      * Returned context data will be retained
      * by Jersey runtime for the whole request life-span.
      *
+     * @param locator HK2 service locator
      * @return external request context data
      */
-    public ExternalRequestContext<T> open();
+    public ExternalRequestContext<T> open(ServiceLocator locator);
 
     /**
      * Suspend request associated with provided context.
      * This will be called within the very same thread as previous open or resume call
      * corresponding to the actual context.
      *
-     * @param c external request context
+     * @param c       external request context
+     * @param locator HK2 service locator
      */
-    public void suspend(ExternalRequestContext<T> c);
+    public void suspend(ExternalRequestContext<T> c, ServiceLocator locator);
 
     /**
      * Resume request associated with provided context.
      * The external request context instance should have been
      * previously suspended.
      *
-     * @param c external request context
+     * @param c       external request context
+     * @param locator HK2 service locator
      */
-    public void resume(ExternalRequestContext<T> c);
+    public void resume(ExternalRequestContext<T> c, ServiceLocator locator);
 
     /**
      * Finish the actual request. This method will be called

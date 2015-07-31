@@ -74,7 +74,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * Obtain information about visited (destination) and recommended (destination, forecast, price) places for "Java8" user. Uses
  * Java 8 CompletionStage and Jersey Client to obtain the data.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("agent/completion")
 @Produces("application/json")

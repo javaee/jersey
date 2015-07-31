@@ -51,7 +51,7 @@ import java.util.Set;
  * Object graph instances are created for entity-filtering scopes that are obtained from entity annotations, configuration or
  * scopes defined on resource methods / classes (on server).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @see ObjectGraphTransformer
  * @see ScopeResolver
  */

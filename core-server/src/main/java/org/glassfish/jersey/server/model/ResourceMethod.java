@@ -45,6 +45,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -137,6 +138,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
      * Resource method model builder.
      */
     public static final class Builder {
+
         private final Resource.Builder parent;
 
         // HttpMethod
@@ -152,6 +154,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         // Invocable
         private Class<?> handlerClass;
         private Object handlerInstance;
+        private final Collection<Parameter> handlerParameters;
 
         // method (can be also interface method). Specific method to execute is defined by handlingMethod
         private Method definitionMethod;
@@ -192,12 +195,19 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
             this.suspendTimeout = AsyncResponse.NO_TIMEOUT;
             this.suspendTimeoutUnit = TimeUnit.MILLISECONDS;
 
+            this.handlerParameters = new LinkedList<>();
+
             this.encodedParams = false;
 
             this.nameBindings = Sets.newLinkedHashSet();
         }
 
-
+        /**
+         * Create a builder from an existing resource method model.
+         *
+         * @param parent         parent resource model builder.
+         * @param originalMethod existing resource method model to create the builder from.
+         */
         /* package */ Builder(final Resource.Builder parent, ResourceMethod originalMethod) {
             this.parent = parent;
             this.consumedTypes = Sets.newLinkedHashSet(originalMethod.getConsumedTypes());
@@ -205,6 +215,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
             this.suspended = originalMethod.isSuspendDeclared();
             this.suspendTimeout = originalMethod.getSuspendTimeout();
             this.suspendTimeoutUnit = originalMethod.getSuspendTimeoutUnit();
+            this.handlerParameters = Sets.newLinkedHashSet(originalMethod.getInvocable().getHandler().getParameters());
             this.nameBindings = originalMethod.getNameBindings();
             this.httpMethod = originalMethod.getHttpMethod();
             this.managedAsync = originalMethod.isManagedAsyncDeclared();
@@ -233,7 +244,6 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
             this.httpMethod = name;
             return this;
         }
-
 
         /**
          * Add produced media types supported by the component.
@@ -334,12 +344,12 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          */
         public Builder nameBindings(final Annotation... nameBindings) {
             return nameBindings(Collections2.transform(Arrays.asList(nameBindings),
-                    new Function<Annotation, Class<? extends Annotation>>() {
-                        @Override
-                        public Class<? extends Annotation> apply(Annotation input) {
-                            return input.annotationType();
-                        }
-                    })
+                            new Function<Annotation, Class<? extends Annotation>>() {
+                                @Override
+                                public Class<? extends Annotation> apply(Annotation input) {
+                                    return input.annotationType();
+                                }
+                            })
             );
         }
 
@@ -443,6 +453,18 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         }
 
         /**
+         * Parameters defined on the handler (i.e. not in the handling method), e.g. via property setters or fields.
+         *
+         * @param parameters handler parameters to be added to the set of handler parameters for the method.
+         * @return updated builder object.
+         * @since 2.20
+         */
+        public Builder handlerParameters(Collection<Parameter> parameters) {
+            this.handlerParameters.addAll(parameters);
+            return this;
+        }
+
+        /**
          * Define a specific method of the handling class that will be executed. If the method
          * is not defined then the method will be equal to the method initialized by
          * one of the {@code handledBy()} builder methods.
@@ -488,7 +510,6 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          * @param extended If {@code true} then resource method is marked as extended.
          * @return updated builder object.
          * @see org.glassfish.jersey.server.model.ExtendedResource
-         *
          * @since 2.5.1
          */
         public Builder extended(boolean extended) {
@@ -526,9 +547,9 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
 
             final MethodHandler handler;
             if (handlerClass != null) {
-                handler = MethodHandler.create(handlerClass, encodedParams);
+                handler = MethodHandler.create(handlerClass, encodedParams, handlerParameters);
             } else { // instance based
-                handler = MethodHandler.create(handlerInstance);
+                handler = MethodHandler.create(handlerInstance, handlerParameters);
             }
 
             return Invocable.create(handler, definitionMethod, handlingMethod, encodedParams, routingResponseType);
@@ -539,6 +560,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
      * Immutable resource method data.
      */
     /* package */ static class Data {
+
         // JAX-RS method type
         private final JaxrsType type;
         // HttpMethod
@@ -600,7 +622,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          * </p>
          *
          * @return the associated HTTP method, or {@code null} in case this method
-         *         represents a sub-resource locator.
+         * represents a sub-resource locator.
          */
         /* package */ String getHttpMethod() {
             return httpMethod;
@@ -771,7 +793,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
      * </p>
      *
      * @return the associated HTTP method, or {@code null} in case this method
-     *         represents a sub-resource locator.
+     * represents a sub-resource locator.
      */
     public String getHttpMethod() {
         return data.getHttpMethod();
@@ -798,17 +820,14 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
      * <p>
      * If not set the resource will not be defined as extended by default.
      * </p>
-
      *
      * @return {@code true} if the method is extended.
      * @see org.glassfish.jersey.server.model.ExtendedResource
-     *
      * @since 2.5.1
      */
     public boolean isExtended() {
         return data.extended;
     }
-
 
     // Consuming
     @Override

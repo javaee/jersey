@@ -83,7 +83,7 @@ import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
  * requestScope.runInScope(new Runnable() {
  *     &#064;Override
  *     public void run() {
- *          System.out.println("This is execute in the request scope...");
+ *          System.out.println("This is executed in the request scope...");
  *     }
  * });
  * </pre>
@@ -97,7 +97,7 @@ import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
  *      requestScope.runInScope(new Callable&lt;Instance&gt;() {
  *          &#064;Override
  *          public Instance call() {
- *              // This is execute in the new request scope.
+ *              // This is executed in the new request scope.
  *
  *              // The following call will cause that the
  *              // RequestScope.Instance will not be released
@@ -111,11 +111,11 @@ import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
  *
  *      &#064;Override
  *      public void run() {
- *          // This is execute in the same request scope as code above.
+ *          // This is executed in the same request scope as code above.
  *      }
  *  });
  *
- *  // we must release the scope instance explicitly
+ *  // The scope instance must be explicitly released.
  *  requestScopeInstance.release();
  * </pre>
  * <p>

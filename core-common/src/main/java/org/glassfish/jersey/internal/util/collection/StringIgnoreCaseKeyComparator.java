@@ -43,7 +43,7 @@ package org.glassfish.jersey.internal.util.collection;
  * Case insensitive String key comparator.
  *
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class StringIgnoreCaseKeyComparator implements KeyComparator<String> {
 

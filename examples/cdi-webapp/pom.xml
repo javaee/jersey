@@ -48,7 +48,7 @@
         <groupId>org.glassfish.jersey.examples</groupId>
         <artifactId>webapp-example-parent</artifactId>
         <relativePath>../webapp-example-parent/pom.xml</relativePath>
-        <version>2.19-SNAPSHOT</version>
+        <version>2.20-SNAPSHOT</version>
     </parent>
 
     <artifactId>cdi-webapp</artifactId>
@@ -202,7 +202,7 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>org.glassfish.jersey.examples.cdi.GrizzlyApp</mainClass>
+                    <mainClass>org.glassfish.jersey.examples.cdi.App</mainClass>
                     <classpathScope>test</classpathScope>
                 </configuration>
             </plugin>

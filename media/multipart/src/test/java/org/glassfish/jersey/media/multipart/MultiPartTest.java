@@ -52,7 +52,7 @@ import static org.junit.Assert.fail;
  * Test case for {@link MultiPart}.
  *
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class MultiPartTest {
 

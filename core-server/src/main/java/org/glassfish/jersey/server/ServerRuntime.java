@@ -151,7 +151,7 @@ public class ServerRuntime {
     /*package */ static final ExternalRequestScope<Object> NOOP_EXTERNAL_REQ_SCOPE = new ExternalRequestScope<Object>() {
 
         @Override
-        public ExternalRequestContext<Object> open() {
+        public ExternalRequestContext<Object> open(ServiceLocator serviceLocator) {
             return null;
         }
 
@@ -160,11 +160,11 @@ public class ServerRuntime {
         }
 
         @Override
-        public void suspend(ExternalRequestContext<Object> o) {
+        public void suspend(ExternalRequestContext<Object> o, ServiceLocator serviceLocator) {
         }
 
         @Override
-        public void resume(ExternalRequestContext<Object> o) {
+        public void resume(ExternalRequestContext<Object> o, ServiceLocator serviceLocator) {
         }
     };
 
@@ -285,7 +285,8 @@ public class ServerRuntime {
         final Responder responder = new Responder(context, ServerRuntime.this);
         final RequestScope.Instance requestScopeInstance = requestScope.createInstance();
         final AsyncResponderHolder asyncResponderHolder =
-                new AsyncResponderHolder(responder, externalRequestScope, requestScopeInstance, externalRequestScope.open());
+                new AsyncResponderHolder(responder, externalRequestScope,
+                        requestScopeInstance, externalRequestScope.open(locator));
         context.initAsyncContext(asyncResponderHolder);
 
         requestScope.runInScope(requestScopeInstance, new Runnable() {
@@ -310,7 +311,7 @@ public class ServerRuntime {
                     if (!asyncResponderHolder.isAsync()) {
                         responder.process(response);
                     } else {
-                        externalRequestScope.suspend(asyncResponderHolder.externalContext);
+                        externalRequestScope.suspend(asyncResponderHolder.externalContext, locator);
                     }
                 } catch (final Throwable throwable) {
                     responder.process(throwable);
@@ -327,7 +328,6 @@ public class ServerRuntime {
      * Get the Jersey server runtime background scheduler.
      *
      * @return server runtime background scheduler.
-     *
      * @see BackgroundScheduler
      */
     ScheduledExecutorService getBackgroundScheduler() {
@@ -336,7 +336,7 @@ public class ServerRuntime {
 
     /**
      * Ensure that the value a {@value HttpHeaders#LOCATION} header is an absolute URI, if present among headers.
-     *
+     * <p/>
      * Relative URI value will be made absolute using a base request URI.
      *
      * @param location location URI; value of the HTTP {@value HttpHeaders#LOCATION} response header.
@@ -558,6 +558,9 @@ public class ServerRuntime {
                     if (throwable instanceof WebApplicationException) {
                         final WebApplicationException webApplicationException = (WebApplicationException) throwable;
 
+                        // set mapped throwable
+                        processingContext.routingContext().setMappedThrowable(throwable);
+
                         waeResponse = webApplicationException.getResponse();
                         if (waeResponse.hasEntity()) {
                             LOGGER.log(Level.FINE, LocalizationMessages
@@ -579,6 +582,9 @@ public class ServerRuntime {
                                         timestamp, mapper, throwable, throwable.getLocalizedMessage(),
                                         mappedResponse != null ? mappedResponse.getStatusInfo() : "-no-response-");
                             }
+
+                            // set mapped throwable
+                            processingContext.routingContext().setMappedThrowable(throwable);
 
                             if (mappedResponse != null) {
                                 // response successfully mapped
@@ -855,7 +861,7 @@ public class ServerRuntime {
                         @Override
                         public void run() {
                             try {
-                                requestScopeListener.resume(foreignScopeInstance);
+                                requestScopeListener.resume(foreignScopeInstance, responder.runtime.locator);
                                 final Response response = producer.call();
                                 if (response != null) {
                                     resume(response);
@@ -889,7 +895,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
-                        requestScopeListener.resume(foreignScopeInstance);
+                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.locator);
                         final Response jaxrsResponse =
                                 (response instanceof Response) ? (Response) response : Response.ok(response).build();
                         ServerRuntime.ensureAbsolute(
@@ -908,7 +914,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
-                        requestScopeListener.resume(foreignScopeInstance);
+                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.locator);
                         responder.process(new MappableException(error));
                     } catch (final Throwable error) {
                         // Ignore the exception - already resumed but may be rethrown by ContainerResponseWriter#failure.
@@ -987,7 +993,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
-                        requestScopeListener.resume(foreignScopeInstance);
+                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.locator);
                         final Response response = responseValue.get();
                         responder.process(new ContainerResponse(responder.processingContext.request(), response));
                     } catch (final Throwable t) {
@@ -1105,7 +1111,7 @@ public class ServerRuntime {
 
     /**
      * Abstract composite callback runner.
-     *
+     * <p/>
      * The runner supports registering multiple callbacks of a specific type and the execute the callback method
      * on all the registered callbacks.
      *

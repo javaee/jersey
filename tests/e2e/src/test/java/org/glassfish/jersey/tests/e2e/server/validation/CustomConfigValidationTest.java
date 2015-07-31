@@ -69,7 +69,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.moxy.xml.MoxyXmlFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -85,13 +84,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class CustomConfigValidationTest extends JerseyTest {
 
-    /**
-     * @author Michal Gajdos (michal.gajdos at oracle.com)
-     */
     @javax.ws.rs.Path("customconfigvalidation/{path: .*}")
     public static class CustomConfigResource {
 

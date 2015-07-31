@@ -45,7 +45,7 @@ import javax.ws.rs.Path;
 /**
  * Common model helper methods.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Constantino Cronemberger (ccronemberger at yahoo.com.br)
  */
 public final class ModelHelper {
@@ -58,21 +58,35 @@ public final class ModelHelper {
      * @return resource class or it's ancestor that is annotated with the {@link javax.ws.rs.Path &#64;Path}
      *         annotation.
      */
-    public static Class<?> getAnnotatedResourceClass(Class<?> resourceClass) {
+    public static Class<?> getAnnotatedResourceClass(final Class<?> resourceClass) {
+
+        Class<?> foundInterface = null;
 
         // traverse the class hierarchy to find the annotation
+        // According to specification, annotation in the super-classes must take precedence over annotation in the
+        // implemented interfaces
         Class<?> cls = resourceClass;
         do {
             if (cls.isAnnotationPresent(Path.class)) {
                 return cls;
             }
 
-            for (Class<?> i : cls.getInterfaces()) {
-                if (i.isAnnotationPresent(Path.class)) {
-                    return i;
+            // if no annotation found on the class currently traversed, check for annotation in the interfaces on this
+            // level - if not already previously found
+            if (foundInterface == null) {
+                for (final Class<?> i : cls.getInterfaces()) {
+                    if (i.isAnnotationPresent(Path.class)) {
+                        // store the interface reference in case no annotation will be found in the super-classes
+                        foundInterface = i;
+                        break;
+                    }
                 }
             }
         } while ((cls = cls.getSuperclass()) != null);
+
+        if (foundInterface != null) {
+            return foundInterface;
+        }
 
         return resourceClass;
     }

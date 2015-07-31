@@ -61,8 +61,15 @@ public final class App {
         try {
             System.out.println("Jersey Entity Data Filtering Example.");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI,
-                    new SelectableEntityFilteringApplication());
+            final HttpServer server = GrizzlyHttpServerFactory
+                    .createHttpServer(BASE_URI, new SelectableEntityFilteringApplication(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
             System.out.println("Application started.\nTry out one of these URIs:");
             for (final String path : new String[]{"people/1234", "people/1234?select=familyName,givenName",
@@ -70,14 +77,11 @@ public final class App {
                     "people/1234?select=familyName,givenName,addresses.phoneNumber.number"}) {
                 System.out.println(BASE_URI + path);
             }
-            System.out.println("Hit enter to stop it...");
+            System.out.println("Stop the application using CTRL+C");
 
-            System.in.read();
-
-            server.shutdownNow();
-        } catch (final IOException ex) {
-            Logger.getLogger(App.class.getName())
-                    .log(Level.SEVERE, "I/O error occurred during reading from an system input stream.", ex);
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

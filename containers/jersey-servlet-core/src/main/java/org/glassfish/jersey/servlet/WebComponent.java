@@ -410,6 +410,11 @@ public class WebComponent {
             });
         } catch (final HeaderValueException hve) {
             final Response.Status status = Response.Status.BAD_REQUEST;
+
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, LocalizationMessages.HEADER_VALUE_READ_FAILED(), hve);
+            }
+
             if (configSetStatusOverSendError) {
                 servletResponse.reset();
                 //noinspection deprecation

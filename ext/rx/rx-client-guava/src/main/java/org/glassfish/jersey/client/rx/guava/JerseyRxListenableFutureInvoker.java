@@ -56,7 +56,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 /**
  * Implementation of Reactive Invoker for {@code ListenableFuture}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 final class JerseyRxListenableFutureInvoker extends AbstractRxInvoker<ListenableFuture> implements RxListenableFutureInvoker {

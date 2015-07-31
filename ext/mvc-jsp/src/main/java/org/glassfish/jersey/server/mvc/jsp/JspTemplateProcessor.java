@@ -73,7 +73,7 @@ import org.glassfish.jersey.server.mvc.spi.ResolvedViewable;
  * processor does not support caching of template reference objects (in Jersey) or passing custom template object factory.
  *
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class JspTemplateProcessor extends AbstractTemplateProcessor<String> {
 

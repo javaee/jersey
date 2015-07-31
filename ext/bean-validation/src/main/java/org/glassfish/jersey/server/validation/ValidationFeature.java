@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,32 +40,41 @@
 
 package org.glassfish.jersey.server.validation;
 
+import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.validation.internal.ValidationExceptionMapper;
 import org.glassfish.jersey.server.validation.internal.ValidationBinder;
-import org.glassfish.jersey.server.validation.internal.ValidationErrorMessageBodyWriter;
 
 /**
  * {@code ValidationFeature} used to add Bean Validation (JSR-349) support to the server.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
+@ConstrainedTo(RuntimeType.SERVER)
 public final class ValidationFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
-        final Object disableProperty = context.getConfiguration().getProperty(ServerProperties.BV_FEATURE_DISABLE);
-        if (PropertiesHelper.isProperty(disableProperty)) {
+        final Configuration config = context.getConfiguration();
+
+        // Validation disabled?
+        if (PropertiesHelper.isProperty(config.getProperty(ServerProperties.BV_FEATURE_DISABLE))) {
             return false;
         }
 
         context.register(new ValidationBinder());
-        context.register(ValidationExceptionMapper.class);
-        context.register(ValidationErrorMessageBodyWriter.class);
+
+        // Set ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR to make sure no sendError is called on servlet container
+        // when ServerProperties.BV_SEND_ERROR_IN_RESPONSE is enabled.
+        if (PropertiesHelper.isProperty(config.getProperty(ServerProperties.BV_SEND_ERROR_IN_RESPONSE))
+                && config.getProperty(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR) == null) {
+            context.property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, true);
+        }
 
         return true;
     }

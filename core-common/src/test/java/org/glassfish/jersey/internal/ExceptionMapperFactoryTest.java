@@ -40,16 +40,19 @@
 
 package org.glassfish.jersey.internal;
 
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.spi.ExtendedExceptionMapper;
-import org.junit.Assert;
-import org.junit.Test;
-
-import javax.inject.Singleton;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.spi.ExtendedExceptionMapper;
+
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Unit test of {@link ExceptionMapperFactory}.
@@ -77,7 +80,6 @@ public class ExceptionMapperFactoryTest {
 
     }
 
-
     /**
      * Test spec:
      * <p/>
@@ -101,10 +103,10 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindMappingExtendedExceptions() throws Exception {
-        ServiceLocator serviceLocator = Injections.createLocator(new ExtendedExceptionMappers());
-        ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
+        final ServiceLocator serviceLocator = Injections.createLocator(new ExtendedExceptionMappers());
+        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
 
-        ExceptionMapper mapper = mapperFactory.findMapping(new IllegalArgumentException());
+        final ExceptionMapper mapper = mapperFactory.findMapping(new IllegalArgumentException());
 
         Assert.assertTrue("IllegalArgumentExceptionMapper should be returned",
                 mapper instanceof IllegalArgumentExceptionMapper);
@@ -131,10 +133,10 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindMapping() throws Exception {
-        ServiceLocator serviceLocator = Injections.createLocator(new AllMappers());
-        ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
+        final ServiceLocator serviceLocator = Injections.createLocator(new AllMappers());
+        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
 
-        ExceptionMapper<RuntimeException> mapper = mapperFactory.findMapping(new RuntimeException());
+        final ExceptionMapper<RuntimeException> mapper = mapperFactory.findMapping(new RuntimeException());
 
         Assert.assertTrue("RuntimeExceptionMapper should be returned", mapper instanceof RuntimeExceptionMapper);
     }
@@ -161,10 +163,10 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindExtendedExceptions() throws Exception {
-        ServiceLocator serviceLocator = Injections.createLocator(new ExtendedExceptionMappers());
-        ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
+        final ServiceLocator serviceLocator = Injections.createLocator(new ExtendedExceptionMappers());
+        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
 
-        ExceptionMapper mapper = mapperFactory.find(IllegalArgumentException.class);
+        final ExceptionMapper mapper = mapperFactory.find(IllegalArgumentException.class);
 
         Assert.assertTrue("IllegalStateExceptionMapper should be returned",
                 mapper instanceof IllegalStateExceptionMapper);
@@ -177,12 +179,12 @@ public class ExceptionMapperFactoryTest {
     private static class IllegalArgumentExceptionMapper implements ExtendedExceptionMapper<RuntimeException> {
 
         @Override
-        public boolean isMappable(RuntimeException exception) {
+        public boolean isMappable(final RuntimeException exception) {
             return exception instanceof IllegalArgumentException;
         }
 
         @Override
-        public Response toResponse(RuntimeException exception) {
+        public Response toResponse(final RuntimeException exception) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
                     .build();
@@ -197,12 +199,12 @@ public class ExceptionMapperFactoryTest {
     private static class IllegalStateExceptionMapper implements ExtendedExceptionMapper<RuntimeException> {
 
         @Override
-        public boolean isMappable(RuntimeException exception) {
+        public boolean isMappable(final RuntimeException exception) {
             return exception instanceof IllegalStateException;
         }
 
         @Override
-        public Response toResponse(RuntimeException exception) {
+        public Response toResponse(final RuntimeException exception) {
             return Response
                     .status(Response.Status.SERVICE_UNAVAILABLE)
                     .build();
@@ -216,7 +218,7 @@ public class ExceptionMapperFactoryTest {
     private static class RuntimeExceptionMapper implements ExceptionMapper<RuntimeException> {
 
         @Override
-        public Response toResponse(RuntimeException exception) {
+        public Response toResponse(final RuntimeException exception) {
             return Response
                     .status(Response.Status.INTERNAL_SERVER_ERROR)
                     .build();

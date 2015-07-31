@@ -60,7 +60,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 /**
  * Used by unit tests / benchmarks to create mock {@link org.glassfish.jersey.server.ContainerRequest} instances.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Martin Matula
  * @since 2.17
  */

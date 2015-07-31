@@ -49,7 +49,7 @@ import org.glassfish.jersey.client.rx.spi.RxInvokerProvider;
 /**
  * Invoker provider for invokers based on JSR-166e's (pre-Java 8) {@code CompletableFuture}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 public final class RxCompletableFutureInvokerProvider implements RxInvokerProvider {

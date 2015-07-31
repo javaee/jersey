@@ -66,6 +66,13 @@ public class Main {
 
     public static HttpServer startServer(String webRootPath) {
         final HttpServer server = new HttpServer();
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                server.shutdownNow();
+            }
+        }));
+
         final NetworkListener listener = new NetworkListener("grizzly", "localhost", PORT);
 
         server.addListener(listener);
@@ -94,11 +101,11 @@ public class Main {
             final HttpServer server = startServer(args.length >= 1 ? args[0] : null);
             System.out.println(String.format("Application started.\n"
                             + "Access it at %s\n"
-                            + "Hit enter to stop it...",
+                            + "Stop the application using CTRL+C",
                     getAppUri()));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
+
+            Thread.currentThread().join();
+        } catch (InterruptedException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

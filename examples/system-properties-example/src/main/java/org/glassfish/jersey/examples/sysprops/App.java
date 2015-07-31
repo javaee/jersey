@@ -61,16 +61,23 @@ public class App {
         try {
             System.out.println("System Properties Jersey Example App");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, createApp(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
             System.out.println(
                     String.format("Application started.%n"
                             + "Try out %s%n"
-                            + "Hit enter to stop it...",
+                            + "Stop the application using CTRL+C",
                             BASE_URI + "/properties"));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
 

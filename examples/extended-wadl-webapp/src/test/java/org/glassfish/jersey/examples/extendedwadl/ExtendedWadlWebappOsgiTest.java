@@ -202,8 +202,7 @@ public class ExtendedWadlWebappOsgiTest {
         return options.toArray(new Option[options.size()]);
     }
 
-
-    ResourceConfig createResourceConfig() {
+    private ResourceConfig createResourceConfig() {
         final ResourceConfig resourceConfig = new ResourceConfig(new MyApplication().getClasses());
         resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG, SampleWadlGeneratorConfig.class.getName());
 
@@ -214,14 +213,14 @@ public class ExtendedWadlWebappOsgiTest {
      * Test checks that the WADL generated using the WadlGenerator api doesn't
      * contain the expected text.
      *
-     * @throws java.lang.Exception
+     * @throws java.lang.Exception in case of a test error.
      */
     @Test
     public void testExtendedWadl() throws Exception {
 
         // TODO - temporary workaround
         // This is a workaround related to issue JERSEY-2093; grizzly (1.9.5) needs to have the correct context
-        // classloader set
+        // class loader set
         ClassLoader myClassLoader = this.getClass().getClassLoader();
 
         for (Bundle bundle : bundleContext.getBundles()) {
@@ -262,7 +261,7 @@ public class ExtendedWadlWebappOsgiTest {
         String wadl = response.readEntity(String.class);
         LOGGER.info("RESULT = " + wadl);
 
-        assertTrue("Generated wadl is of null length", wadl.length() > 0);
+        assertTrue("Generated wadl is of null length", !wadl.isEmpty());
         assertTrue("Generated wadl doesn't contain the expected text",
                 wadl.contains("This is a paragraph"));
 
@@ -275,7 +274,7 @@ public class ExtendedWadlWebappOsgiTest {
     public void testWadlOptionsMethod() throws Exception {
         // TODO - temporary workaround
         // This is a workaround related to issue JERSEY-2093; grizzly (1.9.5) needs to have the correct context
-        // classloader set
+        // class loader set
         ClassLoader myClassLoader = this.getClass().getClassLoader();
         for (Bundle bundle : bundleContext.getBundles()) {
             if ("webapp".equals(bundle.getSymbolicName())) {
@@ -295,7 +294,7 @@ public class ExtendedWadlWebappOsgiTest {
         String wadl = client.target(baseUri).path("items").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
                 .request(MediaTypes.WADL_TYPE).options(String.class);
 
-        assertTrue("Generated wadl is of null length", wadl.length() > 0);
+        assertTrue("Generated wadl is of null length", !wadl.isEmpty());
         assertTrue("Generated wadl doesn't contain the expected text",
                 wadl.contains("This is a paragraph"));
 
@@ -304,7 +303,6 @@ public class ExtendedWadlWebappOsgiTest {
         server.shutdownNow();
     }
 
-
     private void checkWadl(String wadl, URI baseUri) throws Exception {
         DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
         bf.setNamespaceAware(true);
@@ -312,26 +310,40 @@ public class ExtendedWadlWebappOsgiTest {
         DocumentBuilder b = bf.newDocumentBuilder();
         Document document = b.parse(new ByteArrayInputStream(wadl.getBytes(Charset.forName("UTF-8"))));
         XPath xp = XPathFactory.newInstance().newXPath();
-        xp.setNamespaceContext(new SimpleNamespaceResolver("ns2", "http://wadl.dev.java.net/2009/02"));
-        String val = (String) xp.evaluate("/ns2:application/ns2:resources/@base", document, XPathConstants.STRING);
+        xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+        String val = (String) xp.evaluate("/wadl:application/wadl:resources/@base", document, XPathConstants.STRING);
         assertEquals(baseUri.toString(), val.endsWith("/") ? val.substring(0, val.length() - 1) : val);
-        val = (String) xp.evaluate("count(//ns2:resource)", document, XPathConstants.STRING);
-        assertEquals(val, "3");
-        val = (String) xp.evaluate("count(//ns2:resource[@path='items'])", document, XPathConstants.STRING);
-        assertEquals("1", val);
-        val = (String) xp.evaluate("count(//ns2:resource[@path='{id}'])", document, XPathConstants.STRING);
-        assertEquals("1", val);
-        val = (String) xp.evaluate("count(//ns2:resource[@path='value/{value}'])", document, XPathConstants.STRING);
-        assertEquals("1", val);
+        val = (String) xp.evaluate("count(//wadl:resource)", document, XPathConstants.STRING);
+        assertEquals("Unexpected number of resource elements.", val, "4");
+        val = (String) xp.evaluate("count(//wadl:resource[@path='items'])", document, XPathConstants.STRING);
+        assertEquals("Unexpected number of resource elements with 'items' path.", "1", val);
+        val = (String) xp.evaluate("count(//wadl:resource[@path='{id}'])", document, XPathConstants.STRING);
+        assertEquals("Unexpected number of resource elements with '{id}' path.", "1", val);
+        val = (String) xp.evaluate("count(//wadl:resource[@path='try-hard'])", document, XPathConstants.STRING);
+        assertEquals("Unexpected number of resource elements with 'try-hard' path.", "1", val);
+        val = (String) xp.evaluate("count(//wadl:resource[@path='value/{value}'])", document, XPathConstants.STRING);
+        assertEquals("Unexpected number of resource elements with 'value/{value}' path.", "1", val);
 
-        val = (String) xp.evaluate("count(//ns2:resource[@path='{id}']/ns2:method)", document, XPathConstants.STRING);
-        assertEquals("2", val);
-        val = (String) xp.evaluate("count(//ns2:resource[@path='items']/ns2:method)", document, XPathConstants.STRING);
-        assertEquals("4", val);
-        val = (String) xp.evaluate("count(//ns2:resource[@path='value/{value}']/ns2:method)", document, XPathConstants.STRING);
-        assertEquals("1", val);
+        val = (String) xp.evaluate("count(//wadl:resource[@path='{id}']/wadl:method)", document, XPathConstants.STRING);
+        assertEquals("Unexpected number of methods in resource element with '{id}' path.", "2", val);
+        val = (String) xp.evaluate("count(//wadl:resource[@path='{id}']/wadl:method[@id='getItem']"
+                        + "/wadl:doc[contains(., 'Typically returns the item if it exists.')])",
+                document, XPathConstants.STRING);
+        assertEquals("Unexpected documentation of getItem resource method at '{id}' path", "1", val);
 
-        val = (String) xp.evaluate("count(//ns2:application/ns2:doc)", document, XPathConstants.STRING);
-        assertEquals("3", val);
+        val = (String) xp.evaluate("count(//wadl:resource[@path='try-hard']/wadl:method)", document, XPathConstants.STRING);
+        assertEquals("Unexpected number of methods in resource element with 'try-hard' path.", "1", val);
+        val = (String) xp.evaluate("count(//wadl:resource[@path='try-hard']/wadl:method[@id='getItem']"
+                        + "/wadl:doc[contains(., 'Tries hard to return the item if it exists.')])",
+                document, XPathConstants.STRING);
+        assertEquals("Unexpected documentation of getItem resource method at 'try-hard' path", "1", val);
+
+        val = (String) xp.evaluate("count(//wadl:resource[@path='items']/wadl:method)", document, XPathConstants.STRING);
+        assertEquals("Unexpected number of methods in resource element with 'items' path.", "4", val);
+        val = (String) xp.evaluate("count(//wadl:resource[@path='value/{value}']/wadl:method)", document, XPathConstants.STRING);
+        assertEquals("Unexpected number of methods in resource element with 'value/{value}' path.", "1", val);
+
+        val = (String) xp.evaluate("count(//wadl:application/wadl:doc)", document, XPathConstants.STRING);
+        assertEquals("Unexpected number of doc elements in application element.", "3", val);
     }
 }

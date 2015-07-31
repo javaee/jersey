@@ -44,10 +44,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.ext.cdi1x.internal.JerseyVetoed;
 import org.glassfish.jersey.server.spi.ExternalRequestContext;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.jboss.weld.context.bound.BoundRequestContext;
 
@@ -62,27 +66,32 @@ public class WeldRequestScope implements ExternalRequestScope<Map<String, Object
 
     @Inject
     private BoundRequestContext context;
+
     private final ThreadLocal<Map<String, Object>> actualMap = new ThreadLocal<>();
 
+    public static final ThreadLocal<ServiceLocator> actualServiceLocator = new ThreadLocal<>();
+
     @Override
-    public ExternalRequestContext<Map<String, Object>> open() {
+    public ExternalRequestContext<Map<String, Object>> open(ServiceLocator serviceLocator) {
         final Map<String, Object> newMap = new ConcurrentHashMap<>();
         actualMap.set(newMap);
         context.associate(newMap);
         context.activate();
+        actualServiceLocator.set(serviceLocator);
         return new ExternalRequestContext<>(newMap);
     }
 
     @Override
-    public void resume(final ExternalRequestContext<Map<String, Object>> ctx) {
+    public void resume(final ExternalRequestContext<Map<String, Object>> ctx, ServiceLocator serviceLocator) {
         final Map<String, Object> newMap = ctx.getContext();
+        actualServiceLocator.set(serviceLocator);
         actualMap.set(newMap);
         context.associate(newMap);
         context.activate();
     }
 
     @Override
-    public void suspend(final ExternalRequestContext<Map<String, Object>> ctx) {
+    public void suspend(final ExternalRequestContext<Map<String, Object>> ctx, ServiceLocator serviceLocator) {
         try {
             final Map<String, Object> contextMap = actualMap.get();
             if (contextMap != null) {
@@ -91,6 +100,7 @@ public class WeldRequestScope implements ExternalRequestScope<Map<String, Object
             }
         } finally {
             actualMap.remove();
+            actualServiceLocator.remove();
         }
     }
 
@@ -107,6 +117,7 @@ public class WeldRequestScope implements ExternalRequestScope<Map<String, Object
             }
         } finally {
             actualMap.remove();
+            actualServiceLocator.remove();
         }
     }
 }

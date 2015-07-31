@@ -90,7 +90,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * If any of the properties are not supported by particular template processor then this fact should be mentioned in documentation
  * of the template processor.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<T> {
 

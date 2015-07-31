@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,7 @@ import org.glassfish.jersey.examples.beanvalidation.webapp.domain.ContactCard;
  * Checks whether a return entity (entities) has a not-empty {@code searchType} field which contains {@code q} search phrase.
  * (Double check for entities returned from {@link org.glassfish.jersey.examples.beanvalidation.webapp.service.StorageService}.)
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = {NotEmptySearchField.Validator.class, NotEmptySearchField.ListValidator.class})

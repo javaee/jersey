@@ -84,39 +84,42 @@ public class UriRoutingContext implements RoutingContext {
     private final ImmutableMultivaluedMap<String, String> encodedTemplateValuesView =
             new ImmutableMultivaluedMap<>(encodedTemplateValues);
 
+    private final LinkedList<String> paths = Lists.newLinkedList();
+    private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
+    private final LinkedList<ResourceMethod> matchedLocators = Lists.newLinkedList();
+    private final LinkedList<Resource> locatorSubResources = Lists.newLinkedList();
+
+    private final TracingLogger tracingLogger;
+
+    private volatile ResourceMethod matchedResourceMethod = null;
+    private volatile Throwable mappedThrowable = null;
+
+    private Endpoint endpoint;
+
     private MultivaluedHashMap<String, String> decodedTemplateValues;
     private ImmutableMultivaluedMap<String, String> decodedTemplateValuesView;
 
     private ImmutableMultivaluedMap<String, String> encodedQueryParamsView;
     private ImmutableMultivaluedMap<String, String> decodedQueryParamsView;
 
-    private final LinkedList<String> paths = Lists.newLinkedList();
-    private Endpoint endpoint;
-    private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
-    private volatile ResourceMethod matchedResourceMethod = null;
-    private final LinkedList<ResourceMethod> matchedLocators = Lists.newLinkedList();
-    private final LinkedList<Resource> locatorSubResources = Lists.newLinkedList();
-
-    private final TracingLogger tracingLogger;
-
     /**
      * Injection constructor.
      *
-     * @param requestContext      request reference.
+     * @param requestContext request reference.
      */
-    public UriRoutingContext(ContainerRequest requestContext) {
+    public UriRoutingContext(final ContainerRequest requestContext) {
         this.requestContext = requestContext;
         this.tracingLogger = TracingLogger.getInstance(requestContext);
     }
 
     // RoutingContext
     @Override
-    public void pushMatchResult(MatchResult matchResult) {
+    public void pushMatchResult(final MatchResult matchResult) {
         matchResults.push(matchResult);
     }
 
     @Override
-    public void pushMatchedResource(Object resource) {
+    public void pushMatchedResource(final Object resource) {
         tracingLogger.log(ServerTraceEvent.MATCH_RESOURCE, resource);
         matchedResources.push(resource);
     }
@@ -127,7 +130,7 @@ public class UriRoutingContext implements RoutingContext {
     }
 
     @Override
-    public void pushMatchedLocator(ResourceMethod resourceLocator) {
+    public void pushMatchedLocator(final ResourceMethod resourceLocator) {
         tracingLogger.log(ServerTraceEvent.MATCH_LOCATOR, resourceLocator.getInvocable().getHandlingMethod());
         matchedLocators.push(resourceLocator);
     }
@@ -139,7 +142,7 @@ public class UriRoutingContext implements RoutingContext {
 
         final String encodedRequestPath = getPath(false);
 
-        int length = encodedRequestPath.length() - rhpLength;
+        final int length = encodedRequestPath.length() - rhpLength;
         if (length <= 0) {
             paths.addFirst("");
         } else {
@@ -148,7 +151,7 @@ public class UriRoutingContext implements RoutingContext {
     }
 
     @Override
-    public void pushTemplates(UriTemplate resourceTemplate, UriTemplate methodTemplate) {
+    public void pushTemplates(final UriTemplate resourceTemplate, final UriTemplate methodTemplate) {
         final Iterator<MatchResult> matchResultIterator = matchResults.iterator();
         templates.push(resourceTemplate);
         if (methodTemplate != null) {
@@ -164,9 +167,9 @@ public class UriRoutingContext implements RoutingContext {
         }
     }
 
-    private void pushMatchedTemplateValues(UriTemplate template, MatchResult matchResult) {
+    private void pushMatchedTemplateValues(final UriTemplate template, final MatchResult matchResult) {
         int i = 1;
-        for (String templateVariable : template.getTemplateVariables()) {
+        for (final String templateVariable : template.getTemplateVariables()) {
             final String value = matchResult.group(i++);
             encodedTemplateValues.addFirst(templateVariable, value);
             if (decodedTemplateValues != null) {
@@ -184,7 +187,7 @@ public class UriRoutingContext implements RoutingContext {
             return null;
         }
 
-        String finalGroup = mr.group(mr.groupCount());
+        final String finalGroup = mr.group(mr.groupCount());
         // We have found a match but the right hand path pattern did not match anything
         // so just returning an empty string as a final matching group result.
         // Otherwise a non-empty patterns would fail to match the right-hand-path properly.
@@ -208,13 +211,13 @@ public class UriRoutingContext implements RoutingContext {
     }
 
     @Override
-    public void setMatchedResourceMethod(ResourceMethod resourceMethod) {
+    public void setMatchedResourceMethod(final ResourceMethod resourceMethod) {
         tracingLogger.log(ServerTraceEvent.MATCH_RESOURCE_METHOD, resourceMethod.getInvocable().getHandlingMethod());
         this.matchedResourceMethod = resourceMethod;
     }
 
     @Override
-    public void pushMatchedRuntimeResource(RuntimeResource runtimeResource) {
+    public void pushMatchedRuntimeResource(final RuntimeResource runtimeResource) {
         if (tracingLogger.isLogEnabled(ServerTraceEvent.MATCH_RUNTIME_RESOURCE)) {
             tracingLogger.log(ServerTraceEvent.MATCH_RUNTIME_RESOURCE,
                     runtimeResource.getResources().get(0).getPath(),
@@ -228,7 +231,7 @@ public class UriRoutingContext implements RoutingContext {
     }
 
     @Override
-    public void pushLocatorSubResource(Resource subResourceFromLocator) {
+    public void pushLocatorSubResource(final Resource subResourceFromLocator) {
         this.locatorSubResources.push(subResourceFromLocator);
     }
 
@@ -269,14 +272,14 @@ public class UriRoutingContext implements RoutingContext {
     private static final Function<String, String> PATH_DECODER = new Function<String, String>() {
 
         @Override
-        public String apply(String input) {
+        public String apply(final String input) {
             return UriComponent.decode(input, UriComponent.Type.PATH);
         }
 
     };
 
     @Override
-    public List<String> getMatchedURIs(boolean decode) {
+    public List<String> getMatchedURIs(final boolean decode) {
         final List<String> result;
         if (decode) {
             result = Lists.transform(paths, PATH_DECODER);
@@ -292,7 +295,7 @@ public class UriRoutingContext implements RoutingContext {
     }
 
     @Override
-    public String getPath(boolean decode) {
+    public String getPath(final boolean decode) {
         return requestContext.getPath(decode);
     }
 
@@ -302,20 +305,20 @@ public class UriRoutingContext implements RoutingContext {
     }
 
     @Override
-    public MultivaluedMap<String, String> getPathParameters(boolean decode) {
+    public MultivaluedMap<String, String> getPathParameters(final boolean decode) {
         if (decode) {
             if (decodedTemplateValuesView != null) {
                 return decodedTemplateValuesView;
             } else if (decodedTemplateValues == null) {
                 decodedTemplateValues = new MultivaluedHashMap<>();
-                for (Map.Entry<String, List<String>> e : encodedTemplateValues.entrySet()) {
+                for (final Map.Entry<String, List<String>> e : encodedTemplateValues.entrySet()) {
                     decodedTemplateValues.put(
                             UriComponent.decode(e.getKey(), UriComponent.Type.PATH_SEGMENT),
                             // we need to keep the ability to add new entries
                             new LinkedList<>(Lists.transform(e.getValue(), new Function<String, String>() {
 
                                 @Override
-                                public String apply(String input) {
+                                public String apply(final String input) {
                                     return UriComponent.decode(input, UriComponent.Type.PATH);
                                 }
                             })));
@@ -335,7 +338,7 @@ public class UriRoutingContext implements RoutingContext {
     }
 
     @Override
-    public List<PathSegment> getPathSegments(boolean decode) {
+    public List<PathSegment> getPathSegments(final boolean decode) {
         final String requestPath = requestContext.getPath(false);
         return Collections.unmodifiableList(UriComponent.decodePath(requestPath, decode));
     }
@@ -346,7 +349,7 @@ public class UriRoutingContext implements RoutingContext {
     }
 
     @Override
-    public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
+    public MultivaluedMap<String, String> getQueryParameters(final boolean decode) {
         if (decode) {
             if (decodedQueryParamsView != null) {
                 return decodedQueryParamsView;
@@ -393,7 +396,12 @@ public class UriRoutingContext implements RoutingContext {
     // ExtendedUriInfo
     @Override
     public Throwable getMappedThrowable() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return mappedThrowable;
+    }
+
+    @Override
+    public void setMappedThrowable(final Throwable mappedThrowable) {
+        this.mappedThrowable = mappedThrowable;
     }
 
     @Override
@@ -402,15 +410,15 @@ public class UriRoutingContext implements RoutingContext {
     }
 
     @Override
-    public List<PathSegment> getPathSegments(String name) {
+    public List<PathSegment> getPathSegments(final String name) {
         return getPathSegments(name, true);
     }
 
     @Override
-    public List<PathSegment> getPathSegments(String name, boolean decode) {
-        int[] bounds = getPathParameterBounds(name);
+    public List<PathSegment> getPathSegments(final String name, final boolean decode) {
+        final int[] bounds = getPathParameterBounds(name);
         if (bounds != null) {
-            String path = matchResults.getLast().group();
+            final String path = matchResults.getLast().group();
             // Work out how many path segments are up to the start
             // and end position of the matching path parameter value
             // This assumes that the path always starts with a '/'
@@ -433,17 +441,17 @@ public class UriRoutingContext implements RoutingContext {
         }
     }
 
-    private int[] getPathParameterBounds(String name) {
-        Iterator<UriTemplate> templatesIterator = templates.iterator();
-        Iterator<MatchResult> matchResultsIterator = matchResults.iterator();
+    private int[] getPathParameterBounds(final String name) {
+        final Iterator<UriTemplate> templatesIterator = templates.iterator();
+        final Iterator<MatchResult> matchResultsIterator = matchResults.iterator();
         while (templatesIterator.hasNext()) {
             MatchResult mr = matchResultsIterator.next();
             // Find the index of path parameter
-            int pIndex = getLastPathParameterIndex(name, templatesIterator.next());
+            final int pIndex = getLastPathParameterIndex(name, templatesIterator.next());
             if (pIndex != -1) {
                 int pathLength = mr.group().length();
                 int segmentIndex = mr.end(pIndex + 1);
-                int groupLength = segmentIndex - mr.start(pIndex + 1);
+                final int groupLength = segmentIndex - mr.start(pIndex + 1);
 
                 // Find the absolute position of the end of the
                 // capturing group in the request path
@@ -452,16 +460,16 @@ public class UriRoutingContext implements RoutingContext {
                     segmentIndex += mr.group().length() - pathLength;
                     pathLength = mr.group().length();
                 }
-                return new int[]{segmentIndex - groupLength, segmentIndex};
+                return new int[] {segmentIndex - groupLength, segmentIndex};
             }
         }
         return null;
     }
 
-    private int getLastPathParameterIndex(String name, UriTemplate t) {
+    private int getLastPathParameterIndex(final String name, final UriTemplate t) {
         int i = 0;
         int pIndex = -1;
-        for (String parameterName : t.getTemplateVariables()) {
+        for (final String parameterName : t.getTemplateVariables()) {
             if (parameterName.equals(name)) {
                 pIndex = i;
             }
@@ -507,9 +515,8 @@ public class UriRoutingContext implements RoutingContext {
         return matchedResourceMethod == null ? null : matchedResourceMethod.getParent();
     }
 
-
     @Override
-    public URI resolve(URI uri) {
+    public URI resolve(final URI uri) {
         return UriTemplate.resolve(getBaseUri(), uri);
     }
 

@@ -57,7 +57,7 @@ import org.glassfish.jersey.client.rx.RxInvoker;
  *
  * @param <T> the asynchronous/event-based completion aware type. The given type should be parametrized with the actual
  *            response type.
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 public abstract class AbstractRxInvoker<T> implements RxInvoker<T> {

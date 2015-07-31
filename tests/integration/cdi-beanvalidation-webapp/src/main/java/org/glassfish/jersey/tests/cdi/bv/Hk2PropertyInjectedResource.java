@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.tests.cdi.bv;
 
+import javax.enterprise.inject.Vetoed;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -51,6 +52,7 @@ import javax.ws.rs.core.Context;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Path("validated/property")
+@Vetoed
 public class Hk2PropertyInjectedResource {
 
     @QueryParam("q")

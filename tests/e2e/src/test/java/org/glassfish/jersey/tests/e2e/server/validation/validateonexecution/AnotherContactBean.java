@@ -56,7 +56,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import jersey.repackaged.com.google.common.base.MoreObjects;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @XmlRootElement
 public class AnotherContactBean implements Serializable {

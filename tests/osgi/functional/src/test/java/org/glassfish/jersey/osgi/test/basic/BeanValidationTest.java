@@ -70,7 +70,7 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 /**
  * Basic test of Bean Validation.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 @RunWith(PaxExam.class)

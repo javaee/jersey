@@ -70,7 +70,7 @@ import org.glassfish.jersey.spi.Contract;
  *
  * @param <T> the type of the template object.
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Contract
 @ConstrainedTo(RuntimeType.SERVER)

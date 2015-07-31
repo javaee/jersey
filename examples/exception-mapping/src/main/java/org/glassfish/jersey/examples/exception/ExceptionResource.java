@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,6 +67,8 @@ import org.glassfish.jersey.server.ContainerRequest;
  * @author Santiago.PericasGeertsen at oracle.com
  */
 @Path("exception")
+@Consumes("text/plain")
+@Produces("text/plain")
 public class ExceptionResource {
 
     @Provider
@@ -87,12 +89,13 @@ public class ExceptionResource {
         @Override
         public void filter(ContainerRequestContext context) throws IOException {
             System.out.println("WebApplicationExceptionFilter.preFilter() enter");
-            if (context.hasEntity() && ((ContainerRequest) context)
+
+            String path = ((ContainerRequest) context).getRequestUri().getPath();
+            if (path.endsWith("request_exception") && context.hasEntity() && ((ContainerRequest) context)
                     .readEntity(String.class).equals("Request Exception")) {
                 throw new WebApplicationException(Response.Status.OK);
             }
             System.out.println("WebApplicationExceptionFilter.preFilter() exit");
-
         }
 
         @Override
@@ -106,14 +109,11 @@ public class ExceptionResource {
     }
 
     @GET
-    @Produces("text/plain")
     public String pingMe() {
         return "ping!";
     }
 
     @POST
-    @Consumes("text/plain")
-    @Produces("text/plain")
     @Path("webapplication_entity")
     public String testWebApplicationExceptionEntity(String s) {
         String[] tokens = s.split(":");
@@ -124,8 +124,6 @@ public class ExceptionResource {
     }
 
     @POST
-    @Consumes("text/plain")
-    @Produces("text/plain")
     @Path("webapplication_noentity")
     public String testWebApplicationExceptionNoEntity(String s) {
         String[] tokens = s.split(":");
@@ -136,8 +134,6 @@ public class ExceptionResource {
     }
 
     @POST
-    @Consumes("text/plain")
-    @Produces("text/plain")
     @Path("my")
     public String testMyException(String s) {
         String[] tokens = s.split(":");
@@ -148,8 +144,6 @@ public class ExceptionResource {
     }
 
     @POST
-    @Consumes("text/plain")
-    @Produces("text/plain")
     @Path("mysub")
     public String testMySubException(String s) {
         String[] tokens = s.split(":");
@@ -160,8 +154,6 @@ public class ExceptionResource {
     }
 
     @POST
-    @Consumes("text/plain")
-    @Produces("text/plain")
     @Path("mysubsub")
     public String testMySubSubException(String s) {
         String[] tokens = s.split(":");
@@ -172,17 +164,14 @@ public class ExceptionResource {
     }
 
     @POST
-    @Consumes("text/plain")
-    @Produces("text/plain")
     @Path("request_exception")
     public String exceptionInRequestFilter() {
         throw new InternalServerErrorException();        // should not reach here
     }
 
     @GET
-    @Produces("text/plain")
     @Path("response_exception")
     public String exceptionInResponseFilter() {
-        return "response_exception";
+        return "Response Exception";
     }
 }

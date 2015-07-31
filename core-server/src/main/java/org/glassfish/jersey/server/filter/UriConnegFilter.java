@@ -84,7 +84,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
  * <pre>GET /resource.atom</pre>
  * <p>is transformed to:</p>
  * <pre>GET /resource
- *Accept: application/atom+xml</pre>
+ * Accept: application/atom+xml</pre>
  * Any existing "Accept" header value will be replaced.
  * <p>
  * If a suffix of "english" is registered with a language of
@@ -92,9 +92,9 @@ import jersey.repackaged.com.google.common.collect.Maps;
  * <pre>GET /resource.english</pre>
  * <p>is transformed to:</p>
  * <pre>GET /resource
- *Accept-Language: en</pre>
+ * Accept-Language: en</pre>
  * Any existing "Accept-Language"header  value will be replaced.
- * <p>
+ * <p/>
  * The media type mappings are processed before the language type mappings.
  *
  * @author Paul Sandoz
@@ -102,7 +102,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
  */
 @PreMatching
 @Priority(Priorities.HEADER_DECORATOR)
-public class UriConnegFilter implements ContainerRequestFilter {
+public final class UriConnegFilter implements ContainerRequestFilter {
 
     protected final Map<String, MediaType> mediaTypeMappings;
     protected final Map<String, String> languageMappings;
@@ -116,7 +116,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
      *
      * @param rc ResourceConfig instance that holds the configuration for the filter.
      */
-    public UriConnegFilter(@Context Configuration rc) {
+    public UriConnegFilter(@Context final Configuration rc) {
         this(extractMediaTypeMappings(rc.getProperty(ServerProperties.MEDIA_TYPE_MAPPINGS)),
                 extractLanguageMappings(rc.getProperty(ServerProperties.LANGUAGE_MAPPINGS)));
     }
@@ -126,7 +126,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
      * language mappings.
      *
      * @param mediaTypeMappings the suffix to media type mappings.
-     * @param languageMappings the suffix to language mappings.
+     * @param languageMappings  the suffix to language mappings.
      */
     public UriConnegFilter(Map<String, MediaType> mediaTypeMappings, Map<String, String> languageMappings) {
         if (mediaTypeMappings == null) {
@@ -142,8 +142,8 @@ public class UriConnegFilter implements ContainerRequestFilter {
     }
 
     @Override
-    public void filter(ContainerRequestContext rc) throws IOException {
-        UriInfo uriInfo = rc.getUriInfo();
+    public void filter(final ContainerRequestContext rc) throws IOException {
+        final UriInfo uriInfo = rc.getUriInfo();
 
         // Quick check for a '.' character
         String path = uriInfo.getRequestUri().getRawPath();
@@ -151,7 +151,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
             return;
         }
 
-        List<PathSegment> l = uriInfo.getPathSegments(false);
+        final List<PathSegment> l = uriInfo.getPathSegments(false);
         if (l.isEmpty()) {
             return;
         }
@@ -218,25 +218,27 @@ public class UriConnegFilter implements ContainerRequestFilter {
         public T valueOf(String s);
     }
 
-    private static Map<String, MediaType> extractMediaTypeMappings(Object mappings) {
+    private static Map<String, MediaType> extractMediaTypeMappings(final Object mappings) {
         // parse and validate mediaTypeMappings set through MEDIA_TYPE_MAPPINGS property
         return parseAndValidateMappings(ServerProperties.MEDIA_TYPE_MAPPINGS, mappings, new TypeParser<MediaType>() {
-            public MediaType valueOf(String value) {
+            public MediaType valueOf(final String value) {
                 return MediaType.valueOf(value);
             }
         });
     }
 
-    private static Map<String, String> extractLanguageMappings(Object mappings) {
+    private static Map<String, String> extractLanguageMappings(final Object mappings) {
         // parse and validate languageMappings set through LANGUAGE_MAPPINGS property
         return parseAndValidateMappings(ServerProperties.LANGUAGE_MAPPINGS, mappings, new TypeParser<String>() {
-            public String valueOf(String value) {
+            public String valueOf(final String value) {
                 return LanguageTag.valueOf(value).toString();
             }
         });
     }
 
-    private static <T> Map<String, T> parseAndValidateMappings(String property, Object mappings, TypeParser<T> parser) {
+    private static <T> Map<String, T> parseAndValidateMappings(final String property,
+                                                               final Object mappings,
+                                                               final TypeParser<T> parser) {
         if (mappings == null) {
             return Collections.emptyMap();
         }
@@ -245,7 +247,7 @@ public class UriConnegFilter implements ContainerRequestFilter {
             return (Map<String, T>) mappings;
         }
 
-        HashMap<String, T> mappingsMap = Maps.newHashMap();
+        final HashMap<String, T> mappingsMap = Maps.newHashMap();
 
         if (mappings instanceof String) {
             parseMappings(property, (String) mappings, mappingsMap, parser);
@@ -263,22 +265,22 @@ public class UriConnegFilter implements ContainerRequestFilter {
         return mappingsMap;
     }
 
-    private static <T> void parseMappings(String property, String mappings,
-                                          Map<String, T> mappingsMap, TypeParser<T> parser) {
+    private static <T> void parseMappings(final String property, final String mappings,
+                                          final Map<String, T> mappingsMap, final TypeParser<T> parser) {
         if (mappings == null) {
             return;
         }
 
-        String[] records = mappings.split(",");
+        final String[] records = mappings.split(",");
 
-        for (String record : records) {
-            String[] mapping = record.split(":");
+        for (final String record : records) {
+            final String[] mapping = record.split(":");
             if (mapping.length != 2) {
                 throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_FORMAT(property, mappings));
             }
 
-            String trimmedSegment = mapping[0].trim();
-            String trimmedValue = mapping[1].trim();
+            final String trimmedSegment = mapping[0].trim();
+            final String trimmedValue = mapping[1].trim();
 
             if (trimmedSegment.length() == 0) {
                 throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_KEY_EMPTY(property, record));
@@ -291,9 +293,9 @@ public class UriConnegFilter implements ContainerRequestFilter {
         }
     }
 
-    private static <T> void encodeKeys(Map<String, T> map) {
-        Map<String, T> tempMap = new HashMap<String, T>();
-        for (Map.Entry<String, T> entry : map.entrySet()) {
+    private static <T> void encodeKeys(final Map<String, T> map) {
+        final Map<String, T> tempMap = new HashMap<>();
+        for (final Map.Entry<String, T> entry : map.entrySet()) {
             tempMap.put(UriComponent.contextualEncode(entry.getKey(), UriComponent.Type.PATH_SEGMENT), entry.getValue());
         }
         map.clear();

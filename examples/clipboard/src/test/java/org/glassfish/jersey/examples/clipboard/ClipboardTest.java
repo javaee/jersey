@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,6 +49,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -58,6 +59,15 @@ public class ClipboardTest extends JerseyTest {
     protected ResourceConfig configure() {
         enable(TestProperties.LOG_TRAFFIC);
         return App.createApp();
+    }
+
+    @Before
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+
+        client().target(getBaseUri()).path(App.ROOT_PATH).request().delete();
+        client().target(getBaseUri()).path(App.ROOT_PATH).path("history").request().delete();
     }
 
     @Override
@@ -102,13 +112,31 @@ public class ClipboardTest extends JerseyTest {
     @Test
     public void testProgrammaticEchoTextPlain() throws Exception {
         testProgrammaticEcho(MediaType.TEXT_PLAIN_TYPE);
-
     }
 
     @Test
     public void testProgrammaticEchoAppJson() throws Exception {
         testProgrammaticEcho(MediaType.APPLICATION_JSON_TYPE);
+    }
 
+    @Test
+    public void testHistoryInJson() throws Exception {
+        callGetHistory(MediaType.APPLICATION_JSON_TYPE);
+    }
+
+    @Test
+    public void testHistoryInTextPlain() throws Exception {
+        callGetHistory(MediaType.TEXT_PLAIN_TYPE);
+    }
+
+    private void callGetHistory(final MediaType mediaType) {
+        final WebTarget clipboard = client().target(getBaseUri()).path(App.ROOT_PATH);
+        clipboard.request(mediaType).post(Entity.entity(new ClipboardData("Task 1 "), mediaType));
+        clipboard.request(mediaType).post(Entity.entity(new ClipboardData("Task 2 "), mediaType));
+        clipboard.request(mediaType).post(Entity.entity(new ClipboardData("Task 3 "), mediaType));
+
+        ClipboardData response = clipboard.path("history").request(mediaType).get(ClipboardData.class);
+        assertEquals(new ClipboardData("[Task 1 , Task 1 Task 2 ]"), response);
     }
 
     public void testProgrammaticEcho(MediaType mediaType) throws Exception {

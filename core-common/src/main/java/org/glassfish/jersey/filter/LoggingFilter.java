@@ -75,7 +75,7 @@ import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * Universal logging filter.
- *
+ * <p/>
  * Can be used on client or server side. Has the highest priority.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -84,8 +84,8 @@ import org.glassfish.jersey.message.MessageUtils;
 @PreMatching
 @Priority(Integer.MIN_VALUE)
 @SuppressWarnings("ClassWithMultipleLoggers")
-public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilter, ContainerResponseFilter,
-                                      ClientResponseFilter, WriterInterceptor {
+public final class LoggingFilter implements ContainerRequestFilter, ClientRequestFilter, ContainerResponseFilter,
+                                            ClientResponseFilter, WriterInterceptor {
 
     private static final Logger LOGGER = Logger.getLogger(LoggingFilter.class.getName());
     private static final String NOTIFICATION_PREFIX = "* ";
@@ -142,12 +142,12 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
      * @param logger        the logger to log requests and responses.
      * @param maxEntitySize maximum number of entity bytes to be logged (and buffered) - if the entity is larger,
      *                      logging filter will print (and buffer in memory) only the specified number of bytes
-     *                      and print "...more..." string at the end.
+     *                      and print "...more..." string at the end. Negative values are interpreted as zero.
      */
     public LoggingFilter(final Logger logger, final int maxEntitySize) {
         this.logger = logger;
         this.printEntity = true;
-        this.maxEntitySize = maxEntitySize;
+        this.maxEntitySize = Math.max(0, maxEntitySize);
     }
 
     private void log(final StringBuilder b) {
@@ -228,8 +228,9 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
 
     @Override
     public void filter(final ClientRequestContext context) throws IOException {
-        final long id = this._id.incrementAndGet();
+        final long id = _id.incrementAndGet();
         context.setProperty(LOGGING_ID_PROPERTY, id);
+
         final StringBuilder b = new StringBuilder();
 
         printRequestLine(b, "Sending client request", id, context.getMethod(), context.getUri());
@@ -248,7 +249,9 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     @Override
     public void filter(final ClientRequestContext requestContext, final ClientResponseContext responseContext)
             throws IOException {
-        final long id = (Long) requestContext.getProperty(LOGGING_ID_PROPERTY);
+        final Object requestId = requestContext.getProperty(LOGGING_ID_PROPERTY);
+        final long id = requestId != null ? (Long) requestId : _id.incrementAndGet();
+
         final StringBuilder b = new StringBuilder();
 
         printResponseLine(b, "Client response received", id, responseContext.getStatus());
@@ -264,8 +267,9 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
 
     @Override
     public void filter(final ContainerRequestContext context) throws IOException {
-        final long id = this._id.incrementAndGet();
+        final long id = _id.incrementAndGet();
         context.setProperty(LOGGING_ID_PROPERTY, id);
+
         final StringBuilder b = new StringBuilder();
 
         printRequestLine(b, "Server has received a request", id, context.getMethod(), context.getUriInfo().getRequestUri());
@@ -282,7 +286,9 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     @Override
     public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
             throws IOException {
-        long id = (Long) requestContext.getProperty(LOGGING_ID_PROPERTY);
+        final Object requestId = requestContext.getProperty(LOGGING_ID_PROPERTY);
+        final long id = requestId != null ? (Long) requestId : _id.incrementAndGet();
+
         final StringBuilder b = new StringBuilder();
 
         printResponseLine(b, "Server responded with a response", id, responseContext.getStatus());

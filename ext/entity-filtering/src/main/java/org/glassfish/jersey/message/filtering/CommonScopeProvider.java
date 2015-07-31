@@ -69,7 +69,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * entity-filtering scopes from given entity annotations or injected {@link Configuration configuration}. Class can also serve
  * as a base class for server-side implementations.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @see ServerScopeProvider
  */
 @Singleton

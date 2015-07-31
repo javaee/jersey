@@ -53,7 +53,7 @@ import javax.ws.rs.core.Variant;
 
 /**
  * @author Martin Matula
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("/abc")
 public class LanguageVariantResource {

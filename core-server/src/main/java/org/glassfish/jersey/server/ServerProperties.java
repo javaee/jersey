@@ -54,7 +54,7 @@ import org.glassfish.jersey.internal.util.PropertyAlias;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Martin Matula
  */
 @PropertiesClass

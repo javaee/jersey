@@ -41,6 +41,8 @@ package org.glassfish.jersey.tests.cdi.bv;
 
 import javax.enterprise.context.RequestScoped;
 import javax.validation.constraints.NotNull;
+import javax.validation.executable.ExecutableType;
+import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -62,6 +64,7 @@ public class CdiOldFashionedResource {
      */
     @Path("validate")
     @GET
+    @ValidateOnExecution(type = ExecutableType.NONE)
     public String getQ(@QueryParam("q") @NotNull String q) {
 
         return q;

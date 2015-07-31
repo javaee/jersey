@@ -71,19 +71,26 @@ public class App {
         try {
             System.out.println("\"Hello World\" Jersey Example Weld App");
 
-            Weld weld = new Weld();
+            final Weld weld = new Weld();
             weld.initialize();
 
             final ResourceConfig resourceConfig = createJaxRsApp();
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig, false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                    weld.shutdown();
+                }
+            }));
+            server.start();
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
+            System.out.println(String.format("Application started.\nTry out %s%s\nStop the application using CTRL+C",
                     BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-            weld.shutdown();
-        } catch (IOException ex) {
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
 

@@ -1,0 +1,22 @@
+Hello World
+Foo Bar
+org.glassfish.jersey.server.ContainerException: java.lang.OutOfMemoryError: Java heap space
+	at org.glassfish.jersey.servlet.internal.ResponseWriter.rethrow(ResponseWriter.java:256)
+	at org.glassfish.jersey.servlet.internal.ResponseWriter.failure(ResponseWriter.java:238)
+	at org.glassfish.jersey.server.ServerRuntime$Responder.process(ServerRuntime.java:486)
+	at org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:316)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)
+	Truncated. see log file for complete stacktrace
+Caused By: java.lang.OutOfMemoryError: Java heap space
+	at org.glassfish.jersey.tests.memleaks.testleak.MemLeakingResource.invoke(MemLeakingResource.java:70)
+	at sun.reflect.GeneratedMethodAccessor156.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:497)
+	at org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)
+	Truncated. see log file for complete stacktrace
+>
+
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "weblogic.timers.TimerThread"
+Exception in thread "Timer-2"
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "Timer-2"
+This is the end.

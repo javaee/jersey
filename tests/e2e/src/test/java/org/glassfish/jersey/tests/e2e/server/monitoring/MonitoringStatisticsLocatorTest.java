@@ -65,6 +65,7 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * This test verifies that {@link ResourceMethodStatistics} are not duplicated in
@@ -102,7 +103,7 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
 
             String resp = "";
 
-            for (Map.Entry<ResourceMethod, ResourceMethodStatistics> entry
+            for (final Map.Entry<ResourceMethod, ResourceMethodStatistics> entry
                     : resourceStatistics.getResourceMethodStatistics().entrySet()) {
                 if (entry.getKey().getHttpMethod().equals("GET")) {
                     resp = resp + "getFound";
@@ -123,7 +124,7 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
 
             String resp = "";
 
-            for (Map.Entry<ResourceMethod, ResourceMethodStatistics> entry
+            for (final Map.Entry<ResourceMethod, ResourceMethodStatistics> entry
                     : resourceStatistics.getResourceMethodStatistics().entrySet()) {
                 if (entry.getKey().getHttpMethod().equals("GET")) {
                     resp = resp + "getFound";
@@ -165,8 +166,8 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
                     "org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor$PlainTextOptionsInflector");
         }
 
-        private String getResourceClassStatisticsTest(String resourceClassName) {
-            ResourceStatistics resourceMethodStatistics = findResourceClassStatistics(statistics.get(), resourceClassName);
+        private String getResourceClassStatisticsTest(final String resourceClassName) {
+            final ResourceStatistics resourceMethodStatistics = findResourceClassStatistics(statistics.get(), resourceClassName);
 
             boolean resourceHelloOptions = false;
             boolean anotherHelloOptions = false;
@@ -209,13 +210,14 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
             return getUriStatisticsTest("/another/xml");
         }
 
-        private String getUriStatisticsTest(String uri) {
+        private String getUriStatisticsTest(final String uri) {
             boolean plainTextOptions = false;
             boolean wadlOptions = false;
             boolean genericOptions = false;
             final ResourceStatistics resourceStatistics = statistics.get().getUriStatistics().get(uri);
-            for (Map.Entry<ResourceMethod, ResourceMethodStatistics> entry : resourceStatistics.getResourceMethodStatistics()
-                    .entrySet()) {
+
+            for (final Map.Entry<ResourceMethod, ResourceMethodStatistics> entry : resourceStatistics
+                    .getResourceMethodStatistics().entrySet()) {
                 if (entry.getKey().getHttpMethod().equals("OPTIONS")) {
                     final ResourceMethod resourceMethod = entry.getKey();
                     final String producedTypes = resourceMethod.getProducedTypes().toString();
@@ -236,8 +238,8 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
             }
         }
 
-        private ResourceStatistics findResourceClassStatistics(MonitoringStatistics monitoringStatistics,
-                                                               String resourceClassName) {
+        private ResourceStatistics findResourceClassStatistics(final MonitoringStatistics monitoringStatistics,
+                                                               final String resourceClassName) {
             for (final Map.Entry<Class<?>, ResourceStatistics> entry : monitoringStatistics.getResourceClassStatistics()
                     .entrySet()) {
                 final Class<?> key = entry.getKey();
@@ -306,104 +308,101 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
     @Test
     public void test() throws InterruptedException {
         Response response = target().path("resource").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("null", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("null", response.readEntity(String.class));
 
         response = target().path("resource/resource-locator").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("get", response.readEntity(String.class));
 
         response = target().path("resource/resource-locator").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("get", response.readEntity(String.class));
 
         response = target().path("resource/resource-locator/sub").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("get", response.readEntity(String.class));
 
         response = target().path("resource/hello").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("Hello!", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("Hello!", response.readEntity(String.class));
 
         response = target().path("another/hello").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("Hello, again.", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("Hello, again.", response.readEntity(String.class));
 
         response = target().path("another/xml").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("<?xml version=\"1.0\"?><hello>World!</hello>", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("<?xml version=\"1.0\"?><hello>World!</hello>", response.readEntity(String.class));
 
         Thread.sleep(600);
 
         response = target().path("resource").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("getFound", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("getFound", response.readEntity(String.class));
 
         response = target().path("resource/uri").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("getFound", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("getFound", response.readEntity(String.class));
     }
 
     @Test
-    @Ignore //J-396 reproducer
     public void testResourceClassStatisticsWadlOptions() {
-        Response response = target().path("resource/resourceClassStatisticsWadlOptionsTest").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("OK", response.readEntity(String.class));
+        final Response response = target().path("resource/resourceClassStatisticsWadlOptionsTest").request().get();
+        assertEquals(200, response.getStatus());
+        assertEquals("OK", response.readEntity(String.class));
     }
 
     @Test
-    @Ignore //J-396 reproducer
     public void testResourceClassStatisticsGenericOptions() {
-        Response response = target().path("resource/resourceClassStatisticsGenericOptionsTest").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("OK", response.readEntity(String.class));
+        final Response response = target().path("resource/resourceClassStatisticsGenericOptionsTest").request().get();
+        assertEquals(200, response.getStatus());
+        assertEquals("OK", response.readEntity(String.class));
     }
 
     @Test
-    @Ignore //J-396 reproducer
     public void testResourceClassStatisticsPlainTextOptions() {
-        Response response = target().path("resource/resourceClassStatisticsPlainTextOptionsTest").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("OK", response.readEntity(String.class));
+        final Response response = target().path("resource/resourceClassStatisticsPlainTextOptionsTest").request().get();
+        assertEquals(200, response.getStatus());
+        assertEquals("OK", response.readEntity(String.class));
     }
 
     @Test
     public void testUriStatisticsResourceHello() throws InterruptedException {
         Response response = target().path("resource/hello").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("Hello!", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("Hello!", response.readEntity(String.class));
 
         Thread.sleep(600);
 
         response = target().path("resource/uriStatisticsResourceHelloTest").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("OK", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("OK", response.readEntity(String.class));
     }
 
     @Test
     public void testUriStatisticsAnotherHello() throws InterruptedException {
         Response response = target().path("another/hello").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("Hello, again.", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("Hello, again.", response.readEntity(String.class));
 
         Thread.sleep(600);
 
         response = target().path("resource/uriStatisticsAnotherHelloTest").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("OK", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("OK", response.readEntity(String.class));
     }
 
     @Test
     public void testUriStatisticsAnotherXml() throws InterruptedException {
         Response response = target().path("another/xml").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("<?xml version=\"1.0\"?><hello>World!</hello>", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("<?xml version=\"1.0\"?><hello>World!</hello>", response.readEntity(String.class));
 
         Thread.sleep(600);
 
         response = target().path("resource/uriStatisticsAnotherXmlTest").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("OK", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("OK", response.readEntity(String.class));
     }
 }

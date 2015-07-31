@@ -48,7 +48,7 @@ import javax.ws.rs.Produces;
 /**
  * Simple "Hello World" resource with three resource methods and a sub-resource locator (that points again to this class itself).
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("helloworld")
 @Produces("text/plain")

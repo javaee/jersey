@@ -71,6 +71,8 @@ import com.sun.research.ws.wadl.Resource;
 import com.sun.research.ws.wadl.Resources;
 import com.sun.research.ws.wadl.Response;
 
+import jersey.repackaged.com.google.common.collect.Lists;
+
 /**
  * This class implements the algorithm how the wadl is built for one or more
  * {@link org.glassfish.jersey.server.model.Resource} classes. Wadl artifacts are created by a
@@ -83,7 +85,7 @@ import com.sun.research.ws.wadl.Response;
  */
 public class WadlBuilder {
 
-    private WadlGenerator _wadlGenerator;
+    private final WadlGenerator _wadlGenerator;
     private final UriInfo uriInfo;
 
     private final boolean detailedWadl;
@@ -96,8 +98,9 @@ public class WadlBuilder {
 
     /**
      * Generate WADL for a set of resources.
-     * @param resources the set of resources
-     * @return the JAXB WADL application bean
+     *
+     * @param resources the set of resources.
+     * @return the JAXB WADL application bean.
      */
     public ApplicationDescription generate(List<org.glassfish.jersey.server.model.Resource> resources) {
         Application wadlApplication = _wadlGenerator.createApplication();
@@ -135,7 +138,8 @@ public class WadlBuilder {
 
     /**
      * Generate WADL for a resource.
-     * @param resource the resource
+     *
+     * @param resource    the resource
      * @param description the overall application description so we can
      * @return the JAXB WADL application bean
      */
@@ -199,83 +203,92 @@ public class WadlBuilder {
         }
     }
 
-    private com.sun.research.ws.wadl.Method generateMethod(org.glassfish.jersey.server.model.Resource r,
-                                                           final Map<String, Param> wadlResourceParams,
-                                                           final org.glassfish.jersey.server.model.ResourceMethod m) {
+    private com.sun.research.ws.wadl.Method generateMethod(
+            final org.glassfish.jersey.server.model.Resource parentResource,
+            final Map<String, Param> wadlResourceParams,
+            final org.glassfish.jersey.server.model.ResourceMethod resourceMethod) {
+
         try {
-            if (!detailedWadl && m.isExtended()) {
+            if (!detailedWadl && resourceMethod.isExtended()) {
                 return null;
             }
-            com.sun.research.ws.wadl.Method wadlMethod = _wadlGenerator.createMethod(r, m);
+            com.sun.research.ws.wadl.Method wadlMethod = _wadlGenerator.createMethod(parentResource, resourceMethod);
 
             // generate the request part
-            Request wadlRequest = generateRequest(r, m, wadlResourceParams);
+            Request wadlRequest = generateRequest(parentResource, resourceMethod, wadlResourceParams);
             if (wadlRequest != null) {
                 wadlMethod.setRequest(wadlRequest);
             }
             // generate the response part
-            final List<Response> responses = generateResponses(r, m);
+            final List<Response> responses = generateResponses(parentResource, resourceMethod);
             if (responses != null) {
                 wadlMethod.getResponse().addAll(responses);
             }
             return wadlMethod;
         } catch (Exception e) {
-            throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_METHOD(m, r), e);
+            throw new ProcessingException(
+                    LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_METHOD(resourceMethod, parentResource), e);
         }
     }
 
-    private Request generateRequest(org.glassfish.jersey.server.model.Resource r,
-                                    final org.glassfish.jersey.server.model.ResourceMethod m,
+    private Request generateRequest(org.glassfish.jersey.server.model.Resource parentResource,
+                                    final org.glassfish.jersey.server.model.ResourceMethod resourceMethod,
                                     Map<String, Param> wadlResourceParams) {
         try {
-            if (m.getInvocable().getParameters().isEmpty()) {
+            final List<Parameter> requestParams = Lists.newLinkedList(resourceMethod.getInvocable().getParameters());
+            // Adding handler instance parameters to the list of potential request parameters.
+            requestParams.addAll(resourceMethod.getInvocable().getHandler().getParameters());
+
+            if (requestParams.isEmpty()) {
                 return null;
             }
 
-            Request wadlRequest = _wadlGenerator.createRequest(r, m);
+            Request wadlRequest = _wadlGenerator.createRequest(parentResource, resourceMethod);
 
-            for (Parameter p : m.getInvocable().getParameters()) {
+            for (Parameter p : requestParams) {
                 if (p.getSource() == Parameter.Source.ENTITY) {
-                    for (MediaType mediaType : m.getConsumedTypes()) {
-                        setRepresentationForMediaType(r, m, mediaType, wadlRequest);
+                    for (MediaType mediaType : resourceMethod.getConsumedTypes()) {
+                        setRepresentationForMediaType(parentResource, resourceMethod, mediaType, wadlRequest);
                     }
                 } else if (p.getSourceAnnotation().annotationType() == FormParam.class) {
                     // Use application/x-www-form-urlencoded if no @Consumes
-                    List<MediaType> supportedInputTypes = m.getConsumedTypes();
+                    List<MediaType> supportedInputTypes = resourceMethod.getConsumedTypes();
                     if (supportedInputTypes.isEmpty()
                             || (supportedInputTypes.size() == 1 && supportedInputTypes.get(0).isWildcardType())) {
                         supportedInputTypes = Collections.singletonList(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
                     }
 
                     for (MediaType mediaType : supportedInputTypes) {
-                        final Representation wadlRepresentation = setRepresentationForMediaType(r, m, mediaType, wadlRequest);
+                        final Representation wadlRepresentation =
+                                setRepresentationForMediaType(parentResource, resourceMethod, mediaType, wadlRequest);
                         if (getParamByName(wadlRepresentation.getParam(), p.getSourceName()) == null) {
-                            final Param wadlParam = generateParam(r, m, p);
+                            final Param wadlParam = generateParam(parentResource, resourceMethod, p);
                             if (wadlParam != null) {
                                 wadlRepresentation.getParam().add(wadlParam);
                             }
                         }
                     }
-                } else if (p.getSourceAnnotation().annotationType().getName().equals("org.glassfish.jersey.media.multipart"
-                        + ".FormDataParam")) { // jersey-multipart support
+                } else if ("org.glassfish.jersey.media.multipart.FormDataParam".equals(
+                        p.getSourceAnnotation().annotationType().getName())) { // jersey-multipart support
                     // Use multipart/form-data if no @Consumes
-                    List<MediaType> supportedInputTypes = m.getConsumedTypes();
+                    List<MediaType> supportedInputTypes = resourceMethod.getConsumedTypes();
                     if (supportedInputTypes.isEmpty()
                             || (supportedInputTypes.size() == 1 && supportedInputTypes.get(0).isWildcardType())) {
                         supportedInputTypes = Collections.singletonList(MediaType.MULTIPART_FORM_DATA_TYPE);
                     }
 
                     for (MediaType mediaType : supportedInputTypes) {
-                        final Representation wadlRepresentation = setRepresentationForMediaType(r, m, mediaType, wadlRequest);
+                        final Representation wadlRepresentation =
+                                setRepresentationForMediaType(parentResource, resourceMethod, mediaType, wadlRequest);
                         if (getParamByName(wadlRepresentation.getParam(), p.getSourceName()) == null) {
-                            final Param wadlParam = generateParam(r, m, p);
+                            final Param wadlParam = generateParam(parentResource, resourceMethod, p);
                             if (wadlParam != null) {
                                 wadlRepresentation.getParam().add(wadlParam);
                             }
                         }
                     }
                 } else {
-                    Param wadlParam = generateParam(r, m, p);
+                    Param wadlParam = generateParam(parentResource, resourceMethod, p);
                     if (wadlParam == null) {
                         continue;
                     }
@@ -292,7 +305,8 @@ public class WadlBuilder {
                 return wadlRequest;
             }
         } catch (Exception e) {
-            throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_REQUEST(m, r), e);
+            throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_REQUEST(
+                    resourceMethod, parentResource), e);
         }
     }
 
@@ -308,11 +322,11 @@ public class WadlBuilder {
     /**
      * Create the wadl {@link Representation} for the specified {@link MediaType} if not yet
      * existing for the wadl {@link Request} and return it.
-     * @param r the resource
-     * @param m the resource method
-     * @param mediaType an accepted media type of the resource method
+     *
+     * @param r           the resource
+     * @param m           the resource method
+     * @param mediaType   an accepted media type of the resource method
      * @param wadlRequest the wadl request the wadl representation is to be created for (if not yet existing).
-     * @author Martin Grotzke
      * @return the wadl request representation for the specified {@link MediaType}.
      */
     private Representation setRepresentationForMediaType(org.glassfish.jersey.server.model.Resource r,
@@ -342,9 +356,9 @@ public class WadlBuilder {
         return null;
     }
 
-    private Param generateParam(org.glassfish.jersey.server.model.Resource resource,
-                                org.glassfish.jersey.server.model.ResourceMethod
-                                        method, final Parameter param) {
+    private Param generateParam(final org.glassfish.jersey.server.model.Resource resource,
+                                final org.glassfish.jersey.server.model.ResourceMethod method,
+                                final Parameter param) {
         try {
             if (param.getSource() == Parameter.Source.ENTITY || param.getSource() == Parameter.Source.CONTEXT) {
                 return null;
@@ -372,7 +386,7 @@ public class WadlBuilder {
             if (visitedResources.contains(resource)) {
                 return wadlResource;
             } else {
-                visitedResources = new HashSet<org.glassfish.jersey.server.model.Resource>(visitedResources);
+                visitedResources = new HashSet<>(visitedResources);
                 visitedResources.add(resource);
             }
 
@@ -389,13 +403,12 @@ public class WadlBuilder {
                     }
                     org.glassfish.jersey.server.model.Resource subResource = builder.build();
 
-                    Resource wadlSubResource = generateResource(subResource,
-                            resource.getPath(), visitedResources);
+                    Resource wadlSubResource = generateResource(subResource, resource.getPath(), visitedResources);
                     if (wadlSubResource == null) {
                         return null;
                     }
                     if (locator.isExtended()) {
-                        wadlSubResource.getAny().add(WadlApplicationContextImpl.extendedElement);
+                        wadlSubResource.getAny().add(WadlApplicationContextImpl.EXTENDED_ELEMENT);
                     }
 
                     for (Parameter param : locator.getInvocable().getParameters()) {
@@ -412,7 +425,7 @@ public class WadlBuilder {
                 }
             }
 
-            Map<String, Param> wadlResourceParams = new HashMap<String, Param>();
+            Map<String, Param> wadlResourceParams = new HashMap<>();
             // for each resource method
             for (org.glassfish.jersey.server.model.ResourceMethod method : resource.getResourceMethods()) {
                 if (!detailedWadl && method.isExtended()) {
@@ -428,9 +441,8 @@ public class WadlBuilder {
             }
 
             // for each sub-resource method
-            Map<String, Resource> wadlSubResources = new HashMap<String, Resource>();
-            Map<String, Map<String, Param>> wadlSubResourcesParams =
-                    new HashMap<String, Map<String, Param>>();
+            Map<String, Resource> wadlSubResources = new HashMap<>();
+            Map<String, Map<String, Param>> wadlSubResourcesParams = new HashMap<>();
 
             for (org.glassfish.jersey.server.model.Resource childResource : resource.getChildResources()) {
                 Resource childWadlResource = generateResource(childResource, childResource.getPath(),

@@ -53,7 +53,7 @@ import org.glassfish.jersey.model.ContractProvider;
  * Jersey ranked provider model.
  *
  * @param <T> service provider contract Java type.
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class RankedProvider<T> {
 

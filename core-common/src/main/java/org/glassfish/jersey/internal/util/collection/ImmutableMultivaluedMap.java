@@ -54,7 +54,7 @@ import javax.ws.rs.core.MultivaluedMap;
  * @param <K> the key
  * @param <V> the value
  * @author Gili Tzabari
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
 

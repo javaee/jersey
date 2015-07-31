@@ -157,6 +157,8 @@ final class ResourceStatisticsImpl implements ResourceStatistics {
          * @param resourceMethod Resource method.
          */
         void addMethod(final ResourceMethod resourceMethod) {
+            cached = null;
+
             getOrCreate(resourceMethod);
         }
 

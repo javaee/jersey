@@ -58,7 +58,7 @@ import org.eclipse.persistence.jaxb.TypeMappingInfo;
 import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 final class MoxyObjectProvider extends AbstractObjectProvider<org.eclipse.persistence.jaxb.ObjectGraph> {
 

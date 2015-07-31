@@ -65,7 +65,7 @@ import org.glassfish.jersey.server.Uri;
  * Obtain information about visited (destination) and recommended (destination, forecast, price) places for "Sync" user. Uses
  * standard JAX-RS sync approach to obtain the data.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("agent/sync")
 @Produces("application/json")

@@ -61,7 +61,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * End to end test class for testing {@code ResourceConfig} features.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ResourceConfigTest extends JerseyTest {
 

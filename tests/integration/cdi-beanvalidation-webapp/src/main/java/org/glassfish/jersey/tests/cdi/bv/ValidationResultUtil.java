@@ -45,6 +45,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Set;
 
+import javax.enterprise.inject.Vetoed;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
@@ -54,6 +55,7 @@ import javax.validation.ConstraintViolation;
  *
  * @author Santiago Pericas-Geertsen
  */
+@Vetoed
 public final class ValidationResultUtil {
 
     private static final String VALIDATION_RESULT = ValidationResult.class.getName();

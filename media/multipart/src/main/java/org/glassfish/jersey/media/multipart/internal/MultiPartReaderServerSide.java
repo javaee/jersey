@@ -67,7 +67,7 @@ import org.jvnet.mimepull.MIMEParsingException;
  *
  * @author Craig McClanahan
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Singleton
 @ConstrainedTo(RuntimeType.SERVER)

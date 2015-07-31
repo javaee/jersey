@@ -68,15 +68,21 @@ public class App {
             System.out.println("\"Declarative Linking\" Jersey Example App");
 
             final ResourceConfig resourceConfig = new ResourceConfig(ItemsResource.class);
-
             resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
 
-            System.out.println(String.format("Application started.\nTry out curl -L %s%s\nHit enter to stop it...",
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig, false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
+
+            System.out.println(String.format("Application started.\nTry out curl -L %s%s\nStop the application using CTRL+C",
                     BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
 

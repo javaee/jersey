@@ -54,7 +54,7 @@ import org.jvnet.hk2.internal.ServiceLocatorImpl;
 import org.jvnet.hk2.internal.Utilities;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class ServiceLocatorGenerator extends ServiceLocatorGeneratorImpl {
 

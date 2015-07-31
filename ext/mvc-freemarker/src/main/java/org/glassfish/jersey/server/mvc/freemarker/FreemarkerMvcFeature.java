@@ -52,7 +52,7 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
  * <p/>
  * Note: This feature also registers {@link MvcFeature}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @author Jeff Wilde (jeff.wilde at complicatedrobot.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)

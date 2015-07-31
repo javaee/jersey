@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.examples.clipboard;
 
+import java.util.Objects;
+
 /**
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -67,5 +69,22 @@ public class ClipboardData {
 
     void clear() {
         content = "";
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ClipboardData)) {
+            return false;
+        }
+        final ClipboardData that = (ClipboardData) o;
+        return Objects.equals(content, that.content);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(content);
     }
 }

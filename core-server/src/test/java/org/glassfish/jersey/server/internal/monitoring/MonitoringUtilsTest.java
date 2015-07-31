@@ -85,10 +85,13 @@ public class MonitoringUtilsTest {
     @Test
     public void testGetMethodUniqueId() {
         final Resource resource = Resource.builder(MyResource.class).build();
-        Assert.assertEquals("[]|[]|GET|null|get", MonitoringUtils.getMethodUniqueId(getMethod(resource, "get")));
-        Assert.assertEquals("[text/html]|[]|GET|sub|subGet", MonitoringUtils.getMethodUniqueId(getMethod(resource, "subGet")));
-        Assert.assertEquals("[text/html]|[]|GET|sub|subGet", MonitoringUtils.getMethodUniqueId(getMethod(resource, "subGet")));
-        Assert.assertEquals("[text/xml]|[text/plain]|POST|null|post",
+        Assert.assertEquals("[]|[]|GET|resource|get",
+                MonitoringUtils.getMethodUniqueId(getMethod(resource, "get")));
+        Assert.assertEquals("[text/html]|[]|GET|resource.sub|subGet",
+                MonitoringUtils.getMethodUniqueId(getMethod(resource, "subGet")));
+        Assert.assertEquals("[text/html]|[]|GET|resource.sub|subGet",
+                MonitoringUtils.getMethodUniqueId(getMethod(resource, "subGet")));
+        Assert.assertEquals("[text/xml]|[text/plain]|POST|resource|post",
                 MonitoringUtils.getMethodUniqueId(getMethod(resource, "post")));
 
     }

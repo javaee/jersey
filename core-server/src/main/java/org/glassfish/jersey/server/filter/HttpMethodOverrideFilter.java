@@ -96,11 +96,11 @@ import static org.glassfish.jersey.internal.util.Tokenizer.COMMON_DELIMITERS;
  */
 @PreMatching
 @Priority(Priorities.HEADER_DECORATOR + 50) // must go after UriConnegFilter (if present)
-public class HttpMethodOverrideFilter implements ContainerRequestFilter {
+public final class HttpMethodOverrideFilter implements ContainerRequestFilter {
 
     /**
      * Configuration flags.
-     *
+     * <p/>
      * Package-private for testing purposes.
      */
     final int config;
@@ -109,7 +109,7 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
      * Enumeration representing possible sources of information about the method overriding
      * the filter should look for.
      */
-    public static enum Source {
+    public enum Source {
 
         /**
          * If present in the filter configuration,
@@ -123,7 +123,7 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
         QUERY(2);
         private final int flag;
 
-        private Source(int flag) {
+        Source(final int flag) {
             this.flag = flag;
         }
 
@@ -142,7 +142,7 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
          * @param config integer value to check for the bit corresponding to this flag.
          * @return {@code true} if the passed value has the bit corresponding to this flag set.
          */
-        public boolean isPresentIn(int config) {
+        public boolean isPresentIn(final int config) {
             return (config & flag) == flag;
         }
     }
@@ -157,7 +157,7 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
      *                {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source#QUERY} will
      *                be added to the config by default.
      */
-    public static void enableFor(ResourceConfig rc, Source... sources) {
+    public static void enableFor(final ResourceConfig rc, final Source... sources) {
         rc.registerClasses(HttpMethodOverrideFilter.class);
         rc.property(ServerProperties.HTTP_METHOD_OVERRIDE, sources);
     }
@@ -165,14 +165,14 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
     /**
      * Create a filter that reads the configuration ({@link ServerProperties#HTTP_METHOD_OVERRIDE})
      * from the provided {@link org.glassfish.jersey.server.ResourceConfig} instance.
-     *
+     * <p/>
      * This constructor will be called by the Jersey runtime when the filter class is returned from
      * {@link javax.ws.rs.core.Application#getClasses()}. The {@link org.glassfish.jersey.server.ResourceConfig}
      * instance will get auto-injected.
      *
      * @param rc ResourceConfig instance that holds the configuration for the filter.
      */
-    public HttpMethodOverrideFilter(@Context Configuration rc) {
+    public HttpMethodOverrideFilter(@Context final Configuration rc) {
         this(parseConfig(rc.getProperty(ServerProperties.HTTP_METHOD_OVERRIDE)));
     }
 
@@ -184,9 +184,9 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
      *                {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source#QUERY} will
      *                be added to the config by default.
      */
-    public HttpMethodOverrideFilter(Source... sources) {
+    public HttpMethodOverrideFilter(final Source... sources) {
         int c = 0;
-        for (Source cf : sources) {
+        for (final Source cf : sources) {
             if (cf != null) {
                 c |= cf.getFlag();
             }
@@ -203,7 +203,7 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
      * @param config {@link ServerProperties#HTTP_METHOD_OVERRIDE configuration property} value
      * @return array of {@code Source} objects.
      */
-    private static Source[] parseConfig(Object config) {
+    private static Source[] parseConfig(final Object config) {
         if (config == null) {
             return new Source[0];
         }
@@ -211,9 +211,9 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
         if (config instanceof Source[]) {
             return (Source[]) config;
         } else if (config instanceof Source) {
-            return new Source[]{(Source) config};
+            return new Source[] {(Source) config};
         } else {
-            String[] stringValues;
+            final String[] stringValues;
             if (config instanceof String) {
                 stringValues = Tokenizer.tokenize((String) config, COMMON_DELIMITERS);
             } else if (config instanceof String[]) {
@@ -222,11 +222,11 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
                 return new Source[0];
             }
 
-            Source[] result = new Source[stringValues.length];
+            final Source[] result = new Source[stringValues.length];
             for (int i = 0; i < stringValues.length; i++) {
                 try {
                     result[i] = Source.valueOf(stringValues[i]);
-                } catch (IllegalArgumentException e) {
+                } catch (final IllegalArgumentException e) {
                     Logger.getLogger(HttpMethodOverrideFilter.class.getName()).log(Level.WARNING,
                             LocalizationMessages.INVALID_CONFIG_PROPERTY_VALUE(ServerProperties.HTTP_METHOD_OVERRIDE,
                                     stringValues[i]));
@@ -246,7 +246,7 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
      * @param paramName Name of the parameter to retrieve.
      * @return Normalized parameter value. Never returns an empty string - converts it to {@code null}.
      */
-    private String getParamValue(Source source, MultivaluedMap<String, String> paramsMap, String paramName) {
+    private String getParamValue(final Source source, final MultivaluedMap<String, String> paramsMap, final String paramName) {
         String value = source.isPresentIn(config) ? paramsMap.getFirst(paramName) : null;
         if (value == null) {
             return null;
@@ -256,15 +256,15 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
     }
 
     @Override
-    public void filter(ContainerRequestContext request) {
+    public void filter(final ContainerRequestContext request) {
         if (!request.getMethod().equalsIgnoreCase("POST")) {
             return;
         }
 
-        String header = getParamValue(Source.HEADER, request.getHeaders(), "X-HTTP-Method-Override");
-        String query = getParamValue(Source.QUERY, request.getUriInfo().getQueryParameters(), "_method");
+        final String header = getParamValue(Source.HEADER, request.getHeaders(), "X-HTTP-Method-Override");
+        final String query = getParamValue(Source.QUERY, request.getUriInfo().getQueryParameters(), "_method");
 
-        String override;
+        final String override;
         if (header == null) {
             override = query;
         } else {
@@ -280,9 +280,9 @@ public class HttpMethodOverrideFilter implements ContainerRequestFilter {
             if (override.equals("GET")) {
                 if (request.getMediaType() != null
                         && MediaType.APPLICATION_FORM_URLENCODED_TYPE.getType().equals(request.getMediaType().getType())) {
-                    UriBuilder ub = request.getUriInfo().getRequestUriBuilder();
-                    Form f = ((ContainerRequest) request).readEntity(Form.class);
-                    for (Map.Entry<String, List<String>> param : f.asMap().entrySet()) {
+                    final UriBuilder ub = request.getUriInfo().getRequestUriBuilder();
+                    final Form f = ((ContainerRequest) request).readEntity(Form.class);
+                    for (final Map.Entry<String, List<String>> param : f.asMap().entrySet()) {
                         ub.queryParam(param.getKey(), param.getValue().toArray());
                     }
                     request.setRequestUri(request.getUriInfo().getBaseUri(), ub.build());

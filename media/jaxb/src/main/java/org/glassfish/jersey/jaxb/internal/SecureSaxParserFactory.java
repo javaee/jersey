@@ -57,7 +57,6 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.validation.Schema;
 
-import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.SaxHelper;
 
 import org.xml.sax.EntityResolver;
@@ -72,7 +71,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * Secure SAX parser factory wrapper.
  *
  * @author Martin Matula
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class SecureSaxParserFactory extends SAXParserFactory {
 
@@ -83,6 +82,9 @@ public class SecureSaxParserFactory extends SAXParserFactory {
             return new InputSource(new ByteArrayInputStream(new byte[0]));
         }
     };
+
+    private static final String EXTERNAL_GENERAL_ENTITIES_FEATURE = "http://xml.org/sax/features/external-general-entities";
+    private static final String EXTERNAL_PARAMETER_ENTITIES_FEATURE = "http://xml.org/sax/features/external-parameter-entities";
 
     private final SAXParserFactory spf;
 
@@ -98,16 +100,30 @@ public class SecureSaxParserFactory extends SAXParserFactory {
             LOGGER.log(Level.WARNING, LocalizationMessages.SAX_XDK_NO_SECURITY_FEATURES());
         } else {
             try {
-                spf.setFeature("http://xml.org/sax/features/external-general-entities", Boolean.FALSE);
-                spf.setFeature("http://xml.org/sax/features/external-parameter-entities", Boolean.FALSE);
+                spf.setFeature(EXTERNAL_GENERAL_ENTITIES_FEATURE, Boolean.FALSE);
             } catch (Exception ex) {
-                throw new RuntimeException(LocalizationMessages.SAX_CANNOT_ENABLE_SECURITY_FEATURES(), ex);
+                LOGGER.log(
+                        Level.CONFIG,
+                        LocalizationMessages.SAX_CANNOT_DISABLE_GENERAL_ENTITY_PROCESSING_FEATURE(spf.getClass()),
+                        ex);
+            }
+
+            try {
+                spf.setFeature(EXTERNAL_PARAMETER_ENTITIES_FEATURE, Boolean.FALSE);
+            } catch (Exception ex) {
+                LOGGER.log(
+                        Level.CONFIG,
+                        LocalizationMessages.SAX_CANNOT_DISABLE_PARAMETER_ENTITY_PROCESSING_FEATURE(spf.getClass()),
+                        ex);
             }
 
             try {
                 spf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
             } catch (Exception ex) {
-                LOGGER.log(Level.WARNING, LocalizationMessages.SAX_CANNOT_ENABLE_SECURE_PROCESSING_FEATURE(), ex);
+                LOGGER.log(
+                        Level.CONFIG,
+                        LocalizationMessages.SAX_CANNOT_ENABLE_SECURE_PROCESSING_FEATURE(spf.getClass()),
+                        ex);
             }
         }
     }

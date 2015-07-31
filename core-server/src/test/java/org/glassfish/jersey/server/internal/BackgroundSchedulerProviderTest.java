@@ -65,7 +65,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class BackgroundSchedulerProviderTest {
 

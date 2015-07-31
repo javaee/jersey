@@ -48,7 +48,7 @@ import java.util.Map;
 /**
  * Entity-store utility class. Class creates a sample instance of each entity.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @SuppressWarnings({"JavaDoc", "UnusedDeclaration"})
 public final class EntityStore {

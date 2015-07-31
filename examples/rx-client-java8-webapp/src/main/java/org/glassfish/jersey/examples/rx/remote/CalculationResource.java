@@ -55,7 +55,7 @@ import org.glassfish.jersey.server.ManagedAsync;
 /**
  * Obtain a calculation for a trip from one destination to another.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("remote/calculation")
 @Produces("application/xml")

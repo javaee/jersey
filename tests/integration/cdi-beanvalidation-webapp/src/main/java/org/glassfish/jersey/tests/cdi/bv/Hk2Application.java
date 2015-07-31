@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.tests.cdi.bv;
 
+import javax.enterprise.inject.Vetoed;
 import javax.ws.rs.ApplicationPath;
 
 import org.glassfish.jersey.process.internal.RequestScoped;
@@ -53,6 +54,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @ApplicationPath("/hk2")
+@Vetoed
 public class Hk2Application extends ResourceConfig {
 
     public Hk2Application() {

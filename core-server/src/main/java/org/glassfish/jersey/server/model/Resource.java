@@ -139,7 +139,7 @@ public final class Resource implements Routed, ResourceModelComponent {
         private final PathPattern pathPattern;
 
         private final List<ResourceMethod.Data> resourceMethods;
-        private final ResourceMethod.Data locator;
+        private final ResourceMethod.Data subResourceLocator;
         private final List<Resource.Data> childResources;
 
         private final Set<Class<?>> handlerClasses;
@@ -153,7 +153,7 @@ public final class Resource implements Routed, ResourceModelComponent {
          * @param names            resource names.
          * @param path             resource path.
          * @param resourceMethods  child resource methods.
-         * @param locator          child resource locator.
+         * @param subResourceLocator          child resource locator.
          * @param childResources   child sub-resources.
          * @param handlerClasses   handler classes handling the resource methods.
          * @param handlerInstances handler instances handling the resource methods.
@@ -163,7 +163,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                 final List<String> names,
                 final String path,
                 final List<ResourceMethod.Data> resourceMethods,
-                final ResourceMethod.Data locator,
+                final ResourceMethod.Data subResourceLocator,
                 final List<Data> childResources,
                 final Set<Class<?>> handlerClasses,
                 final Set<Object> handlerInstances,
@@ -177,7 +177,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                     ? PathPattern.OPEN_ROOT_PATH_PATTERN
                     : new PathPattern(path, PathPattern.RightHandPath.capturingZeroOrMoreSegments);
             this.resourceMethods = Resource.immutableCopy(resourceMethods);
-            this.locator = locator;
+            this.subResourceLocator = subResourceLocator;
             this.childResources = Collections.unmodifiableList(childResources); // no need to deep-copy the list
 
             this.handlerClasses = Resource.immutableCopy(handlerClasses);
@@ -190,7 +190,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                     + ((path == null) ? "[unbound], " : "\"" + path + "\", ")
                     + childResources.size() + " child resources, "
                     + resourceMethods.size() + " resource methods, "
-                    + (locator == null ? "0" : "1") + " sub-resource locator, "
+                    + (subResourceLocator == null ? "0" : "1") + " sub-resource locator, "
                     + handlerClasses.size() + " method handler classes, "
                     + handlerInstances.size() + " method handler instances"
                     + '}';
@@ -210,7 +210,7 @@ public final class Resource implements Routed, ResourceModelComponent {
         private final List<Resource.Data> childResources;
 
         private final List<ResourceMethod.Data> resourceMethods;
-        private ResourceMethod.Data resourceLocator;
+        private ResourceMethod.Data subResourceLocator;
 
         private final Set<Class<?>> handlerClasses;
         private final Set<Object> handlerInstances;
@@ -251,7 +251,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                     && childResourceBuilders.isEmpty()
                     && resourceMethods.isEmpty()
                     && childResources.isEmpty()
-                    && resourceLocator == null;
+                    && subResourceLocator == null;
         }
 
         /**
@@ -453,7 +453,7 @@ public final class Resource implements Routed, ResourceModelComponent {
             this.resourceMethods.addAll(resourceData.resourceMethods);
             this.childResources.addAll(resourceData.childResources);
 
-            if (resourceLocator != null && resourceData.locator != null) {
+            if (subResourceLocator != null && resourceData.subResourceLocator != null) {
                 Errors.processWithException(new Runnable() {
                     @Override
                     public void run() {
@@ -463,8 +463,8 @@ public final class Resource implements Routed, ResourceModelComponent {
                                 Severity.FATAL);
                     }
                 });
-            } else if (resourceData.locator != null) {
-                this.resourceLocator = resourceData.locator;
+            } else if (resourceData.subResourceLocator != null) {
+                this.subResourceLocator = resourceData.subResourceLocator;
             }
 
             this.handlerClasses.addAll(resourceData.handlerClasses);
@@ -493,7 +493,7 @@ public final class Resource implements Routed, ResourceModelComponent {
 
             this.resourceMethods.addAll(resourceBuilder.resourceMethods);
             this.childResources.addAll(resourceBuilder.childResources);
-            if (Resource.Builder.this.resourceLocator != null && resourceBuilder.resourceLocator != null) {
+            if (Resource.Builder.this.subResourceLocator != null && resourceBuilder.subResourceLocator != null) {
                 Errors.processWithException(new Runnable() {
                     @Override
                     public void run() {
@@ -501,8 +501,8 @@ public final class Resource implements Routed, ResourceModelComponent {
                                 resourceBuilder, path));
                     }
                 });
-            } else if (resourceBuilder.resourceLocator != null) {
-                this.resourceLocator = resourceBuilder.resourceLocator;
+            } else if (resourceBuilder.subResourceLocator != null) {
+                this.subResourceLocator = resourceBuilder.subResourceLocator;
             }
             this.handlerClasses.addAll(resourceBuilder.handlerClasses);
             this.handlerInstances.addAll(resourceBuilder.handlerInstances);
@@ -531,7 +531,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                     resourceMethods.add(methodData);
                     break;
                 case SUB_RESOURCE_LOCATOR:
-                    if (resourceLocator != null) {
+                    if (subResourceLocator != null) {
                         Errors.processWithException(new Runnable() {
                             @Override
                             public void run() {
@@ -543,7 +543,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                         });
 
                     }
-                    resourceLocator = methodData;
+                    subResourceLocator = methodData;
                     break;
             }
 
@@ -614,7 +614,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                     names,
                     path,
                     resourceMethods,
-                    resourceLocator,
+                    subResourceLocator,
                     mergedChildResources,
                     classes,
                     instances,
@@ -633,7 +633,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                     allExtended = false;
                 }
             }
-            if (resourceLocator != null && !resourceLocator.isExtended()) {
+            if (subResourceLocator != null && !subResourceLocator.isExtended()) {
                 allExtended = false;
             }
 
@@ -671,6 +671,22 @@ public final class Resource implements Routed, ResourceModelComponent {
             }
         }
 
+        @Override
+        public String toString() {
+            return "Builder{"
+                    + "names=" + names
+                    + ", path='" + path + '\''
+                    + ", methodBuilders=" + methodBuilders
+                    + ", childResourceBuilders=" + childResourceBuilders
+                    + ", childResources=" + childResources
+                    + ", resourceMethods=" + resourceMethods
+                    + ", subResourceLocator=" + subResourceLocator
+                    + ", handlerClasses=" + handlerClasses
+                    + ", handlerInstances=" + handlerInstances
+                    + ", parentResource=" + parentResource
+                    + ", extended=" + extended
+                    + '}';
+        }
     }
 
     /**
@@ -836,7 +852,7 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         b.resourceMethods.addAll(resourceData.resourceMethods);
         b.childResources.addAll(resourceData.childResources);
-        b.resourceLocator = resourceData.locator;
+        b.subResourceLocator = resourceData.subResourceLocator;
 
         b.handlerClasses.addAll(resourceData.handlerClasses);
         b.handlerInstances.addAll(resourceData.handlerInstances);
@@ -895,7 +911,7 @@ public final class Resource implements Routed, ResourceModelComponent {
         });
 
         this.resourceMethods = immutableCopy(ResourceMethod.transform(Resource.this, data.resourceMethods));
-        this.locator = data.locator == null ? null : new ResourceMethod(Resource.this, data.locator);
+        this.locator = data.subResourceLocator == null ? null : new ResourceMethod(Resource.this, data.subResourceLocator);
         this.childResources = immutableCopy(Resource.transform(Resource.this, data.childResources));
     }
 

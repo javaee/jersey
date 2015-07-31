@@ -64,7 +64,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
 /**
  * {@link PersistenceUnit Persistence unit} injection binder.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class PersistenceUnitBinder extends AbstractBinder {
 

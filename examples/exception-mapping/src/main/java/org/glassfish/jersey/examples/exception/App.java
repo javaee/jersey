@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,7 +51,6 @@ import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
  * Hello world!
- *
  */
 public class App {
 
@@ -62,17 +61,31 @@ public class App {
         try {
             System.out.println("\"Exception Mapping\" Jersey Example App");
 
-            final ResourceConfig resourceConfig = new ResourceConfig(ExceptionResource.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
+            final ResourceConfig resourceConfig = new ResourceConfig(
+                    ExceptionResource.class,
+                    ExceptionResource.MyResponseFilter.class,
+                    ExceptionResource.WebApplicationExceptionFilter.class,
+                    Exceptions.MyExceptionMapper.class,
+                    Exceptions.MySubExceptionMapper.class,
+                    Exceptions.WebApplicationExceptionMapper.class);
+
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig, false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
             System.out.println(String.format(
                     "Application started.%n"
                     + "Try out %s%s%n"
-                    + "Hit enter to stop it...",
+                    + "Stop the application using CTRL+C",
                     BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
 

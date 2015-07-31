@@ -47,7 +47,7 @@ import javax.ws.rs.client.Invocation;
 import org.glassfish.jersey.client.rx.spi.RxInvokerProvider;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class RxTestInvokerProvider implements RxInvokerProvider {
 

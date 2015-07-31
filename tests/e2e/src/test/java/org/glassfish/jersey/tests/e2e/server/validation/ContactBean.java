@@ -51,7 +51,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import jersey.repackaged.com.google.common.base.MoreObjects;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @OneContact
 public class ContactBean implements Serializable {

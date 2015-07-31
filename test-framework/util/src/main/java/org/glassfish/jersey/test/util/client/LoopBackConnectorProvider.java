@@ -52,7 +52,7 @@ import org.glassfish.jersey.client.spi.ConnectorProvider;
  * purposes. The provided connector is {@link org.glassfish.jersey.test.util.client.LoopBackConnector} returns a response that
  * contains the same data (headers, entity) as the processed request.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.17
  */
 public final class LoopBackConnectorProvider implements ConnectorProvider {

@@ -74,7 +74,7 @@ import rx.schedulers.Schedulers;
  * Obtain information about visited (destination) and recommended (destination, forecast, price) places for "RxJava" user. Uses
  * RxJava Observable and Jersey Client to obtain the data.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Singleton
 @Path("agent/observable")

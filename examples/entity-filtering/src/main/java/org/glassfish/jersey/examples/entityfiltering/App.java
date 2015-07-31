@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,7 +51,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
 /**
  * Java application class starting Grizzly2 server with Entity Data Filtering app deployed.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public final class App {
 
@@ -61,19 +61,25 @@ public final class App {
         try {
             System.out.println("Jersey Entity Data Filtering Example.");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, new EntityFilteringApplication());
+            final HttpServer server = GrizzlyHttpServerFactory
+                    .createHttpServer(BASE_URI, new EntityFilteringApplication(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
             System.out.println("Application started.\nTry out one of these URIs:");
             for (final String path : new String[]{"projects", "projects/detailed", "users", "users?detailed=true", "tasks",
                     "tasks/detailed"}) {
                 System.out.println(BASE_URI + path);
             }
-            System.out.println("Hit enter to stop it...");
+            System.out.println("Stop the application using CTRL+C");
 
-            System.in.read();
-
-            server.shutdownNow();
-        } catch (IOException ex) {
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName())
                     .log(Level.SEVERE, "I/O error occurred during reading from an system input stream.", ex);
         }

@@ -62,7 +62,7 @@ import org.glassfish.jersey.tests.e2e.json.JsonTestHelper;
  * object is represented by {@code #DEFAULT_HEADERS}).
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @SuppressWarnings("UnusedDeclaration")
 @XmlRootElement

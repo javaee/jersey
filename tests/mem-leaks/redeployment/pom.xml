@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.glassfish.jersey.tests.memleaks</groupId>
+        <artifactId>project</artifactId>
+        <version>2.20-SNAPSHOT</version>
+    </parent>
+
+    <groupId>org.glassfish.jersey.tests.memleaks.redeployment</groupId>
+    <artifactId>project</artifactId>
+    <packaging>pom</packaging>
+    <name>jersey-tests-memleak-redeployment</name>
+
+    <description>
+        Memory leaks redeployment test.
+
+        This module (and all sub-modules) combine container-runner-maven-plugin goals ('download', 'startAndDeploy', 'stop') with
+        'redeploy' goal which repetitively redeploys and tests with a single http request the deployed application.
+
+        To build all the modules in the redeployment sub-module, run:
+
+        mvn clean install -amd -pl examples/helloworld-webapp/,tests/mem-leaks/ -P tomcat,memleak-redeployment -fae
+    </description>
+
+    <modules>
+        <module>redeployment-leaking-test-app</module>
+        <module>redeployment-hello-world-app-ref</module>
+        <module>redeployment-no-jersey-app</module>
+        <module>redeployment-threadlocals-app</module>
+    </modules>
+
+    <profiles>
+        <profile>
+            <id>wls</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <artifactId>container-runner-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>wls-redeploy</id>
+                                    <goals>
+                                        <goal>redeployWls</goal>
+                                    </goals>
+                                    <phase>integration-test</phase>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+        <profile>
+            <id>gf4</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <artifactId>container-runner-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>gf4-redeploy</id>
+                                    <goals>
+                                        <goal>redeployGf4</goal>
+                                    </goals>
+                                    <phase>integration-test</phase>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+        <profile>
+            <id>tomcat</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <artifactId>container-runner-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>tomcat-redeploy</id>
+                                    <goals>
+                                        <goal>redeployTomcat</goal>
+                                    </goals>
+                                    <phase>integration-test</phase>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                    <artifactId>container-runner-maven-plugin</artifactId>
+                    <configuration>
+                        <!-- these three memleak.redeploy.* properties should be initialized by sub-modules -->
+                        <expectedStatus>${memleak.redeploy.expectedStatus}</expectedStatus>
+                        <redeployCount>${memleak.redeploy.count}</redeployCount>
+                        <requestPathQuery>${memleak.redeploy.requestPathQuery}</requestPathQuery>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <artifactId>custom-enforcer-rules</artifactId>
+                            <version>${project.version}</version>
+                        </dependency>
+                    </dependencies>
+                    <executions>
+                        <execution>
+                            <id>enforce-out-of-memory-did-not-occur</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <phase>post-integration-test</phase>
+                            <configuration>
+                                <rules>
+                                    <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.FilePatternDoesNotExistRule">
+                                        <files>
+                                            <file>${memleak.jvm.heapdumpdir}/java_pid*.hprof</file>
+                                        </files>
+                                    </rule>
+                                    <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.PatternNotMatchedInFileRule">
+                                        <file>${external.container.logFile}</file>
+                                        <pattern>.*java\.lang\.OutOfMemoryError.*</pattern>
+                                    </rule>
+                                </rules>
+                                <fail>true</fail>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>

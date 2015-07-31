@@ -117,11 +117,10 @@ public abstract class AbstractCdiBeanHk2Factory<T> implements Factory<T> {
 
             final Iterator<Bean<?>> beans = beanManager.getBeans(clazz, qualifiers).iterator();
             final Bean bean = beans.hasNext() ? beans.next() : null;
-            final CreationalContext creationalContext = bean != null ? beanManager.createCreationalContext(bean) : null;
 
             @Override
             public T getInstance(final Class<T> clazz) {
-                return (bean != null) ? (T) beanManager.getReference(bean, clazz, creationalContext) : null;
+                return (bean != null) ? CdiUtil.getBeanReference(clazz, bean, beanManager) : null;
             }
 
             @Override
@@ -133,10 +132,10 @@ public abstract class AbstractCdiBeanHk2Factory<T> implements Factory<T> {
             final AnnotatedType<T> annotatedType = beanManager.createAnnotatedType(clazz);
             final InjectionTargetFactory<T> injectionTargetFactory = beanManager.getInjectionTargetFactory(annotatedType);
             final InjectionTarget<T> injectionTarget = injectionTargetFactory.createInjectionTarget(null);
-            final CreationalContext<T> creationalContext = beanManager.createCreationalContext(null);
 
             @Override
             public T getInstance(final Class<T> clazz) {
+                final CreationalContext<T> creationalContext = beanManager.createCreationalContext(null);
                 final T instance = injectionTarget.produce(creationalContext);
                 injectionTarget.inject(instance, creationalContext);
                 if (locator != null) {

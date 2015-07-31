@@ -64,7 +64,7 @@ import org.codehaus.jettison.mapped.MappedXMLStreamWriter;
  * Factory for creating JSON-enabled StAX readers and writers.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class Stax2JettisonFactory {
 

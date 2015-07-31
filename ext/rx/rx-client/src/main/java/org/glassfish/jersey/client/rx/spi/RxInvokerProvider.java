@@ -61,7 +61,7 @@ import org.glassfish.jersey.spi.Contract;
  * {@code org.glassfish.jersey.client.rx.spi.RxInvokerProvider} - in the resource directory {@code META-INF/services}, and adding
  * the fully qualified service-provider-class of the implementation in the file.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  * @since 2.13
  */
 @Contract

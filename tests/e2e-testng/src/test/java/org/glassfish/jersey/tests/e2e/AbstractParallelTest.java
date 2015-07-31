@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,7 +61,7 @@ import static org.testng.Assert.assertEquals;
  * Base for TestNG parallel tests. Contains one singleton resource with GET method returning incremental sequence of integers.
  * Extensions has to implement {@link #testValue(Integer)}.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Test(threadPoolSize = 5, invocationCount = 13)
 public abstract class AbstractParallelTest extends JerseyTestNg {

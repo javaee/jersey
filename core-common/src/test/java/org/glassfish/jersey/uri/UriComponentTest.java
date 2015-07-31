@@ -333,10 +333,12 @@ public class UriComponentTest {
 
     @Test
     public void testEncodeQuery() {
-        assertEquals("a%20b%20c.-*_=+&%25xx%2520", UriComponent.encode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY));
-        assertEquals("a+b+c.-*_%3D%2B%26%25xx%2520", UriComponent.encode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY_PARAM));
-        assertEquals("a%20b%20c.-*_%3D%2B%26%25xx%2520", UriComponent.encode("a b c.-*_=+&%xx%20",
-                UriComponent.Type.QUERY_PARAM_SPACE_ENCODED));
+        assertEquals("a%20b%20c.-%2A_=+&%25xx%2520",
+                UriComponent.encode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY));
+        assertEquals("a+b+c.-%2A_%3D%2B%26%25xx%2520",
+                UriComponent.encode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY_PARAM));
+        assertEquals("a%20b%20c.-%2A_%3D%2B%26%25xx%2520",
+                UriComponent.encode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY_PARAM_SPACE_ENCODED));
 
         assertEquals("thumbsup%F0%9F%91%8D", UriComponent.encode("thumbsup\ud83d\udc4d", UriComponent.Type.QUERY));
         assertEquals("thumbsup%F0%9F%91%8D", UriComponent.encode("thumbsup\ud83d\udc4d", UriComponent.Type.QUERY_PARAM));
@@ -344,11 +346,12 @@ public class UriComponentTest {
 
     @Test
     public void testContextualEncodeQuery() {
-        assertEquals("a%20b%20c.-*_=+&%25xx%20", UriComponent.contextualEncode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY));
-        assertEquals("a+b+c.-*_%3D%2B%26%25xx%20", UriComponent.contextualEncode("a b c.-*_=+&%xx%20", UriComponent.Type
-                .QUERY_PARAM));
-        assertEquals("a%20b%20c.-*_%3D%2B%26%25xx%20", UriComponent.contextualEncode("a b c.-*_=+&%xx%20", UriComponent.Type
-                .QUERY_PARAM_SPACE_ENCODED));
+        assertEquals("a%20b%20c.-%2A_=+&%25xx%20",
+                UriComponent.contextualEncode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY));
+        assertEquals("a+b+c.-%2A_%3D%2B%26%25xx%20",
+                UriComponent.contextualEncode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY_PARAM));
+        assertEquals("a%20b%20c.-%2A_%3D%2B%26%25xx%20",
+                UriComponent.contextualEncode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY_PARAM_SPACE_ENCODED));
 
         assertEquals("thumbsup%F0%9F%91%8Dthumbsup%F0%9F%91%8D",
                 UriComponent.contextualEncode("thumbsup%F0%9F%91%8Dthumbsup\ud83d\udc4d", UriComponent.Type.QUERY));
@@ -386,4 +389,5 @@ public class UriComponentTest {
         assertEquals(true, UriComponent.valid("/x20y", UriComponent.Type.PATH));
         assertEquals(true, UriComponent.valid("/x%20y", UriComponent.Type.PATH));
     }
+
 }

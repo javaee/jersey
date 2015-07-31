@@ -41,7 +41,7 @@
 package org.glassfish.jersey.tests.e2e.entity.filtering.domain;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class EmptyEntity {
 }

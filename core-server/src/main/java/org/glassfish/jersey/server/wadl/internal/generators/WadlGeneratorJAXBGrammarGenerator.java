@@ -202,8 +202,7 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
                              final org.glassfish.jersey.server.model.ResourceMethod am, final Parameter p) {
         final Param param = wadlGeneratorDelegate.createParam(ar, am, p);
 
-        // If the paramter is an entity we probably want to convert this to XML
-        //
+        // If the parameter is an entity we probably want to convert this to XML
         if (p.getSource() == Parameter.Source.ENTITY) {
             nameCallbacks.add(new TypeCallbackPair(
                     new GenericType(p.getType()),

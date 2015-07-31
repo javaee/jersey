@@ -53,7 +53,7 @@
 
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>jersey-bom</artifactId>
-    <version>2.19-SNAPSHOT</version>
+    <version>2.20-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>jersey-bom</name>
 
@@ -229,6 +229,11 @@
             <dependency>
                 <groupId>org.glassfish.jersey.ext.cdi</groupId>
                 <artifactId>jersey-cdi1x-transaction</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+             <dependency>
+                <groupId>org.glassfish.jersey.ext.cdi</groupId>
+                <artifactId>jersey-cdi1x-validation</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

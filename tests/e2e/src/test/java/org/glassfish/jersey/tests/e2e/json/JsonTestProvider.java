@@ -59,7 +59,7 @@ import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 /**
  * Common class for JSON providers that should be used for testing JSON capabilities.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public abstract class JsonTestProvider {
 

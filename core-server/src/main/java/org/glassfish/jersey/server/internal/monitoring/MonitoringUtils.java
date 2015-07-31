@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
+import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ExecutionStatistics;
 import org.glassfish.jersey.server.monitoring.TimeWindowStatistics;
@@ -69,14 +70,22 @@ public final class MonitoringUtils {
      * @return String constructed from resource method parameters.
      */
     public static String getMethodUniqueId(final ResourceMethod method) {
-        final String path = method.getParent().getParent() != null ? method.getParent().getPath() : "null";
+        final String path = method.getParent() != null ? createPath(method.getParent()) : "null";
 
         return method.getProducedTypes().toString() + "|"
                 + method.getConsumedTypes().toString() + "|"
                 + method.getHttpMethod() + "|"
                 + path + "|"
                 + method.getInvocable().getHandlingMethod().getName();
+    }
 
+    private static String createPath(Resource resource) {
+        return appendPath(resource, new StringBuilder()).toString();
+    }
+
+    private static StringBuilder appendPath(Resource resource, StringBuilder path) {
+        return resource.getParent() == null ? path.append(resource.getPath())
+                : appendPath(resource.getParent(), path).append(".").append(resource.getPath());
     }
 
     /**

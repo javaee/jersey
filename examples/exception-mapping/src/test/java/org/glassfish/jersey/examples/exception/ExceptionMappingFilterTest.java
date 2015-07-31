@@ -51,7 +51,6 @@ import org.junit.Test;
 import static org.glassfish.jersey.examples.exception.ExceptionResource.MyResponseFilter;
 import static org.glassfish.jersey.examples.exception.Exceptions.MyExceptionMapper;
 import static org.glassfish.jersey.examples.exception.Exceptions.MySubExceptionMapper;
-import static org.glassfish.jersey.examples.exception.Exceptions.MySubSubException;
 import static org.glassfish.jersey.examples.exception.Exceptions.WebApplicationExceptionMapper;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -74,7 +73,6 @@ public class ExceptionMappingFilterTest extends JerseyTest {
                 ExceptionResource.WebApplicationExceptionFilter.class,
                 MyExceptionMapper.class,
                 MySubExceptionMapper.class,
-                MySubSubException.class,
                 WebApplicationExceptionMapper.class);
 
         return resourceConfig;

@@ -78,7 +78,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Use-cases with entity-filtering annotations on properties, JSON output.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @RunWith(Parameterized.class)
 public class JsonEntityFilteringOnPropertiesTest extends JerseyTest {

@@ -128,7 +128,7 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
         }
 
         // ensure there is not multiple HTTP method designators specified on the method
-        List<String> httpMethodAnnotations = new LinkedList<String>();
+        List<String> httpMethodAnnotations = new LinkedList<>();
         for (Annotation a : invocable.getHandlingMethod().getDeclaredAnnotations()) {
             if (null != a.annotationType().getAnnotation(HttpMethod.class)) {
                 httpMethodAnnotations.add(a.toString());
@@ -150,7 +150,7 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
         final Path pathAnnotation = invocable.getHandlingMethod().getAnnotation(Path.class);
         if (pathAnnotation != null) {
             final String path = pathAnnotation.value();
-            if (path == null || path.isEmpty() || path.equals("/")) {
+            if (path == null || path.isEmpty() || "/".equals(path)) {
 
                 Errors.warning(invocable.getHandlingMethod(),
                         LocalizationMessages.METHOD_EMPTY_PATH_ANNOTATION(
@@ -184,7 +184,7 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
         final Invocable invocable = method.getInvocable();
         final Method handlingMethod = invocable.getHandlingMethod();
         int paramCount = 0;
-        int nonAnnotetedParameters = 0;
+        int nonAnnotatedParameters = 0;
 
         for (Parameter p : invocable.getParameters()) {
             validateParameter(p, handlingMethod, handlingMethod.toGenericString(), Integer.toString(++paramCount), false);
@@ -192,8 +192,8 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
                     && Parameter.Source.ENTITY == p.getSource()) {
                 Errors.fatal(method, LocalizationMessages.SUBRES_LOC_HAS_ENTITY_PARAM(invocable.getHandlingMethod()));
             } else if (p.getAnnotations().length == 0) {
-                nonAnnotetedParameters++;
-                if (nonAnnotetedParameters > 1) {
+                nonAnnotatedParameters++;
+                if (nonAnnotatedParameters > 1) {
                     Errors.fatal(method, LocalizationMessages.AMBIGUOUS_NON_ANNOTATED_PARAMETER(invocable.getHandlingMethod(),
                             invocable.getHandlingMethod().getDeclaringClass()));
                 }
@@ -204,7 +204,7 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
     private static final Set<Class> PARAM_ANNOTATION_SET = createParamAnnotationSet();
 
     private static Set<Class> createParamAnnotationSet() {
-        Set<Class> set = new HashSet<Class>(6);
+        Set<Class> set = new HashSet<>(6);
         set.add(HeaderParam.class);
         set.add(CookieParam.class);
         set.add(MatrixParam.class);
@@ -221,13 +221,14 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
      * @param source                parameter source; used for issue reporting.
      * @param reportedSourceName    source name; used for issue reporting.
      * @param reportedParameterName parameter name; used for issue reporting.
-     * @param injectionsForbidden   true if parameters cannot be injected by
+     * @param injectionsForbidden   {@code true} if parameters cannot be injected by
      *                              parameter annotations, eg. {@link HeaderParam @HeaderParam}.
      */
     static void validateParameter(final Parameter parameter,
                                   final Object source,
                                   final String reportedSourceName,
-                                  final String reportedParameterName, final boolean injectionsForbidden) {
+                                  final String reportedParameterName,
+                                  final boolean injectionsForbidden) {
         Errors.processWithException(new Runnable() {
             @Override
             public void run() {
@@ -258,6 +259,7 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
         });
     }
 
+    @SuppressWarnings("ChainOfInstanceofChecks")
     private static boolean isConcreteType(Type t) {
         if (t instanceof ParameterizedType) {
             return isConcreteParameterizedType((ParameterizedType) t);

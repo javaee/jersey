@@ -52,7 +52,7 @@ import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 /**
  * Feature used to register Multipart providers.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class MultiPartFeature implements Feature {
 

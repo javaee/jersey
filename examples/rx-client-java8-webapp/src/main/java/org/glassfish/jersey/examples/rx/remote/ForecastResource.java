@@ -52,7 +52,7 @@ import org.glassfish.jersey.server.ManagedAsync;
 /**
  * Obtain current weather conditions in a destination.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @Path("remote/forecast")
 @Produces("application/xml")

@@ -102,7 +102,7 @@ import mockit.Verifications;
  * FormDataParam} injections.
  *
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
 
@@ -681,6 +681,12 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         public String successfulMethod(@FormDataParam("file") final File file) {
             return file.getAbsolutePath();
         }
+
+        @POST
+        @Path("FileSize")
+        public long fileSize(@FormDataParam("file") final File file) {
+            return file.length();
+        }
     }
 
     /**
@@ -757,6 +763,25 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
 
         assertThat("Temporary file, " + pathname + ", on the server has not been removed",
                 new File(pathname).exists(), is(false));
+    }
+
+    /**
+     * JERSEY-2862 reproducer. Make sure that mimepull is able to move it's temporary file to the one created by Jersey.
+     * Reproducible only on Windows. Entity size has to be bigger than 8192 to make sure mimepull creates temporary file.
+     */
+    @Test
+    public void testFileSize() throws Exception {
+        final FormDataMultiPart multipart = new FormDataMultiPart();
+        final byte[] content = new byte[2 * 8192];
+        final FormDataBodyPart bodypart = new FormDataBodyPart(FormDataContentDisposition.name("file").fileName("file").build(),
+                content, MediaType.TEXT_PLAIN_TYPE);
+        multipart.bodyPart(bodypart);
+
+        final Response response = target().path("FileResource").path("FileSize")
+                .request()
+                .post(Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA));
+
+        assertThat("Temporary file has wrong size.", response.readEntity(int.class), is(content.length));
     }
 
     @Path("/InputStreamResource")

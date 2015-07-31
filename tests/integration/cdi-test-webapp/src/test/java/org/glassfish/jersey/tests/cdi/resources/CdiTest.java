@@ -77,12 +77,12 @@ public class CdiTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new MyApplication();
+        return new MainApplication();
     }
 
     @Override
     protected URI getBaseUri() {
-        return UriBuilder.fromUri(super.getBaseUri()).path("cdi-test-webapp").build();
+        return UriBuilder.fromUri(super.getBaseUri()).path("cdi-test-webapp/main").build();
     }
 }
 

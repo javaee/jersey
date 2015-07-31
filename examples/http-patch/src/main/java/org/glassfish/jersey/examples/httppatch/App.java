@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,24 +72,25 @@ public final class App {
     static final String ROOT_PATH = "patchable-state";
 
     public static void main(String[] args) {
-        HttpServer server = null;
         try {
             System.out.println("Jersey HTTP PATCH Support Example App");
 
-            server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
+            System.out.println(String.format("Application started.\nTry out %s/%s\nStop the application using CTRL+C",
                     BASE_URI,
                     ROOT_PATH));
 
-            System.in.read();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE,
-                    "Exception occurred while running the application. Shutting down...", ex);
-        } finally {
-            if (server != null) {
-                server.shutdownNow();
-            }
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

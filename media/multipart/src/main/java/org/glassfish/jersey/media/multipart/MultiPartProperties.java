@@ -54,7 +54,7 @@ import org.glassfish.jersey.internal.util.PropertiesClass;
  *
  * @author Craig McClanahan
  * @author Paul Sandoz
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 @PropertiesClass
 public class MultiPartProperties {

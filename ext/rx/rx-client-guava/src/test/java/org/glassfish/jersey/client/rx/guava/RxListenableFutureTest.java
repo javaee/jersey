@@ -65,7 +65,7 @@ import static org.hamcrest.core.Is.is;
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 public class RxListenableFutureTest {
 

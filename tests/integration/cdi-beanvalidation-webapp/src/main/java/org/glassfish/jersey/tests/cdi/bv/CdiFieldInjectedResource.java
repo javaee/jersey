@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.cdi.bv;
 import javax.enterprise.context.RequestScoped;
 
 import javax.inject.Inject;
+import javax.validation.ConstraintViolationException;
 import javax.validation.constraints.NotNull;
 
 import javax.ws.rs.GET;
@@ -60,6 +61,9 @@ public class CdiFieldInjectedResource {
     @Inject
     ValidationResult validationResult;
 
+    @Inject
+    NonJaxRsValidatedBean cdiBean;
+
     @QueryParam("q")
     @NotNull
     String q;
@@ -75,4 +79,25 @@ public class CdiFieldInjectedResource {
 
         return validationResult.getViolationCount();
     }
+
+    /**
+     * Return number of validation issues for non JAX-RS bean.
+     * This is to make sure the implicit Hibernate validator
+     * is functioning for raw CDI beans, where Jersey
+     * is not involved in method invocation.
+     *
+     * @return number of validation issues revealed when invoking injected CDI bean.
+     */
+    @Path("validate/non-jaxrs")
+    @GET
+    public int getValidateNonJaxRs(@QueryParam("h") String h) {
+
+        try {
+            cdiBean.echo(h);
+            return 0;
+        } catch (ConstraintViolationException ex) {
+            return ex.getConstraintViolations().size();
+        }
+    }
+
 }

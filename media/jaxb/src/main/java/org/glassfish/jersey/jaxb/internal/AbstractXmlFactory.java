@@ -47,7 +47,7 @@ import org.glassfish.jersey.message.MessageProperties;
 /**
  * Gathers common functionality for {@link org.glassfish.hk2.api.Factory} instances handling XML data.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Michal Gajdos
  */
 abstract class AbstractXmlFactory {
 

@@ -63,16 +63,23 @@ public class App {
         try {
             System.out.println("\"Managed Client\" Jersey Example App");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, create(), false);
+            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    server.shutdownNow();
+                }
+            }));
+            server.start();
 
             System.out.println(String.format("Application started.\nTry out public endpoints:\n  %s%s\n  %s%s\n"
-                    + "Hit enter to stop it...",
+                            + "Stop the application using CTRL+C",
                     BASE_URI, "public/a",
                     BASE_URI, "public/b"));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, "Error in the IO container.", ex);
+
+            Thread.currentThread().join();
+        } catch (IOException | InterruptedException ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
@@ -88,12 +95,14 @@ public class App {
     }
 
     public static class MyClientAConfig extends ClientConfig {
+
         public MyClientAConfig() {
             this.register(new CustomHeaderFilter("custom-header", "a"));
         }
     }
 
     public static class MyClientBConfig extends ClientConfig {
+
         public MyClientBConfig() {
             this.register(new CustomHeaderFilter("custom-header", "b"));
         }
