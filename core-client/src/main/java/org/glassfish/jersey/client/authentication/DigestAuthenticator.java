@@ -52,7 +52,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.core.HttpHeaders;
@@ -84,26 +83,26 @@ final class DigestAuthenticator {
      * Create a new instance initialized from credentials and configuration.
      *
      * @param credentials Credentials. Can be {@code null} if there are no default credentials.
-     * @param limit Maximum number of URIs that should be kept in the cache containing URIs and their
-     * {@link org.glassfish.jersey.client.authentication.DigestAuthenticator.DigestScheme}.
+     * @param limit       Maximum number of URIs that should be kept in the cache containing URIs and their
+     *                    {@link org.glassfish.jersey.client.authentication.DigestAuthenticator.DigestScheme}.
      */
     DigestAuthenticator(final HttpAuthenticationFilter.Credentials credentials, final int limit) {
         this.credentials = credentials;
 
         digestCache = Collections.synchronizedMap(new LinkedHashMap<URI, DigestScheme>(limit) {
-                    // use id as it is an anonymous inner class with changed behaviour
-                    private static final long serialVersionUID = 2546245625L;
+            // use id as it is an anonymous inner class with changed behaviour
+            private static final long serialVersionUID = 2546245625L;
 
-                    @Override
-                    protected boolean removeEldestEntry(final Map.Entry eldest) {
-                        return size() > limit;
-                    }
-                });
+            @Override
+            protected boolean removeEldestEntry(final Map.Entry eldest) {
+                return size() > limit;
+            }
+        });
 
         try {
             randomGenerator = SecureRandom.getInstance("SHA1PRNG");
         } catch (final NoSuchAlgorithmException e) {
-            throw new ProcessingException(LocalizationMessages.ERROR_DIGEST_FILTER_GENERATOR(), e);
+            throw new RequestAuthenticationException(LocalizationMessages.ERROR_DIGEST_FILTER_GENERATOR(), e);
         }
     }
 
@@ -131,7 +130,7 @@ final class DigestAuthenticator {
      * Process response and repeat the request if digest authentication is requested. When request is repeated
      * the response will be modified to contain new response information.
      *
-     * @param request Request context.
+     * @param request  Request context.
      * @param response Response context (will be updated with newest response data if the request was repeated).
      * @return {@code true} if response does not require authentication or if authentication is required,
      * new request was done with digest authentication information and authentication was successful.
@@ -150,7 +149,8 @@ final class DigestAuthenticator {
             final HttpAuthenticationFilter.Credentials cred = HttpAuthenticationFilter.getCredentials(request,
                     this.credentials, HttpAuthenticationFilter.Type.DIGEST);
             if (cred == null) {
-                throw new RuntimeException(LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_DIGEST());
+
+                throw new ResponseAuthenticationException(null, LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_DIGEST());
             }
 
             final boolean success = HttpAuthenticationFilter.repeatRequest(request, response, createNextAuthToken(digestScheme,
@@ -231,7 +231,7 @@ final class DigestAuthenticator {
     /**
      * Creates digest string including counter.
      *
-     * @param ds DigestScheme instance
+     * @param ds             DigestScheme instance
      * @param requestContext client request context
      * @return digest authentication token string
      * @throws IOException
@@ -279,9 +279,9 @@ final class DigestAuthenticator {
     /**
      * Append comma separated key=value token
      *
-     * @param sb string builder instance
-     * @param key key string
-     * @param value value string
+     * @param sb       string builder instance
+     * @param key      key string
+     * @param value    value string
      * @param useQuote true if value needs to be enclosed in quotes
      */
     private static void append(final StringBuilder sb, final String key, final String value, final boolean useQuote) {
@@ -309,8 +309,8 @@ final class DigestAuthenticator {
      * Append comma separated key=value token. The value gets enclosed in
      * quotes.
      *
-     * @param sb string builder instance
-     * @param key key string
+     * @param sb    string builder instance
+     * @param key   key string
      * @param value value string
      */
     private static void append(final StringBuilder sb, final String key, final String value) {

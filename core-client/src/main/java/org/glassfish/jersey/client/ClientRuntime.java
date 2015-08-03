@@ -48,6 +48,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -257,8 +258,8 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
             }
 
             return Stages.process(response, responseProcessingRoot);
-        } catch (final ProcessingException ex) {
-            throw ex;
+        } catch (final ProcessingException pe) {
+            throw pe;
         } catch (final Throwable t) {
             throw new ProcessingException(t.getMessage(), t);
         }

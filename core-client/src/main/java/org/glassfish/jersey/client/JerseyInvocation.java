@@ -65,6 +65,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
+import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
@@ -801,11 +802,15 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             try {
                 return response.readEntity(responseType);
             } catch (final ProcessingException ex) {
-                throw ex;
+                if (ex.getClass() == ProcessingException.class) {
+                    throw new ResponseProcessingException(new InboundJaxrsResponse(response, scope), ex.getCause());
+                }
+                throw new ResponseProcessingException(new InboundJaxrsResponse(response, scope), ex);
             } catch (final WebApplicationException ex) {
-                throw new ProcessingException(ex);
+                throw new ResponseProcessingException(new InboundJaxrsResponse(response, scope), ex);
             } catch (final Exception ex) {
-                throw new ProcessingException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
+                throw new ResponseProcessingException(new InboundJaxrsResponse(response, scope),
+                        LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
             }
         } else {
             throw convertToException(new InboundJaxrsResponse(response, scope));
@@ -861,11 +866,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             try {
                 return response.readEntity(responseType);
             } catch (final ProcessingException ex) {
-                throw ex;
+                throw new ResponseProcessingException(new InboundJaxrsResponse(response, scope), ex.getCause());
             } catch (final WebApplicationException ex) {
-                throw new ProcessingException(ex);
+                throw new ResponseProcessingException(new InboundJaxrsResponse(response, scope), ex);
             } catch (final Exception ex) {
-                throw new ProcessingException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
+                throw new ResponseProcessingException(new InboundJaxrsResponse(response, scope),
+                        LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
             }
         } else {
             throw convertToException(new InboundJaxrsResponse(response, scope));
@@ -1022,9 +1028,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 }
             }
 
-            return new ProcessingException(webAppException);
+            return new ResponseProcessingException(response, webAppException);
         } catch (final Throwable t) {
-            return new ProcessingException(LocalizationMessages.RESPONSE_TO_EXCEPTION_CONVERSION_FAILED(), t);
+            return new ResponseProcessingException(response, LocalizationMessages.RESPONSE_TO_EXCEPTION_CONVERSION_FAILED(), t);
         }
     }
 
