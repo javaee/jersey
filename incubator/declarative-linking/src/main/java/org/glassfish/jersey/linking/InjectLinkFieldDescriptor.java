@@ -166,29 +166,7 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
                         builder.append(methodTemplate);
                     }
 
-                    // append query parameters
-                    StringBuilder querySubString = new StringBuilder();
-                    int index = 0;
-                    for (Annotation paramAnns[] : method.getParameterAnnotations()) {
-                        for (Annotation ann : paramAnns) {
-                            if (ann.annotationType() == QueryParam.class) {
-                                querySubString.append(((QueryParam) ann).value());
-                                querySubString.append(',');
-                            }
-                            if (ann.annotationType() == BeanParam.class) {
-                                Class<?> beanParamType = method.getParameterTypes()[index];
-                                Field fields[] = beanParamType.getFields();
-                                for (Field field : fields) {
-                                    QueryParam queryParam = field.getAnnotation(QueryParam.class);
-                                    if (queryParam != null) {
-                                        querySubString.append(queryParam.value());
-                                        querySubString.append(',');
-                                    }
-                                }
-                            }
-                        }
-                        index++;
-                    }
+                    StringBuilder querySubString = extractQueryParams(method);
 
                     if (querySubString.length() > 0) {
                         builder.append("{?");
@@ -205,6 +183,33 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
         }
 
         return template;
+    }
+
+    private static StringBuilder extractQueryParams(AnnotatedMethod method) throws SecurityException {
+        // append query parameters
+        StringBuilder querySubString = new StringBuilder();
+        int index = 0;
+        for (Annotation paramAnns[] : method.getParameterAnnotations()) {
+            for (Annotation ann : paramAnns) {
+                if (ann.annotationType() == QueryParam.class) {
+                    querySubString.append(((QueryParam) ann).value());
+                    querySubString.append(',');
+                }
+                if (ann.annotationType() == BeanParam.class) {
+                    Class<?> beanParamType = method.getParameterTypes()[index];
+                    Field fields[] = beanParamType.getFields();
+                    for (Field field : fields) {
+                        QueryParam queryParam = field.getAnnotation(QueryParam.class);
+                        if (queryParam != null) {
+                            querySubString.append(queryParam.value());
+                            querySubString.append(',');
+                        }
+                    }
+                }
+            }
+            index++;
+        }
+        return querySubString;
     }
 
     /**
