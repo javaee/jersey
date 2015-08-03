@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client;
+package org.glassfish.jersey.client.internal;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -68,7 +68,11 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
+import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -88,7 +92,7 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class HttpUrlConnector implements Connector {
+public class HttpUrlConnector implements Connector {
 
     private static final Logger LOGGER = Logger.getLogger(HttpUrlConnector.class.getName());
     private static final String ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY = "sun.net.http.allowRestrictedHeaders";
@@ -135,7 +139,7 @@ class HttpUrlConnector implements Connector {
      * @param setMethodWorkaround specify if the reflection workaround should be used to set HTTP URL connection method
      *                            name. See {@link HttpUrlConnectorProvider#SET_METHOD_WORKAROUND} for details.
      */
-    HttpUrlConnector(
+    public HttpUrlConnector(
             final Client client,
             final HttpUrlConnectorProvider.ConnectionFactory connectionFactory,
             final int chunkSize,
@@ -266,6 +270,27 @@ class HttpUrlConnector implements Connector {
         // do nothing
     }
 
+    /**
+     * Secure connection if necessary.
+     * <p/>
+     * Provided implementation sets {@link HostnameVerifier} and {@link SSLSocketFactory} to give connection, if that
+     * is an instance of {@link HttpsURLConnection}.
+     *
+     * @param client client associated with this client runtime.
+     * @param uc     http connection to be secured.
+     */
+    protected void secureConnection(final Client client, final HttpURLConnection uc) {
+        if (uc instanceof HttpsURLConnection) {
+            HttpsURLConnection suc = (HttpsURLConnection) uc;
+
+            final HostnameVerifier verifier = client.getHostnameVerifier();
+            if (verifier != null) {
+                suc.setHostnameVerifier(verifier);
+            }
+            suc.setSSLSocketFactory(sslSocketFactory.get());
+        }
+    }
+
     private ClientResponse _apply(final ClientRequest request) throws IOException {
         final HttpURLConnection uc;
 
@@ -285,16 +310,7 @@ class HttpUrlConnector implements Connector {
 
         uc.setReadTimeout(request.resolveProperty(ClientProperties.READ_TIMEOUT, uc.getReadTimeout()));
 
-        if (uc instanceof HttpsURLConnection) {
-            HttpsURLConnection suc = (HttpsURLConnection) uc;
-
-            final JerseyClient client = request.getClient();
-            final HostnameVerifier verifier = client.getHostnameVerifier();
-            if (verifier != null) {
-                suc.setHostnameVerifier(verifier);
-            }
-            suc.setSSLSocketFactory(sslSocketFactory.get());
-        }
+        secureConnection(request.getClient(), uc);
 
         final Object entity = request.getEntity();
         if (entity != null) {
@@ -397,10 +413,11 @@ class HttpUrlConnector implements Connector {
      * The implementation of Sun/Oracle is throwing a {@code ProtocolException}
      * when the method is not in the list of the HTTP/1.1 default methods.
      * This means that to use e.g. {@code PROPFIND} and others, we must apply this workaround.
-     *
+     * <p/>
      * See issue http://java.net/jira/browse/JERSEY-639
      */
-    private static void setRequestMethodViaJreBugWorkaround(final HttpURLConnection httpURLConnection, final String method) {
+    private static void setRequestMethodViaJreBugWorkaround(final HttpURLConnection httpURLConnection,
+                                                            final String method) {
         try {
             httpURLConnection.setRequestMethod(method); // Check whether we are running on a buggy JRE
         } catch (final ProtocolException pe) {
@@ -443,8 +460,7 @@ class HttpUrlConnector implements Connector {
                                                 continue;
                                             }
                                             methodField.setAccessible(true);
-                                            methodField.set(httpURLConnection,
-                                                    method);
+                                            methodField.set(httpURLConnection, method);
                                             break;
                                         }
                                     } catch (final Exception e) {
