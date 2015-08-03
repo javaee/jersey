@@ -50,6 +50,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.regex.MatchResult;
 import java.util.zip.ZipEntry;
+import javax.ws.rs.BeanParam;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -686,6 +687,48 @@ public class FieldProcessorTest {
         assertEquals("/application/resources/a/b?query=queryExample&query2=queryExample2", testClass.uri);
         //clean mock
         mockUriInfo.getQueryParameters().clear();
+    }
+
+    public static class BeanParamBean {
+        @QueryParam("query") public String query;
+    }
+
+    @Path("a")
+    public static class BeanParamQueryResource {
+
+        @Path("b")
+        @GET
+        public String getB(@BeanParam BeanParamBean beanParamBean) {
+            return "hello world";
+        }
+    }
+
+    public static class BeanParamResourceBean {
+
+        public String getQueryParam() {
+            return queryExample;
+        }
+
+        private String queryExample;
+
+        public BeanParamResourceBean(String queryExample) {
+            this.queryExample = queryExample;
+        }
+
+        @InjectLink(resource = BeanParamQueryResource.class, method = "getB",
+                bindings = {
+                        @Binding(name = "query", value = "${instance.queryParam}")
+                })
+        public String uri;
+    }
+
+    @Test
+    public void testBeanParamResource() {
+        LOG.info("BeanParamResource");
+        FieldProcessor<BeanParamResourceBean> instance = new FieldProcessor(BeanParamResourceBean.class);
+        BeanParamResourceBean testClass = new BeanParamResourceBean("queryExample");
+        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        assertEquals("/application/resources/a/b?query=queryExample", testClass.uri);
     }
 
     public static class TestClassK {
