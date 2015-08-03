@@ -46,7 +46,10 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Tests of {@link TimeWindowStatisticsImpl}.
+ *
  * @author Miroslav Fuksa
+ * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
 public class TimeWindowStatisticsImplTest {
 
@@ -65,7 +68,8 @@ public class TimeWindowStatisticsImplTest {
 
         check(builder, now + 1000, 6, 15, 150, 75, 6);
         builder.addRequest(now + 1001, 999);
-        check(builder, now + 1001, 7, 15, 999, 207, 7);
+        // the original implementation was supposed to trim the first request, we can only guess why it didn't ...
+        check(builder, now + 1001, 6, 15, 999, 236, 6);
     }
 
     @Test
@@ -81,16 +85,42 @@ public class TimeWindowStatisticsImplTest {
         builder.addRequest(now + 1000, 95);
         builder.addRequest(now + 8001, 600);
 
-        // 30 + 100 + 150 + 15 + 60 + 95 = 450 duration in first second
-        // 30 + 100 + 150 + 15 + 60 + 95 + 600 = 1050 total duration
-        // 0.9 ratio
-        // 450 * 0.9 = 405
-        // 1050 - 405 = 645 total duration
-        // avg = 645 / 2 = 322.5
-
+        // check unfinished interval
         check(builder, now + 8001, 7, 15, 600, 150, 0.8748906);
 
-        check(builder, now + 10900, 2, 15, 600, 322, 0.2);
+        // the original implementation used chunks for time units and the metrics calculation
+        // was accurate only when aligned with the chunks; now, we're accurate as possible which
+        // is why we don't need to use ratio (to adjust the count of the request in the last chunk
+        check(builder, now + 10900, 3, 60, 600, 251, 0.3);
+        // the original calculation left minimum as '15' which collides with the api doc
+        check(builder, now + 11000, 2, 95, 600, 347, 0.2);
+
+    }
+
+    /**
+     * This test shows that current implementation of {@link org.glassfish.jersey.server.monitoring.TimeWindowStatistics} is able
+     * to process information that happened before the last update time.
+     */
+    @Test
+    public void testRequestInPast() {
+        final long now = 0;
+        final TimeWindowStatisticsImpl.Builder builder
+                = new TimeWindowStatisticsImpl.Builder(1000, TimeUnit.MILLISECONDS, now);
+        builder.addRequest(now, 40);
+        builder.addRequest(now + 1000, 30);
+        // this is a request in past which will actually reuse the time 'now + 1000'
+        builder.addRequest(now + 100, 10);
+
+        check(builder, now + 1000, 3, 10, 40, 26, 3);
+
+        // this request in past is so old that it doesn't even fit into the window
+        builder.addRequest(now + 100, 0);
+        builder.addRequest(now + 1200, 20);
+
+        check(builder, now + 1201, 2, 20, 30, 25, 2);
+
+        // snapshot retrieval in past does return values in past; in fact, time 'now + 1201' is used
+        check(builder, now + 1000, 2, 20, 30, 25, 2);
 
     }
 
@@ -127,6 +157,62 @@ public class TimeWindowStatisticsImplTest {
         builder.addRequest(time, 95);
         builder.addRequest(time + 5, 5);
         check(builder, time + 20000, 2, 5, 95, 50, 0.03333);
+    }
+
+    @Test
+    public void testMultipleRequestsAtTheSameTime() {
+        final long now = 0;
+        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(1, TimeUnit.SECONDS, now);
+        // put multiple requests at the beginning so that even the COLLISION_BUFFER bounds is tested
+        builder.addRequest(now, 10);
+        builder.addRequest(now, 20);
+        builder.addRequest(now, 30);
+        builder.addRequest(now, 40);
+
+        builder.addRequest(now + 1, 50);
+        // put multiple requests in the middle of the window
+        builder.addRequest(now + 500, 60);
+        builder.addRequest(now + 500, 70);
+        check(builder, now + 500, 7, 10, 70, 40, 14);
+
+        // put multiple requests at the end of the window
+        builder.addRequest(now + 1000, 80);
+        builder.addRequest(now + 1000, 90);
+        check(builder, now + 1000, 9, 10, 90, 50, 9);
+
+        // at 'now + 1001' all the requests from 'now' should be gone
+        check(builder, now + 1001, 5, 50, 90, 70, 5);
+    }
+
+    @Test
+    public void testExhaustiveRequestsAtTheSameTime() {
+        final long now = 0;
+        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(1, TimeUnit.SECONDS, now);
+        // put multiple requests at the beginning so that even the COLLISION_BUFFER bounds is tested
+        for (int i = 0; i < 256; ++i) {
+            builder.addRequest(now, 10);
+        }
+        // add one more request which should be visible at 'now + 1001'
+        builder.addRequest(now + 1, 10);
+
+        // put multiple requests in the middle of the window
+        for (int i = 0; i < 256; ++i) {
+            builder.addRequest(now + 500, 10);
+        }
+        check(builder, now + 500, 256 * 2 + 1, 10, 10, 10, 256 * 2 * 2 + 1 * 2);
+
+        // put multiple requests at the end of the window
+        for (int i = 0; i < 256; ++i) {
+            builder.addRequest(now + 1000, 10);
+        }
+
+        check(builder, now + 1000, 256 * 3 + 1, 10, 10, 10, 256 * 3 + 1);
+
+        // at 'now + 1001' all the requests from 'now' should be gone
+        check(builder, now + 1001, 256 * 2 + 1, 10, 10, 10, 256 * 2 + 1);
+
+        // at 'now + 1002' the one additional request we added is gone
+        check(builder, now + 1002, 256 * 2, 10, 10, 10, 256 * 2);
     }
 
     /**
