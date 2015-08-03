@@ -50,6 +50,7 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.internal.HttpUrlConnector;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -176,7 +177,7 @@ public class ContentNegotiationTest extends JerseyTest {
     }
 
     /**
-     * {@link org.glassfish.jersey.client.HttpUrlConnector} by default adds some media types
+     * {@link HttpUrlConnector} by default adds some media types
      * to the Accept header if we don't specify them.
      */
     @Test

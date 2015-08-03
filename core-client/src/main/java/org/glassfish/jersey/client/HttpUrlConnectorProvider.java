@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Configuration;
 
+import org.glassfish.jersey.client.internal.HttpUrlConnector;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
@@ -149,7 +150,6 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
         this.useSetMethodWorkaround = false;
     }
 
-
     /**
      * Set a custom {@link java.net.HttpURLConnection} factory.
      *
@@ -237,12 +237,33 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
         final boolean computedUseSetMethodWorkaround = ClientProperties.getValue(properties,
                 SET_METHOD_WORKAROUND, useSetMethodWorkaround, Boolean.class);
 
+        return createHttpUrlConnector(client, connectionFactory, computedChunkSize, computedUseFixedLengthStreaming,
+                                      computedUseSetMethodWorkaround);
+    }
+
+    /**
+     * Create {@link HttpUrlConnector}.
+     *
+     * @param client              JAX-RS client instance for which the connector is being created.
+     * @param connectionFactory   {@link javax.net.ssl.HttpsURLConnection} factory to be used when creating
+     *                            connections.
+     * @param chunkSize           chunk size to use when using HTTP chunked transfer coding.
+     * @param fixLengthStreaming  specify if the the {@link java.net.HttpURLConnection#setFixedLengthStreamingMode(int)
+     *                            fixed-length streaming mode} on the underlying HTTP URL connection instances should
+     *                            be used when sending requests.
+     * @param setMethodWorkaround specify if the reflection workaround should be used to set HTTP URL connection method
+     *                            name. See {@link HttpUrlConnectorProvider#SET_METHOD_WORKAROUND} for details.
+     * @return created {@link HttpUrlConnector} instance.
+     */
+    protected Connector createHttpUrlConnector(Client client, ConnectionFactory connectionFactory,
+                                               int chunkSize, boolean fixLengthStreaming,
+                                               boolean setMethodWorkaround) {
         return new HttpUrlConnector(
                 client,
                 connectionFactory,
-                computedChunkSize,
-                computedUseFixedLengthStreaming,
-                computedUseSetMethodWorkaround);
+                chunkSize,
+                fixLengthStreaming,
+                setMethodWorkaround);
     }
 
     /**

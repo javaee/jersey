@@ -65,6 +65,7 @@
         <module>cdi-with-jersey-injection-custom-cfg-webapp</module>
         <module>cdi-with-jersey-injection-custom-hk2-banned-webapp</module>
         <module>cdi-with-jersey-injection-webapp</module>
+        <module>client-connector-provider</module>
         <module>ejb-multimodule</module>
         <module>ejb-test-webapp</module>
         <module>j-59</module>
