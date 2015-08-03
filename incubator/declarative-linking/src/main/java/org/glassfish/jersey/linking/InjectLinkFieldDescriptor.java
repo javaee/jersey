@@ -42,6 +42,7 @@ package org.glassfish.jersey.linking;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -188,7 +189,7 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
     private static StringBuilder extractQueryParams(AnnotatedMethod method) throws SecurityException {
         // append query parameters
         StringBuilder querySubString = new StringBuilder();
-        int index = 0;
+        int parameterIndex = 0;
         for (Annotation paramAnns[] : method.getParameterAnnotations()) {
             for (Annotation ann : paramAnns) {
                 if (ann.annotationType() == QueryParam.class) {
@@ -196,7 +197,7 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
                     querySubString.append(',');
                 }
                 if (ann.annotationType() == BeanParam.class) {
-                    Class<?> beanParamType = method.getParameterTypes()[index];
+                    Class<?> beanParamType = method.getParameterTypes()[parameterIndex];
                     Field fields[] = beanParamType.getFields();
                     for (Field field : fields) {
                         QueryParam queryParam = field.getAnnotation(QueryParam.class);
@@ -205,9 +206,17 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
                             querySubString.append(',');
                         }
                     }
+                    Method beanMethods[] = beanParamType.getMethods();
+                    for (Method beanMethod : beanMethods) {
+                        QueryParam queryParam = beanMethod.getAnnotation(QueryParam.class);
+                        if (queryParam != null) {
+                            querySubString.append(queryParam.value());
+                            querySubString.append(',');
+                        }
+                    }
                 }
             }
-            index++;
+            parameterIndex++;
         }
         return querySubString;
     }
