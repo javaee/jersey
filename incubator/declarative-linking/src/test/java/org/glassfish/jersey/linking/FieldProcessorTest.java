@@ -689,7 +689,16 @@ public class FieldProcessorTest {
         mockUriInfo.getQueryParameters().clear();
     }
 
-    public static class BeanParamBean {
+    /** Bean param with method setter QueryParam. */
+    public static class BeanParamBeanA {
+        private String qparam;
+        @QueryParam("qparam") public void setQParam(String qparam) {
+            this.qparam = qparam;
+        }
+    }
+
+    /** Bean param with field QueryParam. */
+    public static class BeanParamBeanB {
         @QueryParam("query") public String query;
     }
 
@@ -698,7 +707,7 @@ public class FieldProcessorTest {
 
         @Path("b")
         @GET
-        public String getB(@BeanParam BeanParamBean beanParamBean) {
+        public String getB(@BeanParam BeanParamBeanA beanParamBeanA, @BeanParam BeanParamBeanB beanParamBeanB) {
             return "hello world";
         }
     }
@@ -717,7 +726,8 @@ public class FieldProcessorTest {
 
         @InjectLink(resource = BeanParamQueryResource.class, method = "getB",
                 bindings = {
-                        @Binding(name = "query", value = "${instance.queryParam}")
+                        @Binding(name = "query", value = "${instance.queryParam}"),
+                        @Binding(name = "qparam", value = "foo")
                 })
         public String uri;
     }
@@ -728,7 +738,7 @@ public class FieldProcessorTest {
         FieldProcessor<BeanParamResourceBean> instance = new FieldProcessor(BeanParamResourceBean.class);
         BeanParamResourceBean testClass = new BeanParamResourceBean("queryExample");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
-        assertEquals("/application/resources/a/b?query=queryExample", testClass.uri);
+        assertEquals("/application/resources/a/b?query=queryExample&qparam=foo", testClass.uri);
     }
 
     public static class TestClassK {
