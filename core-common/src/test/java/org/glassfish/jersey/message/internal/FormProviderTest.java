@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,76 +39,65 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Encoded;
-import javax.ws.rs.Produces;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import javax.inject.Singleton;
+import org.junit.Test;
 
-import org.glassfish.jersey.internal.util.collection.NullableMultivaluedHashMap;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNull;
 
 /**
- * Provider for marshalling/un-marshalling of {@code application/x-www-form-urlencoded}
- * entity type to/from {@link Form JAX-RS Form} instance.
+ * {@link FormProvider} unit tests
  *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-@Produces({"application/x-www-form-urlencoded", "*/*"})
-@Consumes({"application/x-www-form-urlencoded", "*/*"})
-@Singleton
-public final class FormProvider extends AbstractFormProvider<Form> {
+public class FormProviderTest {
 
-    @Override
-    public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return type == Form.class;
+    private static final FormProvider PROVIDER = new FormProvider();
+
+    @Test
+    public void testReadFormParam() {
+        Form form = readFrom("name&age=26");
+        MultivaluedMap<String, String> map = form.asMap();
+        assertEquals(2, map.size());
+
+        List<String> nameEntry = map.get("name");
+        assertEquals(1, nameEntry.size());
+        assertNull(nameEntry.get(0));
+
+        List<String> ageEntry = map.get("age");
+        assertEquals(1, ageEntry.size());
+        assertEquals("26", ageEntry.get(0));
     }
 
-    @Override
-    public Form readFrom(
-            Class<Form> type,
-            Type genericType,
-            Annotation annotations[],
-            MediaType mediaType,
-            MultivaluedMap<String, String> httpHeaders,
-            InputStream entityStream) throws IOException {
+    @Test
+    public void testReadMultipleSameFormParam() {
+        Form form = readFrom("name&name=George");
+        MultivaluedMap<String, String> map = form.asMap();
+        assertEquals(1, map.size());
 
-        return new Form(readFrom(new NullableMultivaluedHashMap<String, String>(), mediaType, decode(annotations), entityStream));
+        List<String> nameEntry = map.get("name");
+        assertEquals(2, nameEntry.size());
+        assertNull(nameEntry.get(0));
+        assertEquals("George", nameEntry.get(1));
     }
 
-
-    private boolean decode(Annotation annotations[]) {
-        for (Annotation annotation : annotations) {
-            if (annotation.annotationType().equals(Encoded.class)) {
-                return false;
-            }
+    private static Form readFrom(String body) {
+        try {
+            InputStream stream = new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8));
+            return PROVIDER.readFrom(Form.class, Form.class, new Annotation[] {},
+                    MediaType.APPLICATION_FORM_URLENCODED_TYPE, null, stream);
+        } catch (IOException e) {
+            throw new RuntimeException("Unexpected exception", e);
         }
-        return true;
-    }
-
-    @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return type == Form.class;
-    }
-
-    @Override
-    public void writeTo(
-            Form t,
-            Class<?> type,
-            Type genericType,
-            Annotation annotations[],
-            MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders,
-            OutputStream entityStream) throws IOException {
-        writeTo(t.asMap(), mediaType, entityStream);
     }
 }
