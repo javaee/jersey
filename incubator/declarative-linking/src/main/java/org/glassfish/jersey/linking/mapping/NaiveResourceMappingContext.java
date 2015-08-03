@@ -65,7 +65,7 @@ import org.glassfish.jersey.uri.UriTemplate;
 
 /**
  * This implementation of the resource mapping context assumed resource are
- * of simple a simple type with a statically defined structure.
+ * of a simple type with a statically defined structure.
  *
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
