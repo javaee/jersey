@@ -42,6 +42,7 @@ package org.glassfish.jersey.linking;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -52,6 +53,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.core.Link;
 
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
@@ -165,20 +167,11 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
                         builder.append(methodTemplate);
                     }
 
-                    // append query parameters
-                    StringBuilder querySubString = new StringBuilder();
-                    for (Annotation paramAnns[] : method.getParameterAnnotations()) {
-                        for (Annotation ann : paramAnns) {
-                            if (ann.annotationType() == QueryParam.class) {
-                                querySubString.append(((QueryParam) ann).value());
-                                querySubString.append(',');
-                            }
-                        }
-                    }
+                    CharSequence querySubString = extractQueryParams(method);
 
                     if (querySubString.length() > 0) {
                         builder.append("{?");
-                        builder.append(querySubString.subSequence(0, querySubString.length() - 1));
+                        builder.append(querySubString);
                         builder.append("}");
                     }
 
@@ -191,6 +184,47 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
         }
 
         return template;
+    }
+
+    private static CharSequence extractQueryParams(AnnotatedMethod method) throws SecurityException {
+        // append query parameters
+        StringBuilder querySubString = new StringBuilder();
+        int parameterIndex = 0;
+        for (Annotation paramAnns[] : method.getParameterAnnotations()) {
+            for (Annotation ann : paramAnns) {
+                if (ann.annotationType() == QueryParam.class) {
+                    querySubString.append(((QueryParam) ann).value());
+                    querySubString.append(',');
+                }
+                if (ann.annotationType() == BeanParam.class) {
+                    Class<?> beanParamType = method.getParameterTypes()[parameterIndex];
+                    Field fields[] = beanParamType.getFields();
+                    for (Field field : fields) {
+                        QueryParam queryParam = field.getAnnotation(QueryParam.class);
+                        if (queryParam != null) {
+                            querySubString.append(queryParam.value());
+                            querySubString.append(',');
+                        }
+                    }
+                    Method beanMethods[] = beanParamType.getMethods();
+                    for (Method beanMethod : beanMethods) {
+                        QueryParam queryParam = beanMethod.getAnnotation(QueryParam.class);
+                        if (queryParam != null) {
+                            querySubString.append(queryParam.value());
+                            querySubString.append(',');
+                        }
+                    }
+                }
+            }
+            parameterIndex++;
+        }
+
+        CharSequence result = "";
+
+        if (querySubString.length() > 0) {
+            result = querySubString.subSequence(0, querySubString.length() - 1);
+        }
+        return result;
     }
 
     /**
