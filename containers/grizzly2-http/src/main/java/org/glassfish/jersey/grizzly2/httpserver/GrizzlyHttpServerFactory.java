@@ -58,6 +58,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
+import org.glassfish.grizzly.utils.Charsets;
 
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -287,6 +288,7 @@ public final class GrizzlyHttpServerFactory {
         }
 
         config.setPassTraceRequest(true);
+        config.setDefaultQueryEncoding(Charsets.UTF8_CHARSET);
 
         if (start) {
             try {
