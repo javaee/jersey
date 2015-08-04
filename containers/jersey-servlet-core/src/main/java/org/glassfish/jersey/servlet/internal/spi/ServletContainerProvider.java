@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,8 +43,11 @@ import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 /**
@@ -52,7 +55,12 @@ import org.glassfish.jersey.servlet.ServletContainer;
  * {@code org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer}.
  * The provider implementation class is registered via {@code META-INF/services}.
  *
+ * Implementations could provide their own {@link HttpServletRequest} and {@link HttpServletResponse}
+ * binding implementation in HK2 locator and also an implementation of {@link RequestScopedInitializer}
+ * that is used to set actual request/response references in HK2 service locator within each request.
+ *
  * @author Libor Kramolis (libor.kramolis at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @since 2.4.1
  */
 public interface ServletContainerProvider {
@@ -128,4 +136,31 @@ public interface ServletContainerProvider {
      */
     public void configure(ResourceConfig resourceConfig) throws ServletException;
 
+    /**
+     * Give me a {@link RequestScopedInitializerProvider} instance, that will be utilized
+     * at runtime to set the actual HTTP Servlet request and response.
+     *
+     * The provider returned will be used at runtime for every and each incoming request
+     * so that the actual request/response instances could be made accessible
+     * from Jersey HK2 service locator.
+     *
+     * @return request scoped initializer provider.
+     * @since 2.20
+     */
+    public RequestScopedInitializerProvider getRequestScopedInitializerProvider();
+
+    /**
+     * Used by Jersey runtime to tell if the extension covers HTTP Servlet request response
+     * handling with respect to underlying HK2 service locator.
+     *
+     * Return {@code true}, if your implementation configures HK2 bindings
+     * for {@link HttpServletRequest} and {@link HttpServletResponse}
+     * in {@link #configure(ResourceConfig)} method
+     * and also provides a {@link RequestScopedInitializer} implementation
+     * via {@link #getRequestScopedInitializerProvider()}.
+     *
+     * @return {@code true} if the extension fully covers HTTP request/response handling.
+     * @since 2.20
+     */
+    public boolean bindsServletRequestResponse();
 }

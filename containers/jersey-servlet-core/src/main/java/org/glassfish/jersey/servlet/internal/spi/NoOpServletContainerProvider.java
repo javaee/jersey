@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,60 +37,57 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
+package org.glassfish.jersey.servlet.internal.spi;
 
-import java.util.EnumSet;
+import java.lang.reflect.Type;
 import java.util.Set;
 
-import javax.servlet.DispatcherType;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.servlet.internal.spi.RequestScopedInitializerProvider;
-import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
+
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
 
 /**
- * This is just test purpose implementation of Jersey internal SPI {@link ServletContainerProvider}.
+ * Basic {@link ServletContainerProvider} that provides
+ * dummy no-op method implementation. It should be convenient to extend if you only need to implement
+ * a subset of the original SPI methods.
  *
- * @author Libor Kramolis (libor.kramolis at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class TestServletContainerProvider implements ServletContainerProvider {
+public class NoOpServletContainerProvider implements ServletContainerProvider {
 
-    public static final String TEST_FILTER = "TestFilter";
-
-    private static Set<String> SERVLET_NAMES;
-    private static boolean immutableServletNames = false;
+    public final Type HTTP_SERVLET_REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {
+    }).getType();
+    public final Type HTTP_SERVLET_RESPONSE_TYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {
+    }).getType();
 
     @Override
     public void preInit(final ServletContext servletContext, final Set<Class<?>> classes) throws ServletException {
-        classes.add(AbstractHelloWorldResource.class);
+        // no-op
     }
 
     @Override
-    public void postInit(final ServletContext servletContext, final Set<Class<?>> classes, final Set<String> servletNames)
-            throws ServletException {
-        try {
-            servletNames.add("TEST");
-        } catch (final UnsupportedOperationException ex) {
-            TestServletContainerProvider.setImmutableServletNames(true);
-        }
+    public void postInit(
+            final ServletContext servletContext, final Set<Class<?>> classes, final Set<String> servletNames) {
+        // no-op
     }
 
     @Override
-    public void onRegister(final ServletContext servletContext, final Set<String> servletNames) throws ServletException {
-        TestServletContainerProvider.setServletNames(servletNames);
-
-        servletContext.addFilter(TEST_FILTER, TestFilter.class)
-                .addMappingForServletNames(EnumSet.allOf(DispatcherType.class), false,
-                        servletNames.toArray(new String[servletNames.size()]));
+    public void onRegister(
+            final ServletContext servletContext, final Set<String> servletNames) throws ServletException {
+        // no-op
     }
 
     @Override
     public void configure(final ResourceConfig resourceConfig) throws ServletException {
-        if (!resourceConfig.isRegistered(TestContainerLifecycleListener.class)) {
-            resourceConfig.register(TestContainerLifecycleListener.class);
-        }
+        // no-op
     }
 
     @Override
@@ -101,21 +98,5 @@ public class TestServletContainerProvider implements ServletContainerProvider {
     @Override
     public RequestScopedInitializerProvider getRequestScopedInitializerProvider() {
         return null;
-    }
-
-    public static Set<String> getServletNames() {
-        return SERVLET_NAMES;
-    }
-
-    public static boolean isImmutableServletNames() {
-        return immutableServletNames;
-    }
-
-    private static void setServletNames(final Set<String> servletNames) {
-        TestServletContainerProvider.SERVLET_NAMES = servletNames;
-    }
-
-    public static void setImmutableServletNames(final boolean immutableServletNames) {
-        TestServletContainerProvider.immutableServletNames = immutableServletNames;
     }
 }
