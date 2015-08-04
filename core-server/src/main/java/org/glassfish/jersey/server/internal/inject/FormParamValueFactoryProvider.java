@@ -53,11 +53,13 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.ExtractorException;
+import org.glassfish.jersey.internal.util.collection.NullableMultivaluedHashMap;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -128,7 +130,8 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
         private Form switchUrlEncoding(final ContainerRequest request, final Form otherForm) {
             final Set<Map.Entry<String, List<String>>> entries = otherForm.asMap().entrySet();
-            Form newForm = new Form();
+
+            MultivaluedMap<String, String> formMap = new NullableMultivaluedHashMap<>();
             for (Map.Entry<String, List<String>> entry : entries) {
                 final String charsetName = ReaderWriter.getCharset(MediaType.valueOf(
                         request.getHeaderString(HttpHeaders.CONTENT_TYPE))).name();
@@ -139,8 +142,12 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
                             charsetName);
 
                     for (String value : entry.getValue()) {
-                        newForm.asMap().add(key, decode ? URLDecoder.decode(value, charsetName) : URLEncoder.encode(value,
-                                charsetName));
+                        if (value != null) {
+                            formMap.add(key,
+                                    decode ? URLDecoder.decode(value, charsetName) : URLEncoder.encode(value, charsetName));
+                        } else {
+                            formMap.add(key, null);
+                        }
                     }
 
                 } catch (UnsupportedEncodingException uee) {
@@ -148,7 +155,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
                             extractor.getName()), uee);
                 }
             }
-            return newForm;
+            return new Form(formMap);
         }
 
         private void cacheForm(final ContainerRequest request, final Form form) {
