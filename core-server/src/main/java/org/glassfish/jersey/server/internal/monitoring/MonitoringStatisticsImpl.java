@@ -59,6 +59,9 @@ import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Monitoring statistics implementation.
+ * <p/>
+ * This object is loosely immutable (i.e., {@link #getResourceClassStatistics()} and {@link #getUriStatistics()} gets updated on
+ * access). As a result, it is unnecessary to call {@link #snapshot()}.
  *
  * @author Miroslav Fuksa
  */
@@ -66,6 +69,23 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
 
     /**
      * Builder of monitoring statistics.
+     * <p/>
+     * This builder does not need to be threadsafe as it's only accessed by jersey-background-task-scheduler. However, {@link
+     * #BUILDING_FUNCTION} is triggered when it is accessed (e.g., by servlet-container thread-pool threads) which adds threadsafe
+     * constraint on some of the sub-builders.
+     * <p/>
+     * Sub-Builders that require thread-safety
+     * <pre><ul>
+     *     <li>{@link org.glassfish.jersey.server.internal.monitoring.ExecutionStatisticsImpl.Builder}</li>
+     *     <li>{@link org.glassfish.jersey.server.internal.monitoring.ResourceStatisticsImpl.Builder}</li>
+     *     <li>{@link org.glassfish.jersey.server.internal.monitoring.ResourceMethodStatisticsImpl.Builder}</li>
+     *     <li>{@link org.glassfish.jersey.server.internal.monitoring.TimeWindowStatisticsImpl.Builder}</li>
+     * </ul>
+     * The rest does not need to be thread-safe
+     * <ul>
+     *     <li>{@link org.glassfish.jersey.server.internal.monitoring.ExceptionMapperStatisticsImpl.Builder}</li>
+     *     <li>{@link org.glassfish.jersey.server.internal.monitoring.ResponseStatisticsImpl.Builder}</li>
+     * </ul></pre>
      */
     static class Builder {
 
@@ -90,7 +110,7 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
             }
         });
 
-        private ExecutionStatisticsImpl.Builder requestStatisticsBuilder;
+        private ExecutionStatisticsImpl.Builder executionStatisticsBuilder;
 
         /**
          * Create a new builder.
@@ -102,6 +122,7 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
 
         /**
          * Create a new builder and initialize it from resource model.
+         *
          * @param resourceModel resource model.
          */
         Builder(final ResourceModel resourceModel) {
@@ -143,6 +164,7 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
 
         /**
          * Get the exception mapper statistics builder.
+         *
          * @return Builder of internal exception mapper statistics.
          */
         ExceptionMapperStatisticsImpl.Builder getExceptionMapperStatisticsBuilder() {
@@ -153,26 +175,25 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
          * Add global request execution.
          *
          * @param startTime time of the execution.
-         * @param duration duration of the execution.
+         * @param duration  duration of the execution.
          */
         void addRequestExecution(final long startTime, final long duration) {
-            if (requestStatisticsBuilder == null) {
-                requestStatisticsBuilder = new ExecutionStatisticsImpl.Builder();
+            if (executionStatisticsBuilder == null) {
+                executionStatisticsBuilder = new ExecutionStatisticsImpl.Builder();
             }
-            requestStatisticsBuilder.addExecution(startTime, duration);
+            executionStatisticsBuilder.addExecution(startTime, duration);
         }
 
         /**
          * Add execution of a resource method.
          *
-         * @param uri String uri which was executed.
-         * @param resourceMethod Resource method.
-         * @param methodTime Time spent on execution of resource method itself (Unix timestamp format).
-         * @param methodDuration Time of execution of the resource method.
-         * @param requestTime Time of whole request processing (from receiving
-         *                    the request until writing the response). (Unix timestamp format)
-         * @param requestDuration Time when the request matching to the executed resource method has been received
-         *                         by Jersey.
+         * @param uri             String uri which was executed.
+         * @param resourceMethod  Resource method.
+         * @param methodTime      Time spent on execution of resource method itself (Unix timestamp format).
+         * @param methodDuration  Time of execution of the resource method.
+         * @param requestTime     Time of whole request processing (from receiving the request until writing the response). (Unix
+         *                        timestamp format)
+         * @param requestDuration Time when the request matching to the executed resource method has been received by Jersey.
          */
         void addExecution(final String uri, final ResourceMethod resourceMethod,
                           final long methodTime, final long methodDuration,
@@ -194,18 +215,18 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
                     .addResourceMethodExecution(methodTime, methodDuration, requestTime, requestDuration);
         }
 
-
         /**
          * Add a response status code produces by Jersey.
+         *
          * @param responseCode Response status code.
          */
         void addResponseCode(final int responseCode) {
             responseStatisticsBuilder.addResponseCode(responseCode);
         }
 
-
         /**
          * Build a new instance of monitoring statistics.
+         *
          * @return New instance of {@code MonitoringStatisticsImpl}.
          */
         MonitoringStatisticsImpl build() {
@@ -214,8 +235,8 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
             final Map<Class<?>, ResourceStatistics> classStats = Collections.unmodifiableMap(
                     Maps.transformValues(resourceClassStatistics, BUILDING_FUNCTION));
 
-            final ExecutionStatistics requestStats = requestStatisticsBuilder == null
-                    ? ExecutionStatisticsImpl.EMPTY : requestStatisticsBuilder.build();
+            final ExecutionStatistics requestStats = executionStatisticsBuilder == null
+                    ? ExecutionStatisticsImpl.EMPTY : executionStatisticsBuilder.build();
 
             return new MonitoringStatisticsImpl(
                     uriStats, classStats, requestStats,
@@ -230,7 +251,6 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
     private final Map<String, ResourceStatistics> uriStatistics;
     private final Map<Class<?>, ResourceStatistics> resourceClassStatistics;
 
-
     private MonitoringStatisticsImpl(final Map<String, ResourceStatistics> uriStatistics,
                                      final Map<Class<?>, ResourceStatistics> resourceClassStatistics,
                                      final ExecutionStatistics requestStatistics,
@@ -243,24 +263,31 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
         this.exceptionMapperStatistics = exceptionMapperStatistics;
     }
 
-
     @Override
     public ExecutionStatistics getRequestStatistics() {
         return requestStatistics;
     }
-
 
     @Override
     public ResponseStatistics getResponseStatistics() {
         return responseStatistics;
     }
 
-
+    /**
+     * Refreshed (re-built) on every access. (uses {@link Maps#transformValues(Map, Function)})
+     *
+     * @return resource statistics
+     */
     @Override
     public Map<String, ResourceStatistics> getUriStatistics() {
         return uriStatistics;
     }
 
+    /**
+     * Refreshed (re-built) on every access. (uses {@link Maps#transformValues(Map, Function)})
+     *
+     * @return resource statistics
+     */
     @Override
     public Map<Class<?>, ResourceStatistics> getResourceClassStatistics() {
         return resourceClassStatistics;
@@ -273,7 +300,8 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
 
     @Override
     public MonitoringStatistics snapshot() {
-        // snapshot functionality not yet implemented
+        // snapshot is not needed, this object is loosely immutable (see javadoc of Maps getters)
+        // all the other Statistics objects are immutable
         return this;
     }
 }

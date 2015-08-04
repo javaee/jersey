@@ -57,7 +57,7 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
-import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.TimeUnit;
@@ -90,7 +90,7 @@ public class SlidingWindowTimeReservoir implements TimeReservoir {
     private final long window;
     private final AtomicLong greatestTick;
     private final AtomicLong updateCount;
-    private final long startTick;
+    private final AtomicLong startTick;
     private final AtomicInteger trimOff;
 
     /**
@@ -102,8 +102,8 @@ public class SlidingWindowTimeReservoir implements TimeReservoir {
     public SlidingWindowTimeReservoir(long window, TimeUnit windowUnit, long startTime, TimeUnit startTimeUnit) {
         this.measurements = new ConcurrentSkipListMap<>();
         this.window = windowUnit.toNanos(window) << COLLISION_BUFFER_POWER;
-        this.startTick = tick(startTime, startTimeUnit);
-        this.greatestTick = new AtomicLong(startTick);
+        this.startTick = new AtomicLong(tick(startTime, startTimeUnit));
+        this.greatestTick = new AtomicLong(startTick.get());
         this.updateCount = new AtomicLong(0);
         this.trimOff = new AtomicInteger(0);
     }
@@ -129,7 +129,7 @@ public class SlidingWindowTimeReservoir implements TimeReservoir {
         for (int i = 0; i < COLLISION_BUFFER; ++i) {
             if (measurements.putIfAbsent(tick, value) == null) {
                 conditionallyUpdateGreatestTick(tick);
-                break;
+                return;
             }
             // increase the tick, there should be up to COLLISION_BUFFER empty slots
             // where to put the value for given 'time'
@@ -139,7 +139,7 @@ public class SlidingWindowTimeReservoir implements TimeReservoir {
     }
 
     private long conditionallyUpdateGreatestTick(final long tick) {
-        for (;;) {
+        while (true) {
             final long currentGreatestTick = greatestTick.get();
             if (tick <= currentGreatestTick) {
                 // the tick is too small, return the greatest one
@@ -152,6 +152,24 @@ public class SlidingWindowTimeReservoir implements TimeReservoir {
         }
     }
 
+    /**
+     * Updates the startTick in case that the sliding window was created AFTER the time of a value that updated this window
+     *
+     * @param firstEntry The first entry of the windowed measurments
+     */
+    private void conditionallyUpdateStartTick(final Map.Entry<Long, Long> firstEntry) {
+        final Long firstEntryKey = firstEntry != null ? firstEntry.getKey() : null;
+        if (firstEntryKey != null && firstEntryKey < startTick.get()) {
+            while (true) {
+                final long expectedStartTick = startTick.get();
+
+                if (startTick.compareAndSet(expectedStartTick, firstEntryKey)) {
+                    return;
+                }
+            }
+        }
+    }
+
     @Override
     public UniformTimeSnapshot getSnapshot(long time, TimeUnit timeUnit) {
         trimOff.incrementAndGet();
@@ -159,11 +177,18 @@ public class SlidingWindowTimeReservoir implements TimeReservoir {
         try {
             // now, with the 'baselineTick' we can be sure that no trim will be performed
             // we just cannot guarantee that 'time' will correspond with the 'baselineTick' which is what the API warns about
-            final long measuredTickInterval = Math.min(baselineTick - startTick, window);
-            final Collection<Long> values = measurements
-                    .subMap((roundTick(baselineTick)) - measuredTickInterval, true, baselineTick, true)
-                    .values();
-            return new UniformTimeSnapshot(values, measuredTickInterval >> COLLISION_BUFFER_POWER, TimeUnit.NANOSECONDS);
+            final ConcurrentNavigableMap<Long, Long> windowMap = measurements
+                    .subMap((roundTick(baselineTick)) - window, true, baselineTick, true);
+
+            // if the first update came with value lower that the 'startTick' we need to extend the window size so that the
+            // calculation depending on the actual measured interval is not unnecessary boosted
+            conditionallyUpdateStartTick(windowMap.firstEntry());
+
+            // calculate the actual measured interval
+            final long measuredTickInterval = Math.min(baselineTick - startTick.get(), window);
+
+            return new UniformTimeSnapshot(windowMap.values(), measuredTickInterval >> COLLISION_BUFFER_POWER,
+                    TimeUnit.NANOSECONDS);
         } finally {
             trimOff.decrementAndGet();
             trim(baselineTick);

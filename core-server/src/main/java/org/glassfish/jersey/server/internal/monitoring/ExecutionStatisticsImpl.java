@@ -52,36 +52,43 @@ import org.glassfish.jersey.server.monitoring.TimeWindowStatistics;
 import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
- * Execution statistics.
+ * Immutable Execution statistics.
  *
  * @author Miroslav Fuksa
+ * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
 final class ExecutionStatisticsImpl implements ExecutionStatistics {
 
     /**
      * Builder of execution statistics.
+     * <p/>
+     * Must be thread-safe.
      */
     static class Builder {
 
-        private long lastStartTime;
+        private volatile long lastStartTime;
         private final Map<Long, TimeWindowStatisticsImpl.Builder> intervalStatistics;
 
         /**
          * Create a new builder.
          */
         public Builder() {
-            this.intervalStatistics = new HashMap<>(6);
-            addInterval(0, TimeUnit.MILLISECONDS);
-            addInterval(1, TimeUnit.SECONDS);
-            addInterval(15, TimeUnit.SECONDS);
-            addInterval(1, TimeUnit.MINUTES);
-            addInterval(15, TimeUnit.MINUTES);
-            addInterval(1, TimeUnit.HOURS);
+            // create unmodifiable map to ensure that an iteration in the build() won't have multi-threading issues
+            this.intervalStatistics = Collections.unmodifiableMap(new HashMap<Long, TimeWindowStatisticsImpl.Builder>(6) {
+                {
+                    addInterval(0, TimeUnit.MILLISECONDS, this);
+                    addInterval(1, TimeUnit.SECONDS, this);
+                    addInterval(15, TimeUnit.SECONDS, this);
+                    addInterval(1, TimeUnit.MINUTES, this);
+                    addInterval(15, TimeUnit.MINUTES, this);
+                    addInterval(1, TimeUnit.HOURS, this);
+                }
+            });
         }
 
-        private void addInterval(final long interval, final TimeUnit timeUnit) {
+        private void addInterval(final long interval, final TimeUnit timeUnit, final Map map) {
             final long intervalInMillis = timeUnit.toMillis(interval);
-            intervalStatistics.put(intervalInMillis, new TimeWindowStatisticsImpl.Builder(intervalInMillis,
+            map.put(intervalInMillis, new TimeWindowStatisticsImpl.Builder(intervalInMillis,
                     TimeUnit.MILLISECONDS));
         }
 
@@ -89,7 +96,7 @@ final class ExecutionStatisticsImpl implements ExecutionStatistics {
          * Add execution of a target.
          *
          * @param startTime (Unix timestamp format)
-         * @param duration Duration of target execution in milliseconds.
+         * @param duration  Duration of target execution in milliseconds.
          */
         void addExecution(final long startTime, final long duration) {
             for (final TimeWindowStatisticsImpl.Builder statBuilder : intervalStatistics.values()) {
@@ -112,18 +119,18 @@ final class ExecutionStatisticsImpl implements ExecutionStatistics {
 
             // cache when request rate is 0
 
-            return new ExecutionStatisticsImpl(lastStartTime, Collections.unmodifiableMap(newIntervalStatistics));
+            return new ExecutionStatisticsImpl(lastStartTime, newIntervalStatistics);
         }
     }
 
     static final ExecutionStatistics EMPTY = new Builder().build();
 
-    private final Date lastStartTime;
+    private final long lastStartTime;
     private final Map<Long, TimeWindowStatistics> timeWindowStatistics;
 
     @Override
     public Date getLastStartTime() {
-        return lastStartTime;
+        return new Date(lastStartTime);
     }
 
     @Override
@@ -133,13 +140,13 @@ final class ExecutionStatisticsImpl implements ExecutionStatistics {
 
     @Override
     public ExecutionStatistics snapshot() {
-        // snapshot functionality not yet implemented
+        // this object is immutable (TimeWindowStatistics are immutable as well)
         return this;
     }
 
     private ExecutionStatisticsImpl(final long lastStartTime, final Map<Long, TimeWindowStatistics> timeWindowStatistics) {
-        this.lastStartTime = new Date(lastStartTime);
-        this.timeWindowStatistics = timeWindowStatistics;
+        this.lastStartTime = lastStartTime;
+        this.timeWindowStatistics = Collections.unmodifiableMap(timeWindowStatistics);
     }
 
 }

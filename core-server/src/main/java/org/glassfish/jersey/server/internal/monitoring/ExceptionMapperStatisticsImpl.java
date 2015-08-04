@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.glassfish.jersey.server.monitoring.ExceptionMapperStatistics;
@@ -56,10 +57,12 @@ final class ExceptionMapperStatisticsImpl implements ExceptionMapperStatistics {
 
     /**
      * Builder of exception mapper statistics.
+     * <p/>
+     * This builder does not need to be threadsafe since it's called only from the jersey-background-task-scheduler.
      */
     static class Builder {
 
-        private Map<Class<?>, Long> exceptionMapperExecutionCount = Maps.newHashMap();
+        private Map<Class<?>, Long> exceptionMapperExecutionCountMap = Maps.newHashMap();
         private long successfulMappings;
         private long unsuccessfulMappings;
         private long totalMappings;
@@ -92,9 +95,9 @@ final class ExceptionMapperStatisticsImpl implements ExceptionMapperStatistics {
         void addExceptionMapperExecution(final Class<?> mapper, final int count) {
             cached = null;
 
-            Long cnt = exceptionMapperExecutionCount.get(mapper);
+            Long cnt = exceptionMapperExecutionCountMap.get(mapper);
             cnt = cnt == null ? count : cnt + count;
-            exceptionMapperExecutionCount.put(mapper, cnt);
+            exceptionMapperExecutionCountMap.put(mapper, cnt);
         }
 
         /**
@@ -104,7 +107,7 @@ final class ExceptionMapperStatisticsImpl implements ExceptionMapperStatistics {
          */
         public ExceptionMapperStatisticsImpl build() {
             if (cached == null) {
-                cached = new ExceptionMapperStatisticsImpl(Collections.unmodifiableMap(exceptionMapperExecutionCount),
+                cached = new ExceptionMapperStatisticsImpl(new HashMap<>(this.exceptionMapperExecutionCountMap),
                         successfulMappings, unsuccessfulMappings, totalMappings);
             }
 
@@ -119,7 +122,7 @@ final class ExceptionMapperStatisticsImpl implements ExceptionMapperStatistics {
 
     private ExceptionMapperStatisticsImpl(final Map<Class<?>, Long> exceptionMapperExecutionCount, final long successfulMappings,
                                           final long unsuccessfulMappings, final long totalMappings) {
-        this.exceptionMapperExecutionCount = exceptionMapperExecutionCount;
+        this.exceptionMapperExecutionCount = Collections.unmodifiableMap(exceptionMapperExecutionCount);
         this.successfulMappings = successfulMappings;
         this.unsuccessfulMappings = unsuccessfulMappings;
         this.totalMappings = totalMappings;
