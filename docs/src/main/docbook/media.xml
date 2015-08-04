@@ -575,7 +575,7 @@ final Application application = new ResourceConfig()
 &lt;/dependency&gt;</programlisting>
 
                     If you're not using Maven make sure to have all needed dependencies (see &jersey.media.json-jackson.deps.link; or
-                    &jersey.media.json-jackson.deps.link;) on the classpath.
+                    &jersey.media.json-jackson1.deps.link;) on the classpath.
                 </para>
             </section>
             <section xml:id="jackson-registration">
