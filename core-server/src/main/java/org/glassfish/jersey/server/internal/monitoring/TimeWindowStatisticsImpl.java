@@ -40,17 +40,17 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.glassfish.jersey.server.monitoring.TimeWindowStatistics;
 
 /**
- * {@link TimeWindowStatistics Time window statistics} implementation.
+ * {@link TimeWindowStatistics Time window statistics} that uses backing {@link SlidingWindowTimeReservoir} for its {@code
+ * Builder} implementation.
  *
  * @author Miroslav Fuksa
+ * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
 final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
 
@@ -59,75 +59,10 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
      */
     static class Builder {
 
-        private static final int DEFAULT_UNITS_PER_INTERVAL = 100;
-
         /**
          * Total interval for which these statistics are calculated (eg. last 15 seconds, last one minute) converted to ms
          */
         private final long interval;
-
-        /**
-         * size of one unit in ms.
-         */
-        private final long unit;
-
-        /**
-         * How many units are in one interval.
-         */
-        private final int unitsPerInterval;
-
-        /**
-         * Start time of measuring statistics.
-         */
-        private final long startTime;
-
-        private final Queue<Unit> unitQueue;
-
-        /**
-         * Total request count measured in the interval window.
-         * Summary of {@code count} all units in {@code unitQueue}.
-         */
-        private long totalCount;
-
-        /**
-         * Summary of all request duration in the time window.
-         */
-        private long totalDuration;
-
-        /**
-         * Same meaning as {@code interval} but is calculated including rounding error.
-         * It is equal to {@code unit} * {@code unitsPerInterval}.
-         */
-        private final long intervalWithRoundError;
-
-        // last unit = newest unit. Following statistics are not in the queue yet (no Unit yest)
-        private long lastUnitEnd;
-        private long lastUnitCount;
-        private long lastUnitMin = -1;
-        private long lastUnitMax = -1;
-        private long lastUnitDuration = 0;
-
-        /**
-         * Oldest unit that is in the queue (first that will be removed).
-         */
-        private Unit oldestUnit;
-
-        private static class Unit {
-
-            private final long count;
-            private final long minimumDuration;
-            private final long maximumDuration;
-            private final long duration;
-
-            private Unit(final long count, final long minimumDuration, final long maximumDuration, final long duration) {
-                this.count = count;
-                this.minimumDuration = minimumDuration;
-                this.maximumDuration = maximumDuration;
-                this.duration = duration;
-            }
-
-            private static final Unit EMPTY_UNIT = new Unit(0, -1, -1, 0);
-        }
 
         /**
          * Create a new builder instance.
@@ -139,6 +74,8 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
             this(timeWindowSize, timeUnit, System.currentTimeMillis());
         }
 
+        private final TimeReservoir durationReservoir;
+
         /**
          * Create a new builder instance. A constructor is used mainly for testing purposes.
          *
@@ -147,29 +84,11 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
          * @param now            Current time.
          */
         Builder(final long timeWindowSize, final TimeUnit timeUnit, final long now) {
-            startTime = now;
-            this.interval = timeUnit.toMillis(timeWindowSize);
-            if (interval == 0) {
-                // unlimited timeWindowSize
-                unit = 0;
-                unitsPerInterval = 0;
-                intervalWithRoundError = 0;
-                unitQueue = null;
-            } else {
-                int n = DEFAULT_UNITS_PER_INTERVAL;
-                long u = interval / n;
-                if (u < 1000) {
-                    n = (int) interval / 1000;
-                    u = interval / n;
-                }
-                this.unit = u;
-                this.unitsPerInterval = n;
-                intervalWithRoundError = unit * unitsPerInterval;
-                // TODO change to array
-                this.unitQueue = new LinkedList<>();
+            interval = timeUnit.toMillis(timeWindowSize);
 
-                lastUnitEnd = startTime + unit;
-            }
+            durationReservoir = interval == 0
+                    ? new UniformTimeReservoir(now, TimeUnit.MILLISECONDS)
+                    : new SlidingWindowTimeReservoir(timeWindowSize, timeUnit, now, TimeUnit.MILLISECONDS);
         }
 
         /**
@@ -179,76 +98,7 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
          * @param duration    Duration of request processing.
          */
         void addRequest(final long requestTime, final long duration) {
-            closeLastUnitIfNeeded(requestTime);
-
-            lastUnitCount++;
-            lastUnitDuration += duration;
-
-            if (duration < lastUnitMin || lastUnitMin == -1) {
-                lastUnitMin = duration;
-            }
-
-            if (duration > lastUnitMax || lastUnitMax == -1) {
-                lastUnitMax = duration;
-            }
-        }
-
-        private void closeLastUnitIfNeeded(final long requestTime) {
-            if (interval != 0) {
-                if ((requestTime - lastUnitEnd) > interval + unit) {
-                    resetQueue(requestTime);
-                }
-                if (lastUnitEnd < requestTime) {
-                    // close the old unit
-                    if (lastUnitCount > 0) {
-                        add(new Unit(lastUnitCount, lastUnitMin, lastUnitMax, lastUnitDuration));
-                    } else {
-                        add(Unit.EMPTY_UNIT);
-                    }
-                    lastUnitEnd += unit;
-                    resetLastUnit();
-
-                    while (lastUnitEnd < requestTime) {
-                        add(Unit.EMPTY_UNIT);
-                        lastUnitEnd += unit;
-                    }
-                }
-            }
-        }
-
-        private void resetLastUnit() {
-            lastUnitCount = 0;
-            lastUnitMin = -1;
-            lastUnitMax = -1;
-            lastUnitDuration = 0;
-        }
-
-        private void add(final Unit unit) {
-            unitQueue.add(unit);
-
-            // fill with empty until units
-            if (unitQueue.size() > unitsPerInterval) {
-                final Unit removedUnit = unitQueue.remove();
-                totalCount -= removedUnit.count;
-                totalDuration -= removedUnit.duration;
-            }
-            this.oldestUnit = unitQueue.element();
-            totalCount += lastUnitCount;
-            totalDuration += lastUnitDuration;
-        }
-
-        private void resetQueue(final long requestTime) {
-            this.unitQueue.clear();
-            lastUnitEnd = requestTime + unit;
-            resetLastUnit();
-
-            totalCount = 0;
-            totalDuration = 0;
-
-            // fill with empty unit to keep result consistent
-            for (int i = 0; i < unitsPerInterval; i++) {
-                unitQueue.add(Unit.EMPTY_UNIT);
-            }
+            durationReservoir.update(duration, requestTime, TimeUnit.MILLISECONDS);
         }
 
         /**
@@ -267,57 +117,22 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
          * @return New instance of statistics.
          */
         TimeWindowStatisticsImpl build(final long currentTime) {
-            final long diff = currentTime - startTime;
+            final UniformTimeSnapshot durationReservoirSnapshot = durationReservoir
+                    .getSnapshot(currentTime, TimeUnit.MILLISECONDS);
 
-            // Unlimited time scale.
-            if (interval == 0) {
-                if (lastUnitCount == 0) {
-                    return TimeWindowStatisticsImpl.EMPTY.get(0L);
-                } else {
-                    final double requestsPerSecond = (double) (1000 * lastUnitCount) / diff;
-                    final long avg = lastUnitDuration / lastUnitCount;
-
-                    return new TimeWindowStatisticsImpl(0, requestsPerSecond, lastUnitMin, lastUnitMax, avg, lastUnitCount);
-                }
-            }
-
-            closeLastUnitIfNeeded(currentTime);
-            long min = -1;
-            long max = -1;
-            final double requestsPerSecond;
-
-            for (final Unit u : this.unitQueue) {
-                min = getMin(min, u.minimumDuration);
-                max = getMax(max, u.maximumDuration);
-            }
-
-            min = getMin(min, lastUnitMin);
-            max = getMax(max, lastUnitMax);
-
-            long adjustedTotalCount = totalCount + lastUnitCount;
-            long adjustedTotalDuration = totalDuration + lastUnitDuration;
-
-            final int size = unitQueue.size();
-            if (size >= unitsPerInterval) {
-                final double ratio = (currentTime - (lastUnitEnd - unit)) / ((double) unit);
-
-                if (oldestUnit != null) {
-                    adjustedTotalCount -= (long) (oldestUnit.count * ratio);
-                    adjustedTotalDuration -= (long) (oldestUnit.duration * ratio);
-                }
-
-                // intervalWithRoundError is used instead of size * unit for performance reasons
-                requestsPerSecond = (double) (1000 * adjustedTotalCount) / intervalWithRoundError;
-            } else {
-                requestsPerSecond = diff == 0 ? 0 : (double) (1000 * adjustedTotalCount) / (double) diff;
-            }
-
-            if (adjustedTotalCount == 0) {
+            // if nothing was collected, return a single empty stat instance
+            if (durationReservoirSnapshot.size() == 0) {
                 return getOrCreateEmptyStats(interval);
-            } else {
-                final long avg = adjustedTotalDuration / adjustedTotalCount;
-                return new TimeWindowStatisticsImpl(interval, requestsPerSecond, min, max, avg, adjustedTotalCount);
             }
+
+            final double requestsPerSecond =
+                    (double) (1000 * durationReservoirSnapshot.size()) / durationReservoirSnapshot
+                            .getTimeInterval(TimeUnit.MILLISECONDS);
+
+            return new TimeWindowStatisticsImpl(interval, requestsPerSecond, durationReservoirSnapshot.getMin(),
+                    durationReservoirSnapshot.getMax(), (long) durationReservoirSnapshot.getMean(),
+                    durationReservoirSnapshot.size());
+
         }
 
         private TimeWindowStatisticsImpl getOrCreateEmptyStats(final long interval) {
@@ -325,20 +140,6 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
                 EMPTY.putIfAbsent(interval, new TimeWindowStatisticsImpl(interval, 0, -1, -1, -1, 0));
             }
             return EMPTY.get(interval);
-        }
-
-        private long getMax(long globalMax, final long unitMax) {
-            if ((unitMax > globalMax && unitMax != -1) || globalMax == -1) {
-                globalMax = unitMax;
-            }
-            return globalMax;
-        }
-
-        private long getMin(long globalMin, final long unitMin) {
-            if ((unitMin < globalMin && unitMin != -1) || globalMin == -1) {
-                globalMin = unitMin;
-            }
-            return globalMin;
         }
 
         public long getInterval() {
@@ -398,7 +199,7 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
 
     @Override
     public TimeWindowStatistics snapshot() {
-        // snapshot functionality not yet implemented
+        // TimeWindowStatisticsImpl is immutable; the Builder is mutable
         return this;
     }
 
