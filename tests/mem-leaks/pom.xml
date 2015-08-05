@@ -63,7 +63,7 @@
 
     <properties>
 
-        <memleak.jersey.version>${project.version}</memleak.jersey.version>
+        <memleak.jersey.version>2.20-SNAPSHOT</memleak.jersey.version>
 
         <memleak.tmpdir>/tmp</memleak.tmpdir>
 
