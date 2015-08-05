@@ -368,6 +368,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-cdi1x-validation/dependencies.html">
+    jersey-cdi1x-validation
+</link>
+</entry>
+<entry>Jersey CDI 1.x Bean Validation Support</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-declarative-linking/dependencies.html">
     jersey-declarative-linking
 </link>
@@ -885,6 +893,14 @@
 </link>
 </entry>
 <entry>Extended WADL example.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/feed-combiner-java8-webapp/dependencies.html">
+    feed-combiner-java8-webapp
+</link>
+</entry>
+<entry>Jersey Web Application (Servlet) examples parent POM.</entry>
 </row>
 <row>
 <entry>
