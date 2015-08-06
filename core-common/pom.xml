@@ -201,6 +201,11 @@
         </dependency>
 
         <dependency>
+            <!-- Must be declared before JUnit dependency, otherwise not visible to JUnit. -->
+            <groupId>org.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>

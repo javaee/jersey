@@ -85,6 +85,7 @@ import jersey.repackaged.com.google.common.base.Function;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public abstract class InboundMessageContext {
+
     private static final InputStream EMPTY = new InputStream() {
 
         @Override
@@ -121,6 +122,7 @@ public abstract class InboundMessageContext {
      * is used to control the execution of interceptors.
      */
     private static class EntityContent extends EntityInputStream {
+
         private boolean buffered;
 
         EntityContent() {
@@ -266,7 +268,7 @@ public abstract class InboundMessageContext {
 
     /**
      * Get a message header as a single string value.
-     *
+     * <p/>
      * Each single header value is converted to String using a
      * {@link javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate} if one is available
      * via {@link javax.ws.rs.ext.RuntimeDelegate#createHeaderDelegate(java.lang.Class)}
@@ -275,10 +277,10 @@ public abstract class InboundMessageContext {
      *
      * @param name the message header.
      * @return the message header value. If the message header is not present then
-     *         {@code null} is returned. If the message header is present but has no
-     *         value then the empty string is returned. If the message header is present
-     *         more than once then the values of joined together and separated by a ','
-     *         character.
+     * {@code null} is returned. If the message header is present but has no
+     * value then the empty string is returned. If the message header is present
+     * more than once then the values of joined together and separated by a ','
+     * character.
      */
     public String getHeaderString(String name) {
         List<String> values = this.headers.get(name);
@@ -400,7 +402,7 @@ public abstract class InboundMessageContext {
     /**
      * Get the language of the entity.
      *
-     * @return the language of the entity or {@code null} if not specified
+     * @return the language of the entity or {@code null} if not specified.
      */
     public Locale getLanguage() {
         return singleHeader(HttpHeaders.CONTENT_LANGUAGE, new Function<String, Locale>() {
@@ -418,8 +420,7 @@ public abstract class InboundMessageContext {
     /**
      * Get Content-Length value.
      *
-     * @return Content-Length as integer if present and valid number. In other
-     *         cases returns -1.
+     * @return Content-Length as integer if present and valid number. In other cases returns -1.
      */
     public int getLength() {
         return singleHeader(HttpHeaders.CONTENT_LENGTH, new Function<String, Integer>() {
@@ -438,7 +439,7 @@ public abstract class InboundMessageContext {
      * Get the media type of the entity.
      *
      * @return the media type or {@code null} if not specified (e.g. there's no
-     *         message entity).
+     * message entity).
      */
     public MediaType getMediaType() {
         return singleHeader(HttpHeaders.CONTENT_TYPE, new Function<String, MediaType>() {
@@ -457,7 +458,7 @@ public abstract class InboundMessageContext {
      * Get a list of media types that are acceptable for a request.
      *
      * @return a read-only list of requested response media types sorted according
-     *         to their q-value, with highest preference first.
+     * to their q-value, with highest preference first.
      */
     public List<AcceptableMediaType> getQualifiedAcceptableMediaTypes() {
         final String value = getHeaderString(HttpHeaders.ACCEPT);
@@ -477,7 +478,7 @@ public abstract class InboundMessageContext {
      * Get a list of languages that are acceptable for the message.
      *
      * @return a read-only list of acceptable languages sorted according
-     *         to their q-value, with highest preference first.
+     * to their q-value, with highest preference first.
      */
     public List<AcceptableLanguageTag> getQualifiedAcceptableLanguages() {
         final String value = getHeaderString(HttpHeaders.ACCEPT_LANGUAGE);
@@ -497,7 +498,7 @@ public abstract class InboundMessageContext {
      * Get the list of language tag from the "Accept-Charset" of an HTTP request.
      *
      * @return The list of AcceptableToken. This list
-     *         is ordered with the highest quality acceptable charset occurring first.
+     * is ordered with the highest quality acceptable charset occurring first.
      */
     public List<AcceptableToken> getQualifiedAcceptCharset() {
         final String acceptCharset = getHeaderString(HttpHeaders.ACCEPT_CHARSET);
@@ -515,7 +516,7 @@ public abstract class InboundMessageContext {
      * Get the list of language tag from the "Accept-Charset" of an HTTP request.
      *
      * @return The list of AcceptableToken. This list
-     *         is ordered with the highest quality acceptable charset occurring first.
+     * is ordered with the highest quality acceptable charset occurring first.
      */
     public List<AcceptableToken> getQualifiedAcceptEncoding() {
         final String acceptEncoding = getHeaderString(HttpHeaders.ACCEPT_ENCODING);
@@ -553,7 +554,7 @@ public abstract class InboundMessageContext {
      * Get the allowed HTTP methods from the Allow HTTP header.
      *
      * @return the allowed HTTP methods, all methods will returned as upper case
-     *         strings.
+     * strings.
      */
     public Set<String> getAllowedMethods() {
         final String allowed = getHeaderString(HttpHeaders.ALLOW);
@@ -642,7 +643,7 @@ public abstract class InboundMessageContext {
      * Get the links attached to the message as header.
      *
      * @return links, may return empty {@link java.util.Set} if no links are present. Never
-     *         returns {@code null}.
+     * returns {@code null}.
      */
     public Set<Link> getLinks() {
         List<String> links = this.headers.get(HttpHeaders.LINK);
@@ -666,7 +667,7 @@ public abstract class InboundMessageContext {
      *
      * @param relation link relation.
      * @return {@code true} if the for the relation link exists, {@code false}
-     *         otherwise.
+     * otherwise.
      */
     public boolean hasLink(String relation) {
         for (Link link : getLinks()) {
@@ -701,7 +702,7 @@ public abstract class InboundMessageContext {
      *
      * @param relation link relation.
      * @return the link builder for the relation, otherwise {@code null} if not
-     *         present.
+     * present.
      */
     public Link.Builder getLinkBuilder(String relation) {
         Link link = getLink(relation);
@@ -735,12 +736,12 @@ public abstract class InboundMessageContext {
     /**
      * Check if there is a non-empty entity input stream is available in the
      * message.
-     *
+     * <p/>
      * The method returns {@code true} if the entity is present, returns
      * {@code false} otherwise.
      *
      * @return {@code true} if there is an entity present in the message,
-     *         {@code false} otherwise.
+     * {@code false} otherwise.
      */
     public boolean hasEntity() {
         entityContent.ensureNotClosed();
@@ -784,7 +785,6 @@ public abstract class InboundMessageContext {
     public <T> T readEntity(Class<T> rawType, PropertiesDelegate propertiesDelegate) {
         return readEntity(rawType, rawType, EMPTY_ANNOTATIONS, propertiesDelegate);
     }
-
 
     /**
      * Read entity from a context entity input stream.
@@ -831,14 +831,14 @@ public abstract class InboundMessageContext {
 
         entityContent.ensureNotClosed();
 
-// TODO: revise if we need to re-introduce the check for performance reasons or once non-blocking I/O is supported.
-// The code has been commended out because in case of streaming input (e.g. SSE) the call might block until a first
-// byte is available, which would make e.g. the SSE EventSource construction or EventSource.open() method to block
-// until a first event is received, which is undesirable.
-//
-//        if (entityContent.isEmpty()) {
-//            return null;
-//        }
+        // TODO: revise if we need to re-introduce the check for performance reasons or once non-blocking I/O is supported.
+        // The code has been commended out because in case of streaming input (e.g. SSE) the call might block until a first
+        // byte is available, which would make e.g. the SSE EventSource construction or EventSource.open() method to block
+        // until a first event is received, which is undesirable.
+        //
+        //        if (entityContent.isEmpty()) {
+        //            return null;
+        //        }
 
         if (workers == null) {
             return null;
@@ -846,7 +846,6 @@ public abstract class InboundMessageContext {
 
         MediaType mediaType = getMediaType();
         mediaType = mediaType == null ? MediaType.APPLICATION_OCTET_STREAM_TYPE : mediaType;
-
 
         boolean shouldClose = !buffered;
         try {
@@ -868,7 +867,11 @@ public abstract class InboundMessageContext {
             throw new ProcessingException(LocalizationMessages.ERROR_READING_ENTITY_FROM_INPUT_STREAM(), ex);
         } finally {
             if (shouldClose) {
-                entityContent.close();
+                // Workaround for JRFCAF-1344: the underlying stream close() implementation may be thread-unsafe
+                // and as such the close() may result in an IOException at the socket input stream level,
+                // if the close() gets called at once from multiple threads somehow.
+                // We want to ignore these exceptions in the readEntity/bufferEntity operations though.
+                ReaderWriter.safelyClose(entityContent);
             }
         }
     }
@@ -877,8 +880,7 @@ public abstract class InboundMessageContext {
      * Buffer the entity stream (if not empty).
      *
      * @return {@code true} if the entity input stream was successfully buffered.
-     * @throws javax.ws.rs.ProcessingException
-     *          in case of an IO error.
+     * @throws javax.ws.rs.ProcessingException in case of an IO error.
      */
     public boolean bufferEntity() throws ProcessingException {
         entityContent.ensureNotClosed();
@@ -893,7 +895,11 @@ public abstract class InboundMessageContext {
             try {
                 ReaderWriter.writeTo(entityStream, baos);
             } finally {
-                entityStream.close();
+                // Workaround for JRFCAF-1344: the underlying stream close() implementation may be thread-unsafe
+                // and as such the close() may result in an IOException at the socket input stream level,
+                // if the close() gets called at once from multiple threads somehow.
+                // We want to ignore these exceptions in the readEntity/bufferEntity operations though.
+                ReaderWriter.safelyClose(entityStream);
             }
 
             entityContent.setContent(new ByteArrayInputStream(baos.toByteArray()), true);

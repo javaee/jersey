@@ -1085,8 +1085,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             final Object instance = executor.proceed();
             if (!(instance instanceof Closeable) && !(instance instanceof Source)) {
                 final InputStream stream = executor.getInputStream();
-                if (stream != null) {
-                    stream.close();
+                if (stream != entityStream && stream != null) {
+                    // We only close stream if it differs from the received entity stream,
+                    // otherwise we let the caller close the stream.
+                    ReaderWriter.safelyClose(stream);
                 }
             }
 

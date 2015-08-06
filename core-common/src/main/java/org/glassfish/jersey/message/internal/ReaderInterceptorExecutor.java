@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
@@ -83,15 +82,15 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
 
     private static final Logger LOGGER = Logger.getLogger(ReaderInterceptorExecutor.class.getName());
 
-    private InputStream inputStream;
     private final MultivaluedMap<String, String> headers;
-
     private final Iterator<ReaderInterceptor> interceptors;
-    private int processedCount;
     private final MessageBodyWorkers workers;
     private final boolean translateNce;
 
     private final ServiceLocator serviceLocator;
+
+    private InputStream inputStream;
+    private int processedCount;
 
     /**
      * Constructs a new executor to read given type from provided {@link InputStream entityStream}.
