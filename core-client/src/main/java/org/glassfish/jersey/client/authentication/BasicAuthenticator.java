@@ -40,7 +40,6 @@
 
 package org.glassfish.jersey.client.authentication;
 
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.core.HttpHeaders;
@@ -56,6 +55,7 @@ import org.glassfish.jersey.internal.util.Base64;
  * @author Craig McClanahan
  */
 final class BasicAuthenticator {
+
     private final HttpAuthenticationFilter.Credentials defaultCredentials;
 
     /**
@@ -67,7 +67,6 @@ final class BasicAuthenticator {
     BasicAuthenticator(HttpAuthenticationFilter.Credentials defaultCredentials) {
         this.defaultCredentials = defaultCredentials;
     }
-
 
     private String calculateAuthentication(HttpAuthenticationFilter.Credentials credentials) {
         String username = credentials.getUsername();
@@ -89,17 +88,17 @@ final class BasicAuthenticator {
         return "Basic " + Base64.encodeAsString(usernamePassword);
     }
 
-
     /**
      * Adds authentication information to the request.
      *
      * @param request Request context.
+     * @throws RequestAuthenticationException in case that basic credentials missing or are in invalid format
      */
-    public void filterRequest(ClientRequestContext request) {
+    public void filterRequest(ClientRequestContext request) throws RequestAuthenticationException {
         HttpAuthenticationFilter.Credentials credentials = HttpAuthenticationFilter.getCredentials(request,
                 defaultCredentials, HttpAuthenticationFilter.Type.BASIC);
         if (credentials == null) {
-            throw new ProcessingException(LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_BASIC());
+            throw new RequestAuthenticationException(LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_BASIC());
         }
         request.getHeaders().add(HttpHeaders.AUTHORIZATION, calculateAuthentication(credentials));
     }
@@ -107,10 +106,12 @@ final class BasicAuthenticator {
     /**
      * Checks the response and if basic authentication is required then performs a new request
      * with basic authentication.
-     * @param request Request context.
+     *
+     * @param request  Request context.
      * @param response Response context (will be updated with newest response data if the request was repeated).
      * @return {@code true} if response does not require authentication or if authentication is required,
-     *                  new request was done with digest authentication information and authentication was successful.
+     * new request was done with digest authentication information and authentication was successful.
+     * @throws ResponseAuthenticationException in case that basic credentials missing or are in invalid format
      */
     public boolean filterResponseAndAuthenticate(ClientRequestContext request, ClientResponseContext response) {
         final String authenticate = response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE);
@@ -119,7 +120,7 @@ final class BasicAuthenticator {
                     .getCredentials(request, defaultCredentials, HttpAuthenticationFilter.Type.BASIC);
 
             if (credentials == null) {
-                throw new ProcessingException(LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_BASIC());
+                throw new ResponseAuthenticationException(null, LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_BASIC());
             }
 
             return HttpAuthenticationFilter.repeatRequest(request, response, calculateAuthentication(credentials));

@@ -43,8 +43,7 @@ package org.glassfish.jersey.tests.e2e.entity;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-
-import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
+import javax.ws.rs.client.ResponseProcessingException;
 
 import org.junit.Test;
 import static org.junit.Assert.fail;
@@ -70,7 +69,7 @@ public class InvalidEntityTest extends AbstractTypeTester {
         } catch (Exception e) {
             exception = e;
         }
-        if (!(exception instanceof MessageBodyProviderNotFoundException)) {
+        if (!(exception instanceof ResponseProcessingException)) {
             if (exception != null) {
                 exception.printStackTrace();
             }

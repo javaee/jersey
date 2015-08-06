@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Priorities;
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
@@ -120,12 +119,12 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
     /**
      * Create a new filter instance.
      *
-     * @param mode Mode.
-     * @param basicCredentials Basic credentials (can be {@code null} if this filter does not work in the
-     *                         basic mode or if no default credentials are defined).
+     * @param mode              Mode.
+     * @param basicCredentials  Basic credentials (can be {@code null} if this filter does not work in the
+     *                          basic mode or if no default credentials are defined).
      * @param digestCredentials Digest credentials (can be {@code null} if this filter does not work in the
-     *                         digest mode or if no default credentials are defined).
-     * @param configuration Configuration (non-{@code null}).
+     *                          digest mode or if no default credentials are defined).
+     * @param configuration     Configuration (non-{@code null}).
      */
     HttpAuthenticationFilter(HttpAuthenticationFeature.Mode mode, Credentials basicCredentials,
                              Credentials digestCredentials, Configuration configuration) {
@@ -288,13 +287,11 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
      * Repeat the {@code request} with provided {@code newAuthorizationHeader}
      * and update the {@code response} with newest response data.
      *
-     * @param request Request context.
-     * @param response Response context (will be updated with the new response data).
+     * @param request                Request context.
+     * @param response               Response context (will be updated with the new response data).
      * @param newAuthorizationHeader {@code Authorization} header that should be added to the new request.
-     *
      * @return {@code true} is the authentication was successful ({@code true} if 401 response code was not returned;
      * {@code false} otherwise).
-     *
      */
     static boolean repeatRequest(ClientRequestContext request, ClientResponseContext response, String newAuthorizationHeader) {
         Client client = ClientBuilder.newClient(request.getConfiguration());
@@ -350,6 +347,7 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
 
         /**
          * Create a new credentials from username and password as byte array.
+         *
          * @param username Username.
          * @param password Password as byte array.
          */
@@ -360,6 +358,7 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
 
         /**
          * Create a new credentials from username and password as {@link String}.
+         *
          * @param username Username.
          * @param password {@code String} password.
          */
@@ -410,7 +409,8 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
             } else if (password instanceof String) {
                 pwdBytes = ((String) password).getBytes(CHARACTER_SET);
             } else {
-                throw new ProcessingException(LocalizationMessages.AUTHENTICATION_CREDENTIALS_REQUEST_PASSWORD_UNSUPPORTED());
+                throw new RequestAuthenticationException(
+                        LocalizationMessages.AUTHENTICATION_CREDENTIALS_REQUEST_PASSWORD_UNSUPPORTED());
             }
             return new Credentials(userName, pwdBytes);
         }
@@ -420,16 +420,16 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
     /**
      * Get credentials actual for the current request. Priorities in credentials selection are the following:
      * <ol>
-     *     <li>Basic/digest specific credentials defined in the request properties</li>
-     *     <li>Common credentials defined in the request properties</li>
-     *     <li>{@code defaultCredentials}</li>
+     * <li>Basic/digest specific credentials defined in the request properties</li>
+     * <li>Common credentials defined in the request properties</li>
+     * <li>{@code defaultCredentials}</li>
      * </ol>
      *
-     * @param request Request from which credentials should be extracted.
+     * @param request            Request from which credentials should be extracted.
      * @param defaultCredentials Default credentials (can be {@code null}).
-     * @param type Type of requested credentials.
-     *
+     * @param type               Type of requested credentials.
      * @return Credentials or {@code null} if no credentials are found and {@code defaultCredentials} are {@code null}.
+     * @throws RequestAuthenticationException in case the {@code username} or {@code password} is invalid.
      */
     static Credentials getCredentials(ClientRequestContext request, Credentials defaultCredentials, Type type) {
         Credentials commonCredentials = extractCredentials(request, type);

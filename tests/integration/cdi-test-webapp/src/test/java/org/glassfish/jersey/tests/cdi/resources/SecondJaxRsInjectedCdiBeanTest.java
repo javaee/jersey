@@ -49,6 +49,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.jboss.weld.environment.se.Weld;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -59,6 +60,7 @@ import static org.junit.Assert.assertThat;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
+@Ignore("waiting for https://java.net/jira/browse/JERSEY-2930")
 public class SecondJaxRsInjectedCdiBeanTest extends JerseyTest {
     Weld weld;
 
@@ -75,10 +77,11 @@ public class SecondJaxRsInjectedCdiBeanTest extends JerseyTest {
         super.tearDown();
     }
 
-    @Override
-    protected Application configure() {
-        return new SecondaryApplication();
-    }
+    // TODO: uncomment after https://java.net/jira/browse/JERSEY-2930 gets fixed
+//    @Override
+//    protected Application configure() {
+//        return new SecondaryApplication();
+//    }
 
     @Override
     protected URI getBaseUri() {

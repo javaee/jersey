@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.AsyncInvoker;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
@@ -396,6 +397,28 @@ public class JerseyInvocationTest {
         @Override
         public void filter(final ClientRequestContext requestContext) throws IOException {
             requestContext.abortWith(Response.ok("ENTITY").build());
+        }
+    }
+
+    @Test
+    public void runtimeExceptionInAsyncInvocation() throws ExecutionException, InterruptedException {
+        final AsyncInvoker ai = ClientBuilder.newClient().register(new ExceptionInvokerFilter())
+                .target("http://localhost:888/").request().async();
+
+        try {
+            ai.get().get();
+            fail("ExecutionException should be thrown");
+        } catch (ExecutionException ee) {
+            assertEquals(ProcessingException.class, ee.getCause().getClass());
+            assertEquals(RuntimeException.class, ee.getCause().getCause().getClass());
+        }
+    }
+
+    public static class ExceptionInvokerFilter implements ClientRequestFilter {
+
+        @Override
+        public void filter(final ClientRequestContext requestContext) throws IOException {
+            throw new RuntimeException("ExceptionInvokerFilter RuntimeException");
         }
     }
 }

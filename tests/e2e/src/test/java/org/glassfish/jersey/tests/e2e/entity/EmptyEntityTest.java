@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericType;
@@ -271,8 +272,8 @@ public class EmptyEntityTest extends AbstractTypeTester {
         try {
             target.request("application/xml").get(new GenericType<JAXBElement<String>>() {
             });
-            fail("ProcessingException expected.");
-        } catch (ProcessingException ex) {
+            fail("ResponseProcessingException expected.");
+        } catch (ResponseProcessingException ex) {
             assertSame(NoContentException.class, ex.getCause().getClass());
         }
     }
@@ -292,8 +293,8 @@ public class EmptyEntityTest extends AbstractTypeTester {
 
         try {
             target.request("application/xml").get(TestJaxbBean.class);
-            fail("ProcessingException expected.");
-        } catch (ProcessingException ex) {
+            fail("ResponseProcessingException expected.");
+        } catch (ResponseProcessingException ex) {
             assertSame(NoContentException.class, ex.getCause().getClass());
         }
     }
@@ -315,8 +316,8 @@ public class EmptyEntityTest extends AbstractTypeTester {
         try {
             target.request("application/xml").get(new GenericType<List<TestJaxbBean>>() {
             });
-            fail("ProcessingException expected.");
-        } catch (ProcessingException ex) {
+            fail("ResponseProcessingException expected.");
+        } catch (ResponseProcessingException ex) {
             assertSame(NoContentException.class, ex.getCause().getClass());
         }
     }
@@ -336,8 +337,8 @@ public class EmptyEntityTest extends AbstractTypeTester {
 
         try {
             target.request("text/plain").get(Boolean.class);
-            fail("ProcessingException expected.");
-        } catch (ProcessingException ex) {
+            fail("ResponseProcessingException expected.");
+        } catch (ResponseProcessingException ex) {
             assertSame(NoContentException.class, ex.getCause().getClass());
         }
     }
@@ -357,8 +358,8 @@ public class EmptyEntityTest extends AbstractTypeTester {
 
         try {
             target.request("text/plain").get(Character.class);
-            fail("ProcessingException expected.");
-        } catch (ProcessingException ex) {
+            fail("ResponseProcessingException expected.");
+        } catch (ResponseProcessingException ex) {
             assertSame(NoContentException.class, ex.getCause().getClass());
         }
     }
@@ -378,8 +379,8 @@ public class EmptyEntityTest extends AbstractTypeTester {
 
         try {
             target.request("text/plain").get(Integer.class);
-            fail("ProcessingException expected.");
-        } catch (ProcessingException ex) {
+            fail("ResponseProcessingException expected.");
+        } catch (ResponseProcessingException ex) {
             assertSame(NoContentException.class, ex.getCause().getClass());
         }
     }

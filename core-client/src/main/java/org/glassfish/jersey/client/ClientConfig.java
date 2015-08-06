@@ -41,6 +41,7 @@
 package org.glassfish.jersey.client;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,6 +55,7 @@ import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
+import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
@@ -147,7 +149,12 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             this.strategy = IDENTITY;
             this.commonConfig = new CommonConfig(RuntimeType.CLIENT, ComponentBag.EXCLUDE_EMPTY);
             this.client = client;
-            this.connectorProvider = new HttpUrlConnectorProvider();
+            final Iterator<ConnectorProvider> iterator = ServiceFinder.find(ConnectorProvider.class).iterator();
+            if (iterator.hasNext()) {
+                this.connectorProvider = iterator.next();
+            } else {
+                this.connectorProvider = new HttpUrlConnectorProvider();
+            }
         }
 
         /**
