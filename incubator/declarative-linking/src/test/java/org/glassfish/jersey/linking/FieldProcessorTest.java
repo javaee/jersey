@@ -692,7 +692,8 @@ public class FieldProcessorTest {
     /** Bean param with method setter QueryParam. */
     public static class BeanParamBeanA {
         private String qparam;
-        @QueryParam("qparam") public void setQParam(String qparam) {
+        @QueryParam("qparam")
+        public void setQParam(String qparam) {
             this.qparam = qparam;
         }
     }
