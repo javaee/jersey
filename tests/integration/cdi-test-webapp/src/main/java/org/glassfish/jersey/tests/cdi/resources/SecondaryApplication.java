@@ -60,14 +60,15 @@ import javax.ws.rs.core.Application;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("secondary")
+// TODO: uncomment once JERSEY-2930 gets fixed
+//@ApplicationPath("secondary")
 @ApplicationScoped
-public class SecondaryApplication extends Application {
+public class SecondaryApplication { //extends Application {
 
 
     private static final Logger LOGGER = Logger.getLogger(SecondaryApplication.class.getName());
 
-    @Override
+//    @Override
     public Set<Class<?>> getClasses() {
         final Set<Class<?>> classes = new HashSet<Class<?>>();
         classes.add(SecondNonJaxRsBeanInjectedResource.class);

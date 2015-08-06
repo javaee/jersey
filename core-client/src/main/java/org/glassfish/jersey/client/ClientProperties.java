@@ -42,6 +42,7 @@ package org.glassfish.jersey.client;
 import java.util.Map;
 
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.client.internal.HttpUrlConnector;
 import org.glassfish.jersey.internal.util.PropertiesClass;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.PropertyAlias;

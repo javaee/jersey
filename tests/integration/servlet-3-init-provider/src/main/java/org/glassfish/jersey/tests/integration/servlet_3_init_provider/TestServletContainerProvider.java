@@ -47,6 +47,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.servlet.internal.spi.RequestScopedInitializerProvider;
 import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 
 /**
@@ -92,6 +93,16 @@ public class TestServletContainerProvider implements ServletContainerProvider {
         }
     }
 
+    @Override
+    public boolean bindsServletRequestResponse() {
+        return false;
+    }
+
+    @Override
+    public RequestScopedInitializerProvider getRequestScopedInitializerProvider() {
+        return null;
+    }
+
     public static Set<String> getServletNames() {
         return SERVLET_NAMES;
     }
@@ -107,5 +118,4 @@ public class TestServletContainerProvider implements ServletContainerProvider {
     public static void setImmutableServletNames(final boolean immutableServletNames) {
         TestServletContainerProvider.immutableServletNames = immutableServletNames;
     }
-
 }

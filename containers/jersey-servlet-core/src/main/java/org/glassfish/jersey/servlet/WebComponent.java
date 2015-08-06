@@ -58,13 +58,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -74,6 +67,13 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -86,10 +86,10 @@ import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.BackgroundSchedulerLiteral;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.BackgroundSchedulerLiteral;
 import org.glassfish.jersey.server.internal.InternalServerProperties;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
@@ -97,6 +97,8 @@ import org.glassfish.jersey.servlet.internal.PersistenceUnitBinder;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import org.glassfish.jersey.servlet.internal.ServletContainerProviderFactory;
 import org.glassfish.jersey.servlet.internal.Utils;
+import org.glassfish.jersey.servlet.internal.spi.RequestContextProvider;
+import org.glassfish.jersey.servlet.internal.spi.RequestScopedInitializerProvider;
 import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
@@ -138,6 +140,23 @@ public class WebComponent {
         public void complete() {
         }
     };
+
+    private final RequestScopedInitializerProvider requestScopedInitializer;
+    private final boolean requestResponseBindingExternalized;
+
+    private final RequestScopedInitializerProvider DEFAULT_REQUEST_SCOPE_INITIALIZER_PROVIDER =
+            new RequestScopedInitializerProvider() {
+                @Override
+                public RequestScopedInitializer get(final RequestContextProvider context) {
+                    return new RequestScopedInitializer() {
+                        @Override
+                        public void initialize(final ServiceLocator locator) {
+                            locator.<Ref<HttpServletRequest>>getService(REQUEST_TYPE).set(context.getHttpServletRequest());
+                            locator.<Ref<HttpServletResponse>>getService(RESPONSE_TYPE).set(context.getHttpServletResponse());
+                        }
+                    };
+                }
+            };
 
     /**
      * Return the first found {@link AsyncContextDelegateProvider}
@@ -197,15 +216,22 @@ public class WebComponent {
 
         @Override
         protected void configure() {
-            bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class)
-                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<HttpServletRequest>referenceFactory())
-                    .to(new TypeLiteral<Ref<HttpServletRequest>>() {}).in(RequestScoped.class);
 
-            bindFactory(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class)
-                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<HttpServletResponse>referenceFactory())
-                    .to(new TypeLiteral<Ref<HttpServletResponse>>() {}).in(RequestScoped.class);
+            if (!requestResponseBindingExternalized) {
+
+                // request
+                bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class)
+                        .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+
+                bindFactory(ReferencingFactory.<HttpServletRequest>referenceFactory())
+                        .to(new TypeLiteral<Ref<HttpServletRequest>>() {}).in(RequestScoped.class);
+
+                // response
+                bindFactory(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class)
+                        .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+                bindFactory(ReferencingFactory.<HttpServletResponse>referenceFactory())
+                        .to(new TypeLiteral<Ref<HttpServletResponse>>() {}).in(RequestScoped.class);
+            }
 
             bindFactory(new Factory<ServletContext>() {
                 @Override
@@ -327,8 +353,27 @@ public class WebComponent {
             resourceConfig = createResourceConfig(webConfig);
         }
 
+
+        final ServletContainerProvider[] allServletContainerProviders =
+                ServletContainerProviderFactory.getAllServletContainerProviders();
+
         // SPI/extension hook to configure ResourceConfig
-        configure(resourceConfig);
+        configure(resourceConfig, allServletContainerProviders);
+
+        boolean rrbExternalized = false;
+        RequestScopedInitializerProvider rsiProvider = null;
+
+        for (final ServletContainerProvider servletContainerProvider : allServletContainerProviders) {
+            if (servletContainerProvider.bindsServletRequestResponse()) {
+                rrbExternalized = true;
+            }
+            if (rsiProvider == null) { // try to take the first non-null provider
+                rsiProvider = servletContainerProvider.getRequestScopedInitializerProvider();
+            }
+        }
+
+        requestScopedInitializer = rsiProvider != null ? rsiProvider : DEFAULT_REQUEST_SCOPE_INITIALIZER_PROVIDER;
+        requestResponseBindingExternalized = rrbExternalized;
 
         final AbstractBinder webComponentBinder = new WebComponentBinder(resourceConfig.getProperties());
         resourceConfig.register(webComponentBinder);
@@ -391,13 +436,19 @@ public class WebComponent {
                     asyncExtensionDelegate.createDelegate(servletRequest, servletResponse),
                     backgroundTaskScheduler);
 
-            requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
+            requestContext.setRequestScopedInitializer(requestScopedInitializer.get(new RequestContextProvider() {
+
                 @Override
-                public void initialize(final ServiceLocator locator) {
-                    locator.<Ref<HttpServletRequest>>getService(REQUEST_TYPE).set(servletRequest);
-                    locator.<Ref<HttpServletResponse>>getService(RESPONSE_TYPE).set(servletResponse);
+                public HttpServletRequest getHttpServletRequest() {
+                    return servletRequest;
                 }
-            });
+
+                @Override
+                public HttpServletResponse getHttpServletResponse() {
+                    return servletResponse;
+                }
+            }));
+
             requestContext.setWriter(responseWriter);
 
             appHandler.handle(requestContext);
@@ -520,9 +571,9 @@ public class WebComponent {
      * @param resourceConfig Jersey application configuration.
      * @throws ServletException if an error has occurred.
      */
-    private static void configure(final ResourceConfig resourceConfig) throws ServletException {
-        final ServletContainerProvider[] allServletContainerProviders =
-                ServletContainerProviderFactory.getAllServletContainerProviders();
+    private void configure(final ResourceConfig resourceConfig,
+                           final ServletContainerProvider[] allServletContainerProviders) throws ServletException {
+
         for (final ServletContainerProvider servletContainerProvider : allServletContainerProviders) {
             servletContainerProvider.configure(resourceConfig);
         }

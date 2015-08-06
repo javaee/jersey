@@ -495,15 +495,18 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     @SuppressWarnings("unused")
     private void processAnnotatedType(@Observes
-                                      @WithAnnotations({
-                                              Context.class,
-                                              ApplicationPath.class,
-                                              HeaderParam.class,
-                                              QueryParam.class,
-                                              FormParam.class,
-                                              MatrixParam.class,
-                                              BeanParam.class,
-                                              PathParam.class})
+    // We can not apply the following constraint
+    // if we want to fully support {@link org.glassfish.jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider}.
+    // Covered by tests/integration/cdi-with-jersey-injection-custom-cfg-webapp test application:
+//                                      @WithAnnotations({
+//                                              Context.class,
+//                                              ApplicationPath.class,
+//                                              HeaderParam.class,
+//                                              QueryParam.class,
+//                                              FormParam.class,
+//                                              MatrixParam.class,
+//                                              BeanParam.class,
+//                                              PathParam.class})
                                       final ProcessAnnotatedType processAnnotatedType) {
         final AnnotatedType<?> annotatedType = processAnnotatedType.getAnnotatedType();
 
