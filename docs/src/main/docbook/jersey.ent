@@ -600,7 +600,7 @@
 
 <!-- Jersey Module Literals -->
 <!ENTITY lit.jersey-bean-validation "<literal>jersey-bean-validation</literal>" >
-<!ENTITY lit.jersey-declarative-linking "<literal>jersey-jersey.ent</literal>" >
+<!ENTITY lit.jersey-declarative-linking "<literal>jersey-declarative-linking</literal>" >
 <!ENTITY lit.jersey-media-json-processing "<literal>jersey-media-json-processing</literal>" >
 <!ENTITY lit.jersey-media-json-jettison "<literal>jersey-media-json-jettison</literal>" >
 <!ENTITY lit.jersey-media-json-jackson "<literal>jersey-media-json-jackson</literal>" >
