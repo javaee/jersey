@@ -78,4 +78,38 @@ public class ContainerUtils {
 
         return result;
     }
+
+    /**
+     * Reduces the number of slashes before the path to only one slash.
+     *
+     * @param path path string
+     * @return path string with reduced slashes to only one.
+     */
+    public static String reduceLeadingSlashes(final String path) {
+        int length;
+        if (path == null || (length = path.length()) == 0) {
+            return path;
+        }
+
+        int start = 0;
+        while (start != length && "/".indexOf(path.charAt(start)) != -1) {
+            start++;
+        }
+
+        return path.substring(start > 0 ? start - 1 : 0);
+    }
+
+    /**
+     * Splits URI address from query params and returns it.
+     *
+     * @param uri URI address in string format with query params
+     * @return URI address in string format without query params
+     */
+    public static String getHandlerPath(String uri) {
+        if (uri == null || uri.length() == 0 || !uri.contains("?")) {
+            return uri;
+        } else {
+            return uri.substring(0, uri.indexOf("?"));
+        }
+    }
 }

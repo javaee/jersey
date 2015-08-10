@@ -362,6 +362,16 @@
                         </entry>
                     </row>
                     <row>
+                        <entry>&jersey.server.ServerProperties.REDUCE_CONTEXT_PATH_SLASHES_ENABLED;</entry>
+                        <entry><literal>jersey.config.server.reduceContextPathSlashes.enabled</literal></entry>
+                        <entry>
+                            <para>
+                                Ignores multiple slashes between a port and a context path and will resolve it
+                                as URI with only one slash. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
                         <entry>&jersey.server.ServerProperties.RESOURCE_VALIDATION_DISABLE;</entry>
                         <entry><literal>jersey.config.server
                             .resource.validation.disable</literal></entry>
