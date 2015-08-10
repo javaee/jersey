@@ -97,6 +97,7 @@ import org.glassfish.jersey.servlet.internal.PersistenceUnitBinder;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import org.glassfish.jersey.servlet.internal.ServletContainerProviderFactory;
 import org.glassfish.jersey.servlet.internal.Utils;
+import org.glassfish.jersey.servlet.internal.spi.ExtendedServletContainerProvider;
 import org.glassfish.jersey.servlet.internal.spi.RequestContextProvider;
 import org.glassfish.jersey.servlet.internal.spi.RequestScopedInitializerProvider;
 import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
@@ -364,11 +365,16 @@ public class WebComponent {
         RequestScopedInitializerProvider rsiProvider = null;
 
         for (final ServletContainerProvider servletContainerProvider : allServletContainerProviders) {
-            if (servletContainerProvider.bindsServletRequestResponse()) {
-                rrbExternalized = true;
-            }
-            if (rsiProvider == null) { // try to take the first non-null provider
-                rsiProvider = servletContainerProvider.getRequestScopedInitializerProvider();
+            if (servletContainerProvider instanceof ExtendedServletContainerProvider) {
+                final ExtendedServletContainerProvider extendedProvider =
+                        (ExtendedServletContainerProvider) servletContainerProvider;
+
+                if (extendedProvider.bindsServletRequestResponse()) {
+                    rrbExternalized = true;
+                }
+                if (rsiProvider == null) { // try to take the first non-null provider
+                    rsiProvider = extendedProvider.getRequestScopedInitializerProvider();
+                }
             }
         }
 

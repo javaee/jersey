@@ -39,64 +39,45 @@
  */
 package org.glassfish.jersey.servlet.internal.spi;
 
-import java.lang.reflect.Type;
-import java.util.Set;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-
 /**
- * Basic {@link ExtendedServletContainerProvider} that provides
- * dummy no-op method implementation. It should be convenient to extend if you only need to implement
- * a subset of the original SPI methods.
+ * Implementations could provide their own {@link HttpServletRequest} and {@link HttpServletResponse}
+ * binding implementation in HK2 locator and also an implementation of {@link RequestScopedInitializer}
+ * that is used to set actual request/response references in HK2 service locator within each request.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @since 2.21
  */
-public class NoOpServletContainerProvider implements ExtendedServletContainerProvider {
+public interface ExtendedServletContainerProvider extends ServletContainerProvider {
 
-    public final Type HTTP_SERVLET_REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {
-    }).getType();
-    public final Type HTTP_SERVLET_RESPONSE_TYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {
-    }).getType();
+    /**
+     * Give me a {@link RequestScopedInitializerProvider} instance, that will be utilized
+     * at runtime to set the actual HTTP Servlet request and response.
+     *
+     * The provider returned will be used at runtime for every and each incoming request
+     * so that the actual request/response instances could be made accessible
+     * from Jersey HK2 service locator.
+     *
+     * @return request scoped initializer provider.
+     */
+    public RequestScopedInitializerProvider getRequestScopedInitializerProvider();
 
-    @Override
-    public void preInit(final ServletContext servletContext, final Set<Class<?>> classes) throws ServletException {
-        // no-op
-    }
-
-    @Override
-    public void postInit(
-            final ServletContext servletContext, final Set<Class<?>> classes, final Set<String> servletNames) {
-        // no-op
-    }
-
-    @Override
-    public void onRegister(
-            final ServletContext servletContext, final Set<String> servletNames) throws ServletException {
-        // no-op
-    }
-
-    @Override
-    public void configure(final ResourceConfig resourceConfig) throws ServletException {
-        // no-op
-    }
-
-    @Override
-    public boolean bindsServletRequestResponse() {
-        return false;
-    }
-
-    @Override
-    public RequestScopedInitializerProvider getRequestScopedInitializerProvider() {
-        return null;
-    }
+    /**
+     * Used by Jersey runtime to tell if the extension covers HTTP Servlet request response
+     * handling with respect to underlying HK2 service locator.
+     *
+     * Return {@code true}, if your implementation configures HK2 bindings
+     * for {@link HttpServletRequest} and {@link HttpServletResponse}
+     * in {@link #configure(ResourceConfig)} method
+     * and also provides a {@link RequestScopedInitializer} implementation
+     * via {@link #getRequestScopedInitializerProvider()}.
+     *
+     * @return {@code true} if the extension fully covers HTTP request/response handling.
+     */
+    public boolean bindsServletRequestResponse();
 }

@@ -93,16 +93,6 @@ public class TestServletContainerProvider implements ServletContainerProvider {
         }
     }
 
-    @Override
-    public boolean bindsServletRequestResponse() {
-        return false;
-    }
-
-    @Override
-    public RequestScopedInitializerProvider getRequestScopedInitializerProvider() {
-        return null;
-    }
-
     public static Set<String> getServletNames() {
         return SERVLET_NAMES;
     }
