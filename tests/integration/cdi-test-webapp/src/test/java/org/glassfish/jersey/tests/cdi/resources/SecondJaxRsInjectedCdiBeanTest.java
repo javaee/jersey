@@ -60,7 +60,6 @@ import static org.junit.Assert.assertThat;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Ignore("waiting for https://java.net/jira/browse/JERSEY-2930")
 public class SecondJaxRsInjectedCdiBeanTest extends JerseyTest {
     Weld weld;
 
@@ -77,11 +76,10 @@ public class SecondJaxRsInjectedCdiBeanTest extends JerseyTest {
         super.tearDown();
     }
 
-    // TODO: uncomment after https://java.net/jira/browse/JERSEY-2930 gets fixed
-//    @Override
-//    protected Application configure() {
-//        return new SecondaryApplication();
-//    }
+    @Override
+    protected Application configure() {
+        return new SecondaryApplication();
+    }
 
     @Override
     protected URI getBaseUri() {

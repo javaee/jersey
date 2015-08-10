@@ -62,7 +62,6 @@ import org.jboss.weld.environment.se.Weld;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -75,7 +74,6 @@ import org.junit.Test;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Ignore("waiting for https://java.net/jira/browse/JERSEY-2930")
 public class NonJaxRsBeanJaxRsInjectionTest {
 
     public static final String MAIN_URI = "/main";
@@ -127,10 +125,7 @@ public class NonJaxRsBeanJaxRsInjectionTest {
 
     private void startGrizzlyContainer() throws IOException {
         final ResourceConfig firstConfig = ResourceConfig.forApplicationClass(MainApplication.class);
-
-        // TODO: replace after https://java.net/jira/browse/JERSEY-2930 gets fixed
-        final ResourceConfig secondConfig = ResourceConfig.forApplicationClass(MainApplication.class);
-//        final ResourceConfig secondConfig = ResourceConfig.forApplicationClass(SecondaryApplication.class);
+        final ResourceConfig secondConfig = ResourceConfig.forApplicationClass(SecondaryApplication.class);
 
         httpServer = GrizzlyHttpServerFactory.createHttpServer(MAIN_APP_URI, firstConfig, false);
         final HttpHandler secondHandler = createGrizzlyContainer(secondConfig);

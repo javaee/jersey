@@ -79,10 +79,12 @@ public abstract class GenericHk2LocatorManager implements Hk2LocatorManager, Inj
                 this.locator = null;
                 multipleLocators = true;
             } // first and second case
-            for (final Hk2InjectedTarget target : injectionTargets) {
-                target.setLocator(this.locator);
-            }
-        } // ignore otherwise
+        }
+
+        // pass the locator to registered injection targets anyway
+        for (final Hk2InjectedTarget target : injectionTargets) {
+            target.setLocator(locator);
+        }
     }
 
     @Override

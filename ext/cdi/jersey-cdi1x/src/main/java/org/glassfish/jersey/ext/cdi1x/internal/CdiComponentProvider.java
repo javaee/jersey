@@ -885,6 +885,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         private final ClassLoader targetClassLoader;
 
         private volatile ServiceLocator effectiveLocator;
+        private volatile boolean multipleLocators = false;
 
         public Hk2InjectedCdiTarget(final Class<?> componentClass,
                                     final InjectionTarget delegate) {
@@ -900,7 +901,8 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         public void inject(final Object t, final CreationalContext cc) {
             delegate.inject(t, cc);
 
-            final ServiceLocator injectingLocator = (effectiveLocator != null) ? effectiveLocator : getEffectiveLocator();
+            final ServiceLocator il = multipleLocators ? getEffectiveLocator() : effectiveLocator;
+            final ServiceLocator injectingLocator = (il != null) ? il : effectiveLocator;
 
             if (injectingLocator != null) {
                 injectingLocator.inject(t, CdiComponentProvider.CDI_CLASS_ANALYZER);
@@ -929,6 +931,9 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         @Override
         public void setLocator(final ServiceLocator effectiveLocator) {
+            if (this.effectiveLocator != null) {
+                this.multipleLocators = true;
+            }
             this.effectiveLocator = effectiveLocator;
         }
     }
