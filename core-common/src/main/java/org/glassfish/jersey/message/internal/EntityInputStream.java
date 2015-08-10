@@ -42,9 +42,6 @@ package org.glassfish.jersey.message.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 
@@ -60,14 +57,13 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class EntityInputStream extends InputStream {
-    private static final Logger LOGGER = Logger.getLogger(EntityInputStream.class.getName());
 
-    private volatile InputStream input;
-    private final AtomicBoolean closed = new AtomicBoolean(false);
+    private InputStream input;
+    private boolean closed = false;
 
     /**
      * Create an entity input stream instance wrapping the original input stream.
-     *
+     * <p/>
      * In case the original entity stream is already of type {@code EntityInputStream},
      * the stream is returned without wrapping.
      *
@@ -133,8 +129,7 @@ public class EntityInputStream extends InputStream {
      * a runtime {@link javax.ws.rs.ProcessingException} is thrown.
      * </p>
      *
-     * @throws javax.ws.rs.ProcessingException
-     *          in case the reset operation on the underlying entity input stream failed.
+     * @throws javax.ws.rs.ProcessingException in case the reset operation on the underlying entity input stream failed.
      */
     @Override
     public void reset() {
@@ -158,15 +153,14 @@ public class EntityInputStream extends InputStream {
         if (in == null) {
             return;
         }
-        if (closed.compareAndSet(false, true)) {
-            // Workaround for JRFCAF-1344: Underlying stream close() may be thread-unsafe
-            // and as such the close() may result in an IOException at the socket input stream level,
-            // if the close() gets called at once from multiple threads somehow.
+        if (!closed) {
             try {
                 in.close();
             } catch (IOException ex) {
-                // This means that the underlying socket stream got closed by other thread somehow
-                LOGGER.log(Level.FINE, LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
+                // This e.g. means that the underlying socket stream got closed by other thread somehow...
+                throw new ProcessingException(LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ex);
+            } finally {
+                closed = true;
             }
         }
     }
@@ -230,7 +224,7 @@ public class EntityInputStream extends InputStream {
      * @throws IllegalStateException in case the entity input stream has been closed.
      */
     public void ensureNotClosed() throws IllegalStateException {
-        if (closed.get()) {
+        if (closed) {
             throw new IllegalStateException(LocalizationMessages.ERROR_ENTITY_STREAM_CLOSED());
         }
     }
@@ -241,7 +235,7 @@ public class EntityInputStream extends InputStream {
      * @return {@code true} if the stream has been closed, {@code false} otherwise.
      */
     public boolean isClosed() {
-        return closed.get();
+        return closed;
     }
 
     /**

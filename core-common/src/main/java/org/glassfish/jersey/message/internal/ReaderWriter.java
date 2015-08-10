@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -51,8 +52,10 @@ import java.security.AccessController;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageProperties;
 
@@ -188,6 +191,21 @@ public final class ReaderWriter {
         Writer osw = new OutputStreamWriter(out, getCharset(type));
         osw.write(s, 0, s.length());
         osw.flush();
+    }
+
+    /**
+     * Safely close a closeable, without throwing an exception.
+     *
+     * @param closeable object to be closed.
+     */
+    public static void safelyClose(Closeable closeable) {
+        try {
+            closeable.close();
+        } catch (IOException ioe) {
+            LOGGER.log(Level.FINE, LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), ioe);
+        } catch (ProcessingException pe) {
+            LOGGER.log(Level.FINE, LocalizationMessages.MESSAGE_CONTENT_INPUT_STREAM_CLOSE_FAILED(), pe);
+        }
     }
 
     /**
