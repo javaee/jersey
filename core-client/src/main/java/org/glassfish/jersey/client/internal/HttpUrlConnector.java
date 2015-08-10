@@ -185,34 +185,71 @@ public class HttpUrlConnector implements Connector {
                 }
             });
 
+            private volatile boolean closed = false;
+
+            /**
+             * The motivation for this method is to straighten up a behaviour of {@link sun.net.www.http.KeepAliveStream} which
+             * is used here as a backing {@link InputStream}. The problem is that its access methods (e.g., {@link
+             * sun.net.www.http.KeepAliveStream#read()}) do not throw {@link IOException} if the stream is closed. This behaviour
+             * contradicts with {@link InputStream} contract.
+             * <p/>
+             * This is a part of fix of JERSEY-2878
+             * <p/>
+             * Note that {@link java.io.FilterInputStream} also changes the contract of
+             * {@link java.io.FilterInputStream#read(byte[], int, int)} as it doesn't state that closed stream causes an {@link
+             * IOException} which might be questionable. Nevertheless, our contract is {@link InputStream} and as such, the
+             * stream we're offering must comply with it.
+             *
+             * @throws IOException
+             */
+            private void throwIOExceptionIfClosed() throws IOException {
+                if (closed) {
+                    throw new IOException("Stream closed");
+                }
+            }
+
             @Override
             public int read() throws IOException {
-                return in.get().read();
+                int result = in.get().read();
+                throwIOExceptionIfClosed();
+                return result;
             }
 
             @Override
             public int read(byte[] b) throws IOException {
-                return in.get().read(b);
+                int result = in.get().read(b);
+                throwIOExceptionIfClosed();
+                return result;
             }
 
             @Override
             public int read(byte[] b, int off, int len) throws IOException {
-                return in.get().read(b, off, len);
+                int result = in.get().read(b, off, len);
+                throwIOExceptionIfClosed();
+                return result;
             }
 
             @Override
             public long skip(long n) throws IOException {
-                return in.get().skip(n);
+                long result = in.get().skip(n);
+                throwIOExceptionIfClosed();
+                return result;
             }
 
             @Override
             public int available() throws IOException {
-                return in.get().available();
+                int result = in.get().available();
+                throwIOExceptionIfClosed();
+                return result;
             }
 
             @Override
             public void close() throws IOException {
-                in.get().close();
+                try {
+                    in.get().close();
+                } finally {
+                    closed = true;
+                }
             }
 
             @Override
@@ -227,6 +264,7 @@ public class HttpUrlConnector implements Connector {
             @Override
             public void reset() throws IOException {
                 in.get().reset();
+                throwIOExceptionIfClosed();
             }
 
             @Override
