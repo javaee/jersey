@@ -45,6 +45,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.CacheControl;
@@ -60,6 +63,7 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -121,5 +125,34 @@ public class ClientFilterTest extends JerseyTest {
         assertTrue(entity.contains("GET"));
         assertTrue(entity.contains("private"));
         assertTrue(entity.contains("cookie-value"));
+    }
+
+    public static class IOExceptionResponseFilter implements ClientResponseFilter {
+
+        @Override
+        public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws
+                IOException {
+            throw new IOException(IOExceptionResponseFilter.class.getName());
+
+        }
+    }
+
+    @Test
+    public void ioExceptionResponseFilterTest() {
+        final WebTarget target = target();
+        target.register(IOExceptionResponseFilter.class).register(LoggingFilter.class);
+
+        boolean caught = false;
+
+        try {
+            target.path("test").request().get(Response.class);
+        } catch (ResponseProcessingException e) {
+            caught = true;
+            assertNotNull(e.getCause());
+            assertEquals(IOException.class, e.getCause().getClass());
+            assertEquals(IOExceptionResponseFilter.class.getName(), e.getCause().getMessage());
+        }
+
+        assertTrue(caught);
     }
 }
