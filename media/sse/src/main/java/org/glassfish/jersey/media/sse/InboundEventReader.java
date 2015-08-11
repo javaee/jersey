@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -74,7 +74,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
     @Inject
     private Provider<MessageBodyWorkers> messageBodyWorkers;
 
-    private static enum State {
+    private enum State {
         NEW_LINE,
         COMMENT,
         FIELD,
@@ -100,6 +100,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
          * last editors draft from 13 March 2012
          */
         final ByteArrayOutputStream tokenData = new ByteArrayOutputStream();
+        final String charsetName = MessageUtils.getCharset(mediaType).name();
         final InboundEvent.Builder eventBuilder =
                 new InboundEvent.Builder(messageBodyWorkers.get(), annotations, mediaType, headers);
 
@@ -123,13 +124,16 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
                     break;
                 case COMMENT:
                     // skipping comment data
-                    b = readLineUntil(entityStream, '\n', null);
+                    b = readLineUntil(entityStream, '\n', tokenData);
+                    final String commentLine = tokenData.toString(charsetName);
+                    tokenData.reset();
+                    eventBuilder.commentLine(commentLine.trim());
                     currentState = State.NEW_LINE;
                     break;
                 case FIELD:
                     // read field name
                     b = readLineUntil(entityStream, ':', tokenData);
-                    final String fieldName = tokenData.toString(MessageUtils.getCharset(mediaType).name());
+                    final String fieldName = tokenData.toString(charsetName);
                     tokenData.reset();
 
                     if (b == ':') {

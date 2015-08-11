@@ -49,7 +49,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -60,6 +59,8 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 
 import org.glassfish.jersey.internal.util.ExtendedLogger;
+
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Client for reading and processing {@link InboundEvent incoming Server-Sent Events}.
@@ -139,7 +140,7 @@ public class EventSource implements EventListener {
      */
     public static final long RECONNECT_DEFAULT = 500;
 
-    private static enum State {
+    private enum State {
         READY, OPEN, CLOSED
     }
 
@@ -232,6 +233,7 @@ public class EventSource implements EventListener {
          *
          * @return updated event source builder instance.
          */
+        @SuppressWarnings("unused")
         public Builder usePersistentConnections() {
             disableKeepAlive = false;
             return this;
@@ -249,6 +251,7 @@ public class EventSource implements EventListener {
          * @param unit  time unit of the reconnect delay parameter.
          * @return updated event source builder instance.
          */
+        @SuppressWarnings("unused")
         public Builder reconnectingEvery(final long delay, TimeUnit unit) {
             reconnect = unit.toMillis(delay);
             return this;
@@ -380,12 +383,8 @@ public class EventSource implements EventListener {
         this.disableKeepAlive = disableKeepAlive;
 
         final String esName = (name == null) ? createDefaultName(target) : name;
-        this.executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                return new Thread(r, esName);
-            }
-        });
+        this.executor = Executors.newSingleThreadScheduledExecutor(
+                new ThreadFactoryBuilder().setNameFormat(esName + "-%d").setDaemon(true).build());
 
         if (open) {
             open();

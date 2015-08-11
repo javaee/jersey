@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,7 @@ import org.glassfish.jersey.server.ChunkedOutput;
  */
 public class EventOutput extends ChunkedOutput<OutboundEvent> {
     // encoding does not matter for lower ASCII characters
-    private static final byte[] SSE_EVENT_DELIMITER = "\n\n".getBytes(Charset.forName("UTF-8"));
+    private static final byte[] SSE_EVENT_DELIMITER = "\n".getBytes(Charset.forName("UTF-8"));
 
     /**
      * Create new outbound Server-Sent Events channel.
