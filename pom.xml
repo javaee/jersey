@@ -1666,7 +1666,7 @@
         <grizzly2.version>2.3.19</grizzly2.version>
         <guava.version>18.0</guava.version>
         <hamcrest.version>1.3</hamcrest.version>
-        <hk2.version>2.4.0-b27</hk2.version>
+        <hk2.version>2.4.0-b31</hk2.version>
         <httpclient.version>4.5</httpclient.version>
         <jackson.version>2.5.4</jackson.version>
         <jackson1.version>1.9.13</jackson1.version>
