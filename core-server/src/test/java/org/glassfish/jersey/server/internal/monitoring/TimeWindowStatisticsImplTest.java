@@ -58,16 +58,17 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void test() {
         final long now = System.currentTimeMillis();
-        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(1000, TimeUnit.MILLISECONDS, now);
-        builder.addRequest(now, 30);
-        builder.addRequest(now + 300, 100);
-        builder.addRequest(now + 600, 150);
-        builder.addRequest(now + 800, 15);
-        builder.addRequest(now + 999, 60);
-        builder.addRequest(now + 1000, 95);
+        final TimeWindowStatisticsImpl.Builder<Long> builder = new TimeWindowStatisticsImpl.Builder<>(
+                new SlidingWindowTimeReservoir(1000L, TimeUnit.MILLISECONDS, now, TimeUnit.MILLISECONDS));
+        builder.addRequest(now, 30L);
+        builder.addRequest(now + 300, 100L);
+        builder.addRequest(now + 600, 150L);
+        builder.addRequest(now + 800, 15L);
+        builder.addRequest(now + 999, 60L);
+        builder.addRequest(now + 1000, 95L);
 
         check(builder, now + 1000, 6, 15, 150, 75, 6);
-        builder.addRequest(now + 1001, 999);
+        builder.addRequest(now + 1001, 999L);
         // the original implementation was supposed to trim the first request, we can only guess why it didn't ...
         check(builder, now + 1001, 6, 15, 999, 236, 6);
     }
@@ -75,15 +76,16 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void test10() {
         final long now = 0;
-        final TimeWindowStatisticsImpl.Builder builder
-                = new TimeWindowStatisticsImpl.Builder(10000, TimeUnit.MILLISECONDS, now);
-        builder.addRequest(now, 30);
-        builder.addRequest(now + 300, 100);
-        builder.addRequest(now + 600, 150);
-        builder.addRequest(now + 800, 15);
-        builder.addRequest(now + 999, 60);
-        builder.addRequest(now + 1000, 95);
-        builder.addRequest(now + 8001, 600);
+        final TimeWindowStatisticsImpl.Builder<Long> builder
+                = new TimeWindowStatisticsImpl.Builder<>(
+                new SlidingWindowTimeReservoir(10000, TimeUnit.MILLISECONDS, now, TimeUnit.MILLISECONDS));
+        builder.addRequest(now, 30L);
+        builder.addRequest(now + 300, 100L);
+        builder.addRequest(now + 600, 150L);
+        builder.addRequest(now + 800, 15L);
+        builder.addRequest(now + 999, 60L);
+        builder.addRequest(now + 1000, 95L);
+        builder.addRequest(now + 8001, 600L);
 
         // check unfinished interval
         check(builder, now + 8001, 7, 15, 600, 150, 0.8748906);
@@ -104,18 +106,19 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void testRequestInPast() {
         final long now = 0;
-        final TimeWindowStatisticsImpl.Builder builder
-                = new TimeWindowStatisticsImpl.Builder(1000, TimeUnit.MILLISECONDS, now);
-        builder.addRequest(now, 40);
-        builder.addRequest(now + 1000, 30);
+        final TimeWindowStatisticsImpl.Builder<Long> builder
+                = new TimeWindowStatisticsImpl.Builder<>(
+                new SlidingWindowTimeReservoir(1000, TimeUnit.MILLISECONDS, now, TimeUnit.MILLISECONDS));
+        builder.addRequest(now, 40L);
+        builder.addRequest(now + 1000, 30L);
         // this is a request in past which will actually reuse the time 'now + 1000'
-        builder.addRequest(now + 100, 10);
+        builder.addRequest(now + 100, 10L);
 
         check(builder, now + 1000, 3, 10, 40, 26, 3);
 
         // this request in past is so old that it doesn't even fit into the window
-        builder.addRequest(now + 100, 0);
-        builder.addRequest(now + 1200, 20);
+        builder.addRequest(now + 100, 0L);
+        builder.addRequest(now + 1200, 20L);
 
         check(builder, now + 1201, 2, 20, 30, 25, 2);
 
@@ -127,23 +130,24 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void test3s() {
         final long now = 0;
-        final TimeWindowStatisticsImpl.Builder builder
-                = new TimeWindowStatisticsImpl.Builder(3000, TimeUnit.MILLISECONDS, now);
-        builder.addRequest(now, 99);
-        builder.addRequest(now + 300, 98);
-        builder.addRequest(now + 600, 1);
-        builder.addRequest(now + 1000, 96);
-        builder.addRequest(now + 1500, 95);
-        builder.addRequest(now + 2500, 3);
+        final TimeWindowStatisticsImpl.Builder<Long> builder
+                = new TimeWindowStatisticsImpl.Builder<>(
+                new SlidingWindowTimeReservoir(3000, TimeUnit.MILLISECONDS, now, TimeUnit.MILLISECONDS));
+        builder.addRequest(now, 99L);
+        builder.addRequest(now + 300, 98L);
+        builder.addRequest(now + 600, 1L);
+        builder.addRequest(now + 1000, 96L);
+        builder.addRequest(now + 1500, 95L);
+        builder.addRequest(now + 2500, 3L);
         // ... above should be ignored
 
-        builder.addRequest(now + 3500, 90);
-        builder.addRequest(now + 3900, 4);
-        builder.addRequest(now + 3900, 80);
-        builder.addRequest(now + 4200, 92);
-        builder.addRequest(now + 4900, 15);
-        builder.addRequest(now + 5300, 8);
-        builder.addRequest(now + 5600, 50);
+        builder.addRequest(now + 3500, 90L);
+        builder.addRequest(now + 3900, 4L);
+        builder.addRequest(now + 3900, 80L);
+        builder.addRequest(now + 4200, 92L);
+        builder.addRequest(now + 4900, 15L);
+        builder.addRequest(now + 5300, 8L);
+        builder.addRequest(now + 5600, 50L);
 
         check(builder, now + 6001, 7, 4, 92, 48, 2.333333);
     }
@@ -151,33 +155,35 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void testLongPause() {
         final long now = 0;
-        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(60, TimeUnit.SECONDS, now);
-        builder.addRequest(now, 99);
+        final TimeWindowStatisticsImpl.Builder<Long> builder = new TimeWindowStatisticsImpl.Builder<>(
+                new SlidingWindowTimeReservoir(60, TimeUnit.SECONDS, now, TimeUnit.MILLISECONDS));
+        builder.addRequest(now, 99L);
         final long time = now + 1000 * 60 * 60 * 23;
-        builder.addRequest(time, 95);
-        builder.addRequest(time + 5, 5);
+        builder.addRequest(time, 95L);
+        builder.addRequest(time + 5, 5L);
         check(builder, time + 20000, 2, 5, 95, 50, 0.03333);
     }
 
     @Test
     public void testMultipleRequestsAtTheSameTime() {
         final long now = 0;
-        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(1, TimeUnit.SECONDS, now);
+        final TimeWindowStatisticsImpl.Builder<Long> builder = new TimeWindowStatisticsImpl.Builder<>(
+                new SlidingWindowTimeReservoir(1, TimeUnit.SECONDS, now, TimeUnit.MILLISECONDS));
         // put multiple requests at the beginning so that even the COLLISION_BUFFER bounds is tested
-        builder.addRequest(now, 10);
-        builder.addRequest(now, 20);
-        builder.addRequest(now, 30);
-        builder.addRequest(now, 40);
+        builder.addRequest(now, 10L);
+        builder.addRequest(now, 20L);
+        builder.addRequest(now, 30L);
+        builder.addRequest(now, 40L);
 
-        builder.addRequest(now + 1, 50);
+        builder.addRequest(now + 1, 50L);
         // put multiple requests in the middle of the window
-        builder.addRequest(now + 500, 60);
-        builder.addRequest(now + 500, 70);
+        builder.addRequest(now + 500, 60L);
+        builder.addRequest(now + 500, 70L);
         check(builder, now + 500, 7, 10, 70, 40, 14);
 
         // put multiple requests at the end of the window
-        builder.addRequest(now + 1000, 80);
-        builder.addRequest(now + 1000, 90);
+        builder.addRequest(now + 1000, 80L);
+        builder.addRequest(now + 1000, 90L);
         check(builder, now + 1000, 9, 10, 90, 50, 9);
 
         // at 'now + 1001' all the requests from 'now' should be gone
@@ -187,23 +193,24 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void testExhaustiveRequestsAtTheSameTime() {
         final long now = 0;
-        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(1, TimeUnit.SECONDS, now);
+        final TimeWindowStatisticsImpl.Builder<Long> builder = new TimeWindowStatisticsImpl.Builder<>(
+                new SlidingWindowTimeReservoir(1, TimeUnit.SECONDS, now, TimeUnit.MILLISECONDS));
         // put multiple requests at the beginning so that even the COLLISION_BUFFER bounds is tested
         for (int i = 0; i < 256; ++i) {
-            builder.addRequest(now, 10);
+            builder.addRequest(now, 10L);
         }
         // add one more request which should be visible at 'now + 1001'
-        builder.addRequest(now + 1, 10);
+        builder.addRequest(now + 1, 10L);
 
         // put multiple requests in the middle of the window
         for (int i = 0; i < 256; ++i) {
-            builder.addRequest(now + 500, 10);
+            builder.addRequest(now + 500, 10L);
         }
         check(builder, now + 500, 256 * 2 + 1, 10, 10, 10, 256 * 2 * 2 + 1 * 2);
 
         // put multiple requests at the end of the window
         for (int i = 0; i < 256; ++i) {
-            builder.addRequest(now + 1000, 10);
+            builder.addRequest(now + 1000, 10L);
         }
 
         check(builder, now + 1000, 256 * 3 + 1, 10, 10, 10, 256 * 3 + 1);
@@ -221,10 +228,11 @@ public class TimeWindowStatisticsImplTest {
     @Test
     public void testGapGreaterThanTimeWindowPause() {
         final long now = 0;
-        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(10, TimeUnit.SECONDS, now);
-        builder.addRequest(now, 91);
-        builder.addRequest(now + 1000, 92);
-        builder.addRequest(now + 2000, 93);
+        final TimeWindowStatisticsImpl.Builder<Long> builder = new TimeWindowStatisticsImpl.Builder<>(
+                new SlidingWindowTimeReservoir(10, TimeUnit.SECONDS, now, TimeUnit.MILLISECONDS));
+        builder.addRequest(now, 91L);
+        builder.addRequest(now + 1000, 92L);
+        builder.addRequest(now + 2000, 93L);
 
         // we need to add the time of last request + the whole time windows pause + additional time that is greater than unit time
         // which is 1000
@@ -232,10 +240,10 @@ public class TimeWindowStatisticsImplTest {
 
         // this request addition causes the queue to reset; however, the original implementation didn't reset the total count
         // and total duration; as a result, the stats in that window became corrupted
-        builder.addRequest(time, 94);
+        builder.addRequest(time, 94L);
 
-        builder.addRequest(time + 1000, 95);
-        builder.addRequest(time + 2000, 96);
+        builder.addRequest(time + 1000, 95L);
+        builder.addRequest(time + 2000, 96L);
 
         check(builder, time + 3000, 3, 94, 96, 95, 0.3);
 
@@ -261,10 +269,11 @@ public class TimeWindowStatisticsImplTest {
 
     @Test
     public void testGeneric() {
-        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(10, TimeUnit.SECONDS, 0);
+        final TimeWindowStatisticsImpl.Builder<Long> builder = new TimeWindowStatisticsImpl.Builder<>(
+                new SlidingWindowTimeReservoir(10, TimeUnit.SECONDS, 0, TimeUnit.MILLISECONDS));
         for (int i = 0; i < 100; i++) {
             final int requestTime = i * 10000;
-            builder.addRequest(requestTime + 1, i);
+            builder.addRequest(requestTime + 1, (long) i);
             for (int j = 11; j < 100; j++) {
                 try {
                     final TimeWindowStatisticsImpl stat = builder.build(requestTime + j * 100);
@@ -272,8 +281,7 @@ public class TimeWindowStatisticsImplTest {
                     assertEquals(i, stat.getMinimumDuration());
                     assertEquals(i, stat.getMaximumDuration());
                 } catch (final AssertionError e) {
-                    System.out.println(i + " / " + j);
-                    throw e;
+                    throw new AssertionError("i=" + i + ", j=" + j, e);
                 }
             }
         }
@@ -281,20 +289,21 @@ public class TimeWindowStatisticsImplTest {
 
     @Test
     public void testUnlimited() {
-        final TimeWindowStatisticsImpl.Builder builder = new TimeWindowStatisticsImpl.Builder(0, TimeUnit.MILLISECONDS, 0);
+        final TimeWindowStatisticsImpl.Builder<Long> builder = new TimeWindowStatisticsImpl.Builder<>(
+                new UniformTimeReservoir(0, TimeUnit.MILLISECONDS));
 
         check(builder, 0, 0, 0, 0, 0, 0);
         check(builder, 10000, 0, 0, 0, 0, 0);
 
-        builder.addRequest(0, 10);
+        builder.addRequest(0, 10L);
 
         check(builder, 50, 1, 10, 10, 10, 20.0);
 
-        builder.addRequest(100 + 300, 20);
-        builder.addRequest(1000 + 600, 30);
-        builder.addRequest(1587 + 800, 40);
-        builder.addRequest(5544 + 999, 60);
-        builder.addRequest(9998 + 1000, 50);
+        builder.addRequest(100 + 300, 20L);
+        builder.addRequest(1000 + 600, 30L);
+        builder.addRequest(1587 + 800, 40L);
+        builder.addRequest(5544 + 999, 60L);
+        builder.addRequest(9998 + 1000, 50L);
 
         check(builder, 10000, 6, 10, 60, 35, 0.6);
     }

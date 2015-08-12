@@ -50,10 +50,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
-public class SlidingWindowTimeReservoirTest {
-
-    private static final double DELTA = 0.0001;
-    private static final int COLLISION_BUFFER = 256;
+public class SlidingWindowTimeReservoirTest extends AbstractNanosReservoirTest {
 
     @Test
     public void testMultipleRequestsAtTheSameTimeZeroTime() {
@@ -66,8 +63,7 @@ public class SlidingWindowTimeReservoirTest {
     }
 
     private void testMultipleRequestsAtTheSameTime(final long now) {
-        final SlidingWindowTimeReservoir reservoir = new SlidingWindowTimeReservoir(10, TimeUnit.NANOSECONDS, now,
-                TimeUnit.NANOSECONDS);
+        final SlidingWindowTimeReservoir reservoir = slidingWindowTimeReservoir(now);
 
         // put multiple requests at the beginning so that even the COLLISION_BUFFER bounds is tested
         reservoirUpdateInNanos(reservoir, 10, now);
@@ -108,8 +104,7 @@ public class SlidingWindowTimeReservoirTest {
     }
 
     private void testFirstUpdateOlderThanStartTime(final long now) {
-        final SlidingWindowTimeReservoir reservoir = new SlidingWindowTimeReservoir(10, TimeUnit.NANOSECONDS, now,
-                TimeUnit.NANOSECONDS);
+        final SlidingWindowTimeReservoir reservoir = slidingWindowTimeReservoir(now);
 
         // put multiple requests at the beginning so that even the COLLISION_BUFFER bounds is tested
         reservoirUpdateInNanos(reservoir, 10, now - 5);
@@ -132,6 +127,11 @@ public class SlidingWindowTimeReservoirTest {
 
     }
 
+    protected SlidingWindowTimeReservoir slidingWindowTimeReservoir(final long now) {
+        return new SlidingWindowTimeReservoir(10, TimeUnit.NANOSECONDS, now,
+                TimeUnit.NANOSECONDS);
+    }
+
     @Test
     public void testExhaustiveRequestsAtTheSameTimeZeroTime() {
         testExhaustiveRequestsAtTheSameTime(0);
@@ -152,8 +152,7 @@ public class SlidingWindowTimeReservoirTest {
      * thoroughly tested.
      */
     private void testExhaustiveRequestsAtTheSameTime(final long now) {
-        final SlidingWindowTimeReservoir reservoir = new SlidingWindowTimeReservoir(10, TimeUnit.NANOSECONDS, now,
-                TimeUnit.NANOSECONDS);
+        final SlidingWindowTimeReservoir reservoir = slidingWindowTimeReservoir(now);
 
         // put multiple requests at the beginning so that even the COLLISION_BUFFER bounds is tested
         for (int i = 0; i < COLLISION_BUFFER; ++i) {
@@ -219,35 +218,6 @@ public class SlidingWindowTimeReservoirTest {
 
         // at 'now + 21' all the requests are gone
         checkInNanos(reservoir, now + 21, 0, 0, 0, 0);
-    }
-
-    private void reservoirUpdateInNanos(TimeReservoir reservoir, long value, long time) {
-        reservoir.update(value, time, TimeUnit.NANOSECONDS);
-    }
-
-    private void checkInNanos(final TimeReservoir reservoir,
-                              final long snapshotTime,
-                              final int expectedSize,
-                              final int expectedMin,
-                              final int expectedMax,
-                              final long expectedMean) {
-        checkInNanos(reservoir, snapshotTime, expectedSize, expectedMin, expectedMax, expectedMean,
-                reservoir.getSnapshot(snapshotTime, TimeUnit.NANOSECONDS).getTimeInterval(TimeUnit.NANOSECONDS));
-    }
-
-    private void checkInNanos(final TimeReservoir reservoir,
-                              final long snapshotTime,
-                              final int expectedSize,
-                              final int expectedMin,
-                              final int expectedMax,
-                              final long expectedMean, final long expectedInterval) {
-        final UniformTimeSnapshot snapshot = reservoir.getSnapshot(snapshotTime, TimeUnit.NANOSECONDS);
-
-        assertEquals("Total count does not match!", expectedSize, snapshot.size());
-        assertEquals("Min exec time does not match!", expectedMin, snapshot.getMin());
-        assertEquals("Max exec time does not match!", expectedMax, snapshot.getMax());
-        assertEquals("Average exec time does not match!", expectedMean, snapshot.getMean(), DELTA);
-        assertEquals("Expected interval does not match!", expectedInterval, snapshot.getTimeInterval(TimeUnit.NANOSECONDS));
     }
 
 }

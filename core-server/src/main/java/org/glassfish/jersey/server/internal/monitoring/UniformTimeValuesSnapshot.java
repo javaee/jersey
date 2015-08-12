@@ -57,52 +57,131 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.Math.floor;
+
 /**
- * A statistical snapshot of a {@link UniformTimeSnapshot}.
+ * A statistical snapshot of a {@link UniformTimeValuesSnapshot}.
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  * @author Dropwizard Team
  * @see <a href="https://github.com/dropwizard/metrics">https://github.com/dropwizard/metrics</a>
  */
-interface UniformTimeSnapshot {
+class UniformTimeValuesSnapshot extends AbstractTimeSnapshot {
+
+    private final long[] values;
+
+    /**
+     * Create a new snapshot with the given values.
+     *
+     * @param values           an unordered set of values in the reservoir
+     * @param timeInterval     The time interval this snapshot relates to
+     * @param timeIntervalUnit The time unit of the time interval
+     */
+    public UniformTimeValuesSnapshot(Collection<Long> values, final long timeInterval, final TimeUnit timeIntervalUnit) {
+        super(timeInterval, timeIntervalUnit);
+        final Object[] copy = values.toArray();
+        this.values = new long[copy.length];
+        for (int i = 0; i < copy.length; i++) {
+            this.values[i] = (Long) copy[i];
+        }
+        Arrays.sort(this.values);
+    }
+
+    /**
+     * Returns the value at the given quantile.
+     *
+     * @param quantile a given quantile, in {@code [0..1]}
+     * @return the value in the distribution at {@code quantile}
+     */
+    public double getValue(double quantile) {
+        if (quantile < 0.0 || quantile > 1.0 || Double.isNaN(quantile)) {
+            throw new IllegalArgumentException(quantile + " is not in [0..1] range");
+        }
+
+        if (values.length == 0) {
+            return 0.0;
+        }
+
+        final double pos = quantile * (values.length + 1);
+        final int index = (int) pos;
+
+        if (index < 1) {
+            return values[0];
+        }
+
+        if (index >= values.length) {
+            return values[values.length - 1];
+        }
+
+        final double lower = values[index - 1];
+        final double upper = values[index];
+        return lower + (pos - floor(pos)) * (upper - lower);
+    }
 
     /**
      * Returns the number of values in the snapshot.
      *
      * @return the number of values
      */
-    long size();
+    @Override
+    public long size() {
+        return values.length;
+    }
 
     /**
-     * @return The maximum value in this snapshot
-     */
-    long getMax();
-
-    /**
-     * @return The minimum value in this snapshot
-     */
-    long getMin();
-
-    /**
-     * @return The mean of the values in this snapshot
-     */
-    double getMean();
-
-    /**
-     * The time interval for which this snapshot was created.
+     * Returns the entire set of values in the snapshot.
      *
-     * @param timeUnit The time unit in which to return the time interval.
-     * @return The time interval the snapshot was created at for the given time unit.
+     * @return the entire set of values
      */
-    long getTimeInterval(TimeUnit timeUnit);
+    public long[] getValues() {
+        return Arrays.copyOf(values, values.length);
+    }
 
     /**
-     * The rate of values in this snapshot for one given time unit.
+     * Returns the highest value in the snapshot.
      *
-     * @param timeUnit The time unit at which to get the rate
-     * @return The rate
+     * @return the highest value
      */
-    double getRate(TimeUnit timeUnit);
+    @Override
+    public long getMax() {
+        if (values.length == 0) {
+            return 0;
+        }
+        return values[values.length - 1];
+    }
+
+    /**
+     * Returns the lowest value in the snapshot.
+     *
+     * @return the lowest value
+     */
+    @Override
+    public long getMin() {
+        if (values.length == 0) {
+            return 0;
+        }
+        return values[0];
+    }
+
+    /**
+     * Returns the arithmetic mean of the values in the snapshot.
+     *
+     * @return the arithmetic mean
+     */
+    @Override
+    public double getMean() {
+        if (values.length == 0) {
+            return 0;
+        }
+
+        double sum = 0;
+        for (long value : values) {
+            sum += value;
+        }
+        return sum / values.length;
+    }
 }

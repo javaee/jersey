@@ -36,73 +36,77 @@
  * and therefore, elected the GPL Version 2 license, then the option applies
  * only if the new code is made subject to such option by the copyright
  * holder.
- *
- * This file incorporates work covered by the following copyright and
- * permission notice:
- *
- * Copyright 2010-2013 Coda Hale and Yammer, Inc., 2014-2015 Dropwizard Team
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
-
 package org.glassfish.jersey.server.internal.monitoring;
 
-import java.util.concurrent.TimeUnit;
+import java.util.Collection;
 
 /**
- * A statistical snapshot of a {@link UniformTimeSnapshot}.
+ * Aggregated value object stores aggregated measurements for provided set of data. The purpose of aggregation is to avoid high
+ * memory and processor time requirements for the calculation of statistics.
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
- * @author Dropwizard Team
- * @see <a href="https://github.com/dropwizard/metrics">https://github.com/dropwizard/metrics</a>
  */
-interface UniformTimeSnapshot {
+class AggregatedValueObject {
+
+    private final long max;
+    private final long min;
+    private final double mean;
+    private final long count;
 
     /**
-     * Returns the number of values in the snapshot.
+     * Creates aggregated value object for monitoring statistics based on the provided values. During the construction, the values
+     * collection must not be modified.
      *
-     * @return the number of values
+     * @param values The collection to create the aggregated statistics from
      */
-    long size();
+    public AggregatedValueObject(final Collection<Long> values) {
+
+        if (values.isEmpty()) {
+            // aggregated objects must be created for at least one value, additionally, prevent from division by zero in the mean
+            throw new IllegalArgumentException("The values collection must not be empty");
+        }
+
+        long max = Long.MIN_VALUE;
+        long min = Long.MAX_VALUE;
+        long sum = 0;
+        for (Long value : values) {
+            max = Math.max(max, value);
+            min = Math.min(min, value);
+            sum += value;
+        }
+
+        this.min = min;
+        this.max = max;
+        this.count = values.size();
+        this.mean = (double) sum / count;
+    }
 
     /**
-     * @return The maximum value in this snapshot
+     * @return The maximum value of the aggregated data
      */
-    long getMax();
+    public long getMax() {
+        return max;
+    }
 
     /**
-     * @return The minimum value in this snapshot
+     * @return The minimum value of the aggregated data
      */
-    long getMin();
+    public long getMin() {
+        return min;
+    }
 
     /**
-     * @return The mean of the values in this snapshot
+     * @return The mean of the aggregated data
      */
-    double getMean();
+    public double getMean() {
+        return mean;
+    }
 
     /**
-     * The time interval for which this snapshot was created.
-     *
-     * @param timeUnit The time unit in which to return the time interval.
-     * @return The time interval the snapshot was created at for the given time unit.
+     * @return The total number of the values this aggregated data provide information about
      */
-    long getTimeInterval(TimeUnit timeUnit);
-
-    /**
-     * The rate of values in this snapshot for one given time unit.
-     *
-     * @param timeUnit The time unit at which to get the rate
-     * @return The rate
-     */
-    double getRate(TimeUnit timeUnit);
+    public long getCount() {
+        return count;
+    }
 }

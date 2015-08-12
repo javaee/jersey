@@ -57,38 +57,23 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
     /**
      * Builder of time window statistics.
      */
-    static class Builder {
+    static class Builder<V> {
 
         /**
          * Total interval for which these statistics are calculated (eg. last 15 seconds, last one minute) converted to ms
          */
         private final long interval;
 
-        /**
-         * Create a new builder instance.
-         *
-         * @param timeWindowSize Size of time window.
-         * @param timeUnit       Time units of {@code timeWindowSize}.
-         */
-        Builder(final long timeWindowSize, final TimeUnit timeUnit) {
-            this(timeWindowSize, timeUnit, System.currentTimeMillis());
-        }
-
-        private final TimeReservoir durationReservoir;
+        private final TimeReservoir<V> timeReservoir;
 
         /**
-         * Create a new builder instance. A constructor is used mainly for testing purposes.
+         * Create new time window statistics builder instance.
          *
-         * @param timeWindowSize Size of time window.
-         * @param timeUnit       Time units of {@code timeWindowSize}.
-         * @param now            Current time.
+         * @param timeReservoir statistically representative reservoir of long values data stream in time.
          */
-        Builder(final long timeWindowSize, final TimeUnit timeUnit, final long now) {
-            interval = timeUnit.toMillis(timeWindowSize);
-
-            durationReservoir = interval == 0
-                    ? new UniformTimeReservoir(now, TimeUnit.MILLISECONDS)
-                    : new SlidingWindowTimeReservoir(timeWindowSize, timeUnit, now, TimeUnit.MILLISECONDS);
+        Builder(TimeReservoir<V> timeReservoir) {
+            interval = timeReservoir.interval(TimeUnit.MILLISECONDS);
+            this.timeReservoir = timeReservoir;
         }
 
         /**
@@ -97,8 +82,8 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
          * @param requestTime Time of execution.
          * @param duration    Duration of request processing.
          */
-        void addRequest(final long requestTime, final long duration) {
-            durationReservoir.update(duration, requestTime, TimeUnit.MILLISECONDS);
+        void addRequest(final long requestTime, final V duration) {
+            timeReservoir.update(duration, requestTime, TimeUnit.MILLISECONDS);
         }
 
         /**
@@ -117,7 +102,7 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
          * @return New instance of statistics.
          */
         TimeWindowStatisticsImpl build(final long currentTime) {
-            final UniformTimeSnapshot durationReservoirSnapshot = durationReservoir
+            final UniformTimeSnapshot durationReservoirSnapshot = timeReservoir
                     .getSnapshot(currentTime, TimeUnit.MILLISECONDS);
 
             // if nothing was collected, return a single empty stat instance
@@ -125,13 +110,7 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
                 return getOrCreateEmptyStats(interval);
             }
 
-            final double requestsPerSecond =
-                    (double) (1000 * durationReservoirSnapshot.size()) / durationReservoirSnapshot
-                            .getTimeInterval(TimeUnit.MILLISECONDS);
-
-            return new TimeWindowStatisticsImpl(interval, requestsPerSecond, durationReservoirSnapshot.getMin(),
-                    durationReservoirSnapshot.getMax(), (long) durationReservoirSnapshot.getMean(),
-                    durationReservoirSnapshot.size());
+            return new TimeWindowStatisticsImpl(interval, durationReservoirSnapshot);
 
         }
 
@@ -170,6 +149,11 @@ final class TimeWindowStatisticsImpl implements TimeWindowStatistics {
         this.maximumDuration = maximumDuration;
         this.averageDuration = averageDuration;
         this.totalCount = totalCount;
+    }
+
+    private TimeWindowStatisticsImpl(final long interval, final UniformTimeSnapshot snapshot) {
+        this(interval, snapshot.getRate(TimeUnit.SECONDS), snapshot.getMin(), snapshot.getMax(), (long) snapshot.getMean(),
+                snapshot.size());
     }
 
     @Override

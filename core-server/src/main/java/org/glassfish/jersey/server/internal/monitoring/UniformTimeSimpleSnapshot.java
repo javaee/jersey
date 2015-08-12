@@ -36,23 +36,6 @@
  * and therefore, elected the GPL Version 2 license, then the option applies
  * only if the new code is made subject to such option by the copyright
  * holder.
- *
- * This file incorporates work covered by the following copyright and
- * permission notice:
- *
- * Copyright 2010-2013 Coda Hale and Yammer, Inc., 2014-2015 Dropwizard Team
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 package org.glassfish.jersey.server.internal.monitoring;
@@ -60,49 +43,60 @@ package org.glassfish.jersey.server.internal.monitoring;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A statistical snapshot of a {@link UniformTimeSnapshot}.
+ * A statistical snapshot of a {@link UniformTimeSimpleSnapshot}.
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  * @author Dropwizard Team
  * @see <a href="https://github.com/dropwizard/metrics">https://github.com/dropwizard/metrics</a>
  */
-interface UniformTimeSnapshot {
+class UniformTimeSimpleSnapshot extends AbstractTimeSnapshot {
+
+
+    private final long max;
+    private final long min;
+    private final double mean;
+    private final long count;
 
     /**
-     * Returns the number of values in the snapshot.
+     * Constructs the snapshot which simply returns the provided data as arguments.
      *
-     * @return the number of values
+     * @param max              The maximum.
+     * @param min              The minimum.
+     * @param mean             The mean.
+     * @param count            The total count.
+     * @param timeInterval     The time interval of this snapshot.
+     * @param timeIntervalUnit The time interval unit.
      */
-    long size();
+    public UniformTimeSimpleSnapshot(final long max,
+                                     final long min,
+                                     final double mean,
+                                     final long count,
+                                     final long timeInterval,
+                                     final TimeUnit timeIntervalUnit) {
+        super(timeInterval, timeIntervalUnit);
+        this.max = max;
+        this.min = min;
+        this.mean = mean;
+        this.count = count;
+    }
 
-    /**
-     * @return The maximum value in this snapshot
-     */
-    long getMax();
+    @Override
+    public long size() {
+        return count;
+    }
 
-    /**
-     * @return The minimum value in this snapshot
-     */
-    long getMin();
+    @Override
+    public long getMax() {
+        return max;
+    }
 
-    /**
-     * @return The mean of the values in this snapshot
-     */
-    double getMean();
+    @Override
+    public long getMin() {
+        return min;
+    }
 
-    /**
-     * The time interval for which this snapshot was created.
-     *
-     * @param timeUnit The time unit in which to return the time interval.
-     * @return The time interval the snapshot was created at for the given time unit.
-     */
-    long getTimeInterval(TimeUnit timeUnit);
-
-    /**
-     * The rate of values in this snapshot for one given time unit.
-     *
-     * @param timeUnit The time unit at which to get the rate
-     * @return The rate
-     */
-    double getRate(TimeUnit timeUnit);
+    @Override
+    public double getMean() {
+        return mean;
+    }
 }

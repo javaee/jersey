@@ -73,7 +73,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
  * @see <a href="http://www.cs.umd.edu/~samir/498/vitter.pdf">Random Sampling with a Reservoir</a>
  * @see <a href="https://github.com/dropwizard/metrics">https://github.com/dropwizard/metrics</a>
  */
-public class UniformTimeReservoir implements TimeReservoir {
+class UniformTimeReservoir implements TimeReservoir<Long> {
 
     private final long startTime;
     private final TimeUnit startTimeUnit;
@@ -84,8 +84,8 @@ public class UniformTimeReservoir implements TimeReservoir {
     private final AtomicLongArray values;
 
     /**
-     * Creates a new {@link UniformTimeReservoir} of 1024 elements, which offers a 99.9% confidence level with a 5% margin of
-     * error assuming a normal distribution.
+     * Creates a new {@code UniformTimeReservoir} instance of 1024 elements, which offers a 99.9% confidence level
+     * with a 5% margin of error assuming a normal distribution.
      *
      * @param startTime     The start time
      * @param startTimeUnit The start time unit
@@ -95,7 +95,7 @@ public class UniformTimeReservoir implements TimeReservoir {
     }
 
     /**
-     * Creates a new {@link UniformTimeReservoir}.
+     * Creates a new {@code UniformTimeReservoir} instance.
      *
      * @param size          the number of samples to keep in the sampling reservoir
      * @param startTime     The start time
@@ -121,7 +121,7 @@ public class UniformTimeReservoir implements TimeReservoir {
     }
 
     @Override
-    public void update(long value, final long time, final TimeUnit timeUnit) {
+    public void update(Long value, final long time, final TimeUnit timeUnit) {
         final long c = count.incrementAndGet();
         if (c <= values.length()) {
             values.set((int) c - 1, value);
@@ -140,7 +140,8 @@ public class UniformTimeReservoir implements TimeReservoir {
      * @return a value select randomly from the range {@code [0..n)}.
      */
     private static long nextLong(long n) {
-        long bits, val;
+        long bits;
+        long val;
         do {
             bits = ThreadLocalRandom.current().nextLong() & (~(1L << BITS_PER_LONG));
             val = bits % n;
@@ -151,11 +152,11 @@ public class UniformTimeReservoir implements TimeReservoir {
     @Override
     public UniformTimeSnapshot getSnapshot(final long time, final TimeUnit timeUnit) {
         final int s = size(time, timeUnit);
-        final List<Long> copy = new ArrayList<Long>(s);
+        final List<Long> copy = new ArrayList<>(s);
         for (int i = 0; i < s; i++) {
             copy.add(values.get(i));
         }
-        return new UniformTimeSnapshot(copy,
+        return new UniformTimeValuesSnapshot(copy,
                 startTimeUnit.convert(time, timeUnit) - startTime,
                 startTimeUnit) {
 
@@ -163,12 +164,18 @@ public class UniformTimeReservoir implements TimeReservoir {
              * Method size must be overridden because it returns the values size by default which is {@link
              * UniformTimeReservoir#DEFAULT_SIZE}.
              *
-             * @return
+             * @return total number of data entries in the reservoir.
              */
             @Override
             public long size() {
                 return count.get();
             }
         };
+    }
+
+    @Override
+    public long interval(final TimeUnit timeUnit) {
+        // Uniform Interval returns 0 for infinity
+        return 0;
     }
 }

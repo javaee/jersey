@@ -36,73 +36,41 @@
  * and therefore, elected the GPL Version 2 license, then the option applies
  * only if the new code is made subject to such option by the copyright
  * holder.
- *
- * This file incorporates work covered by the following copyright and
- * permission notice:
- *
- * Copyright 2010-2013 Coda Hale and Yammer, Inc., 2014-2015 Dropwizard Team
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
-
 package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.concurrent.TimeUnit;
 
 /**
- * A statistical snapshot of a {@link UniformTimeSnapshot}.
+ * Base implementation of {@code UniformTimeSnapshot}.
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
- * @author Dropwizard Team
- * @see <a href="https://github.com/dropwizard/metrics">https://github.com/dropwizard/metrics</a>
  */
-interface UniformTimeSnapshot {
+abstract class AbstractTimeSnapshot implements UniformTimeSnapshot {
+
+    private final long timeInterval;
+    private final TimeUnit timeIntervalUnit;
 
     /**
-     * Returns the number of values in the snapshot.
+     * Constructor to be used by subclasses overriding the base abstract uniform time snapshot class.
      *
-     * @return the number of values
+     * @param timeInterval     The time interval of this snapshot.
+     * @param timeIntervalUnit The time interval unit.
      */
-    long size();
+    protected AbstractTimeSnapshot(final long timeInterval, final TimeUnit timeIntervalUnit) {
+        this.timeInterval = timeInterval;
+        this.timeIntervalUnit = timeIntervalUnit;
+    }
 
-    /**
-     * @return The maximum value in this snapshot
-     */
-    long getMax();
+    @Override
+    public long getTimeInterval(TimeUnit timeUnit) {
+        return timeUnit.convert(timeInterval, timeIntervalUnit);
+    }
 
-    /**
-     * @return The minimum value in this snapshot
-     */
-    long getMin();
-
-    /**
-     * @return The mean of the values in this snapshot
-     */
-    double getMean();
-
-    /**
-     * The time interval for which this snapshot was created.
-     *
-     * @param timeUnit The time unit in which to return the time interval.
-     * @return The time interval the snapshot was created at for the given time unit.
-     */
-    long getTimeInterval(TimeUnit timeUnit);
-
-    /**
-     * The rate of values in this snapshot for one given time unit.
-     *
-     * @param timeUnit The time unit at which to get the rate
-     * @return The rate
-     */
-    double getRate(TimeUnit timeUnit);
+    @Override
+    public double getRate(TimeUnit timeUnit) {
+        final double rateInNanos = (double) size() / getTimeInterval(TimeUnit.NANOSECONDS);
+        final long multiplier = TimeUnit.NANOSECONDS.convert(1, timeUnit);
+        return rateInNanos * multiplier;
+    }
 }
