@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.glassfish.jersey.server.monitoring.ResponseStatistics;
@@ -47,6 +49,8 @@ import org.glassfish.jersey.server.monitoring.ResponseStatistics;
 import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
+ * Immutable response statistics.
+ *
  * @author Miroslav Fuksa
  */
 final class ResponseStatisticsImpl implements ResponseStatistics {
@@ -54,9 +58,12 @@ final class ResponseStatisticsImpl implements ResponseStatistics {
     private final Map<Integer, Long> responseCodes;
     private final Integer lastResponseCode;
 
+    /**
+     * This builder does not need to be threadsafe since it's called only from the jersey-background-task-scheduler.
+     */
     static class Builder {
 
-        private final Map<Integer, Long> responseCodes = Maps.newHashMap();
+        private final Map<Integer, Long> responseCodesMap = Maps.newHashMap();
         private Integer lastResponseCode = null;
 
         private ResponseStatisticsImpl cached = null;
@@ -65,17 +72,18 @@ final class ResponseStatisticsImpl implements ResponseStatistics {
             cached = null;
 
             lastResponseCode = responseCode;
-            Long currentValue = responseCodes.get(responseCode);
+            Long currentValue = responseCodesMap.get(responseCode);
             if (currentValue == null) {
                 currentValue = 0L;
             }
-            responseCodes.put(responseCode, currentValue + 1);
+            responseCodesMap.put(responseCode, currentValue + 1);
         }
 
         ResponseStatisticsImpl build() {
             if (cached == null) {
-                cached = new ResponseStatisticsImpl(lastResponseCode, responseCodes);
+                cached = new ResponseStatisticsImpl(lastResponseCode, new HashMap<>(this.responseCodesMap));
             }
+
             return cached;
         }
 
@@ -83,7 +91,7 @@ final class ResponseStatisticsImpl implements ResponseStatistics {
 
     private ResponseStatisticsImpl(final Integer lastResponseCode, final Map<Integer, Long> responseCodes) {
         this.lastResponseCode = lastResponseCode;
-        this.responseCodes = responseCodes;
+        this.responseCodes = Collections.unmodifiableMap(responseCodes);
     }
 
     @Override
@@ -98,7 +106,7 @@ final class ResponseStatisticsImpl implements ResponseStatistics {
 
     @Override
     public ResponseStatistics snapshot() {
-        // snapshot functionality not yet implemented
+        // this object is immutable
         return this;
     }
 }

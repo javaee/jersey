@@ -46,8 +46,8 @@ import java.util.concurrent.TimeUnit;
 import org.glassfish.jersey.server.monitoring.TimeWindowStatistics;
 
 /**
- * {@link TimeWindowStatistics Time window statistics} that uses backing {@link SlidingWindowTimeReservoir} for its {@code
- * Builder} implementation.
+ * Immutable {@link TimeWindowStatistics Time window statistics} that uses backing {@link SlidingWindowTimeReservoir} for its
+ * {@code Builder} implementation.
  *
  * @author Miroslav Fuksa
  * @author Stepan Vavra (stepan.vavra at oracle.com)
