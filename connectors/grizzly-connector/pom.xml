@@ -67,8 +67,10 @@
         <dependency>
             <groupId>org.glassfish.grizzly</groupId>
             <artifactId>grizzly-websockets</artifactId>
-            <!-- Until grizzly-http-client is not updated to the latest grizzly API.-->
-            <version>2.3.19</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.grizzly</groupId>
+            <artifactId>connection-pool</artifactId>
         </dependency>
 
         <dependency>

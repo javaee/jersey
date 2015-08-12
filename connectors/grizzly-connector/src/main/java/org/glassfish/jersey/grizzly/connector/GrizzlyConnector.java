@@ -122,10 +122,10 @@ class GrizzlyConnector implements Connector {
 
             builder = builder.setExecutorService(executorService);
 
-            builder.setConnectionTimeoutInMs(ClientProperties.getValue(config.getProperties(),
+            builder.setConnectTimeout(ClientProperties.getValue(config.getProperties(),
                     ClientProperties.CONNECT_TIMEOUT, 0));
 
-            builder.setRequestTimeoutInMs(ClientProperties.getValue(config.getProperties(),
+            builder.setRequestTimeout(ClientProperties.getValue(config.getProperties(),
                     ClientProperties.READ_TIMEOUT, 0));
 
             Object proxyUri;
@@ -156,7 +156,7 @@ class GrizzlyConnector implements Connector {
             builder.setExecutorService(executorService);
         }
 
-        builder.setAllowPoolingConnection(true);
+        builder.setAllowPoolingConnections(true);
         if (client.getSslContext() != null) {
             builder.setSSLContext(client.getSslContext());
         }
@@ -252,8 +252,6 @@ class GrizzlyConnector implements Connector {
             });
 
             return responseFuture.get();
-        } catch (IOException ex) {
-            throw new ProcessingException(ex.getMessage(), ex.getCause());
         } catch (ExecutionException ex) {
             Throwable e = ex.getCause() == null ? ex : ex.getCause();
             throw new ProcessingException(e.getMessage(), e);
@@ -315,8 +313,6 @@ class GrizzlyConnector implements Connector {
                     }
                 }
             });
-        } catch (IOException ex) {
-            failure = new ProcessingException(ex.getMessage(), ex.getCause());
         } catch (Throwable t) {
             failure = t;
         }
@@ -383,7 +379,7 @@ class GrizzlyConnector implements Connector {
             if (entityProcessing == RequestEntityProcessing.BUFFERED) {
                 byte[] entityBytes = bufferEntity(requestContext);
                 builder = builder.setBody(entityBytes);
-            } else if (entityProcessing == RequestEntityProcessing.CHUNKED) {
+            } else {
                 final FeedableBodyGenerator bodyGenerator = new FeedableBodyGenerator();
                 final Integer chunkSize = requestContext.resolveProperty(
                         ClientProperties.CHUNKED_ENCODING_SIZE, ClientProperties.DEFAULT_CHUNK_SIZE);
@@ -403,8 +399,6 @@ class GrizzlyConnector implements Connector {
                 });
                 bodyGenerator.setFeeder(feeder);
                 builder.setBody(bodyGenerator);
-            } else {
-                builder.setBody(getEntityWriter(requestContext));
             }
         }
 
@@ -483,22 +477,6 @@ class GrizzlyConnector implements Connector {
             request.getHeaders().add(e.getKey(), e.getValue());
         }
         return stringHeaders;
-    }
-
-    private com.ning.http.client.Request.EntityWriter getEntityWriter(final ClientRequest requestContext) {
-        return new com.ning.http.client.Request.EntityWriter() {
-            @Override
-            public void writeEntity(final OutputStream out) throws IOException {
-                requestContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
-
-                    @Override
-                    public OutputStream getOutputStream(int contentLength) throws IOException {
-                        return out;
-                    }
-                });
-                requestContext.writeEntity();
-            }
-        };
     }
 
     @Override
