@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -128,11 +129,16 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
             final ContainerRequest request = getContainerRequest();
             final String requestPropertyName = FormDataMultiPart.class.getName();
 
-            if (request.getProperty(requestPropertyName) == null) {
-                request.setProperty(requestPropertyName, request.readEntity(FormDataMultiPart.class));
+            Object entity = request.getProperty(requestPropertyName);
+            if (entity == null) {
+                entity = request.readEntity(FormDataMultiPart.class);
+                if (entity == null) {
+                    throw new BadRequestException(LocalizationMessages.ENTITY_IS_EMPTY());
+                }
+                request.setProperty(requestPropertyName, entity);
             }
 
-            return (FormDataMultiPart) request.getProperty(requestPropertyName);
+            return (FormDataMultiPart) entity;
         }
     }
 
@@ -281,7 +287,6 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
             // Return the field value for the field specified by the sourceName property.
             final List<FormDataBodyPart> parts = getEntity().getFields(parameter.getSourceName());
 
-
             final FormDataBodyPart part = parts != null ? parts.get(0) : null;
             final MediaType mediaType = part != null ? part.getMediaType() : MediaType.TEXT_PLAIN_TYPE;
 
@@ -390,8 +395,8 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
     /**
      * Injection constructor.
      *
-     * @param extractorProvider    multi-valued map parameter extractor provider.
-     * @param locator HK2 service locator.
+     * @param extractorProvider multi-valued map parameter extractor provider.
+     * @param locator           HK2 service locator.
      */
     @Inject
     public FormDataParamValueFactoryProvider(final MultivaluedParameterExtractorProvider extractorProvider,
