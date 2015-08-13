@@ -313,11 +313,10 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
      * values for parameters of this Invocable returned by {@link #getParameters()}. Value providers are ordered in the same
      * order as parameters.
      *
-     *
      * @param locator HK2 service locator.
      * @return Set of value providers for this Invocable.
      */
-    public List<Factory<?>> getValueProviders(ServiceLocator locator) {
+    public List<? extends Factory<?>> getValueProviders(ServiceLocator locator) {
         return ParameterValueHelper.createValueProviders(locator, this);
     }
 

@@ -52,10 +52,10 @@ import javax.inject.Inject;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
@@ -74,7 +74,8 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
     public ResourceMethodDispatcher create(final Invocable resourceMethod,
             final InvocationHandler invocationHandler,
             final ConfiguredValidator validator) {
-        final List<Factory<?>> valueProviders = resourceMethod.getValueProviders(serviceLocator);
+        final List<ParamValueFactoryWithSource<?>> valueProviders =
+                ParameterValueHelper.createValueProviders(serviceLocator, resourceMethod);
         final Class<?> returnType = resourceMethod.getHandlingMethod().getReturnType();
 
         ResourceMethodDispatcher resourceMethodDispatcher;
@@ -111,12 +112,12 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
     private abstract static class AbstractMethodParamInvoker extends AbstractJavaResourceMethodDispatcher {
 
-        private final List<Factory<?>> valueProviders;
+        private final List<ParamValueFactoryWithSource<?>> valueProviders;
 
         public AbstractMethodParamInvoker(
                 final Invocable resourceMethod,
                 final InvocationHandler handler,
-                final List<Factory<?>> valueProviders,
+                final List<ParamValueFactoryWithSource<?>> valueProviders,
                 final ConfiguredValidator validator) {
             super(resourceMethod, handler, validator);
             this.valueProviders = valueProviders;
@@ -132,7 +133,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         public VoidOutInvoker(
                 final Invocable resourceMethod,
                 final InvocationHandler handler,
-                final List<Factory<?>> valueProviders,
+                final List<ParamValueFactoryWithSource<?>> valueProviders,
                 final ConfiguredValidator validator) {
             super(resourceMethod, handler, valueProviders, validator);
         }
@@ -149,7 +150,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         public ResponseOutInvoker(
                 final Invocable resourceMethod,
                 final InvocationHandler handler,
-                final List<Factory<?>> valueProviders,
+                final List<ParamValueFactoryWithSource<?>> valueProviders,
                 final ConfiguredValidator validator) {
             super(resourceMethod, handler, valueProviders, validator);
         }
@@ -165,7 +166,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         public ObjectOutInvoker(
                 final Invocable resourceMethod,
                 final InvocationHandler handler,
-                final List<Factory<?>> valueProviders,
+                final List<ParamValueFactoryWithSource<?>> valueProviders,
                 final ConfiguredValidator validator) {
             super(resourceMethod, handler, valueProviders, validator);
         }
@@ -193,7 +194,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         public TypeOutInvoker(
                 final Invocable resourceMethod,
                 final InvocationHandler handler,
-                final List<Factory<?>> valueProviders,
+                final List<ParamValueFactoryWithSource<?>> valueProviders,
                 final ConfiguredValidator validator) {
             super(resourceMethod, handler, valueProviders, validator);
             this.t = resourceMethod.getHandlingMethod().getGenericReturnType();

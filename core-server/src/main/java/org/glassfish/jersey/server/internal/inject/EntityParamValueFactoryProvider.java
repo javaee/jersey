@@ -41,18 +41,13 @@ package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.internal.InternalServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 
@@ -109,66 +104,8 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
     }
 
-    private static class FormEntityValueFactory extends AbstractContainerRequestValueFactory<Object> {
-
-        private final MultivaluedParameterExtractor<?> extractor;
-
-        public FormEntityValueFactory(MultivaluedParameterExtractor<?> extractor) {
-            this.extractor = extractor;
-        }
-
-        @Override
-        public Object provide() {
-            final ContainerRequest request = getContainerRequest();
-
-            Form form = getCachedForm(request);
-            if (form == null) {
-                form = getForm(request);
-                cacheForm(request, form);
-            }
-
-            return form.asMap();
-        }
-
-        private static Form getCachedForm(final ContainerRequest request) {
-            return (Form) request.getProperty(InternalServerProperties.FORM_DECODED_PROPERTY);
-        }
-
-        private void cacheForm(final ContainerRequest request, final Form form) {
-            request.setProperty(InternalServerProperties.FORM_DECODED_PROPERTY, form);
-        }
-
-        private Form getForm(final ContainerRequest request) {
-            return getFormParameters(ensureValidRequest(request));
-        }
-
-        private static ContainerRequest ensureValidRequest(final ContainerRequest request) throws IllegalStateException {
-            if (request.getMethod().equals("GET")) {
-                throw new IllegalStateException(LocalizationMessages.FORM_PARAM_METHOD_ERROR());
-            }
-
-            if (!MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())) {
-                throw new IllegalStateException(LocalizationMessages.FORM_PARAM_CONTENT_TYPE_ERROR());
-            }
-            return request;
-        }
-
-        private Form getFormParameters(ContainerRequest request) {
-            if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())) {
-                request.bufferEntity();
-                Form form = request.readEntity(Form.class);
-                return (form == null ? new Form() : form);
-            } else {
-                return new Form();
-            }
-        }
-    }
-
     @Override
     protected Factory<?> createValueFactory(Parameter parameter) {
-        if (MultivaluedMap.class.isAssignableFrom(parameter.getRawType())) {
-            return new FormEntityValueFactory(get(parameter));
-        }
         return new EntityValueFactory(parameter);
     }
 }
