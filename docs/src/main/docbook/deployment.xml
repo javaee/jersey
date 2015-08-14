@@ -101,7 +101,13 @@
             <literal>getClasses</literal>. For example, the following application class that extends from
             &lit.jersey.server.ResourceConfig; scans during deployment for JAX-RS components in packages
             <literal>org.foo.rest</literal> and <literal>org.bar.rest</literal>:
-
+            <note>
+                <para>
+                    <emphasis>Package scanning</emphasis> ignores an inheritance and therefore &lit.jaxrs.Path; annotation
+                    on parent classes and interfaces will be ignored. These classes won't be registered as the JAX-RS component
+                    classes.
+                </para>
+            </note>
             <example>
                 <title>Reusing Jersey implementation in your custom application model</title>
                 <programlisting language="java" linenumbering="numbered">public class MyApplication extends ResourceConfig {

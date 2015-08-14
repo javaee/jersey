@@ -51,6 +51,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.Path;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configurable;
@@ -646,6 +647,9 @@ public class ResourceConfig extends Application implements Configurable<Resource
     /**
      * Adds array of package names which will be used to scan for components.
      * <p/>
+     * Package scanning ignores inheritance and therefore {@link Path} annotation
+     * on parent classes and interfaces will be ignored.
+     * <p/>
      * Packages will be scanned recursively, including all nested packages.
      *
      * @param packages array of package names.
@@ -658,7 +662,10 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
     /**
      * Adds array of package names which will be used to scan for components.
-     *
+     * <p/>
+     * Package scanning ignores an inheritance and therefore {@link Path} annotation
+     * on parent classes and interfaces will be ignored.
+     * <p/>
      * @param recursive defines whether any nested packages in the collection of specified
      *                  package names should be recursively scanned (value of {@code true})
      *                  as part of the package scanning or not (value of {@code false}).
