@@ -77,7 +77,7 @@ public class RequestScopeTest extends JerseyTest {
                 });
     }
 
-    public static interface CloseMe {
+    public interface CloseMe {
 
         String eval();
 
@@ -86,7 +86,7 @@ public class RequestScopeTest extends JerseyTest {
 
     public static class CloseMeFactory implements Factory<CloseMe> {
 
-        public static boolean closed = false;
+        public static volatile boolean closed = false;
 
         @Override
         public CloseMe provide() {
