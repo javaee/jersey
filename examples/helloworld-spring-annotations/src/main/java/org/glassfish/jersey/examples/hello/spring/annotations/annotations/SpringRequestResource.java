@@ -68,7 +68,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SpringRequestResource {
 
-	@Resource(name = "atomicCounter")
+    @Resource(name = "atomicCounter")
     AtomicInteger counter;
 
     @Autowired

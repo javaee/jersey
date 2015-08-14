@@ -54,9 +54,9 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan(basePackageClasses = {GreetingService.class})
 public class SpringAnnotationConfig {
 
-	@Bean(name = "atomicCounter")
-	public AtomicInteger getCounter() {
-		return new AtomicInteger();
-	}
-	
+    @Bean(name = "atomicCounter")
+    public AtomicInteger getCounter() {
+        return new AtomicInteger();
+    }
+    
 }
