@@ -114,7 +114,6 @@ public class ConsumeProduceSimpleTest {
     }
 
     @Path("/{arg1}/{arg2}")
-    @Consumes("text/html")
     @Produces("text/html")
     public static class ConsumeProduceSimpleBean {
 
@@ -135,6 +134,7 @@ public class ConsumeProduceSimpleTest {
         }
 
         @POST
+        @Consumes("text/html")
         @SuppressWarnings("UnusedParameters")
         public String doPostHtml(String data) {
             assertEquals("text/html", httpHeaders.getRequestHeader("Content-Type").get(0));
