@@ -163,14 +163,14 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     public void handle(final String target, final Request request, final HttpServletRequest httpServletRequest,
                        final HttpServletResponse httpServletResponse) throws IOException, ServletException {
 
-        final Response response = Response.getResponse(httpServletResponse);
+        final Response response = request.getResponse();
         final ResponseWriter responseWriter = new ResponseWriter(request, response, configSetStatusOverSendError);
         final URI baseUri = getBaseUri(request);
 
-        final String originalQuery = request.getUri().getQuery();
+        final String originalQuery = request.getHttpURI().getQuery();
         final String encodedQuery = ContainerUtils.encodeUnsafeCharacters(originalQuery);
         final String uriString = (originalQuery == null || originalQuery.isEmpty() || originalQuery.equals(encodedQuery))
-                ? request.getUri().toString() : request.getUri().toString().replace(originalQuery, encodedQuery);
+                ? request.getHttpURI().toString() : request.getHttpURI().toString().replace(originalQuery, encodedQuery);
         final URI requestUri = baseUri.resolve(uriString);
         try {
             final ContainerRequest requestContext = new ContainerRequest(
