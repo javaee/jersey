@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.simple;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
@@ -48,6 +50,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -64,10 +68,35 @@ public class OptionsTest extends AbstractSimpleServerTester {
         }
     }
 
+    @Path("/users")
+    public class UserResource {
+
+        @Path("/current")
+        @GET
+        @Produces("text/plain")
+        public String getCurrentUser() {
+            return "current user";
+        }
+    }
+
+    private Client client;
+
+    @Before
+    public void setUp() throws Exception {
+        startServer(HelloWorldResource.class, UserResource.class);
+        client = ClientBuilder.newClient();
+    }
+
+    @Override
+    @After
+    public void tearDown() {
+        super.tearDown();
+        client = null;
+    }
+
+
     @Test
     public void testFooBarOptions() {
-        startServer(HelloWorldResource.class);
-        Client client = ClientBuilder.newClient();
         Response response = client.target(getUri()).path("helloworld").request().header("Accept", "foo/bar").options();
         assertEquals(200, response.getStatus());
         final String allowHeader = response.getHeaderString("Allow");
@@ -80,6 +109,12 @@ public class OptionsTest extends AbstractSimpleServerTester {
         assertTrue(content.contains("GET"));
         assertTrue(content.contains("HEAD"));
         assertTrue(content.contains("OPTIONS"));
+    }
+
+    @Test
+    public void testNoDefaultMethod() {
+        Response response = client.target(getUri()).path("/users").request().options();
+        assertThat(response.getStatus(), is(404));
     }
 
 }
