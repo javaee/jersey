@@ -78,9 +78,9 @@ public class AbstractNanosReservoirTest {
      */
     protected void checkInNanos(final TimeReservoir reservoir,
                                 final long snapshotTime,
-                                final int expectedSize,
-                                final int expectedMin,
-                                final int expectedMax,
+                                final long expectedSize,
+                                final long expectedMin,
+                                final long expectedMax,
                                 final double expectedMean, final long expectedInterval) {
         final UniformTimeSnapshot snapshot = reservoir.getSnapshot(snapshotTime, TimeUnit.NANOSECONDS);
 
