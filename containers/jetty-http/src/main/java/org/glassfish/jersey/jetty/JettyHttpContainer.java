@@ -178,7 +178,8 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
             final Enumeration<String> headerNames = request.getHeaderNames();
             while (headerNames.hasMoreElements()) {
                 final String headerName = headerNames.nextElement();
-                requestContext.headers(headerName, request.getHeader(headerName));
+                String headerValue = request.getHeader(headerName);
+                requestContext.headers(headerName, headerValue == null ? "" : headerValue);
             }
             requestContext.setWriter(responseWriter);
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
