@@ -54,7 +54,6 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriBuilder;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -83,7 +82,6 @@ import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
-import org.glassfish.grizzly.utils.Charsets;
 
 /**
  * Jersey {@code Container} implementation based on Grizzly {@link org.glassfish.grizzly.http.server.HttpHandler}.
@@ -110,6 +108,14 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     private boolean configSetStatusOverSendError;
 
     /**
+     * Cached value of configuration property
+     * {@link org.glassfish.jersey.server.ServerProperties#REDUCE_CONTEXT_PATH_SLASHES_ENABLED}.
+     * If {@code true} method {@link org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer#getRequestUri(Request)}
+     * will reduce the of leading context-path slashes to only one.
+     */
+    private boolean configReduceContextPathSlashesEnabled;
+
+    /**
      * Referencing factory for Grizzly request.
      */
     private static class GrizzlyRequestReferencingFactory extends ReferencingFactory<Request> {
@@ -133,7 +139,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
     /**
      * An internal binder to enable Grizzly HTTP container specific types injection.
-     *
+     * <p/>
      * This binder allows to inject underlying Grizzly HTTP request and response instances.
      * Note that since Grizzly {@code Request} class is not proxiable as it does not expose an empty constructor,
      * the injection of Grizzly request instance into singleton JAX-RS and Jersey providers is only supported via
@@ -330,6 +336,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     /* package */ GrizzlyHttpContainer(final Application application) {
         this.appHandler = new ApplicationHandler(application, new GrizzlyBinder());
         cacheConfigSetStatusOverSendError();
+        cacheConfigEnableLeadingContextPathSlashes();
     }
 
     /**
@@ -341,6 +348,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     /* package */ GrizzlyHttpContainer(final Application application, final ServiceLocator parentLocator) {
         this.appHandler = new ApplicationHandler(application, new GrizzlyBinder(), parentLocator);
         cacheConfigSetStatusOverSendError();
+        cacheConfigEnableLeadingContextPathSlashes();
     }
 
     @Override
@@ -354,9 +362,10 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         final ResponseWriter responseWriter = new ResponseWriter(response, configSetStatusOverSendError);
         try {
             logger.debugLog("GrizzlyHttpContainer.service(...) started");
-            final URI baseUri = getBaseUri(request);
+            URI baseUri = getBaseUri(request);
+            URI requestUri = getRequestUri(request);
             final ContainerRequest requestContext = new ContainerRequest(baseUri,
-                    getRequestUri(baseUri, request), request.getMethod().getMethodString(),
+                    requestUri, request.getMethod().getMethodString(),
                     getSecurityContext(request), new GrizzlyRequestPropertiesDelegate(request));
             requestContext.setEntityStream(request.getInputStream());
             for (final String headerName : request.getHeaderNames()) {
@@ -378,6 +387,10 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         }
     }
 
+    private boolean containsContextPath(Request request) {
+        return request.getContextPath() != null && request.getContextPath().length() > 0;
+    }
+
     @Override
     public ResourceConfig getConfiguration() {
         return appHandler.getConfiguration();
@@ -396,6 +409,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         appHandler.onReload(this);
         appHandler.onStartup(this);
         cacheConfigSetStatusOverSendError();
+        cacheConfigEnableLeadingContextPathSlashes();
     }
 
     @Override
@@ -456,18 +470,30 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         }
     }
 
-    private URI getRequestUri(final URI baseUri, final Request grizzlyRequest) {
-        // TODO: this is terrible, there must be a way to obtain the original request URI!
-        String originalUri = UriBuilder.fromPath(
-                grizzlyRequest.getRequest().getRequestURIRef().getOriginalRequestURIBC().toString(Charsets.ASCII_CHARSET)
-        ).build().toString();
+    private URI getRequestUri(final Request request) {
+        try {
+            final String serverAddress = getServerAddress(request);
 
-        final String queryString = grizzlyRequest.getQueryString();
-        if (queryString != null) {
-            originalUri = originalUri + "?" + ContainerUtils.encodeUnsafeCharacters(queryString);
+            String uri;
+            if (configReduceContextPathSlashesEnabled && containsContextPath(request)) {
+                uri = ContainerUtils.reduceLeadingSlashes(request.getRequestURI());
+            } else {
+                uri = request.getRequestURI();
+            }
+
+            final String queryString = request.getQueryString();
+            if (queryString != null) {
+                uri = uri + "?" + ContainerUtils.encodeUnsafeCharacters(queryString);
+            }
+
+            return new URI(serverAddress + uri);
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException(ex);
         }
+    }
 
-        return baseUri.resolve(originalUri);
+    private String getServerAddress(final Request request) throws URISyntaxException {
+        return new URI(request.getScheme(), null,  request.getServerName(), request.getServerPort(), null, null, null).toString();
     }
 
     /**
@@ -477,5 +503,14 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     private void cacheConfigSetStatusOverSendError() {
         this.configSetStatusOverSendError = ServerProperties.getValue(getConfiguration().getProperties(),
                 ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, false, Boolean.class);
+    }
+
+    /**
+     * The method reads and caches value of configuration property
+     * {@link org.glassfish.jersey.server.ServerProperties#REDUCE_CONTEXT_PATH_SLASHES_ENABLED} for future purposes.
+     */
+    private void cacheConfigEnableLeadingContextPathSlashes() {
+        this.configReduceContextPathSlashesEnabled = ServerProperties.getValue(getConfiguration().getProperties(),
+                ServerProperties.REDUCE_CONTEXT_PATH_SLASHES_ENABLED, false, Boolean.class);
     }
 }

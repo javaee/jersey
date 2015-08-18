@@ -166,12 +166,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         final Response response = Response.getResponse(httpServletResponse);
         final ResponseWriter responseWriter = new ResponseWriter(request, response, configSetStatusOverSendError);
         final URI baseUri = getBaseUri(request);
-
-        final String originalQuery = request.getUri().getQuery();
-        final String encodedQuery = ContainerUtils.encodeUnsafeCharacters(originalQuery);
-        final String uriString = (originalQuery == null || originalQuery.isEmpty() || originalQuery.equals(encodedQuery))
-                ? request.getUri().toString() : request.getUri().toString().replace(originalQuery, encodedQuery);
-        final URI requestUri = baseUri.resolve(uriString);
+        final URI requestUri = getRequestUri(request, baseUri);
         try {
             final ContainerRequest requestContext = new ContainerRequest(
                     baseUri,
@@ -201,6 +196,30 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
             throw new RuntimeException(ex);
         }
 
+    }
+
+    private URI getRequestUri(final Request request, final URI baseUri) {
+        try {
+            final String serverAddress = getServerAddress(baseUri);
+            String uri = request.getRequestURI();
+
+            final String queryString = request.getQueryString();
+            if (queryString != null) {
+                uri = uri + "?" + ContainerUtils.encodeUnsafeCharacters(queryString);
+            }
+
+            return new URI(serverAddress + uri);
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    private String getServerAddress(URI baseUri) {
+        String serverAddress = baseUri.toString();
+        if (serverAddress.charAt(serverAddress.length() - 1) == '/') {
+            return serverAddress.substring(0, serverAddress.length() - 1);
+        }
+        return serverAddress;
     }
 
     private SecurityContext getSecurityContext(final Request request) {

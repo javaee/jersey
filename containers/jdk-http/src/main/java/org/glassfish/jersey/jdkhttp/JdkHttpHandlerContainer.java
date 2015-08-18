@@ -147,21 +147,8 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         final boolean isSecure = exchange instanceof HttpsExchange;
         final String scheme = isSecure ? "https" : "http";
 
-        final URI baseUri;
-        try {
-            final List<String> hostHeader = exchange.getRequestHeaders().get("Host");
-            if (hostHeader != null) {
-                baseUri = new URI(scheme + "://" + hostHeader.get(0) + decodedBasePath);
-            } else {
-                final InetSocketAddress addr = exchange.getLocalAddress();
-                baseUri = new URI(scheme, null, addr.getHostName(), addr.getPort(),
-                        decodedBasePath, null, null);
-            }
-        } catch (final URISyntaxException ex) {
-            throw new IllegalArgumentException(ex);
-        }
-
-        final URI requestUri = baseUri.resolve(exchangeUri);
+        final URI baseUri = getBaseUri(exchange, decodedBasePath, scheme);
+        final URI requestUri = getRequestUri(exchange, baseUri);
 
         final ResponseWriter responseWriter = new ResponseWriter(exchange);
         final ContainerRequest requestContext = new ContainerRequest(baseUri, requestUri,
@@ -177,6 +164,35 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
             // then commit it and log warning
             responseWriter.closeAndLogWarning();
         }
+    }
+
+    private URI getBaseUri(final HttpExchange exchange, final String decodedBasePath, final String scheme) {
+        final URI baseUri;
+        try {
+            final List<String> hostHeader = exchange.getRequestHeaders().get("Host");
+            if (hostHeader != null) {
+                baseUri = new URI(scheme + "://" + hostHeader.get(0) + decodedBasePath);
+            } else {
+                final InetSocketAddress addr = exchange.getLocalAddress();
+                baseUri = new URI(scheme, null, addr.getHostName(), addr.getPort(),
+                        decodedBasePath, null, null);
+            }
+        } catch (final URISyntaxException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+        return baseUri;
+    }
+
+    private URI getRequestUri(final HttpExchange exchange, final URI baseUri) {
+        try {
+            return new URI(getServerAddress(baseUri) + exchange.getRequestURI());
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    private String getServerAddress(final URI baseUri) throws URISyntaxException {
+        return new URI(baseUri.getScheme(), null,  baseUri.getHost(), baseUri.getPort(), null, null, null).toString();
     }
 
     private SecurityContext getSecurityContext(final Principal principal, final boolean isSecure) {

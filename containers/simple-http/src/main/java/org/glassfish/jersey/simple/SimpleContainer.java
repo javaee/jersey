@@ -235,7 +235,7 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     public void handle(final Request request, final Response response) {
         final Writer responseWriter = new Writer(response);
         final URI baseUri = getBaseUri(request);
-        final URI requestUri = baseUri.resolve(ContainerUtils.encodeUnsafeCharacters(request.getTarget()));
+        final URI requestUri = getRequestUri(request, baseUri);
 
         try {
             final ContainerRequest requestContext = new ContainerRequest(
@@ -262,6 +262,42 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
             throw new RuntimeException(ex);
         } finally {
             close(response);
+        }
+    }
+
+    private URI getRequestUri(final Request request, final URI baseUri) {
+        try {
+            final String serverAddress = getServerAddress(baseUri);
+            String uri = ContainerUtils.getHandlerPath(request.getTarget());
+
+            final String queryString = request.getQuery().toString();
+            if (queryString != null) {
+                uri = uri + "?" + ContainerUtils.encodeUnsafeCharacters(queryString);
+            }
+
+            return new URI(serverAddress + uri);
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    private String getServerAddress(final URI baseUri) throws URISyntaxException {
+        return new URI(baseUri.getScheme(), null,  baseUri.getHost(), baseUri.getPort(), null, null, null).toString();
+    }
+
+    private URI getBaseUri(final Request request) {
+        try {
+            final String hostHeader = request.getValue("Host");
+
+            if (hostHeader != null) {
+                final String scheme = request.isSecure() ? "https" : "http";
+                return new URI(scheme + "://" + hostHeader + "/");
+            } else {
+                final Address address = request.getAddress();
+                return new URI(address.getScheme(), null, address.getDomain(), address.getPort(), "/", null, null);
+            }
+        } catch (final URISyntaxException ex) {
+            throw new IllegalArgumentException(ex);
         }
     }
 
@@ -295,22 +331,6 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
             response.close();
         } catch (final Exception ex) {
             throw new RuntimeException(ex);
-        }
-    }
-
-    private URI getBaseUri(final Request request) {
-        try {
-            final Address address = request.getAddress();
-
-            return new URI(
-                    address.getScheme(),
-                    null,
-                    address.getDomain(),
-                    address.getPort(),
-                    "/",
-                    null, null);
-        } catch (final URISyntaxException ex) {
-            throw new IllegalArgumentException(ex);
         }
     }
 

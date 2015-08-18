@@ -305,6 +305,24 @@ public final class ServerProperties {
             = "jersey.config.beanValidation.enableOutputValidationErrorEntity.server";
 
     /**
+     * If set to {@code true} then a container will ignore multiple slashes between a port and a context path and will resolve it
+     * as URI with only one slash.
+     * <p>
+     * The default value is {@code false}. This means that in case of multiple slashes a container will match with the address
+     * with the same number of slashes before a context path.
+     * </p>
+     * <p>
+     * The property influences only Grizzly Container from containers which are supported by Jersey. Other containers have
+     * limited or disabled usage of a context path.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     */
+    public static final String REDUCE_CONTEXT_PATH_SLASHES_ENABLED
+            = "jersey.config.server.reduceContextPathSlashes.enabled";
+
+    /**
      * If {@code true} then disable auto discovery on server.
      *
      * By default auto discovery is automatically enabled if global property
