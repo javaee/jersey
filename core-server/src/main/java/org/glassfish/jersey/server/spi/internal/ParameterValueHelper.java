@@ -57,6 +57,7 @@ import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
 
 import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.MultiException;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
@@ -100,6 +101,12 @@ public final class ParameterValueHelper {
             throw new NotSupportedException(e);
         } catch (ProcessingException e) {
             throw e;
+        } catch (MultiException e) {
+            if (e.getCause() instanceof WebApplicationException) {
+                throw (WebApplicationException) e.getCause();
+            }
+
+            throw new MappableException("Exception obtaining parameters", e);
         } catch (RuntimeException e) {
             throw new MappableException("Exception obtaining parameters", e);
         }
