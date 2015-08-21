@@ -63,7 +63,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
  * Response entity type used for receiving messages in "typed" chunks.
- *
+ * <p/>
  * This data type is useful for consuming partial responses from large or continuous data
  * input streams.
  *
@@ -108,6 +108,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
     }
 
     private static class FixedBoundaryParser implements ChunkParser {
+
         private final byte[] delimiter;
 
         public FixedBoundaryParser(final byte[] boundary) {
@@ -120,30 +121,50 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
             final byte[] delimiterBuffer = new byte[delimiter.length];
 
             int data;
+            int dPos;
             do {
-                int dPos = 0;
+                dPos = 0;
                 while ((data = in.read()) != -1) {
                     final byte b = (byte) data;
+
+                    // last read byte is part of the chunk delimiter
                     if (b == delimiter[dPos]) {
                         delimiterBuffer[dPos++] = b;
                         if (dPos == delimiter.length) {
                             // found chunk delimiter
                             break;
                         }
-                    } else {
-                        if (dPos > 0) {
-                            buffer.write(delimiterBuffer, 0, dPos);
-                            dPos = 0;
+                    } else if (dPos > 0) {
+                        // flush delimiter buffer
+                        buffer.write(delimiterBuffer, 0, dPos);
+                        dPos = 0;
+
+                        if (b == delimiter[dPos]) {
+                            // last read byte is the first byte of of the chunk delimiter
+                            delimiterBuffer[dPos++] = b;
+                            if (dPos == delimiter.length) {
+                                // found chunk delimiter
+                                break;
+                            }
+                        } else {
+                            // last read byte is not the first byte of the chunk delimiter
+                            buffer.write(b);
                         }
+
+                    } else {
+                        // last read byte is not part of the chunk delimiter
                         buffer.write(b);
                     }
                 }
-            } while (data != -1 && buffer.size() == 0);
 
-            if (buffer.size() > 0) {
-                return buffer.toByteArray();
+            } while (data != -1 && buffer.size() == 0); // skip an empty chunk
+
+            if (dPos > 0 && dPos != delimiter.length) {
+                // flush the delimiter buffer, if not empty - parsing finished in the middle of a potential delimiter sequence
+                buffer.write(delimiterBuffer, 0, dPos);
             }
-            return null;
+
+            return (buffer.size() > 0) ? buffer.toByteArray() : null;
         }
     }
 
@@ -204,7 +225,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
 
     /**
      * Get chunk data media type.
-     *
+     * <p/>
      * Default chunk data media type is derived from the value of the response
      * <tt>{@value javax.ws.rs.core.HttpHeaders#CONTENT_TYPE}</tt> header field.
      * This default value may be manually overridden by {@link #setChunkType(javax.ws.rs.core.MediaType) setting}
@@ -222,7 +243,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
 
     /**
      * Set custom chunk data media type.
-     *
+     * <p/>
      * By default, chunk data media type is derived from the value of the response
      * <tt>{@value javax.ws.rs.core.HttpHeaders#CONTENT_TYPE}</tt> header field.
      * Using this methods will override the default chunk media type value and set it
@@ -294,7 +315,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      * </p>
      *
      * @return next streamed chunk or {@code null} if the underlying entity input stream
-     *         has been closed while reading next chunk data.
+     * has been closed while reading next chunk data.
      * @throws IllegalStateException in case this chunked input has been closed.
      */
     @SuppressWarnings("unchecked")
