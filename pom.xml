@@ -1581,6 +1581,12 @@
                 <version>${jmockit.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>xmlunit</groupId>
+                <artifactId>xmlunit</artifactId>
+                <version>${xmlunit.version}</version>
+                <scope>test</scope>
+            </dependency>
 
             <dependency>
                 <groupId>org.apache.felix</groupId>
@@ -1645,6 +1651,7 @@
         <grizzly2.version>2.3.22</grizzly2.version>
         <guava.version>18.0</guava.version>
         <hamcrest.version>1.3</hamcrest.version>
+        <xmlunit.version>1.6</xmlunit.version>
         <hk2.version>2.4.0-b31</hk2.version>
         <httpclient.version>4.5</httpclient.version>
         <jackson.version>2.5.4</jackson.version>

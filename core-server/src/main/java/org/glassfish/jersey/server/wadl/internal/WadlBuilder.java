@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.wadl.internal;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,10 +75,8 @@ import com.sun.research.ws.wadl.Response;
 import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
- * This class implements the algorithm how the wadl is built for one or more
- * {@link org.glassfish.jersey.server.model.Resource} classes. Wadl artifacts are created by a
- * {@link org.glassfish.jersey.server.wadl.WadlGenerator}.
- * Created on: Jun 18, 2008<br>
+ * This class implements the algorithm how the wadl is built for one or more {@link org.glassfish.jersey.server.model.Resource}
+ * classes. Wadl artifacts are created by a {@link org.glassfish.jersey.server.wadl.WadlGenerator}. Created on: Jun 18, 2008<br>
  *
  * @author Marc Hadley
  * @author Martin Grotzke (martin.grotzke at freiheit.com)
@@ -245,60 +244,8 @@ public class WadlBuilder {
 
             Request wadlRequest = _wadlGenerator.createRequest(parentResource, resourceMethod);
 
-            for (Parameter p : requestParams) {
-                if (p.getSource() == Parameter.Source.ENTITY) {
-                    for (MediaType mediaType : resourceMethod.getConsumedTypes()) {
-                        setRepresentationForMediaType(parentResource, resourceMethod, mediaType, wadlRequest);
-                    }
-                } else if (p.getSourceAnnotation().annotationType() == FormParam.class) {
-                    // Use application/x-www-form-urlencoded if no @Consumes
-                    List<MediaType> supportedInputTypes = resourceMethod.getConsumedTypes();
-                    if (supportedInputTypes.isEmpty()
-                            || (supportedInputTypes.size() == 1 && supportedInputTypes.get(0).isWildcardType())) {
-                        supportedInputTypes = Collections.singletonList(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
-                    }
+            processRequestParameters(parentResource, resourceMethod, wadlResourceParams, requestParams, wadlRequest);
 
-                    for (MediaType mediaType : supportedInputTypes) {
-                        final Representation wadlRepresentation =
-                                setRepresentationForMediaType(parentResource, resourceMethod, mediaType, wadlRequest);
-                        if (getParamByName(wadlRepresentation.getParam(), p.getSourceName()) == null) {
-                            final Param wadlParam = generateParam(parentResource, resourceMethod, p);
-                            if (wadlParam != null) {
-                                wadlRepresentation.getParam().add(wadlParam);
-                            }
-                        }
-                    }
-                } else if ("org.glassfish.jersey.media.multipart.FormDataParam".equals(
-                        p.getSourceAnnotation().annotationType().getName())) { // jersey-multipart support
-                    // Use multipart/form-data if no @Consumes
-                    List<MediaType> supportedInputTypes = resourceMethod.getConsumedTypes();
-                    if (supportedInputTypes.isEmpty()
-                            || (supportedInputTypes.size() == 1 && supportedInputTypes.get(0).isWildcardType())) {
-                        supportedInputTypes = Collections.singletonList(MediaType.MULTIPART_FORM_DATA_TYPE);
-                    }
-
-                    for (MediaType mediaType : supportedInputTypes) {
-                        final Representation wadlRepresentation =
-                                setRepresentationForMediaType(parentResource, resourceMethod, mediaType, wadlRequest);
-                        if (getParamByName(wadlRepresentation.getParam(), p.getSourceName()) == null) {
-                            final Param wadlParam = generateParam(parentResource, resourceMethod, p);
-                            if (wadlParam != null) {
-                                wadlRepresentation.getParam().add(wadlParam);
-                            }
-                        }
-                    }
-                } else {
-                    Param wadlParam = generateParam(parentResource, resourceMethod, p);
-                    if (wadlParam == null) {
-                        continue;
-                    }
-                    if (wadlParam.getStyle() == ParamStyle.TEMPLATE || wadlParam.getStyle() == ParamStyle.MATRIX) {
-                        wadlResourceParams.put(wadlParam.getName(), wadlParam);
-                    } else {
-                        wadlRequest.getParam().add(wadlParam);
-                    }
-                }
-            }
             if (wadlRequest.getRepresentation().size() + wadlRequest.getParam().size() == 0) {
                 return null;
             } else {
@@ -307,6 +254,73 @@ public class WadlBuilder {
         } catch (Exception e) {
             throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_REQUEST(
                     resourceMethod, parentResource), e);
+        }
+    }
+
+    /**
+     * Recursively processes provided request parameters and adds the resulting WADL information into the WADL request.
+     */
+    private void processRequestParameters(final org.glassfish.jersey.server.model.Resource parentResource,
+                                          final ResourceMethod resourceMethod,
+                                          final Map<String, Param> wadlResourceParams,
+                                          final Collection<Parameter> requestParameters,
+                                          final Request wadlRequest) {
+        for (Parameter parameter : requestParameters) {
+            if (parameter.getSource() == Parameter.Source.ENTITY) {
+                for (MediaType mediaType : resourceMethod.getConsumedTypes()) {
+                    setRepresentationForMediaType(parentResource, resourceMethod, mediaType, wadlRequest);
+                }
+            } else if (parameter.getSourceAnnotation().annotationType() == FormParam.class) {
+                // Use application/x-www-form-urlencoded if no @Consumes
+                List<MediaType> supportedInputTypes = resourceMethod.getConsumedTypes();
+                if (supportedInputTypes.isEmpty()
+                        || (supportedInputTypes.size() == 1 && supportedInputTypes.get(0).isWildcardType())) {
+                    supportedInputTypes = Collections.singletonList(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+                }
+
+                for (MediaType mediaType : supportedInputTypes) {
+                    final Representation wadlRepresentation =
+                            setRepresentationForMediaType(parentResource, resourceMethod, mediaType, wadlRequest);
+                    if (getParamByName(wadlRepresentation.getParam(), parameter.getSourceName()) == null) {
+                        final Param wadlParam = generateParam(parentResource, resourceMethod, parameter);
+                        if (wadlParam != null) {
+                            wadlRepresentation.getParam().add(wadlParam);
+                        }
+                    }
+                }
+            } else if ("org.glassfish.jersey.media.multipart.FormDataParam".equals(
+                    parameter.getSourceAnnotation().annotationType().getName())) { // jersey-multipart support
+                // Use multipart/form-data if no @Consumes
+                List<MediaType> supportedInputTypes = resourceMethod.getConsumedTypes();
+                if (supportedInputTypes.isEmpty()
+                        || (supportedInputTypes.size() == 1 && supportedInputTypes.get(0).isWildcardType())) {
+                    supportedInputTypes = Collections.singletonList(MediaType.MULTIPART_FORM_DATA_TYPE);
+                }
+
+                for (MediaType mediaType : supportedInputTypes) {
+                    final Representation wadlRepresentation =
+                            setRepresentationForMediaType(parentResource, resourceMethod, mediaType, wadlRequest);
+                    if (getParamByName(wadlRepresentation.getParam(), parameter.getSourceName()) == null) {
+                        final Param wadlParam = generateParam(parentResource, resourceMethod, parameter);
+                        if (wadlParam != null) {
+                            wadlRepresentation.getParam().add(wadlParam);
+                        }
+                    }
+                }
+            } else if (parameter instanceof Parameter.BeanParameter) {
+                processRequestParameters(parentResource, resourceMethod, wadlResourceParams,
+                        ((Parameter.BeanParameter) parameter).getParameters(), wadlRequest);
+            } else {
+                Param wadlParam = generateParam(parentResource, resourceMethod, parameter);
+                if (wadlParam == null) {
+                    continue;
+                }
+                if (wadlParam.getStyle() == ParamStyle.TEMPLATE || wadlParam.getStyle() == ParamStyle.MATRIX) {
+                    wadlResourceParams.put(wadlParam.getName(), wadlParam);
+                } else {
+                    wadlRequest.getParam().add(wadlParam);
+                }
+            }
         }
     }
 
@@ -320,8 +334,8 @@ public class WadlBuilder {
     }
 
     /**
-     * Create the wadl {@link Representation} for the specified {@link MediaType} if not yet
-     * existing for the wadl {@link Request} and return it.
+     * Create the wadl {@link Representation} for the specified {@link MediaType} if not yet existing for the wadl {@link Request}
+     * and return it.
      *
      * @param r           the resource
      * @param m           the resource method
