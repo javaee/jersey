@@ -52,6 +52,49 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.22">
+        <title>Migrating from Jersey 2.21 to 2.22</title>
+        <section xml:id="mig-2.22-breaking-changes">
+            <title>Breaking Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            In previous Jersey versions, if the resource method created a response containing relative URI in the
+                            <literal>Location</literal> http header, the URI was resolved against <emphasis>base uri</emphasis> of
+                            the application. This behaviour was not correct, as pointed out by &jersey.jira.2883;.
+                            With this change, the URI is, by default, resolved against <emphasis>request base uri</emphasis>.
+                        </para>
+                        <para>
+                            For example, having a resource at <literal>http://server.com/api/management/user</literal>, that returns
+                            response with <literal>Location: foo</literal>, while the root of the app is
+                            <literal>http://server.com/api</literal>, the resulting URI will be:
+                            <simplelist>
+                                <member>with Jersey 2.21 and earlier: <literal>http://server.com/api/foo</literal></member>
+                                <member>with Jersey 2.22: <literal>http://server.com/api/management/foo</literal></member>
+                            </simplelist>
+                        </para>
+                        <para>
+                            Please note, that the trailing slash is significant, so that if the URI ends with a slash
+                            (<literal>http://server.com/api/management/user/</literal>), the output will be:
+                            <simplelist>
+                                <member>with Jersey 2.21 and earlier: <literal>http://server.com/api/foo</literal></member>
+                                <member>with Jersey 2.22: <literal>http://server.com/api/management/user/foo</literal></member>
+                            </simplelist>
+                        </para>
+                        <para>
+                            Alternatively, the entire URI resolving logic can be switched off by newly introduced
+                            &jersey.server.ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED; property.
+                            If the value is <literal>true</literal>, Jersey will not change the URI contained in the
+                            <literal>Location</literal> header at all (even if this behaviour may not match with behaviour
+                            described in JavaDoc).
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
     <section xml:id="mig-2.20">
         <title>Migrating from Jersey 2.19 to 2.20</title>
 

@@ -501,6 +501,16 @@
                             </para>
                         </entry>
                     </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED;</entry>
+                        <entry><literal>jersey.config.server.headers.location.relative.resolution.disabled</literal></entry>
+                        <entry>
+                            <para>
+                                If <literal>true</literal>, Jersey will not resolve relative URIs in the <literal>Location</literal>
+                                http header.
+                            </para>
+                        </entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>

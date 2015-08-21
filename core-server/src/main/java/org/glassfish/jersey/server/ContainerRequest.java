@@ -75,6 +75,7 @@ import org.glassfish.jersey.message.internal.AcceptableMediaType;
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.MatchingEntityTag;
+import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.TracingAwarePropertiesDelegate;
 import org.glassfish.jersey.message.internal.VariantSelector;
 import org.glassfish.jersey.model.internal.RankedProvider;
@@ -164,11 +165,11 @@ public class ContainerRequest extends InboundMessageContext
      *                           to be used by the context.
      */
     public ContainerRequest(
-            URI baseUri,
-            URI requestUri,
-            String httpMethod,
-            SecurityContext securityContext,
-            PropertiesDelegate propertiesDelegate) {
+            final URI baseUri,
+            final URI requestUri,
+            final String httpMethod,
+            final SecurityContext securityContext,
+            final PropertiesDelegate propertiesDelegate) {
         super(true);
 
         this.baseUri = baseUri == null ? DEFAULT_BASE_URI : baseUri.normalize();
@@ -200,7 +201,7 @@ public class ContainerRequest extends InboundMessageContext
      *
      * @param requestScopedInitializer custom container extensions initializer.
      */
-    public void setRequestScopedInitializer(RequestScopedInitializer requestScopedInitializer) {
+    public void setRequestScopedInitializer(final RequestScopedInitializer requestScopedInitializer) {
         this.requestScopedInitializer = requestScopedInitializer;
     }
 
@@ -218,7 +219,7 @@ public class ContainerRequest extends InboundMessageContext
      *
      * @param responseWriter container response writer. Must not be {@code null}.
      */
-    public void setWriter(ContainerResponseWriter responseWriter) {
+    public void setWriter(final ContainerResponseWriter responseWriter) {
         this.responseWriter = responseWriter;
     }
 
@@ -229,7 +230,7 @@ public class ContainerRequest extends InboundMessageContext
      * @param rawType raw Java entity type.
      * @return entity read from a context entity input stream.
      */
-    public <T> T readEntity(Class<T> rawType) {
+    public <T> T readEntity(final Class<T> rawType) {
         return readEntity(rawType, propertiesDelegate);
     }
 
@@ -241,7 +242,7 @@ public class ContainerRequest extends InboundMessageContext
      * @param annotations entity annotations.
      * @return entity read from a context entity input stream.
      */
-    public <T> T readEntity(Class<T> rawType, Annotation[] annotations) {
+    public <T> T readEntity(final Class<T> rawType, final Annotation[] annotations) {
         return super.readEntity(rawType, annotations, propertiesDelegate);
     }
 
@@ -253,7 +254,7 @@ public class ContainerRequest extends InboundMessageContext
      * @param type    generic Java entity type.
      * @return entity read from a context entity input stream.
      */
-    public <T> T readEntity(Class<T> rawType, Type type) {
+    public <T> T readEntity(final Class<T> rawType, final Type type) {
         return super.readEntity(rawType, type, propertiesDelegate);
     }
 
@@ -266,12 +267,12 @@ public class ContainerRequest extends InboundMessageContext
      * @param annotations entity annotations.
      * @return entity read from a context entity input stream.
      */
-    public <T> T readEntity(Class<T> rawType, Type type, Annotation[] annotations) {
+    public <T> T readEntity(final Class<T> rawType, final Type type, final Annotation[] annotations) {
         return super.readEntity(rawType, type, annotations, propertiesDelegate);
     }
 
     @Override
-    public Object getProperty(String name) {
+    public Object getProperty(final String name) {
         return propertiesDelegate.getProperty(name);
     }
 
@@ -281,12 +282,12 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public void setProperty(String name, Object object) {
+    public void setProperty(final String name, final Object object) {
         propertiesDelegate.setProperty(name, object);
     }
 
     @Override
-    public void removeProperty(String name) {
+    public void removeProperty(final String name) {
         propertiesDelegate.removeProperty(name);
     }
 
@@ -369,7 +370,7 @@ public class ContainerRequest extends InboundMessageContext
         return uriRoutingContext.getEndpoint();
     }
 
-    private static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
+    private static <T> Iterable<T> emptyIfNull(final Iterable<T> iterable) {
         return iterable == null ? Collections.<T>emptyList() : iterable;
     }
 
@@ -406,7 +407,7 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public void setRequestUri(URI requestUri) throws IllegalStateException {
+    public void setRequestUri(final URI requestUri) throws IllegalStateException {
         if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
@@ -420,7 +421,7 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public void setRequestUri(URI baseUri, URI requestUri) throws IllegalStateException {
+    public void setRequestUri(final URI baseUri, final URI requestUri) throws IllegalStateException {
         if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
@@ -432,6 +433,7 @@ public class ContainerRequest extends InboundMessageContext
 
         this.baseUri = baseUri;
         this.requestUri = requestUri;
+        OutboundJaxrsResponse.Builder.setBaseUri(baseUri);
     }
 
     /**
@@ -442,7 +444,7 @@ public class ContainerRequest extends InboundMessageContext
      *               ({@code true}) or not ({@code false}).
      * @return relative request path.
      */
-    public String getPath(boolean decode) {
+    public String getPath(final boolean decode) {
         if (decode) {
             if (decodedRelativePath != null) {
                 return decodedRelativePath;
@@ -459,7 +461,7 @@ public class ContainerRequest extends InboundMessageContext
             return encodedRelativePath;
         }
 
-        String requestUriRawPath = requestUri.getRawPath();
+        final String requestUriRawPath = requestUri.getRawPath();
 
         if (baseUri == null) {
             return encodedRelativePath = requestUriRawPath;
@@ -476,7 +478,7 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public void setMethod(String method) throws IllegalStateException {
+    public void setMethod(final String method) throws IllegalStateException {
         if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
@@ -489,7 +491,7 @@ public class ContainerRequest extends InboundMessageContext
      *
      * @param method HTTP method.
      */
-    public void setMethodWithoutException(String method) {
+    public void setMethodWithoutException(final String method) {
         this.httpMethod = method;
     }
 
@@ -499,13 +501,13 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public void setSecurityContext(SecurityContext context) {
+    public void setSecurityContext(final SecurityContext context) {
         Preconditions.checkState(!inResponseProcessingPhase, ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE);
         this.securityContext = context;
     }
 
     @Override
-    public void setEntityStream(InputStream input) {
+    public void setEntityStream(final InputStream input) {
         Preconditions.checkState(!inResponseProcessingPhase, ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE);
         super.setEntityStream(input);
     }
@@ -516,7 +518,7 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public void abortWith(Response response) {
+    public void abortWith(final Response response) {
         Preconditions.checkState(!inResponseProcessingPhase, ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE);
         this.abortResponse = response;
     }
@@ -554,7 +556,7 @@ public class ContainerRequest extends InboundMessageContext
     public List<MediaType> getAcceptableMediaTypes() {
         return Lists.transform(getQualifiedAcceptableMediaTypes(), new Function<AcceptableMediaType, MediaType>() {
             @Override
-            public MediaType apply(AcceptableMediaType input) {
+            public MediaType apply(final AcceptableMediaType input) {
                 return input;
             }
         });
@@ -565,7 +567,7 @@ public class ContainerRequest extends InboundMessageContext
         return Lists.transform(getQualifiedAcceptableLanguages(), new Function<AcceptableLanguageTag, Locale>() {
 
             @Override
-            public Locale apply(AcceptableLanguageTag input) {
+            public Locale apply(final AcceptableLanguageTag input) {
                 return input.getAsLocale();
             }
         });
@@ -574,11 +576,11 @@ public class ContainerRequest extends InboundMessageContext
     // JAX-RS request
 
     @Override
-    public Variant selectVariant(List<Variant> variants) throws IllegalArgumentException {
+    public Variant selectVariant(final List<Variant> variants) throws IllegalArgumentException {
         if (variants == null || variants.isEmpty()) {
             throw new IllegalArgumentException(METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY);
         }
-        Ref<String> varyValueRef = Refs.emptyRef();
+        final Ref<String> varyValueRef = Refs.emptyRef();
         final Variant variant = VariantSelector.selectVariant(this, variants, varyValueRef);
         this.varyValue = varyValueRef.get();
         return variant;
@@ -596,12 +598,12 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public Response.ResponseBuilder evaluatePreconditions(EntityTag eTag) {
+    public Response.ResponseBuilder evaluatePreconditions(final EntityTag eTag) {
         if (eTag == null) {
             throw new IllegalArgumentException(METHOD_PARAMETER_CANNOT_BE_NULL_ETAG);
         }
 
-        Response.ResponseBuilder r = evaluateIfMatch(eTag);
+        final Response.ResponseBuilder r = evaluateIfMatch(eTag);
         if (r != null) {
             return r;
         }
@@ -609,13 +611,13 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public Response.ResponseBuilder evaluatePreconditions(Date lastModified) {
+    public Response.ResponseBuilder evaluatePreconditions(final Date lastModified) {
         if (lastModified == null) {
             throw new IllegalArgumentException(METHOD_PARAMETER_CANNOT_BE_NULL_LAST_MODIFIED);
         }
 
         final long lastModifiedTime = lastModified.getTime();
-        Response.ResponseBuilder r = evaluateIfUnmodifiedSince(lastModifiedTime);
+        final Response.ResponseBuilder r = evaluateIfUnmodifiedSince(lastModifiedTime);
         if (r != null) {
             return r;
         }
@@ -623,7 +625,7 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public Response.ResponseBuilder evaluatePreconditions(Date lastModified, EntityTag eTag) {
+    public Response.ResponseBuilder evaluatePreconditions(final Date lastModified, final EntityTag eTag) {
         if (lastModified == null) {
             throw new IllegalArgumentException(METHOD_PARAMETER_CANNOT_BE_NULL_LAST_MODIFIED);
         }
@@ -670,7 +672,7 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public Response.ResponseBuilder evaluatePreconditions() {
-        Set<MatchingEntityTag> matchingTags = getIfMatch();
+        final Set<MatchingEntityTag> matchingTags = getIfMatch();
         if (matchingTags == null) {
             return null;
         }
@@ -681,8 +683,8 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     // Private methods
-    private Response.ResponseBuilder evaluateIfMatch(EntityTag eTag) {
-        Set<? extends EntityTag> matchingTags = getIfMatch();
+    private Response.ResponseBuilder evaluateIfMatch(final EntityTag eTag) {
+        final Set<? extends EntityTag> matchingTags = getIfMatch();
         if (matchingTags == null) {
             return null;
         }
@@ -702,8 +704,8 @@ public class ContainerRequest extends InboundMessageContext
         return null;
     }
 
-    private Response.ResponseBuilder evaluateIfNoneMatch(EntityTag eTag) {
-        Set<MatchingEntityTag> matchingTags = getIfNoneMatch();
+    private Response.ResponseBuilder evaluateIfNoneMatch(final EntityTag eTag) {
+        final Set<MatchingEntityTag> matchingTags = getIfNoneMatch();
         if (matchingTags == null) {
             return null;
         }
@@ -712,8 +714,8 @@ public class ContainerRequest extends InboundMessageContext
         return evaluateIfNoneMatch(eTag, matchingTags, "GET".equals(httpMethod) || "HEAD".equals(httpMethod));
     }
 
-    private Response.ResponseBuilder evaluateIfNoneMatch(EntityTag eTag, Set<? extends EntityTag> matchingTags,
-                                                         boolean isGetOrHead) {
+    private Response.ResponseBuilder evaluateIfNoneMatch(final EntityTag eTag, final Set<? extends EntityTag> matchingTags,
+                                                         final boolean isGetOrHead) {
         if (isGetOrHead) {
             if (matchingTags == MatchingEntityTag.ANY_MATCH) {
                 // 304 Not modified
@@ -743,16 +745,16 @@ public class ContainerRequest extends InboundMessageContext
         return null;
     }
 
-    private Response.ResponseBuilder evaluateIfUnmodifiedSince(long lastModified) {
-        String ifUnmodifiedSinceHeader = getHeaderString(HttpHeaders.IF_UNMODIFIED_SINCE);
+    private Response.ResponseBuilder evaluateIfUnmodifiedSince(final long lastModified) {
+        final String ifUnmodifiedSinceHeader = getHeaderString(HttpHeaders.IF_UNMODIFIED_SINCE);
         if (ifUnmodifiedSinceHeader != null && !ifUnmodifiedSinceHeader.isEmpty()) {
             try {
-                long ifUnmodifiedSince = HttpHeaderReader.readDate(ifUnmodifiedSinceHeader).getTime();
+                final long ifUnmodifiedSince = HttpHeaderReader.readDate(ifUnmodifiedSinceHeader).getTime();
                 if (roundDown(lastModified) > ifUnmodifiedSince) {
                     // 412 Precondition Failed
                     return Response.status(Response.Status.PRECONDITION_FAILED);
                 }
-            } catch (ParseException ex) {
+            } catch (final ParseException ex) {
                 // Ignore the header if parsing error
             }
         }
@@ -760,8 +762,8 @@ public class ContainerRequest extends InboundMessageContext
         return null;
     }
 
-    private Response.ResponseBuilder evaluateIfModifiedSince(long lastModified) {
-        String ifModifiedSinceHeader = getHeaderString(HttpHeaders.IF_MODIFIED_SINCE);
+    private Response.ResponseBuilder evaluateIfModifiedSince(final long lastModified) {
+        final String ifModifiedSinceHeader = getHeaderString(HttpHeaders.IF_MODIFIED_SINCE);
         if (ifModifiedSinceHeader == null || ifModifiedSinceHeader.isEmpty()) {
             return null;
         }
@@ -774,14 +776,14 @@ public class ContainerRequest extends InboundMessageContext
         }
     }
 
-    private Response.ResponseBuilder evaluateIfModifiedSince(long lastModified, String ifModifiedSinceHeader) {
+    private Response.ResponseBuilder evaluateIfModifiedSince(final long lastModified, final String ifModifiedSinceHeader) {
         try {
-            long ifModifiedSince = HttpHeaderReader.readDate(ifModifiedSinceHeader).getTime();
+            final long ifModifiedSince = HttpHeaderReader.readDate(ifModifiedSinceHeader).getTime();
             if (roundDown(lastModified) <= ifModifiedSince) {
                 // 304 Not modified
                 return Response.notModified();
             }
-        } catch (ParseException ex) {
+        } catch (final ParseException ex) {
             // Ignore the header if parsing error
         }
 
@@ -794,7 +796,7 @@ public class ContainerRequest extends InboundMessageContext
      * @param time the time to round down.
      * @return the rounded down time.
      */
-    private static long roundDown(long time) {
+    private static long roundDown(final long time) {
         return time - time % 1000;
     }
 
@@ -808,7 +810,7 @@ public class ContainerRequest extends InboundMessageContext
      * @throws IllegalStateException if called outside the scope of a request.
      */
     @Override
-    public List<String> getRequestHeader(String name) {
+    public List<String> getRequestHeader(final String name) {
         return getHeaders().get(name);
     }
 

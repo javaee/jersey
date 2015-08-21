@@ -122,6 +122,7 @@
 <!ENTITY rxjava.link "<link xlink:href='&rxjava.uri;'>RxJava</link>">
 <!ENTITY rxjava.uri "https://github.com/ReactiveX/RxJava">
 <!ENTITY wikipedia.uri "http://en.wikipedia.org/wiki/">
+<!ENTITY jira.uri.prefix "https://java.net/jira/browse">
 
 <!-- API Docs links -->
 <!ENTITY bv.Configuration "<link xlink:href='&bv11.javadoc.uri;/javax/validation/Configuration.html'>Configuration</link>">
@@ -492,6 +493,7 @@
 <!ENTITY jersey.server.ServerProperties.TRACING_THRESHOLD "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#TRACING_THRESHOLD'>ServerProperties.TRACING_THRESHOLD</link>" >
 <!ENTITY jersey.server.ServerProperties.WADL_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#WADL_FEATURE_DISABLE'>ServerProperties.WADL_FEATURE_DISABLE</link>" >
 <!ENTITY jersey.server.ServerProperties.WADL_GENERATOR_CONFIG "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#WADL_GENERATOR_CONFIG'>ServerProperties.WADL_GENERATOR_CONFIG</link>" >
+<!ENTITY jersey.server.ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED'>ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED</link>" >
 <!ENTITY jersey.server.Uri "<link xlink:href='&jersey.javadoc.uri.prefix;/server/Uri.html'>Uri</link>">
 <!ENTITY jersey.server.UriConnegFilter "<link xlink:href='&jersey.javadoc.uri.prefix;/server/filter/UriConnegFilter.html'>UriConnegFilter</link>">
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/server/wadl/WadlFeature.html'>WadlFeature</link>">
@@ -569,6 +571,9 @@
 <!ENTITY jersey.test.spi.TestContainerFactory "<link xlink:href='&jersey.javadoc.uri.prefix;/test/spi/TestContainerFactory.html'>TestContainerFactory</link>">
 <!ENTITY jersey.test.util.ContainerRequestBuilder "<link xlink:href='&jersey.javadoc.uri.prefix;/test/util/server/ContainerRequestBuilder.html'>ContainerRequestBuilder</link>">
 <!ENTITY jersey.test.util.LoopBackConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/test/util/client/LoopBackConnectorProvider.html'>LoopBackConnectorProvider</link>">
+
+<!-- Links to specific JIRA issues -->
+<!ENTITY jersey.jira.2883 "<link xlink:href='&jira.uri.prefix;/2838'>JERSEY-2838</link>">
 
 <!-- Common Literals -->
 <!ENTITY lit.null "<literal>null</literal>">
