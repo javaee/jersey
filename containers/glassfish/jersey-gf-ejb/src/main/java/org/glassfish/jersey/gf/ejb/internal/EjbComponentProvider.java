@@ -197,7 +197,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             final List<String> tempLibNames = new LinkedList<>();
             for (ModuleInfo moduleInfo : appInfo.getModuleInfos()) {
                 final String jarName = moduleInfo.getName();
-                if (jarName.endsWith(".jar")) {
+                if (jarName.endsWith(".jar") || jarName.endsWith(".war")) {
                     final String moduleName = jarName.substring(0, jarName.length() - 4);
                     tempLibNames.add(moduleName);
                     final Object bundleDescriptor = moduleInfo.getMetaData(EjbBundleDescriptorImpl.class.getName());
