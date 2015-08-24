@@ -62,10 +62,11 @@ import static org.hamcrest.Matchers.greaterThan;
  * Run with:
  * <pre>
  * mvn clean package
- * $AS_HOME/bin/asadmin deploy ../ejb-jax-rs-ear1/target/ejb-jax-rs-ear1
+ * $AS_HOME/bin/asadmin deploy ../ear/target/ejb-multimodule-ear-*.ear
  * mvn -DskipTests=false test</pre>
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class JaxRsFromEjbLibraryTest extends JerseyTest {
 
@@ -102,6 +103,12 @@ public class JaxRsFromEjbLibraryTest extends JerseyTest {
 
         final int requestCount6 = _nextCount(target().path("stateful").path("count"));
         assertThat(requestCount6, is(greaterThan(requestCount5)));
+
+        final int requestCount7 = _nextCount(target().path("war-stateless"));
+        assertThat(requestCount7, is(greaterThan(requestCount6)));
+
+        final int requestCount8 = _nextCount(target().path("war-stateless"));
+        assertThat(requestCount8, is(greaterThan(requestCount7)));
     }
 
     private int _nextCount(final WebTarget target) throws NumberFormatException {
@@ -116,6 +123,8 @@ public class JaxRsFromEjbLibraryTest extends JerseyTest {
         _testPath(target().path("counter").path("two"), "counter/two");
         _testPath(target().path("stateless").path("three"), "stateless/three");
         _testPath(target().path("stateless").path("four"), "stateless/four");
+        _testPath(target().path("war-stateless").path("five"), "war-stateless/five");
+        _testPath(target().path("war-stateless").path("six"), "war-stateless/six");
     }
 
     private void _testPath(final WebTarget target, final String expectedResult) {

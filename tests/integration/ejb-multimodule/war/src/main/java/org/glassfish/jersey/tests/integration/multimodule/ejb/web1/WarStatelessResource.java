@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,32 +40,37 @@
 
 package org.glassfish.jersey.tests.integration.multimodule.ejb.web1;
 
-import java.util.HashSet;
-import java.util.Set;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 
 import org.glassfish.jersey.tests.integration.multimodule.ejb.lib.EjbCounterResource;
-import org.glassfish.jersey.tests.integration.multimodule.ejb.lib.StatefulResource;
-import org.glassfish.jersey.tests.integration.multimodule.ejb.lib.StatelessResource;
 
 /**
- * JAX-RS application resource configuration that includes only
- * those JAX-RS components imported from EJB library jar.
+ * JAX-RS resource backed by a stateless EJB bean placed in WAR module.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-@ApplicationPath("resources")
-public class JaxRsConfiguration extends Application {
+@Stateless
+@Path("war-stateless")
+public class WarStatelessResource {
 
-    @Override
-    public Set<Class<?>> getClasses() {
-        return new HashSet<Class<?>>() {{
-            add(EjbCounterResource.class);
-            add(StatelessResource.class);
-            add(StatefulResource.class);
-            add(WarStatelessResource.class);
-        }};
+    @EJB EjbCounterResource counter;
+    @Context UriInfo uriInfo;
+
+    @GET
+    public int getCount() {
+        return counter.getCount();
+    }
+
+    @GET
+    @Path("{uriInfo}")
+    public String getPath() {
+        return uriInfo != null ? uriInfo.getPath() : "uri info is null";
     }
 }
