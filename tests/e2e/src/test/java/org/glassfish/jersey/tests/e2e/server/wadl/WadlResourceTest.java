@@ -43,6 +43,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +68,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
@@ -77,6 +84,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -105,6 +113,12 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.tests.e2e.entity.JaxbBean;
 
+import org.custommonkey.xmlunit.Diff;
+import org.custommonkey.xmlunit.ElementQualifier;
+import org.custommonkey.xmlunit.SimpleNamespaceContext;
+import org.custommonkey.xmlunit.XMLAssert;
+import org.custommonkey.xmlunit.XMLUnit;
+import org.custommonkey.xmlunit.examples.RecursiveElementNameAndTextQualifier;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -121,8 +135,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.collect.ImmutableMap;
+
 import com.sun.research.ws.wadl.Method;
 import com.sun.research.ws.wadl.Param;
+import com.sun.research.ws.wadl.Request;
+import com.sun.research.ws.wadl.Resource;
 import com.sun.research.ws.wadl.Resources;
 
 /**
@@ -145,7 +163,9 @@ import com.sun.research.ws.wadl.Resources;
         WadlResourceTest.Wadl7Test.class,
         WadlResourceTest.Wadl8Test.class,
         WadlResourceTest.Wadl9Test.class,
-        WadlResourceTest.Wadl10Test.class})
+        WadlResourceTest.Wadl10Test.class,
+        WadlResourceTest.Wadl11Test.class,
+})
 public class WadlResourceTest {
 
     /**
@@ -171,6 +191,13 @@ public class WadlResourceTest {
         final Document d = b.parse(tmpFile);
         Wadl5Test.printSource(new DOMSource(d));
         return d;
+    }
+
+    private static String nodeAsString(final Object resourceNode) throws TransformerException {
+        StringWriter writer = new StringWriter();
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.transform(new DOMSource((Node) resourceNode), new StreamResult(writer));
+        return writer.toString();
     }
 
     public static class Wadl7Test extends JerseyTest {
@@ -1160,4 +1187,123 @@ public class WadlResourceTest {
         }
 
     } // class Wadl10Test
+
+    /**
+     * Tests whether unknown annotation affects a WADL correctness.
+     */
+    public static class Wadl11Test extends JerseyTest {
+
+        @Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.TYPE})
+        @Retention(RetentionPolicy.RUNTIME)
+        @Inherited
+        public @interface UnknownAnnotation {
+        }
+
+        @Path("annotated")
+        @Consumes("application/json")
+        @UnknownAnnotation
+        public static class Annotated {
+
+            @Path("subresource")
+            @POST
+            @Produces("application/json")
+            @UnknownAnnotation
+            public Entity myMethod1(@UnknownAnnotation final Entity entity) {
+                return entity;
+            }
+
+            @Path("subresource")
+            @POST
+            @Produces("application/xml")
+            public Entity myMethod2(@UnknownAnnotation final Entity entity) {
+                return entity;
+            }
+
+        }
+
+        @Path("not-annotated")
+        @Consumes("application/json")
+        public static class Plain {
+
+            @Path("subresource")
+            @POST
+            @Produces("application/json")
+            public Entity myMethod1(final Entity entity) {
+                return entity;
+            }
+
+            @Path("subresource")
+            @POST
+            @Produces("application/xml")
+            public Entity myMethod2(final Entity entity) {
+                return entity;
+            }
+
+        }
+
+        @Override
+        protected Application configure() {
+            return new ResourceConfig(Annotated.class, Plain.class);
+        }
+
+        @Test
+        public void testWadlIsComplete() throws Exception {
+            final Response response = target("/application.wadl").request().get();
+
+            assertThat(response.getStatus(), is(200));
+            assertThat(response.hasEntity(), is(true));
+
+            final com.sun.research.ws.wadl.Application application =
+                    response.readEntity(com.sun.research.ws.wadl.Application.class);
+
+            // "annotated/subresource"
+            final Resource resource =
+                    (Resource) application.getResources().get(0).getResource().get(0).getMethodOrResource().get(0);
+
+            assertThatMethodContainsRR(resource, "myMethod1", 0);
+            assertThatMethodContainsRR(resource, "myMethod2", 1);
+
+        }
+
+        private static void assertThatMethodContainsRR(final Resource resource, final String methodName, final int methodIndex) {
+            final Method method = (Method) resource.getMethodOrResource().get(methodIndex);
+
+            assertThat(method.getId(), equalTo(methodName));
+
+            final Request request = method.getRequest();
+            final List<com.sun.research.ws.wadl.Response> response = method.getResponse();
+
+            assertThat(request, notNullValue());
+            assertThat(response.isEmpty(), is(false));
+        }
+
+        @Test
+        public void testWadlIsSameForAnnotatedAndNot() throws Exception {
+
+            final Response response = target("/application.wadl").request().get();
+
+            final Document document = extractWadlAsDocument(response);
+
+            final XPath xp = XPathFactory.newInstance().newXPath();
+            final SimpleNamespaceResolver nsContext = new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02");
+            xp.setNamespaceContext(nsContext);
+
+            final Diff diff = XMLUnit.compareXML(
+                    nodeAsString(
+                            xp.evaluate("//wadl:resource[@path='annotated']/wadl:resource", document,
+                                    XPathConstants.NODE)),
+                    nodeAsString(
+                            xp.evaluate("//wadl:resource[@path='not-annotated']/wadl:resource", document,
+                                    XPathConstants.NODE))
+            );
+            XMLUnit.setXpathNamespaceContext(
+                    new SimpleNamespaceContext(ImmutableMap.of("wadl", "http://wadl.dev.java.net/2009/02")));
+            final ElementQualifier elementQualifier = new RecursiveElementNameAndTextQualifier();
+            diff.overrideElementQualifier(elementQualifier);
+            XMLAssert.assertXMLEqual(diff, true);
+
+        }
+
+    } // class Wadl11Test
+
 }

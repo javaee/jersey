@@ -1702,5 +1702,6 @@
         <validation.impl.version>5.1.3.Final</validation.impl.version>
         <weld.version>2.2.14.Final</weld.version>
         <xerces.version>2.11.0</xerces.version>
+        <xmlunit.version>1.6</xmlunit.version>
     </properties>
 </project>
