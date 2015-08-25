@@ -110,7 +110,7 @@ public class AsyncContentAndEntityTypeTest {
         ContainerResponse response;
         // making sure the JVM optimization does not swap the order of the calls.
         synchronized (this) {
-            app.apply(RequestContextBuilder.from("/", "POST").entity("Foo").build());
+            app.apply(RequestContextBuilder.from("/", "POST").type("application/foo").entity("Foo").build());
             response = responseFuture.get();
         }
 
