@@ -325,7 +325,11 @@ public class HttpUrlConnector implements Connector {
             if (verifier != null) {
                 suc.setHostnameVerifier(verifier);
             }
-            suc.setSSLSocketFactory(sslSocketFactory.get());
+
+            if (HttpsURLConnection.getDefaultSSLSocketFactory() == suc.getSSLSocketFactory()) {
+                // indicates that the custom socket factory was not set
+                suc.setSSLSocketFactory(sslSocketFactory.get());
+            }
         }
     }
 
