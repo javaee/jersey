@@ -263,8 +263,7 @@ public class AsyncResource {
                 sending it to the client. The most important fact about response chunks is that you want
                 to send them to the client immediately as they become available without waiting for the remaining chunks to become
                 available too. The first bytes of each chunked response consists of the HTTP headers that are sent to the client.
-                The size -1 is set in the response <literal>Content-Length</literal> header to indicate that the response
-                is chunked. As noted above, the entity of the response is then sent in chunks as they become available.
+                As noted above, the entity of the response is then sent in chunks as they become available.
                 Client knows that the response is going to be chunked, so it reads each chunk of the response separately,
                 processes it, and waits for more chunks to arrive on the same connection. After some time, the server generates
                 another response chunk and send it again to the client. Server keeps on sending response chunks until
