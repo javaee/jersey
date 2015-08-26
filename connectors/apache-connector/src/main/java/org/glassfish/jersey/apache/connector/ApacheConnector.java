@@ -63,9 +63,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
@@ -104,7 +106,6 @@ import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.ContentLengthStrategy;
@@ -318,18 +319,19 @@ class ApacheConnector implements Connector {
             }
         }
 
+        HostnameVerifier hostnameVerifier = ((ClientConfig) config).getClient().getHostnameVerifier();
         // Create custom connection manager.
         return createConnectionManager(
                 config,
                 sslContext,
-                null,
+                hostnameVerifier,
                 false);
     }
 
     private HttpClientConnectionManager createConnectionManager(
             final Configuration config,
             final SSLContext sslContext,
-            X509HostnameVerifier hostnameVerifier,
+            HostnameVerifier hostnameVerifier,
             final boolean useSystemProperties) {
 
         final String[] supportedProtocols = useSystemProperties ? split(
