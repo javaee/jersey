@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -53,9 +54,9 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.server.BackgroundSchedulerLiteral;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.BackgroundSchedulerLiteral;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
@@ -142,7 +143,11 @@ final class MonitoringStatisticsProcessor {
 
     private void processExceptionMapperEvents() {
         final Queue<RequestEvent> eventQueue = monitoringEventListener.getExceptionMapperEvents();
+        final FloodingLogger floodingLogger = new FloodingLogger(eventQueue);
+
         while (!eventQueue.isEmpty()) {
+            floodingLogger.conditionallyLogFlooding();
+
             final RequestEvent event = eventQueue.remove();
             final ExceptionMapperStatisticsImpl.Builder mapperStats = statisticsBuilder.getExceptionMapperStatisticsBuilder();
 
@@ -156,8 +161,11 @@ final class MonitoringStatisticsProcessor {
 
     private void processRequestItems() {
         final Queue<MonitoringEventListener.RequestStats> requestQueuedItems = monitoringEventListener.getRequestQueuedItems();
+        final FloodingLogger floodingLogger = new FloodingLogger(requestQueuedItems);
 
         while (!requestQueuedItems.isEmpty()) {
+            floodingLogger.conditionallyLogFlooding();
+
             final MonitoringEventListener.RequestStats event = requestQueuedItems.remove();
 
             final MonitoringEventListener.TimeStats requestStats = event.getRequestStats();
@@ -175,9 +183,12 @@ final class MonitoringStatisticsProcessor {
 
     private void processResponseCodeEvents() {
         final Queue<Integer> responseEvents = monitoringEventListener.getResponseStatuses();
-        Integer code;
+        final FloodingLogger floodingLogger = new FloodingLogger(responseEvents);
+
         while (!responseEvents.isEmpty()) {
-            code = responseEvents.remove();
+            floodingLogger.conditionallyLogFlooding();
+
+            final Integer code = responseEvents.remove();
             statisticsBuilder.addResponseCode(code);
         }
 
@@ -197,6 +208,56 @@ final class MonitoringStatisticsProcessor {
         final boolean success = scheduler.awaitTermination(SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
         if (!success) {
             LOGGER.warning(LocalizationMessages.ERROR_MONITORING_SCHEDULER_DESTROY_TIMEOUT());
+        }
+    }
+
+    /**
+     * Upon calling of {@link #conditionallyLogFlooding()}, flooding logger conditionally checks for the size of the associated
+     * collection and if its size increases a warning about flooding is logged.
+     * <p/>
+     * The purpose of this flooding logger facility is to warn about disability to decrease the size of given collection which
+     * leads to never ending looping while trying to empty that collection in a loop.
+     *
+     * @author Stepan Vavra (stepan.vavra at oracle.com)
+     */
+    private static class FloodingLogger {
+
+        /** The frequency of logging a warning about the request queue being flooded. */
+        private static final int FLOODING_WARNING_LOG_INTERVAL_MILLIS = 5_000;
+
+        private final Collection<?> collection;
+        private final long startTime = System.nanoTime();
+
+        private int i = 0;
+        private int lastSize;
+
+        /**
+         * Constructs Flooding Logger and associate it with given collection.
+         *
+         * @param collection The collection to associate this flooding logger with.
+         */
+        public FloodingLogger(final Collection<?> collection) {
+            this.collection = collection;
+            this.lastSize = collection.size();
+        }
+
+        /**
+         * With a frequency of {@link #FLOODING_WARNING_LOG_INTERVAL_MILLIS}, a warning about flooding is logged if the size of
+         * the associated collection is increasing.
+         */
+        public void conditionallyLogFlooding() {
+            // this condition prevents the log warning from being logged more frequently than
+            // 'FLOODING_WARNING_LOG_INTERVAL_MILLIS' - counted from the initialization of this class
+            if ((System.nanoTime() - startTime) / TimeUnit.NANOSECONDS.convert(FLOODING_WARNING_LOG_INTERVAL_MILLIS,
+                    TimeUnit.MILLISECONDS) <= i) {
+                return;
+            }
+
+            if (collection.size() > lastSize) {
+                LOGGER.warning(LocalizationMessages.ERROR_MONITORING_QUEUE_FLOODED(collection.size()));
+            }
+            i++;
+            lastSize = collection.size();
         }
     }
 }
