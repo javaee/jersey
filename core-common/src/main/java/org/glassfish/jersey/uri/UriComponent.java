@@ -595,7 +595,7 @@ public class UriComponent {
             } else if (equals == 0) {
                 // no key declared, ignore
             } else if (param.length() > 0) {
-                params.add(URLDecoder.decode(param, "UTF-8"), "");
+                params.add((decodeNames) ? URLDecoder.decode(param, "UTF-8") : param, "");
             }
         } catch (final UnsupportedEncodingException ex) {
             // This should never occur
