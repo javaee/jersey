@@ -234,7 +234,8 @@ final class MethodSelectingRouter implements Router {
          */
         boolean isConsumable(ContainerRequest requestContext) {
             MediaType contentType = requestContext.getMediaType();
-            return contentType == null || consumes.getMediaType().isCompatible(contentType);
+            return consumes.getMediaType().isCompatible(contentType)
+                    || (contentType == null && MediaType.WILDCARD_TYPE.equals(consumes.getMediaType()));
         }
 
         @Override

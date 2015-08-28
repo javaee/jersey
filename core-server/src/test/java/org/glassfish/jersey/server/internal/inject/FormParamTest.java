@@ -440,6 +440,37 @@ public class FormParamTest extends AbstractTest {
         assertEquals("POST", responseContext.getEntity());
     }
 
+    @Path("/")
+    public static class ConsumesApplicationFormUrlEncoded {
+
+        @POST
+        @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+        public String post(@FormParam("foo") final String foo) {
+            assertEquals("bar", foo);
+            return "OK";
+        }
+
+    }
+
+    /**
+     * JERSEY-2636: POST requests without Content-Type header pass through @Consumes check
+     */
+    @Test
+    public void testConsumesMatching() throws Exception {
+        testConsumesMatching("application/x-www-form-urlencoded", 200);
+        testConsumesMatching("text/plain", 415);
+        testConsumesMatching(null, 415);
+    }
+
+    private void testConsumesMatching(final String contentType, final int expectedStatus) throws Exception {
+        initiateWebApplication(ConsumesApplicationFormUrlEncoded.class);
+        final Form form = new Form("foo", "bar");
+        final ContainerResponse response = apply(
+                RequestContextBuilder.from("/", "POST").type(contentType).entity(form).build()
+        );
+        assertEquals(expectedStatus, response.getStatus());
+    }
+
 //    @InjectParam replace with @Inject?
 
 //    public static class ParamBean {

@@ -122,6 +122,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
                 NonContentTypeForPartResource.class,
                 MediaTypeWithBoundaryResource.class,
                 FileResource.class,
+                ConsumesMultipartFormData.class,
                 InputStreamResource.class);
     }
 
@@ -594,6 +595,49 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         final String response = request.put(Entity.entity(entity, "multipart/form-data;"
                 + "boundary=\"---------------------------33219615019106944971719437488\""), String.class);
         assertEquals("OK", response);
+    }
+
+    @Path("/ConsumesMultipartFormData")
+    public static class ConsumesMultipartFormData {
+
+        @POST
+        @Consumes("multipart/form-data")
+        public String post(@FormDataParam("foo") final String foo) {
+            assertEquals("bar", foo);
+            return "OK";
+        }
+
+    }
+
+    /**
+     * JERSEY-2636: POST requests without Content-Type header pass through @Consumes check
+     */
+    @Test
+    public void testConsumesMatchingWithMatch() throws Exception {
+        final Invocation.Builder request = target().path("ConsumesMultipartFormData").request("text/plain");
+        final FormDataMultiPart entity = new FormDataMultiPart().field("foo", "bar");
+        final Response response = request.post(Entity.entity(entity, "multipart/form-data"), Response.class);
+        assertEquals(200, response.getStatus());
+    }
+
+    /**
+     * JERSEY-2636: POST requests without Content-Type header pass through @Consumes check
+     */
+    @Test
+    public void testConsumesMatchingWrongContentType() throws Exception {
+        final Invocation.Builder request = target().path("ConsumesMultipartFormData").request("text/plain");
+        final Response response = request.post(Entity.entity("foo", "text/plain"), Response.class);
+        assertEquals(415, response.getStatus());
+    }
+
+    /**
+     * JERSEY-2636: POST requests without Content-Type header pass through @Consumes check
+     */
+    @Test
+    public void testConsumesMatchingNoContentType() throws Exception {
+        final Invocation.Builder request = target().path("ConsumesMultipartFormData").request("text/plain");
+        final Response response = request.post(null, Response.class);
+        assertEquals(415, response.getStatus());
     }
 
     @Path("/MediaTypeWithBoundaryResource")

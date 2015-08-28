@@ -51,6 +51,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -113,7 +114,6 @@ public class ConsumeProduceSimpleTest {
     }
 
     @Path("/{arg1}/{arg2}")
-    @Consumes("text/html")
     @Produces("text/html")
     public static class ConsumeProduceSimpleBean {
 
@@ -134,6 +134,7 @@ public class ConsumeProduceSimpleTest {
         }
 
         @POST
+        @Consumes("text/html")
         @SuppressWarnings("UnusedParameters")
         public String doPostHtml(String data) {
             assertEquals("text/html", httpHeaders.getRequestHeader("Content-Type").get(0));
@@ -233,5 +234,62 @@ public class ConsumeProduceSimpleTest {
 
         assertEquals("text/plain", response.getEntity());
         assertEquals("text-plain", response.getHeaderString("HEAD"));
+    }
+
+    @Path("/")
+    public static class ConsumesText {
+
+        @POST
+        @Consumes("text/plain")
+        public String post() {
+            return "OK";
+        }
+
+    }
+
+    @Path("/")
+    public static class ConsumesAllExplicitly {
+
+        @POST
+        @Consumes("*/*")
+        public String post() {
+            return "OK";
+        }
+
+    }
+
+    @Path("/")
+    public static class ConsumesAllImplicitly {
+
+        @POST
+        public String post() {
+            return "OK";
+        }
+
+    }
+
+    /**
+     * JERSEY-2636: POST requests without Content-Type header pass through @Consumes check
+     */
+    @Test
+    public void testConsumesMatching() throws Exception {
+        testConsumesMatching(ConsumesText.class, "text/plain", 200);
+        testConsumesMatching(ConsumesText.class, "image/jpeg", 415);
+        testConsumesMatching(ConsumesText.class, null, 415);
+
+        testConsumesMatching(ConsumesAllExplicitly.class, "text/plain", 200);
+        testConsumesMatching(ConsumesAllExplicitly.class, "image/jpeg", 200);
+        testConsumesMatching(ConsumesAllExplicitly.class, null, 200);
+
+        testConsumesMatching(ConsumesAllImplicitly.class, "text/plain", 200);
+        testConsumesMatching(ConsumesAllImplicitly.class, "image/jpeg", 200);
+        testConsumesMatching(ConsumesAllImplicitly.class, null, 200);
+    }
+
+    private void testConsumesMatching(final Class<?> clazz, final String contentType, final int expectedStatus) throws Exception {
+        final ApplicationHandler application = createApplication(clazz);
+        final ContainerRequest request = RequestContextBuilder.from("/", "POST").type(contentType).build();
+        final ContainerResponse response = application.apply(request).get();
+        assertEquals(expectedStatus, response.getStatus());
     }
 }

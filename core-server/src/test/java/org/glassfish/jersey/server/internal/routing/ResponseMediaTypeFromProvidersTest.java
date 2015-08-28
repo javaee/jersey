@@ -109,6 +109,6 @@ public class ResponseMediaTypeFromProvidersTest {
 
         assertThat(response.getStatus(), equalTo(200));
         assertThat(response.getHeaderString("Content-Type"), equalTo("text/plain"));
-        assertThat((String) response.getEntity(), equalTo("AnotherSubResource"));
+        assertThat((String) response.getEntity(), equalTo("AnotherSubResourceAnotherSubResource"));
     }
 }
