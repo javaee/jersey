@@ -39,16 +39,19 @@
  */
 package org.glassfish.jersey.server.internal.monitoring;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.SortedMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.glassfish.jersey.server.internal.monitoring.ReservoirConstants.COLLISION_BUFFER_POWER;
+
+import jersey.repackaged.com.google.common.collect.TreeMultimap;
 
 /**
  * An aggregating trimmer for sliding window measurements. This trimmer updates registered time reservoirs with the aggregated
@@ -71,12 +74,12 @@ class AggregatingTrimmer implements SlidingWindowTrimmer<Long> {
     private final AtomicBoolean locked = new AtomicBoolean(false);
 
     /**
-     * Creates the trimmer that updates the registered time reservoirs with the aggregated measurements
-     * for the values it trimmed.
+     * Creates the trimmer that updates the registered time reservoirs with the aggregated measurements for the values it
+     * trimmed.
      *
-     * @param startTime The start time that determines the offset for the chunks.
-     * @param startUnitTime The time unit of the start time.
-     * @param chunkTimeSize The size of one "time chunk".
+     * @param startTime         The start time that determines the offset for the chunks.
+     * @param startUnitTime     The time unit of the start time.
+     * @param chunkTimeSize     The size of one "time chunk".
      * @param chunkTimeSizeUnit The time unit of the time chunk.
      */
     public AggregatingTrimmer(final long startTime,
@@ -93,28 +96,30 @@ class AggregatingTrimmer implements SlidingWindowTrimmer<Long> {
         if (!locked.compareAndSet(false, true)) {
             return;
         }
-        final NavigableMap<Long, Long> trimMap;
+        final TreeMultimap<Long, Long> trimMultiMap = TreeMultimap.create();
+        final NavigableMap<Long, Collection<Long>> trimMap = trimMultiMap.asMap();
 
         try {
-            trimMap = new TreeMap<>();
             final ConcurrentNavigableMap<Long, Long> headMap = map.headMap(key);
             while (!headMap.isEmpty()) {
+                // headMap itself is being accessed with updates from other threads
                 final Map.Entry<Long, Long> entry = headMap.pollFirstEntry();
-                trimMap.put(entry.getKey(), entry.getValue());
+                trimMultiMap.put(entry.getKey(), entry.getValue());
             }
             // now the headMap is trimmed...
         } finally {
             locked.set(false);
         }
 
-        for (Map.Entry<Long, Long> firstEntry = trimMap.firstEntry(); firstEntry != null; firstEntry = trimMap.firstEntry()) {
-            long chunkLowerBound = lowerBound(firstEntry);
+        for (Map.Entry<Long, Collection<Long>> firstEntry = trimMap.firstEntry(); firstEntry != null;
+                firstEntry = trimMap.firstEntry()) {
+            long chunkLowerBound = lowerBound(firstEntry.getKey());
             long chunkUpperBound = upperBound(chunkLowerBound, key);
 
             // now, we need to process and then remove entries at interval [chunkLowerBound, chunkUpperBound)
-            Map<Long, Long> chunkMap = trimMap.headMap(chunkUpperBound);
+            SortedMap<Long, Collection<Long>> chunkMap = trimMap.headMap(chunkUpperBound);
 
-            final AggregatedValueObject aggregatedValueObject = new AggregatedValueObject(chunkMap.values());
+            final AggregatedValueObject aggregatedValueObject = AggregatedValueObject.createFromMultiValues(chunkMap.values());
 
             // update all listening aggregated reservoirs
             for (TimeReservoir<AggregatedValueObject> aggregatedReservoir : aggregatedReservoirListeners) {
@@ -132,8 +137,8 @@ class AggregatingTrimmer implements SlidingWindowTrimmer<Long> {
         return chunkUpperBoundCandidate < key ? chunkUpperBoundCandidate : key;
     }
 
-    private long lowerBound(final Map.Entry<Long, Long> firstEntry) {
-        return lowerBound(firstEntry.getKey(), TimeUnit.NANOSECONDS.convert(startTime, startUnitTime), chunkSize,
+    private long lowerBound(final Long key) {
+        return lowerBound(key, TimeUnit.NANOSECONDS.convert(startTime, startUnitTime), chunkSize,
                 COLLISION_BUFFER_POWER);
     }
 

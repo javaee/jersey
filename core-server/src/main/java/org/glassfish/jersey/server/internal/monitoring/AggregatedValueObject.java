@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.Collection;
+import java.util.LinkedList;
 
 /**
  * Aggregated value object stores aggregated measurements for provided set of data. The purpose of aggregation is to avoid high
@@ -54,14 +55,21 @@ class AggregatedValueObject {
     private final double mean;
     private final long count;
 
+    private AggregatedValueObject(final long max, final long min, final double mean, final long count) {
+        this.max = max;
+        this.min = min;
+        this.mean = mean;
+        this.count = count;
+    }
+
     /**
      * Creates aggregated value object for monitoring statistics based on the provided values. During the construction, the values
      * collection must not be modified.
      *
-     * @param values The collection to create the aggregated statistics from
+     * @param values The collection to create the aggregated statistics from.
+     * @return Aggregated value object for provided arguments.
      */
-    public AggregatedValueObject(final Collection<Long> values) {
-
+    public static AggregatedValueObject createFromValues(Collection<Long> values) {
         if (values.isEmpty()) {
             // aggregated objects must be created for at least one value, additionally, prevent from division by zero in the mean
             throw new IllegalArgumentException("The values collection must not be empty");
@@ -76,10 +84,22 @@ class AggregatedValueObject {
             sum += value;
         }
 
-        this.min = min;
-        this.max = max;
-        this.count = values.size();
-        this.mean = (double) sum / count;
+        return new AggregatedValueObject(max, min, (double) sum / values.size(), values.size());
+    }
+
+    /**
+     * Creates aggregated value object for monitoring statistics based on the provided collection of values. During the
+     * construction, the values collection must not be modified.
+     *
+     * @param values The collection to create the aggregated statistics from.
+     * @return Aggregated value object for provided arguments.
+     */
+    public static AggregatedValueObject createFromMultiValues(Collection<? extends Collection<Long>> values) {
+        final Collection<Long> mergedCollection = new LinkedList<>();
+        for (Collection<Long> collection : values) {
+            mergedCollection.addAll(collection);
+        }
+        return createFromValues(mergedCollection);
     }
 
     /**
