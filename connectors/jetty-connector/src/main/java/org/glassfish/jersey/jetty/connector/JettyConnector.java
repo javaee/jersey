@@ -356,13 +356,18 @@ class JettyConnector implements Connector {
                 return streamContentProvider.getOutputStream();
             }
         });
-
-        try {
-            clientRequest.writeEntity();
-        } catch (final IOException e) {
-            throw new ProcessingException("Failed to write request entity.", e);
-        }
         return streamContentProvider;
+    }
+
+    private void processContent(final ClientRequest clientRequest, final ContentProvider entity) throws IOException {
+        if (entity == null) {
+            return;
+        }
+
+        final OutputStreamContentProvider streamContentProvider = (OutputStreamContentProvider) entity;
+        try (final OutputStream output = streamContentProvider.getOutputStream()) {
+            clientRequest.writeEntity();
+        }
     }
 
     @Override
@@ -439,6 +444,7 @@ class JettyConnector implements Connector {
                     }
                 }
             });
+            processContent(jerseyRequest, entity);
             return responseFuture;
         } catch (final Throwable t) {
             failure = t;
