@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,56 +40,18 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.glassfish.jersey</groupId>
-        <artifactId>project</artifactId>
-        <version>2.22-SNAPSHOT</version>
-    </parent>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <groupId>org.glassfish.jersey.ext</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-extensions</name>
-
-    <description>
-        Jersey extension modules providing utilities, filters as well as integrations
-        with external frameworks (Guice, Spring, Freemarker, etc.) and languages
-        (Scala, Groovy, etc.).
-
-        NOTE: Jersey security extensions have their own dedicated security umbrella
-        project.
-    </description>
-
-    <modules>
-        <module>bean-validation</module>
-        <module>cdi</module>
-        <module>entity-filtering</module>
-        <module>metainf-services</module>
-        <module>mvc</module>
-        <module>mvc-bean-validation</module>
-        <module>mvc-freemarker</module>
-        <module>mvc-jsp</module>
-        <module>mvc-mustache</module>
-        <module>proxy-client</module>
-        <module>rx</module>
-        <module>servlet-portability</module>
-        <module>spring3</module>
-        <module>wadl-doclet</module>
-        <module>spring4</module>
-    </modules>
-
-    <dependencies>
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-</project>
+    <bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
+        <property name="scopes">
+            <map>
+                <entry key="request">
+                    <bean class="org.springframework.web.context.request.RequestScope"/>
+                </entry>
+            </map>
+        </property>
+    </bean>
+</beans>
