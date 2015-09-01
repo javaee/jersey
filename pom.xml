@@ -446,7 +446,6 @@
                         <configLocation>etc/config/checkstyle.xml</configLocation>
                         <suppressionsLocation>etc/config/checkstyle-suppressions.xml</suppressionsLocation>
                         <outputFile>${project.build.directory}/checkstyle/checkstyle-result.xml</outputFile>
-                        <outputDirectory>${project.build.directory}/checkstyle</outputDirectory>
                     </configuration>
                     <dependencies>
                         <dependency>
@@ -653,7 +652,7 @@
                         <dependency>
                             <groupId>net.sf.proguard</groupId>
                             <artifactId>proguard-base</artifactId>
-                            <version>5.1</version>
+                            <version>5.1</version><!-- transitive dependency version increased from 5.0 -->
                             <scope>runtime</scope>
                         </dependency>
                     </dependencies>
@@ -1120,33 +1119,7 @@
         <module>media</module>
         <module>security</module>
         <module>test-framework</module>
-
-        <!--module>tools</module-->
     </modules>
-
-    <!--distributionManagement /-->
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>snapshots.codehaus.org</id>
-            <name>Codehaus.org Snapshots Maven Repository</name>
-            <url>http://nexus.codehaus.org/snapshots</url>
-            <layout>default</layout>
-        </pluginRepository>
-    </pluginRepositories>
-
-    <!-- TODO remove the java.net maven repository reference -->
-    <repositories>
-        <repository>
-            <id>release.maven.java.net</id>
-            <name>java.net Maven Release Repository</name>
-            <url>https://maven.java.net/content/groups/public</url>
-            <layout>default</layout>
-        </repository>
-    </repositories>
-
-    <!--dependencies></dependencies-->
-    <!--reporting></reporting -->
 
     <dependencyManagement>
         <dependencies>
@@ -1419,27 +1392,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.framework</artifactId>
-                <version>4.2.1</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.eventadmin</artifactId>
-                <version>1.2.2</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>org.apache.felix.framework.security</artifactId>
-                <version>2.2.0</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
                 <groupId>org.glassfish.main.ejb</groupId>
                 <artifactId>ejb-container</artifactId>
                 <version>${gf.impl.version}</version>
@@ -1495,6 +1447,38 @@
                 <version>${validation.impl.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.ops4j.pax.web</groupId>
+                <artifactId>pax-web-jetty-bundle</artifactId>
+                <version>${pax.web.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ops4j.pax.web</groupId>
+                <artifactId>pax-web-extender-war</artifactId>
+                <version>${pax.web.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${jmh.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-generator-annprocess</artifactId>
+                <version>${jmh.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.esotericsoftware</groupId>
+                <artifactId>kryo</artifactId>
+                <version>${kryo.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.1</version>
+            </dependency>
+
             <!-- Weld -->
             <dependency>
                 <groupId>org.jboss.weld.se</groupId>
@@ -1508,12 +1492,6 @@
             </dependency>
 
             <!-- Test scope -->
-
-            <dependency>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-                <version>1.1</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.ops4j.pax.exam</groupId>
@@ -1605,30 +1583,26 @@
             </dependency>
 
             <dependency>
-                <groupId>org.ops4j.pax.web</groupId>
-                <artifactId>pax-web-jetty-bundle</artifactId>
-                <version>${pax.web.version}</version>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.framework</artifactId>
+                <version>4.2.1</version>
+                <scope>test</scope>
             </dependency>
+
             <dependency>
-                <groupId>org.ops4j.pax.web</groupId>
-                <artifactId>pax-web-extender-war</artifactId>
-                <version>${pax.web.version}</version>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.eventadmin</artifactId>
+                <version>1.2.2</version>
+                <scope>test</scope>
             </dependency>
+
             <dependency>
-                <groupId>org.openjdk.jmh</groupId>
-                <artifactId>jmh-core</artifactId>
-                <version>${jmh.version}</version>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.framework.security</artifactId>
+                <version>2.2.0</version>
+                <scope>test</scope>
             </dependency>
-            <dependency>
-                <groupId>org.openjdk.jmh</groupId>
-                <artifactId>jmh-generator-annprocess</artifactId>
-                <version>${jmh.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.esotericsoftware</groupId>
-                <artifactId>kryo</artifactId>
-                <version>${kryo.version}</version>
-            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -1657,7 +1631,7 @@
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>
         <commons-lang3.version>3.3.2</commons-lang3.version>
-        <checkstyle.mvn.plugin.version>2.15</checkstyle.mvn.plugin.version>
+        <checkstyle.mvn.plugin.version>2.16</checkstyle.mvn.plugin.version>
         <checkstyle.version>6.8.1</checkstyle.version>
         <easymock.version>3.3</easymock.version>
         <ejb.version>3.2</ejb.version>
