@@ -65,22 +65,42 @@ public abstract class Jersey2176ITCaseBase extends JerseyTest {
 
     @Test
     public void testGetContent222() {
-        testGetContent(222);
+        testGetContent(222, true);
     }
 
     @Test
     public void testGetContent333() {
-        testGetContent(333);
+        testGetContent(333, true);
     }
 
     @Test
     public void testGetContent444() {
-        testGetContent(444);
+        testGetContent(444, true);
     }
 
     @Test
     public void testGetContent555() {
-        testGetContent(555);
+        testGetContent(555, true);
+    }
+
+    @Test
+    public void testGetContent222NoResponseEntity() {
+        testGetContent(222, false);
+    }
+
+    @Test
+    public void testGetContent333NoResponseEntity() {
+        testGetContent(333, false);
+    }
+
+    @Test
+    public void testGetContent444NoResponseEntity() {
+        testGetContent(444, false);
+    }
+
+    @Test
+    public void testGetContent555NoResponseEntity() {
+        testGetContent(555, false);
     }
 
     @Test
@@ -108,45 +128,63 @@ public abstract class Jersey2176ITCaseBase extends JerseyTest {
         testGetException(222, 500, true);
     }
 
-    private void testGetContent(int uc) {
-        String expectedContent = "TEST";
+    private void testGetContent(int uc, boolean responseEntity) {
+        String expectedContent = "ENTITY";
         expectedContent = "[INTERCEPTOR]" + expectedContent + "[/INTERCEPTOR]";
         expectedContent = "[FILTER]" + expectedContent + "[/FILTER]";
-        Response response = target().path("/resource/" + uc).request().get();
-        Assert.assertEquals(uc, response.getStatus());
-        if (servletFilterWorks(uc)) {
-            Assert.assertEquals("OK", response.getHeaderString(TraceResponseFilter.X_STATUS_HEADER));
-            Assert.assertNotNull(response.getHeaderString(TraceResponseFilter.X_SERVER_DURATION_HEADER));
-            Assert.assertEquals(expectedContent, response.readEntity(String.class));
-            Assert.assertEquals(String.valueOf(expectedContent.length()), response.getHeaderString(HttpHeaders.CONTENT_LENGTH));
+
+        Invocation.Builder builder = target().path("/resource/" + uc).request();
+        if (responseEntity) {
+            builder.header(Issue2176ReproducerResource.X_RESPONSE_ENTITY_HEADER, true);
         } else {
-            Assert.assertNull(response.getHeaderString(TraceResponseFilter.X_STATUS_HEADER));
-            Assert.assertNull(response.getHeaderString(TraceResponseFilter.X_SERVER_DURATION_HEADER));
+            builder.header(TraceResponseFilter.X_NO_FILTER_HEADER, true);
+        }
+
+        final Response response = builder.get();
+        final String assertMessage = uc + "|" + responseEntity;
+
+        Assert.assertEquals(assertMessage, uc, response.getStatus());
+        if (!sendErrorExpected(uc, responseEntity)) {
+            Assert.assertEquals(assertMessage, "OK", response.getHeaderString(TraceResponseFilter.X_STATUS_HEADER));
+            Assert.assertNotNull(assertMessage, response.getHeaderString(TraceResponseFilter.X_SERVER_DURATION_HEADER));
+            if (responseEntity) {
+                Assert.assertEquals(assertMessage, expectedContent, response.readEntity(String.class));
+                Assert.assertEquals(assertMessage, String.valueOf(expectedContent.length()),
+                        response.getHeaderString(HttpHeaders.CONTENT_LENGTH));
+            }
+        } else {
+            Assert.assertNull(assertMessage, response.getHeaderString(TraceResponseFilter.X_STATUS_HEADER));
+            Assert.assertNull(assertMessage, response.getHeaderString(TraceResponseFilter.X_SERVER_DURATION_HEADER));
         }
     }
 
     private void testGetException(int uc, int expectedStatus, boolean fail) {
         Invocation.Builder builder = target().path("/resource/" + uc).request();
+        builder = builder.header(Issue2176ReproducerResource.X_RESPONSE_ENTITY_HEADER, true);
         if (fail) {
-            builder = builder.header("X-FAIL", true);
+            builder = builder.header(Issue2176ReproducerResource.X_FAIL_HEADER, true);
         }
 
-        Response response = builder.get();
-        String expectedContent = "[FILTER][/FILTER]";
-        Assert.assertEquals(expectedStatus, response.getStatus());
-        if (servletFilterWorks(expectedStatus)) {
-            Assert.assertEquals(expectedStatus == 500 ? "FAIL" : "OK",
+        final Response response = builder.get();
+
+        final String expectedContent = "[FILTER][/FILTER]";
+        final String assertMessage = uc + ":" + expectedStatus + "|" + fail;
+
+        Assert.assertEquals(assertMessage, expectedStatus, response.getStatus());
+        if (!sendErrorExpected(expectedStatus, false)) {
+            Assert.assertEquals(assertMessage, expectedStatus == 500 ? "FAIL" : "OK",
                     response.getHeaderString(TraceResponseFilter.X_STATUS_HEADER));
-            Assert.assertNotNull(response.getHeaderString(TraceResponseFilter.X_SERVER_DURATION_HEADER));
-            Assert.assertEquals(String.valueOf(expectedContent.length()), response.getHeaderString(HttpHeaders.CONTENT_LENGTH));
+            Assert.assertNotNull(assertMessage, response.getHeaderString(TraceResponseFilter.X_SERVER_DURATION_HEADER));
+            Assert.assertEquals(assertMessage, String.valueOf(expectedContent.length()),
+                    response.getHeaderString(HttpHeaders.CONTENT_LENGTH));
         } else {
-            Assert.assertNull(response.getHeaderString(TraceResponseFilter.X_STATUS_HEADER));
-            Assert.assertNull(response.getHeaderString(TraceResponseFilter.X_SERVER_DURATION_HEADER));
+            Assert.assertNull(assertMessage, response.getHeaderString(TraceResponseFilter.X_STATUS_HEADER));
+            Assert.assertNull(assertMessage, response.getHeaderString(TraceResponseFilter.X_SERVER_DURATION_HEADER));
         }
     }
 
-    private boolean servletFilterWorks(int uc) {
-        return ((Jersey2176App) configure()).isSetStatusOverSendError() || (uc < 400);
+    private boolean sendErrorExpected(final int uc, final boolean responseEntity) {
+        return !((Jersey2176App) configure()).isSetStatusOverSendError() && (uc >= 400) && !responseEntity;
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -36,59 +36,47 @@
  * and therefore, elected the GPL Version 2 license, then the option applies
  * only if the new code is made subject to such option by the copyright
  * holder.
- */
+ */package org.glassfish.jersey.tests.integration.servlettests;
 
-package org.glassfish.jersey.tests.integration.servlettests;
+import java.io.IOException;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 /**
- * Test class related to issue JERSEY-1189.
- * Confirms that if one sends an entity with the error status, the cache control
- * headers don't get reset by the container.
+ * JERSEY-2936 reproducer filter.
  *
- * @author Martin Matula
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class CacheControlOn404ITCase extends JerseyTest {
+public class SuppressContentLengthFilter implements Filter {
 
-    @Override
-    protected ResourceConfig configure() {
-        return new ResourceConfig(CacheControlOn404ITCase.class);
+    public static final String PARAMETER_NAME_SUPPRESS_CONTENT_LENGTH = "SuppressContentLength";
+
+    public void doFilter(final ServletRequest request, ServletResponse response, final FilterChain chain)
+            throws IOException, ServletException {
+        if (Boolean.parseBoolean(request.getParameter(PARAMETER_NAME_SUPPRESS_CONTENT_LENGTH))) {
+            response = new HttpServletResponseWrapper((HttpServletResponse) response) {
+                @Override
+                public void setContentLength(int len) {
+                    // do not delegate to original ServletResponse -> response is NOT committed
+                }
+            };
+        }
+        chain.doFilter(request, response);
     }
 
-    @Override
-    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
-        return new ExternalTestContainerFactory();
+    public void init(FilterConfig filterConfig) {
+        //NOOP
     }
 
-    @Test
-    public void test404() throws Exception {
-        test404Impl(false);
-    }
-
-    @Test
-    public void test404SuppressContentLength() throws Exception {
-        test404Impl(true);
-    }
-
-    private void test404Impl(final boolean suppressContentLength) {
-        Response r = target("servlet").path("404")
-                .queryParam(SuppressContentLengthFilter.PARAMETER_NAME_SUPPRESS_CONTENT_LENGTH, suppressContentLength)
-                .request().get();
-        assertEquals(404, r.getStatus());
-        assertEquals("404 Not Found", r.readEntity(String.class));
-        assertEquals("no-transform, max-age=10", r.getHeaderString(HttpHeaders.CACHE_CONTROL));
+    public void destroy() {
+        //NOOP
     }
 
 }

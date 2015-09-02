@@ -121,7 +121,11 @@ Go to the URL:
 
 #### Test Client Running
 
->   mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.external.ExternalTestContainerFactory -Djersey.config.test.logging.enable=true -Djersey.config.test.logging.dumpEntity=true -Djersey.config.test.container.port=8080 -Ptest
+>   mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.external.ExternalTestContainerFactory -Djersey.config.test.logging.enable=true -Djersey.config.test.logging.dumpEntity=true -Djersey.config.test.container.port=8080 -Dmaven.test.skip=false
+
+or
+
+>   mvn test -Prun-external-tests
 
 How it works
 ------------

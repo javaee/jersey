@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,8 +40,13 @@
 
 package org.glassfish.jersey.tests.integration.servlettests;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -53,18 +58,13 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Test class related to issue JERSEY-1189.
- * Confirms that if one sends an entity with the error status, the cache control
- * headers don't get reset by the container.
- *
- * @author Martin Matula
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class CacheControlOn404ITCase extends JerseyTest {
-
+public class DuplicateHeaderITCase extends JerseyTest {
     @Override
-    protected ResourceConfig configure() {
-        return new ResourceConfig(CacheControlOn404ITCase.class);
+    protected Application configure() {
+        // dummy resource config
+        return new ResourceConfig();
     }
 
     @Override
@@ -73,22 +73,32 @@ public class CacheControlOn404ITCase extends JerseyTest {
     }
 
     @Test
-    public void test404() throws Exception {
-        test404Impl(false);
+    public void testDuplicateHeader() throws IOException {
+        testDuplicateHeaderImpl("contextPathFilter/contextPathResource");
+        testDuplicateHeaderImpl("servlet/contextPathResource");
     }
 
-    @Test
-    public void test404SuppressContentLength() throws Exception {
-        test404Impl(true);
+    private void testDuplicateHeaderImpl(final String path) throws IOException {
+        testDuplicateHeaderImpl(0, HttpURLConnection.HTTP_OK, path);
+        testDuplicateHeaderImpl(1, HttpURLConnection.HTTP_OK, path);
+        testDuplicateHeaderImpl(2, HttpURLConnection.HTTP_BAD_REQUEST, path);
     }
 
-    private void test404Impl(final boolean suppressContentLength) {
-        Response r = target("servlet").path("404")
-                .queryParam(SuppressContentLengthFilter.PARAMETER_NAME_SUPPRESS_CONTENT_LENGTH, suppressContentLength)
-                .request().get();
-        assertEquals(404, r.getStatus());
-        assertEquals("404 Not Found", r.readEntity(String.class));
-        assertEquals("no-transform, max-age=10", r.getHeaderString(HttpHeaders.CACHE_CONTROL));
+    private void testDuplicateHeaderImpl(final int headerCount, int expectedResponseCode, final String path)
+            throws IOException {
+        final String headerName = HttpHeaders.CONTENT_TYPE;
+        URL getUrl = UriBuilder.fromUri(getBaseUri()).path(path).build().toURL();
+        HttpURLConnection connection = (HttpURLConnection) getUrl.openConnection();
+        try {
+            connection.setRequestMethod("GET");
+            for (int i = 0; i < headerCount; i++) {
+                connection.addRequestProperty(headerName, "N/A");
+            }
+            connection.connect();
+            assertEquals(path + " [" + headerName + ":" + headerCount + "x]", expectedResponseCode, connection.getResponseCode());
+        } finally {
+            connection.disconnect();
+        }
     }
 
 }

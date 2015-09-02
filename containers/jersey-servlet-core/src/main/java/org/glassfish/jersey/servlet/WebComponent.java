@@ -415,62 +415,66 @@ public class WebComponent {
      * @throws java.io.IOException            if an input or output error occurs
      *                                        while the Web component is handling the
      *                                        HTTP request.
-     * @throws javax.servlet.ServletException if the HTTP request cannot
-     *                                        be handled.
+     * @throws javax.servlet.ServletException if the HTTP request cannot be handled.
      */
     public Value<Integer> service(
             final URI baseUri,
             final URI requestUri,
             final HttpServletRequest servletRequest,
             final HttpServletResponse servletResponse) throws ServletException, IOException {
+        final ResponseWriter responseWriter = serviceImpl(baseUri, requestUri, servletRequest, servletResponse);
+        return Values.lazy(new Value<Integer>() {
+            @Override
+            public Integer get() {
+                return responseWriter.responseContextResolved() ? responseWriter.getResponseStatus() : -1;
+            }
+        });
+    }
 
-        final ContainerRequest requestContext = new ContainerRequest(baseUri, requestUri,
-                servletRequest.getMethod(), getSecurityContext(servletRequest), new ServletPropertiesDelegate(servletRequest));
-        requestContext.setEntityStream(servletRequest.getInputStream());
-        addRequestHeaders(servletRequest, requestContext);
+    /**
+     * Dispatch client requests to a resource class.
+     *
+     * @param baseUri         the base URI of the request.
+     * @param requestUri      the URI of the request.
+     * @param servletRequest  the {@link javax.servlet.http.HttpServletRequest} object that
+     *                        contains the request the client made to
+     *                        the Web component.
+     * @param servletResponse the {@link javax.servlet.http.HttpServletResponse} object that
+     *                        contains the response the Web component returns
+     *                        to the client.
+     * @return returns {@link ResponseWriter}, Servlet's {@link org.glassfish.jersey.server.spi.ContainerResponseWriter}
+     *         implementation, into which processed request response was written to.
+     * @throws java.io.IOException            if an input or output error occurs
+     *                                        while the Web component is handling the
+     *                                        HTTP request.
+     * @throws javax.servlet.ServletException if the HTTP request cannot be handled.
+     */
+     /* package */ ResponseWriter serviceImpl(
+            final URI baseUri,
+            final URI requestUri,
+            final HttpServletRequest servletRequest,
+            final HttpServletResponse servletResponse) throws ServletException, IOException {
+
+        final ResponseWriter responseWriter = new ResponseWriter(
+                forwardOn404,
+                configSetStatusOverSendError,
+                servletResponse,
+                asyncExtensionDelegate.createDelegate(servletRequest, servletResponse),
+                backgroundTaskScheduler);
 
         try {
-            // Check if any servlet filters have consumed a request entity
-            // of the media type application/x-www-form-urlencoded
-            // This can happen if a filter calls request.getParameter(...)
-            filterFormParameters(servletRequest, requestContext);
+            final ContainerRequest requestContext = new ContainerRequest(baseUri, requestUri, servletRequest.getMethod(),
+                    getSecurityContext(servletRequest), new ServletPropertiesDelegate(servletRequest));
 
-            final ResponseWriter responseWriter = new ResponseWriter(
-                    forwardOn404,
-                    configSetStatusOverSendError,
-                    servletResponse,
-                    asyncExtensionDelegate.createDelegate(servletRequest, servletResponse),
-                    backgroundTaskScheduler);
-
-            requestContext.setRequestScopedInitializer(requestScopedInitializer.get(new RequestContextProvider() {
-
-                @Override
-                public HttpServletRequest getHttpServletRequest() {
-                    return servletRequest;
-                }
-
-                @Override
-                public HttpServletResponse getHttpServletResponse() {
-                    return servletResponse;
-                }
-            }));
-
-            requestContext.setWriter(responseWriter);
+            initContainerRequest(requestContext, servletRequest, servletResponse, responseWriter);
 
             appHandler.handle(requestContext);
-
-            return Values.lazy(new Value<Integer>() {
-                @Override
-                public Integer get() {
-                    return responseWriter.responseContextResolved() ? responseWriter.getResponseStatus() : -1;
-                }
-            });
         } catch (final HeaderValueException hve) {
-            final Response.Status status = Response.Status.BAD_REQUEST;
-
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.log(Level.FINE, LocalizationMessages.HEADER_VALUE_READ_FAILED(), hve);
             }
+
+            final Response.Status status = Response.Status.BAD_REQUEST;
 
             if (configSetStatusOverSendError) {
                 servletResponse.reset();
@@ -479,21 +483,48 @@ public class WebComponent {
             } else {
                 servletResponse.sendError(status.getStatusCode(), status.getReasonPhrase());
             }
-
-            return Values.of(status.getStatusCode());
         } catch (final Exception e) {
             throw new ServletException(e);
         }
-
+        return responseWriter;
     }
 
     /**
-     * Get default {@link SecurityContext} for given {@code request}.
+     * Initialize {@code ContainerRequest} instance to used used to handle {@code servletRequest}.
+     */
+    private void initContainerRequest(
+            final ContainerRequest requestContext,
+            final HttpServletRequest servletRequest,
+            final HttpServletResponse servletResponse,
+            final ResponseWriter responseWriter) throws IOException {
+
+        requestContext.setEntityStream(servletRequest.getInputStream());
+        requestContext.setRequestScopedInitializer(requestScopedInitializer.get(new RequestContextProvider() {
+            @Override
+            public HttpServletRequest getHttpServletRequest() {
+                return servletRequest;
+            }
+            @Override
+            public HttpServletResponse getHttpServletResponse() {
+                return servletResponse;
+            }
+        }));
+        requestContext.setWriter(responseWriter);
+
+        addRequestHeaders(servletRequest, requestContext);
+        // Check if any servlet filters have consumed a request entity
+        // of the media type application/x-www-form-urlencoded
+        // This can happen if a filter calls request.getParameter(...)
+        filterFormParameters(servletRequest, requestContext);
+    }
+
+    /**
+     * Get default {@link javax.ws.rs.core.SecurityContext} for given {@code request}.
      *
      * @param request http servlet request to create a security context for.
      * @return a non-null security context instance.
      */
-    private SecurityContext getSecurityContext(final HttpServletRequest request) {
+    private static SecurityContext getSecurityContext(final HttpServletRequest request) {
         return new SecurityContext() {
 
             @Override
