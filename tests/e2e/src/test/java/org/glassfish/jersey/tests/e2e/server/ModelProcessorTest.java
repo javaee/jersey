@@ -71,7 +71,6 @@ import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import static org.junit.Assert.assertEquals;
 
 import jersey.repackaged.com.google.common.collect.Lists;
@@ -264,7 +263,6 @@ public class ModelProcessorTest extends JerseyTest {
         Response response = target("/a").request().get();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("a-get", entity);
     }
 
@@ -273,7 +271,6 @@ public class ModelProcessorTest extends JerseyTest {
         Response response = target("/a").request().post(Entity.entity("post", MediaType.TEXT_PLAIN_TYPE));
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("a-post", entity);
     }
 
@@ -282,7 +279,6 @@ public class ModelProcessorTest extends JerseyTest {
         Response response = target("/a").request(MediaType.TEXT_PLAIN_TYPE).options();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("a", entity);
     }
 
@@ -291,7 +287,6 @@ public class ModelProcessorTest extends JerseyTest {
         Response response = target("/a/child").request().get();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("a-child-get", entity);
     }
 
@@ -300,16 +295,14 @@ public class ModelProcessorTest extends JerseyTest {
         Response response = target("/a/locator").request().get();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("sub-get", entity);
     }
 
     @Test
     public void testResourceALocatorOptions() {
-        Response response = target("/a/locator").request().options();
-        assertEquals(200, response.getStatus());
+        Response response = target("/a/locator").request(MediaType.TEXT_PLAIN_TYPE).options();
+        assertEquals(204, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("", entity);
     }
 
@@ -318,16 +311,14 @@ public class ModelProcessorTest extends JerseyTest {
         Response response = target("/b").request().get();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("b-get", entity);
     }
 
     @Test
     public void testResourceBOptions() {
-        Response response = target("/b").request().options();
+        Response response = target("/b").request(MediaType.TEXT_PLAIN_TYPE).options();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("b-options", entity);
     }
 
@@ -336,16 +327,14 @@ public class ModelProcessorTest extends JerseyTest {
         Response response = target("/b/locator").request().get();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("sub-get", entity);
     }
 
     @Test
     public void testResourceBLocatorOptions() {
-        Response response = target("/b/locator").request().options();
-        assertEquals(200, response.getStatus());
+        Response response = target("/b/locator").request(MediaType.TEXT_PLAIN_TYPE).options();
+        assertEquals(204, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("", entity);
     }
 
@@ -354,16 +343,14 @@ public class ModelProcessorTest extends JerseyTest {
         Response response = target("/a/my-resource").request().get();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("my-resource:a,GET=getFromA|POST=postFromA|", entity);
     }
 
     @Test
     public void testResourceALocatorMyResource() {
-        Response response = target("/a/locator/my-resource").request().get();
+        Response response = target("/a/locator/my-resource").request(MediaType.TEXT_PLAIN_TYPE).get();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("my-resource:<no-path>GET=getFromSubResource|", entity);
     }
 
@@ -372,7 +359,6 @@ public class ModelProcessorTest extends JerseyTest {
         Response response = target("/b/my-resource").request().get();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("my-resource:b,GET=getFromB|OPTIONS=optionsFromB|", entity);
     }
 
@@ -381,7 +367,6 @@ public class ModelProcessorTest extends JerseyTest {
         Response response = target("/model").request().get();
         assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        assertEquals(200, response.getStatus());
         assertEquals("a|b|model|", entity);
     }
 
