@@ -332,6 +332,7 @@
 <!ENTITY jersey.client.EncodingFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/client/filter/EncodingFeature.html'>EncodingFeature</link>">
 <!ENTITY jersey.client.EncodingFilter "<link xlink:href='&jersey.javadoc.uri.prefix;/client/filter/EncodingFilter.html'>EncodingFilter</link>">
 <!ENTITY jersey.client.HttpAuthenticationFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/client/authentication/HttpAuthenticationFeature.html'>HttpAuthenticationFeature</link>">
+<!ENTITY jersey.client.HttpUrlConnector "<link xlink:href='&jersey.javadoc.uri.prefix;/client/HttpUrlConnector.html'>HttpUrlConnector</link>">
 <!ENTITY jersey.client.HttpUrlConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/client/HttpUrlConnector.html'>HttpUrlConnectorProvider</link>">
 <!ENTITY jersey.client.HttpUrlConnectorProvider.SET_METHOD_WORKAROUND "<link xlink:href='&jersey.javadoc.uri.prefix;/client/HttpUrlConnectorProvider.html#SET_METHOD_WORKAROUND'>HttpUrlConnector.SET_METHOD_WORKAROUND</link>" >
 <!ENTITY jersey.client.HttpUrlConnectorProvider.USE_FIXED_LENGTH_STREAMING "<link xlink:href='&jersey.javadoc.uri.prefix;/client/HttpUrlConnectorProvider.html#USE_FIXED_LENGTH_STREAMING'>HttpUrlConnectorProvider.USE_FIXED_LENGTH_STREAMING</link>">
@@ -389,6 +390,7 @@
 <!ENTITY jersey.ext.rx.client.rxjava.RxObservable "<link xlink:href='&jersey.javadoc.uri.prefix;/client/rx/rxjava/RxObservable.html'>RxObservable</link>">
 <!ENTITY jersey.ext.rx.client.rxjava.RxObservableInvoker "<link xlink:href='&jersey.javadoc.uri.prefix;/client/rx/rxjava/RxObservableInvoker.html'>RxObservableInvoker</link>">
 <!ENTITY jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/ext/cdi1x/spi/Hk2CustomBoundTypesProvider.html'>Hk2CustomBoundTypesProvider</link>">
+<!ENTITY jersey.grizzly.GrizzlyConnector "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly/connector/GrizzlyConnector.html'>GrizzlyConnector</link>">
 <!ENTITY jersey.grizzly.GrizzlyConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly/connector/GrizzlyConnectorProvider.html'>GrizzlyConnectorProvider</link>">
 <!ENTITY jersey.grizzly.GrizzlyHttpContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly2/httpserver/GrizzlyHttpContainer.html'>GrizzlyHttpContainer</link>">
 <!ENTITY jersey.grizzly.GrizzlyHttpContainerProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly2/httpserver/GrizzlyHttpContainerProvider.html'>GrizzlyHttpContainerProvider</link>">
@@ -403,6 +405,7 @@
 <!ENTITY jersey.jetty.JettyHttpContainerFactory "<link xlink:href='&jersey.javadoc.uri.prefix;/jetty/JettyHttpContainerFactory.html'>JettyHttpContainerFactory</link>">
 <!ENTITY jersey.jetty.JettyHttpContainerProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/jetty/JettyHttpContainerProvider.html'>JettyHttpContainerProvider</link>">
 <!ENTITY jersey.jetty.JettyWebContainerFactory "<link xlink:href='&jersey.javadoc.uri.prefix;/jetty/servlet/JettyWebContainerFactory.html'>JettyWebContainerFactory</link>">
+<!ENTITY jersey.jetty.JettyClientProperties.ENABLE_SSL_HOSTNAME_VERIFICATION "<link xlink:href='&jersey.javadoc.uri.prefix;/client/JettyClientProperties.html#ENABLE_SSL_HOSTNAME_VERIFICATION'>JettyClientProperties.ENABLE_SSL_HOSTNAME_VERIFICATION</link>" >
 <!ENTITY jersey.linking.DeclarativeLinkingFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/linking/DeclarativeLinkingFeature.html'>DeclarativeLinkingFeature</link>">
 <!ENTITY jersey.media.Jackson1Feature "<link xlink:href='&jersey.javadoc.uri.prefix;/jackson1/Jackson1Feature.html'>Jackson1Feature</link>" >
 <!ENTITY jersey.media.JacksonFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/jackson/JacksonFeature.html'>JacksonFeature</link>" >
@@ -734,6 +737,7 @@
 <!ENTITY lit.jaxrs.ext.RuntimeDelegate.HeaderDelegate "<literal>RuntimeDelegate.HeaderDelegate&lt;T&gt;</literal>">
 
 <!ENTITY lit.jdk6.Boolean "<literal>Boolean</literal>">
+<!ENTITY lit.jdk6.CertificateException "<literal>CertificateException</literal>">
 <!ENTITY lit.jdk6.Character "<literal>Character</literal>">
 <!ENTITY lit.jdk6.DataSource "<literal>DataSource</literal>">
 <!ENTITY lit.jdk6.DynamicMBean "<literal>DynamicMBean</literal>">
@@ -799,6 +803,7 @@
 <!ENTITY lit.jersey.client.CsrfProtectionFilter "<literal>CsrfProtectionFilter</literal>">
 <!ENTITY lit.jersey.client.EncodingFeature "<literal>EncodingFeature</literal>">
 <!ENTITY lit.jersey.client.HttpAuthenticationFeature "<literal>HttpAuthenticationFeature</literal>">
+<!ENTITY lit.jersey.client.HttpUrlConnector "<literal>HttpUrlConnector</literal>">
 <!ENTITY lit.jersey.client.HttpUrlConnectorProvider "<literal>HttpUrlConnectorProvider</literal>">
 <!ENTITY lit.jersey.client.ServiceLocatorClientProvider "<literal>ServiceLocatorClientProvider</literal>">
 <!ENTITY lit.jersey.client.oauth1.AccessToken "<literal>AccessToken</literal>">
@@ -844,6 +849,7 @@
 <!ENTITY lit.jersey.ext.rx.client.jsr166e.RxCompletableFutureInvoker "<literal>RxCompletableFutureInvoker</literal>">
 <!ENTITY lit.jersey.ext.rx.client.rxjava.RxObservable "<literal>RxObservable</literal>">
 <!ENTITY lit.jersey.ext.rx.client.rxjava.RxObservableInvoker "<literal>RxObservableInvoker</literal>">
+<!ENTITY lit.jersey.grizzly.GrizzlyConnector "<literal>GrizzlyConnector</literal>">
 <!ENTITY lit.jersey.grizzly.GrizzlyConnectorProvider "<literal>GrizzlyConnectorProvider</literal>">
 <!ENTITY lit.jersey.grizzly.GrizzlyHttpContainer "<literal>GrizzlyHttpContainer</literal>">
 <!ENTITY lit.jersey.grizzly.GrizzlyHttpContainerProvider "<literal>GrizzlyHttpContainerProvider</literal>">

@@ -165,6 +165,13 @@ class JettyConnector implements Connector {
         final SSLContext sslContext = jaxrsClient.getSslContext();
         final SslContextFactory sslContextFactory = new SslContextFactory();
         sslContextFactory.setSslContext(sslContext);
+
+        Boolean enableHostnameVerification = (Boolean) config.getProperties()
+                .get(JettyClientProperties.ENABLE_SSL_HOSTNAME_VERIFICATION);
+        if (enableHostnameVerification != null && enableHostnameVerification) {
+            sslContextFactory.setEndpointIdentificationAlgorithm("https");
+        }
+
         this.client = new HttpClient(sslContextFactory);
 
         final Object connectTimeout = config.getProperties().get(ClientProperties.CONNECT_TIMEOUT);

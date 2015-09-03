@@ -40,7 +40,6 @@
 package org.glassfish.jersey.tests.e2e.client.connector.ssl;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -54,65 +53,21 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.filter.LoggingFilter;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import com.google.common.io.ByteStreams;
 
 /**
  * Test custom socket factory in HttpUrlConnection using SSL
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class SslHttpUrlConnectorTest {
-
-    private static final String CLIENT_TRUST_STORE = "truststore_client";
-    private static final String CLIENT_KEY_STORE = "keystore_client";
-
-    private final Object serverGuard = new Object();
-    private Server server = null;
-
-    @Before
-    public void setUp() throws Exception {
-        synchronized (serverGuard) {
-            if (server != null) {
-                throw new IllegalStateException(
-                        "Test run sync issue: Another instance of the SSL-secured HTTP test server has been already started.");
-            }
-            server = Server.start();
-        }
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        synchronized (serverGuard) {
-            if (server == null) {
-                throw new IllegalStateException("Test run sync issue: There is no SSL-secured HTTP test server to stop.");
-            }
-            server.stop();
-            server = null;
-        }
-    }
-
-    private static SSLContext getSslContext() throws IOException {
-        final InputStream trustStore = SslHttpUrlConnectorTest.class.getResourceAsStream(CLIENT_TRUST_STORE);
-        final InputStream keyStore = SslHttpUrlConnectorTest.class.getResourceAsStream(CLIENT_KEY_STORE);
-        return SslConfigurator.newInstance()
-                .trustStoreBytes(ByteStreams.toByteArray(trustStore))
-                .trustStorePassword("asdfgh")
-                .keyStoreBytes(ByteStreams.toByteArray(keyStore))
-                .keyPassword("asdfgh")
-                .createSSLContext();
-    }
+public class SslHttpUrlConnectorTest extends AbstractConnectorServerTest {
 
     /**
      * Test to see that the correct Http status is returned.

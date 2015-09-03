@@ -43,6 +43,12 @@ keystore_server
 server.cert
 truststore_client
 truststore_server
+keystore-client
+keystore-localhost-server
+keystore-example_com-server
+truststore-example_com-client
+truststore-localhost-client
+truststore-server
 /examples/reload/resources
 /core-server/etc
 bootstrap
