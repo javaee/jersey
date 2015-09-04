@@ -40,7 +40,8 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -58,6 +59,9 @@
         Memory leaks test maven parent module.
 
         This module aggregates maven based configuration for all memory leak related modules.
+
+        Note that the majority of plugin execution in maven sub-modules is bound to phase none by default. The reason is that
+        memory leak tests are executed only if one of memory leak maven profiles are activated.
     </description>
 
     <properties>
@@ -95,11 +99,29 @@
         <memleak.tomcat.zip>${memleak.tmpdir}/memleak-test-tomcat-${memleak.tomcat.version}-${memleak.timestamp}.zip
         </memleak.tomcat.zip>
         <memleak.tomcat.maxheap>${memleak.jvm.maxheap}</memleak.tomcat.maxheap>
+
+        <!-- by default, all common executions are bound to the pahse 'none' so that they're not executed -->
+        <phase.common.pre-integration-test>none</phase.common.pre-integration-test>
+        <phase.common.post-integration-test>none</phase.common.post-integration-test>
+
+        <!-- by default, redeployment executions are bound to the phase 'none' so that they're not executed -->
+        <phase.redeployment.pre-integration-test>none</phase.redeployment.pre-integration-test>
+        <phase.redeployment.integration-test>none</phase.redeployment.integration-test>
+        <phase.redeployment.post-integration-test>none</phase.redeployment.post-integration-test>
+
+        <!-- by default, test-cases executions are bound to the phase 'none' so that they're not executed -->
+        <phase.tests.test>none</phase.tests.test>
+        <phase.tests.pre-integration-test>none</phase.tests.pre-integration-test>
+        <phase.tests.integration-test>none</phase.tests.integration-test>
+        <phase.tests.post-integration-test>none</phase.tests.post-integration-test>
+        <phase.tests.verify>none</phase.tests.verify>
     </properties>
 
     <modules>
         <module>maven</module>
         <module>memleak-test-common</module>
+        <module>redeployment</module>
+        <module>test-cases</module>
     </modules>
 
     <build>
@@ -114,7 +136,7 @@
                             <goals>
                                 <goal>reserve-network-port</goal>
                             </goals>
-                            <phase>pre-integration-test</phase>
+                            <phase>${phase.common.pre-integration-test}</phase>
                             <configuration>
                                 <portNames>
                                     <portName>external.container.port.dynamic</portName>
@@ -139,18 +161,6 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>memleak-redeployment</id>
-            <modules>
-                <module>redeployment</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>memleak-test-cases</id>
-            <modules>
-                <module>test-cases</module>
-            </modules>
-        </profile>
         <profile>
             <id>gf4</id>
             <properties>
@@ -187,21 +197,21 @@
                                     <goals>
                                         <goal>downloadGf4</goal>
                                     </goals>
-                                    <phase>pre-integration-test</phase>
+                                    <phase>${phase.common.pre-integration-test}</phase>
                                 </execution>
                                 <execution>
                                     <id>gf4-start-and-deploy</id>
                                     <goals>
                                         <goal>startAndDeployGf4</goal>
                                     </goals>
-                                    <phase>pre-integration-test</phase>
+                                    <phase>${phase.common.pre-integration-test}</phase>
                                 </execution>
                                 <execution>
                                     <id>gf4-undeploy-and-stop</id>
                                     <goals>
                                         <goal>stopGf4</goal>
                                     </goals>
-                                    <phase>post-integration-test</phase>
+                                    <phase>${phase.common.post-integration-test}</phase>
                                 </execution>
                             </executions>
                         </plugin>
@@ -234,21 +244,21 @@
                                     <goals>
                                         <goal>downloadWls</goal>
                                     </goals>
-                                    <phase>pre-integration-test</phase>
+                                    <phase>${phase.common.pre-integration-test}</phase>
                                 </execution>
                                 <execution>
                                     <id>wls-deploy</id>
                                     <goals>
                                         <goal>startAndDeployWls</goal>
                                     </goals>
-                                    <phase>pre-integration-test</phase>
+                                    <phase>${phase.common.pre-integration-test}</phase>
                                 </execution>
                                 <execution>
                                     <id>wls-stop</id>
                                     <goals>
                                         <goal>stopWls</goal>
                                     </goals>
-                                    <phase>post-integration-test</phase>
+                                    <phase>${phase.common.post-integration-test}</phase>
                                 </execution>
                             </executions>
                         </plugin>
@@ -281,21 +291,21 @@
                                     <goals>
                                         <goal>downloadTomcat</goal>
                                     </goals>
-                                    <phase>pre-integration-test</phase>
+                                    <phase>${phase.common.pre-integration-test}</phase>
                                 </execution>
                                 <execution>
                                     <id>tomcat-deploy</id>
                                     <goals>
                                         <goal>startAndDeployTomcat</goal>
                                     </goals>
-                                    <phase>pre-integration-test</phase>
+                                    <phase>${phase.common.pre-integration-test}</phase>
                                 </execution>
                                 <execution>
                                     <id>tomcat-stop</id>
                                     <goals>
                                         <goal>stopTomcat</goal>
                                     </goals>
-                                    <phase>post-integration-test</phase>
+                                    <phase>${phase.common.post-integration-test}</phase>
                                 </execution>
                             </executions>
                         </plugin>
@@ -307,7 +317,7 @@
 
         <!-- profiles that help set ${memleak.tmpdir} based on environment -->
         <profile>
-            <id>env-memleak-tmpdir</id>
+            <id>memleak-env-tmpdir</id>
             <activation>
                 <property>
                     <name>env.TMPDIR</name>
@@ -318,7 +328,7 @@
             </properties>
         </profile>
         <profile>
-            <id>env-memleak-tmp</id>
+            <id>memleak-env-tmp</id>
             <activation>
                 <property>
                     <name>env.TMP</name>

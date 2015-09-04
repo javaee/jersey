@@ -48,7 +48,7 @@
     <parent>
         <groupId>org.glassfish.jersey.tests.memleaks.redeployment</groupId>
         <artifactId>project</artifactId>
-        <version>2.20-SNAPSHOT</version>
+        <version>2.22-SNAPSHOT</version>
     </parent>
 
     <artifactId>redeployment-no-jersey-app</artifactId>
@@ -67,7 +67,7 @@
         tomcat,memleak-redeployment
 
         mvn -am -pl tests/mem-leaks/redeployment/redeployment-no-jersey-app -rf tests/mem-leaks clean install -P
-        tomcat,memleak-redeployment,memory-leak-reproducer
+        tomcat,memleak-redeployment,memleak-reproducer
     </description>
 
     <properties>
@@ -99,7 +99,7 @@
                                     <goals>
                                         <goal>enforce</goal>
                                     </goals>
-                                    <phase>post-integration-test</phase>
+                                    <phase>${phase.redeployment.post-integration-test}</phase>
                                     <configuration>
                                         <!-- assure that Tomcat ThreadLocal memory leak detection messages weren't included in the Tomcat output.
                                         If so, ThreadLocals aren't kept clean and that's what users do not like (see JERSEY-2890). -->
@@ -121,7 +121,7 @@
             </build>
         </profile>
         <profile>
-            <id>memory-leak-reproducer</id>
+            <id>memleak-reproducer</id>
             <properties>
                 <hk2.version>2.4.0-b26</hk2.version>
             </properties>

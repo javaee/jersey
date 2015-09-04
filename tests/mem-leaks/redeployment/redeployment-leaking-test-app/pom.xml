@@ -47,7 +47,7 @@
     <parent>
         <groupId>org.glassfish.jersey.tests.memleaks.redeployment</groupId>
         <artifactId>project</artifactId>
-        <version>2.20-SNAPSHOT</version>
+        <version>2.22-SNAPSHOT</version>
     </parent>
 
     <artifactId>redeployment-leaking-test-app</artifactId>
@@ -59,9 +59,9 @@
 
         To run this example, execute from jersey root dir:
 
-        [1] Glassfish: mvn install -pl :memleak-test-common,:redeployment-leaking-test-app -P gf4,leaking-test
+        [1] Glassfish: mvn install -pl :memleak-test-common,:redeployment-leaking-test-app -P gf4,memleak-leaking-test
 
-        [2] Weblogic: mvn install -pl :memleak-test-common,:redeployment-leaking-test-app -P wls,leaking-test
+        [2] Weblogic: mvn install -pl :memleak-test-common,:redeployment-leaking-test-app -P wls,memleak-leaking-test
     </description>
 
     <properties>
@@ -131,7 +131,7 @@
 
     <profiles>
         <profile>
-            <id>leaking-test</id>
+            <id>memleak-leaking-test</id>
             <build>
                 <plugins>
                     <plugin>
@@ -152,7 +152,7 @@
                         <executions>
                             <execution>
                                 <id>enforce-out-of-memory-did-not-occur</id>
-                                <phase>post-integration-test</phase>
+                                <phase>${phase.redeployment.post-integration-test}</phase>
                             </execution>
                         </executions>
                     </plugin>

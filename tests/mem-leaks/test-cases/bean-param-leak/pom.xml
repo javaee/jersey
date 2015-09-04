@@ -47,7 +47,7 @@
     <parent>
         <groupId>org.glassfish.jersey.tests.memleaks.testcases</groupId>
         <artifactId>project</artifactId>
-        <version>2.20-SNAPSHOT</version>
+        <version>2.22-SNAPSHOT</version>
     </parent>
 
     <artifactId>bean-param-leak</artifactId>
@@ -128,14 +128,14 @@
 
     <profiles>
         <profile>
-            <id>memory-leak-reproducer</id>
+            <id>memleak-reproducer</id>
             <properties>
                 <memleak.jersey.version>2.16</memleak.jersey.version>
                 <memleak.wls.packagingExcludes.weblogic.xml />
             </properties>
         </profile>
         <profile>
-            <id>override-libraries</id>
+            <id>memleak-override-libraries</id>
             <properties>
                 <memleak.wls.packagingExcludes.weblogic.xml />
             </properties>

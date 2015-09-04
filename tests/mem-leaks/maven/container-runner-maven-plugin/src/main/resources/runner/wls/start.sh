@@ -95,6 +95,7 @@ else
 
     java $JAVA_OPTIONS -Xmx$MAX_HEAP -XX:MaxPermSize=256m \
         -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$DIST_DIR \
+        -XX:GCTimeLimit=20 -XX:GCHeapFreeLimit=30 \
         -Djersey.config.test.memleak.wls.magicRunnerIdentifier \
         -Dweblogic.management.GenerateDefaultConfig \
         -Dweblogic.Domain=$DOMAIN \
