@@ -96,7 +96,7 @@ start_tomcat() {
     </tomcat-users>@g' "$CATALINA_HOME"/conf/tomcat-users.xml
     fi
 
-    export CATALINA_OPTS="-Xmx$MAX_HEAP -Djersey.config.test.memleak.tomcat.magicRunnerIdentifier -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$DIST_DIR $JVM_ARGS"
+    export CATALINA_OPTS="-Xmx$MAX_HEAP -Djersey.config.test.memleak.tomcat.magicRunnerIdentifier -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$DIST_DIR -XX:GCTimeLimit=20 -XX:GCHeapFreeLimit=30 $JVM_ARGS"
 
     chmod +x "$CATALINA_HOME"/bin/startup.sh
 

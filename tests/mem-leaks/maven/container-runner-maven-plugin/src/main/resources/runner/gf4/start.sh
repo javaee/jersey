@@ -97,9 +97,15 @@ else
     "$AS_HOME"/bin/asadmin create-jvm-options --port $ADMINPORT --target default-config -Djersey.config.test.memleak.gf4.magicRunnerIdentifier
     "$AS_HOME"/bin/asadmin create-jvm-options --port $ADMINPORT --target server-config -Djersey.config.test.memleak.gf4.magicRunnerIdentifier
 
+    # if JVM_ARGS doesn't contain following vm options, set them (increases the probability of OOME GC Overhead exceeded)
+    echo "$JVM_ARGS" | grep GCTimeLimit > /dev/null || "$AS_HOME"/bin/asadmin create-jvm-options --port $ADMINPORT --target server-config "-XX\:GCTimeLimit=20"
+    echo "$JVM_ARGS" | grep GCHeapFreeLimit > /dev/null || "$AS_HOME"/bin/asadmin create-jvm-options --port $ADMINPORT --target server-config "-XX\:GCHeapFreeLimit=30"
+
     if [ "$JVM_ARGS" != "" ]; then
-        "$AS_HOME"/bin/asadmin create-jvm-options --port $ADMINPORT --target default-config "$JVM_ARGS"
-        "$AS_HOME"/bin/asadmin create-jvm-options --port $ADMINPORT --target server-config "$JVM_ARGS"
+        for JVM_ARG in `echo $JVM_ARGS`; do
+            "$AS_HOME"/bin/asadmin create-jvm-options --port $ADMINPORT --target default-config "$JVM_ARG"
+            "$AS_HOME"/bin/asadmin create-jvm-options --port $ADMINPORT --target server-config "$JVM_ARG"
+        done
     fi
 
     "$AS_HOME"/bin/asadmin stop-domain --port $ADMINPORT --force=true $DOMAIN
