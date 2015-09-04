@@ -39,13 +39,16 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_request_wrapper_binding2;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 
 /**
@@ -58,6 +61,8 @@ import javax.ws.rs.core.Context;
 @Path("/")
 public class RequestResponseInjectedResource {
 
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+
     @Context
     HttpServletRequest request;
 
@@ -66,9 +71,15 @@ public class RequestResponseInjectedResource {
 
     @GET
     @Path("requestType")
-    public String getRequestType() {
+    public String getRequestType() throws Exception {
 
-        return ((HttpServletRequestWrapper) request).getRequest().getClass().getName();
+        // make sure we can access underlying request from another thread
+        return executor.submit(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return ((HttpServletRequestWrapper) request).getRequest().getClass().getName();
+            }
+        }).get();
     }
 
     @GET
