@@ -60,6 +60,7 @@
         <module>cdi-ejb-test-webapp</module>
         <module>cdi-iface-with-non-jaxrs-impl-test-webapp</module>
         <module>cdi-multimodule</module>
+        <module>ejb-multimodule-reload</module>
         <module>cdi-multipart-webapp</module>
         <module>cdi-test-webapp</module>
         <module>cdi-with-jersey-injection-custom-cfg-webapp</module>
