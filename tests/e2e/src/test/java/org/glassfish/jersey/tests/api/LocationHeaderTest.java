@@ -91,6 +91,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test if the location response header is correctly adjusted to contain an absolute URI.
@@ -103,8 +104,8 @@ public class LocationHeaderTest extends JerseyTest {
     private static final Logger LOGGER = Logger.getLogger(LocationHeaderTest.class.getName());
     static ExecutorService executor;
 
-    private static AtomicBoolean executorComparisonFailed = new AtomicBoolean(false);
-    private static AtomicBoolean interrupted = new AtomicBoolean(false);
+    private static final AtomicBoolean executorComparisonFailed = new AtomicBoolean(false);
+    private static final AtomicBoolean interrupted = new AtomicBoolean(false);
 
     @Override
     protected ResourceConfig configure() {
@@ -113,6 +114,7 @@ public class LocationHeaderTest extends JerseyTest {
                 LocationHeaderTest.ResponseTest.class,
                 LocationManipulationDynamicBinding.class,
                 AbortingPreMatchingRequestFilter.class,
+                BaseUriChangingPreMatchingFilter.class,
                 TestExceptionMapper.class
         );
     }
@@ -142,6 +144,7 @@ public class LocationHeaderTest extends JerseyTest {
     /**
      * Test JAX-RS resource
      */
+    @SuppressWarnings("VoidMethodAnnotatedWithGET")
     @Path(value = "/ResponseTest")
     public static class ResponseTest {
 
@@ -156,7 +159,7 @@ public class LocationHeaderTest extends JerseyTest {
         @GET
         @Path("location")
         public Response locationTest() {
-            URI uri = getUriBuilder().segment("location").build();
+            final URI uri = URI.create("location");
             LOGGER.info("URI Created in the resource method > " + uri);
             return Response.created(uri).build();
         }
@@ -190,7 +193,7 @@ public class LocationHeaderTest extends JerseyTest {
         @GET
         @Path("locationWithInterceptor")
         public Response locationTestWithInterceptor() {
-            URI uri = getUriBuilder().segment("foo").build();
+            final URI uri = getUriBuilder().segment("foo").build();
             return Response.created(uri).entity("Return from locationTestWithInterceptor").type("text/plain").build();
         }
 
@@ -202,7 +205,7 @@ public class LocationHeaderTest extends JerseyTest {
         @Path("locationWithBody")
         @Produces("text/plain")
         public Response locationTestWithBody() {
-            URI uri = getUriBuilder().segment("locationWithBody").build();
+            final URI uri = getUriBuilder().segment("locationWithBody").build();
             return Response.created(uri).entity("Return from locationWithBody").type("text/plain").build();
         }
 
@@ -218,8 +221,8 @@ public class LocationHeaderTest extends JerseyTest {
         @Path("locationDirect")
         @Produces("text/plain")
         public Boolean locationDirectTest() {
-            URI uri = getUriBuilder().segment("locationDirect").build();
-            Response response = Response.created(uri).build();
+            final URI uri = getUriBuilder().segment("locationDirect").build();
+            final Response response = Response.created(uri).build();
             return response.getLocation().equals(uriInfo.getAbsolutePath());
         }
 
@@ -235,10 +238,10 @@ public class LocationHeaderTest extends JerseyTest {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    URI uri = getUriBuilder().segment("locationAsync").build();
-                    Response result = Response.created(uri).build();
+                    final URI uri = getUriBuilder().segment("locationAsync").build();
+                    final Response result = Response.created(uri).build();
 
-                    URI location = result.getLocation();
+                    final URI location = result.getLocation();
                     if (uriInfo.getAbsolutePath().equals(location)) {
                         asyncResponse.resume(result);
                     } else {
@@ -263,8 +266,8 @@ public class LocationHeaderTest extends JerseyTest {
             LocationHeaderTest.executor.submit(new Runnable() {
                 @Override
                 public void run() {
-                    URI uri = getUriBuilder().segment("executorAsync").build();
-                    Response result = Response.created(uri).build();
+                    final URI uri = getUriBuilder().segment("executorAsync").build();
+                    final Response result = Response.created(uri).build();
                     asyncResponse.resume(result);
                     if (!uriInfo.getAbsolutePath().equals(result.getLocation())) {
                         executorComparisonFailed.set(true);
@@ -279,7 +282,7 @@ public class LocationHeaderTest extends JerseyTest {
          *
          * This is inspired by the {@link AsyncResponse} javadoc example
          */
-        private static final BlockingQueue<AsyncResponse> suspended = new ArrayBlockingQueue<AsyncResponse>(5);
+        private static final BlockingQueue<AsyncResponse> suspended = new ArrayBlockingQueue<>(5);
 
         /**
          * Start of the async test - stores the asynchronous response object
@@ -292,7 +295,7 @@ public class LocationHeaderTest extends JerseyTest {
                 public void run() {
                     try {
                         suspended.put(asyncResponse);
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         asyncResponse.cancel();
                         Thread.currentThread().interrupt();
                         interrupted.set(true);
@@ -308,11 +311,11 @@ public class LocationHeaderTest extends JerseyTest {
         @GET
         @Path("locationAsyncFinish")
         public Boolean locationAsyncFinish() throws InterruptedException {
-            AsyncResponse asyncResponse = suspended.poll(2000, TimeUnit.MILLISECONDS);
+            final AsyncResponse asyncResponse = suspended.poll(2000, TimeUnit.MILLISECONDS);
 
-            URI uri = getUriBuilder().segment("locationAsyncFinish").build();
-            Response result = Response.created(uri).build();
-            boolean wasEqual = result.getLocation().equals(uriInfo.getAbsolutePath());
+            final URI uri = getUriBuilder().segment("locationAsyncFinish").build();
+            final Response result = Response.created(uri).build();
+            final boolean wasEqual = result.getLocation().equals(uriInfo.getAbsolutePath());
 
             asyncResponse.resume(result);
             return wasEqual;
@@ -375,7 +378,7 @@ public class LocationHeaderTest extends JerseyTest {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    Response result = Response.created(getUriBuilder().segment("responseFilterAsync").build()).build();
+                    final Response result = Response.created(getUriBuilder().segment("responseFilterAsync").build()).build();
                     asyncResponse.resume(result);
                 }
             }).start();
@@ -397,7 +400,8 @@ public class LocationHeaderTest extends JerseyTest {
             executor.submit(new Runnable() {
                 @Override
                 public void run() {
-                    Response result = Response.created(getUriBuilder().segment("responseFilterAsyncExecutor").build()).build();
+                    final Response result =
+                            Response.created(getUriBuilder().segment("responseFilterAsyncExecutor").build()).build();
                     asyncResponse.resume(result);
                 }
             });
@@ -459,6 +463,29 @@ public class LocationHeaderTest extends JerseyTest {
             });
         }
 
+        /**
+         * Resource method for testing correct baseUri and request overwrite in the prematching filter.
+         * Should never be called by the test, as {@link ResponseTest#redirectedUri()} should be called instead.
+         */
+        @GET
+        @Path("filterChangedBaseUri")
+        public Response locationWithChangedBaseUri() {
+            fail("Method should not expected to be called, as prematching filter should have changed the request uri.");
+            return Response.created(URI.create("new")).build();
+        }
+
+        /**
+         * Not called by the test directly, but after prematching filter redirect from
+         * {@link ResponseTest#locationWithChangedBaseUri()}.
+         *
+         * @return {@code 201 Created} response with location resolved against new baseUri.
+         */
+        @GET
+        @Path("newUri")
+        public Response redirectedUri() {
+            return Response.created(URI.create("newRedirected")).build();
+        }
+
         /** Return UriBuilder with base pre-set {@code /ResponseTest} uri segment for this resource.
          *
          * @return UriBuilder
@@ -473,7 +500,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testAbortFilter() {
-        checkResponseFilter("ResponseTest/locationAborted", "uriAfterAbortion/SUCCESS");
+        checkResponseFilter("ResponseTest/locationAborted", "ResponseTest/uriAfterAbortion/SUCCESS");
     }
 
     /**
@@ -481,7 +508,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testAbortPreMatchingFilter() {
-        checkResource("ResponseTest/locationAbortedPreMatching", "uriAfterPreMatchingAbortion/SUCCESS");
+        checkResource("ResponseTest/locationAbortedPreMatching", "ResponseTest/uriAfterPreMatchingAbortion/SUCCESS");
     }
 
     /**
@@ -493,12 +520,20 @@ public class LocationHeaderTest extends JerseyTest {
     }
 
     /**
+     * Test, that trailing slash in the request URI changes the way how relative URI is resolved.
+     */
+    @Test
+    public void testConvertRelativeUriToAbsoluteWithTrailingSlash() {
+        checkResource("ResponseTest/location/", "ResponseTest/location/location");
+    }
+
+    /**
      * Test with entity; most of the HTTP 201 Created responses do not contain any body, just headers.
      * This test ensures, that the uri conversion works even in case when entity is present.
      */
     @Test
     public void testAbsoluteUriWithEntity() {
-        Response response = checkResource("ResponseTest/locationWithBody");
+        final Response response = checkResource("ResponseTest/locationWithBody");
         assertNotNull(response.getEntity());
     }
 
@@ -532,7 +567,7 @@ public class LocationHeaderTest extends JerseyTest {
     @Test
     public void testNullLocation() {
         final Response response = target().path("ResponseTest/locationNull").request(MediaType.TEXT_PLAIN).get(Response.class);
-        String location = response.getHeaderString(HttpHeaders.LOCATION);
+        final String location = response.getHeaderString(HttpHeaders.LOCATION);
         LOGGER.info("Location resolved from response > " + location);
         assertNull("Location header should be absolute URI", location);
     }
@@ -552,14 +587,14 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testAsync() {
-        String expectedUri = getBaseUri() + "ResponseTest/locationAsync";
+        final String expectedUri = getBaseUri() + "ResponseTest/locationAsync";
         final Response response = target().path("ResponseTest/locationAsync").request().get(Response.class);
 
-        String msg = String.format("Comparison failed in the resource method. \nExpected: %1$s\nActual: %2$s",
+        final String msg = String.format("Comparison failed in the resource method. \nExpected: %1$s\nActual: %2$s",
                 expectedUri, response.readEntity(String.class));
         assertNotEquals(msg, response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 
-        String location = response.getHeaderString(HttpHeaders.LOCATION);
+        final String location = response.getHeaderString(HttpHeaders.LOCATION);
         LOGGER.info("Location resolved from response > " + location);
         assertEquals(expectedUri, location);
     }
@@ -570,7 +605,7 @@ public class LocationHeaderTest extends JerseyTest {
     @Test
     public void testExecutorAsync() {
         final Response response = target().path("ResponseTest/executorAsync").request().get(Response.class);
-        String location = response.getHeaderString(HttpHeaders.LOCATION);
+        final String location = response.getHeaderString(HttpHeaders.LOCATION);
         LOGGER.info("Location resolved from response > " + location);
         assertFalse("The comparison failed in the resource method.", executorComparisonFailed.get());
         assertEquals(getBaseUri() + "ResponseTest/executorAsync", location);
@@ -581,13 +616,13 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testSeparatedAsync() throws ExecutionException, InterruptedException {
-        Future<Response> futureResponse = target().path("ResponseTest/locationAsyncStart").request().async().get();
-        Boolean result = target().path("ResponseTest/locationAsyncFinish").request().get(Boolean.class);
+        final Future<Response> futureResponse = target().path("ResponseTest/locationAsyncStart").request().async().get();
+        final Boolean result = target().path("ResponseTest/locationAsyncFinish").request().get(Boolean.class);
         assertFalse("Thread was interrupted on inserting into blocking queue.", interrupted.get());
         assertTrue(result);
 
-        Response response = futureResponse.get();
-        String location = response.getHeaderString(HttpHeaders.LOCATION);
+        final Response response = futureResponse.get();
+        final String location = response.getHeaderString(HttpHeaders.LOCATION);
         assertEquals(getBaseUri() + "ResponseTest/locationAsyncFinish", location);
     }
 
@@ -620,7 +655,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testExceptionMapperSync() {
-        checkResponseFilter("ResponseTest/exceptionMapperSync", "EXCEPTION_MAPPER");
+        checkResponseFilter("ResponseTest/exceptionMapperSync", "ResponseTest/EXCEPTION_MAPPER");
     }
 
     /**
@@ -628,7 +663,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testExceptionMapperAsync() {
-        checkResponseFilter("ResponseTest/exceptionMapperAsync", "EXCEPTION_MAPPER");
+        checkResponseFilter("ResponseTest/exceptionMapperAsync", "ResponseTest/EXCEPTION_MAPPER");
     }
 
     /**
@@ -636,26 +671,35 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testExceptionMapperExecutor() {
-        checkResponseFilter("ResponseTest/exceptionMapperExecutor", "EXCEPTION_MAPPER");
+        checkResponseFilter("ResponseTest/exceptionMapperExecutor", "ResponseTest/EXCEPTION_MAPPER");
     }
 
-    private Response checkResource(String resourcePath) {
+    /**
+     * Test the baseUri and requestUri change in the prematching filter.
+     */
+    @Test
+    public void testLocationBaseUriChangedByPrematchingFilter() {
+        final Response response = target().path("ResponseTest/filterChangedBaseUri").request().get();
+        assertEquals("http://www.server.com/newRedirected", response.getHeaderString("Location"));
+    }
+
+    private Response checkResource(final String resourcePath) {
         return checkResource(resourcePath, resourcePath);
     }
 
-    private Response checkResource(String resourcePath, String expectedRelativeUri) {
+    private Response checkResource(final String resourcePath, final String expectedRelativeUri) {
         final Response response = target().path(resourcePath).request(MediaType.TEXT_PLAIN).get(Response.class);
-        String location = response.getHeaderString(HttpHeaders.LOCATION);
+        final String location = response.getHeaderString(HttpHeaders.LOCATION);
         LOGGER.info("Location resolved from response > " + location);
         assertEquals(getBaseUri() + expectedRelativeUri, location);
         return response;
     }
 
-    private void checkResponseFilter(String resourcePath) {
+    private void checkResponseFilter(final String resourcePath) {
         checkResponseFilter(resourcePath, resourcePath);
     }
 
-    private void checkResponseFilter(String resourcePath, String expectedRelativeUri) {
+    private void checkResponseFilter(final String resourcePath, final String expectedRelativeUri) {
         final Response response = target().path(resourcePath).request().get(Response.class);
         assertNotEquals("Message from response filter: " + response.readEntity(String.class),
                 response.getStatus(), Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
@@ -668,10 +712,11 @@ public class LocationHeaderTest extends JerseyTest {
     public static class LocationManipulationFilter implements ContainerResponseFilter {
 
         @Override
-        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-            MultivaluedMap<String, ? extends Object> headers = responseContext.getHeaders();
-            List<URI> locations = (List<URI>) headers.get(HttpHeaders.LOCATION);
-            locations.set(0, URI.create("ResponseTest/UriChangedByFilter"));
+        public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
+                throws IOException {
+            final MultivaluedMap<String, ?> headers = responseContext.getHeaders();
+            final List<URI> locations = (List<URI>) headers.get(HttpHeaders.LOCATION);
+            locations.set(0, URI.create("UriChangedByFilter"));
             LOGGER.info("LocationManipulationFilter applied.");
         }
     }
@@ -683,8 +728,9 @@ public class LocationHeaderTest extends JerseyTest {
     public static class UriCheckingResponseFilter implements ContainerResponseFilter {
 
         @Override
-        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-            URI location = responseContext.getLocation();
+        public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
+                throws IOException {
+            final URI location = responseContext.getLocation();
             if (!location.isAbsolute()) {
                 responseContext.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
                 responseContext.setEntity("Response location was not absolute in UriCheckingFilter. Location value: " + location);
@@ -704,12 +750,12 @@ public class LocationHeaderTest extends JerseyTest {
     public static class AbortingRequestFilter implements ContainerRequestFilter {
 
         @Override
-        public void filter(ContainerRequestContext requestContext) throws IOException {
+        public void filter(final ContainerRequestContext requestContext) throws IOException {
             LOGGER.info("Aborting request in the request filter. Returning status created.");
-            String successRelativeUri = "uriAfterAbortion/SUCCESS";
+            final String successRelativeUri = "uriAfterAbortion/SUCCESS";
             Response response = Response.created(URI.create(successRelativeUri)).build();
 
-            if (!response.getLocation().toString().equals(requestContext.getUriInfo().getBaseUri() + successRelativeUri)) {
+            if (!response.getLocation().equals(requestContext.getUriInfo().getRequestUri().resolve(successRelativeUri))) {
                 response = Response.created(URI.create("uriAfterAbortion/FAILURE")).build();
             }
             requestContext.abortWith(response);
@@ -729,15 +775,37 @@ public class LocationHeaderTest extends JerseyTest {
     public static class AbortingPreMatchingRequestFilter implements ContainerRequestFilter {
 
         @Override
-        public void filter(ContainerRequestContext requestContext) throws IOException {
+        public void filter(final ContainerRequestContext requestContext) throws IOException {
             if (requestContext.getUriInfo().getAbsolutePath().toString().endsWith("locationAbortedPreMatching")) {
                 LOGGER.info("Aborting request in the request filter. Returning status created.");
-                String successRelativeUri = "uriAfterPreMatchingAbortion/SUCCESS";
+                final String successRelativeUri = "uriAfterPreMatchingAbortion/SUCCESS";
                 Response response = Response.created(URI.create(successRelativeUri)).build();
-                if (!response.getLocation().toString().equals(requestContext.getUriInfo().getBaseUri() + successRelativeUri)) {
+                if (!response.getLocation().toString().equals(requestContext.getUriInfo().getRequestUri()
+                        .resolve(successRelativeUri).toString())) {
                     response = Response.created(URI.create("uriAfterPreMatchingAbortion/FAILURE")).build();
                 }
                 requestContext.abortWith(response);
+            }
+        }
+    }
+
+    /**
+     * Request prematching filter which changes request URI and base URI.
+     *
+     * As a result, different resource mathod should be matched and invoked and return location resolved against the new
+     * base URI.
+     */
+    @PreMatching
+    public static class BaseUriChangingPreMatchingFilter implements ContainerRequestFilter {
+
+        @Override
+        public void filter(final ContainerRequestContext requestContext) throws IOException {
+            if (requestContext.getUriInfo().getAbsolutePath().toString().endsWith("filterChangedBaseUri")) {
+                final URI requestUri = requestContext.getUriInfo().getRequestUri();
+                // NOTE, that the trailing slash matters, without it, the URI is nod valid and is not correctly resolved by the
+                // URI.resolve() method.
+                final URI baseUri = URI.create("http://www.server.com/");
+                requestContext.setRequestUri(baseUri, requestUri.resolve("newUri"));
             }
         }
     }
@@ -748,10 +816,10 @@ public class LocationHeaderTest extends JerseyTest {
     public static class LocationManipulationInterceptor implements WriterInterceptor {
 
         @Override
-        public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
-            MultivaluedMap<String, ? extends Object> headers = context.getHeaders();
-            List<URI> locations = (List<URI>) headers.get(HttpHeaders.LOCATION);
-            locations.set(0, URI.create("ResponseTest/UriChangedByInterceptor"));
+        public void aroundWriteTo(final WriterInterceptorContext context) throws IOException, WebApplicationException {
+            final MultivaluedMap<String, ?> headers = context.getHeaders();
+            final List<URI> locations = (List<URI>) headers.get(HttpHeaders.LOCATION);
+            locations.set(0, URI.create("UriChangedByInterceptor"));
             LOGGER.info("LocationManipulationInterceptor applied.");
             context.proceed();
         }
@@ -763,7 +831,7 @@ public class LocationHeaderTest extends JerseyTest {
     public static class TestExceptionMapper implements ExceptionMapper<WebApplicationException> {
 
         @Override
-        public Response toResponse(WebApplicationException exception) {
+        public Response toResponse(final WebApplicationException exception) {
             return Response.created(URI.create("EXCEPTION_MAPPER")).build();
         }
     }
@@ -774,9 +842,9 @@ public class LocationHeaderTest extends JerseyTest {
     public static class LocationManipulationDynamicBinding implements DynamicFeature {
 
         @Override
-        public void configure(ResourceInfo resourceInfo, FeatureContext context) {
+        public void configure(final ResourceInfo resourceInfo, final FeatureContext context) {
             if (ResponseTest.class.equals(resourceInfo.getResourceClass())) {
-                String methodName = resourceInfo.getResourceMethod().getName();
+                final String methodName = resourceInfo.getResourceMethod().getName();
                 if (methodName.contains("locationTestWithFilter")) {
                     context.register(LocationManipulationFilter.class);
                     LOGGER.info("LocationManipulationFilter registered.");
@@ -797,6 +865,10 @@ public class LocationHeaderTest extends JerseyTest {
                         || methodName.contains("exceptionMapperExecutor")) {
                     context.register(UriCheckingResponseFilter.class);
                     LOGGER.info("UriCheckingResponseFilter registered.");
+                }
+                if (methodName.contains("locationWithChangedBaseUri")) {
+                    context.register(BaseUriChangingPreMatchingFilter.class);
+                    LOGGER.info("BaseUriChangingPreMatchingFilter registered.");
                 }
 
             }

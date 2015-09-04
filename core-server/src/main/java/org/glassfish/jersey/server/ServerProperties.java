@@ -709,6 +709,22 @@ public final class ServerProperties {
     public static final String SUBRESOURCE_LOCATOR_CACHE_JERSEY_RESOURCE_ENABLED =
             "jersey.config.server.subresource.cache.jersey.resource.enabled";
 
+    /**
+     * If {@code true} then Jersey will not attempt to resolve relative URIs in the {@code Location} http header against the
+     * request URI.
+     *
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.22
+     */
+    public static final String LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED =
+            "jersey.config.server.headers.location.relative.resolution.disabled";
+
     private ServerProperties() {
         // prevents instantiation
     }
