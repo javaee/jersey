@@ -42,11 +42,15 @@ package org.glassfish.jersey.server.model;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -332,15 +336,26 @@ public class Parameter implements AnnotatedElement {
         ClassTypePair ct = ReflectionHelper.resolveGenericType(
                 concreteClass, declaringClass, rawType, type);
 
-        return new Parameter(
-                annotations,
-                paramAnnotation,
-                paramSource,
-                paramName,
-                ct.rawClass(),
-                ct.type(),
-                paramEncoded,
-                paramDefault);
+        if (paramSource == Source.BEAN_PARAM) {
+            return new BeanParameter(
+                    annotations,
+                    paramAnnotation,
+                    paramName,
+                    ct.rawClass(),
+                    ct.type(),
+                    paramEncoded,
+                    paramDefault);
+        } else {
+            return new Parameter(
+                    annotations,
+                    paramAnnotation,
+                    paramSource,
+                    paramName,
+                    ct.rawClass(),
+                    ct.type(),
+                    paramEncoded,
+                    paramDefault);
+        }
     }
 
     private static List<Parameter> create(
@@ -499,6 +514,53 @@ public class Parameter implements AnnotatedElement {
         this.type = type;
         this.encoded = encoded;
         this.defaultValue = defaultValue;
+    }
+
+    /**
+     * Bean Parameter class represents a parameter annotated with {@link BeanParam} which in fact represents
+     * additional set of parameters.
+     */
+    public static class BeanParameter extends Parameter {
+
+        private final Collection<Parameter> parameters;
+
+        private BeanParameter(final Annotation[] markers,
+                              final Annotation marker,
+                              final String sourceName,
+                              final Class<?> rawType,
+                              final Type type, final boolean encoded, final String defaultValue) {
+            super(markers, marker, Source.BEAN_PARAM, sourceName, rawType, type, encoded, defaultValue);
+
+            final Collection<Parameter> parameters = new LinkedList<>();
+
+            for (Field field : AccessController.doPrivileged(ReflectionHelper.getDeclaredFieldsPA(rawType))) {
+                if (field.getDeclaredAnnotations().length > 0) {
+                    Parameter beanParamParameter = Parameter.create(
+                            rawType,
+                            field.getDeclaringClass(),
+                            field.isAnnotationPresent(Encoded.class),
+                            field.getType(),
+                            field.getGenericType(),
+                            field.getAnnotations());
+                    parameters.add(beanParamParameter);
+                }
+            }
+            for (Constructor constructor : AccessController
+                    .doPrivileged(ReflectionHelper.getDeclaredConstructorsPA(rawType))) {
+                for (Parameter parameter : Parameter.create(rawType, rawType, constructor, false)) {
+                    parameters.add(parameter);
+                }
+            }
+
+            this.parameters = Collections.unmodifiableCollection(parameters);
+        }
+
+        /**
+         * @return The transitively associated parameters through this {@link BeanParam} parameter.
+         */
+        public Collection<Parameter> getParameters() {
+            return parameters;
+        }
     }
 
     /**

@@ -148,7 +148,16 @@ import com.sun.research.ws.wadl.Resources;
         WadlResourceTest.Wadl10Test.class})
 public class WadlResourceTest {
 
-    private static Document extractWadlAsDocument(final Response response) throws ParserConfigurationException, SAXException,
+    /**
+     * Extracts WADL as {@link Document} from given {@link Response}.
+     *
+     * @param response The response to extract {@code Document} from.
+     * @return The extracted {@code Document}.
+     * @throws ParserConfigurationException In case of parser configuration issues.
+     * @throws SAXException                 In case of parsing issues.
+     * @throws IOException                  In case of IO error.
+     */
+    static Document extractWadlAsDocument(final Response response) throws ParserConfigurationException, SAXException,
             IOException {
         assertEquals(200, response.getStatus());
         final File tmpFile = response.readEntity(File.class);
@@ -906,7 +915,7 @@ public class WadlResourceTest {
 
                 // check the style of the param
                 final String style = (String) xp.evaluate(paramXPath + "/@style", d, XPathConstants.STRING);
-                assertThat("Parameter '" + pName + "' style does not match.",  pStyle, equalTo(style));
+                assertThat("Parameter '" + pName + "' style does not match.", pStyle, equalTo(style));
             }
 
             paramStyles.clear();
@@ -931,7 +940,7 @@ public class WadlResourceTest {
 
                 // check the style of the param
                 final String style = (String) xp.evaluate(paramXPath + "/@style", d, XPathConstants.STRING);
-                assertThat("Parameter '" + pName + "' style does not match.",  pStyle, equalTo(style));
+                assertThat("Parameter '" + pName + "' style does not match.", pStyle, equalTo(style));
             }
         }
     }

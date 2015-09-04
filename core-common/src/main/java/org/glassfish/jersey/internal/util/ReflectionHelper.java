@@ -820,22 +820,40 @@ public final class ReflectionHelper {
      * If run using security manager, the returned privileged action
      * must be invoked within a doPrivileged block.
      *
-     * @param c The class for which to obtain the constructor.
+     * @param clazz The class for which to obtain the constructor.
      * @return privileged action to obtain the constructor.
      * The action could return {@code null} if the constructor is not present.
      * @see AccessController#doPrivileged(java.security.PrivilegedAction)
      */
-    public static PrivilegedAction<Constructor> getStringConstructorPA(final Class<?> c) {
+    public static PrivilegedAction<Constructor> getStringConstructorPA(final Class<?> clazz) {
         return new PrivilegedAction<Constructor>() {
             @Override
             public Constructor run() {
                 try {
-                    return c.getConstructor(String.class);
+                    return clazz.getConstructor(String.class);
                 } catch (final SecurityException e) {
                     throw e;
                 } catch (final Exception e) {
                     return null;
                 }
+            }
+        };
+    }
+
+    /**
+     * Get privileged action to obtain declared constructors of given class.
+     * If run using security manager, the returned privileged action
+     * must be invoked within a doPrivileged block.
+     *
+     * @param clazz The class for which to obtain the constructors.
+     * @return privileged action to obtain the array of constructors.
+     * @see AccessController#doPrivileged(java.security.PrivilegedAction)
+     */
+    public static PrivilegedAction<Constructor<?>[]> getDeclaredConstructorsPA(final Class<?> clazz) {
+        return new PrivilegedAction<Constructor<?>[]>() {
+            @Override
+            public Constructor<?>[] run() {
+                return clazz.getDeclaredConstructors();
             }
         };
     }
