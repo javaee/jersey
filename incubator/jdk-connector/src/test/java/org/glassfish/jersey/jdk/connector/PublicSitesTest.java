@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,89 +38,81 @@
  * holder.
  */
 
-package org.glassfish.jersey.grizzly.connector;
+package org.glassfish.jersey.jdk.connector;
 
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Tests the Http methods.
- *
- * @author Stepan Kopriva
+ * @author Petr Janouch (petr.janouch at oracle.com)
  */
-public class MethodTest extends JerseyTest {
+@Ignore
+public class PublicSitesTest extends JerseyTest {
 
-    private static final String PATH = "test";
-
-    @Path("/test")
-    public static class HttpMethodResource {
-
-        @GET
-        public String get() {
-            return "GET";
-        }
-
-        @POST
-        public String post(String entity) {
-            return entity;
-        }
-
-        @PUT
-        public String put(String entity) {
-            return entity;
-        }
-
-        @DELETE
-        public String delete() {
-            return "DELETE";
-        }
+    @Test
+    public void testGoolgeCom() throws InterruptedException {
+        doTest("https://www.google.com");
     }
 
-    @Override
-    protected Application configure() {
-        return new ResourceConfig(HttpMethodResource.class);
+    @Test
+    public void testSeznam() throws InterruptedException {
+        doTest("https://www.seznam.cz");
+    }
+
+    @Test
+    public void testGoogleUK() throws InterruptedException {
+        doTest("https://www.google.co.uk");
+    }
+
+    @Test
+    public void testWikipedia() throws InterruptedException {
+        doTest("http://www.wikipedia.com");
+    }
+
+    @Test
+    public void testJavaNet() throws InterruptedException {
+        doTest("http://www.java.net");
+    }
+
+    @Test
+    public void testTheGuardian() throws InterruptedException {
+        doTest("http://www.theguardian.com");
+    }
+
+    @Test
+    public void testBbcUk() throws InterruptedException {
+        doTest("http://www.bbc.co.uk");
+    }
+
+    @Test
+    public void testServis24() throws InterruptedException {
+        doTest("https://www.servis24.cz");
+    }
+
+    private void doTest(String url) {
+        Response response = client().target(url).request().get();
+        String htmlPage = response.readEntity(String.class);
+        assertEquals(200, response.getStatus());
+        assertTrue(htmlPage.contains("<html"));
+        assertTrue(htmlPage.contains("</html>"));
     }
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.connectorProvider(new GrizzlyConnectorProvider());
+        config.connectorProvider(new JdkConnectorProvider());
     }
 
-    @Test
-    public void testGet() {
-        Response response = target(PATH).request().get();
-        assertEquals("GET", response.readEntity(String.class));
-    }
-
-    @Test
-    public void testPost() {
-        Response response = target(PATH).request().post(Entity.entity("POST", MediaType.TEXT_PLAIN));
-        assertEquals("POST", response.readEntity(String.class));
-    }
-
-    @Test
-    public void testPut() {
-        Response response = target(PATH).request().put(Entity.entity("PUT", MediaType.TEXT_PLAIN));
-        assertEquals("PUT", response.readEntity(String.class));
-    }
-
-    @Test
-    public void testDelete() {
-        Response response = target(PATH).request().delete();
-        assertEquals("DELETE", response.readEntity(String.class));
+    @Override
+    protected Application configure() {
+        return new ResourceConfig();
     }
 }
