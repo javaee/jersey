@@ -40,7 +40,8 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -59,13 +60,10 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <forkMode>always</forkMode>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
                     <enableAssertions>false</enableAssertions>
                 </configuration>
             </plugin>
@@ -220,8 +218,26 @@
             <id>xdk</id>
             <properties>
                 <!-- do not use security manager for xdk -->
-                <surefire.security.argline />
+                <surefire.security.argline/>
             </properties>
+        </profile>
+        <profile>
+            <id>sonar</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <configuration>
+                                <!-- disable JaCoCo listener because it's not working with <forkMode>always</fork> (<reuseForks>false</reuseForks> respectively)
+                                https://jira.sonarsource.com/browse/SONARJAVA-728 (https://github.com/SonarSource/sonar-java/pull/324) -->
+                                <properties combine.self="override"/>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
         </profile>
 
     </profiles>

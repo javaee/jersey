@@ -95,4 +95,25 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>sonar</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <configuration>
+                                <!-- disable JaCoCo listener because it's not working with <forkMode>always</fork> (<reuseForks>false</reuseForks> respectively)
+                                https://jira.sonarsource.com/browse/SONARJAVA-728 (https://github.com/SonarSource/sonar-java/pull/324) -->
+                                <properties combine.self="override" />
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
+
 </project>

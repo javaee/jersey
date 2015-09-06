@@ -44,23 +44,31 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.glassfish.jersey.tests</groupId>
+        <groupId>org.glassfish.jersey.tests.integration</groupId>
         <artifactId>project</artifactId>
         <version>2.23-SNAPSHOT</version>
     </parent>
 
-    <artifactId>stress</artifactId>
-    <packaging>jar</packaging>
-    <name>jersey-tests-stress</name>
+    <artifactId>sonar-test</artifactId>
+    <packaging>war</packaging>
+    <name>jersey-tests-integration-sonar-test</name>
 
     <description>
-
-        Jersey stress tests
-
-        This module may contain tests which execution is limited by time (or a fault). This may lead to a considerable longer
-        build of Jersey.
-
+        The purpose of this module is to provide an ability to check whether Sonar's code coverage includes
+        lines of code executed from an externally executed JVM, Jetty web server in this case.
     </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-external</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -70,63 +78,13 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <argLine>-Xmx2048m ${surefire.coverage.argline}</argLine>
-                    <forkMode>always</forkMode>
-                    <enableAssertions>false</enableAssertions>
-                </configuration>
+                <artifactId>maven-failsafe-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-bundle</artifactId>
-            <type>pom</type>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework</groupId>
-            <artifactId>jersey-test-framework-util</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-library</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <profiles>
-        <profile>
-            <id>sonar</id>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-surefire-plugin</artifactId>
-                            <configuration>
-                                <!-- disable JaCoCo listener because it's not working with <forkMode>always</fork> (<reuseForks>false</reuseForks> respectively)
-                                https://jira.sonarsource.com/browse/SONARJAVA-728 (https://github.com/SonarSource/sonar-java/pull/324) -->
-                                <properties combine.self="override"/>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-    </profiles>
 
 </project>
