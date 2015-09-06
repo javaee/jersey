@@ -40,7 +40,8 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -144,6 +145,7 @@
         <module>servlet-request-wrapper-binding-2</module>
         <module>servlet-request-wrapper-binding</module>
         <module>servlet-tests</module>
+        <module>sonar-test</module>
         <module>spring3</module>
         <module>tracing-support</module>
     </modules>
@@ -159,6 +161,54 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
         </profile>
+        <profile>
+            <id>sonar</id>
+            <properties>
+                <env>default</env>
+                <jersey.config.test.container.port>9998</jersey.config.test.container.port>
+                <jetty.log.file>${project.build.directory}/jetty-out.log</jetty.log.file>
+            </properties>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <!-- configure Jetty to run in a separated JVM in order to get proper coverage -->
+                        <plugin>
+                            <groupId>org.mortbay.jetty</groupId>
+                            <artifactId>jetty-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>start-jetty-forked</id>
+                                    <phase>pre-integration-test</phase>
+                                    <goals>
+                                        <goal>run-forked</goal>
+                                    </goals>
+                                    <configuration>
+                                        <contextPath>/</contextPath>
+                                        <scanIntervalSeconds>0</scanIntervalSeconds>
+                                        <waitForChild>false</waitForChild>
+                                        <jvmArgs>${server.coverage.argline} -Djetty.port=${jersey.config.test.container.port}
+                                            -Dorg.slf4j.simpleLogger.logFile=${jetty.log.file}
+                                        </jvmArgs>
+                                    </configuration>
+                                </execution>
+                                <execution>
+                                    <id>start-jetty</id>
+                                    <phase>none</phase>
+                                </execution>
+                            </executions>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>org.slf4j</groupId>
+                                    <artifactId>slf4j-simple</artifactId>
+                                    <version>1.7.5</version>
+                                </dependency>
+                            </dependencies>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
     </profiles>
 
     <build>
@@ -182,6 +232,7 @@
                                 <maxIdleTime>60000</maxIdleTime>
                             </connector>
                         </connectors>
+                        <jvmArgs>${server.coverage.argline}</jvmArgs>
                     </configuration>
                     <executions>
                         <execution>

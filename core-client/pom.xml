@@ -157,4 +157,29 @@
     <properties>
         <java.version>1.6</java.version>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>sonar</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- disable 'reuseForks' because 'AutoDiscoverableClientTest.testAutoDiscoverableClosing' test fails if executed together with JaCoCo agent with other tests in a single JVM -->
+                            <reuseForks>false</reuseForks>
+
+                            <!-- disable JaCoCo listener because with switched 'reuseForks' to 'false' (due to
+                            https://jira.sonarsource.com/browse/SONARJAVA-728 (https://github.com/SonarSource/sonar-java/pull/324) -->
+                            <properties combine.self="override" />
+
+                            <!-- parallel execution doesn't need to be disabled since JaCoCo listener is disabled -->
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
