@@ -171,7 +171,7 @@ public final class Resource implements Routed, ResourceModelComponent {
 
             this.extended = extended;
 
-            this.names = immutableCopy(names);
+            this.names = Resource.immutableCopy(names);
             this.path = path;
             this.pathPattern = (path == null || path.isEmpty())
                     ? PathPattern.OPEN_ROOT_PATH_PATTERN
@@ -578,6 +578,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                         }
                         builder.mergeWith(inner);
                         resources.remove(j);
+                        //noinspection AssignmentToForLoopParameter
                         j--;
                     }
                 }
@@ -683,9 +684,13 @@ public final class Resource implements Routed, ResourceModelComponent {
                     + ", subResourceLocator=" + subResourceLocator
                     + ", handlerClasses=" + handlerClasses
                     + ", handlerInstances=" + handlerInstances
-                    + ", parentResource=" + parentResource
+                    + ", parentResource=" + ((parentResource == null) ? "<no parent>" : parentResource.shortToString())
                     + ", extended=" + extended
                     + '}';
+        }
+
+        private String shortToString() {
+            return "Builder{names=" + names + ", path='" + path + "'}";
         }
     }
 
@@ -1056,7 +1061,7 @@ public final class Resource implements Routed, ResourceModelComponent {
 
     @Override
     public List<? extends ResourceModelComponent> getComponents() {
-        List<ResourceModelComponent> components = new LinkedList<ResourceModelComponent>();
+        List<ResourceModelComponent> components = new LinkedList<>();
 
         components.addAll(getChildResources());
         components.addAll(getResourceMethods());
