@@ -115,7 +115,7 @@ final class BasicAuthenticator {
      */
     public boolean filterResponseAndAuthenticate(ClientRequestContext request, ClientResponseContext response) {
         final String authenticate = response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE);
-        if (authenticate != null && authenticate.trim().startsWith("Basic")) {
+        if (authenticate != null && authenticate.trim().toUpperCase().startsWith("BASIC")) {
             HttpAuthenticationFilter.Credentials credentials = HttpAuthenticationFilter
                     .getCredentials(request, defaultCredentials, HttpAuthenticationFilter.Type.BASIC);
 
