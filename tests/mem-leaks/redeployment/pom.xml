@@ -88,6 +88,56 @@
                 <phase.redeployment.integration-test>integration-test</phase.redeployment.integration-test>
                 <phase.redeployment.post-integration-test>post-integration-test</phase.redeployment.post-integration-test>
             </properties>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <artifactId>container-runner-maven-plugin</artifactId>
+                            <configuration>
+                                <!-- these three memleak.redeploy.* properties should be initialized by sub-modules -->
+                                <expectedStatus>${memleak.redeploy.expectedStatus}</expectedStatus>
+                                <redeployCount>${memleak.redeploy.count}</redeployCount>
+                                <requestPathQuery>${memleak.redeploy.requestPathQuery}</requestPathQuery>
+                            </configuration>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-enforcer-plugin</artifactId>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                                    <artifactId>custom-enforcer-rules</artifactId>
+                                    <version>${project.version}</version>
+                                </dependency>
+                            </dependencies>
+                            <executions>
+                                <execution>
+                                    <id>enforce-out-of-memory-did-not-occur</id>
+                                    <goals>
+                                        <goal>enforce</goal>
+                                    </goals>
+                                    <phase>${phase.redeployment.post-integration-test}</phase>
+                                    <configuration>
+                                        <rules>
+                                            <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.FilePatternDoesNotExistRule">
+                                                <files>
+                                                    <file>${memleak.jvm.heapdumpdir}/java_pid*.hprof</file>
+                                                </files>
+                                            </rule>
+                                            <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.PatternNotMatchedInFileRule">
+                                                <file>${external.container.logFile}</file>
+                                                <pattern>.*java\.lang\.OutOfMemoryError.*</pattern>
+                                            </rule>
+                                        </rules>
+                                        <fail>true</fail>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
         </profile>
 
         <profile>
@@ -157,56 +207,5 @@
             </build>
         </profile>
     </profiles>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
-                    <artifactId>container-runner-maven-plugin</artifactId>
-                    <configuration>
-                        <!-- these three memleak.redeploy.* properties should be initialized by sub-modules -->
-                        <expectedStatus>${memleak.redeploy.expectedStatus}</expectedStatus>
-                        <redeployCount>${memleak.redeploy.count}</redeployCount>
-                        <requestPathQuery>${memleak.redeploy.requestPathQuery}</requestPathQuery>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
-                            <artifactId>custom-enforcer-rules</artifactId>
-                            <version>${project.version}</version>
-                        </dependency>
-                    </dependencies>
-                    <executions>
-                        <execution>
-                            <id>enforce-out-of-memory-did-not-occur</id>
-                            <goals>
-                                <goal>enforce</goal>
-                            </goals>
-                            <phase>${phase.redeployment.post-integration-test}</phase>
-                            <configuration>
-                                <rules>
-                                    <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.FilePatternDoesNotExistRule">
-                                        <files>
-                                            <file>${memleak.jvm.heapdumpdir}/java_pid*.hprof</file>
-                                        </files>
-                                    </rule>
-                                    <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.PatternNotMatchedInFileRule">
-                                        <file>${external.container.logFile}</file>
-                                        <pattern>.*java\.lang\.OutOfMemoryError.*</pattern>
-                                    </rule>
-                                </rules>
-                                <fail>true</fail>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
 
 </project>

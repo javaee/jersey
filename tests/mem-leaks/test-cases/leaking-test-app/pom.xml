@@ -98,45 +98,6 @@
 
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
-                        <artifactId>custom-enforcer-rules</artifactId>
-                        <version>${project.version}</version>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <id>enforce-out-of-memory-did-not-occur</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <phase>${phase.tests.post-integration-test}</phase>
-                        <configuration>
-                            <rules>
-                                <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.FilePatternDoesNotExistRule">
-                                    <files>
-                                        <file>${memleak.jvm.heapdumpdir}/java_pid*.hprof</file>
-                                    </files>
-                                </rule>
-                                <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.PatternNotMatchedInFileRule">
-                                    <file>${external.container.logFile}</file>
-                                    <pattern>.*java\.lang\.OutOfMemoryError.*</pattern>
-                                </rule>
-                            </rules>
-                            <fail>true</fail>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
     <profiles>
         <profile>
             <id>memleak-leaking-test</id>
@@ -161,12 +122,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-enforcer-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>enforce-out-of-memory-did-not-occur</id>
-                                <phase>${phase.tests.post-integration-test}</phase>
-                            </execution>
-                        </executions>
                     </plugin>
                 </plugins>
             </build>

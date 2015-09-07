@@ -60,4 +60,15 @@
         <module>custom-enforcer-rules</module>
     </modules>
 
+    <!-- as a inner-project dependency, maven artifacts need to be installed in the local repo so that maven-site-plugin can work -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <configuration combine.self="override" />
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
