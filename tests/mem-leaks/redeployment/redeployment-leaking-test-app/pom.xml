@@ -57,11 +57,14 @@
     <description>
         An example application that causes a memory leak in the container where it's being repetitively redeployed.
 
+
         To run this example, execute from jersey root dir:
 
-        [1] Glassfish: mvn install -pl :memleak-test-common,:redeployment-leaking-test-app -P gf4,memleak-leaking-test
+        [1] Glassfish: mvn clean install -pl :redeployment-leaking-test-app -P gf4,memleak-leaking-test,memleak-redeployment
 
-        [2] Weblogic: mvn install -pl :memleak-test-common,:redeployment-leaking-test-app -P wls,memleak-leaking-test
+        [2] Weblogic: mvn clean install -pl :redeployment-leaking-test-app -P wls,memleak-leaking-test,memleak-redeployment
+
+        [3] Tomcat: mvn clean install -pl :redeployment-leaking-test-app -P tomcat,memleak-leaking-test,memleak-redeployment
     </description>
 
     <properties>
@@ -77,7 +80,7 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                    <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                     <artifactId>container-runner-maven-plugin</artifactId>
                     <configuration>
                         <method>POST</method>
@@ -117,7 +120,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.glassfish.jersey.tests.memleaks</groupId>
+            <groupId>org.glassfish.jersey.test-framework</groupId>
             <artifactId>memleak-test-common</artifactId>
             <scope>test</scope>
         </dependency>
@@ -143,7 +146,7 @@
                         <artifactId>jetty-maven-plugin</artifactId>
                     </plugin>
                     <plugin>
-                        <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                        <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                         <artifactId>container-runner-maven-plugin</artifactId>
                     </plugin>
                     <plugin>

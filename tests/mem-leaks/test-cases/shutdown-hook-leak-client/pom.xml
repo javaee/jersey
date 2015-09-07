@@ -69,7 +69,7 @@
         </dependency>
 
         <dependency>
-            <groupId>org.glassfish.jersey.tests.memleaks</groupId>
+            <groupId>org.glassfish.jersey.test-framework</groupId>
             <artifactId>memleak-test-common</artifactId>
         </dependency>
     </dependencies>

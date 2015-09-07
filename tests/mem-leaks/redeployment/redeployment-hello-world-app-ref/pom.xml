@@ -99,7 +99,7 @@
                                     <!-- assure that Tomcat ThreadLocal memory leak detection messages weren't included in the Tomcat output.
                                     If so, ThreadLocals aren't kept clean and that's what users do not like (see JERSEY-2890). -->
                                     <rules>
-                                        <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.PatternNotMatchedInFileRule">
+                                        <rule implementation="org.glassfish.jersey.test.maven.rule.PatternNotMatchedInFileRule">
                                             <file>${external.container.logFile}</file>
                                             <pattern>
                                                 <![CDATA[.*SEVERE.*The web application.*created a ThreadLocal with key.*avoid a probable memory leak.*]]></pattern>
@@ -129,7 +129,7 @@
                 <artifactId>build-helper-maven-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                 <artifactId>container-runner-maven-plugin</artifactId>
             </plugin>
             <plugin>
