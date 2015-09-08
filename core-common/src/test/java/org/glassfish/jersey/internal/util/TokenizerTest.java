@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,6 @@ package org.glassfish.jersey.internal.util;
 
 import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tokenizer utility unit test.
@@ -89,20 +88,4 @@ public class TokenizerTest {
         assertArrayEquals(expected, actual);
     }
 
-    @Test
-    public void testUnqote() throws Exception {
-        assertEquals(null, Tokenizer.unqote(null));
-        assertEquals("", Tokenizer.unqote(""));
-        assertEquals("", Tokenizer.unqote("   "));
-        assertEquals("", Tokenizer.unqote("\"   "));
-        assertEquals("", Tokenizer.unqote(" \"\"  "));
-        assertEquals(" ", Tokenizer.unqote("\" \"  "));
-        assertEquals(" ", Tokenizer.unqote(" \" \"  "));
-        assertEquals("a b", Tokenizer.unqote(" \"a b\"  "));
-        assertEquals("a b", Tokenizer.unqote("\"a b\""));
-        assertEquals("a b", Tokenizer.unqote(" a b\"  "));
-        assertEquals("a b", Tokenizer.unqote("a b\""));
-        assertEquals("a b", Tokenizer.unqote(" \"a b  "));
-        assertEquals("a b", Tokenizer.unqote("\"a b"));
-    }
 }
