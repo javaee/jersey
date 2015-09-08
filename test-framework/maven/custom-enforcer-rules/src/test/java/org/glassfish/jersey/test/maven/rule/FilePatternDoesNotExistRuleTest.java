@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.memleaks.maven.rule;
+package org.glassfish.jersey.test.maven.rule;
 
 import java.io.File;
 import java.net.URI;
@@ -58,7 +58,7 @@ public class FilePatternDoesNotExistRuleTest {
         final FilePatternDoesNotExistRule filePatternDoesNotExistRule = new FilePatternDoesNotExistRule();
 
         final URI uri = getClass()
-                .getResource("/org/glassfish/jersey/tests/memleaks/maven/rule/FilePatternDoesNotExistRule.class").toURI();
+                .getResource("/org/glassfish/jersey/test/maven/rule/FilePatternDoesNotExistRule.class").toURI();
         final File file = new File(uri);
         final String pattern = file.getAbsolutePath().replace("PatternDoes", "*");
         filePatternDoesNotExistRule.files = new File[] {new File(pattern)};
@@ -71,7 +71,7 @@ public class FilePatternDoesNotExistRuleTest {
         final FilePatternDoesNotExistRule filePatternDoesNotExistRule = new FilePatternDoesNotExistRule();
 
         final URI uri = getClass()
-                .getResource("/org/glassfish/jersey/tests/memleaks/maven/rule/FilePatternDoesNotExistRule.class").toURI();
+                .getResource("/org/glassfish/jersey/test/maven/rule/FilePatternDoesNotExistRule.class").toURI();
         final File file = new File(uri);
         final String pattern = file.getAbsolutePath().replace("PatternDoes", "*").replace("Exist", "");
         filePatternDoesNotExistRule.files = new File[] {new File(pattern)};

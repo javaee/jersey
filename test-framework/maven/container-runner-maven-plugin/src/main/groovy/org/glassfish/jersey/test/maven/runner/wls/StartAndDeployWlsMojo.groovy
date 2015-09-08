@@ -37,14 +37,14 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.memleaks.maven.runner.wls
+package org.glassfish.jersey.test.maven.runner.wls
 
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
-import org.glassfish.jersey.tests.memleaks.maven.runner.CommonStartAndDeploy
-import org.glassfish.jersey.tests.memleaks.maven.runner.ShellMojoExecutionException
+import org.glassfish.jersey.test.maven.runner.CommonStartAndDeploy
+import org.glassfish.jersey.test.maven.runner.ShellMojoExecutionException
 
 /**
  * This mojo starts Weblogic and deploys provided application to it.

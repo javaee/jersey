@@ -92,7 +92,7 @@
                 <pluginManagement>
                     <plugins>
                         <plugin>
-                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                             <artifactId>container-runner-maven-plugin</artifactId>
                             <configuration>
                                 <!-- these three memleak.redeploy.* properties should be initialized by sub-modules -->
@@ -106,7 +106,7 @@
                             <artifactId>maven-enforcer-plugin</artifactId>
                             <dependencies>
                                 <dependency>
-                                    <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                                    <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                                     <artifactId>custom-enforcer-rules</artifactId>
                                     <version>${project.version}</version>
                                 </dependency>
@@ -120,12 +120,12 @@
                                     <phase>${phase.redeployment.post-integration-test}</phase>
                                     <configuration>
                                         <rules>
-                                            <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.FilePatternDoesNotExistRule">
+                                            <rule implementation="org.glassfish.jersey.test.maven.rule.FilePatternDoesNotExistRule">
                                                 <files>
                                                     <file>${memleak.jvm.heapdumpdir}/java_pid*.hprof</file>
                                                 </files>
                                             </rule>
-                                            <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.PatternNotMatchedInFileRule">
+                                            <rule implementation="org.glassfish.jersey.test.maven.rule.PatternNotMatchedInFileRule">
                                                 <file>${external.container.logFile}</file>
                                                 <pattern>.*java\.lang\.OutOfMemoryError.*</pattern>
                                             </rule>
@@ -146,7 +146,7 @@
                 <pluginManagement>
                     <plugins>
                         <plugin>
-                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                             <artifactId>container-runner-maven-plugin</artifactId>
                             <executions>
                                 <execution>
@@ -168,7 +168,7 @@
                 <pluginManagement>
                     <plugins>
                         <plugin>
-                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                             <artifactId>container-runner-maven-plugin</artifactId>
                             <executions>
                                 <execution>
@@ -190,7 +190,7 @@
                 <pluginManagement>
                     <plugins>
                         <plugin>
-                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                             <artifactId>container-runner-maven-plugin</artifactId>
                             <executions>
                                 <execution>

@@ -37,12 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.memleaks.maven.runner.gf4
+package org.glassfish.jersey.test.maven.runner.gf4
 
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Mojo
-import org.glassfish.jersey.tests.memleaks.maven.runner.CommonDownload
+import org.glassfish.jersey.test.maven.runner.CommonDownload
 
 /**
  * This mojo performs download and unzip of Glassfish zip distribution.

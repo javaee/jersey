@@ -118,8 +118,6 @@
     </properties>
 
     <modules>
-        <module>maven</module>
-        <module>memleak-test-common</module>
         <module>redeployment</module>
         <module>test-cases</module>
     </modules>
@@ -146,7 +144,7 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                    <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                     <artifactId>container-runner-maven-plugin</artifactId>
                     <version>${project.version}</version>
                     <configuration>
@@ -181,7 +179,7 @@
                             </configuration>
                         </plugin>
                         <plugin>
-                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                             <artifactId>container-runner-maven-plugin</artifactId>
                             <version>${project.version}</version>
                             <configuration>
@@ -230,7 +228,7 @@
                 <pluginManagement>
                     <plugins>
                         <plugin>
-                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                             <artifactId>container-runner-maven-plugin</artifactId>
                             <configuration>
                                 <distUrl>${memleak.wls.url}</distUrl>
@@ -277,7 +275,7 @@
                 <pluginManagement>
                     <plugins>
                         <plugin>
-                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+                            <groupId>org.glassfish.jersey.test-framework.maven</groupId>
                             <artifactId>container-runner-maven-plugin</artifactId>
                             <configuration>
                                 <distUrl>${memleak.tomcat.url}</distUrl>
@@ -344,7 +342,7 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.glassfish.jersey.tests.memleaks</groupId>
+                <groupId>org.glassfish.jersey.test-framework</groupId>
                 <artifactId>memleak-test-common</artifactId>
                 <version>${project.version}</version>
             </dependency>

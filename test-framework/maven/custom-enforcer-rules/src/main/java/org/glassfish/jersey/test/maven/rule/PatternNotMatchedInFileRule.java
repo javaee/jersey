@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.memleaks.maven.rule;
+package org.glassfish.jersey.test.maven.rule;
 
 import java.io.File;
 import java.io.IOException;

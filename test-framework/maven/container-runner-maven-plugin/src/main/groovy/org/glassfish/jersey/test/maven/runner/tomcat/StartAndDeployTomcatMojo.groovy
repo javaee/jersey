@@ -37,13 +37,13 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.memleaks.maven.runner.tomcat
+package org.glassfish.jersey.test.maven.runner.tomcat
 
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.Parameter
-import org.glassfish.jersey.tests.memleaks.maven.runner.CommonStartAndDeploy
+import org.glassfish.jersey.test.maven.runner.CommonStartAndDeploy
 
 /**
  * This mojo starts Tomcat and deploys provided application to it.

@@ -44,13 +44,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+        <groupId>org.glassfish.jersey.test-framework.maven</groupId>
         <artifactId>project</artifactId>
         <version>2.22-SNAPSHOT</version>
     </parent>
 
     <artifactId>custom-enforcer-rules</artifactId>
-    <name>jersey-tests-memleak-maven-custom-enforcer-rules</name>
+    <name>jersey-test-framework-maven-custom-enforcer-rules</name>
 
     <dependencies>
 

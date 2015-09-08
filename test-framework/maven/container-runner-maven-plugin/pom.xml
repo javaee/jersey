@@ -44,18 +44,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
+        <groupId>org.glassfish.jersey.test-framework.maven</groupId>
         <artifactId>project</artifactId>
         <version>2.22-SNAPSHOT</version>
     </parent>
 
     <artifactId>container-runner-maven-plugin</artifactId>
     <packaging>maven-plugin</packaging>
-    <name>jersey-tests-memleak-maven-container-runner-plugin</name>
+    <name>jersey-test-framework-maven-container-runner-plugin</name>
 
     <description>
-        The container runner maven plugin provides means to start and stop a container (currently, Weblogic and Glassfish4 are supported). To deploy
-        an application to this container or to repetitively redeploy and test an application in the container.
+        The container runner maven plugin provides means to start and stop a container (currently, Weblogic, Tomcat and Glassfish4
+        are supported). To deploy an application to this container or to repetitively redeploy and test an application in the container.
     </description>
 
     <properties>
@@ -144,6 +144,7 @@
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
     </dependencies>

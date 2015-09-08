@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.memleaks.maven.runner.gf4.maven
+package org.glassfish.jersey.test.maven.runner.gf4.maven
 
 import org.apache.maven.plugin.testing.stubs.MavenProjectStub
 

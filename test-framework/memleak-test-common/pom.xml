@@ -45,18 +45,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.glassfish.jersey.tests.memleaks</groupId>
+        <groupId>org.glassfish.jersey.test-framework</groupId>
         <artifactId>project</artifactId>
         <version>2.22-SNAPSHOT</version>
     </parent>
 
     <artifactId>memleak-test-common</artifactId>
-    <name>jersey-tests-memleak-test-common</name>
+    <name>jersey-test-framework-memleak-test-common</name>
 
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
             <artifactId>jersey-test-framework-provider-external</artifactId>
+            <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -69,16 +70,5 @@
             <artifactId>guava</artifactId>
         </dependency>
     </dependencies>
-
-    <!-- as a inner-project dependency, memleak-test-common artifact needs to be installed in the local repo so that maven-site-plugin can work -->
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <configuration combine.self="override" />
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.memleaks.common;
+package org.glassfish.jersey.test.memleak.common;
 
 import org.junit.internal.runners.statements.FailOnTimeout;
 import org.junit.rules.Timeout;

@@ -37,13 +37,13 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.memleaks.maven.runner.wls
+package org.glassfish.jersey.test.maven.runner.wls
 
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Parameter
 import org.codehaus.gmaven.mojo.GroovyMojo
-import org.glassfish.jersey.tests.memleaks.maven.runner.RunnerMojo
+import org.glassfish.jersey.test.maven.runner.RunnerMojo
 
 import java.nio.file.Paths
 

@@ -37,12 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.memleaks.maven.runner.tomcat
+package org.glassfish.jersey.test.maven.runner.tomcat
 
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Mojo
-import org.glassfish.jersey.tests.memleaks.maven.runner.CommonRedeploy
+import org.glassfish.jersey.test.maven.runner.CommonRedeploy
 
 /**
  * This mojo repetitively redeploys given application to Tomcat and performs a http request to it.
