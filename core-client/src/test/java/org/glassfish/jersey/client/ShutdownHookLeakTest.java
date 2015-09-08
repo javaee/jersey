@@ -61,7 +61,7 @@ import static org.junit.Assert.assertThat;
  */
 public class ShutdownHookLeakTest {
 
-    private final int ITERATIONS = 1000;
+    private static final int ITERATIONS = 4000;
 
     @Test
     public void testShutdownHookDoesNotLeak() throws Exception {
@@ -71,27 +71,23 @@ public class ShutdownHookLeakTest {
         final Collection shutdownHooks = getShutdownHooks(client);
 
         for (int i = 0; i < ITERATIONS; i++) {
-            WebTarget target2 = target.property("Washington", "Irving");
-            Builder req = target2.request().property("how", "now").property("and", "what");
-            req.buildGet().property("Irving", "Washington").property("Thomas", "Alva");
+            // Create/Initialize client runtime.
+            target.property("Washington", "Irving")
+                    .request()
+                    .property("how", "now")
+                    .buildGet()
+                    .property("Irving", "Washington");
         }
 
         assertThat(
                 "shutdown hook deque size should not copy number of property invocation",
                 // 66 % seems like a reasonable threshold for this test to keep it stable
-                shutdownHooks.size(), is(lessThan(2 * ITERATIONS / 3)));
-
-        client.close();
-
-        assertThat(
-                "shutdown hook deque size should be empty after Client closed",
-                shutdownHooks.size(), is(equalTo(0)));
-
+                shutdownHooks.size(), is(lessThan(ITERATIONS * 2 / 3)));
     }
 
-    private Collection getShutdownHooks(javax.ws.rs.client.Client client) throws NoSuchFieldException, IllegalAccessException {
-        JerseyClient jerseyClient = (JerseyClient) client;
-        Field shutdownHooksField = JerseyClient.class.getDeclaredField("shutdownHooks");
+    private Collection getShutdownHooks(final Client client) throws NoSuchFieldException, IllegalAccessException {
+        final JerseyClient jerseyClient = (JerseyClient) client;
+        final Field shutdownHooksField = JerseyClient.class.getDeclaredField("shutdownHooks");
         shutdownHooksField.setAccessible(true);
         return (Collection) shutdownHooksField.get(jerseyClient);
     }
