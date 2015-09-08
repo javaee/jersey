@@ -266,7 +266,7 @@ public class WadlBuilder {
                                           final Collection<Parameter> requestParameters,
                                           final Request wadlRequest) {
         for (Parameter parameter : requestParameters) {
-            if (parameter.getSource() == Parameter.Source.ENTITY) {
+            if (parameter.getSource() == Parameter.Source.ENTITY || parameter.getSource() == Parameter.Source.UNKNOWN) {
                 for (MediaType mediaType : resourceMethod.getConsumedTypes()) {
                     setRepresentationForMediaType(parentResource, resourceMethod, mediaType, wadlRequest);
                 }
