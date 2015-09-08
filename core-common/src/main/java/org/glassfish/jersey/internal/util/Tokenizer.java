@@ -165,7 +165,7 @@ public final class Tokenizer {
      * @param entry a potentially quoted string entry.
      * @return a trimmed, unquoted string entry.
      */
-    public static String unqote(String entry) {
+    public static String unquote(String entry) {
         if (entry == null || entry.isEmpty()) {
             return entry;
         }
