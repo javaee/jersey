@@ -78,7 +78,6 @@ final class JacksonObjectProvider extends AbstractObjectProvider<FilterProvider>
 
     private Map<String, FilteringPropertyFilter> createSubfilters(final Class<?> entityClass,
                                                                   final Map<String, ObjectGraph> entitySubgraphs) {
-        final Set<String> processed = new HashSet<>();
         final Map<String, FilteringPropertyFilter> subfilters = new HashMap<>();
 
         for (final Map.Entry<String, ObjectGraph> entry : entitySubgraphs.entrySet()) {
@@ -91,8 +90,8 @@ final class JacksonObjectProvider extends AbstractObjectProvider<FilterProvider>
             Map<String, FilteringPropertyFilter> subSubfilters = new HashMap<>();
             if (!subgraphs.isEmpty()) {
                 final Class<?> subEntityClass = graph.getEntityClass();
+                final Set<String> processed = Collections.singleton(getProcessedSubgraph(entityClass, fieldName, subEntityClass));
 
-                processed.add(getProcessedSubgraph(entityClass, fieldName, subEntityClass));
                 subSubfilters = createSubfilters(fieldName, subEntityClass, subgraphs, processed);
             }
 
@@ -124,14 +123,22 @@ final class JacksonObjectProvider extends AbstractObjectProvider<FilterProvider>
 
             Map<String, FilteringPropertyFilter> subSubfilters = new HashMap<>();
             if (!subgraphs.isEmpty() && !processed.contains(processedSubgraph)) {
-                processed.add(processedSubgraph);
-                subSubfilters = createSubfilters(path, subEntityClass, subgraphs, processed);
+                // duplicate processed set so that elements in different subtrees aren't skipped (JERSEY-2892)
+                final Set<String> subProcessed = immutableSetOf(processed, processedSubgraph);
+
+                subSubfilters = createSubfilters(path, subEntityClass, subgraphs, subProcessed);
             }
 
             subfilters.put(fieldName, new FilteringPropertyFilter(graph.getEntityClass(), graph.getFields(path), subSubfilters));
         }
 
         return subfilters;
+    }
+
+    private Set<String> immutableSetOf(final Set<String> set, final String item) {
+        final Set<String> duplicate = new HashSet<>(set);
+        duplicate.add(item);
+        return Collections.unmodifiableSet(duplicate);
     }
 
     private String getProcessedSubgraph(final Class<?> parent, final String field, final Class<?> fieldClass) {
