@@ -88,6 +88,17 @@ public final class JettyClientProperties {
             "jersey.config.jetty.client.preemptiveBasicAuthentication";
 
     /**
+     * A value of {@code false} indicates the client disable a hostname verification
+     * during SSL Handshake. A client will ignore CN value defined in a certificate
+     * that is stored in a truststore.
+     * <p/>
+     * The value MUST be an instance of {@link java.lang.Boolean}.
+     * If the property is absent the default value is {@code true}
+     */
+    public static final String ENABLE_SSL_HOSTNAME_VERIFICATION =
+            "jersey.config.jetty.client.enableSslHostnameVerification";
+
+    /**
      * Get the value of the specified property.
      *
      * If the property is not set or the real value type is not compatible with the specified value type, returns {@code null}.

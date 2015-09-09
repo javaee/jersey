@@ -63,9 +63,9 @@ import com.google.common.io.ByteStreams;
  */
 final class Server {
 
-    private static final String SERVER_TRUST_STORE = "truststore_server";
-    private static final String SERVER_KEY_STORE = "keystore_server";
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
+
+    private static final String SERVER_TRUST_STORE = "truststore-server";
 
     /**
      * Base server URI.
@@ -102,9 +102,9 @@ final class Server {
      * @throws IOException in case there is an error while reading server key store or trust store.
      * @return an instance of the started SSL-secured HTTP test server.
      */
-    public static Server start() throws IOException {
+    public static Server start(String keystore) throws IOException {
         final InputStream trustStore = Server.class.getResourceAsStream(SERVER_TRUST_STORE);
-        final InputStream keyStore = Server.class.getResourceAsStream(SERVER_KEY_STORE);
+        final InputStream keyStore = Server.class.getResourceAsStream(keystore);
 
         // Grizzly ssl configuration
         SSLContextConfigurator sslContext = new SSLContextConfigurator();

@@ -39,10 +39,6 @@
  */
 package org.glassfish.jersey.tests.e2e.client.connector.ssl;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -50,25 +46,16 @@ import javax.ws.rs.core.Response;
 
 import javax.net.ssl.SSLContext;
 
-import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
-import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import com.google.common.io.ByteStreams;
 
 /**
  * SSL connector tests.
@@ -78,64 +65,7 @@ import com.google.common.io.ByteStreams;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @RunWith(Parameterized.class)
-public class SslConnectorConfigurationTest {
-
-    private static final String CLIENT_TRUST_STORE = "truststore_client";
-    private static final String CLIENT_KEY_STORE = "keystore_client";
-
-    /**
-     * Test parameters provider.
-     *
-     * @return test parameters.
-     */
-    @Parameterized.Parameters(name = "{index}: {0}")
-    public static Iterable<Object[]> testData() {
-        return Arrays.asList(new Object[][] {
-                {new HttpUrlConnectorProvider()},
-                {new GrizzlyConnectorProvider()},
-                {new JettyConnectorProvider()},
-                {new ApacheConnectorProvider()}
-        });
-    }
-
-    @Parameterized.Parameter(0)
-    public ConnectorProvider connectorProvider;
-
-    private final Object serverGuard = new Object();
-    private Server server = null;
-
-    @Before
-    public void setUp() throws Exception {
-        synchronized (serverGuard) {
-            if (server != null) {
-                throw new IllegalStateException(
-                        "Test run sync issue: Another instance of the SSL-secured HTTP test server has been already started.");
-            }
-            server = Server.start();
-        }
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        synchronized (serverGuard) {
-            if (server == null) {
-                throw new IllegalStateException("Test run sync issue: There is no SSL-secured HTTP test server to stop.");
-            }
-            server.stop();
-            server = null;
-        }
-    }
-
-    private static SSLContext getSslContext() throws IOException {
-        final InputStream trustStore = SslConnectorConfigurationTest.class.getResourceAsStream(CLIENT_TRUST_STORE);
-        final InputStream keyStore = SslConnectorConfigurationTest.class.getResourceAsStream(CLIENT_KEY_STORE);
-        return SslConfigurator.newInstance()
-                .trustStoreBytes(ByteStreams.toByteArray(trustStore))
-                .trustStorePassword("asdfgh")
-                .keyStoreBytes(ByteStreams.toByteArray(keyStore))
-                .keyPassword("asdfgh")
-                .createSSLContext();
-    }
+public class SslConnectorConfigurationTest extends AbstractConnectorServerTest {
 
     /**
      * Test to see that the correct Http status is returned.

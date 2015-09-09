@@ -63,6 +63,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -104,7 +105,6 @@ import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.ContentLengthStrategy;
@@ -236,7 +236,7 @@ class ApacheConnector implements Connector {
         final SSLContext sslContext = client.getSslContext();
         final HttpClientBuilder clientBuilder = HttpClientBuilder.create();
 
-        clientBuilder.setConnectionManager(getConnectionManager(config, sslContext));
+        clientBuilder.setConnectionManager(getConnectionManager(client, config, sslContext));
         clientBuilder.setConnectionManagerShared(
                 PropertiesHelper.getValue(config.getProperties(), ApacheClientProperties.CONNECTION_MANAGER_SHARED, false, null));
         clientBuilder.setSslcontext(sslContext);
@@ -300,7 +300,9 @@ class ApacheConnector implements Connector {
         this.client = clientBuilder.build();
     }
 
-    private HttpClientConnectionManager getConnectionManager(final Configuration config, final SSLContext sslContext) {
+    private HttpClientConnectionManager getConnectionManager(final Client client,
+                                                             final Configuration config,
+                                                             final SSLContext sslContext) {
         final Object cmObject = config.getProperties().get(ApacheClientProperties.CONNECTION_MANAGER);
 
         // Connection manager from configuration.
@@ -320,16 +322,16 @@ class ApacheConnector implements Connector {
 
         // Create custom connection manager.
         return createConnectionManager(
+                client,
                 config,
                 sslContext,
-                null,
                 false);
     }
 
     private HttpClientConnectionManager createConnectionManager(
+            final Client client,
             final Configuration config,
             final SSLContext sslContext,
-            X509HostnameVerifier hostnameVerifier,
             final boolean useSystemProperties) {
 
         final String[] supportedProtocols = useSystemProperties ? split(
@@ -337,9 +339,7 @@ class ApacheConnector implements Connector {
         final String[] supportedCipherSuites = useSystemProperties ? split(
                 System.getProperty("https.cipherSuites")) : null;
 
-        if (hostnameVerifier == null) {
-            hostnameVerifier = SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
-        }
+        HostnameVerifier hostnameVerifier = client.getHostnameVerifier();
 
         final LayeredConnectionSocketFactory sslSocketFactory;
         if (sslContext != null) {
