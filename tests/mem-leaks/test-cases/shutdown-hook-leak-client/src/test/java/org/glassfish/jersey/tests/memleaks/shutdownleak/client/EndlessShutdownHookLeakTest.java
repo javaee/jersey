@@ -46,8 +46,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 
-import org.glassfish.jersey.tests.memleaks.common.AbstractMemoryLeakSimpleTest;
-import org.glassfish.jersey.tests.memleaks.common.MemoryLeakSucceedingTimeout;
+import org.glassfish.jersey.test.memleak.common.AbstractMemoryLeakSimpleTest;
+import org.glassfish.jersey.test.memleak.common.MemoryLeakSucceedingTimeout;
 
 import org.junit.Rule;
 import org.junit.Test;

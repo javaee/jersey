@@ -114,42 +114,6 @@
         <phase.tests.post-integration-test.jetty>${phase.tests.post-integration-test}</phase.tests.post-integration-test.jetty>
     </properties>
 
-    <profiles>
-        <profile>
-            <id>memleak-test-cases</id>
-            <properties>
-                <!-- set all the phases for this sub-module tree so that the executions are un-bound from the 'none' phase -->
-                <phase.tests.test>test</phase.tests.test>
-                <phase.tests.pre-integration-test>pre-integration-test</phase.tests.pre-integration-test>
-                <phase.tests.integration-test>integration-test</phase.tests.integration-test>
-                <phase.tests.post-integration-test>post-integration-test</phase.tests.post-integration-test>
-                <phase.tests.verify>verify</phase.tests.verify>
-            </properties>
-        </profile>
-
-        <profile>
-            <id>gf4</id>
-            <properties>
-                <phase.tests.pre-integration-test.jetty>none</phase.tests.pre-integration-test.jetty>
-                <phase.tests.post-integration-test.jetty>none</phase.tests.post-integration-test.jetty>
-            </properties>
-        </profile>
-        <profile>
-            <id>wls</id>
-            <properties>
-                <phase.tests.pre-integration-test.jetty>none</phase.tests.pre-integration-test.jetty>
-                <phase.tests.post-integration-test.jetty>none</phase.tests.post-integration-test.jetty>
-            </properties>
-        </profile>
-        <profile>
-            <id>tomcat</id>
-            <properties>
-                <phase.tests.pre-integration-test.jetty>none</phase.tests.pre-integration-test.jetty>
-                <phase.tests.post-integration-test.jetty>none</phase.tests.post-integration-test.jetty>
-            </properties>
-        </profile>
-    </profiles>
-
     <build>
         <pluginManagement>
             <plugins>
@@ -217,87 +181,129 @@
                         </execution>
                     </executions>
                 </plugin>
-                <plugin>
-                    <groupId>org.mortbay.jetty</groupId>
-                    <artifactId>jetty-maven-plugin</artifactId>
-                    <configuration>
-                        <skip>${skip.tests}</skip>
-                        <scanIntervalSeconds>10</scanIntervalSeconds>
-                        <stopPort>9999</stopPort>
-                        <stopKey>STOP</stopKey>
-                        <contextPath>/${external.container.contextRoot}</contextPath>
-                        <jvmArgs>-Xms64m -Xmx${memleak.jetty.maxheap} -XX:PermSize=128m -XX:MaxPermSize=256m
-                            -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${memleak.jvm.heapdumpdir}
-                            -Djetty.port=${external.container.port} -Djersey.config.test.memleak.jetty.magicRunnerIdentifier
-                            -Dorg.slf4j.simpleLogger.logFile=${external.container.logFile}
-                        </jvmArgs>
-                        <waitForChild>false</waitForChild>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>start-jetty</id>
-                            <phase>${phase.tests.pre-integration-test.jetty}</phase>
-                            <goals>
-                                <goal>run-forked</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>stop-jetty</id>
-                            <phase>${phase.tests.post-integration-test.jetty}</phase>
-                            <goals>
-                                <goal>stop</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-simple</artifactId>
-                            <version>1.7.5</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
-                            <artifactId>custom-enforcer-rules</artifactId>
-                            <version>${project.version}</version>
-                        </dependency>
-                    </dependencies>
-                    <executions>
-                        <execution>
-                            <id>enforce-out-of-memory-did-not-occur</id>
-                            <goals>
-                                <goal>enforce</goal>
-                            </goals>
-                            <phase>${phase.tests.post-integration-test}</phase>
-                            <configuration>
-                                <rules>
-                                    <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.FilePatternDoesNotExistRule">
-                                        <files>
-                                            <file>${memleak.jvm.heapdumpdir}/java_pid*.hprof</file>
-                                        </files>
-                                    </rule>
-                                    <rule implementation="org.glassfish.jersey.tests.memleaks.maven.rule.PatternNotMatchedInFileRule">
-                                        <file>${external.container.logFile}</file>
-                                        <pattern>.*java\.lang\.OutOfMemoryError.*</pattern>
-                                    </rule>
-                                </rules>
-                                <fail>true</fail>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.glassfish.jersey.tests.memleaks.maven</groupId>
-                    <artifactId>container-runner-maven-plugin</artifactId>
-                </plugin>
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>memleak-test-cases</id>
+            <properties>
+                <!-- set all the phases for this sub-module tree so that the executions are un-bound from the 'none' phase -->
+                <phase.tests.test>test</phase.tests.test>
+                <phase.tests.pre-integration-test>pre-integration-test</phase.tests.pre-integration-test>
+                <phase.tests.integration-test>integration-test</phase.tests.integration-test>
+                <phase.tests.post-integration-test>post-integration-test</phase.tests.post-integration-test>
+                <phase.tests.verify>verify</phase.tests.verify>
+            </properties>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.mortbay.jetty</groupId>
+                            <artifactId>jetty-maven-plugin</artifactId>
+                            <configuration>
+                                <skip>${skip.tests}</skip>
+                                <scanIntervalSeconds>10</scanIntervalSeconds>
+                                <stopPort>9999</stopPort>
+                                <stopKey>STOP</stopKey>
+                                <contextPath>/${external.container.contextRoot}</contextPath>
+                                <jvmArgs>-Xms64m -Xmx${memleak.jetty.maxheap} -XX:PermSize=128m -XX:MaxPermSize=256m
+                                    -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${memleak.jvm.heapdumpdir}
+                                    -Djetty.port=${external.container.port} -Djersey.config.test.memleak.jetty.magicRunnerIdentifier
+                                    -Dorg.slf4j.simpleLogger.logFile=${external.container.logFile}
+                                </jvmArgs>
+                                <waitForChild>false</waitForChild>
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <id>start-jetty</id>
+                                    <phase>${phase.tests.pre-integration-test.jetty}</phase>
+                                    <goals>
+                                        <goal>run-forked</goal>
+                                    </goals>
+                                </execution>
+                                <execution>
+                                    <id>stop-jetty</id>
+                                    <phase>${phase.tests.post-integration-test.jetty}</phase>
+                                    <goals>
+                                        <goal>stop</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>org.slf4j</groupId>
+                                    <artifactId>slf4j-simple</artifactId>
+                                    <version>1.7.5</version>
+                                </dependency>
+                            </dependencies>
+                        </plugin>
+
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-enforcer-plugin</artifactId>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>org.glassfish.jersey.test-framework.maven</groupId>
+                                    <artifactId>custom-enforcer-rules</artifactId>
+                                    <version>${project.version}</version>
+                                </dependency>
+                            </dependencies>
+                            <executions>
+                                <execution>
+                                    <id>enforce-out-of-memory-did-not-occur</id>
+                                    <goals>
+                                        <goal>enforce</goal>
+                                    </goals>
+                                    <phase>${phase.tests.post-integration-test}</phase>
+                                    <configuration>
+                                        <rules>
+                                            <rule implementation="org.glassfish.jersey.test.maven.rule.FilePatternDoesNotExistRule">
+                                                <files>
+                                                    <file>${memleak.jvm.heapdumpdir}/java_pid*.hprof</file>
+                                                </files>
+                                            </rule>
+                                            <rule implementation="org.glassfish.jersey.test.maven.rule.PatternNotMatchedInFileRule">
+                                                <file>${external.container.logFile}</file>
+                                                <pattern>.*java\.lang\.OutOfMemoryError.*</pattern>
+                                            </rule>
+                                        </rules>
+                                        <fail>true</fail>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.glassfish.jersey.test-framework.maven</groupId>
+                            <artifactId>container-runner-maven-plugin</artifactId>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
+        <profile>
+            <id>gf4</id>
+            <properties>
+                <phase.tests.pre-integration-test.jetty>none</phase.tests.pre-integration-test.jetty>
+                <phase.tests.post-integration-test.jetty>none</phase.tests.post-integration-test.jetty>
+            </properties>
+        </profile>
+        <profile>
+            <id>wls</id>
+            <properties>
+                <phase.tests.pre-integration-test.jetty>none</phase.tests.pre-integration-test.jetty>
+                <phase.tests.post-integration-test.jetty>none</phase.tests.post-integration-test.jetty>
+            </properties>
+        </profile>
+        <profile>
+            <id>tomcat</id>
+            <properties>
+                <phase.tests.pre-integration-test.jetty>none</phase.tests.pre-integration-test.jetty>
+                <phase.tests.post-integration-test.jetty>none</phase.tests.post-integration-test.jetty>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>

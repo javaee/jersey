@@ -59,6 +59,8 @@
         <module>core</module>
         <module>providers</module>
         <module>util</module>
+        <module>maven</module>
+        <module>memleak-test-common</module>
     </modules>
 
     <dependencies>
