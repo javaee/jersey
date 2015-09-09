@@ -72,6 +72,7 @@ public class MultiThreadingAggregatedReservoirTest {
      * Note that more than 5 seconds may require more than 1G heap memory.
      */
     private static final int TEST_DURATION_MILLIS = 10_000;
+    private static final int SHUTDOWN_TIMEOUT_SECONDS = 120;
     private static final double DELTA = 0.0001;
 
     private final AtomicInteger incrementer = new AtomicInteger(0);
@@ -161,10 +162,10 @@ public class MultiThreadingAggregatedReservoirTest {
         doShutdown = true;
         producerExecutorService.shutdown();
         consumerExecutorService.shutdown();
-        Assert.assertTrue("Producer tasks didn't terminated peacefully, aborting this test.",
-                producerExecutorService.awaitTermination(20, TimeUnit.SECONDS));
         Assert.assertTrue("Consumer tasks didn't terminated peacefully, aborting this test.",
-                consumerExecutorService.awaitTermination(20, TimeUnit.SECONDS));
+                consumerExecutorService.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        Assert.assertTrue("Producer tasks didn't terminated peacefully, aborting this test.",
+                producerExecutorService.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
         final long snapshotTime = System.nanoTime();
         final long sum = (long) incrementer.get() * (incrementer.get() + 1) / 2;
