@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,7 +70,7 @@ public final class Tokenizer {
      * @return the array of tokens, each token is trimmed, the array will
      *         not contain any empty or {@code null} entries.
      */
-    public static String[] tokenize(String[] entries) {
+    public static String[] tokenize(final String[] entries) {
         return tokenize(entries, COMMON_DELIMITERS);
     }
 
@@ -86,7 +86,7 @@ public final class Tokenizer {
      * @return the array of tokens, each token is trimmed, the array will
      *         not contain any empty or {@code null} entries.
      */
-    public static String[] tokenize(String[] entries, String delimiters) {
+    public static String[] tokenize(final String[] entries, final String delimiters) {
         final List<String> tokens = new LinkedList<String>();
 
         for (String entry : entries) {
@@ -112,7 +112,7 @@ public final class Tokenizer {
      * @return the array of tokens, each tokens is trimmed, the array will
      *         not contain any empty or {@code null} entries.
      */
-    public static String[] tokenize(String entry) {
+    public static String[] tokenize(final String entry) {
         return tokenize(entry, COMMON_DELIMITERS);
     }
 
@@ -128,20 +128,20 @@ public final class Tokenizer {
      * @return the array of tokens, each tokens is trimmed, the array will
      *         not contain any empty or {@code null} entries.
      */
-    public static String[] tokenize(String entry, String delimiters) {
+    public static String[] tokenize(final String entry, final String delimiters) {
         final Collection<String> tokens = tokenize(entry, delimiters, new LinkedList<String>());
         return tokens.toArray(new String[tokens.size()]);
     }
 
-    private static Collection<String> tokenize(String entry, String delimiters, Collection<String> tokens) {
+    private static Collection<String> tokenize(final String entry, final String delimiters, final Collection<String> tokens) {
         final StringBuilder regexpBuilder = new StringBuilder(delimiters.length() * 3);
         regexpBuilder.append('[');
-        for (char c : delimiters.toCharArray()) {
+        for (final char c : delimiters.toCharArray()) {
             regexpBuilder.append(Pattern.quote(String.valueOf(c)));
         }
         regexpBuilder.append(']');
 
-        String[] tokenArray = entry.split(regexpBuilder.toString());
+        final String[] tokenArray = entry.split(regexpBuilder.toString());
         for (String token : tokenArray) {
             if (token == null || token.isEmpty()) {
                 continue;
@@ -156,26 +156,5 @@ public final class Tokenizer {
         }
 
         return tokens;
-    }
-
-    /**
-     * Remove any beginning or trailing quotes from a trimmed entry and return the
-     * updated entry.
-     *
-     * @param entry a potentially quoted string entry.
-     * @return a trimmed, unquoted string entry.
-     */
-    public static String unqote(String entry) {
-        if (entry == null || entry.isEmpty()) {
-            return entry;
-        }
-
-        entry = entry.trim();
-        if (entry.isEmpty()) {
-            return entry;
-        }
-
-        entry = (entry.startsWith("\"")) ? entry.substring(1) : entry;
-        return (entry.endsWith("\"")) ? entry.substring(0, entry.length() - 1) : entry;
     }
 }
