@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,21 +39,41 @@
  */
 package org.glassfish.jersey.client;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.net.URI;
 
-import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.WriterInterceptor;
 
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.message.MessageBodyWorkers;
+
+import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
 
 /**
  * {@code ClientRequest} unit tests.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@RunWith(JMockit.class)
 public class ClientRequestTest {
 
     /**
@@ -136,4 +156,32 @@ public class ClientRequestTest {
         assertEquals("value-request", request.resolveProperty("name", "value-default"));
     }
 
+    @Test
+    public void testSSLExceptionHandling(@Mocked MessageBodyWorkers workers, @Mocked GenericType<?> entityType)
+            throws Exception {
+        JerseyClient client = new JerseyClientBuilder().build();
+        final ClientRequest request = new ClientRequest(
+                URI.create("http://example.org"),
+                client.getConfiguration(),
+                new MapPropertiesDelegate());
+
+        final IOException ioException = new IOException("Test");
+        new MockUp<MessageBodyWorkers>(workers) {
+            @Mock
+            OutputStream writeTo(Object entity, Class<?> rawType, Type type, Annotation[] annotations,
+                                 MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
+                                 PropertiesDelegate propertiesDelegate, OutputStream entityStream,
+                                 Iterable<WriterInterceptor> writerInterceptors)
+                    throws java.io.IOException, javax.ws.rs.WebApplicationException {
+                throw ioException;
+            }
+        };
+
+        try {
+            request.doWriteEntity(workers, entityType);
+            Assert.fail("An IOException exception should be thrown.");
+        } catch (IOException e) {
+            assertSame(ioException, e);
+        }
+    }
 }
