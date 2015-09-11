@@ -229,7 +229,7 @@ public class InboundEvent {
         this.id = id;
         this.comment = comment;
         this.reconnectDelay = reconnectDelay;
-        this.data = data;
+        this.data = stripLastLineBreak(data);
         this.messageBodyWorkers = messageBodyWorkers;
         this.annotations = annotations;
         this.mediaType = mediaType;
@@ -389,7 +389,7 @@ public class InboundEvent {
                     annotations,
                     effectiveMediaType,
                     headers,
-                    new ByteArrayInputStream(stripLastLineBreak(data)));
+                    new ByteArrayInputStream(data));
         } catch (IOException ex) {
             throw new ProcessingException(ex);
         }
