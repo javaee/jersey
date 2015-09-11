@@ -153,6 +153,12 @@
             <artifactId>hamcrest-library</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <properties>
         <java.version>1.6</java.version>
