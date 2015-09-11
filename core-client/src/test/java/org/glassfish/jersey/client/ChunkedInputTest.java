@@ -93,6 +93,9 @@ public class ChunkedInputTest {
 
         // input has the same beginning as the delimiter
         assertEquals("12", parse(parser, "121234"));
+
+        // input ends with first char of delimiter
+        assertEquals("1231", parse(parser, "1231"));
     }
 
     @Test
@@ -110,6 +113,12 @@ public class ChunkedInputTest {
 
         // delimiter in the input is not complete, only partial
         assertEquals("abc123", parse(parser, "abc123"));
+    }
+
+    @Test
+    public void delimiterWithRepeatedInitialCharacters() throws IOException {
+        ChunkParser parser = ChunkedInput.createParser("**b**");
+        assertEquals("1*", parse(parser, "1***b**"));
     }
 
     private static String parse(ChunkParser parser, String str) throws IOException {
