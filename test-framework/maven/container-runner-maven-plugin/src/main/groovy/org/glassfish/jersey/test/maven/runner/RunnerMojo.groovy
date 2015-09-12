@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.test.maven.runner
 
-import org.apache.maven.plugin.Mojo
+import com.google.common.collect.EvictingQueue
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Parameter
@@ -54,7 +54,7 @@ import java.util.regex.Pattern
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
-trait RunnerMojo implements Mojo {
+trait RunnerMojo implements SuperRunnerMojo {
 
     /**
      * The Maven project to analyze.
@@ -106,7 +106,10 @@ trait RunnerMojo implements Mojo {
     @Parameter(defaultValue = "false", name = "skipStartAndStop", property = "jersey.runner.skipStartAndStop")
     boolean skipStartAndStop
 
-    @Parameter(defaultValue = "\${project.build.directory}/tmp")
+    /**
+     * The location of a directory where a content of executed shell scripts is dumped.
+     */
+    @Parameter(defaultValue = "\${project.build.directory}/tmp", name = "scriptsDirectory")
     String scriptsDirectory
 
     /**
@@ -179,9 +182,10 @@ trait RunnerMojo implements Mojo {
         outputStream.write(shellContent)
         outputStream.close()
 
-        def lastLine = ""
+        def lastLinesQueue = EvictingQueue.<String>create(lastLinesCount)
+
         process.in.eachLine {
-            lastLine = it
+            lastLinesQueue.add(it)
             if (getLog()?.isDebugEnabled() && it.startsWith("+")) {
                 getLog().debug(it)
             } else {
@@ -194,7 +198,7 @@ trait RunnerMojo implements Mojo {
         if (process.exitValue() != 0 && exceptionOnError) {
             throw new ShellMojoExecutionException("The shell script: '" + shell + "' ended with non-zero exit value!",
                     process.exitValue(),
-                    lastLine)
+                    lastLinesQueue)
         }
 
         return process.exitValue()
