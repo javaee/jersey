@@ -196,6 +196,49 @@ public class InboundMessageContextTest {
     }
 
     @Test
+    public void testGetLinksWithCommaInUri() {
+        InboundMessageContext r = createInboundMessageContext();
+        Link link1 = Link.fromUri("http://example.org/app/foo,bar").param("produces", "application/json").param("method",
+                "GET").rel("self").build();
+        r.header("Link", link1.toString());
+        assertEquals(1, r.getLinks().size());
+        assertTrue(r.getLinks().contains(link1));
+    }
+
+    @Test
+    public void testGetLinksWithMultipleLinksInOneHeaderAndCommaInUri() {
+        InboundMessageContext r = createInboundMessageContext();
+        Link link1 = Link.fromUri("https://example.org/one/api/groups?foo,page=2").rel("next").build();
+        Link link2 = Link.fromUri("https://example.org/one/api/groups?bar,page=39").rel("last").build();
+        r.header("Link", "<https://example.org/one/api/groups?foo,page=2>; rel=\"next\", <https://example.org/one/api/groups?bar,page=39>; rel=\"last\"");
+        assertEquals(2, r.getLinks().size());
+        assertTrue(r.getLinks().contains(link1));
+        assertTrue(r.getLinks().contains(link2));
+    }
+
+    @Test
+    public void testGetLinksWithMultipleLinksInOneHeader() {
+        InboundMessageContext r = createInboundMessageContext();
+        Link link1 = Link.fromUri("https://example.org/one/api/groups?page=2").rel("next").build();
+        Link link2 = Link.fromUri("https://example.org/one/api/groups?page=39").rel("last").build();
+        r.header("Link", "<https://example.org/one/api/groups?page=2>; rel=\"next\", <https://example.org/one/api/groups?page=39>; rel=\"last\"");
+        assertEquals(2, r.getLinks().size());
+        assertTrue(r.getLinks().contains(link1));
+        assertTrue(r.getLinks().contains(link2));
+    }
+
+    @Test
+    public void testGetLinksWithMultipleLinksInOneHeaderWithLtInValue() {
+        InboundMessageContext r = createInboundMessageContext();
+        Link link1 = Link.fromUri("https://example.org/one/api/groups?page=2").rel("next").param("foo", "<bar>").build();
+        Link link2 = Link.fromUri("https://example.org/one/api/groups?page=39").rel("last").param("bar", "<<foo").build();
+        r.header("Link", "<https://example.org/one/api/groups?page=2>; rel=\"next\"; foo=\"<bar>\", <https://example.org/one/api/groups?page=39>; rel=\"last\"; bar=\"<<foo\"");
+        assertEquals(2, r.getLinks().size());
+        assertTrue(r.getLinks().contains(link1));
+        assertTrue(r.getLinks().contains(link2));
+    }
+
+    @Test
     public void testGetLink() {
         InboundMessageContext r = createInboundMessageContext();
         Link link1 = Link.fromUri("http://example.org/app/link1").param("produces", "application/json").param("method",
