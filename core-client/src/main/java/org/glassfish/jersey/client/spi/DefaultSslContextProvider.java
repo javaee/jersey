@@ -38,39 +38,28 @@
  * holder.
  */
 
-package org.glassfish.jersey.tests.integration.client.connector.provider;
+package org.glassfish.jersey.client.spi;
 
-import java.net.HttpURLConnection;
+import javax.net.ssl.SSLContext;
 
-import javax.ws.rs.client.Client;
-
-import org.glassfish.jersey.client.HttpUrlConnectorProvider;
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.internal.HttpUrlConnector;
-import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.SslConfigurator;
 
 /**
+ * Default {@link SSLContext} provider.
+ * <p/>
+ * Can be used to override {@link SslConfigurator#getDefaultContext()}.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public final class CustomConnectorProvider extends HttpUrlConnectorProvider {
+public interface DefaultSslContextProvider {
 
-    public static volatile boolean invoked = false;
-
-    @Override
-    protected Connector createHttpUrlConnector(Client client, ConnectionFactory connectionFactory, int chunkSize,
-                                               boolean fixLengthStreaming, boolean setMethodWorkaround) {
-
-        return new HttpUrlConnector(
-                client,
-                connectionFactory,
-                chunkSize,
-                fixLengthStreaming,
-                setMethodWorkaround) {
-
-            @Override
-            protected void secureConnection(JerseyClient client, HttpURLConnection uc) {
-                invoked = true;
-            }
-        };
-    }
+    /**
+     * Get default {@code SSLContext}.
+     * <p/>
+     * Returned instance is expected to be configured to container default values.
+     *
+     * @return default SSL context.
+     * @throws IllegalStateException when there is a problem with creating or obtaining default SSL context.
+     */
+    SSLContext getDefaultSslContext();
 }

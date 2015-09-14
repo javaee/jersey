@@ -72,6 +72,7 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
+import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
@@ -317,7 +318,7 @@ public class HttpUrlConnector implements Connector {
      * @param client client associated with this client runtime.
      * @param uc     http connection to be secured.
      */
-    protected void secureConnection(final Client client, final HttpURLConnection uc) {
+    protected void secureConnection(final JerseyClient client, final HttpURLConnection uc) {
         if (uc instanceof HttpsURLConnection) {
             HttpsURLConnection suc = (HttpsURLConnection) uc;
 
