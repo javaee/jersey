@@ -80,7 +80,7 @@ public class DomainResource {
 
         Executors.newSingleThreadExecutor().execute(process);
 
-        final URI processIdUri = UriBuilder.fromResource(DomainResource.class).path("process/{id}").build(process.getId());
+        final URI processIdUri = UriBuilder.fromUri("process/{id}").build(process.getId());
         return Response.created(processIdUri).build();
     }
 

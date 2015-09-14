@@ -85,7 +85,11 @@ class InboundJaxrsResponse extends Response {
     public InboundJaxrsResponse(final ClientResponse context, final RequestScope scope) {
         this.context = context;
         this.scope = scope;
-        this.scopeInstance = scope.referenceCurrent();
+        if (this.scope != null) {
+            this.scopeInstance = scope.referenceCurrent();
+        } else {
+            this.scopeInstance = null;
+        }
     }
 
     @Override
@@ -105,7 +109,7 @@ class InboundJaxrsResponse extends Response {
 
     @Override
     public <T> T readEntity(final Class<T> entityType) throws ProcessingException, IllegalStateException {
-        return scope.runInScope(scopeInstance, new Producer<T>() {
+        return runInScopeIfPossible(new Producer<T>() {
             @Override
             public T call() {
                 return context.readEntity(entityType);
@@ -116,7 +120,7 @@ class InboundJaxrsResponse extends Response {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T readEntity(final GenericType<T> entityType) throws ProcessingException, IllegalStateException {
-        return scope.runInScope(scopeInstance, new Producer<T>() {
+        return runInScopeIfPossible(new Producer<T>() {
             @Override
             public T call() {
                 return context.readEntity(entityType);
@@ -127,7 +131,7 @@ class InboundJaxrsResponse extends Response {
     @Override
     public <T> T readEntity(final Class<T> entityType, final Annotation[] annotations)
             throws ProcessingException, IllegalStateException {
-        return scope.runInScope(scopeInstance, new Producer<T>() {
+        return runInScopeIfPossible(new Producer<T>() {
             @Override
             public T call() {
                 return context.readEntity(entityType, annotations);
@@ -139,7 +143,7 @@ class InboundJaxrsResponse extends Response {
     @SuppressWarnings("unchecked")
     public <T> T readEntity(final GenericType<T> entityType, final Annotation[] annotations)
             throws ProcessingException, IllegalStateException {
-        return scope.runInScope(scopeInstance, new Producer<T>() {
+        return runInScopeIfPossible(new Producer<T>() {
             @Override
             public T call() {
                 return context.readEntity(entityType, annotations);
@@ -162,7 +166,9 @@ class InboundJaxrsResponse extends Response {
         try {
             context.close();
         } finally {
-            scopeInstance.release();
+            if (scopeInstance != null) {
+                scopeInstance.release();
+            }
         }
     }
 
@@ -254,5 +260,13 @@ class InboundJaxrsResponse extends Response {
                 .toStringHelper(this)
                 .add("context", context)
                 .toString();
+    }
+
+    private <T> T runInScopeIfPossible(Producer<T> producer) {
+        if (scope != null && scopeInstance != null) {
+            return scope.runInScope(scopeInstance, producer);
+        } else {
+            return producer.call();
+        }
     }
 }

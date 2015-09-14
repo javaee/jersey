@@ -46,7 +46,7 @@
     <parent>
         <groupId>org.glassfish.jersey</groupId>
         <artifactId>project</artifactId>
-        <version>2.21-SNAPSHOT</version>
+        <version>2.22-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.tests</groupId>
@@ -65,6 +65,7 @@
         <module>integration</module>
         <module>mem-leaks</module>
         <module>osgi</module>
+        <module>stress</module>
         <module>performance</module>
     </modules>
 

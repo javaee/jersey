@@ -51,6 +51,7 @@ import org.glassfish.jersey.uri.internal.UriTemplateParser;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import jersey.repackaged.com.google.common.collect.Lists;
@@ -181,6 +182,20 @@ public class ResourceModelTest {
                 "{b-child-template-z}"), false, "PUT");
         ResourceTestUtils.containsExactMethods(ResourceTestUtils.getResource(templateBChildResources,
                 "another-child"), false, "PUT");
+    }
+
+    /**
+     * Reproducer for JERSEY-2946: StackOverFlowError in Resource.toString()
+     */
+    @Test
+    public void testResourceWithChildrenDoesNotOverflowToString() {
+        final Resource.Builder parentBuilder = Resource.builder("parent");
+        final Resource.Builder childBuilder = parentBuilder.addChildResource("child");
+        final Resource.Builder locatorBuilder = parentBuilder.addChildResource("child");
+
+        // In Jersey 2.21 this throws StackOverFlowError.
+        assertNotNull(childBuilder.toString());
+        assertNotNull(parentBuilder.toString());
     }
 
     @Test

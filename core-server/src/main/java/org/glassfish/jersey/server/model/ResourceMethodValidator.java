@@ -162,7 +162,7 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
     }
 
     private void checkValueProviders(ResourceMethod method) {
-        final List<Factory<?>> valueProviders = method.getInvocable().getValueProviders(locator);
+        final List<? extends Factory<?>> valueProviders = method.getInvocable().getValueProviders(locator);
         if (valueProviders.contains(null)) {
             int index = valueProviders.indexOf(null);
             Errors.fatal(method, LocalizationMessages.ERROR_PARAMETER_MISSING_VALUE_PROVIDER(index, method.getInvocable()

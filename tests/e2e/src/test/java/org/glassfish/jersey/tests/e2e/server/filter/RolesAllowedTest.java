@@ -194,6 +194,6 @@ public class RolesAllowedTest extends JerseyTest {
 
     @Test
     public void testNotAuthorized() {
-        assertThat("User should not be authorized.", target().request().get().getStatus(), is(401));
+        assertThat("User should not be authorized.", target().request().get().getStatus(), is(403));
     }
 }

@@ -64,24 +64,24 @@ import org.glassfish.jersey.uri.PathPattern;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**
- * This implementation of the resource mapping context assumed resource are
- * of simple a simple type with a statically defined structure.
+ * This implementation of the resource mapping context assumed resources are
+ * of a simple type with a statically defined structure.
  *
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 
 public class NaiveResourceMappingContext implements ResourceMappingContext {
 
-    private ExtendedResourceContext erc;
+    private final ExtendedResourceContext erc;
 
     private Map<Class<?>, ResourceMappingContext.Mapping> mappings;
 
-    public NaiveResourceMappingContext(@Context ExtendedResourceContext erc) {
+    public NaiveResourceMappingContext(@Context final ExtendedResourceContext erc) {
         this.erc = erc;
     }
 
     @Override
-    public Mapping getMapping(Class<?> resource) {
+    public Mapping getMapping(final Class<?> resource) {
         buildMappings();
         return mappings.get(resource);
     }
@@ -94,63 +94,62 @@ public class NaiveResourceMappingContext implements ResourceMappingContext {
 
         erc.getResourceModel().accept(new ResourceModelVisitor() {
 
-            StringBuffer prefix = new StringBuffer();
             Deque<PathPattern> stack = new LinkedList<>();
 
-            private void processComponents(ResourceModelComponent component) {
+            private void processComponents(final ResourceModelComponent component) {
 
-                List<? extends ResourceModelComponent> components = component.getComponents();
+                final List<? extends ResourceModelComponent> components = component.getComponents();
                 if (components != null) {
-                    for (ResourceModelComponent rc : components) {
+                    for (final ResourceModelComponent rc : components) {
                         rc.accept(this);
                     }
                 }
             }
 
             @Override
-            public void visitInvocable(Invocable invocable) {
+            public void visitInvocable(final Invocable invocable) {
                 processComponents(invocable);
             }
 
             @Override
-            public void visitRuntimeResource(RuntimeResource runtimeResource) {
+            public void visitRuntimeResource(final RuntimeResource runtimeResource) {
                 processComponents(runtimeResource);
             }
 
             @Override
-            public void visitResourceModel(ResourceModel resourceModel) {
+            public void visitResourceModel(final ResourceModel resourceModel) {
                 processComponents(resourceModel);
             }
 
             @Override
-            public void visitResourceHandlerConstructor(HandlerConstructor handlerConstructor) {
+            public void visitResourceHandlerConstructor(final HandlerConstructor handlerConstructor) {
                 processComponents(handlerConstructor);
             }
 
             @Override
-            public void visitMethodHandler(MethodHandler methodHandler) {
+            public void visitMethodHandler(final MethodHandler methodHandler) {
                 processComponents(methodHandler);
             }
 
             @Override
-            public void visitChildResource(Resource resource) {
+            public void visitChildResource(final Resource resource) {
                 visitResourceIntl(resource, false);
             }
 
             @Override
-            public void visitResource(Resource resource) {
+            public void visitResource(final Resource resource) {
 
                 visitResourceIntl(resource, true);
             }
 
-            private void visitResourceIntl(Resource resource, boolean isRoot) {
+            private void visitResourceIntl(final Resource resource, final boolean isRoot) {
                 try {
                     stack.addLast(resource.getPathPattern());
                     processComponents(resource);
 
                     if (isRoot) {
                         Class likelyToBeRoot = null;
-                        for (Class next : resource.getHandlerClasses()) {
+                        for (final Class next : resource.getHandlerClasses()) {
                             if (!(Inflector.class.isAssignableFrom(next))) {
                                 likelyToBeRoot = next;
                             }
@@ -166,7 +165,7 @@ public class NaiveResourceMappingContext implements ResourceMappingContext {
             }
 
             @Override
-            public void visitResourceMethod(ResourceMethod resourceMethod) {
+            public void visitResourceMethod(final ResourceMethod resourceMethod) {
 
                 if (resourceMethod.isExtended()) {
                     return;
@@ -174,7 +173,7 @@ public class NaiveResourceMappingContext implements ResourceMappingContext {
 
                 if (ResourceMethod.JaxrsType.SUB_RESOURCE_LOCATOR.equals(resourceMethod.getType())) {
                     if (resourceMethod.getInvocable() != null) {
-                        Invocable i = resourceMethod.getInvocable();
+                        final Invocable i = resourceMethod.getInvocable();
 
                         final Type type = i.getResponseType();
                         final StringBuilder template = getTemplate();
@@ -189,7 +188,7 @@ public class NaiveResourceMappingContext implements ResourceMappingContext {
                             // for example in the case the return type of the sub resource locator is Object
                             builder = Resource.builder().path(resourceMethod.getParent().getPath());
                         }
-                        Resource subResource = builder.build();
+                        final Resource subResource = builder.build();
 
                         visitChildResource(subResource);
                     }
@@ -200,10 +199,10 @@ public class NaiveResourceMappingContext implements ResourceMappingContext {
 
             private StringBuilder getTemplate() {
                 final StringBuilder template = new StringBuilder();
-                for (PathPattern pp : stack) {
-                    String ppTemplate = pp.getTemplate().getTemplate();
+                for (final PathPattern pp : stack) {
+                    final String ppTemplate = pp.getTemplate().getTemplate();
 
-                    int tlength = template.length();
+                    final int tlength = template.length();
                     if (tlength > 0) {
                         if (template.charAt(tlength - 1) == '/') {
                             if (ppTemplate.startsWith("/")) {

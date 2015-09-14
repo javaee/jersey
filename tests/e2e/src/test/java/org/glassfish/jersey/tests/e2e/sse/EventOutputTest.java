@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,8 @@
 package org.glassfish.jersey.tests.e2e.sse;
 
 import java.io.IOException;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -68,7 +70,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -144,12 +148,65 @@ public class EventOutputTest extends JerseyTest {
             output.close();
             return output;
         }
+
+        @GET
+        @Path("comments-only")
+        public EventOutput getCommentsOnlyStream() throws IOException {
+            final EventOutput output = new EventOutput();
+            output.write(new OutboundEvent.Builder().comment("No comment #1").build());
+            output.write(new OutboundEvent.Builder().comment("No comment #2").build());
+            output.close();
+            return output;
+        }
     }
 
     @Test
     public void testReadSseEventAsPlainString() throws Exception {
         final Response r = target().path("test/single").request().get(Response.class);
-        assertTrue(r.readEntity(String.class).contains("single"));
+        assertThat(r.readEntity(String.class), containsString("single"));
+    }
+
+    /**
+     * Reproducer for JERSEY-2912: Sending and receiving comments-only events.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testReadCommentsOnlySseEvents() throws Exception {
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 15000);
+        clientConfig.property(ClientProperties.READ_TIMEOUT, 0);
+        clientConfig.property(ClientProperties.ASYNC_THREADPOOL_SIZE, 8);
+        clientConfig.connectorProvider(new GrizzlyConnectorProvider());
+        Client client = ClientBuilder.newBuilder().withConfig(clientConfig).build();
+
+        final CountDownLatch latch = new CountDownLatch(2);
+        final Queue<String> eventComments = new ArrayBlockingQueue<>(2);
+        WebTarget single = client.target(getBaseUri()).path("test/comments-only");
+        EventSource es = EventSource.target(single).build();
+        es.register(new EventListener() {
+            @Override
+            public void onEvent(InboundEvent inboundEvent) {
+                eventComments.add(inboundEvent.getComment());
+                latch.countDown();
+            }
+        });
+
+        boolean latchTimedOut;
+        boolean closeTimedOut;
+        try {
+            es.open();
+            latchTimedOut = latch.await(5 * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS);
+        } finally {
+            closeTimedOut = es.close(5, TimeUnit.SECONDS);
+        }
+
+        assertEquals("Unexpected event count", 2, eventComments.size());
+        for (int i = 1; i <= 2; i++) {
+            assertEquals("Unexpected comment data on event #" + i, "No comment #" + i, eventComments.poll());
+        }
+        assertTrue("Event latch has timed out", latchTimedOut);
+        assertTrue("EventSource.close() has timed out", closeTimedOut);
     }
 
     @Test

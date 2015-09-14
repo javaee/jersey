@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,13 +68,14 @@ import org.glassfish.jersey.message.MessageUtils;
  */
 @ConstrainedTo(RuntimeType.CLIENT)
 class InboundEventReader implements MessageBodyReader<InboundEvent> {
+
     private static final Logger LOGGER = Logger.getLogger(InboundEventReader.class.getName());
-    private static final byte[] EOL_DATA = new byte[]{'\n'};
+    private static final byte[] EOL_DATA = new byte[] {'\n'};
 
     @Inject
     private Provider<MessageBodyWorkers> messageBodyWorkers;
 
-    private static enum State {
+    private enum State {
         NEW_LINE,
         COMMENT,
         FIELD,
@@ -100,6 +101,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
          * last editors draft from 13 March 2012
          */
         final ByteArrayOutputStream tokenData = new ByteArrayOutputStream();
+        final String charsetName = MessageUtils.getCharset(mediaType).name();
         final InboundEvent.Builder eventBuilder =
                 new InboundEvent.Builder(messageBodyWorkers.get(), annotations, mediaType, headers);
 
@@ -109,8 +111,15 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
         do {
             switch (currentState) {
                 case NEW_LINE:
-                    b = entityStream.read();
-                    if (b == '\n' || b == -1) {
+                    if (b == '\r') {
+                        // read next byte in case of CRLF delimiter
+                        b = entityStream.read();
+                        b = b == '\n' ? entityStream.read() : b;
+                    } else {
+                        b = entityStream.read();
+                    }
+
+                    if (b == '\n' || b == '\r' || b == -1) {
                         break loop;
                     }
 
@@ -123,24 +132,24 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
                     break;
                 case COMMENT:
                     // skipping comment data
-                    b = readLineUntil(entityStream, '\n', null);
+                    b = readLineUntil(entityStream, '\n', tokenData);
+                    final String commentLine = tokenData.toString(charsetName);
+                    tokenData.reset();
+                    eventBuilder.commentLine(commentLine.trim());
                     currentState = State.NEW_LINE;
                     break;
                 case FIELD:
                     // read field name
                     b = readLineUntil(entityStream, ':', tokenData);
-                    final String fieldName = tokenData.toString(MessageUtils.getCharset(mediaType).name());
+                    final String fieldName = tokenData.toString(charsetName);
                     tokenData.reset();
 
                     if (b == ':') {
-                        // read field value
-                        b = entityStream.read();
-                        if (b == ' ') {
-                            // first space in value has to be skipped
+                        do {
                             b = entityStream.read();
-                        }
+                        } while (b == ' ');
 
-                        if (b != '\n' && b != -1) {
+                        if (b != '\n' && b != '\r' && b != -1) {
                             tokenData.write(b);
                             b = readLineUntil(entityStream, '\n', tokenData);
                         }
@@ -163,7 +172,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
      * the data if the output stream is {@code null}.
      *
      * @param in        input stream to be read.
-     * @param delimiter delimiter to break the read (apart from {@code EOL ('\n')} or {@code EOF}).
+     * @param delimiter delimiter to break the read (apart from {@code EOL ('\n', '\r')} or {@code EOF}).
      * @param out       output stream to write the read data to. May be {@code null}, in which case the
      *                  read data are silently discarded.
      * @return value of the last byte read.
@@ -172,7 +181,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
     private int readLineUntil(final InputStream in, final int delimiter, final OutputStream out) throws IOException {
         int b;
         while ((b = in.read()) != -1) {
-            if (b == delimiter || b == '\n') {
+            if (b == delimiter || b == '\n' || b == '\r') {
                 break;
             } else if (out != null) {
                 out.write(b);

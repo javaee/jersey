@@ -362,6 +362,16 @@
                         </entry>
                     </row>
                     <row>
+                        <entry>&jersey.server.ServerProperties.REDUCE_CONTEXT_PATH_SLASHES_ENABLED;</entry>
+                        <entry><literal>jersey.config.server.reduceContextPathSlashes.enabled</literal></entry>
+                        <entry>
+                            <para>
+                                Ignores multiple slashes between a port and a context path and will resolve it
+                                as URI with only one slash. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
                         <entry>&jersey.server.ServerProperties.RESOURCE_VALIDATION_DISABLE;</entry>
                         <entry><literal>jersey.config.server
                             .resource.validation.disable</literal></entry>
@@ -488,6 +498,16 @@
                                 is effective in this case you need to return same Jersey Resource instances for same input
                                 parameters from resource method. This means that generating new Jersey Resource instances for same
                                 input parameters would not have any performance effect and it would only fill-up the cache.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED;</entry>
+                        <entry><literal>jersey.config.server.headers.location.relative.resolution.disabled</literal></entry>
+                        <entry>
+                            <para>
+                                If <literal>true</literal>, Jersey will not resolve relative URIs in the <literal>Location</literal>
+                                http header.
                             </para>
                         </entry>
                     </row>

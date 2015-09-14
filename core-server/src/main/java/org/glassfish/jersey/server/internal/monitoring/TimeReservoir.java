@@ -62,13 +62,13 @@ import java.util.concurrent.TimeUnit;
 /**
  * A statistically representative reservoir of a data stream in time.
  * <p/>
- * Comparing to Dropwizard's Reservoir, this interface adds a possibility to work with data that is associated with a specific
+ * Compared to Dropwizard Reservoir, this interface adds a possibility to work with data that is associated with a specific
  * time. It may not be possible; however, to obtain a snapshot or size at some moment in past due to performance optimizations.
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  * @see <a href="https://github.com/dropwizard/metrics">https://github.com/dropwizard/metrics</a>
  */
-public interface TimeReservoir {
+interface TimeReservoir<V> {
 
     /**
      * Returns the number of values recorded at given time or newer. It may not be supported to return a size in past due to
@@ -87,7 +87,7 @@ public interface TimeReservoir {
      * @param time     The time the recorded value occurred at
      * @param timeUnit Time unit of the provided time
      */
-    void update(long value, long time, TimeUnit timeUnit);
+    void update(V value, long time, TimeUnit timeUnit);
 
     /**
      * Returns a snapshot of the reservoir's values at given time or newer. It may not be supported to return a snapshot in past
@@ -98,4 +98,12 @@ public interface TimeReservoir {
      * @return a snapshot of the reservoir's values for given time or newer
      */
     UniformTimeSnapshot getSnapshot(long time, TimeUnit timeUnit);
+
+    /**
+     * The time interval this reservoir stores data of.
+     *
+     * @param timeUnit The time unit in which to get the interval
+     * @return The time interval of this time reservoir
+     */
+    long interval(TimeUnit timeUnit);
 }

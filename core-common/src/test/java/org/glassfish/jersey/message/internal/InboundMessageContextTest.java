@@ -254,7 +254,6 @@ public class InboundMessageContextTest {
         assertTrue(r.getLink("update").equals(link2) || r.getLink("update").equals(link3));
     }
 
-
     @Test
     public void testGetAllowedMethods() {
         InboundMessageContext r = createInboundMessageContext();

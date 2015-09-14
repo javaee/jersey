@@ -124,7 +124,7 @@ public class HttpAuthorizationTest extends JerseyTest {
         public void filter(ContainerRequestContext requestContext) throws IOException {
             final String authorization = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-            if (authorization != null && authorization.startsWith("Digest")) {
+            if (authorization != null && authorization.trim().toUpperCase().startsWith("DIGEST")) {
                 final Matcher match = Pattern.compile("username=\"([^\"]+)\"").matcher(authorization);
                 if (!match.find()) {
                     return;
@@ -174,12 +174,13 @@ public class HttpAuthorizationTest extends JerseyTest {
     public static class BasicFilter implements ContainerRequestFilter {
 
         static final Charset CHARACTER_SET = Charset.forName("iso-8859-1");
+        public static final String AUTH_SCHEME_CASE = "Auth-Scheme-Case";
 
         @Override
         public void filter(ContainerRequestContext request) throws IOException {
 
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-            if (authHeader != null && authHeader.startsWith("Basic")) {
+            if (authHeader != null && authHeader.trim().toUpperCase().startsWith("BASIC")) {
                 String decoded = new String(Base64.decode(authHeader.substring(6).getBytes()), CHARACTER_SET);
                 //                String decoded = Base64.decodeAsString(authHeader.substring(6));
                 final String[] split = decoded.split(":");
@@ -216,7 +217,18 @@ public class HttpAuthorizationTest extends JerseyTest {
                     return;
                 }
             }
-            request.abortWith(Response.status(401).header(HttpHeaders.WWW_AUTHENTICATE, "Basic").build());
+            final String authSchemeCase = request.getHeaderString(AUTH_SCHEME_CASE);
+
+            final String authScheme;
+            if ("uppercase".equals(authSchemeCase)) {
+                authScheme = "BASIC";
+            } else if ("lowercase".equals(authSchemeCase)) {
+                authScheme = "basic";
+            } else {
+                authScheme = "Basic";
+            }
+
+            request.abortWith(Response.status(401).header(HttpHeaders.WWW_AUTHENTICATE, authScheme).build());
         }
     }
 
@@ -308,6 +320,36 @@ public class HttpAuthorizationTest extends JerseyTest {
         Response response = target().path("resource").path("basic")
                 .register(HttpAuthenticationFeature.universalBuilder().credentials("homer", "Homer").build())
                 .request().get();
+        check(response, 200, "BASIC:homer");
+    }
+
+    /**
+     * Reproducer for JERSEY-2941: BasicAuthenticator#filterResponseAndAuthenticate: auth-scheme checks should be case
+     * insensitve.
+     */
+    @Test
+    public void testUniversalBasicCaseSensitivity() {
+        Response response;
+
+        response = target().path("resource").path("basic")
+                .register(HttpAuthenticationFeature.universalBuilder().credentials("homer", "Homer").build())
+                .request()
+                // no AUTH_SCHEME_CASE header = mixed case
+                .get();
+        check(response, 200, "BASIC:homer");
+
+        response = target().path("resource").path("basic")
+                .register(HttpAuthenticationFeature.universalBuilder().credentials("homer", "Homer").build())
+                .request()
+                .header(BasicFilter.AUTH_SCHEME_CASE, "lowercase")
+                .get();
+        check(response, 200, "BASIC:homer");
+
+        response = target().path("resource").path("basic")
+                .register(HttpAuthenticationFeature.universalBuilder().credentials("homer", "Homer").build())
+                .request()
+                .header(BasicFilter.AUTH_SCHEME_CASE, "uppercase")
+                .get();
         check(response, 200, "BASIC:homer");
     }
 

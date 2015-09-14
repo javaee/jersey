@@ -65,6 +65,7 @@ public class JaxRsConfiguration extends Application {
             add(EjbCounterResource.class);
             add(StatelessResource.class);
             add(StatefulResource.class);
+            add(WarStatelessResource.class);
         }};
     }
 }

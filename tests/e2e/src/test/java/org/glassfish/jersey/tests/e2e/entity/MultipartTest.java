@@ -240,4 +240,23 @@ public class MultipartTest extends JerseyTest {
 
         assertThat(response.readEntity(String.class), is("object_list1_list2"));
     }
+
+    @Test
+    public void testEmptyEntity() throws Exception {
+        final Response response = target("filename")
+                .request()
+                .post(Entity.entity(null, MediaType.MULTIPART_FORM_DATA_TYPE));
+
+        assertThat(response.getStatus(), is(400));
+    }
+
+    @Test
+    public void testEmptyEntityWithoutContentType() throws Exception {
+        final Response response = target("filename")
+                .request()
+                .post(null);
+
+        assertThat(response.getStatus(), is(400));
+    }
+
 }

@@ -182,10 +182,25 @@ public class UriComponentTest {
         _testDecodeQuery("a=x&b=y", "a", "x", "b", "y");
         _testDecodeQuery("a=x&&b=y", "a", "x", "b", "y");
 
+        _testDecodeQuery("+a+", true, " a ", "");
+        _testDecodeQuery("+a+=", true, " a ", "");
         _testDecodeQuery("+a+=+x+", true, " a ", " x ");
         _testDecodeQuery("%20a%20=%20x%20", true, " a ", " x ");
+
+        _testDecodeQuery("+a+", false, " a ", "");
+        _testDecodeQuery("+a+=", false, " a ", "");
         _testDecodeQuery("+a+=+x+", false, " a ", "+x+");
         _testDecodeQuery("%20a%20=%20x%20", false, " a ", "%20x%20");
+
+        _testDecodeQuery("+a+", false, true, "+a+", "");
+        _testDecodeQuery("+a+=", false, true, "+a+", "");
+        _testDecodeQuery("+a+=+x+", false, true, "+a+", " x ");
+        _testDecodeQuery("%20a%20=%20x%20", false, true, "%20a%20", " x ");
+
+        _testDecodeQuery("+a+", false, false, "+a+", "");
+        _testDecodeQuery("+a+=", false, false, "+a+", "");
+        _testDecodeQuery("+a+=+x+", false, false, "+a+", "+x+");
+        _testDecodeQuery("%20a%20=%20x%20", false, false, "%20a%20", "%20x%20");
     }
 
     @Test
@@ -226,7 +241,11 @@ public class UriComponentTest {
     }
 
     private void _testDecodeQuery(final String q, final boolean decode, final String... query) {
-        final MultivaluedMap<String, String> queryParameters = UriComponent.decodeQuery(q, decode);
+        _testDecodeQuery(q, true, decode, query);
+    }
+
+    private void _testDecodeQuery(final String q, final boolean decodeNames, final boolean decodeValues, final String... query) {
+        final MultivaluedMap<String, String> queryParameters = UriComponent.decodeQuery(q, decodeNames, decodeValues);
 
         assertEquals(query.length / 2, queryParameters.size());
 

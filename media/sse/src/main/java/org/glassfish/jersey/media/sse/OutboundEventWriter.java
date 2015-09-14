@@ -155,6 +155,7 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
                             }
                         }
                     });
+            entityStream.write(EOL);
         }
     }
 }

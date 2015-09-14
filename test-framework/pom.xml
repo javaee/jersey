@@ -45,7 +45,7 @@
     <parent>
         <groupId>org.glassfish.jersey</groupId>
         <artifactId>project</artifactId>
-        <version>2.21-SNAPSHOT</version>
+        <version>2.22-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.test-framework</groupId>
@@ -59,6 +59,8 @@
         <module>core</module>
         <module>providers</module>
         <module>util</module>
+        <module>maven</module>
+        <module>memleak-test-common</module>
     </modules>
 
     <dependencies>

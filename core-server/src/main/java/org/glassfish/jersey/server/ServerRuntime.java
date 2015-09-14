@@ -148,10 +148,12 @@ public class ServerRuntime {
 
     private final boolean processResponseErrors;
 
+    private final boolean disableLocationHeaderRelativeUriResolution;
+
     /*package */ static final ExternalRequestScope<Object> NOOP_EXTERNAL_REQ_SCOPE = new ExternalRequestScope<Object>() {
 
         @Override
-        public ExternalRequestContext<Object> open(ServiceLocator serviceLocator) {
+        public ExternalRequestContext<Object> open(final ServiceLocator serviceLocator) {
             return null;
         }
 
@@ -160,11 +162,11 @@ public class ServerRuntime {
         }
 
         @Override
-        public void suspend(ExternalRequestContext<Object> o, ServiceLocator serviceLocator) {
+        public void suspend(final ExternalRequestContext<Object> o, final ServiceLocator serviceLocator) {
         }
 
         @Override
-        public void resume(ExternalRequestContext<Object> o, ServiceLocator serviceLocator) {
+        public void resume(final ExternalRequestContext<Object> o, final ServiceLocator serviceLocator) {
         }
     };
 
@@ -248,6 +250,10 @@ public class ServerRuntime {
 
         this.processResponseErrors = PropertiesHelper.isProperty(
                 configuration.getProperty(ServerProperties.PROCESSING_RESPONSE_ERRORS_ENABLED));
+
+        this.disableLocationHeaderRelativeUriResolution = ServerProperties.getValue(configuration.getProperties(),
+                ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED,
+                Boolean.FALSE, Boolean.class);
     }
 
     /**
@@ -295,7 +301,9 @@ public class ServerRuntime {
                 try {
                     // set base URI into response builder thread-local variable
                     // for later resolving of relative location URIs
-                    OutboundJaxrsResponse.Builder.setBaseUri(request.getBaseUri());
+                    if (!disableLocationHeaderRelativeUriResolution) {
+                        OutboundJaxrsResponse.Builder.setBaseUri(request.getRequestUri());
+                    }
 
                     final Ref<Endpoint> endpointRef = Refs.emptyRef();
                     final RequestProcessingContext data = Stages.process(context, requestProcessingRoot, endpointRef);
@@ -348,8 +356,8 @@ public class ServerRuntime {
         if (location == null || location.isAbsolute()) {
             return;
         }
-        // according to RFC2616 (HTTP/1.1), this field can contain one single URI
-        headers.putSingle(HttpHeaders.LOCATION, request.getBaseUri().resolve(location));
+        // according to RFC7231 (HTTP/1.1), this field can contain one single URI reference
+        headers.putSingle(HttpHeaders.LOCATION, request.getRequestUri().resolve(location));
     }
 
     private static class AsyncResponderHolder implements Value<AsyncContext> {
@@ -457,7 +465,9 @@ public class ServerRuntime {
                 try {
                     try {
                         response = convertResponse(exceptionResponse);
-                        ensureAbsolute(response.getLocation(), response.getHeaders(), request);
+                        if (!runtime.disableLocationHeaderRelativeUriResolution) {
+                            ensureAbsolute(response.getLocation(), response.getHeaders(), request);
+                        }
                         processingContext.monitoringEventBuilder().setContainerResponse(response)
                                 .setResponseSuccessfullyMapped(true);
                     } finally {
@@ -647,8 +657,10 @@ public class ServerRuntime {
         private ContainerResponse writeResponse(final ContainerResponse response) {
             final ContainerRequest request = processingContext.request();
             final ContainerResponseWriter writer = request.getResponseWriter();
-            ServerRuntime.ensureAbsolute(response.getLocation(), response.getHeaders(),
-                    response.getRequestContext());
+
+            if (!runtime.disableLocationHeaderRelativeUriResolution) {
+                ServerRuntime.ensureAbsolute(response.getLocation(), response.getHeaders(), response.getRequestContext());
+            }
 
             if (!response.hasEntity()) {
                 tracingLogger.log(ServerTraceEvent.FINISHED, response.getStatusInfo());
@@ -668,8 +680,10 @@ public class ServerRuntime {
                 response.setStreamProvider(new OutboundMessageContext.StreamProvider() {
                     @Override
                     public OutputStream getOutputStream(final int contentLength) throws IOException {
-                        ServerRuntime.ensureAbsolute(response.getLocation(), response.getHeaders(),
-                                response.getRequestContext());
+                        if (!runtime.disableLocationHeaderRelativeUriResolution) {
+                            ServerRuntime.ensureAbsolute(response.getLocation(), response.getHeaders(),
+                                    response.getRequestContext());
+                        }
                         final OutputStream outputStream = writer.writeResponseStatusAndHeaders(contentLength, response);
                         return isHead ? null : outputStream;
                     }
@@ -898,8 +912,10 @@ public class ServerRuntime {
                         requestScopeListener.resume(foreignScopeInstance, responder.runtime.locator);
                         final Response jaxrsResponse =
                                 (response instanceof Response) ? (Response) response : Response.ok(response).build();
-                        ServerRuntime.ensureAbsolute(
-                                jaxrsResponse.getLocation(), jaxrsResponse.getHeaders(), responder.processingContext.request());
+                        if (!responder.runtime.disableLocationHeaderRelativeUriResolution) {
+                            ServerRuntime.ensureAbsolute(jaxrsResponse.getLocation(), jaxrsResponse.getHeaders(),
+                                    responder.processingContext.request());
+                        }
                         responder.process(new ContainerResponse(responder.processingContext.request(), jaxrsResponse));
                     } catch (final Throwable t) {
                         responder.process(t);

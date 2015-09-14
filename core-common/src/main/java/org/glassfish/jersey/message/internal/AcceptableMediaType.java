@@ -200,9 +200,4 @@ public class AcceptableMediaType extends MediaType implements Qualified {
         int hash = super.hashCode();
         return (this.q == Quality.DEFAULT) ? hash : 47 * hash + this.q;
     }
-
-    @Override
-    public String toString() {
-        return "{" + super.toString() + ", q=" + q + "}";
-    }
 }

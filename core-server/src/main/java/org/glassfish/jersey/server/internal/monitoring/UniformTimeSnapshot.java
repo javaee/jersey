@@ -57,15 +57,7 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-
-import static java.lang.Math.floor;
 
 /**
  * A statistical snapshot of a {@link UniformTimeSnapshot}.
@@ -74,176 +66,29 @@ import static java.lang.Math.floor;
  * @author Dropwizard Team
  * @see <a href="https://github.com/dropwizard/metrics">https://github.com/dropwizard/metrics</a>
  */
-public class UniformTimeSnapshot {
-
-    private static final Charset UTF_8 = Charset.forName("UTF-8");
-
-    private final long[] values;
-
-    private final long timeInterval;
-    private final TimeUnit timeIntervalUnit;
-
-    /**
-     * Create a new snapshot with the given values.
-     *
-     * @param values           an unordered set of values in the reservoir
-     * @param timeInterval     The time interval this snapshot relates to
-     * @param timeIntervalUnit The time unit of the time interval
-     */
-    public UniformTimeSnapshot(Collection<Long> values, final long timeInterval, final TimeUnit timeIntervalUnit) {
-        this.timeInterval = timeInterval;
-        this.timeIntervalUnit = timeIntervalUnit;
-        final Object[] copy = values.toArray();
-        this.values = new long[copy.length];
-        for (int i = 0; i < copy.length; i++) {
-            this.values[i] = (Long) copy[i];
-        }
-        Arrays.sort(this.values);
-    }
-
-    /**
-     * Create a new snapshot with the given values.
-     *
-     * @param values           an unordered set of values in the reservoir
-     * @param timeInterval     The time interval this snapshot relates to
-     * @param timeIntervalUnit The time unit of the time interval
-     */
-    public UniformTimeSnapshot(long[] values, final long timeInterval, final TimeUnit timeIntervalUnit) {
-        this.timeInterval = timeInterval;
-        this.timeIntervalUnit = timeIntervalUnit;
-        this.values = Arrays.copyOf(values, values.length);
-        Arrays.sort(this.values);
-    }
-
-    /**
-     * Returns the value at the given quantile.
-     *
-     * @param quantile a given quantile, in {@code [0..1]}
-     * @return the value in the distribution at {@code quantile}
-     */
-    public double getValue(double quantile) {
-        if (quantile < 0.0 || quantile > 1.0 || Double.isNaN(quantile)) {
-            throw new IllegalArgumentException(quantile + " is not in [0..1] range");
-        }
-
-        if (values.length == 0) {
-            return 0.0;
-        }
-
-        final double pos = quantile * (values.length + 1);
-        final int index = (int) pos;
-
-        if (index < 1) {
-            return values[0];
-        }
-
-        if (index >= values.length) {
-            return values[values.length - 1];
-        }
-
-        final double lower = values[index - 1];
-        final double upper = values[index];
-        return lower + (pos - floor(pos)) * (upper - lower);
-    }
+interface UniformTimeSnapshot {
 
     /**
      * Returns the number of values in the snapshot.
      *
      * @return the number of values
      */
-    public long size() {
-        return values.length;
-    }
+    long size();
 
     /**
-     * Returns the entire set of values in the snapshot.
-     *
-     * @return the entire set of values
+     * @return The maximum value in this snapshot
      */
-    public long[] getValues() {
-        return Arrays.copyOf(values, values.length);
-    }
+    long getMax();
 
     /**
-     * Returns the highest value in the snapshot.
-     *
-     * @return the highest value
+     * @return The minimum value in this snapshot
      */
-    public long getMax() {
-        if (values.length == 0) {
-            return 0;
-        }
-        return values[values.length - 1];
-    }
+    long getMin();
 
     /**
-     * Returns the lowest value in the snapshot.
-     *
-     * @return the lowest value
+     * @return The mean of the values in this snapshot
      */
-    public long getMin() {
-        if (values.length == 0) {
-            return 0;
-        }
-        return values[0];
-    }
-
-    /**
-     * Returns the arithmetic mean of the values in the snapshot.
-     *
-     * @return the arithmetic mean
-     */
-    public double getMean() {
-        if (values.length == 0) {
-            return 0;
-        }
-
-        double sum = 0;
-        for (long value : values) {
-            sum += value;
-        }
-        return sum / values.length;
-    }
-
-    /**
-     * Returns the standard deviation of the values in the snapshot.
-     *
-     * @return the standard deviation value
-     */
-    public double getStdDev() {
-        // two-pass algorithm for variance, avoids numeric overflow
-
-        if (values.length <= 1) {
-            return 0;
-        }
-
-        final double mean = getMean();
-        double sum = 0;
-
-        for (long value : values) {
-            final double diff = value - mean;
-            sum += diff * diff;
-        }
-
-        final double variance = sum / (values.length - 1);
-        return Math.sqrt(variance);
-    }
-
-    /**
-     * Writes the values of the snapshot to the given stream.
-     *
-     * @param output an output stream
-     */
-    public void dump(OutputStream output) {
-        final PrintWriter out = new PrintWriter(new OutputStreamWriter(output, UTF_8));
-        try {
-            for (long value : values) {
-                out.printf("%d%n", value);
-            }
-        } finally {
-            out.close();
-        }
-    }
+    double getMean();
 
     /**
      * The time interval for which this snapshot was created.
@@ -251,7 +96,13 @@ public class UniformTimeSnapshot {
      * @param timeUnit The time unit in which to return the time interval.
      * @return The time interval the snapshot was created at for the given time unit.
      */
-    public long getTimeInterval(TimeUnit timeUnit) {
-        return timeUnit.convert(timeInterval, timeIntervalUnit);
-    }
+    long getTimeInterval(TimeUnit timeUnit);
+
+    /**
+     * The rate of values in this snapshot for one given time unit.
+     *
+     * @param timeUnit The time unit at which to get the rate
+     * @return The rate
+     */
+    double getRate(TimeUnit timeUnit);
 }

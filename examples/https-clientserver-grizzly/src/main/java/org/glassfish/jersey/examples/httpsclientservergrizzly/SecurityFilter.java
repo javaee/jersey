@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,15 +47,14 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 
 import javax.inject.Inject;
 
-import org.glassfish.jersey.internal.util.Base64;
-import org.glassfish.jersey.server.ContainerRequest;
+import java.nio.charset.Charset;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * Simple authentication filter.
@@ -75,13 +74,13 @@ public class SecurityFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext filterContext) throws IOException {
-        User user = authenticate(filterContext.getRequest());
+        User user = authenticate(filterContext);
         filterContext.setSecurityContext(new Authorizer(user));
     }
 
-    private User authenticate(Request request) {
+    private User authenticate(ContainerRequestContext filterContext) {
         // Extract authentication credentials
-        String authentication = ((ContainerRequest) request).getHeaderString(HttpHeaders.AUTHORIZATION);
+        String authentication = filterContext.getHeaderString(HttpHeaders.AUTHORIZATION);
         if (authentication == null) {
             throw new AuthenticationException("Authentication credentials are required", REALM);
         }
@@ -91,7 +90,7 @@ public class SecurityFilter implements ContainerRequestFilter {
             // "Only HTTP Basic authentication is supported"
         }
         authentication = authentication.substring("Basic ".length());
-        String[] values = Base64.decodeAsString(authentication).split(":");
+        String[] values = new String(DatatypeConverter.parseBase64Binary(authentication), Charset.forName("ASCII")).split(":");
         if (values.length < 2) {
             throw new WebApplicationException(400);
             // "Invalid syntax for username and password"

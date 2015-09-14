@@ -84,7 +84,7 @@ import jersey.repackaged.com.google.common.collect.Queues;
 public final class MonitoringEventListener implements ApplicationEventListener {
 
     private static final Logger LOGGER = Logger.getLogger(MonitoringEventListener.class.getName());
-    private static final int EVENT_QUEUE_SIZE = 50000;
+    private static final int EVENT_QUEUE_SIZE = 500_000;
 
     @Inject
     private ServiceLocator serviceLocator;

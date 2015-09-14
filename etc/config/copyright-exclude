@@ -43,6 +43,12 @@ keystore_server
 server.cert
 truststore_client
 truststore_server
+keystore-client
+keystore-localhost-server
+keystore-example_com-server
+truststore-example_com-client
+truststore-localhost-client
+truststore-server
 /examples/reload/resources
 /core-server/etc
 bootstrap
@@ -55,7 +61,8 @@ build.readme
 /core-server/src/main/java/com/sun/research/ws/wadl
 /bundles/repackaged/jersey-jsr166e/src/main/java/jersey/repackaged/jsr166e
 /tests/performance/etc/data/MEASUREMENT_DATA
-/core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/SlidingWindowTimeReservoir.java
+/core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/AbstractSlidingWindowTimeReservoir.java
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/TimeReservoir.java
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/UniformTimeReservoir.java
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/UniformTimeSnapshot.java
+/core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/UniformTimeValuesSnapshot.java

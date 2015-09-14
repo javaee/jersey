@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -49,50 +50,86 @@ import java.util.concurrent.TimeUnit;
 import org.glassfish.jersey.server.monitoring.ExecutionStatistics;
 import org.glassfish.jersey.server.monitoring.TimeWindowStatistics;
 
+import jersey.repackaged.com.google.common.collect.ImmutableList;
 import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
- * Execution statistics.
+ * Immutable Execution statistics.
  *
  * @author Miroslav Fuksa
+ * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
 final class ExecutionStatisticsImpl implements ExecutionStatistics {
 
     /**
+     * Empty execution statistics instance.
+     */
+    static final ExecutionStatistics EMPTY = new Builder().build();
+
+    /**
      * Builder of execution statistics.
+     * <p/>
+     * Must be thread-safe.
      */
     static class Builder {
 
-        private long lastStartTime;
+        private volatile long lastStartTime;
         private final Map<Long, TimeWindowStatisticsImpl.Builder> intervalStatistics;
+        private final Collection<TimeWindowStatisticsImpl.Builder<Long>> updatableIntervalStatistics;
 
         /**
          * Create a new builder.
          */
+        @SuppressWarnings("MagicNumber")
         public Builder() {
-            this.intervalStatistics = new HashMap<>(6);
-            addInterval(0, TimeUnit.MILLISECONDS);
-            addInterval(1, TimeUnit.SECONDS);
-            addInterval(15, TimeUnit.SECONDS);
-            addInterval(1, TimeUnit.MINUTES);
-            addInterval(15, TimeUnit.MINUTES);
-            addInterval(1, TimeUnit.HOURS);
+            final long nowMillis = System.currentTimeMillis();
+            final AggregatingTrimmer trimmer = new AggregatingTrimmer(nowMillis, TimeUnit.MILLISECONDS, 1, TimeUnit.SECONDS);
+            final TimeWindowStatisticsImpl.Builder<Long> oneSecondIntervalWindowBuilder =
+                    new TimeWindowStatisticsImpl.Builder<>(
+                            new SlidingWindowTimeReservoir(1, TimeUnit.SECONDS, nowMillis, TimeUnit.MILLISECONDS, trimmer));
+            final TimeWindowStatisticsImpl.Builder<Long> infiniteIntervalWindowBuilder =
+                    new TimeWindowStatisticsImpl.Builder<>(new UniformTimeReservoir(nowMillis, TimeUnit.MILLISECONDS));
+
+            this.updatableIntervalStatistics = ImmutableList.of(infiniteIntervalWindowBuilder, oneSecondIntervalWindowBuilder);
+
+            // create unmodifiable map to ensure that an iteration in the build() won't have multi-threading issues
+            final HashMap<Long, TimeWindowStatisticsImpl.Builder> tmpIntervalStatistics = new HashMap<>(6);
+            // Add approximate infinite time window builder
+            tmpIntervalStatistics.put(0L, infiniteIntervalWindowBuilder);
+            // Add precise 1 second time window builder
+            tmpIntervalStatistics.put(TimeUnit.SECONDS.toMillis(1), oneSecondIntervalWindowBuilder);
+            // Add aggregated 15 seconds time window builder
+            addAggregatedInterval(tmpIntervalStatistics, nowMillis, 15, TimeUnit.SECONDS, trimmer);
+            // Add aggregated 1 minute time window builder
+            addAggregatedInterval(tmpIntervalStatistics, nowMillis, 1, TimeUnit.MINUTES, trimmer);
+            // Add aggregated 15 minutes time window builder
+            addAggregatedInterval(tmpIntervalStatistics, nowMillis, 15, TimeUnit.MINUTES, trimmer);
+            // Add aggregated 1 hour time window builder
+            addAggregatedInterval(tmpIntervalStatistics, nowMillis, 1, TimeUnit.HOURS, trimmer);
+
+            this.intervalStatistics = Collections.unmodifiableMap(tmpIntervalStatistics);
         }
 
-        private void addInterval(final long interval, final TimeUnit timeUnit) {
+        private static void addAggregatedInterval(
+                final Map<Long, TimeWindowStatisticsImpl.Builder> intervalStatisticsMap,
+                final long nowMillis,
+                final long interval,
+                final TimeUnit timeUnit,
+                final AggregatingTrimmer notifier) {
             final long intervalInMillis = timeUnit.toMillis(interval);
-            intervalStatistics.put(intervalInMillis, new TimeWindowStatisticsImpl.Builder(intervalInMillis,
-                    TimeUnit.MILLISECONDS));
+            intervalStatisticsMap.put(intervalInMillis, new TimeWindowStatisticsImpl.Builder<>(
+                    new AggregatedSlidingWindowTimeReservoir(intervalInMillis, TimeUnit.MILLISECONDS, nowMillis,
+                            TimeUnit.MILLISECONDS, notifier)));
         }
 
         /**
          * Add execution of a target.
          *
-         * @param startTime (Unix timestamp format)
-         * @param duration Duration of target execution in milliseconds.
+         * @param startTime Start time of an execution event (in Unix timestamp format).
+         * @param duration  Duration of an execution event in milliseconds.
          */
         void addExecution(final long startTime, final long duration) {
-            for (final TimeWindowStatisticsImpl.Builder statBuilder : intervalStatistics.values()) {
+            for (final TimeWindowStatisticsImpl.Builder<Long> statBuilder : updatableIntervalStatistics) {
                 statBuilder.addRequest(startTime, duration);
             }
 
@@ -112,18 +149,16 @@ final class ExecutionStatisticsImpl implements ExecutionStatistics {
 
             // cache when request rate is 0
 
-            return new ExecutionStatisticsImpl(lastStartTime, Collections.unmodifiableMap(newIntervalStatistics));
+            return new ExecutionStatisticsImpl(lastStartTime, newIntervalStatistics);
         }
     }
 
-    static final ExecutionStatistics EMPTY = new Builder().build();
-
-    private final Date lastStartTime;
+    private final long lastStartTime;
     private final Map<Long, TimeWindowStatistics> timeWindowStatistics;
 
     @Override
     public Date getLastStartTime() {
-        return lastStartTime;
+        return new Date(lastStartTime);
     }
 
     @Override
@@ -133,13 +168,13 @@ final class ExecutionStatisticsImpl implements ExecutionStatistics {
 
     @Override
     public ExecutionStatistics snapshot() {
-        // snapshot functionality not yet implemented
+        // this object is immutable (TimeWindowStatistics are immutable as well)
         return this;
     }
 
     private ExecutionStatisticsImpl(final long lastStartTime, final Map<Long, TimeWindowStatistics> timeWindowStatistics) {
-        this.lastStartTime = new Date(lastStartTime);
-        this.timeWindowStatistics = timeWindowStatistics;
+        this.lastStartTime = lastStartTime;
+        this.timeWindowStatistics = Collections.unmodifiableMap(timeWindowStatistics);
     }
 
 }

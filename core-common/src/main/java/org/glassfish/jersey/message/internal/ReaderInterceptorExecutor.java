@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
@@ -83,15 +82,15 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
 
     private static final Logger LOGGER = Logger.getLogger(ReaderInterceptorExecutor.class.getName());
 
-    private InputStream inputStream;
     private final MultivaluedMap<String, String> headers;
-
     private final Iterator<ReaderInterceptor> interceptors;
-    private int processedCount;
     private final MessageBodyWorkers workers;
     private final boolean translateNce;
 
     private final ServiceLocator serviceLocator;
+
+    private InputStream inputStream;
+    private int processedCount;
 
     /**
      * Constructs a new executor to read given type from provided {@link InputStream entityStream}.
@@ -251,22 +250,17 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
 
             final TracingLogger tracingLogger = getTracingLogger();
             final long timestamp = tracingLogger.timestamp(MsgTraceEvent.MBR_READ_FROM);
-            final UnCloseableInputStream stream = new UnCloseableInputStream(input, reader);
+            final InputStream stream = new UnCloseableInputStream(input, reader);
 
             try {
-                final Object entity;
+                return reader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
+                        context.getMediaType(), context.getHeaders(), stream);
+            } catch (final NoContentException ex) {
                 if (translateNce) {
-                    try {
-                        entity = reader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
-                                context.getMediaType(), context.getHeaders(), stream);
-                    } catch (final NoContentException ex) {
-                        throw new BadRequestException(ex);
-                    }
+                    throw new BadRequestException(ex);
                 } else {
-                    entity = reader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
-                            context.getMediaType(), context.getHeaders(), stream);
+                    throw ex;
                 }
-                return entity;
             } finally {
                 tracingLogger.logDuration(MsgTraceEvent.MBR_READ_FROM, timestamp, reader);
             }
@@ -332,6 +326,26 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.log(Level.FINE, LocalizationMessages.MBR_TRYING_TO_CLOSE_STREAM(reader.getClass()));
             }
+        }
+
+        private InputStream unwrap() {
+            return original;
+        }
+    }
+
+    /**
+     * Make the {@link InputStream} able to close.
+     * <p/>
+     * The purpose of this utility method is to undo effect of {@link ReaderInterceptorExecutor.UnCloseableInputStream}.
+     *
+     * @param inputStream Potential {@link ReaderInterceptorExecutor.UnCloseableInputStream} to undo its effect
+     * @return Input stream that is possible to close
+     */
+    static InputStream closeableInputStream(InputStream inputStream) {
+        if (inputStream instanceof ReaderInterceptorExecutor.UnCloseableInputStream) {
+            return ((ReaderInterceptorExecutor.UnCloseableInputStream) inputStream).unwrap();
+        } else {
+            return inputStream;
         }
     }
 }

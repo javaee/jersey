@@ -60,10 +60,12 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class InboundEvent {
-    private static final GenericType<String> STRING_AS_GENERIC_TYPE = new GenericType<String>(String.class);
+
+    private static final GenericType<String> STRING_AS_GENERIC_TYPE = new GenericType<>(String.class);
 
     private final String name;
     private final String id;
+    private final String comment;
     private final byte[] data;
     private final long reconnectDelay;
 
@@ -76,6 +78,7 @@ public class InboundEvent {
      * Inbound event builder. This implementation is not thread-safe.
      */
     static class Builder {
+
         private String name;
         private String id;
         private long reconnectDelay = SseFeature.RECONNECT_NOT_SET;
@@ -85,6 +88,7 @@ public class InboundEvent {
         private final Annotation[] annotations;
         private final MediaType mediaType;
         private final MultivaluedMap<String, String> headers;
+        private final StringBuilder commentBuilder;
 
         /**
          * Create new inbound event builder.
@@ -106,12 +110,13 @@ public class InboundEvent {
             this.mediaType = mediaType;
             this.headers = headers;
 
+            this.commentBuilder = new StringBuilder();
             this.dataStream = new ByteArrayOutputStream();
         }
 
         /**
          * Set inbound event name.
-         *
+         * <p/>
          * Value of the received SSE {@code "event"} field.
          *
          * @param name {@code "event"} field value.
@@ -124,7 +129,7 @@ public class InboundEvent {
 
         /**
          * Set inbound event identifier.
-         *
+         * <p/>
          * Value of the received SSE {@code "id"} field.
          *
          * @param id {@code "id"} field value.
@@ -136,11 +141,31 @@ public class InboundEvent {
         }
 
         /**
+         * Add a comment line to the event.
+         * <p>
+         * The comment line will be added to the received SSE event comment as a new line in the comment field.
+         * If the comment line parameter is {@code null}, the call will be ignored.
+         * </p>
+         *
+         * @param commentLine comment line to be added to the event comment.
+         * @return updated builder instance.
+         * @since 2.21
+         */
+        public Builder commentLine(final CharSequence commentLine) {
+            if (commentLine != null) {
+                commentBuilder.append(commentLine).append('\n');
+            }
+
+            return this;
+        }
+
+        /**
          * Set reconnection delay (in milliseconds) that indicates how long the event receiver should wait
          * before attempting to reconnect in case a connection to SSE event source is lost.
          * <p>
          * Value of the received SSE {@code "retry"} field.
          * </p>
+         *
          * @param milliseconds reconnection delay in milliseconds. Negative values un-set the reconnection delay.
          * @return updated builder instance.
          * @since 2.3
@@ -181,6 +206,7 @@ public class InboundEvent {
             return new InboundEvent(
                     name,
                     id,
+                    commentBuilder.length() > 0 ? commentBuilder.substring(0, commentBuilder.length() - 1) : null,
                     reconnectDelay,
                     dataStream.toByteArray(),
                     workers,
@@ -190,18 +216,20 @@ public class InboundEvent {
         }
     }
 
-    private InboundEvent(String name,
-                         String id,
-                         long reconnectDelay,
-                         byte[] data,
-                         MessageBodyWorkers messageBodyWorkers,
-                         Annotation[] annotations,
-                         MediaType mediaType,
-                         MultivaluedMap<String, String> headers) {
+    private InboundEvent(final String name,
+                         final String id,
+                         final String comment,
+                         final long reconnectDelay,
+                         final byte[] data,
+                         final MessageBodyWorkers messageBodyWorkers,
+                         final Annotation[] annotations,
+                         final MediaType mediaType,
+                         final MultivaluedMap<String, String> headers) {
         this.name = name;
         this.id = id;
+        this.comment = comment;
         this.reconnectDelay = reconnectDelay;
-        this.data = data;
+        this.data = stripLastLineBreak(data);
         this.messageBodyWorkers = messageBodyWorkers;
         this.annotations = annotations;
         this.mediaType = mediaType;
@@ -233,6 +261,20 @@ public class InboundEvent {
      */
     public String getId() {
         return id;
+    }
+
+    /**
+     * Get a comment string that accompanies the event.
+     * <p>
+     * Contains value of the comment associated with SSE event. This field is optional. Method may return {@code null},
+     * if the event comment is not specified.
+     * </p>
+     *
+     * @return comment associated with the event.
+     * @since 2.21
+     */
+    public String getComment() {
+        return comment;
     }
 
     /**
@@ -273,8 +315,7 @@ public class InboundEvent {
      * Get the original event data string {@link String}.
      *
      * @return event data de-serialized into a string.
-     * @throws javax.ws.rs.ProcessingException
-     *          when provided type can't be read. The thrown exception wraps the original cause.
+     * @throws javax.ws.rs.ProcessingException when provided type can't be read. The thrown exception wraps the original cause.
      * @since 2.3
      */
     public String readData() {
@@ -286,8 +327,7 @@ public class InboundEvent {
      *
      * @param type Java type to be used for event data de-serialization.
      * @return event data de-serialized as an instance of a given type.
-     * @throws javax.ws.rs.ProcessingException
-     *          when provided type can't be read. The thrown exception wraps the original cause.
+     * @throws javax.ws.rs.ProcessingException when provided type can't be read. The thrown exception wraps the original cause.
      * @since 2.3
      */
     public <T> T readData(Class<T> type) {
@@ -299,10 +339,10 @@ public class InboundEvent {
      *
      * @param type generic type to be used for event data de-serialization.
      * @return event data de-serialized as an instance of a given type.
-     * @throws javax.ws.rs.ProcessingException
-     *          when provided type can't be read. The thrown exception wraps the original cause.
+     * @throws javax.ws.rs.ProcessingException when provided type can't be read. The thrown exception wraps the original cause.
      * @since 2.3
      */
+    @SuppressWarnings("unused")
     public <T> T readData(GenericType<T> type) {
         return readData(type, null);
     }
@@ -313,10 +353,10 @@ public class InboundEvent {
      * @param messageType Java type to be used for event data de-serialization.
      * @param mediaType   {@link MediaType media type} to be used for event data de-serialization.
      * @return event data de-serialized as an instance of a given type.
-     * @throws javax.ws.rs.ProcessingException
-     *          when provided type can't be read. The thrown exception wraps the original cause.
+     * @throws javax.ws.rs.ProcessingException when provided type can't be read. The thrown exception wraps the original cause.
      * @since 2.3
      */
+    @SuppressWarnings("unused")
     public <T> T readData(Class<T> messageType, MediaType mediaType) {
         return readData(new GenericType<T>(messageType), mediaType);
     }
@@ -324,11 +364,10 @@ public class InboundEvent {
     /**
      * Read event data as a given generic type.
      *
-     * @param type generic type to be used for event data de-serialization.
-     * @param mediaType   {@link MediaType media type} to be used for event data de-serialization.
+     * @param type      generic type to be used for event data de-serialization.
+     * @param mediaType {@link MediaType media type} to be used for event data de-serialization.
      * @return event data de-serialized as an instance of a given type.
-     * @throws javax.ws.rs.ProcessingException
-     *          when provided type can't be read. The thrown exception wraps the original cause.
+     * @throws javax.ws.rs.ProcessingException when provided type can't be read. The thrown exception wraps the original cause.
      * @since 2.3
      */
     public <T> T readData(GenericType<T> type, MediaType mediaType) {
@@ -350,7 +389,7 @@ public class InboundEvent {
                     annotations,
                     effectiveMediaType,
                     headers,
-                    new ByteArrayInputStream(stripLastLineBreak(data)));
+                    new ByteArrayInputStream(data));
         } catch (IOException ex) {
             throw new ProcessingException(ex);
         }
@@ -360,8 +399,9 @@ public class InboundEvent {
      * Get the raw event data bytes.
      *
      * @return raw event data bytes. The returned byte array may be empty if the event does not
-     *         contain any data.
+     * contain any data.
      */
+    @SuppressWarnings("unused")
     public byte[] getRawData() {
         if (isEmpty()) {
             return data;
@@ -383,6 +423,7 @@ public class InboundEvent {
         return "InboundEvent{"
                 + "name='" + name + '\''
                 + ", id='" + id + '\''
+                + ", comment=" + (comment == null ? "[no comments]" : '\'' + comment + '\'')
                 + ", data=" + s
                 + '}';
     }

@@ -82,7 +82,7 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
     /**
      * Authentication type.
      */
-    static enum Type {
+    enum Type {
         /**
          * Basic authentication.
          */

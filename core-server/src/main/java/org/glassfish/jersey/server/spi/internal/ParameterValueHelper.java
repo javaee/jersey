@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,7 @@ import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
 
 import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.MultiException;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
@@ -73,13 +74,26 @@ public final class ParameterValueHelper {
      * @param valueProviders a list of value providers.
      * @return array of parameter values provided by the value providers.
      */
-    public static Object[] getParameterValues(List<Factory<?>> valueProviders) {
+    public static Object[] getParameterValues(List<ParamValueFactoryWithSource<?>> valueProviders) {
         final Object[] params = new Object[valueProviders.size()];
         try {
+            int entityProviderIndex = -1;
             int index = 0;
-            for (Factory<?> valueProvider : valueProviders) {
-                params[index++] = valueProvider.provide();
+
+            for (ParamValueFactoryWithSource<?> paramValProvider : valueProviders) {
+                // entity provider has to be called last; see JERSEY-2642
+                if (paramValProvider.getSource().equals(Parameter.Source.ENTITY)) {
+                    entityProviderIndex = index++;
+                    continue;
+                }
+
+                params[index++] = paramValProvider.provide();
             }
+
+            if (entityProviderIndex != -1) {
+                params[entityProviderIndex] = valueProviders.get(entityProviderIndex).provide();
+            }
+
             return params;
         } catch (WebApplicationException e) {
             throw e;
@@ -87,6 +101,12 @@ public final class ParameterValueHelper {
             throw new NotSupportedException(e);
         } catch (ProcessingException e) {
             throw e;
+        } catch (MultiException e) {
+            if (e.getCause() instanceof WebApplicationException) {
+                throw (WebApplicationException) e.getCause();
+            }
+
+            throw new MappableException("Exception obtaining parameters", e);
         } catch (RuntimeException e) {
             throw new MappableException("Exception obtaining parameters", e);
         }
@@ -100,7 +120,8 @@ public final class ParameterValueHelper {
      * @param parameterized parameterized resource model component.
      * @return list of parameter value providers for the parameterized component.
      */
-    public static List<Factory<?>> createValueProviders(final ServiceLocator locator, final Parameterized parameterized) {
+    public static List<ParamValueFactoryWithSource<?>> createValueProviders(final ServiceLocator locator,
+                                                                    final Parameterized parameterized) {
         if ((null == parameterized.getParameters()) || (0 == parameterized.getParameters().size())) {
             return Collections.emptyList();
         }
@@ -118,10 +139,17 @@ public final class ParameterValueHelper {
         });
 
         boolean entityParamFound = false;
-        final List<Factory<?>> providers = new ArrayList<Factory<?>>(parameterized.getParameters().size());
+        final List<ParamValueFactoryWithSource<?>> providers =
+                new ArrayList<ParamValueFactoryWithSource<?>>(parameterized.getParameters().size());
         for (final Parameter parameter : parameterized.getParameters()) {
-            entityParamFound = entityParamFound || Parameter.Source.ENTITY == parameter.getSource();
-            providers.add(getValueFactory(valueFactoryProviders, parameter));
+            final Parameter.Source parameterSource = parameter.getSource();
+            entityParamFound = entityParamFound || Parameter.Source.ENTITY == parameterSource;
+            final Factory<?> valueFactory = getValueFactory(valueFactoryProviders, parameter);
+            if (valueFactory != null) {
+                providers.add(wrapParamFactory(valueFactory, parameterSource));
+            } else {
+                providers.add(null);
+            }
         }
 
         if (!entityParamFound && Collections.frequency(providers, null) == 1) {
@@ -129,13 +157,23 @@ public final class ParameterValueHelper {
             final int entityParamIndex = providers.lastIndexOf(null);
             final Parameter parameter = parameterized.getParameters().get(entityParamIndex);
             if (Parameter.Source.UNKNOWN == parameter.getSource() && !parameter.isQualified()) {
-                providers.set(entityParamIndex, getValueFactory(
+                final Parameter overridenParameter = Parameter.overrideSource(parameter, Parameter.Source.ENTITY);
+                final Factory<?> valueFactory = getValueFactory(
                         valueFactoryProviders,
-                        Parameter.overrideSource(parameter, Parameter.Source.ENTITY)));
+                        overridenParameter);
+                if (valueFactory != null) {
+                    providers.set(entityParamIndex, wrapParamFactory(valueFactory, overridenParameter.getSource()));
+                } else {
+                    providers.set(entityParamIndex, null);
+                }
             }
         }
 
         return providers;
+    }
+
+    private static <T> ParamValueFactoryWithSource<T> wrapParamFactory(Factory<T> factory, Parameter.Source paramSource) {
+        return new ParamValueFactoryWithSource<T>(factory, paramSource);
     }
 
     private static Factory<?> getValueFactory(Collection<ValueFactoryProvider> valueFactoryProviders, final Parameter parameter) {

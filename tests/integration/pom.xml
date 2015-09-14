@@ -46,7 +46,7 @@
     <parent>
         <groupId>org.glassfish.jersey.tests</groupId>
         <artifactId>project</artifactId>
-        <version>2.21-SNAPSHOT</version>
+        <version>2.22-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.tests.integration</groupId>
@@ -60,6 +60,7 @@
         <module>cdi-ejb-test-webapp</module>
         <module>cdi-iface-with-non-jaxrs-impl-test-webapp</module>
         <module>cdi-multimodule</module>
+        <module>ejb-multimodule-reload</module>
         <module>cdi-multipart-webapp</module>
         <module>cdi-test-webapp</module>
         <module>cdi-with-jersey-injection-custom-cfg-webapp</module>
@@ -103,6 +104,8 @@
         <module>jersey-2776</module>
         <module>jersey-2794</module>
         <module>jersey-2846</module>
+        <module>jersey-2878</module>
+        <module>jersey-2892</module>
         <module>jersey-780</module>
         <module>portability-jersey-1</module>
         <module>portability-jersey-2</module>

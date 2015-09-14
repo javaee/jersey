@@ -135,9 +135,8 @@ public class RolesAllowedDynamicFeature implements DynamicFeature {
         @Override
         public void filter(final ContainerRequestContext requestContext) throws IOException {
             if (!denyAll) {
-                if (rolesAllowed.length > 0
-                        && requestContext.getSecurityContext().getUserPrincipal() == null) {
-                    throw new NotAuthorizedException(LocalizationMessages.USER_NOT_AUTHORIZED());
+                if (rolesAllowed.length > 0 && !isAuthenticated(requestContext)) {
+                    throw new ForbiddenException(LocalizationMessages.USER_NOT_AUTHORIZED());
                 }
 
                 for (final String role : rolesAllowed) {
@@ -147,7 +146,11 @@ public class RolesAllowedDynamicFeature implements DynamicFeature {
                 }
             }
 
-            throw new ForbiddenException();
+            throw new ForbiddenException(LocalizationMessages.USER_NOT_AUTHORIZED());
+        }
+
+        private static boolean isAuthenticated(final ContainerRequestContext requestContext) {
+            return requestContext.getSecurityContext().getUserPrincipal() != null;
         }
     }
 }

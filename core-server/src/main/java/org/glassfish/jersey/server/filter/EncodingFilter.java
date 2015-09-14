@@ -231,7 +231,7 @@ public final class EncodingFilter implements ContainerResponseFilter {
         @Override
         public int compareTo(ContentEncoding o) {
             // higher q goes first (i.e. descending order)
-            return Integer.valueOf(o.q).compareTo(q);
+            return Integer.compare(o.q, q);
         }
     }
 

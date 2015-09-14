@@ -45,6 +45,9 @@ import javax.ws.rs.BeanParam;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.model.Parameter;
+
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
@@ -52,9 +55,6 @@ import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.hk2.utilities.cache.Cache;
 import org.glassfish.hk2.utilities.cache.Computable;
-
-import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.server.model.Parameter;
 
 /**
  * Value factory provider for {@link BeanParam bean parameters}.
@@ -121,6 +121,7 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
     /**
      * Creates new instance initialized from parameters injected by HK2.
+     *
      * @param mpep Multivalued parameter extractor provider.
      * @param injector HK2 Service locator.
      */

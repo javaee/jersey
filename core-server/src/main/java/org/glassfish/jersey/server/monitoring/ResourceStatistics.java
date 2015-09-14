@@ -99,7 +99,9 @@ public interface ResourceStatistics {
      * must be updated in the same time on mutable version of statistics.
      *
      * @return Snapshot of resource statistics.
+     * @deprecated implementing class is immutable hence snapshot creation is not needed anymore
      */
+    @Deprecated
     public ResourceStatistics snapshot();
 
 }

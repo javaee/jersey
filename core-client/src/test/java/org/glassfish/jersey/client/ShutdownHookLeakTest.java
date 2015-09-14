@@ -49,6 +49,7 @@ import javax.ws.rs.client.WebTarget;
 
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.number.OrderingComparison.lessThan;
 import static org.junit.Assert.assertThat;
@@ -71,14 +72,21 @@ public class ShutdownHookLeakTest {
 
         for (int i = 0; i < ITERATIONS; i++) {
             WebTarget target2 = target.property("Washington", "Irving");
-            Builder req = target2.request().property("how", "now");
-            req.buildGet().property("Irving", "Washington");
+            Builder req = target2.request().property("how", "now").property("and", "what");
+            req.buildGet().property("Irving", "Washington").property("Thomas", "Alva");
         }
 
         assertThat(
                 "shutdown hook deque size should not copy number of property invocation",
-                // 50 % seems like a reasonable threshold for this test to keep it stable
-                shutdownHooks.size(), is(lessThan(ITERATIONS / 2)));
+                // 66 % seems like a reasonable threshold for this test to keep it stable
+                shutdownHooks.size(), is(lessThan(2 * ITERATIONS / 3)));
+
+        client.close();
+
+        assertThat(
+                "shutdown hook deque size should be empty after Client closed",
+                shutdownHooks.size(), is(equalTo(0)));
+
     }
 
     private Collection getShutdownHooks(javax.ws.rs.client.Client client) throws NoSuchFieldException, IllegalAccessException {

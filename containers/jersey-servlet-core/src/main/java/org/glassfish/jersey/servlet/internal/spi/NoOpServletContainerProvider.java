@@ -55,13 +55,13 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
 
 /**
- * Basic {@link ServletContainerProvider} that provides
+ * Basic {@link ExtendedServletContainerProvider} that provides
  * dummy no-op method implementation. It should be convenient to extend if you only need to implement
  * a subset of the original SPI methods.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class NoOpServletContainerProvider implements ServletContainerProvider {
+public class NoOpServletContainerProvider implements ExtendedServletContainerProvider {
 
     public final Type HTTP_SERVLET_REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {
     }).getType();

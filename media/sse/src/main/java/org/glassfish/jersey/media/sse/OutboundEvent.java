@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -349,10 +349,10 @@ public final class OutboundEvent {
      * serializing the {@link #getData() event data}.
      * </p>
      *
-     * @return data type.
+     * @return data type. May return {@code null}, if the event does not contain any data.
      */
     public Class<?> getType() {
-        return type.getRawType();
+        return type == null ? null : type.getRawType();
     }
 
     /**
@@ -362,11 +362,11 @@ public final class OutboundEvent {
      * serializing the {@link #getData() event data}.
      * </p>
      *
-     * @return generic data type.
+     * @return generic data type. May return {@code null}, if the event does not contain any data.
      * @since 2.3
      */
     public Type getGenericType() {
-        return type.getType();
+        return type == null ? null : type.getType();
     }
 
     /**
@@ -406,7 +406,7 @@ public final class OutboundEvent {
      * {@link #getType() type}, {@link #getGenericType()} generic type} and {@link #getMediaType()} media type}.
      * </p>
      *
-     * @return event data.
+     * @return event data. May return {@code null}, if the event does not contain any data.
      */
     public Object getData() {
         return data;

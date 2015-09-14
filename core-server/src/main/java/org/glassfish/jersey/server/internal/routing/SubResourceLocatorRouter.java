@@ -59,9 +59,9 @@ import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
+import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
@@ -78,7 +78,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 final class SubResourceLocatorRouter implements Router {
 
     private final ResourceMethod locatorModel;
-    private final List<Factory<?>> valueProviders;
+    private final List<ParamValueFactoryWithSource<?>> valueProviders;
     private final RuntimeLocatorModelBuilder runtimeLocatorBuilder;
     private final JerseyResourceContext resourceContext;
 

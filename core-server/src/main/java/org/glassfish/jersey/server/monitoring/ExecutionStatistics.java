@@ -82,6 +82,8 @@ public interface ExecutionStatistics {
      * must be updated in the same time on mutable version of statistics.
      *
      * @return Snapshot of execution statistics.
+     * @deprecated implementing class is immutable hence snapshot creation is not needed anymore
      */
+    @Deprecated
     public ExecutionStatistics snapshot();
 }

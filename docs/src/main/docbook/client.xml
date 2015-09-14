@@ -859,6 +859,20 @@ Client client = ClientBuilder.newBuilder().sslContext(sslContext).build();</prog
 
         <important>
             <para>
+                A behaviour of &jdk6.HostnameVerifier; is dependent on an http client implementation.
+                &lit.jersey.client.HttpUrlConnector; and &lit.jersey.apache.ApacheConnector; work properly, that means that after
+                the unsuccessful URL verification &lit.jdk6.HostnameVerifier; is called and by means of it is possible to
+                revalidate URL using a custom implementation of &lit.jdk6.HostnameVerifier; and go on in a handskahe processing.
+                &lit.jersey.jetty.JettyConnector; and &lit.jersey.grizzly.GrizzlyConnector; provide only host URL verification
+                and throw a &lit.jdk6.CertificateException; without any possibility to use custom &lit.jdk6.HostnameVerifier;.
+                Moreover, in case of &lit.jersey.jetty.JettyConnector; there is a property
+                &jersey.jetty.JettyClientProperties.ENABLE_SSL_HOSTNAME_VERIFICATION; to disable an entire host URL verification
+                mechanism in a handshake.
+            </para>
+        </important>
+
+        <important>
+            <para>
                 Note that to utilize HTTP with SSL it is necessary to utilize the <literal>“https”</literal> scheme.
             </para>
         </important>
