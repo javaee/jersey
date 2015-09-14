@@ -43,20 +43,24 @@ import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.net.URI;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.client.spi.DefaultSslContextProvider;
+import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.internal.util.collection.Values;
 
@@ -72,7 +76,15 @@ import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
 public class JerseyClient implements javax.ws.rs.client.Client, Initializable<JerseyClient> {
     private static final Logger LOG = Logger.getLogger(JerseyClient.class.getName());
 
+    private static final DefaultSslContextProvider DEFAULT_SSL_CONTEXT_PROVIDER = new DefaultSslContextProvider() {
+        @Override
+        public SSLContext getDefaultSslContext() {
+            return SslConfigurator.getDefaultContext();
+        }
+    };
+
     private final AtomicBoolean closedFlag = new AtomicBoolean(false);
+    private final boolean isDefaultSslContext;
     private final ClientConfig config;
     private final HostnameVerifier hostnameVerifier;
     private final UnsafeValue<SSLContext, IllegalStateException> sslContext;
@@ -83,7 +95,7 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     /**
      * Client instance shutdown hook.
      */
-    static interface ShutdownHook {
+    interface ShutdownHook {
         /**
          * Invoked when the client instance is closed.
          */
@@ -94,7 +106,7 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
      * Create a new Jersey client instance using a default configuration.
      */
     protected JerseyClient() {
-        this(null, (UnsafeValue<SSLContext, IllegalStateException>) null, null);
+        this(null, (UnsafeValue<SSLContext, IllegalStateException>) null, null, null);
     }
 
     /**
@@ -107,7 +119,24 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     protected JerseyClient(final Configuration config,
                            final SSLContext sslContext,
                            final HostnameVerifier verifier) {
-        this(config, Values.<SSLContext, IllegalStateException>unsafe(sslContext), verifier);
+
+        this(config, sslContext, verifier, null);
+    }
+
+    /**
+     * Create a new Jersey client instance.
+     *
+     * @param config                    jersey client configuration.
+     * @param sslContext                jersey client SSL context.
+     * @param verifier                  jersey client host name verifier.
+     * @param defaultSslContextProvider default SSL context provider.
+     */
+    protected JerseyClient(final Configuration config,
+                           final SSLContext sslContext,
+                           final HostnameVerifier verifier,
+                           final DefaultSslContextProvider defaultSslContextProvider) {
+        this(config, sslContext == null ? null : Values.<SSLContext, IllegalStateException>unsafe(sslContext), verifier,
+             defaultSslContextProvider);
     }
 
     /**
@@ -120,18 +149,49 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     protected JerseyClient(final Configuration config,
                            final UnsafeValue<SSLContext, IllegalStateException> sslContextProvider,
                            final HostnameVerifier verifier) {
-        this.config = config == null ? new ClientConfig(this) : new ClientConfig(this, config);
-        this.sslContext = Values.lazy(sslContextProvider != null ? sslContextProvider : createSslContextProvider());
-        this.hostnameVerifier = verifier;
+        this(config, sslContextProvider, verifier, null);
     }
 
-    private UnsafeValue<SSLContext, IllegalStateException> createSslContextProvider() {
-        return new UnsafeValue<SSLContext, IllegalStateException>() {
-            @Override
-            public SSLContext get() {
-                return SslConfigurator.getDefaultContext();
+    /**
+     * Create a new Jersey client instance.
+     *
+     * @param config                    jersey client configuration.
+     * @param sslContextProvider        jersey client SSL context provider. Non {@code null} provider is expected to
+     *                                  return non-default value.
+     * @param verifier                  jersey client host name verifier.
+     * @param defaultSslContextProvider default SSL context provider.
+     */
+    protected JerseyClient(final Configuration config,
+                           final UnsafeValue<SSLContext, IllegalStateException> sslContextProvider,
+                           final HostnameVerifier verifier,
+                           final DefaultSslContextProvider defaultSslContextProvider) {
+        this.config = config == null ? new ClientConfig(this) : new ClientConfig(this, config);
+
+        if (sslContextProvider == null) {
+            this.isDefaultSslContext = true;
+
+            if (defaultSslContextProvider != null) {
+                this.sslContext = createLazySslContext(defaultSslContextProvider);
+            } else {
+                final DefaultSslContextProvider lookedUpSslContextProvider;
+
+                final Iterator<DefaultSslContextProvider> iterator =
+                        ServiceFinder.find(DefaultSslContextProvider.class).iterator();
+
+                if (iterator.hasNext()) {
+                    lookedUpSslContextProvider = iterator.next();
+                } else {
+                    lookedUpSslContextProvider = DEFAULT_SSL_CONTEXT_PROVIDER;
+                }
+
+                this.sslContext = createLazySslContext(lookedUpSslContextProvider);
             }
-        };
+        } else {
+            this.isDefaultSslContext = false;
+            this.sslContext = Values.lazy(sslContextProvider);
+        }
+
+        this.hostnameVerifier = verifier;
     }
 
     @Override
@@ -145,7 +205,7 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
         Reference<ShutdownHook> listenerRef;
         while ((listenerRef = shutdownHooks.pollFirst()) != null) {
             JerseyClient.ShutdownHook listener = listenerRef.get();
-            if (listener != null){
+            if (listener != null) {
                 try {
                     listener.onShutdown();
                 } catch (Throwable t) {
@@ -153,6 +213,15 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
                 }
             }
         }
+    }
+
+    private UnsafeValue<SSLContext, IllegalStateException> createLazySslContext(final DefaultSslContextProvider provider) {
+        return Values.lazy(new UnsafeValue<SSLContext, IllegalStateException>() {
+            @Override
+            public SSLContext get() {
+                return provider.getDefaultSslContext();
+            }
+        });
     }
 
     /**
@@ -202,6 +271,16 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
      */
     void checkNotClosed() {
         checkState(!closedFlag.get(), LocalizationMessages.CLIENT_INSTANCE_CLOSED());
+    }
+
+    /**
+     * Get information about used {@link SSLContext}.
+     *
+     * @return {@code true} when used {@code SSLContext} is acquired from {@link SslConfigurator#getDefaultContext()},
+     * {@code false} otherwise.
+     */
+    public boolean isDefaultSslContext() {
+        return isDefaultSslContext;
     }
 
     @Override
