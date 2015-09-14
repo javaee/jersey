@@ -60,6 +60,7 @@ import org.glassfish.jersey.uri.UriComponent;
  *
  * @author Paul Sandoz
  * @author Gerard Davison (gerard.davison at oracle.com)
+ * @author Qunfei Wu (wu.qunfei@gmail.com) modified
  */
 final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
 
