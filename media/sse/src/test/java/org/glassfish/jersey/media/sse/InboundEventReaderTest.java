@@ -46,9 +46,15 @@ import java.lang.annotation.Annotation;
 import java.nio.charset.Charset;
 import java.util.Collections;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.MediaType;
 
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
+import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.MessageBodyFactory;
+import org.glassfish.jersey.message.internal.MessagingBinders;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -94,7 +100,7 @@ public class InboundEventReaderTest {
         ByteArrayInputStream inputStream = new ByteArrayInputStream("event: custom-message\ndata: message 1".getBytes());
         InboundEvent event = parse(inputStream);
         assertEquals("custom-message", event.getName());
-        assertEquals("message 1\n", new String(event.getRawData(), Charset.defaultCharset()));
+        assertDataEquals("message 1", event);
     }
 
     @Test
@@ -102,7 +108,7 @@ public class InboundEventReaderTest {
         ByteArrayInputStream inputStream = new ByteArrayInputStream("event: custom-message\r\ndata: message 1".getBytes());
         InboundEvent event = parse(inputStream);
         assertEquals("custom-message", event.getName());
-        assertEquals("message 1\n", new String(event.getRawData(), Charset.defaultCharset()));
+        assertDataEquals("message 1", event);
     }
 
     @Test
@@ -110,7 +116,7 @@ public class InboundEventReaderTest {
         ByteArrayInputStream inputStream = new ByteArrayInputStream("event: custom-message\rdata: message 1".getBytes());
         InboundEvent event = parse(inputStream);
         assertEquals("custom-message", event.getName());
-        assertEquals("message 1\n", new String(event.getRawData(), Charset.defaultCharset()));
+        assertDataEquals("message 1", event);
     }
 
     @Test
@@ -118,7 +124,7 @@ public class InboundEventReaderTest {
         ByteArrayInputStream inputStream = new ByteArrayInputStream("event:     custom-message\rdata:   message 1".getBytes());
         InboundEvent event = parse(inputStream);
         assertEquals("custom-message", event.getName());
-        assertEquals("message 1\n", new String(event.getRawData(), Charset.defaultCharset()));
+        assertDataEquals("message 1", event);
     }
 
     @Test
@@ -126,7 +132,7 @@ public class InboundEventReaderTest {
         ByteArrayInputStream inputStream = new ByteArrayInputStream("event: custom-message\rdata: message 1\r".getBytes());
         InboundEvent event = parse(inputStream);
         assertEquals("custom-message", event.getName());
-        assertEquals("message 1\n", new String(event.getRawData(), Charset.defaultCharset()));
+        assertDataEquals("message 1", event);
     }
 
     private static InboundEvent parse(InputStream stream) throws IOException {
@@ -134,12 +140,18 @@ public class InboundEventReaderTest {
                 MediaType.valueOf(SseFeature.SERVER_SENT_EVENTS), headers, stream);
     }
 
+    private void assertDataEquals(final String expectedData, final InboundEvent event) {
+        assertEquals(expectedData, event.readData());
+        assertEquals(expectedData, new String(event.getRawData(), Charset.defaultCharset()));
+    }
+
     private static class TestBinder extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bind(InboundEventReader.class)
-                    .to(InboundEventReader.class);
+            install(new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER));
+            bindAsContract(MessageBodyFactory.class).to(MessageBodyWorkers.class).in(Singleton.class);
+            bind(InboundEventReader.class).to(InboundEventReader.class);
         }
     }
 }
