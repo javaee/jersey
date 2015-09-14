@@ -37,60 +37,27 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.maven.runner;
 
-import java.util.Collection;
+package org.glassfish.jersey.test.maven.runner
 
-import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.Mojo
+import org.apache.maven.plugins.annotations.Parameter
 
 /**
- * Mojo Execution exception that contains additional information regarding an error from an executed shell script.
+ * This trait serves as a field container only as a workaround for failing Traits with more than 10 fields (see
+ * http://stackoverflow.com/questions/27259633/using-groovy-trait-in-grails-test-fails)
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
-public class ShellMojoExecutionException extends MojoExecutionException {
+trait SuperRunnerMojo implements Mojo {
 
     /**
-     * The error code the shell script exited with.
+     * The number of lines of stderr/stdout to print when an execution failure occurs.
      */
-    private final int errorCode;
+    @Parameter(defaultValue = "10", name = "lastLinesCount")
+    int lastLinesCount
 
-    /**
-     * The last lines of the output of the executed shell script.
-     */
-    private final Collection<String> lastLines;
-
-    /**
-     * Constructs shell mojo exection exception.
-     *
-     * @param message The message that will be prepended to a default mojo exectuion exception message.
-     * @param errorCode The error code.
-     * @param lastLines The collection of last lines that will be also part of the exception message.
-     */
-    public ShellMojoExecutionException(final String message, final int errorCode, final Collection<String> lastLines) {
-        super(message
-                + "\nError exit code: " + errorCode + "."
-                + "\nThe last " + lastLines.size() + " lines of stderr/stdout output are: "
-                + "\n" + lastLinesToString(lastLines));
-        this.errorCode = errorCode;
-        this.lastLines = lastLines;
-    }
-
-    public int getErrorCode() {
-        return errorCode;
-    }
-
-    public Collection<String> getLastLines() {
-        return lastLines;
-    }
-
-    private static String lastLinesToString(Collection<String> collection) {
-        StringBuilder sb = new StringBuilder();
-        int lineNumber = 1;
-        for (String string : collection) {
-            sb.append("Line ").append(lineNumber++).append(": ");
-            sb.append(string).append("\n");
-        }
-        return sb.toString();
+    void setLastLinesCount(final int lastLinesCount) {
+        this.lastLinesCount = lastLinesCount
     }
 }
