@@ -181,8 +181,8 @@ final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinder
             } else {
                 inputStream = new URL(jarUrlString).openStream();
             }
-            if(inputStream == null){
-                Logger.getLogger(JarZipSchemeScanner.class.getName()).log(Level.WARNING, "Unable to load this library "+ jarUrlString);
+            if (inputStream == null) {
+                Logger.getLogger(JarZipSchemeScanner.class.getName()).log(Level.WARNING, "Unable to load this library " + jarUrlString);
             }
             return inputStream;
 
