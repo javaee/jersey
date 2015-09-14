@@ -48,7 +48,11 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -155,7 +159,7 @@ final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinder
      * <li><code>zip:/tmp/fishfingers.zip!/example.txt</code></li>
      * <li><code>zip:d:/tempfishfingers.zip!/example.txt</code></li>
      * </ul>
-     * <p/>
+     * <p>
      * This method will first attempt to create a {@link InputStream} as follows:
      * <pre>
      *   new URL(jarUrlString).openStream();
@@ -182,7 +186,8 @@ final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinder
                 inputStream = new URL(jarUrlString).openStream();
             }
             if (inputStream == null) {
-                Logger.getLogger(JarZipSchemeScanner.class.getName()).log(Level.WARNING, "Unable to load this library " + jarUrlString);
+                Logger.getLogger(JarZipSchemeScanner.class.getName()).log(Level.WARNING, "Unable to load this library "
+                        + jarUrlString);
             }
             return inputStream;
 
