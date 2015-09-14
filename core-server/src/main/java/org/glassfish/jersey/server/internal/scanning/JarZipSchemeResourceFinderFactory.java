@@ -39,24 +39,20 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
+import org.glassfish.jersey.uri.UriComponent;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
-import org.glassfish.jersey.uri.UriComponent;
 
 /**
  * A "jar", "zip" and "wsjar" scheme URI scanner that recursively jar files.
@@ -185,8 +181,8 @@ final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinder
             } else {
                 inputStream = new URL(jarUrlString).openStream();
             }
-            if (inputStream == null) {
-                new RuntimeException("input stream is empty from " + jarUrlString);
+            if(inputStream == null){
+                Logger.getLogger(JarZipSchemeScanner.class.getName()).log(Level.WARNING, "Unable to load this library "+ jarUrlString);
             }
             return inputStream;
 
