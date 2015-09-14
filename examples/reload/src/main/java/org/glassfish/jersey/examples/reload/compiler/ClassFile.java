@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,16 +37,58 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.reload;
+package org.glassfish.jersey.examples.reload.compiler;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import javax.tools.SimpleJavaFileObject;
 
 /**
+ * Class file representation.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class FlightsDB {
+public class ClassFile extends SimpleJavaFileObject {
 
-    static AtomicInteger departuresReqCount = new AtomicInteger();
-    static AtomicInteger arrivalsReqCount = new AtomicInteger();
+    private final String className;
+
+    private final ByteArrayOutputStream byteCode = new ByteArrayOutputStream();
+
+    /**
+     * Creates a new class file holder.
+     *
+     * @param className class name.
+     * @throws URISyntaxException in case given class name could not be represented as an URI.
+     */
+    public ClassFile(String className) throws URISyntaxException {
+        super(new URI(className), Kind.CLASS);
+        this.className = className;
+    }
+
+    /**
+     * Getter for class name associated with this class file.
+     *
+     * @return class name.
+     */
+    public String getClassName() {
+        return className;
+    }
+
+    @Override
+    public OutputStream openOutputStream() throws IOException {
+        return byteCode;
+    }
+
+    /**
+     * Returns byte code representation of the class after the class has been compiled.
+     *
+     * @return compiled byte code of the class.
+     */
+    public byte[] getByteCode() {
+        return byteCode.toByteArray();
+    }
 }
