@@ -45,12 +45,11 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
 import org.glassfish.jersey.uri.UriComponent;
@@ -172,12 +171,54 @@ final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinder
      * @return a {@link InputStream}.
      * @throws IOException if there is an error opening the stream.
      */
-    private InputStream getInputStream(final String jarUrlString) throws IOException {
+    private InputStream getInputStream(String jarUrlString) throws IOException {
         try {
-            return new URL(jarUrlString).openStream();
-        } catch (final MalformedURLException e) {
+            InputStream inputStream = null;
+            if (jarUrlString.contains("!")) {
+                jarUrlString = jarUrlString.replace("file:", "");
+                inputStream = getInnerJarInputStream(jarUrlString, inputStream);
+            } else {
+                inputStream = new URL(jarUrlString).openStream();
+            }
+            if (inputStream == null) {
+                new RuntimeException("input stream is empty from " + jarUrlString);
+            }
+            return inputStream;
+
+        } catch (MalformedURLException e) {
             return new FileInputStream(
                     UriComponent.decode(jarUrlString, UriComponent.Type.PATH));
         }
+    }
+
+    private InputStream getInnerJarInputStream(String jarUrlString, InputStream inputStream) throws IOException {
+        String jars[] = jarUrlString.split("!");
+        if (jars.length == 2) {
+            inputStream = readInnerJar(inputStream, jars);
+        }
+        return inputStream;
+    }
+
+    private InputStream readInnerJar(InputStream inputStream, String[] jars) throws IOException {
+        String jarFileName = jars[0];
+        String libFileName = jars[1].substring(1);
+        if (this.isLibraryFile(jarFileName) && this.isLibraryFile(libFileName)) {
+            ZipFile zip = new ZipFile(jarFileName);
+            inputStream = zip.getInputStream(new ZipEntry(libFileName));
+        }
+        return inputStream;
+    }
+
+    private boolean isLibraryFile(String fileName) {
+        boolean flag = false;
+        Iterator iterator = this.getSchemes().iterator();
+        while (iterator.hasNext()) {
+            String fileType = "." + iterator.next();
+            if (fileName.contains(fileType)) {
+                flag = true;
+                break;
+            }
+        }
+        return flag;
     }
 }
