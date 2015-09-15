@@ -57,6 +57,7 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Martin Matula
@@ -103,6 +104,7 @@ public class TimeoutTest extends JerseyTest {
     public void testSlow() {
         try {
             target("test/timeout").request().get();
+            fail("Timeout expected.");
         } catch (ProcessingException e) {
             assertThat("Unexpected processing exception cause",
                     e.getCause(), instanceOf(TimeoutException.class));
