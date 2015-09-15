@@ -379,7 +379,7 @@ HttpServer server = JdkHttpServerFactory.createHttpServer(baseUri, config);</pro
                     <title>Using Jersey with Grizzly HTTP Server</title>
                     <programlisting language="java" linenumbering="numbered">URI baseUri = UriBuilder.fromUri("http://localhost/").port(9998).build();
     ResourceConfig config = new ResourceConfig(MyResource.class);
-    HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config);</programlisting>
+    HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, config);</programlisting>
 
                     The container extension module dependency to be added is:
 
