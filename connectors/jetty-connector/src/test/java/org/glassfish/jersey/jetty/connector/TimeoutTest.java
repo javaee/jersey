@@ -40,10 +40,7 @@
 
 package org.glassfish.jersey.jetty.connector;
 
-import java.net.NoRouteToHostException;
-import java.net.SocketTimeoutException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
@@ -63,10 +60,10 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Martin Matula
@@ -122,27 +119,10 @@ public class TimeoutTest extends JerseyTest {
         WebTarget t = c.target(u);
         try {
             t.path("test/timeout").request().get();
+            fail("Timeout expected.");
         } catch (ProcessingException e) {
             assertThat("Unexpected processing exception cause",
                     e.getCause(), instanceOf(TimeoutException.class));
-        } finally {
-            c.close();
-        }
-    }
-
-    @Test
-    public void testUnknownHost() throws URISyntaxException {
-        ClientConfig config = new ClientConfig().property(ClientProperties.CONNECT_TIMEOUT, 1000);
-        config.connectorProvider(new JettyConnectorProvider());
-        Client c = ClientBuilder.newClient(config);
-        final URI u = new URI("http://google.com:81");
-        WebTarget target = c.target(u);
-        try {
-            target.request().get();
-        } catch (ProcessingException e) {
-            assertThat("Unexpected processing exception cause",
-                    e.getCause().getCause(),
-                    anyOf(instanceOf(SocketTimeoutException.class), instanceOf(NoRouteToHostException.class)));
         } finally {
             c.close();
         }

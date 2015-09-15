@@ -101,6 +101,7 @@ public class TimeoutTest extends JerseyTest {
     public void testSlow() {
         try {
             target("test/timeout").request().get();
+            fail("Timeout expected.");
         } catch (ProcessingException e) {
             if (!(e.getCause() instanceof SocketTimeoutException)) {
                 e.printStackTrace();
