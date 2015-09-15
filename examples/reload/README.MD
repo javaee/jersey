@@ -60,9 +60,10 @@ URI path                    | Resource class                                    
 
 The application gets configured via a plain text file named `resources`.
 The file contains a list of resource classes to be published by the
-application. After the application gets started, it checks the file
-regularily each 2 seconds and reloads the application as file updates
-are being detected.
+application. After the application gets started, it watches the file system
+and reloads the application as file updates are being detected.
+Changes in JAX-RS resource source files and updates of the above mentioned resources file
+are being detected. Java code re-compilation is done as required.
 
 Running the Example
 -------------------
@@ -97,3 +98,6 @@ but the other, departures/arrivals, resources should remain functional.
 
 Now you can revert the change back and check the stats resource is back
 providing actual statistics information.
+
+You can also try to change the JAX-RS resources source code. These changes
+will be also picked up automatically.

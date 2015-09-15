@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,16 +37,60 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.reload;
+package org.glassfish.jersey.examples.reload.compiler;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.tools.FileObject;
+import javax.tools.ForwardingJavaFileManager;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 
 /**
+ * File manager delegator to control our source and class files.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak @ oracle.com)
  */
-public class FlightsDB {
+public class FileManager extends ForwardingJavaFileManager<JavaFileManager> {
 
-    static AtomicInteger departuresReqCount = new AtomicInteger();
-    static AtomicInteger arrivalsReqCount = new AtomicInteger();
+    private final Map<String, ClassFile> classFiles;
+    private final AppClassLoader cl;
+
+    /**
+     * Creates a new instance of FileManager.
+     *
+     * @param fileManager delegate to this file manager
+     * @param cl
+     */
+    protected FileManager(JavaFileManager fileManager, List<ClassFile> classFiles, AppClassLoader cl) {
+        super(fileManager);
+        this.classFiles = new HashMap<>();
+        this.cl = cl;
+        for (ClassFile classFile : classFiles) {
+            this.classFiles.put(classFile.getClassName(), classFile);
+        }
+    }
+
+    @Override
+    public JavaFileObject getJavaFileForOutput(
+            JavaFileManager.Location location,
+            String className,
+            JavaFileObject.Kind kind,
+            FileObject sibling) throws IOException {
+
+        final ClassFile classFile = classFiles.get(className);
+        if (classFile != null) {
+            this.cl.setCode(classFile);
+        }
+
+        return classFile;
+    }
+
+    @Override
+    public ClassLoader getClassLoader(JavaFileManager.Location location) {
+        return cl;
+    }
 }

@@ -45,17 +45,31 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.glassfish.jersey.examples.reload.compiler.AppClassLoader;
+import org.glassfish.jersey.examples.reload.compiler.Compiler;
+import org.glassfish.jersey.examples.reload.compiler.JavaFile;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import org.glassfish.grizzly.http.server.HttpServer;
+
+import com.sun.nio.file.SensitivityWatchEventModifier;
 
 /**
  * Reload example application.
@@ -75,80 +89,126 @@ public class App {
     private static final URI BASE_URI = URI.create("http://localhost:8080/flights/");
     public static final String ROOT_PATH = "arrivals";
     public static final String CONFIG_FILENAME = "resources";
-    public static final long REFRESH_PERIOD_MS = 2000;
+    public static final String SRC_MAIN_JAVA = "src/main/java";
 
     static Container container;
 
-    // @todo Java SE 7 - use java.nio.file.WatchService
     static class FileCheckTask extends TimerTask {
-
-        long lastModified;
-
-        FileCheckTask(final long lastModified) {
-            this.lastModified = lastModified;
-        }
 
         @Override
         public void run() {
-            final File configFile = new File(CONFIG_FILENAME);
-            final long actualLastModified = configFile.lastModified();
-            if (lastModified < actualLastModified) {
-                lastModified = actualLastModified;
-                reloadApp(configFile);
+
+            WatchService watcher;
+
+            try {
+                watcher = FileSystems.getDefault().newWatchService();
+
+                Path srcDir = Paths.get("src/main/java/org/glassfish/jersey/examples/reload");
+                registerWatcher(watcher, srcDir);
+
+                Path configFilePath = Paths.get(".");
+                registerWatcher(watcher, configFilePath);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Could not initialize watcher service!");
             }
+
+            for (;;) {
+
+                try {
+                    final WatchKey watchKey = watcher.take();
+
+                    try {
+                        for (WatchEvent<?> event : watchKey.pollEvents()) {
+                            final WatchEvent.Kind<?> kind = event.kind();
+                            if (kind == StandardWatchEventKinds.ENTRY_MODIFY) {
+                                WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
+                                Path modifiedFile = pathEvent.context();
+                                System.out.printf("FILE MODIFIED: %s\n", modifiedFile);
+                            }
+                        }
+                    } finally {
+                        watchKey.reset(); // so that consecutive events could be processed
+                    }
+
+                    final File configFile = new File(CONFIG_FILENAME);
+                    reloadApp(configFile);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
+        private void registerWatcher(WatchService watcher, Path directory) throws IOException {
+            directory.register(watcher,
+                    new WatchEvent.Kind[]{
+                            StandardWatchEventKinds.ENTRY_MODIFY
+                    },
+                    SensitivityWatchEventModifier.HIGH);
         }
 
         private void reloadApp(final File configFile) {
             LOGGER.info("Reloading resource classes:");
-            final ResourceConfig rc = new ResourceConfig();
-
-            try {
-                try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(configFile), "UTF-8"))) {
-                    while (r.ready()) {
-                        final String className = r.readLine();
-                        if (!className.startsWith("#")) {
-                            try {
-                                rc.registerClasses(Class.forName(className));
-                                LOGGER.info(String.format(" + loaded class %s.\n", className));
-                            } catch (final ClassNotFoundException ex) {
-                                LOGGER.info(String.format(" ! class %s not found.\n", className));
-                            }
-                        } else {
-                            LOGGER.info(String.format(" - ignored class %s\n", className.substring(1)));
-                        }
-                    }
-                }
-            } catch (final Exception ex) {
-                Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            final ResourceConfig rc = createResourceConfig(configFile);
             App.container.reload(rc);
         }
 
     }
 
-    public static void main(final String[] args) {
+    private static ResourceConfig createResourceConfig(File configFile) {
+        final ResourceConfig rc = new ResourceConfig();
+
+        try {
+            final AppClassLoader appClassLoader = new AppClassLoader(Thread.currentThread().getContextClassLoader());
+            final List<JavaFile> javaFiles = getJavaFiles(configFile);
+
+            Compiler.compile(appClassLoader, javaFiles);
+
+            for (JavaFile javaFile : javaFiles) {
+                try {
+                    rc.registerClasses(appClassLoader.loadClass(javaFile.getClassName()));
+                } catch (final ClassNotFoundException ex) {
+                    LOGGER.info(String.format(" ! class %s not found.\n", javaFile.getClassName()));
+                }
+            }
+        } catch (final Exception ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return rc;
+    }
+
+    private static List<JavaFile> getJavaFiles(File configFile) throws Exception {
+
+        final List<JavaFile> javaFiles = new LinkedList<>();
+
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(configFile), "UTF-8"))) {
+            while (r.ready()) {
+                final String className = r.readLine();
+                if (!className.startsWith("#")) {
+                    javaFiles.add(new JavaFile(className, SRC_MAIN_JAVA));
+                    LOGGER.info(String.format(" + included class %s.\n", className));
+                } else {
+                    LOGGER.info(String.format(" - ignored class %s\n", className.substring(1)));
+                }
+            }
+        }
+        return javaFiles;
+    }
+
+    public static void main(final String[] args) throws Exception {
         try {
             LOGGER.info("Resource Config Reload Jersey Example App");
 
-            final ResourceConfig resourceConfig = new ResourceConfig(ArrivalsResource.class);
-            resourceConfig.registerInstances(new ContainerLifecycleListener() {
-                @Override
-                public void onStartup(final Container container) {
-                    App.container = container;
-                    final Timer t = new Timer(true);
-                    t.scheduleAtFixedRate(new FileCheckTask(0), 0, REFRESH_PERIOD_MS);
+            for (String s : args) {
+                if (s.startsWith("-cp=")) {
+                    Compiler.classpath = s.substring(4);
                 }
+            }
 
-                @Override
-                public void onReload(final Container container) {
-                    System.out.println("Application has been reloaded!");
-                }
-
-                @Override
-                public void onShutdown(final Container container) {
-                    // ignore
-                }
-            });
+            final ResourceConfig resourceConfig = createResourceConfig(new File(CONFIG_FILENAME));
+            registerReloader(resourceConfig);
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig, true);
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -166,5 +226,31 @@ public class App {
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private static Class<?> loadClass(String className) throws Exception {
+        final JavaFile javaFile = new JavaFile(className, SRC_MAIN_JAVA);
+        return Compiler.compile(className, javaFile);
+    }
+
+    private static void registerReloader(ResourceConfig resourceConfig) {
+        resourceConfig.registerInstances(new ContainerLifecycleListener() {
+            @Override
+            public void onStartup(final Container container) {
+                App.container = container;
+                final Timer t = new Timer(true);
+                t.schedule(new FileCheckTask(), 0);
+            }
+
+            @Override
+            public void onReload(final Container container) {
+                System.out.println("Application has been reloaded!");
+            }
+
+            @Override
+            public void onShutdown(final Container container) {
+                // ignore
+            }
+        });
     }
 }

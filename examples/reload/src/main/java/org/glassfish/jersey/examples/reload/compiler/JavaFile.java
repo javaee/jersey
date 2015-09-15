@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,16 +37,47 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.reload;
+package org.glassfish.jersey.examples.reload.compiler;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import javax.tools.SimpleJavaFileObject;
 
 /**
+ * Java source file representation.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class FlightsDB {
+public class JavaFile extends SimpleJavaFileObject {
 
-    static AtomicInteger departuresReqCount = new AtomicInteger();
-    static AtomicInteger arrivalsReqCount = new AtomicInteger();
+    private final String className;
+    private final String path;
+
+    public JavaFile(String className, String path) throws Exception {
+        super(URI.create("string:///" + className.replace('.', '/') + Kind.SOURCE.extension), Kind.SOURCE);
+        this.className = className;
+        this.path = path;
+    }
+
+    /**
+     * Class name getter.
+     *
+     * @return class name.
+     */
+    public String getClassName() {
+        return className;
+    }
+
+    @Override
+    public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+
+        String filePath = path + File.separator + className.replace('.', '/') + Kind.SOURCE.extension;
+        final byte[] bytes = Files.readAllBytes(Paths.get(filePath));
+
+        return new String(bytes);
+    }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,16 +37,47 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.reload;
+package org.glassfish.jersey.examples.reload.compiler;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
+ * In order to load re-compiled classes we need
+ * to have a separate class-loader for each reload.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class FlightsDB {
+public class AppClassLoader extends ClassLoader {
 
-    static AtomicInteger departuresReqCount = new AtomicInteger();
-    static AtomicInteger arrivalsReqCount = new AtomicInteger();
+    private final Map<String, ClassFile> classFiles = new HashMap<>();
+
+    public AppClassLoader(ClassLoader parent) {
+        super(parent);
+    }
+
+    public void setCode(ClassFile cc) {
+        classFiles.put(cc.getName(), cc);
+    }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        ClassFile cc = classFiles.get(name);
+        if (cc == null) {
+            return super.findClass(name);
+        }
+        byte[] byteCode = cc.getByteCode();
+        return defineClass(name, byteCode, 0, byteCode.length);
+    }
+
+    @Override
+    public Class<?> loadClass(String name) throws ClassNotFoundException {
+        // we are cheating here, the parent already has the class, but we prefer our bytecode to be used.
+        ClassFile cc = classFiles.get(name);
+        if (cc == null) {
+            return super.loadClass(name);
+        }
+        byte[] byteCode = cc.getByteCode();
+        return defineClass(name, byteCode, 0, byteCode.length);
+    }
 }
