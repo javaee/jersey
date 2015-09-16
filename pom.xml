@@ -1128,9 +1128,9 @@
 
     <pluginRepositories>
         <pluginRepository>
-            <id>snapshots.codehaus.org</id>
-            <name>Codehaus.org Snapshots Maven Repository</name>
-            <url>http://nexus.codehaus.org/snapshots</url>
+            <id>oss.sonatype.snapshots.codehaus.org</id>
+            <name>Codehaus.org Snapshots (OSS Sonatype Mirror) Maven Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/codehaus-snapshots/</url>
             <layout>default</layout>
         </pluginRepository>
     </pluginRepositories>
