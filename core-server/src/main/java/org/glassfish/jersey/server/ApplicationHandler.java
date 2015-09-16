@@ -134,6 +134,8 @@ import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 
+import org.jvnet.hk2.external.runtime.ServiceLocatorRuntimeBean;
+
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.base.Predicate;
 import jersey.repackaged.com.google.common.collect.Collections2;
@@ -594,8 +596,21 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 .to(routingStage)
                 .to(resourceFilteringStage)
                 .build(Routing.matchedEndpointExtractor());
+
         final ServerRuntime serverRuntime = locator.createAndInitialize(ServerRuntime.Builder.class)
                 .build(rootStage, compositeListener, processingProviders);
+
+        // clear HK2 caches
+        final ServiceLocatorRuntimeBean serviceLocatorRuntimeBean = locator.getService(ServiceLocatorRuntimeBean.class);
+        if (serviceLocatorRuntimeBean != null) {
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine(LocalizationMessages.CLEARING_HK_2_CACHE(
+                        serviceLocatorRuntimeBean.getServiceCacheSize(),
+                        serviceLocatorRuntimeBean.getReflectionCacheSize()));
+            }
+            serviceLocatorRuntimeBean.clearReflectionCache();
+            serviceLocatorRuntimeBean.clearServiceCache();
+        }
 
         // Inject instances.
         for (final Object instance : componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS)) {
