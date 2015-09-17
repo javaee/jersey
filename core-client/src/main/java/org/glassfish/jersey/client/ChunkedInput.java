@@ -118,7 +118,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
         @Override
         public byte[] readChunk(final InputStream in) throws IOException {
             final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            final byte[] delimiterBuffer = new byte[delimiter.length];
+            byte[] delimiterBuffer = new byte[delimiter.length];
 
             int data;
             int dPos;
@@ -135,24 +135,24 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                             break;
                         }
                     } else if (dPos > 0) {
-                        // flush delimiter buffer
-                        buffer.write(delimiterBuffer, 0, dPos);
-                        dPos = 0;
+                        delimiterBuffer[dPos] = b;
 
-                        if (b == delimiter[dPos]) {
-                            // last read byte is the first byte of of the chunk delimiter
-                            delimiterBuffer[dPos++] = b;
-                            if (dPos == delimiter.length) {
-                                // found chunk delimiter
-                                break;
-                            }
-                        } else {
-                            // last read byte is not the first byte of the chunk delimiter
+                        int matched = matchTail(delimiterBuffer, 1, dPos, delimiter);
+                        if (matched == 0) {
+                            // flush delimiter buffer
+                            buffer.write(delimiterBuffer, 0, dPos);
                             buffer.write(b);
+                            dPos = 0;
+                        } else if (matched == delimiter.length) {
+                            // found chunk delimiter
+                            break;
+                        } else {
+                            // one or more elements of a previous buffered delimiter
+                            // are parts of a current buffered delimiter
+                            buffer.write(delimiterBuffer, 0, dPos + 1 - matched);
+                            dPos = matched;
                         }
-
                     } else {
-                        // last read byte is not part of the chunk delimiter
                         buffer.write(b);
                     }
                 }
@@ -165,6 +165,47 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
             }
 
             return (buffer.size() > 0) ? buffer.toByteArray() : null;
+        }
+
+        /**
+         * Tries to find an element intersection between two arrays in a way that intersecting elements must be
+         * at the tail of the first array and at the beginning of the second array.
+         * <p>
+         * For example, consider the following two arrays:
+         * <pre>
+         * a1: {a, b, c, d, e}
+         * a2: {d, e, f, g}
+         * </pre>
+         * In this example, the intersection of tail of {@code a1} with head of {@code a2} is <tt>{d, e}</tt>
+         * and consists of 2 overlapping elements.
+         * </p>
+         * The method takes the first array represented as a sub-array in buffer demarcated by an offset and length.
+         * The second array is a fixed pattern to be matched. The method then compares the tail of the
+         * array in the buffer with the head of the pattern and returns the number of intersecting elements,
+         * or zero in case the two arrays do not intersect tail to head.
+         *
+         * @param buffer  byte buffer containing the array whose tail to intersect.
+         * @param offset  start of the array to be tail-matched in the {@code buffer}.
+         * @param length  length of the array to be tail-matched.
+         * @param pattern pattern to be head-matched.
+         * @return {@code 0} if any part of the tail of the array in the buffer does not match
+         * any part of the head of the pattern, otherwise returns number of overlapping elements.
+         */
+        private static int matchTail(byte[] buffer, int offset, int length, byte[] pattern) {
+            outer:
+            for (int i = 0; i < length; i++) {
+                final int tailLength = length - i;
+                for (int j = 0; j < tailLength; j++) {
+                    if (buffer[offset + i + j] != pattern[j]) {
+                        // mismatch - continue with shorter tail
+                        continue outer;
+                    }
+                }
+
+                // found the longest matching tail
+                return tailLength;
+            }
+            return 0;
         }
     }
 
