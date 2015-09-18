@@ -39,20 +39,19 @@
  */
 package org.glassfish.jersey.client;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.number.OrderingComparison.lessThan;
+import static org.junit.Assert.assertThat;
+
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 
 import org.junit.Test;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.number.OrderingComparison.lessThan;
-import static org.junit.Assert.assertThat;
 
 /**
  * Reproducer for JERSEY-2786.
@@ -62,6 +61,7 @@ import static org.junit.Assert.assertThat;
 public class ShutdownHookLeakTest {
 
     private static final int ITERATIONS = 4000;
+    private static final int THRESHOLD = ITERATIONS * 2 / 3;
 
     @Test
     public void testShutdownHookDoesNotLeak() throws Exception {
@@ -79,10 +79,28 @@ public class ShutdownHookLeakTest {
                     .property("Irving", "Washington");
         }
 
+        System.gc();
+
+        int notEnqueued = 0;
+        int notNull = 0;
+        for (Object o : shutdownHooks) {
+            if (((WeakReference<JerseyClient.ShutdownHook>) o).get() != null) {
+                notNull++;
+            }
+            if (!((WeakReference<JerseyClient.ShutdownHook>) o).isEnqueued()) {
+                notEnqueued++;
+            }
+        }
+
         assertThat(
-                "shutdown hook deque size should not copy number of property invocation",
+                "Non-null shutdown hook references count should not copy number of property invocation",
                 // 66 % seems like a reasonable threshold for this test to keep it stable
-                shutdownHooks.size(), is(lessThan(ITERATIONS * 2 / 3)));
+                notNull, is(lessThan(THRESHOLD)));
+
+        assertThat(
+                "Shutdown hook references count not enqueued in the ReferenceQueue should not copy number of property invocation",
+                // 66 % seems like a reasonable threshold for this test to keep it stable
+                notEnqueued, is(lessThan(THRESHOLD)));
     }
 
     private Collection getShutdownHooks(final Client client) throws NoSuchFieldException, IllegalAccessException {
