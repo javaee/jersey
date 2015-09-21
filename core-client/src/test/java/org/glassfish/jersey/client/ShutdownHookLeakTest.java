@@ -39,9 +39,6 @@
  */
 package org.glassfish.jersey.client;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.number.OrderingComparison.lessThan;
-import static org.junit.Assert.assertThat;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -50,6 +47,10 @@ import java.util.Collection;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.number.OrderingComparison.lessThan;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
@@ -63,6 +64,7 @@ public class ShutdownHookLeakTest {
     private static final int ITERATIONS = 4000;
     private static final int THRESHOLD = ITERATIONS * 2 / 3;
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testShutdownHookDoesNotLeak() throws Exception {
         final Client client = ClientBuilder.newClient();
@@ -83,7 +85,7 @@ public class ShutdownHookLeakTest {
 
         int notEnqueued = 0;
         int notNull = 0;
-        for (Object o : shutdownHooks) {
+        for (final Object o : shutdownHooks) {
             if (((WeakReference<JerseyClient.ShutdownHook>) o).get() != null) {
                 notNull++;
             }
