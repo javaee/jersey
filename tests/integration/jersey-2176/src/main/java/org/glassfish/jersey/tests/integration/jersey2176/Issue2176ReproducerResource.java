@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,13 +57,13 @@ import javax.ws.rs.core.Response;
 public class Issue2176ReproducerResource {
 
     static final String X_FAIL_HEADER = "X-FAIL";
+    static final String X_RESPONSE_ENTITY_HEADER = "X-RESPONSE-ENTITY";
 
     @GET
     @Produces("text/plain")
     @Path("{status}")
     public Response getText(@PathParam("status") int uc,
                             @Context HttpHeaders headers) throws MyException {
-        System.out.println("***** GOT IT *****");
         if (uc == -1) {
             throw new MyException("UC= " + uc);
         } else if (uc == -2) {
@@ -74,7 +74,14 @@ public class Issue2176ReproducerResource {
             throw new WebApplicationException("UC= " + uc, 432);
         }
 
-        Response response = Response.status(uc).entity("TEST").build();
+        final Response.ResponseBuilder responseBuilder = Response.status(uc);
+        if (headers.getRequestHeaders().containsKey(X_RESPONSE_ENTITY_HEADER)) {
+            responseBuilder.entity("ENTITY");
+        }
+        final Response response = responseBuilder.build();
+        if (headers.getRequestHeaders().containsKey(X_RESPONSE_ENTITY_HEADER)) {
+            response.getHeaders().add(X_RESPONSE_ENTITY_HEADER, "true");
+        }
         if (headers.getRequestHeaders().containsKey(X_FAIL_HEADER)) {
             response.getHeaders().add(X_FAIL_HEADER, "true");
         }

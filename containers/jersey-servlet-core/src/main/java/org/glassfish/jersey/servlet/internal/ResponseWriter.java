@@ -77,6 +77,10 @@ public class ResponseWriter implements ContainerResponseWriter {
     private static final Logger LOGGER = Logger.getLogger(ResponseWriter.class.getName());
 
     private final HttpServletResponse response;
+    /**
+     * Cached value of configuration property
+     * {@link org.glassfish.jersey.servlet.ServletProperties#FILTER_FORWARD_ON_404}.
+     */
     private final boolean useSetStatusOn404;
     /**
      * Cached value of configuration property
@@ -187,27 +191,45 @@ public class ResponseWriter implements ContainerResponseWriter {
     @Override
     public void commit() {
         try {
-            if (!configSetStatusOverSendError && !response.isCommitted()) {
-                final ContainerResponse responseContext = getResponseContext();
-                final int status = responseContext.getStatus();
-                if (status >= 400 && !(useSetStatusOn404 && status == 404)) {
-                    final String reason = responseContext.getStatusInfo().getReasonPhrase();
-                    try {
-                        if (reason == null || reason.isEmpty()) {
-                            response.sendError(status);
-                        } else {
-                            response.sendError(status, reason);
-                        }
-                    } catch (final IOException ex) {
-                        throw new ContainerException(
-                                LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(status, reason != null ? reason : "--"),
-                                ex);
-                    }
-                }
-            }
+            callSendError();
         } finally {
             requestTimeoutHandler.close();
             asyncExt.complete();
+        }
+    }
+
+    /**
+     * According to configuration and response processing status it calls {@link HttpServletResponse#sendError(int, String)} over
+     * common {@link HttpServletResponse#setStatus(int)}.
+     */
+    private void callSendError() {
+        // call HttpServletResponse.sendError in case:
+        // - property ServerProperties#RESPONSE_SET_STATUS_OVER_SEND_ERROR == false (default)
+        // - response NOT yet committed
+        // - response entity NOT set
+        // - response status code is 4xx or 5xx
+        // plus in case of Jersey as a Filter (JaaF):
+        // - response status code is 404 (Not Found)
+        // - property ServletProperties#FILTER_FORWARD_ON_404 == false (default)
+        if (!configSetStatusOverSendError && !response.isCommitted()) {
+            final ContainerResponse responseContext = getResponseContext();
+            final boolean hasEntity = responseContext.hasEntity();
+            final Response.StatusType status = responseContext.getStatusInfo();
+            if (!hasEntity && status != null && status.getStatusCode() >= 400
+                    && !(useSetStatusOn404 && status == Response.Status.NOT_FOUND)) {
+                final String reason = status.getReasonPhrase();
+                try {
+                    if (reason == null || reason.isEmpty()) {
+                        response.sendError(status.getStatusCode());
+                    } else {
+                        response.sendError(status.getStatusCode(), reason);
+                    }
+                } catch (final IOException ex) {
+                    throw new ContainerException(
+                            LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(status, reason != null ? reason : "--"),
+                            ex);
+                }
+            }
         }
     }
 
@@ -272,7 +294,7 @@ public class ResponseWriter implements ContainerResponseWriter {
         return responseContext.isDone();
     }
 
-    private ContainerResponse getResponseContext() {
+    public ContainerResponse getResponseContext() {
         try {
             return responseContext.get();
         } catch (InterruptedException | ExecutionException ex) {

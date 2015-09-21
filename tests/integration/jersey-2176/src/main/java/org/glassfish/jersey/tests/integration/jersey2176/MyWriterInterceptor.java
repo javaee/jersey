@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,8 +60,12 @@ public class MyWriterInterceptor implements WriterInterceptor {
     @Override
     public void aroundWriteTo(final WriterInterceptorContext context) throws IOException {
         final boolean fail = context.getHeaders().containsKey(Issue2176ReproducerResource.X_FAIL_HEADER);
+        final boolean responseEntity = context.getHeaders().containsKey(Issue2176ReproducerResource.X_RESPONSE_ENTITY_HEADER);
 
-        context.setOutputStream(new MyOutputStream(context.getOutputStream(), MessageUtils.getCharset(context.getMediaType())));
+        if (responseEntity) {
+            context.setOutputStream(
+                    new MyOutputStream(context.getOutputStream(), MessageUtils.getCharset(context.getMediaType())));
+        }
         context.proceed();
         if (fail) {
             throw new IllegalStateException("From MyWriterInterceptor");
@@ -70,10 +74,13 @@ public class MyWriterInterceptor implements WriterInterceptor {
 
     private static class MyOutputStream extends OutputStream {
         private final OutputStream delegate;
-        final ByteArrayOutputStream localStream;
+        final Charset charset;
+        private final ByteArrayOutputStream localStream;
 
         private MyOutputStream(final OutputStream delegate, final Charset charset) throws IOException {
             this.delegate = delegate;
+            this.charset = charset;
+
             this.localStream = new ByteArrayOutputStream();
             localStream.write("[INTERCEPTOR]".getBytes(charset));
         }
@@ -92,7 +99,7 @@ public class MyWriterInterceptor implements WriterInterceptor {
 
         @Override
         public void close() throws IOException {
-            localStream.write("[/INTERCEPTOR]".getBytes("UTF-8"));
+            localStream.write("[/INTERCEPTOR]".getBytes(charset));
 
             delegate.write(localStream.toByteArray());
 

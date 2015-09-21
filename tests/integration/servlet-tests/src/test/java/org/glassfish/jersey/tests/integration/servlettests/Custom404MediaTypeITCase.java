@@ -51,12 +51,13 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.Assert;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Miroslav Fuksa
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class Custom404MediaTypeITCase extends JerseyTest {
+
     @Override
     protected Application configure() {
         // dummy resource config
@@ -70,15 +71,38 @@ public class Custom404MediaTypeITCase extends JerseyTest {
 
     @Test
     public void testCustom404() {
-        final Response response = target().path("custom404/resource404/content-type-entity").request().get();
+        testCustom404Impl(false);
+    }
+
+    @Test
+    public void testCustom404WithEmtpyEntityString() {
+        testCustom404WithEmtpyEntityStringImpl(false);
+    }
+
+    @Test
+    public void testCustom404SuppressContentLength() {
+        testCustom404Impl(true);
+    }
+
+    @Test
+    public void testCustom404WithEmtpyEntityStringSuppressContentLength() {
+        testCustom404WithEmtpyEntityStringImpl(true);
+    }
+
+    private void testCustom404Impl(final boolean suppressContentLength) {
+        final Response response = target().path("custom404/resource404/content-type-entity")
+                .queryParam(SuppressContentLengthFilter.PARAMETER_NAME_SUPPRESS_CONTENT_LENGTH, suppressContentLength)
+                .request()
+                .get();
         Assert.assertEquals(404, response.getStatus());
         Assert.assertEquals("application/something", response.getMediaType().toString());
         Assert.assertEquals("not found custom entity", response.readEntity(String.class));
     }
 
-    @Test
-    public void testCustom404WithEmtpyEntityString() {
-        final Response response = target().path("custom404/resource404/content-type-empty-entity").request().get();
+    private void testCustom404WithEmtpyEntityStringImpl(final boolean suppressContentLength) {
+        final Response response = target().path("custom404/resource404/content-type-empty-entity")
+                .queryParam(SuppressContentLengthFilter.PARAMETER_NAME_SUPPRESS_CONTENT_LENGTH, suppressContentLength)
+                .request().get();
         Assert.assertEquals(404, response.getStatus());
         Assert.assertEquals("application/something", response.getMediaType().toString());
         Assert.assertEquals("", response.readEntity(String.class));

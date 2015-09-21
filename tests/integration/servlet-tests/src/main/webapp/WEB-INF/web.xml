@@ -62,6 +62,16 @@
         <url-pattern>/servlet/*</url-pattern>
     </servlet-mapping>
 
+    <!-- filter to test NOT commited responses -->
+    <filter>
+        <filter-name>SuppressContentLengthFilter</filter-name>
+        <filter-class>org.glassfish.jersey.tests.integration.servlettests.SuppressContentLengthFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>SuppressContentLengthFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
     <!-- filter for generic use (has all resources) -->
     <filter>
         <filter-name>testFilter</filter-name>

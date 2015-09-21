@@ -82,9 +82,12 @@
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
                 <configuration>
+                    <webApp>
+                        <contextPath>/bookstore-webapp</contextPath>
+                    </webApp>
                     <connectors>
                         <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
-                            <port>9998</port>
+                            <port>8080</port>
                             <responseHeaderSize>16192</responseHeaderSize>
                         </connector>
                     </connectors>
@@ -95,6 +98,7 @@
 
     <profiles>
         <profile>
+            <!-- mvn test -Prun-external-tests -->
             <id>run-external-tests</id>
             <build>
                 <plugins>
