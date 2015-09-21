@@ -76,6 +76,10 @@
                             <pattern>com.google.common</pattern>
                             <shadedPattern>${shade.package}</shadedPattern>
                         </relocation>
+                        <relocation>
+                            <pattern>com.google.thirdparty</pattern>
+                            <shadedPattern>${shade.package.thirdparty}</shadedPattern>
+                        </relocation>
                     </relocations>
                 </configuration>
             </plugin>
@@ -96,6 +100,7 @@
                     <instructions>
                         <Import-Package>
                             !${jersey.repackaged.prefix}.com.google.common.*,
+                            !${jersey.repackaged.prefix}.com.google.thirdparty.*,
                             javax.annotation;resolution:=optional;version="[1.2,2)",
                             javax.inject;resolution:=optional;version="[1.0,2)",
                             sun.misc.*;resolution:=optional,
@@ -103,7 +108,8 @@
                         </Import-Package>
                         <Export-Package>
                             !${jersey.repackaged.prefix}.com.google.common.base.internal,
-                            ${jersey.repackaged.prefix}.com.google.common.*
+                            ${jersey.repackaged.prefix}.com.google.common.*,
+                            ${jersey.repackaged.prefix}.com.google.thirdparty.*
                         </Export-Package>
                         <_include>src/main/resources/META-INF/MANIFEST.MF</_include>
                     </instructions>
@@ -254,5 +260,6 @@
 
     <properties>
         <shade.package>${jersey.repackaged.prefix}.com.google.common</shade.package>
+        <shade.package.thirdparty>${jersey.repackaged.prefix}.com.google.thirdparty</shade.package.thirdparty>
     </properties>
 </project>
