@@ -536,6 +536,23 @@
         <tbody>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/container-runner-maven-plugin/dependencies.html">
+    container-runner-maven-plugin
+</link>
+</entry>
+<entry>The container runner maven plugin provides means to start and stop a container (currently, Weblogic, Tomcat and Glassfish4
+        are supported). To deploy an application to this container or to repetitively redeploy and test an application in the container.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/custom-enforcer-rules/dependencies.html">
+    custom-enforcer-rules
+</link>
+</entry>
+<entry>Jersey test framework Maven projects</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-test-framework-core/dependencies.html">
     jersey-test-framework-core
 </link>
@@ -605,6 +622,14 @@
 </link>
 </entry>
 <entry>Jersey Test Framework Utils</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/memleak-test-common/dependencies.html">
+    memleak-test-common
+</link>
+</entry>
+<entry>Jersey test framework umbrella project</entry>
 </row>
         </tbody>
     </tgroup>
