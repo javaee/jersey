@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,6 +55,7 @@ import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThan;
 
 import org.junit.Test;
 
@@ -195,6 +196,16 @@ public class EjbTest extends JerseyTest {
         assertThat(response.readEntity(String.class), is("async"));
     }
 
+    @Test
+    public void testAppIsEjbSingleton() {
+
+        int c1 = target().path("rest/app/count").request().get(Integer.class);
+        int c2 = target().path("rest/app/count").request().get(Integer.class);
+        int c3 = target().path("rest/app/count").request().get(Integer.class);
+
+        assertThat("the first count should be less than the second one", c1, is(lessThan(c2)));
+        assertThat("the second count should be less than the third one", c2, is(lessThan(c3)));
+    }
 
     private void _check500Response(final Response response, final String expectedSubstring) {
         assertThat(response.getStatus(), is(500));

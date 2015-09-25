@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,43 +39,25 @@
  */
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.ejb.Singleton;
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 
 /**
- * JAX-RS application to configure resources.
+ * Test resource that exposes counter from the JAX-RS application subclass.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/rest")
-@Singleton
-public class MyApplication extends Application {
+@Stateless
+@Path("app")
+public class AppResource {
 
-    private AtomicInteger counter;
+    @EJB MyApplication app;
 
-    @Override
-    public Set<Class<?>> getClasses() {
-
-        this.counter = new AtomicInteger();
-
-        return new HashSet<Class<?>>() {{
-            add(AppResource.class);
-            add(ExceptionEjbResource.class);
-            add(EchoResource.class);
-            add(RawEchoResource.class);
-            add(CounterFilter.class);
-            add(AsyncResource.class);
-            add(EjbExceptionMapperOne.class);
-            add(EjbExceptionMapperTwo.class);
-        }};
-    }
-
-    public int incrementAndGetCount() {
-        return counter.incrementAndGet();
+    @Path("count")
+    @GET
+    public int getCount() {
+        return app.incrementAndGetCount();
     }
 }
