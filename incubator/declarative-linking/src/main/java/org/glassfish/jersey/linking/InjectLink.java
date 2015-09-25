@@ -147,6 +147,11 @@ public @interface InjectLink {
     Binding[] bindings() default {};
 
     /**
+     * Shall we return an PropertyNotFoundException is parameter cannot be resolved
+     */
+    boolean strictMatching() default true;
+
+    /**
      * Specifies a boolean EL expression whose value determines whether a Ref is
      * set (true) or not (false). Omission of a condition will always insert a
      * ref.

@@ -656,6 +656,15 @@ public class FieldProcessorTest {
         public String uri;
     }
 
+    public static class QueryResourceBeanLenientMatching {
+        //Use null when parameter isn't declared
+        //JERSEY-2976
+        @InjectLink(resource = QueryResource.class,
+                method = "getB",
+                strictMatching = false)
+        public String uri;
+    }
+
     @Test
     public void testQueryResource() {
         LOG.info("QueryResource");
@@ -684,6 +693,20 @@ public class FieldProcessorTest {
         assertEquals("queryExample", mockUriInfo.getQueryParameters().getFirst("query"));
         instance.processLinks(testClass, mockUriInfo, mockRmc);
         assertEquals("/application/resources/a/b?query=queryExample&query2=queryExample2", testClass.uri);
+        //clean mock
+        mockUriInfo.getQueryParameters().clear();
+    }
+
+    @Test
+    public void testQueryResourceWithLenientMatching() {
+        LOG.info("QueryResource");
+        FieldProcessor<QueryResourceBeanLenientMatching> instance = new FieldProcessor(QueryResourceBeanLenientMatching.class);
+        QueryResourceBeanLenientMatching testClass = new QueryResourceBeanLenientMatching();
+        mockUriInfo.getQueryParameters().putSingle("query", "queryExample");
+        assertEquals("queryExample", mockUriInfo.getQueryParameters().getFirst("query"));
+        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        //shouldn't complain query2 isn't set and not show it in link
+        assertEquals("/application/resources/a/b?query=queryExample", testClass.uri);
         //clean mock
         mockUriInfo.getQueryParameters().clear();
     }

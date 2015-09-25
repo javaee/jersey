@@ -57,6 +57,12 @@ interface InjectLinkDescriptor {
     InjectLink.Style getLinkStyle();
 
     /**
+     * Is parameter matching should throw an exception
+     * @return the flag for strict matching
+     */
+    boolean isStrictMatching();
+
+    /**
      * Get the link template, either directly from the value() or from the
      * @Path of the class referenced in resource()
      * @return the link template
