@@ -657,6 +657,13 @@ public class FieldProcessorTest {
         public String uri;
     }
 
+    public static class QueryResourceBeanCanonical {
+        //query parameters will be ignored
+        //JERSEY-2974
+        @InjectLink(resource = QueryResource.class, method = "getB", isCanonical = true)
+        public String uri;
+    }
+
     @Test
     public void testQueryResource() {
         LOG.info("QueryResource");
@@ -740,6 +747,20 @@ public class FieldProcessorTest {
         BeanParamResourceBean testClass = new BeanParamResourceBean("queryExample");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
         assertEquals("/application/resources/a/b?qparam=foo&query=queryExample", testClass.uri);
+    }
+
+    @Test
+    public void testQueryResourceWithCanonicalLink() {
+        LOG.info("QueryResource");
+        FieldProcessor<QueryResourceBeanCanonical> instance = new FieldProcessor(QueryResourceBeanCanonical.class);
+        QueryResourceBeanCanonical testClass = new QueryResourceBeanCanonical();
+        mockUriInfo.getQueryParameters().putSingle("query", "queryExample");
+        mockUriInfo.getQueryParameters().putSingle("query2", "queryExample2");
+        assertEquals("queryExample", mockUriInfo.getQueryParameters().getFirst("query"));
+        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        assertEquals("/application/resources/a/b", testClass.uri);
+        //clean mock
+        mockUriInfo.getQueryParameters().clear();
     }
 
     public static class TestClassK {

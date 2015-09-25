@@ -167,12 +167,14 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
                         builder.append(methodTemplate);
                     }
 
-                    CharSequence querySubString = extractQueryParams(method);
+                    if (!link.isCanonical()) {
+                        CharSequence querySubString = extractQueryParams(method);
 
-                    if (querySubString.length() > 0) {
-                        builder.append("{?");
-                        builder.append(querySubString);
-                        builder.append("}");
+                        if (querySubString.length() > 0) {
+                            builder.append("{?");
+                            builder.append(querySubString);
+                            builder.append("}");
+                        }
                     }
 
                     template = builder.toString();
