@@ -53,6 +53,8 @@ import java.util.regex.PatternSyntaxException;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.uri.UriComponent;
 
+import jersey.repackaged.com.google.common.net.UrlEscapers;
+
 /**
  * A URI template parser that parses JAX-RS specific URI templates.
  *
@@ -278,13 +280,15 @@ public class UriTemplateParser {
                 if (RESERVED_REGEX_CHARACTERS.contains(c)) {
                     regex.append("\\");
                     regex.append(c);
-                } else if (c == '%') {
+                } else if (c == '%' && s.length() >= (i + 2)) {
                     final char c1 = s.charAt(i + 1);
                     final char c2 = s.charAt(i + 2);
                     if (UriComponent.isHexCharacter(c1) && UriComponent.isHexCharacter(c2)) {
                         regex.append("%").append(HEX_TO_UPPERCASE_REGEX[c1]).append(HEX_TO_UPPERCASE_REGEX[c2]);
-                        i += 2;
+                    } else {
+                        regex.append("%").append(c1).append(c2);
                     }
+                    i += 2;
                 } else {
                     regex.append(c);
                 }
