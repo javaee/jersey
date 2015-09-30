@@ -46,7 +46,7 @@
     <parent>
         <groupId>org.glassfish.jersey.incubator</groupId>
         <artifactId>project</artifactId>
-        <version>2.23-SNAPSHOT</version>
+        <version>3.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.media</groupId>
@@ -60,7 +60,7 @@
         net.java.html.json library. Define your objects via @Model annotation.
         Use them in Jersey.
     </description>
-    
+
     <properties>
         <net.java.html.version>1.0</net.java.html.version>
     </properties>
