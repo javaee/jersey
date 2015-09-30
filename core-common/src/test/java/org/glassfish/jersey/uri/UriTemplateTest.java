@@ -348,18 +348,14 @@ public class UriTemplateTest {
     
     @Test
     public void testSpecificCharacterPosition() {
-        _testSpecificCharacterPosition("/test/coverage/100%", 
-                                       "/test/coverage/100%");
-        _testSpecificCharacterPosition("/test/coverrage/100%/done", 
-                                       "/test/coverrage/100%/done");
-        _testSpecificCharacterPosition("/test/coverrage/100%26done", 
-                                       "/test/coverrage/100%26done");
-        _testSpecificCharacterPosition("/test/coverrage/100%;today", 
-                                       "/test/coverrage/100%;today");
+        _testSpecificCharacterPosition("/test/coverage/100%"); 
+        _testSpecificCharacterPosition("/test/coverrage/100%/done");
+        _testSpecificCharacterPosition("/test/coverrage/100%26done");
+        _testSpecificCharacterPosition("/test/coverrage/100%;today");
     }
 
-    private void _testSpecificCharacterPosition(String uri, String expected) {
-        assertEquals(expected, new UriTemplate(uri).getPattern().getRegex());
+    private void _testSpecificCharacterPosition(String uri) {
+        assertEquals(uri, new UriTemplate(uri).getPattern().getRegex());
     }
 
     @Test
