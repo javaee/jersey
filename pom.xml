@@ -290,7 +290,8 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.18.1</version>
                     <configuration>
-                        <argLine>-Xmx1024m</argLine>
+                        <!-- for convenience reasons, 'argLine' should not be overridden in child poms. if needed, a property should be declared and used here -->
+                        <argLine>-Xmx1024m -Dfile.encoding=UTF8 ${surefire.security.argline} ${surefire.coverage.argline}</argLine>
                         <skipTests>${skip.tests}</skipTests>
                     </configuration>
                 </plugin>
@@ -497,6 +498,7 @@
                     <configuration>
                         <skipTests>${skip.tests}</skipTests>
                         <skipITs>${skip.tests}</skipITs>
+                        <argLine>${failsafe.coverage.argline}</argLine>
                     </configuration>
                     <executions>
                         <execution>
@@ -727,7 +729,7 @@
                 <findbugs.skip>true</findbugs.skip>
             </properties>
         </profile>
-        <profile> <!-- tests module will automatically be included unless tests.excluded env variable is set -->
+        <profile> <!-- tests module will be automatically included unless tests.excluded env variable is set -->
             <id>testsIncluded</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
@@ -737,6 +739,30 @@
             </activation>
             <modules>
                 <module>tests</module>
+            </modules>
+        </profile>
+        <profile> <!-- examples module will be automatically included unless examples.excluded env variable is set -->
+            <id>examplesIncluded</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <property>
+                    <name>!examples.excluded</name>
+                </property>
+            </activation>
+            <modules>
+                <module>examples</module>
+            </modules>
+        </profile>
+        <profile> <!-- test-framework module will be automatically included unless test-framework.excluded env variable is set -->
+            <id>testFrameworkIncluded</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <property>
+                    <name>!test-framework.excluded</name>
+                </property>
+            </activation>
+            <modules>
+                <module>test-framework</module>
             </modules>
         </profile>
         <profile>
@@ -910,10 +936,47 @@
                 <jdk>1.8</jdk>
             </activation>
             <modules>
+                <module>ext/rx/rx-client-java8</module>
+            </modules>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-javadoc-plugin</artifactId>
+                            <inherited>true</inherited>
+                            <configuration>
+                                <additionalparam>-Xdoclint:none</additionalparam>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+            <reporting>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <additionalparam>-Xdoclint:none</additionalparam>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </reporting>
+        </profile>
+        <profile> <!-- examples jdk1.8 modules will be automatically included if jdk8 is present unless examples.excluded env variable is set -->
+            <id>examplesIncludedJdk1.8</id>
+            <activation>
+                <jdk>1.8</jdk>
+                <property>
+                    <name>!examples.excluded</name>
+                </property>
+            </activation>
+            <modules>
                 <module>examples/feed-combiner-java8-webapp</module>
                 <module>examples/java8-webapp</module>
                 <module>examples/rx-client-java8-webapp</module>
-                <module>ext/rx/rx-client-java8</module>
             </modules>
             <build>
                 <pluginManagement>
@@ -954,31 +1017,143 @@
             </dependencies>
         </profile>
         <profile>
-            <id>windows</id>
-            <activation>
-                <os>
-                    <family>windows</family>
-                </os>
-            </activation>
+            <id>sonar</id>
+            <properties>
+                <!-- Sonar/Reporting settings (heavily inspired at http://www.aheritier.net/maven-failsafe-sonar-and-jacoco-are-in-a-boat/ -->
+
+                <!-- Tells Sonar to use jacoco for coverage results -->
+                <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+
+                <!-- Don't let Sonar execute tests. We will ask it to Maven -->
+                <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+                <!-- The system property jacoco.outputDir is based on. This won't work for 'sonar:sonar' (see http://jira.codehaus.org/browse/SONAR-3427), as such a property 'jacoco.outputDir' has to be explicitly specified from a command line -->
+                <jacoco.outputDir>${session.executionRootDirectory}/target</jacoco.outputDir>
+                <!-- Tells Sonar where the Jacoco coverage result file is located for Unit Tests -->
+                <sonar.jacoco.reportPath>${jacoco.outputDir}/jacoco.exec</sonar.jacoco.reportPath>
+                <!-- Tells Sonar where the Jacoco coverage result file is located for Integration Tests -->
+                <sonar.jacoco.itReportPath>${jacoco.outputDir}/jacoco-it.exec</sonar.jacoco.itReportPath>
+
+                <!-- Force JaCoCo to show 0% coverage if the report is missing -->
+                <sonar.jacoco.reportMissing.force.zero>true</sonar.jacoco.reportMissing.force.zero>
+
+                <!-- jacoco.agent.*.arg properties are dynamically generated by jacoco:prepare-agent (see bellow) -->
+                <surefire.coverage.argline>${jacoco.agent.ut.arg}</surefire.coverage.argline>
+                <failsafe.coverage.argline>${jacoco.agent.it.arg}</failsafe.coverage.argline>
+
+                <!-- Maven versions -->
+                <jacoco.version>0.7.4.201502262128</jacoco.version>
+                <sonar-jacoco-listeners.version>3.2</sonar-jacoco-listeners.version>
+                <sonar.version>2.6</sonar.version>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.codehaus.sonar-plugins.java</groupId>
+                    <artifactId>sonar-jacoco-listeners</artifactId>
+                    <version>${sonar-jacoco-listeners.version}</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <argLine>-Dfile.encoding=UTF8</argLine>
-                            <!-- Exclude unit tests regarding JDK HTTP Server because of failing a server shutdown in a class
-                            with several tests. "java.net.BindException: Address already in use: bind"
-                            bug reported on https://bugs.openjdk.java.net/browse/JDK-8015692 -->
-                            <excludes>
-                                <exclude>org/glassfish/jersey/jdkhttp/BasicJdkHttpServerTest.java</exclude>
-                                <exclude>org/glassfish/jersey/jdkhttp/JdkHttpPackageTest.java</exclude>
-                                <exclude>org/glassfish/jersey/jdkhttp/JdkHttpsServerTest.java</exclude>
-                                <exclude>org/glassfish/jersey/jdkhttp/LifecycleListenerTest.java</exclude>
-                            </excludes>
-                        </configuration>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.version}</version>
+                        <executions>
+                            <!-- Prepares a variable, jacoco.agent.ut.arg, that contains the info to be passed to the JVM hosting the code being tested. -->
+                            <execution>
+                                <id>prepare-ut-agent</id>
+                                <phase>process-test-classes</phase>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <destFile>${sonar.jacoco.reportPath}</destFile>
+                                    <propertyName>jacoco.agent.ut.arg</propertyName>
+                                    <append>true</append>
+                                </configuration>
+                            </execution>
+                            <!-- Prepares a variable, jacoco.agent.it.arg, that contains the info to be passed to the JVM hosting the code being tested. -->
+                            <execution>
+                                <id>prepare-it-agent</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <destFile>${sonar.jacoco.itReportPath}</destFile>
+                                    <propertyName>jacoco.agent.it.arg</propertyName>
+                                    <append>true</append>
+                                </configuration>
+                            </execution>
+
+                            <!-- Generate reports which may not be complete as the execution won't consider tests of projects that weren't executed during the build yet --><!-- The good thing is that with every module built, we're ensured that integrity of both jacoco .exec files was preserved -->
+                            <execution>
+                                <id>jacoco-report-unit-tests</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- Sets the path to the file which contains the execution data. -->
+                                    <dataFile>${sonar.jacoco.reportPath}</dataFile>
+                                    <!-- Sets the output directory for the code coverage report. -->
+                                    <outputDirectory>${project.build.directory}/jacoco</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>jacoco-report-integration-tests</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>report-integration</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- Sets the path to the file which contains the execution data. -->
+                                    <dataFile>${sonar.jacoco.itReportPath}</dataFile>
+                                    <!-- Sets the output directory for the code coverage report. -->
+                                    <outputDirectory>${project.build.directory}/jacoco-it</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>sonar-maven-plugin</artifactId>
+                            <version>${sonar.version}</version>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <configuration>
+                                <!-- If possible (in some modules, this has to be disabled due to https://jira.sonarsource.com/browse/SONARJAVA-728), enable coverage details per JUnit test -->
+                                <properties>
+                                    <property>
+                                        <name>listener</name>
+                                        <value>org.sonar.java.jacoco.JUnitListener</value>
+                                    </property>
+                                </properties>
+                            </configuration>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-failsafe-plugin</artifactId>
+                            <configuration>
+                                <!-- Enable coverage details per JUnit test -->
+                                <properties>
+                                    <property>
+                                        <name>listener</name>
+                                        <value>org.sonar.java.jacoco.JUnitListener</value>
+                                    </property>
+                                </properties>
+                                <!-- Let's put failsafe reports with surefire to have access to tests failures/success reports in Sonar -->
+                                <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
             </build>
         </profile>
     </profiles>
@@ -1113,12 +1288,10 @@
         <module>core-server</module>
         <module>core-client</module>
 
-        <module>examples</module>
         <module>ext</module>
         <module>incubator</module>
         <module>media</module>
         <module>security</module>
-        <module>test-framework</module>
     </modules>
 
     <dependencyManagement>
@@ -1630,6 +1803,10 @@
         <skip.tests>false</skip.tests>
         <xdk.absolute.path />
         <surefire.security.argline />
+        <surefire.coverage.argline />
+        <failsafe.coverage.argline />
+        <server.coverage.argline>${failsafe.coverage.argline}</server.coverage.argline>
+
 
         <!-- Dependency versions -->
         <jersey.version>${project.version}</jersey.version>
@@ -1648,7 +1825,7 @@
         <freemarker.version>2.3.23</freemarker.version>
         <gae.version>1.8.4</gae.version>
         <grizzly.client.version>1.9</grizzly.client.version>
-        <grizzly2.version>2.3.22</grizzly2.version>
+        <grizzly2.version>2.3.23</grizzly2.version>
         <guava.version>18.0</guava.version>
         <hamcrest.version>1.3</hamcrest.version>
         <xmlunit.version>1.6</xmlunit.version>
