@@ -53,7 +53,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Jersey2 Spring integration example.
+ * Jersey Spring integration example.
  * Demonstrate how to use Spring managed JAX-RS resource class with singleton scope (+ Spring bean DI).
  *
  * @author Marko Asplund (marko.asplund at gmail.com)

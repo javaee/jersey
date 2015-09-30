@@ -52,6 +52,32 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-3.0">
+        <title>Migrating from Jersey 2.22 to 3.0</title>
+        <section xml:id="mig-3.0-breaking-changes">
+            <title>Breaking Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            The most fundamental change in Jersey 3.0 is that all the modules (including the client module) are
+                            now being built with Java SE 8 and with 1.8 language level.
+                        </para>
+                        <para>
+                            As a consequential change, one of the modules was dropped, the <literal>rx-client-jsr166e</literal>.
+                            This implementation relied on the <literal>ConcurrentHashMapV8</literal> and was made redundant by
+                            the JDK upgrade. Please use <literal>rx-client-java8</literal> instead.
+                        </para>
+                        <para>
+                            Spring version used in the extension module was upgraded to 4.2.1.RELEASE. The reason for that is lack
+                            of Java 8 support with Spring 3.x versions.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
     <section xml:id="mig-2.22">
         <title>Migrating from Jersey 2.21 to 2.22</title>
         <section xml:id="mig-2.22-breaking-changes">

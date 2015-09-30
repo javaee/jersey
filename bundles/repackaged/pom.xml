@@ -58,6 +58,5 @@
 
     <modules>
         <module>jersey-guava</module>
-        <module>jersey-jsr166e</module>
     </modules>
 </project>

@@ -57,7 +57,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Integration of jersey and spring.
- * This rest controller is a singleton spring bean with an autowired depency
+ * This rest controller is a singleton spring bean with autowired dependencies
  * from spring
  *
  * @author Geoffroy Warin (http://geowarin.github.io)
@@ -78,7 +78,7 @@ public class SpringRequestResource {
     private Set<GoodbyeService> goodbyeServicesSet;
 
     @Autowired
-    private Iterable<GoodbyeService> goodbyeServicesIterable;
+    private List<GoodbyeService> goodbyeServicesIterable;
 
 
     @GET
