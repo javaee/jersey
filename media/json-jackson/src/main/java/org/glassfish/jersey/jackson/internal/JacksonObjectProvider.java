@@ -42,7 +42,6 @@ package org.glassfish.jersey.jackson.internal;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -90,7 +89,7 @@ final class JacksonObjectProvider extends AbstractObjectProvider<FilterProvider>
             Map<String, FilteringPropertyFilter> subSubfilters = new HashMap<>();
             if (!subgraphs.isEmpty()) {
                 final Class<?> subEntityClass = graph.getEntityClass();
-                final Set<String> processed = Collections.singleton(getProcessedSubgraph(entityClass, fieldName, subEntityClass));
+                final Set<String> processed = Collections.singleton(subgraphIdentifier(entityClass, fieldName, subEntityClass));
 
                 subSubfilters = createSubfilters(fieldName, subEntityClass, subgraphs, processed);
             }
@@ -119,7 +118,7 @@ final class JacksonObjectProvider extends AbstractObjectProvider<FilterProvider>
             final Map<String, ObjectGraph> subgraphs = graph.getSubgraphs(path);
 
             final Class<?> subEntityClass = graph.getEntityClass();
-            final String processedSubgraph = getProcessedSubgraph(entityClass, fieldName, subEntityClass);
+            final String processedSubgraph = subgraphIdentifier(entityClass, fieldName, subEntityClass);
 
             Map<String, FilteringPropertyFilter> subSubfilters = new HashMap<>();
             if (!subgraphs.isEmpty() && !processed.contains(processedSubgraph)) {
@@ -133,16 +132,6 @@ final class JacksonObjectProvider extends AbstractObjectProvider<FilterProvider>
         }
 
         return subfilters;
-    }
-
-    private Set<String> immutableSetOf(final Set<String> set, final String item) {
-        final Set<String> duplicate = new HashSet<>(set);
-        duplicate.add(item);
-        return Collections.unmodifiableSet(duplicate);
-    }
-
-    private String getProcessedSubgraph(final Class<?> parent, final String field, final Class<?> fieldClass) {
-        return parent.getName() + "_" + field + "_" + fieldClass.getName();
     }
 
     private static class FilteringFilterProvider extends FilterProvider {

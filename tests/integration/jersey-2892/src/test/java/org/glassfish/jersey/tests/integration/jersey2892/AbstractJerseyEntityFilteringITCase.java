@@ -56,7 +56,7 @@ import org.junit.Test;
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
-public class Jersey2892ITCase extends JerseyTest {
+public abstract class AbstractJerseyEntityFilteringITCase extends JerseyTest {
 
     @Override
     protected Application configure() {
@@ -69,14 +69,14 @@ public class Jersey2892ITCase extends JerseyTest {
     }
 
     /**
-     * Tests whether sub-sub-field, {@link org.glassfish.jersey.tests.integration.jersey2892.TestResource.Street} in particular,
+     * Tests whether sub-sub-field, {@link TestResource.Street} in particular,
      * is not filtered out.
      * <p/>
      * This corresponds with the JERSEY-2892 reported case.
      */
     @Test
     public void testWhetherSubSubFiledIsNotFilteredOut() {
-        Response response = target("test").request(MediaType.APPLICATION_JSON_TYPE).get();
+        Response response = target(provider() + "/test").request(MediaType.APPLICATION_JSON_TYPE).get();
 
         final TestResource.Persons persons = response.readEntity(TestResource.Persons.class);
 
@@ -90,7 +90,7 @@ public class Jersey2892ITCase extends JerseyTest {
      */
     @Test
     public void testWhetherSubSubSubFieldIsNotFilteredOut() {
-        Response response = target("pointer").request(MediaType.APPLICATION_JSON_TYPE).get();
+        Response response = target(provider() + "/pointer").request(MediaType.APPLICATION_JSON_TYPE).get();
 
         final TestResource.Pointer pointer = response.readEntity(TestResource.Pointer.class);
 
@@ -103,10 +103,18 @@ public class Jersey2892ITCase extends JerseyTest {
      */
     @Test
     public void testWhetherReferenceCycleIsDetected() {
-        Response response = target("recursive").request(MediaType.APPLICATION_JSON_TYPE).get();
+        Response response = target(provider() + "/recursive").request(MediaType.APPLICATION_JSON_TYPE).get();
 
         final TestResource.Recursive recursive = response.readEntity(TestResource.Recursive.class);
 
         Assert.assertEquals("c", recursive.subField.subSubField.idSubSubField);
     }
+
+    /**
+     * Jersey Entity filtering feature provider.
+     *
+     * @return The provider string to match with appropriate Jersey app configured in web.xml.
+     */
+    protected abstract String provider();
+
 }
