@@ -37,24 +37,17 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.integration.jersey2892;
 
-import javax.ws.rs.ApplicationPath;
-
-import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-
 /**
- * Jersey application for JERSEY-2878 and also J-605 (which is derived from the former one).
+ * Tests whether classes repeating in the object graph are filtered out correctly when using Jackson json provider.
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
-@ApplicationPath("/")
-public class TestApplication extends ResourceConfig {
+public class Jersey2892JacksonITCase extends AbstractJerseyEntityFilteringITCase {
 
-    public TestApplication() {
-        register(TestResource.class);
-        register(EntityFilteringFeature.class);
+    @Override
+    protected String provider() {
+        return "jackson";
     }
 }

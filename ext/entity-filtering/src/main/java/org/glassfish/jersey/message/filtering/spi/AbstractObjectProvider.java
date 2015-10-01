@@ -44,6 +44,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -128,14 +130,39 @@ public abstract class AbstractObjectProvider<T> implements ObjectProvider<T>, Ob
     /**
      * Create entity-filtering object after this object has not been found in the cache.
      *
-     * @param entityClass entity class the entity-filtering object should be created for.
+     * @param entityClass     entity class the entity-filtering object should be created for.
      * @param filteringScopes entity-filtering scopes to create the entity-filtering object for.
-     * @param forWriter flag determining whether the class should be examined for reader or writer.
+     * @param forWriter       flag determining whether the class should be examined for reader or writer.
      * @return entity-filtering object.
      */
     private T createFilteringObject(final Class<?> entityClass, final Set<String> filteringScopes, final boolean forWriter) {
         // Obtain the filtering object.
         return transform(graphProvider.createObjectGraph(entityClass, filteringScopes, forWriter));
+    }
+
+    /**
+     * A helper method for a creation of an immutable set based on a provided set together with a given item.
+     *
+     * @param set  The set to create the immutable set from.
+     * @param item The item to add to the set before it's made immutable.
+     * @return The immutable set from given set and item.
+     */
+    protected Set<String> immutableSetOf(final Set<String> set, final String item) {
+        final Set<String> duplicate = new HashSet<>(set);
+        duplicate.add(item);
+        return Collections.unmodifiableSet(duplicate);
+    }
+
+    /**
+     * Creates a string identifier of a sub-graph.
+     *
+     * @param parent     The parent class.
+     * @param field      The field name.
+     * @param fieldClass The class of the field.
+     * @return The string identifier of the sub-graph.
+     */
+    protected String subgraphIdentifier(final Class<?> parent, final String field, final Class<?> fieldClass) {
+        return parent.getName() + "_" + field + "_" + fieldClass.getName();
     }
 
     /**
@@ -150,7 +177,7 @@ public abstract class AbstractObjectProvider<T> implements ObjectProvider<T>, Ob
         /**
          * Create entity context class for given entity class and set of entity-filtering scopes.
          *
-         * @param entityClass entity class.
+         * @param entityClass     entity class.
          * @param filteringScopes entity-filtering scopes.
          */
         private EntityContext(final Class<?> entityClass, final Set<String> filteringScopes) {

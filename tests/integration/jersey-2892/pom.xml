@@ -71,6 +71,11 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- which jersey media provider to use is determined in web.xml by using 'jersey.config.jsonFeature' init param -->
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>

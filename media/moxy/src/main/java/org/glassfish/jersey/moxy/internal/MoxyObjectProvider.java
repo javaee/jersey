@@ -55,8 +55,6 @@ import org.eclipse.persistence.jaxb.JAXBHelper;
 import org.eclipse.persistence.jaxb.Subgraph;
 import org.eclipse.persistence.jaxb.TypeMappingInfo;
 
-import jersey.repackaged.com.google.common.collect.Sets;
-
 /**
  * @author Michal Gajdos
  */
@@ -97,8 +95,6 @@ final class MoxyObjectProvider extends AbstractObjectProvider<org.eclipse.persis
 
     private void createSubgraphs(final org.eclipse.persistence.jaxb.ObjectGraph graph,
                                  final Class<?> entityClass, final Map<String, ObjectGraph> entitySubgraphs) {
-        final Set<String> processed = Sets.newHashSet();
-
         for (final Map.Entry<String, ObjectGraph> entry : entitySubgraphs.entrySet()) {
             final String fieldName = entry.getKey();
 
@@ -114,7 +110,7 @@ final class MoxyObjectProvider extends AbstractObjectProvider<org.eclipse.persis
             if (!subgraphs.isEmpty()) {
                 final Class<?> subEntityClass = entityGraph.getEntityClass();
 
-                processed.add(getProcessedSubgraph(entityClass, fieldName, subEntityClass));
+                final Set<String> processed = Collections.singleton(subgraphIdentifier(entityClass, fieldName, subEntityClass));
                 createSubgraphs(fieldName, subgraph, subEntityClass, subgraphs, processed);
             }
         }
@@ -137,16 +133,13 @@ final class MoxyObjectProvider extends AbstractObjectProvider<org.eclipse.persis
 
             final Map<String, ObjectGraph> subgraphs = entityGraph.getSubgraphs(path);
             final Class<?> subEntityClass = entityGraph.getEntityClass();
-            final String processedSubgraph = getProcessedSubgraph(entityClass, fieldName, subEntityClass);
+            final String processedSubgraph = subgraphIdentifier(entityClass, fieldName, subEntityClass);
 
             if (!subgraphs.isEmpty() && !processed.contains(processedSubgraph)) {
-                processed.add(processedSubgraph);
-                createSubgraphs(path, subgraph, subEntityClass, subgraphs, processed);
+                // duplicate processed set so that elements in different subtrees aren't skipped (J-605)
+                final Set<String> subProcessed = immutableSetOf(processed, processedSubgraph);
+                createSubgraphs(path, subgraph, subEntityClass, subgraphs, subProcessed);
             }
         }
-    }
-
-    private String getProcessedSubgraph(final Class<?> parent, final String field, final Class<?> fieldClass) {
-        return parent.getName() + "_" + field + "_" + fieldClass.getName();
     }
 }
