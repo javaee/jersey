@@ -779,17 +779,8 @@ RxTarget&lt;RxCompletionStageInvoker&gt; rxWebTarget = RxCompletionStage.from(ta
             <simplesect>
                 <title>Dependencies</title>
 
-                <important>
-                    <para>
-                        To use this module the application has to be compiled (with <literal>javac</literal>
-                        <literal>-target</literal> option set to <literal>1.8</literal>) and run in a Java 8 environment.
-                        If you want to use Reactive Jersey Client with &lit.jdk8.CompletableFuture; in pre-Java 8 environment, see
-                        <xref linkend="rx-client.jsr166e" />.
-                    </para>
-                </important>
-
                 <para>
-                    The Reactive Jersey Client with Java 8 support is available as an extension module in Jersey. For Maven users,
+                    The Reactive Jersey Client is available as an extension module in Jersey. For Maven users,
                     simply add the following dependency to your &lit.pom.xml;:
 
                     <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
@@ -922,126 +913,6 @@ RxTarget&lt;RxListenableFutureInvoker&gt; rxWebTarget = RxListenableFuture.from(
             </simplesect>
         </section>
 
-        <section xml:id="rx-client.jsr166e">
-            <title>JSR-166e – CompletableFuture</title>
-            <titleabbrev xml:id="rx-client.jsr166e.title">JSR-166e (CompletableFuture)</titleabbrev>
-
-            <para>
-                When Java 8 is not an option but the functionality of &jdk8.CompletionStage; and &jdk8.CompletableFuture;
-                is required a &jsr166.link; library can be used. It's a back-port of classes from
-                <literal>java.util.concurrent</literal> package added to Java 8. Contributed and maintained by Doug Lea.
-                &lit.jdk8.CompletableFuture; is the parameter type in the JSR-166e's extension of
-                &lit.jersey.ext.rx.client.RxInvoker;, called &jersey.ext.rx.client.jsr166e.RxCompletableFutureInvoker;. This means
-                that the return type of HTTP method calls is &lit.jdk8.CompletableFuture; in this case (accordingly
-                parametrized).
-            </para>
-            <para>
-                Requests are by default invoked immediately. If not said otherwise the &jsr166e.ForkJoinPool.commonPool; pool
-                is used to obtain a thread which processed the request. This behavior can be overridden by providing an
-                &jdk6.ExecutorService; when a reactive &lit.jaxrs.client.Client; or &lit.jaxrs.client.WebTarget; is created or
-                when a particular requests is about to be invoked.
-            </para>
-
-            <simplesect>
-                <title>Usage</title>
-
-                <para>
-                    A JAX-RS &lit.jaxrs.client.Client; or &lit.jaxrs.client.WebTarget; aware of reactive HTTP calls, Jersey's
-                    &jersey.ext.rx.client.RxClient; or &jersey.ext.rx.client.RxWebTarget; parametrized by
-                    &lit.jersey.ext.rx.client.jsr166e.RxCompletableFutureInvoker;, can be created either via the generic
-                    &jersey.ext.rx.client.Rx; entry point or the customized &jersey.ext.rx.client.jsr166e.RxCompletableFuture; one.
-                </para>
-                <para>
-                    When using the generic entry point you need to specify the
-                    &lit.jersey.ext.rx.client.jsr166e.RxCompletableFutureInvoker; invoker type to obtain an appropriate instance
-                    of the client or the web target.
-
-                    <example xml:id="rx.client.jsr166e.rx">
-                        <title>Creating Jersey/JSR-166e Client and WebTarget – Using Rx</title>
-
-                        <programlisting language="java" linenumbering="numbered">// New Client
-RxClient&lt;RxCompletableFutureInvoker&gt; newRxClient = Rx.newClient(RxCompletableFutureInvoker.class);
-
-// From existing Client
-RxClient&lt;RxCompletableFutureInvoker&gt; rxClient = Rx.from(client, RxCompletableFutureInvoker.class);
-
-// From existing WebTarget
-RxTarget&lt;RxCompletableFutureInvoker&gt; rxWebTarget = Rx.from(target, RxCompletableFutureInvoker.class);</programlisting>
-                    </example>
-                </para>
-                <para>
-                    You can skip specifying the invoker type when you use &lit.jersey.ext.rx.client.jsr166e.RxCompletableFuture;
-                    entry point.
-
-                    <example xml:id="rx.client.jsr166e.rxcompletablefuture">
-                        <title>Creating Jersey/JSR-166e Client and WebTarget – Using RxCompletableFuture</title>
-
-                        <programlisting language="java" linenumbering="numbered">// New Client
-RxClient&lt;RxCompletableFutureInvoker&gt; newRxClient = RxCompletableFuture.newClient();
-
-// From existing Client
-RxClient&lt;RxCompletableFutureInvoker&gt; rxClient = RxCompletableFuture.from(client);
-
-// From existing WebTarget
-RxTarget&lt;RxCompletableFutureInvoker&gt; rxWebTarget = RxCompletableFuture.from(target);</programlisting>
-                    </example>
-                </para>
-                <para>
-                    In addition to specifying the invoker type and client/web-target instances, when using the factory methods in
-                    the entry points mentioned above, an &lit.jdk6.ExecutorService; can be specified that is further used
-                    to execute requests on a separate thread.
-                </para>
-                <para>
-                    An example of obtaining &lit.jdk8.CompletableFuture; with JAX-RS &lit.jaxrs.core.Response; from a remote service
-                    can be seen in <xref linkend="rx.client.jsr166e.usage" />.
-
-                    <example xml:id="rx.client.jsr166e.usage">
-                        <title>Obtaining CompletableFuture&lt;Response&gt; from Jersey/JSR-166e Client</title>
-
-                        <programlisting language="java" linenumbering="numbered">CompletableFuture&lt;Response&gt; stage = RxCompletableFuture.newClient()
-        .target("http://example.com/resource")
-        .request()
-        .rx()
-        .get();
-</programlisting>
-                    </example>
-                </para>
-            </simplesect>
-
-            <simplesect>
-                <title>Dependencies</title>
-
-                <important>
-                    <para>
-                        If you're compiling and running your application in Java 8 environment consider using
-                        Reactive Jersey Client with &lit.jdk8.CompletableFuture; with <xref linkend="rx-client.java8" /> instead.
-                    </para>
-                </important>
-
-                <para>
-                    The Reactive Jersey Client with JSR-166e support is available as an extension module in Jersey. For Maven users,
-                    simply add the following dependency to your &lit.pom.xml;:
-
-                    <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
-    &lt;groupId&gt;org.glassfish.jersey.ext.rx&lt;/groupId&gt;
-    &lt;artifactId&gt;jersey-rx-client-jsr166e&lt;/artifactId&gt;
-    &lt;version&gt;&version;&lt;/version&gt;
-&lt;/dependency&gt;</programlisting>
-
-                    After this step you can use the extended client right away. The dependency transitively adds the following
-                    dependencies to your class-path as well: <literal>org.glassfish.jersey.ext.rx:jersey-rx-client</literal> and
-                    <literal>org.glassfish.jersey.bundles.repackaged:jersey-jsr166e</literal>. The later is the JSR-166e library
-                    repackaged by Jersey to make sure the OSGi headers are correct and the library can be used in OSGi environment.
-                </para>
-
-                <note>
-                    <para>
-                        If you're not using Maven (or other dependency management tool) make sure to add also all the transitive
-                        dependencies of this extension module (see &jersey.ext.rx-client.jsr166e.deps.link;) on the class-path.
-                    </para>
-                </note>
-            </simplesect>
-        </section>
     </section>
 
     <section xml:id="rx.client.spi">
