@@ -61,8 +61,16 @@
         </dependency>
         <dependency>
             <groupId>org.simpleframework</groupId>
-            <artifactId>simple</artifactId>
-        </dependency>
+            <artifactId>simple-http</artifactId>
+         </dependency>
+         <dependency>
+            <groupId>org.simpleframework</groupId>
+            <artifactId>simple-transport</artifactId>
+         </dependency>
+         <dependency>
+            <groupId>org.simpleframework</groupId>
+            <artifactId>simple-common</artifactId>
+        </dependency>   
     </dependencies>
 
 

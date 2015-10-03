@@ -46,19 +46,15 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
 
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.ProcessingException;
 
-import javax.net.ssl.SSLContext;
-
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.simple.internal.LocalizationMessages;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
 import org.simpleframework.http.core.Container;
-import org.simpleframework.http.core.ContainerServer;
-import org.simpleframework.transport.Server;
+import org.simpleframework.http.core.ContainerSocketProcessor;
+import org.simpleframework.transport.SocketProcessor;
 import org.simpleframework.transport.connect.Connection;
 import org.simpleframework.transport.connect.SocketConnection;
 
@@ -180,10 +176,10 @@ public final class SimpleContainerFactory {
     public static SimpleServer create(final URI address,
                                       final SSLContext context,
                                       final SimpleContainer container) {
-        return _create(address, context, container, new UnsafeValue<Server, IOException>() {
+        return _create(address, context, container, new UnsafeValue<SocketProcessor, IOException>() {
             @Override
-            public Server get() throws IOException {
-                return new ContainerServer(container);
+            public SocketProcessor get() throws IOException {
+                return new ContainerSocketProcessor(container);
             }
         });
     }
@@ -241,10 +237,10 @@ public final class SimpleContainerFactory {
                                    final int count,
                                    final int select) throws ProcessingException {
 
-        return _create(address, context, container, new UnsafeValue<Server, IOException>() {
+        return _create(address, context, container, new UnsafeValue<SocketProcessor, IOException>() {
             @Override
-            public Server get() throws IOException {
-                return new ContainerServer(container, count, select);
+            public SocketProcessor get() throws IOException {
+                return new ContainerSocketProcessor(container, count, select);
             }
         });
     }
@@ -252,7 +248,7 @@ public final class SimpleContainerFactory {
     private static SimpleServer _create(final URI address,
                                      final SSLContext context,
                                      final SimpleContainer container,
-                                     final UnsafeValue<Server, IOException> serverProvider) throws ProcessingException {
+                                     final UnsafeValue<SocketProcessor, IOException> serverProvider) throws ProcessingException {
         if (address == null) {
             throw new IllegalArgumentException(LocalizationMessages.URI_CANNOT_BE_NULL());
         }
@@ -277,9 +273,11 @@ public final class SimpleContainerFactory {
         final InetSocketAddress listen = new InetSocketAddress(port);
         final Connection connection;
         try {
-            final Server server = serverProvider.get();
-            connection = new SocketConnection(server);
+        	final SimpleTraceAnalyzer analyzer = new SimpleTraceAnalyzer();
+            final SocketProcessor server = serverProvider.get();
+            connection = new SocketConnection(server, analyzer);
 
+            
             final SocketAddress socketAddr = connection.connect(listen, context);
             container.onServerStart();
 
@@ -288,6 +286,7 @@ public final class SimpleContainerFactory {
                 @Override
                 public void close() throws IOException {
                     container.onServerStop();
+                    analyzer.stop();
                     connection.close();
                 }
 
@@ -295,6 +294,20 @@ public final class SimpleContainerFactory {
                 public int getPort() {
                     return ((InetSocketAddress) socketAddr).getPort();
                 }
+
+				@Override
+				public boolean isDebug() {
+					return analyzer.isActive();
+				}
+
+				@Override
+				public void setDebug(boolean enable) {
+					if(enable) {
+						analyzer.start();
+					} else {
+						analyzer.stop();
+					}
+				}
             };
         } catch (final IOException ex) {
             throw new ProcessingException(LocalizationMessages.ERROR_WHEN_CREATING_SERVER(), ex);

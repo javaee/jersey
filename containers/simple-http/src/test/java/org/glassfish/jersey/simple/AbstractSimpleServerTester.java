@@ -51,7 +51,6 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ResourceConfig;
-
 import org.junit.After;
 
 /**
@@ -95,7 +94,7 @@ public abstract class AbstractSimpleServerTester {
         return DEFAULT_PORT;
     }
 
-    private volatile Closeable server;
+    private volatile SimpleServer server;
 
     public UriBuilder getUri() {
         return UriBuilder.fromUri("http://localhost").port(getPort()).path(CONTEXT);
@@ -104,6 +103,13 @@ public abstract class AbstractSimpleServerTester {
     public void startServer(Class... resources) {
         ResourceConfig config = new ResourceConfig(resources);
         config.register(LoggingFilter.class);
+        final URI baseUri = getBaseUri();
+        server = SimpleContainerFactory.create(baseUri, config);
+        LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
+    }
+    
+    public void startServerNoLoggingFilter(Class... resources) {
+        ResourceConfig config = new ResourceConfig(resources);
         final URI baseUri = getBaseUri();
         server = SimpleContainerFactory.create(baseUri, config);
         LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
@@ -125,6 +131,12 @@ public abstract class AbstractSimpleServerTester {
 
     public URI getBaseUri() {
         return UriBuilder.fromUri("http://localhost/").port(getPort()).build();
+    }
+    
+    public void setDebug(boolean enable) {
+    	if(server != null) {
+    		server.setDebug(enable);
+    	}
     }
 
     public void stopServer() {
