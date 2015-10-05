@@ -50,6 +50,8 @@ import javax.inject.Inject;
 import org.glassfish.hk2.api.Immediate;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -74,6 +76,8 @@ public class InjectionsTest {
      * @throws InterruptedException if awaiting on the latch is interrupted.
      */
     @Test
+    @Ignore("HK2 Immediate Scope is now disabled due to a memory leak issues with ImmediateThread (see JERSEY-2979) and some "
+            + "other problems which aren't publicly reported.")
     public void testHK2ImmediateAnnotation() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
 
