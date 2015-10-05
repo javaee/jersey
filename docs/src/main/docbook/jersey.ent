@@ -97,7 +97,7 @@
 <!ENTITY jersey.ext.mvc-freemarker.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-mvc-freemarker/dependencies.html'>jersey-mvc-freemarker</link>" >
 <!ENTITY jersey.ext.mvc-jsp.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-mvc-jsp/dependencies.html'>jersey-mvc-jsp</link>" >
 <!ENTITY jersey.ext.mvc-mustache.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-mvc-mustache/dependencies.html'>jersey-mvc-mustache</link>" >
-<!ENTITY jersey.ext.spring3.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-spring3/dependencies.html'>jersey-spring3</link>" >
+<!ENTITY jersey.ext.spring4.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-spring4/dependencies.html'>jersey-spring4</link>" >
 <!ENTITY jersey.docs.root.uri "https://jersey.java.net/documentation/&docs.version;">
 <!ENTITY jersey.docs.index.uri "&jersey.docs.root.uri;/index.html">
 <!ENTITY jersey.github.examples.uri "&jersey.github.release.uri;/examples">

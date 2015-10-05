@@ -146,7 +146,7 @@
         <module>servlet-request-wrapper-binding</module>
         <module>servlet-tests</module>
         <module>sonar-test</module>
-        <module>spring3</module>
+        <module>spring4</module>
         <module>tracing-support</module>
     </modules>
 

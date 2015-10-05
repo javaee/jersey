@@ -198,7 +198,7 @@
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.ext</groupId>
-                <artifactId>jersey-spring3</artifactId>
+                <artifactId>jersey-spring4</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
