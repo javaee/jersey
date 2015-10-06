@@ -139,7 +139,9 @@ public class Injections {
 
         result.setNeutralContextClassLoader(false);
         ServiceLocatorUtilities.enablePerThreadScope(result);
-        ServiceLocatorUtilities.enableImmediateScope(result);
+
+        // HK2 Immediate Scope is commented out due to JERSEY-2979 and other issues
+        // ServiceLocatorUtilities.enableImmediateScope(result);
 
         for (final Binder binder : binders) {
             bind(result, binder);
