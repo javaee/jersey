@@ -73,7 +73,7 @@ public class FollowRedirectHeadTest extends JerseyTest {
         @Path("redirect")
         @GET
         public Response redirect() {
-            return Response.status(303).location(URI.create("final")).build();
+            return Response.status(303).location(URI.create("resource/final")).build();
         }
 
         @Path("final")

@@ -59,20 +59,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 /**
- * Test if the location response header is left intact in case the
- * {@link ServerProperties#LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED} property is set to {@code true}.
+ * Test if the location response header is resolved according to RFC7231 (in a JAX-RS 2.0 incompatible way) when
+ * {@link ServerProperties#LOCATION_HEADER_RELATIVE_URI_RESOLUTION_RFC7231} property is set to {@code true} and
+ * {@link ServerProperties#LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED} to {@code false}
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public class LocationHeaderWithAbsolutizationDisabledTest extends JerseyTest {
+public class LocationHeaderWithIncompatibleFlagTest extends JerseyTest {
 
-    private static final Logger LOGGER = Logger.getLogger(LocationHeaderWithAbsolutizationDisabledTest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(LocationHeaderWithIncompatibleFlagTest.class.getName());
 
     @Override
     protected ResourceConfig configure() {
         enable(TestProperties.LOG_TRAFFIC);
         final ResourceConfig rc = new ResourceConfig(ResponseTest.class);
-        rc.property(ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED, Boolean.TRUE);
+        rc.property(ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_RFC7231, Boolean.TRUE);
         return rc;
     }
 
@@ -81,7 +82,6 @@ public class LocationHeaderWithAbsolutizationDisabledTest extends JerseyTest {
      */
     @Path(value = "test")
     public static class ResponseTest {
-
         /**
          * Resource method for the basic uri test
          * @return test response with relative location uri
@@ -90,7 +90,6 @@ public class LocationHeaderWithAbsolutizationDisabledTest extends JerseyTest {
         @Path("location")
         public Response locationTest() {
             final URI uri = URI.create("location");
-            LOGGER.info("URI Created in the resource method > " + uri);
             return Response.created(uri).build();
         }
 
@@ -124,7 +123,7 @@ public class LocationHeaderWithAbsolutizationDisabledTest extends JerseyTest {
         final Response response = target().path("test/location").request(MediaType.TEXT_PLAIN).get(Response.class);
         final String location = response.getHeaderString(HttpHeaders.LOCATION);
         LOGGER.info("Location resolved from response > " + location);
-        assertEquals("location", location);
+        assertEquals(getBaseUri().toString() + "test/location", location);
     }
 
     /**
@@ -135,7 +134,7 @@ public class LocationHeaderWithAbsolutizationDisabledTest extends JerseyTest {
         final Response response = target().path("test/locationSlash").request(MediaType.TEXT_PLAIN).get(Response.class);
         final String location = response.getHeaderString(HttpHeaders.LOCATION);
         LOGGER.info("Location resolved from response > " + location);
-        assertEquals("/location", location);
+        assertEquals(getBaseUri() + "location", location);
     }
 
     /**

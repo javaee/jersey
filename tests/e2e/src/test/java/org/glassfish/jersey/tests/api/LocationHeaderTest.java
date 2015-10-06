@@ -52,10 +52,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -77,6 +80,8 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -117,6 +122,12 @@ public class LocationHeaderTest extends JerseyTest {
                 BaseUriChangingPreMatchingFilter.class,
                 TestExceptionMapper.class
         );
+    }
+
+    @Override
+    protected void configureClient(final ClientConfig config) {
+        super.configureClient(config);
+        config.property(ClientProperties.FOLLOW_REDIRECTS, false);
     }
 
     /**
@@ -193,7 +204,7 @@ public class LocationHeaderTest extends JerseyTest {
         @GET
         @Path("locationWithInterceptor")
         public Response locationTestWithInterceptor() {
-            final URI uri = getUriBuilder().segment("foo").build();
+            final URI uri = URI.create("foo");
             return Response.created(uri).entity("Return from locationTestWithInterceptor").type("text/plain").build();
         }
 
@@ -205,7 +216,7 @@ public class LocationHeaderTest extends JerseyTest {
         @Path("locationWithBody")
         @Produces("text/plain")
         public Response locationTestWithBody() {
-            final URI uri = getUriBuilder().segment("locationWithBody").build();
+            final URI uri = URI.create("locationWithBody");
             return Response.created(uri).entity("Return from locationWithBody").type("text/plain").build();
         }
 
@@ -360,7 +371,7 @@ public class LocationHeaderTest extends JerseyTest {
         @GET
         @Path("responseFilterSync")
         public Response responseFilterSync() {
-            return Response.created(getUriBuilder().segment("responseFilterSync").build()).build();
+            return Response.created(URI.create("responseFilterSync")).build();
         }
 
         /**
@@ -378,7 +389,7 @@ public class LocationHeaderTest extends JerseyTest {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    final Response result = Response.created(getUriBuilder().segment("responseFilterAsync").build()).build();
+                    final Response result = Response.created(URI.create("responseFilterAsync")).build();
                     asyncResponse.resume(result);
                 }
             }).start();
@@ -401,7 +412,7 @@ public class LocationHeaderTest extends JerseyTest {
                 @Override
                 public void run() {
                     final Response result =
-                            Response.created(getUriBuilder().segment("responseFilterAsyncExecutor").build()).build();
+                            Response.created(URI.create("responseFilterAsyncExecutor")).build();
                     asyncResponse.resume(result);
                 }
             });
@@ -486,6 +497,67 @@ public class LocationHeaderTest extends JerseyTest {
             return Response.created(URI.create("newRedirected")).build();
         }
 
+        /**
+         * Resource method for testing relative URI resolution in case of {@code seeOther} response.
+         * @return {@code 303 See Other} response with relative URI
+         */
+        @POST
+        @Path("seeOther")
+        @Consumes("text/plain")
+        public Response seeOther() {
+            return Response.seeOther(URI.create("other")).build();
+        }
+
+        /**
+         * Resource method for testing relative URI resolution in case of {@code seeOther} response.
+         * @return {@code 303 See Other} response with relative URI
+         */
+        @GET
+        @Path("seeOtherLeading")
+        public Response seeOtherWithLeadingSlash() {
+            return Response.seeOther(URI.create("/other")).build();
+        }
+
+        /**
+         * Resource method for testing relative URI resolution in case of {@code seeOther} response.
+         * @return {@code 303 See Other} response with relative URI
+         */
+        @GET
+        @Path("seeOtherTrailing")
+        public Response seeOtherWithTrailingSlash() {
+            return Response.seeOther(URI.create("other/")).build();
+        }
+
+        /**
+         * Resource method for testing relative URI resolution in case of {@code temporaryRedirect} response.
+         * @return {@code 307 Temporary Redirect} response with relative URI
+         */
+        @GET
+        @Path("temporaryRedirect")
+        public Response temporaryRedirect() {
+            return Response.temporaryRedirect(URI.create("redirect")).build();
+        }
+
+        /**
+         * Resource method for testing relative URI resolution in case of {@code temporaryRedirect} response.
+         * @return {@code 307 Temporary Redirect} response with relative URI
+         */
+        @GET
+        @Path("temporaryRedirectLeading")
+        public Response temporaryRedirectWithLeadingSlash() {
+            return Response.temporaryRedirect(URI.create("/redirect")).build();
+        }
+
+        /**
+         * Resource method for testing relative URI resolution in case of {@code temporaryRedirect} response.
+         * @return {@code 307 Temporary Redirect} response with relative URI
+         */
+        @GET
+        @Path("temporaryRedirectTrailing")
+        public Response temporaryRedirectWithTrailingSlash() {
+            return Response.temporaryRedirect(URI.create("redirect/")).build();
+        }
+
         /** Return UriBuilder with base pre-set {@code /ResponseTest} uri segment for this resource.
          *
          * @return UriBuilder
@@ -500,7 +572,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testAbortFilter() {
-        checkResponseFilter("ResponseTest/locationAborted", "ResponseTest/uriAfterAbortion/SUCCESS");
+        checkResponseFilter("ResponseTest/locationAborted", "uriAfterAbortion/SUCCESS");
     }
 
     /**
@@ -508,7 +580,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testAbortPreMatchingFilter() {
-        checkResource("ResponseTest/locationAbortedPreMatching", "ResponseTest/uriAfterPreMatchingAbortion/SUCCESS");
+        checkResource("ResponseTest/locationAbortedPreMatching", "uriAfterPreMatchingAbortion/SUCCESS");
     }
 
     /**
@@ -516,15 +588,8 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testConvertRelativeUriToAbsolute() {
-        checkResource("ResponseTest/location");
-    }
-
-    /**
-     * Test, that trailing slash in the request URI changes the way how relative URI is resolved.
-     */
-    @Test
-    public void testConvertRelativeUriToAbsoluteWithTrailingSlash() {
-        checkResource("ResponseTest/location/", "ResponseTest/location/location");
+        checkResource("ResponseTest/location", "location");
+        // checkResource("ResponseTest/location");
     }
 
     /**
@@ -533,7 +598,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testAbsoluteUriWithEntity() {
-        final Response response = checkResource("ResponseTest/locationWithBody");
+        final Response response = checkResource("ResponseTest/locationWithBody", "locationWithBody");
         assertNotNull(response.getEntity());
     }
 
@@ -631,7 +696,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testResponseFilterSync() {
-        checkResponseFilter("ResponseTest/responseFilterSync");
+        checkResponseFilter("ResponseTest/responseFilterSync", "responseFilterSync");
     }
 
     /**
@@ -639,7 +704,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testResponseFilterAsync() {
-        checkResponseFilter("ResponseTest/responseFilterAsync");
+        checkResponseFilter("ResponseTest/responseFilterAsync", "responseFilterAsync");
     }
 
     /**
@@ -647,7 +712,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testResponseFilterAsyncExecutor() {
-        checkResponseFilter("ResponseTest/responseFilterAsyncExecutor");
+        checkResponseFilter("ResponseTest/responseFilterAsyncExecutor", "responseFilterAsyncExecutor");
     }
 
     /**
@@ -655,7 +720,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testExceptionMapperSync() {
-        checkResponseFilter("ResponseTest/exceptionMapperSync", "ResponseTest/EXCEPTION_MAPPER");
+        checkResponseFilter("ResponseTest/exceptionMapperSync", "EXCEPTION_MAPPER");
     }
 
     /**
@@ -663,7 +728,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testExceptionMapperAsync() {
-        checkResponseFilter("ResponseTest/exceptionMapperAsync", "ResponseTest/EXCEPTION_MAPPER");
+        checkResponseFilter("ResponseTest/exceptionMapperAsync", "EXCEPTION_MAPPER");
     }
 
     /**
@@ -671,7 +736,7 @@ public class LocationHeaderTest extends JerseyTest {
      */
     @Test
     public void testExceptionMapperExecutor() {
-        checkResponseFilter("ResponseTest/exceptionMapperExecutor", "ResponseTest/EXCEPTION_MAPPER");
+        checkResponseFilter("ResponseTest/exceptionMapperExecutor", "EXCEPTION_MAPPER");
     }
 
     /**
@@ -681,6 +746,37 @@ public class LocationHeaderTest extends JerseyTest {
     public void testLocationBaseUriChangedByPrematchingFilter() {
         final Response response = target().path("ResponseTest/filterChangedBaseUri").request().get();
         assertEquals("http://www.server.com/newRedirected", response.getHeaderString("Location"));
+    }
+
+    @Test
+    public void testSeeOther() {
+        Response response = target().path("ResponseTest/seeOther").request()
+                .post(Entity.entity("TEXT", MediaType.TEXT_PLAIN_TYPE));
+        String location = response.getHeaderString(HttpHeaders.LOCATION);
+        assertEquals(getBaseUri().toString() + "other", location);
+
+        response = target().path("ResponseTest/seeOtherLeading").request(MediaType.TEXT_PLAIN).get(Response.class);
+        location = response.getHeaderString(HttpHeaders.LOCATION);
+        assertEquals(getBaseUri().toString() + "other", location);
+
+        response = target().path("ResponseTest/seeOtherTrailing").request(MediaType.TEXT_PLAIN).get(Response.class);
+        location = response.getHeaderString(HttpHeaders.LOCATION);
+        assertEquals(getBaseUri().toString() + "other/", location);
+    }
+
+    @Test
+    public void testTemporaryRedirect() {
+        Response response = target().path("ResponseTest/temporaryRedirect").request(MediaType.TEXT_PLAIN).get(Response.class);
+        String location = response.getHeaderString(HttpHeaders.LOCATION);
+        assertEquals(getBaseUri().toString() + "redirect", location);
+
+        response = target().path("ResponseTest/temporaryRedirectLeading").request(MediaType.TEXT_PLAIN).get(Response.class);
+        location = response.getHeaderString(HttpHeaders.LOCATION);
+        assertEquals(getBaseUri().toString() + "redirect", location);
+
+        response = target().path("ResponseTest/temporaryRedirectTrailing").request(MediaType.TEXT_PLAIN).get(Response.class);
+        location = response.getHeaderString(HttpHeaders.LOCATION);
+        assertEquals(getBaseUri().toString() + "redirect/", location);
     }
 
     private Response checkResource(final String resourcePath) {
@@ -716,7 +812,7 @@ public class LocationHeaderTest extends JerseyTest {
                 throws IOException {
             final MultivaluedMap<String, ?> headers = responseContext.getHeaders();
             final List<URI> locations = (List<URI>) headers.get(HttpHeaders.LOCATION);
-            locations.set(0, URI.create("UriChangedByFilter"));
+            locations.set(0, URI.create("ResponseTest/UriChangedByFilter"));
             LOGGER.info("LocationManipulationFilter applied.");
         }
     }
@@ -755,7 +851,7 @@ public class LocationHeaderTest extends JerseyTest {
             final String successRelativeUri = "uriAfterAbortion/SUCCESS";
             Response response = Response.created(URI.create(successRelativeUri)).build();
 
-            if (!response.getLocation().equals(requestContext.getUriInfo().getRequestUri().resolve(successRelativeUri))) {
+            if (!response.getLocation().toString().equals(requestContext.getUriInfo().getBaseUri() + successRelativeUri)) {
                 response = Response.created(URI.create("uriAfterAbortion/FAILURE")).build();
             }
             requestContext.abortWith(response);
@@ -776,12 +872,12 @@ public class LocationHeaderTest extends JerseyTest {
 
         @Override
         public void filter(final ContainerRequestContext requestContext) throws IOException {
+
             if (requestContext.getUriInfo().getAbsolutePath().toString().endsWith("locationAbortedPreMatching")) {
                 LOGGER.info("Aborting request in the request filter. Returning status created.");
                 final String successRelativeUri = "uriAfterPreMatchingAbortion/SUCCESS";
                 Response response = Response.created(URI.create(successRelativeUri)).build();
-                if (!response.getLocation().toString().equals(requestContext.getUriInfo().getRequestUri()
-                        .resolve(successRelativeUri).toString())) {
+                if (!response.getLocation().toString().equals(requestContext.getUriInfo().getBaseUri() + successRelativeUri)) {
                     response = Response.created(URI.create("uriAfterPreMatchingAbortion/FAILURE")).build();
                 }
                 requestContext.abortWith(response);
@@ -819,7 +915,7 @@ public class LocationHeaderTest extends JerseyTest {
         public void aroundWriteTo(final WriterInterceptorContext context) throws IOException, WebApplicationException {
             final MultivaluedMap<String, ?> headers = context.getHeaders();
             final List<URI> locations = (List<URI>) headers.get(HttpHeaders.LOCATION);
-            locations.set(0, URI.create("UriChangedByInterceptor"));
+            locations.set(0, URI.create("ResponseTest/UriChangedByInterceptor"));
             LOGGER.info("LocationManipulationInterceptor applied.");
             context.proceed();
         }
@@ -832,6 +928,7 @@ public class LocationHeaderTest extends JerseyTest {
 
         @Override
         public Response toResponse(final WebApplicationException exception) {
+            exception.printStackTrace();
             return Response.created(URI.create("EXCEPTION_MAPPER")).build();
         }
     }
@@ -870,7 +967,6 @@ public class LocationHeaderTest extends JerseyTest {
                     context.register(BaseUriChangingPreMatchingFilter.class);
                     LOGGER.info("BaseUriChangingPreMatchingFilter registered.");
                 }
-
             }
         }
     }

@@ -710,6 +710,28 @@ public final class ServerProperties {
             "jersey.config.server.subresource.cache.jersey.resource.enabled";
 
     /**
+     * If {@code true} then Jersey will resolve relative URIs in the {@code Location} http header against the
+     * request URI according to RFC7231 (new HTTP Specification).
+     *
+     * <p>
+     * This behaviour violates the JAX-RS 2.0 specification (which dates older than RFC7231).
+     * If {@link #LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED} is set to {@code true}, value of this property is not taken
+     * into account.
+     * </p>
+     *
+     * <p>
+     * The default value is {@code false} (JAX-RS 2.0 compliant).
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.23
+     */
+    public static final String LOCATION_HEADER_RELATIVE_URI_RESOLUTION_RFC7231 =
+            "jersey.config.server.headers.location.relative.resolution.rfc7231";
+
+    /**
      * If {@code true} then Jersey will not attempt to resolve relative URIs in the {@code Location} http header against the
      * request URI.
      *

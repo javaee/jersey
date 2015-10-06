@@ -52,6 +52,26 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.23">
+        <title>Migrating from Jersey 2.22 to 2.23</title>
+        <section xml:id="mig-2.23-breaking-changes">
+            <title>Breaking Changes</title>
+                <para>
+                    Last version contained a change in relative URI resolution in the location header. Even though the change
+                    was fixing the discrepancy between the real behaviour and RFC7231, it also caused JAX-RS spec incompatibility
+                    in some cases. Furthermore, there was no way to preserve backwards compatibility.
+                </para>
+                <para>
+                    Therefore, the default behaviour was rollbacked and a new configuration property was introduced to switch
+                    to the RFC7231 compliant
+                    behaviour: &jersey.server.ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_RFC7231;. Also,
+                    the possibility to switch the URI resolution completely off remains with the
+                    &jersey.server.ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED; disabled switch. Both
+                    properties are false by default.
+                </para>
+        </section>
+    </section>
+
     <section xml:id="mig-2.22">
         <title>Migrating from Jersey 2.21 to 2.22</title>
         <section xml:id="mig-2.22-breaking-changes">

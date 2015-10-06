@@ -148,7 +148,10 @@ public class ServerRuntime {
 
     private final boolean processResponseErrors;
 
+    /** Do not resolve relative URIs in the {@code Location} header */
     private final boolean disableLocationHeaderRelativeUriResolution;
+    /** Resolve relative URIs according to RFC7231 (not JAX-RS 2.0 compliant */
+    private final boolean rfc7231LocationHeaderRelativeUriResolution;
 
     /*package */ static final ExternalRequestScope<Object> NOOP_EXTERNAL_REQ_SCOPE = new ExternalRequestScope<Object>() {
 
@@ -254,6 +257,10 @@ public class ServerRuntime {
         this.disableLocationHeaderRelativeUriResolution = ServerProperties.getValue(configuration.getProperties(),
                 ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED,
                 Boolean.FALSE, Boolean.class);
+
+        this.rfc7231LocationHeaderRelativeUriResolution = ServerProperties.getValue(configuration.getProperties(),
+                ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_RFC7231,
+                Boolean.FALSE, Boolean.class);
     }
 
     /**
@@ -302,7 +309,9 @@ public class ServerRuntime {
                     // set base URI into response builder thread-local variable
                     // for later resolving of relative location URIs
                     if (!disableLocationHeaderRelativeUriResolution) {
-                        OutboundJaxrsResponse.Builder.setBaseUri(request.getRequestUri());
+                        final URI uriToUse =
+                                rfc7231LocationHeaderRelativeUriResolution ? request.getRequestUri() : request.getBaseUri();
+                        OutboundJaxrsResponse.Builder.setBaseUri(uriToUse);
                     }
 
                     final Ref<Endpoint> endpointRef = Refs.emptyRef();
@@ -350,14 +359,17 @@ public class ServerRuntime {
      * @param location location URI; value of the HTTP {@value HttpHeaders#LOCATION} response header.
      * @param headers  mutable map of response headers.
      * @param request  container request.
+     * @param incompatible if set to {@code true}, uri will be resolved against the request uri, not the base uri;
+     *                     this is correct against RFC7231, but does violate the JAX-RS 2.0 specs
      */
     private static void ensureAbsolute(final URI location, final MultivaluedMap<String, Object> headers,
-                                       final ContainerRequest request) {
+                                       final ContainerRequest request, final boolean incompatible) {
         if (location == null || location.isAbsolute()) {
             return;
         }
         // according to RFC7231 (HTTP/1.1), this field can contain one single URI reference
-        headers.putSingle(HttpHeaders.LOCATION, request.getRequestUri().resolve(location));
+        final URI uri = incompatible ? request.getRequestUri() : request.getBaseUri();
+        headers.putSingle(HttpHeaders.LOCATION, uri.resolve(location));
     }
 
     private static class AsyncResponderHolder implements Value<AsyncContext> {
@@ -466,7 +478,8 @@ public class ServerRuntime {
                     try {
                         response = convertResponse(exceptionResponse);
                         if (!runtime.disableLocationHeaderRelativeUriResolution) {
-                            ensureAbsolute(response.getLocation(), response.getHeaders(), request);
+                            ensureAbsolute(response.getLocation(), response.getHeaders(), request,
+                                    runtime.rfc7231LocationHeaderRelativeUriResolution);
                         }
                         processingContext.monitoringEventBuilder().setContainerResponse(response)
                                 .setResponseSuccessfullyMapped(true);
@@ -659,7 +672,8 @@ public class ServerRuntime {
             final ContainerResponseWriter writer = request.getResponseWriter();
 
             if (!runtime.disableLocationHeaderRelativeUriResolution) {
-                ServerRuntime.ensureAbsolute(response.getLocation(), response.getHeaders(), response.getRequestContext());
+                ServerRuntime.ensureAbsolute(response.getLocation(), response.getHeaders(), response.getRequestContext(),
+                        runtime.rfc7231LocationHeaderRelativeUriResolution);
             }
 
             if (!response.hasEntity()) {
@@ -682,7 +696,7 @@ public class ServerRuntime {
                     public OutputStream getOutputStream(final int contentLength) throws IOException {
                         if (!runtime.disableLocationHeaderRelativeUriResolution) {
                             ServerRuntime.ensureAbsolute(response.getLocation(), response.getHeaders(),
-                                    response.getRequestContext());
+                                    response.getRequestContext(), runtime.rfc7231LocationHeaderRelativeUriResolution);
                         }
                         final OutputStream outputStream = writer.writeResponseStatusAndHeaders(contentLength, response);
                         return isHead ? null : outputStream;
@@ -914,7 +928,8 @@ public class ServerRuntime {
                                 (response instanceof Response) ? (Response) response : Response.ok(response).build();
                         if (!responder.runtime.disableLocationHeaderRelativeUriResolution) {
                             ServerRuntime.ensureAbsolute(jaxrsResponse.getLocation(), jaxrsResponse.getHeaders(),
-                                    responder.processingContext.request());
+                                    responder.processingContext.request(),
+                                    responder.runtime.rfc7231LocationHeaderRelativeUriResolution);
                         }
                         responder.process(new ContainerResponse(responder.processingContext.request(), jaxrsResponse));
                     } catch (final Throwable t) {

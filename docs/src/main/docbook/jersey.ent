@@ -497,6 +497,7 @@
 <!ENTITY jersey.server.ServerProperties.WADL_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#WADL_FEATURE_DISABLE'>ServerProperties.WADL_FEATURE_DISABLE</link>" >
 <!ENTITY jersey.server.ServerProperties.WADL_GENERATOR_CONFIG "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#WADL_GENERATOR_CONFIG'>ServerProperties.WADL_GENERATOR_CONFIG</link>" >
 <!ENTITY jersey.server.ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED'>ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED</link>" >
+<!ENTITY jersey.server.ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_RFC7231 "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#LOCATION_HEADER_RELATIVE_URI_RESOLUTION_RFC7231'>ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_RFC7231</link>" >
 <!ENTITY jersey.server.Uri "<link xlink:href='&jersey.javadoc.uri.prefix;/server/Uri.html'>Uri</link>">
 <!ENTITY jersey.server.UriConnegFilter "<link xlink:href='&jersey.javadoc.uri.prefix;/server/filter/UriConnegFilter.html'>UriConnegFilter</link>">
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/server/wadl/WadlFeature.html'>WadlFeature</link>">
