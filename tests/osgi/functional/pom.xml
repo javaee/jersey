@@ -47,7 +47,7 @@
     <parent>
         <groupId>org.glassfish.jersey.tests.osgi</groupId>
         <artifactId>project</artifactId>
-        <version>2.23-SNAPSHOT</version>
+        <version>2.22.1</version>
     </parent>
 
     <artifactId>jersey-tests-osgi-functional</artifactId>
@@ -433,7 +433,7 @@
                             <configuration>
                                 <!-- disable JaCoCo listener because it's not working with <forkMode>always</fork> (<reuseForks>false</reuseForks> respectively)
                                 https://jira.sonarsource.com/browse/SONARJAVA-728 (https://github.com/SonarSource/sonar-java/pull/324) -->
-                                <properties combine.self="override"/>
+                                <properties combine.self="override" />
                             </configuration>
                         </plugin>
                     </plugins>
