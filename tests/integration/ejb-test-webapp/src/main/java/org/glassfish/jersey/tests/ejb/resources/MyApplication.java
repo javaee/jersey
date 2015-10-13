@@ -39,7 +39,9 @@
  */
 package org.glassfish.jersey.tests.ejb.resources;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -57,6 +59,13 @@ import javax.ws.rs.core.Application;
 public class MyApplication extends Application {
 
     private AtomicInteger counter;
+
+    @Override
+    public Map<String, Object> getProperties() {
+        return new HashMap<String, Object>() {{
+            put("jersey.config.server.response.setStatusOverSendError", true);
+        }};
+    }
 
     @Override
     public Set<Class<?>> getClasses() {
