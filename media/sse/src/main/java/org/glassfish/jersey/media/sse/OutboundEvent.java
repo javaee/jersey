@@ -257,10 +257,8 @@ public final class OutboundEvent {
          * @throws IllegalStateException when called with invalid configuration (neither a comment nor event data are set).
          */
         public OutboundEvent build() {
-            if (comment == null) {
-                if ((data == null) && (type == null)) {
-                    throw new IllegalStateException(LocalizationMessages.OUT_EVENT_NOT_BUILDABLE());
-                }
+            if (comment == null && data == null && type == null) {
+                throw new IllegalStateException(LocalizationMessages.OUT_EVENT_NOT_BUILDABLE());
             }
 
             return new OutboundEvent(name, id, reconnectDelay, type, mediaType, data, comment);
