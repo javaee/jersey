@@ -49,7 +49,7 @@
 <!ENTITY experimentalrepository "snapshots">
 <!ENTITY guava.version "$guava-version">
 <!ENTITY jaxb-api-jar.version "$jaxb-api-jar-version">
-<!ENTITY jax-rs.version "$jax-rs-version">
+<!ENTITY jax-rs.version "$jax-rs-api-jar-version">
 <!ENTITY javax-el.version "$javax-el-version">
 <!ENTITY javax-el-impl.version "$javax-el-impl-version">
 <!ENTITY jax-rs-api-jar.version "$jax-rs-api-jar-version">
@@ -77,7 +77,7 @@
 <!ENTITY jaxb.release.uri "http://jaxb.java.net/nonav/&jaxb-api-jar.version;">
 <!ENTITY jaxb.javadoc.uri "&jaxb.release.uri;/docs/api/javax/xml/bind">
 <!ENTITY jaxrs.release.uri "http://jax-rs-spec.java.net/nonav/&jax-rs.version;">
-<!ENTITY jaxrs.javadoc.uri "&jaxrs.release.uri;/apidocs/javax/ws/rs">
+<!ENTITY jaxrs.javadoc.uri "https://jersey.java.net/apidocs-javax.jax-rs/&jax-rs.version;/javax/ws/rs">
 <!ENTITY jersey.ext.bean-validation.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
 <!ENTITY jersey.ext.declarative-linking.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-declarative-linking/dependencies.html'>jersey-declarative-linking</link>" >
 <!ENTITY jersey.ext.entity-filtering.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-entity-filtering/dependencies.html'>jersey-entity-filtering</link>" >

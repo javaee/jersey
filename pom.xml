@@ -322,9 +322,8 @@
                                 All Rights Reserved. Use is subject to license terms.]]>
                         </bottom>
                         <links>
-                            <link>http://jax-rs-spec.java.net/nonav/2.0/apidocs</link>
+                            <link>http://jersey.java.net/apidocs-javax.jax-rs/2.0.1</link>
                             <link>http://hk2.java.net/nonav/hk2-api/apidocs</link>
-                            <link>http://docs.oracle.com/javaee/7/api</link>
                         </links>
                         <excludePackageNames>
                             *.internal.*:*.tests.*
@@ -333,6 +332,7 @@
                             <exclude>bundles/**</exclude>
                         </sourceFileExcludes>
                         <verbose />
+                        <additionalparam>-Xdoclint:none</additionalparam>
                     </configuration>
                     <executions>
                         <execution>
@@ -751,6 +751,18 @@
             </activation>
             <modules>
                 <module>examples</module>
+            </modules>
+        </profile>
+        <profile> <!-- bundles module will be automatically included unless bundles.excluded env variable is set -->
+            <id>bundlesIncluded</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <property>
+                    <name>!bundles.excluded</name>
+                </property>
+            </activation>
+            <modules>
+                <module>bundles</module>
             </modules>
         </profile>
         <profile> <!-- test-framework module will be automatically included unless test-framework.excluded env variable is set -->
@@ -1203,15 +1215,14 @@
                             and/or its affiliates.
                             All Rights Reserved. Use is subject to license terms.]]>
                     </bottom>
-                    <!-- TODO: add 'javax.ws.rs*' to excludePackageNames whenever links works. -->
                     <excludePackageNames>
                         com.sun.ws.rs.ext:*.examples.*:*.internal.*:*.tests.*
                     </excludePackageNames>
-                    <!-- TODO: links still not working :-( -->
                     <links>
-                        <link>http://jax-rs-spec.java.net/nonav/2.0/apidocs</link>
+                        <link>http://jersey.java.net/apidocs-javax.jax-rs/2.0.1</link>
                         <link>http://hk2.java.net/${hk2.version}/apidocs</link>
                     </links>
+                    <additionalparam>-Xdoclint:none</additionalparam>
                 </configuration>
                 <reportSets>
                     <reportSet>
@@ -1280,7 +1291,6 @@
     <modules>
         <module>archetypes</module>
         <module>bom</module>
-        <module>bundles</module>
         <module>connectors</module>
         <module>containers</module>
 
