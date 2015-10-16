@@ -148,10 +148,12 @@ class FieldProcessor<T> {
         }
 
         // Recursively process all member fields
-        for (FieldDescriptor member : instanceDescriptor.getNonLinkFields()) {
-
-            if (fieldSuitableForIntrospection(member)) {
-                processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo, rmc);
+        if (!instanceDescriptor.getEntityClass().isAnnotationPresent(InjectLinkNoFollow.class)) {
+            for (FieldDescriptor member : instanceDescriptor.getNonLinkFields()) {
+                if (fieldSuitableForIntrospection(member)) {
+                    processMember(entity, resource, member.getFieldValue(instance), processed,
+                            uriInfo, rmc);
+                }
             }
         }
 
