@@ -333,6 +333,7 @@
                         </sourceFileExcludes>
                         <verbose />
                         <additionalparam>-Xdoclint:none</additionalparam>
+                        <maxmemory>256m</maxmemory>
                     </configuration>
                     <executions>
                         <execution>
