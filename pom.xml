@@ -332,7 +332,6 @@
                             <exclude>bundles/**</exclude>
                         </sourceFileExcludes>
                         <verbose />
-                        <additionalparam>-Xdoclint:none</additionalparam>
                         <maxmemory>256m</maxmemory>
                     </configuration>
                     <executions>
@@ -1007,7 +1006,6 @@
             </build>
             <reporting>
                 <plugins>
-
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
@@ -1223,7 +1221,6 @@
                         <link>http://jersey.java.net/apidocs-javax.jax-rs/2.0.1</link>
                         <link>http://hk2.java.net/${hk2.version}/apidocs</link>
                     </links>
-                    <additionalparam>-Xdoclint:none</additionalparam>
                 </configuration>
                 <reportSets>
                     <reportSet>
