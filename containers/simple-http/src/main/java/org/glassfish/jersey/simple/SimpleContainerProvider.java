@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.simple;
 
 import javax.ws.rs.ProcessingException;
@@ -47,7 +48,8 @@ import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.simpleframework.http.core.Container;
 
 /**
- * Container provider for containers based on Simple HTTP Server {@link org.simpleframework.http.core.Container}.
+ * Container provider for containers based on Simple HTTP Server
+ * {@link org.simpleframework.http.core.Container}.
  *
  * @author Marc Hadley
  * @author Arul Dhesiaseelan (aruld@acm.org)
@@ -55,12 +57,12 @@ import org.simpleframework.http.core.Container;
  */
 public final class SimpleContainerProvider implements ContainerProvider {
 
-    @Override
-    public <T> T createContainer(Class<T> type, Application application) throws ProcessingException {
-        if (Container.class == type || SimpleContainer.class == type) {
-            return type.cast(new SimpleContainer(application));
-        }
-        return null;
+  @Override
+  public <T> T createContainer(Class<T> type, Application application) throws ProcessingException {
+    if (Container.class == type || SimpleContainer.class == type) {
+      return type.cast(new SimpleContainer(application));
     }
+    return null;
+  }
 
 }

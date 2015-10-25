@@ -57,29 +57,29 @@ import static org.junit.Assert.assertEquals;
  * @author Paul Sandoz
  */
 public class ExceptionTest extends AbstractSimpleServerTester {
-    @Path("{status}")
-    public static class ExceptionResource {
-        @GET
-        public String get(@PathParam("status") int status) {
-            throw new WebApplicationException(status);
-        }
-
+  @Path("{status}")
+  public static class ExceptionResource {
+    @GET
+    public String get(@PathParam("status") int status) {
+      throw new WebApplicationException(status);
     }
 
-    @Test
-    public void test400StatusCode() {
-        startServer(ExceptionResource.class);
-        Client client = ClientBuilder.newClient();
-        WebTarget r = client.target(getUri().path("400").build());
-        assertEquals(400, r.request().get(Response.class).getStatus());
-    }
+  }
 
-    @Test
-    public void test500StatusCode() {
-        startServer(ExceptionResource.class);
-        Client client = ClientBuilder.newClient();
-        WebTarget r = client.target(getUri().path("500").build());
+  @Test
+  public void test400StatusCode() {
+    startServer(ExceptionResource.class);
+    Client client = ClientBuilder.newClient();
+    WebTarget r = client.target(getUri().path("400").build());
+    assertEquals(400, r.request().get(Response.class).getStatus());
+  }
 
-        assertEquals(500, r.request().get(Response.class).getStatus());
-    }
+  @Test
+  public void test500StatusCode() {
+    startServer(ExceptionResource.class);
+    Client client = ClientBuilder.newClient();
+    WebTarget r = client.target(getUri().path("500").build());
+
+    assertEquals(500, r.request().get(Response.class).getStatus());
+  }
 }

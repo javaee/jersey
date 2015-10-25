@@ -50,33 +50,32 @@ import java.io.Closeable;
  */
 public interface SimpleServer extends Closeable {
 
-	/**
-	 * The port the server is listening to for incomming HTTP connections. If the
-	 * port is not specified the {@linke org.glassfish.jersey.server.spi.Container.DEFAULT_PORT}
-	 * is used.
-	 * 
-	 * @return the port the server is listening on
-	 */
-    public int getPort();
-    
-    /**
-     * If this is true then very low level I/O operations are logged. Typically this is used
-     * to debug I/O issues such as HTTPS handshakes or performance issues by analysing the
-     * various latencies involved in the HTTP conversation.
-     * <p>
-     * There is a minimal performance penalty if this is enabled and it is perfectly suited
-     * to being enabled in a production environment, at the cost of logging overhead.
-     * 
-     * @return true if debug is enabled, false otherwise
-     */
-    public boolean isDebug();
-    
-    /**
-     * To enable very low level logging this can be enabled. This goes far beyond logging
-     * issues such as connection establishment of request dispatch, it can trace the TCP
-     * operations latencies involved.
-     * 
-     * @param enable if true debug tracing will be enabled
-     */
-    public void setDebug(boolean enable);
+  /**
+   * The port the server is listening to for incomming HTTP connections. If the port is not
+   * specified the {@linke org.glassfish.jersey.server.spi.Container.DEFAULT_PORT} is used.
+   *
+   * @return the port the server is listening on
+   */
+  public int getPort();
+
+  /**
+   * If this is true then very low level I/O operations are logged. Typically this is used to debug
+   * I/O issues such as HTTPS handshakes or performance issues by analysing the various latencies
+   * involved in the HTTP conversation.
+   * <p/>
+   * There is a minimal performance penalty if this is enabled and it is perfectly suited to being
+   * enabled in a production environment, at the cost of logging overhead.
+   *
+   * @return true if debug is enabled, false otherwise
+   */
+  public boolean isDebug();
+
+  /**
+   * To enable very low level logging this can be enabled. This goes far beyond logging issues such
+   * as connection establishment of request dispatch, it can trace the TCP operations latencies
+   * involved.
+   *
+   * @param enable if true debug tracing will be enabled
+   */
+  public void setDebug(boolean enable);
 }

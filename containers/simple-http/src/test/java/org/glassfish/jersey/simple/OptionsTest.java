@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.simple;
 
 import org.junit.After;
@@ -57,64 +58,65 @@ import static org.junit.Assert.assertTrue;
 
 public class OptionsTest extends AbstractSimpleServerTester {
 
-    @Path("helloworld")
-    public static class HelloWorldResource {
-        public static final String CLICHED_MESSAGE = "Hello World!";
+  @Path("helloworld")
+  public static class HelloWorldResource {
+    public static final String CLICHED_MESSAGE = "Hello World!";
 
-        @GET
-        @Produces("text/plain")
-        public String getHello() {
-            return CLICHED_MESSAGE;
-        }
+    @GET
+    @Produces("text/plain")
+    public String getHello() {
+      return CLICHED_MESSAGE;
     }
+  }
 
-    @Path("/users")
-    public class UserResource {
+  @Path("/users")
+  public class UserResource {
 
-        @Path("/current")
-        @GET
-        @Produces("text/plain")
-        public String getCurrentUser() {
-            return "current user";
-        }
+    @Path("/current")
+    @GET
+    @Produces("text/plain")
+    public String getCurrentUser() {
+      return "current user";
     }
+  }
 
-    private Client client;
+  private Client client;
 
-    @Before
-    public void setUp() throws Exception {
-        startServer(HelloWorldResource.class, UserResource.class);
-        client = ClientBuilder.newClient();
-    }
+  @Before
+  public void setUp() throws Exception {
+    startServer(HelloWorldResource.class, UserResource.class);
+    client = ClientBuilder.newClient();
+  }
 
-    @Override
-    @After
-    public void tearDown() {
-        super.tearDown();
-        client = null;
-    }
+  @Override
+  @After
+  public void tearDown() {
+    super.tearDown();
+    client = null;
+  }
 
 
-    @Test
-    public void testFooBarOptions() {
-        Response response = client.target(getUri()).path("helloworld").request().header("Accept", "foo/bar").options();
-        assertEquals(200, response.getStatus());
-        final String allowHeader = response.getHeaderString("Allow");
-        _checkAllowContent(allowHeader);
-        assertEquals(0, response.getLength());
-        assertEquals("foo/bar", response.getMediaType().toString());
-    }
+  @Test
+  public void testFooBarOptions() {
+    Response response =
+        client.target(getUri()).path("helloworld").request().header("Accept", "foo/bar").options();
+    assertEquals(200, response.getStatus());
+    final String allowHeader = response.getHeaderString("Allow");
+    _checkAllowContent(allowHeader);
+    assertEquals(0, response.getLength());
+    assertEquals("foo/bar", response.getMediaType().toString());
+  }
 
-    private void _checkAllowContent(final String content) {
-        assertTrue(content.contains("GET"));
-        assertTrue(content.contains("HEAD"));
-        assertTrue(content.contains("OPTIONS"));
-    }
+  private void _checkAllowContent(final String content) {
+    assertTrue(content.contains("GET"));
+    assertTrue(content.contains("HEAD"));
+    assertTrue(content.contains("OPTIONS"));
+  }
 
-    @Test
-    public void testNoDefaultMethod() {
-        Response response = client.target(getUri()).path("/users").request().options();
-        assertThat(response.getStatus(), is(404));
-    }
+  @Test
+  public void testNoDefaultMethod() {
+    Response response = client.target(getUri()).path("/users").request().options();
+    assertThat(response.getStatus(), is(404));
+  }
 
 }

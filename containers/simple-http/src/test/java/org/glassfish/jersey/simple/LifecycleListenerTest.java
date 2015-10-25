@@ -65,90 +65,90 @@ import static org.junit.Assert.assertTrue;
  */
 public class LifecycleListenerTest extends AbstractSimpleServerTester {
 
-    @Path("/one")
-    public static class One {
-        @GET
-        public String get() {
-            return "one";
-        }
+  @Path("/one")
+  public static class One {
+    @GET
+    public String get() {
+      return "one";
+    }
+  }
+
+  @Path("/two")
+  public static class Two {
+    @GET
+    public String get() {
+      return "two";
+    }
+  }
+
+  public static class Reloader extends AbstractContainerLifecycleListener {
+    Container container;
+
+    public void reload(ResourceConfig newConfig) {
+      container.reload(newConfig);
     }
 
-    @Path("/two")
-    public static class Two {
-        @GET
-        public String get() {
-            return "two";
-        }
+    public void reload() {
+      container.reload();
     }
 
-    public static class Reloader extends AbstractContainerLifecycleListener {
-        Container container;
-
-        public void reload(ResourceConfig newConfig) {
-            container.reload(newConfig);
-        }
-
-        public void reload() {
-            container.reload();
-        }
-
-        @Override
-        public void onStartup(Container container) {
-            this.container = container;
-        }
-
+    @Override
+    public void onStartup(Container container) {
+      this.container = container;
     }
 
-    @Test
-    public void testReload() {
-        final ResourceConfig rc = new ResourceConfig(One.class);
+  }
 
-        Reloader reloader = new Reloader();
-        rc.registerInstances(reloader);
+  @Test
+  public void testReload() {
+    final ResourceConfig rc = new ResourceConfig(One.class);
 
-        startServer(rc);
+    Reloader reloader = new Reloader();
+    rc.registerInstances(reloader);
 
-        WebTarget r = ClientBuilder.newClient().target(getUri().path("/").build());
+    startServer(rc);
 
-        assertEquals("one", r.path("one").request().get(String.class));
-        assertEquals(404, r.path("two").request().get(Response.class).getStatus());
+    WebTarget r = ClientBuilder.newClient().target(getUri().path("/").build());
 
-        // add Two resource
-        reloader.reload(new ResourceConfig(One.class, Two.class));
+    assertEquals("one", r.path("one").request().get(String.class));
+    assertEquals(404, r.path("two").request().get(Response.class).getStatus());
 
-        assertEquals("one", r.path("one").request().get(String.class));
-        assertEquals("two", r.path("two").request().get(String.class));
+    // add Two resource
+    reloader.reload(new ResourceConfig(One.class, Two.class));
+
+    assertEquals("one", r.path("one").request().get(String.class));
+    assertEquals("two", r.path("two").request().get(String.class));
+  }
+
+  static class StartStopListener extends AbstractContainerLifecycleListener {
+    volatile boolean started;
+    volatile boolean stopped;
+
+    @Override
+    public void onStartup(Container container) {
+      started = true;
     }
 
-    static class StartStopListener extends AbstractContainerLifecycleListener {
-        volatile boolean started;
-        volatile boolean stopped;
-
-        @Override
-        public void onStartup(Container container) {
-            started = true;
-        }
-
-        @Override
-        public void onShutdown(Container container) {
-            stopped = true;
-        }
+    @Override
+    public void onShutdown(Container container) {
+      stopped = true;
     }
+  }
 
-    @Test
-    public void testStartupShutdownHooks() {
-        final StartStopListener listener = new StartStopListener();
+  @Test
+  public void testStartupShutdownHooks() {
+    final StartStopListener listener = new StartStopListener();
 
-        startServer(new ResourceConfig(One.class).register(listener));
+    startServer(new ResourceConfig(One.class).register(listener));
 
-        WebTarget r = ClientBuilder.newClient().target(getUri().path("/").build());
+    WebTarget r = ClientBuilder.newClient().target(getUri().path("/").build());
 
-        assertThat(r.path("one").request().get(String.class), equalTo("one"));
-        assertThat(r.path("two").request().get(Response.class).getStatus(), equalTo(404));
+    assertThat(r.path("one").request().get(String.class), equalTo("one"));
+    assertThat(r.path("two").request().get(Response.class).getStatus(), equalTo(404));
 
-        stopServer();
+    stopServer();
 
-        assertTrue("ContainerLifecycleListener.onStartup has not been called.", listener.started);
-        assertTrue("ContainerLifecycleListener.onShutdown has not been called.", listener.stopped);
-    }
+    assertTrue("ContainerLifecycleListener.onStartup has not been called.", listener.started);
+    assertTrue("ContainerLifecycleListener.onShutdown has not been called.", listener.stopped);
+  }
 }
