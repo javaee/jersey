@@ -40,7 +40,6 @@
 package org.glassfish.jersey.client;
 
 import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,10 +47,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
@@ -66,10 +65,6 @@ import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Client-side request processing runtime.
@@ -162,24 +157,26 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
                         return;
                     }
 
-                    final SettableFuture<ClientResponse> responseFuture = SettableFuture.create();
                     final AsyncConnectorCallback connectorCallback = new AsyncConnectorCallback() {
 
                         @Override
                         public void response(final ClientResponse response) {
-                            responseFuture.set(response);
+                              requestScope.runInScope(new Runnable(){
+                                 public void run() {
+                                      processResponse(response, callback);
+                                 }});
                         }
 
                         @Override
                         public void failure(final Throwable failure) {
-                            responseFuture.setException(failure);
+                              requestScope.runInScope(new Runnable() {
+                                    public void run() {
+                                        processFailure(failure, callback);
+                                    }
+                            });
                         }
                     };
                     connector.apply(processedRequest, connectorCallback);
-
-                    processResponse(responseFuture.get(), callback);
-                } catch (final ExecutionException e) {
-                    processFailure(e.getCause(), callback);
                 } catch (final Throwable throwable) {
                     processFailure(throwable, callback);
                 }

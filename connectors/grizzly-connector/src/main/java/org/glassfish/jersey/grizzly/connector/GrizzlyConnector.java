@@ -286,8 +286,13 @@ class GrizzlyConnector implements Connector {
 
                     HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, request.getHeaders(),
                             GrizzlyConnector.this.getClass().getName());
-
-                    callback.response(translate(request, this.status, headers, entityStream));
+                    // hand-off to grizzly's application thread pool for response processing
+                    processResponse(new Runnable() {
+                        @Override
+                        public void run() {
+                           callback.response(translate(request, status, headers, entityStream));
+                        }
+                    });
                     return STATE.CONTINUE;
                 }
 
@@ -410,6 +415,14 @@ class GrizzlyConnector implements Connector {
         }
 
         return builder.build();
+    }
+
+    /**
+     * Submits the response processing on Grizzly client's application thread pool
+     * @param responseTask task to be processed on application thread pool
+     */
+    public void processResponse(Runnable responseTask) {
+        this.grizzlyClient.getConfig().executorService().submit(responseTask);
     }
 
     /**
