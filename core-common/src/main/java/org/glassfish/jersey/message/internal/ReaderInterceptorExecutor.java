@@ -341,9 +341,9 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
      * @param inputStream Potential {@link ReaderInterceptorExecutor.UnCloseableInputStream} to undo its effect
      * @return Input stream that is possible to close
      */
-    static InputStream closeableInputStream(InputStream inputStream) {
-        if (inputStream instanceof ReaderInterceptorExecutor.UnCloseableInputStream) {
-            return ((ReaderInterceptorExecutor.UnCloseableInputStream) inputStream).unwrap();
+    public static InputStream closeableInputStream(InputStream inputStream) {
+        if (inputStream instanceof UnCloseableInputStream) {
+            return ((UnCloseableInputStream) inputStream).unwrap();
         } else {
             return inputStream;
         }

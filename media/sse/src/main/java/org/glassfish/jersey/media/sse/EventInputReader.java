@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,6 +54,8 @@ import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.MessageUtils;
+import org.glassfish.jersey.message.internal.ReaderInterceptorExecutor;
 
 /**
  * SSE {@link EventInput event input} message body reader.
@@ -79,9 +81,9 @@ class EventInputReader implements MessageBodyReader<EventInput> {
                                  MediaType mediaType,
                                  MultivaluedMap<String, String> headers,
                                  InputStream inputStream) throws IOException, WebApplicationException {
-
+        InputStream closeableInputStream = ReaderInterceptorExecutor.closeableInputStream(inputStream);
         return new EventInput(
-                inputStream,
+                closeableInputStream,
                 annotations,
                 mediaType,
                 headers,
