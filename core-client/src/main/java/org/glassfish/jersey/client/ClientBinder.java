@@ -148,6 +148,9 @@ class ClientBinder extends AbstractBinder {
         // Default async request executors support
         int asyncThreadPoolSize = ClientProperties.getValue(clientRuntimeProperties, ClientProperties.ASYNC_THREADPOOL_SIZE, 0);
         asyncThreadPoolSize = (asyncThreadPoolSize < 0) ? 0 : asyncThreadPoolSize;
-        bind(new DefaultClientAsyncExecutorProvider(asyncThreadPoolSize)).to(ExecutorServiceProvider.class);
+        // a constructor parameter injected into DefaultClientAsyncExecutorProvider
+        bind(asyncThreadPoolSize).named("ClientAsyncThreadPoolSize");
+        // DefaultClientAsyncExecutorProvider must be singleton scoped, so that @PreDestroy, which closes the executor, is called
+        bind(DefaultClientAsyncExecutorProvider.class).to(ExecutorServiceProvider.class).in(Singleton.class);
     }
 }
