@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.client;
 
-
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -48,12 +47,10 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
+import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.number.OrderingComparison.lessThan;
 import static org.junit.Assert.assertThat;
-
-import org.junit.Ignore;
-import org.junit.Test;
 
 /**
  * Reproducer for JERSEY-2786.
@@ -67,7 +64,6 @@ public class ShutdownHookLeakTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore("intermittent failures.")
     public void testShutdownHookDoesNotLeak() throws Exception {
         final Client client = ClientBuilder.newClient();
         final WebTarget target = client.target("http://example.com");
