@@ -108,6 +108,7 @@
             <name>Pavel Bucek</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com/</organizationUrl>
+            <url>https://blogs.oracle.com/PavelBucek</url>
         </developer>
         <developer>
             <name>Jakub Podlesak</name>
@@ -141,6 +142,11 @@
         </developer>
         <developer>
             <name>Petr Bouda</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Petr Janouch</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com</organizationUrl>
         </developer>
