@@ -119,6 +119,13 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
     /**
      * TODO javadoc.
      */
+    public boolean isStrictMatching() {
+        return link.strictMatching();
+    }
+
+    /**
+     * TODO javadoc.
+     */
     public String getLinkTemplate(ResourceMappingContext rmc) {
         return getLinkTemplate(rmc, link);
     }

@@ -49,6 +49,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import javax.el.ExpressionFactory;
+import javax.el.PropertyNotFoundException;
 import javax.el.ValueExpression;
 
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
@@ -150,7 +151,14 @@ final class ELLinkBuilder {
             ValueExpression expr = expressionFactory.createValueExpression(context,
                         elExpression, String.class);
 
-            Object value = expr.getValue(context);
+            Object value = null;
+            try {
+                value = expr.getValue(context);
+            } catch (PropertyNotFoundException pnfe) {
+                if (linkField.isStrictMatching()) {
+                    throw pnfe;
+                }
+            }
             values.put(name, value != null ? value.toString() : null);
          }
         return values;

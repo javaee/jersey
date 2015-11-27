@@ -77,6 +77,10 @@ class LinkHeaderDescriptor implements InjectLinkDescriptor {
         return linkHeader.style();
     }
 
+    public boolean isStrictMatching() {
+        return linkHeader.strictMatching();
+    }
+
     public String getBinding(String name) {
         return bindings.get(name);
     }
