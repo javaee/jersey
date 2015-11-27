@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -120,77 +120,7 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
      * TODO javadoc.
      */
     public String getLinkTemplate(ResourceMappingContext rmc) {
-        return getLinkTemplate(rmc, link);
-    }
-
-
-    /**
-     * TODO javadoc.
-     */
-    public static String getLinkTemplate(ResourceMappingContext rmc, InjectLink link) {
-        String template = null;
-        if (!link.resource().equals(Class.class)) {
-
-
-            ResourceMappingContext.Mapping map = rmc.getMapping(link.resource());
-            if (map != null) {
-                template = map.getTemplate().getTemplate().toString();
-            } else {
-                // extract template from specified class' @Path annotation
-                Path path = link.resource().getAnnotation(Path.class);
-                template = path == null ? "" : path.value();
-            }
-
-            // extract template from specified class' @Path annotation
-            if (link.method().length() > 0) {
-                // append value of method's @Path annotation
-                MethodList methods = new MethodList(link.resource());
-                methods = methods.withMetaAnnotation(HttpMethod.class);
-                Iterator<AnnotatedMethod> iterator = methods.iterator();
-                while (iterator.hasNext()) {
-                    AnnotatedMethod method = iterator.next();
-                    if (!method.getMethod().getName().equals(link.method())) {
-                        continue;
-                    }
-                    StringBuilder builder = new StringBuilder();
-                    builder.append(template);
-
-                    Path methodPath = method.getAnnotation(Path.class);
-                    if (methodPath != null) {
-                        String methodTemplate = methodPath.value();
-
-                        if (!(template.endsWith("/") || methodTemplate.startsWith("/"))) {
-                            builder.append("/");
-                        }
-                        builder.append(methodTemplate);
-                    }
-
-                    // append query parameters
-                    StringBuilder querySubString = new StringBuilder();
-                    for (Annotation paramAnns[] : method.getParameterAnnotations()) {
-                        for (Annotation ann : paramAnns) {
-                            if (ann.annotationType() == QueryParam.class) {
-                                querySubString.append(((QueryParam) ann).value());
-                                querySubString.append(',');
-                            }
-                        }
-                    }
-
-                    if (querySubString.length() > 0) {
-                        builder.append("{?");
-                        builder.append(querySubString.subSequence(0, querySubString.length() - 1));
-                        builder.append("}");
-                    }
-
-                    template = builder.toString();
-                    break;
-                }
-            }
-        } else {
-            template = link.value();
-        }
-
-        return template;
+        return LinkDescriptorUtil.getLinkTemplate(rmc, link);
     }
 
     /**

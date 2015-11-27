@@ -40,49 +40,100 @@
 
 package org.glassfish.jersey.linking;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.glassfish.jersey.linking.InjectLink.Style;
+import javax.ws.rs.core.Link;
+
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
 /**
- * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations
+ * Utility class for working with {@link InjectLink} annotated methods.
  *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
+ * @author Ryan Peterson
  */
-class LinkHeaderDescriptor implements InjectLinkDescriptor {
+class InjectLinkMethodDescriptor extends MethodDescriptor implements InjectLinkDescriptor {
 
-    private InjectLink linkHeader;
+    private InjectLink link;
+    private Class<?> type;
     private Map<String, String> bindings;
 
-    LinkHeaderDescriptor(InjectLink linkHeader) {
-        this.linkHeader = linkHeader;
-        bindings = new HashMap<String, String>();
-        for (Binding binding : linkHeader.bindings()) {
+    /**
+     * TODO javadoc.
+     */
+    public InjectLinkMethodDescriptor(Method m, InjectLink l, Class<?> t) {
+        super(t, m);
+        link = l;
+        type = t;
+        bindings = new HashMap<>();
+        for (Binding binding : l.bindings()) {
             bindings.put(binding.name(), binding.value());
         }
     }
 
-    public InjectLink getLinkHeader() {
-        return linkHeader;
+    /**
+     * TODO javadoc.
+     */
+    public void setPropertyValue(Object instance, URI uri) {
+        setAccessibleMethod(getter);
+        try {
+
+            Object value;
+            if (URI.class.equals(type)) {
+                value = uri;
+            } else if (Link.class.isAssignableFrom(type)) {
+
+                // Make a link with the correct bindings
+                value = getLink(uri);
+            } else if (String.class.equals(type)) {
+                value = uri.toString();
+            } else {
+                throw new IllegalArgumentException("Field type " + type + " not one of supported String,URI and Link");
+            }
+
+            setter.invoke(instance, value);
+        } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ex) {
+            Logger.getLogger(InjectLinkFieldDescriptor.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
+    /**
+     * TODO javadoc.
+     */
+    public InjectLink.Style getLinkStyle() {
+        return link.style();
+    }
+
+    /**
+     * TODO javadoc.
+     */
     public String getLinkTemplate(ResourceMappingContext rmc) {
-        return LinkDescriptorUtil.getLinkTemplate(rmc, linkHeader);
+        return LinkDescriptorUtil.getLinkTemplate(rmc, link);
     }
 
-    public Style getLinkStyle() {
-        return linkHeader.style();
+    /**
+     * TODO javadoc.
+     */
+    public Link getLink(URI uri) {
+        return InjectLink.Util.buildLinkFromUri(uri, link);
     }
 
+    /**
+     * TODO javadoc.
+     */
     public String getBinding(String name) {
         return bindings.get(name);
     }
 
+    /**
+     * TODO javadoc.
+     */
     public String getCondition() {
-        return linkHeader.condition();
+        return link.condition();
     }
-
 }
