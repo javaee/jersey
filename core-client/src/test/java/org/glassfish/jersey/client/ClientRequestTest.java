@@ -39,21 +39,39 @@
  */
 package org.glassfish.jersey.client;
 
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import javax.net.ssl.SSLException;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.WriterInterceptor;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.net.URI;
 
-import org.glassfish.jersey.internal.MapPropertiesDelegate;
-
-import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertSame;
 
 /**
  * {@code ClientRequest} unit tests.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@RunWith(JMockit.class)
 public class ClientRequestTest {
 
     /**
@@ -136,4 +154,31 @@ public class ClientRequestTest {
         assertEquals("value-request", request.resolveProperty("name", "value-default"));
     }
 
+    @Test
+    public void testSSLExceptionHandling(@Mocked MessageBodyWorkers workers, @Mocked GenericType<?> entityType)
+            throws Exception {
+        JerseyClient client = new JerseyClientBuilder().build();
+        final ClientRequest request = new ClientRequest(
+                URI.create("http://example.org"),
+                client.getConfiguration(),
+                new MapPropertiesDelegate());
+
+        final SSLException sslException = new SSLException("Test SSLException");
+        new MockUp<MessageBodyWorkers>(workers) {
+            @Mock OutputStream writeTo(Object entity, Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
+                                       MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate,
+                                       OutputStream entityStream,
+                                       Iterable<WriterInterceptor> writerInterceptors)
+                    throws java.io.IOException, javax.ws.rs.WebApplicationException {
+                throw sslException;
+            }
+        };
+
+        try {
+            request.doWriteEntity(workers, entityType);
+            Assert.fail("SSL exception should be thrown");
+        } catch (SSLException e) {
+            assertSame(sslException, e);
+        }
+    }
 }

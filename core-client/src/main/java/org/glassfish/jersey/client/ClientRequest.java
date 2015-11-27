@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.SSLException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Configuration;
@@ -495,11 +496,15 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         entityWritten = true;
         ensureMediaType();
         final GenericType<?> entityType = new GenericType(getEntityType());
+        doWriteEntity(workers, entityType);
+    }
+
+    void doWriteEntity(final MessageBodyWorkers writeWorkers, final GenericType<?> entityType) throws IOException {
         OutputStream entityStream = null;
         boolean connectionFailed = false;
         try {
             try {
-                entityStream = workers.writeTo(
+                entityStream = writeWorkers.writeTo(
                         getEntity(),
                         entityType.getRawType(),
                         entityType.getType(),
@@ -527,6 +532,10 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                 // to cover all the cases, also NoRouteToHostException is to be handled similarly.
                 connectionFailed = true;
                 throw e;
+            } catch (final SSLException e) {
+                // JERSEY-2728 - treat SSLException as connection failure
+                connectionFailed = true;
+                throw e;
             }
         } finally {
             // in case we've seen the ConnectException, we won't try to close/commit stream as this would produce just
@@ -537,13 +546,13 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                 if (entityStream != null) {
                     try {
                         entityStream.close();
-                    } catch (final IOException ex) {
+                    } catch (final Exception ex) {
                         LOGGER.log(Level.FINE, LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), ex);
                     }
                 }
                 try {
                     commitStream();
-                } catch (final IOException e) {
+                } catch (final Exception e) {
                     LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), e);
                 }
             }
