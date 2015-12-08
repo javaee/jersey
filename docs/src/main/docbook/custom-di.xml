@@ -165,7 +165,8 @@ public class MyApplication extends ResourceConfig {
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bindFactory(HttpSessionFactory.class).to(HttpSession.class);
+                bindFactory(HttpSessionFactory.class).to(HttpSession.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
             }
         });
     }
