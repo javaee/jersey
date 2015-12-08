@@ -624,15 +624,26 @@ class ApacheConnector implements Connector {
 
     private static InputStream getInputStream(final CloseableHttpResponse response) throws IOException {
 
+        final InputStream inputStream;
+
         if (response.getEntity() == null) {
-            return new ByteArrayInputStream(new byte[0]);
+            inputStream = new ByteArrayInputStream(new byte[0]);
         } else {
             final InputStream i = response.getEntity().getContent();
             if (i.markSupported()) {
-                return i;
+                inputStream = i;
+            } else {
+                inputStream = new BufferedInputStream(i, ReaderWriter.BUFFER_SIZE);
             }
-            return new BufferedInputStream(i, ReaderWriter.BUFFER_SIZE);
         }
+
+        return new FilterInputStream(inputStream) {
+            @Override
+            public void close() throws IOException {
+                response.close();
+                super.close();
+            }
+        };
     }
 
     private static class ConnectionFactory extends ManagedHttpClientConnectionFactory {
