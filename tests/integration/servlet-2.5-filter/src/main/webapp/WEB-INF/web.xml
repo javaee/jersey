@@ -40,45 +40,22 @@
     holder.
 
 -->
-<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-        metadata-complete="true">
 
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
     <filter>
-        <filter-name>jersey2812</filter-name>
-        <filter-class>org.glassfish.jersey.tests.integration.jersey2812.TestFilter</filter-class>
-        <async-supported>true</async-supported>
-    </filter>
-
-    <filter>
-        <filter-name>jersey</filter-name>
+        <filter-name>Jersey Web Application</filter-name>
         <filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
-        <async-supported>true</async-supported>
         <init-param>
-            <param-name>javax.ws.rs.Application</param-name>
-            <param-value>org.glassfish.jersey.tests.integration.async.TestApplication</param-value>
+            <param-name>jersey.config.server.provider.packages</param-name>
+            <param-value>org.glassfish.jersey.tests.integration.servlet_2_5_filter</param-value>
         </init-param>
-        <!-- let ServletContainer#doFilter(HttpServletRequest, HttpServletResponse, FilterChain, String, String, String)
-            resolve the response status -->
         <init-param>
-            <param-name>jersey.config.servlet.filter.forwardOn404</param-name>
-            <param-value>true</param-value>
+            <param-name>jersey.config.servlet.filter.contextPath</param-name>
+            <param-value>/myapp/</param-value>
         </init-param>
     </filter>
-
     <filter-mapping>
-        <filter-name>jersey2812</filter-name>
-        <url-pattern>/asyncTest/async/wait/*</url-pattern>
+        <filter-name>Jersey Web Application</filter-name>
+        <url-pattern>/myapp/*</url-pattern>
     </filter-mapping>
-
-    <filter-mapping>
-        <filter-name>jersey</filter-name>
-        <url-pattern>/exceptionTest/*</url-pattern>
-    </filter-mapping>
-    <filter-mapping>
-        <filter-name>jersey</filter-name>
-        <url-pattern>/asyncTest/*</url-pattern>
-    </filter-mapping>
-
-    <absolute-ordering />
 </web-app>

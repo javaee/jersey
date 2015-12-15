@@ -40,45 +40,48 @@
     holder.
 
 -->
-<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-        metadata-complete="true">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-    <filter>
-        <filter-name>jersey2812</filter-name>
-        <filter-class>org.glassfish.jersey.tests.integration.jersey2812.TestFilter</filter-class>
-        <async-supported>true</async-supported>
-    </filter>
+    <parent>
+        <groupId>org.glassfish.jersey.tests.integration</groupId>
+        <artifactId>project</artifactId>
+        <version>3.0-SNAPSHOT</version>
+    </parent>
 
-    <filter>
-        <filter-name>jersey</filter-name>
-        <filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
-        <async-supported>true</async-supported>
-        <init-param>
-            <param-name>javax.ws.rs.Application</param-name>
-            <param-value>org.glassfish.jersey.tests.integration.async.TestApplication</param-value>
-        </init-param>
-        <!-- let ServletContainer#doFilter(HttpServletRequest, HttpServletResponse, FilterChain, String, String, String)
-            resolve the response status -->
-        <init-param>
-            <param-name>jersey.config.servlet.filter.forwardOn404</param-name>
-            <param-value>true</param-value>
-        </init-param>
-    </filter>
+    <artifactId>servlet-2.5-filter</artifactId>
+    <packaging>war</packaging>
+    <name>jersey-tests-integration-servlet-2.5-filter</name>
 
-    <filter-mapping>
-        <filter-name>jersey2812</filter-name>
-        <url-pattern>/asyncTest/async/wait/*</url-pattern>
-    </filter-mapping>
+    <description>Servlet integration test - servlet-2.5-filter</description>
 
-    <filter-mapping>
-        <filter-name>jersey</filter-name>
-        <url-pattern>/exceptionTest/*</url-pattern>
-    </filter-mapping>
-    <filter-mapping>
-        <filter-name>jersey</filter-name>
-        <url-pattern>/asyncTest/*</url-pattern>
-    </filter-mapping>
+    <dependencies>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+        </dependency>
 
-    <absolute-ordering />
-</web-app>
+        <dependency>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-external</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+            </plugin>
+            <plugin>
+              <groupId>org.mortbay.jetty</groupId>
+              <artifactId>jetty-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

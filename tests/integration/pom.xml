@@ -114,6 +114,7 @@
         <module>security-digest</module>
         <module>servlet-2.5-autodiscovery-1</module>
         <module>servlet-2.5-autodiscovery-2</module>
+        <module>servlet-2.5-filter</module>
         <module>servlet-2.5-inflector-1</module>
         <module>servlet-2.5-init-1</module>
         <module>servlet-2.5-init-2</module>
@@ -129,6 +130,7 @@
         <module>servlet-2.5-reload</module>
         <module>servlet-3-async</module>
         <module>servlet-3-chunked-io</module>
+        <module>servlet-3-filter</module>
         <module>servlet-3-gf-async</module>
         <module>servlet-3-inflector-1</module>
         <module>servlet-3-init-1</module>

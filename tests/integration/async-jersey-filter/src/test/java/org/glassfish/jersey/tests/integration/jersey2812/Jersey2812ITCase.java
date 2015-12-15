@@ -87,7 +87,7 @@ public class Jersey2812ITCase extends AbstractAsyncJerseyTest {
             @Override
             public void run() {
                 LOGGER.finer("Running a request to /async/wait in a separate thread.");
-                asyncResult.set(target("/async/wait").path(uuid).request().get(String.class));
+                asyncResult.set(target("/asyncTest/async/wait").path(uuid).request().get(String.class));
             }
         });
     }
@@ -115,22 +115,22 @@ public class Jersey2812ITCase extends AbstractAsyncJerseyTest {
     @Test
     public void asyncSuspendedResourceDoesNotGetStuck() throws Exception {
         // [1] wait for the /async/wait request to be processed
-        final Response startResponse = target("/async/await").path(uuid).path("started").queryParam("millis", WAIT_TIMEOUT)
-                .request().get();
+        final Response startResponse = target("/asyncTest/async/await").path(uuid).path("started")
+                .queryParam("millis", WAIT_TIMEOUT).request().get();
         assertTrue("The server-side thread handling the request to /async/wait didn't start in timely fashion. "
                         + "This error indicates this test is not executed / designed properly rather than a regression in "
                         + "JERSEY-2812 fix.",
                 startResponse.readEntity(Boolean.class));
 
         // [2] wait for the /async/wait request to finish
-        final Response finishResponse = target("/async/await").path(uuid).path("finished").queryParam("millis", WAIT_TIMEOUT)
-                .request().get();
+        final Response finishResponse = target("/asyncTest/async/await").path(uuid).path("finished")
+                .queryParam("millis", WAIT_TIMEOUT).request().get();
         assertTrue("The thread processing the /async/wait request did not respond in timely fashion. "
                         + "Memory leak / thread got stuck detected!",
                 finishResponse.readEntity(Boolean.class));
 
         // [3] release the blocked http call to /async/wait
-        final String releaseResponse = target("/async/release").path(uuid).request().post(null, String.class);
+        final String releaseResponse = target("/asyncTest/async/release").path(uuid).request().post(null, String.class);
         assertEquals("RELEASED", releaseResponse);
 
         // [4] test whether everything ended as expected
@@ -143,7 +143,7 @@ public class Jersey2812ITCase extends AbstractAsyncJerseyTest {
     @After
     public void releaseResources() {
         // release the server-side thread regardless of whether left un-attended
-        target("/async/release").path(uuid).request().post(null);
+        target("/asyncTest/async/release").path(uuid).request().post(null);
     }
 
     @After
