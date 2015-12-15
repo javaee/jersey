@@ -555,6 +555,16 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
                 </example>
             </para>
 
+            <important>
+                <para>
+                    Servlet 2.x API does not provide a way how to programmatically read the filter mappings. To make application
+                    deployed using filter work correctly, either Servlet 3.x container must be used
+                    (<literal>jersey-container-servlet</literal> instead of <literal>jersey-container-servlet-core</literal>), or
+                    the context path of the app needs to be defined using init parameter
+                    <literal>jersey.config.servlet.filter.contextPath</literal>.
+                </para>
+            </important>
+
             <para>
                 The content of the <literal>&lt;init-param&gt;</literal> element will vary depending on the way you decide to
                 configure Jersey resources.

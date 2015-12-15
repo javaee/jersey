@@ -41,6 +41,8 @@ package org.glassfish.jersey.servlet;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -62,6 +64,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -74,6 +77,7 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
+import org.glassfish.jersey.servlet.spi.FilterUrlMappingsProvider;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
@@ -159,6 +163,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     private transient ResourceConfig resourceConfig;
     private transient Pattern staticContentPattern;
     private transient String filterContextPath;
+    private transient List<String> filterUrlMappings;
 
     private transient volatile ContainerLifecycleListener containerListener;
 
@@ -432,6 +437,19 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
                 }
             }
         }
+
+        // get the url-pattern defined (e.g.) in the filter-mapping section of web.xml
+        final FilterUrlMappingsProvider filterUrlMappingsProvider = getFilterUrlMappingsProvider();
+        if (filterUrlMappingsProvider != null) {
+            filterUrlMappings = filterUrlMappingsProvider.getFilterUrlMappings(filterConfig);
+        }
+
+        // we need either the url-pattern from the filter mapping (in case of Servlet 3) or specific init-param to
+        // determine the baseUri and request relative URI. If we do not have either one, the app will most likely
+        // not work (won't be accessible)
+        if (filterUrlMappings == null && filterContextPath == null) {
+            LOGGER.warning(LocalizationMessages.FILTER_CONTEXT_PATH_MISSING());
+        }
     }
 
     @Override
@@ -545,14 +563,14 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
         try {
             final UriBuilder absoluteUriBuilder = UriBuilder.fromUri(request.getRequestURL().toString());
 
-            baseUri = (filterContextPath == null)
-                    ? absoluteUriBuilder.replacePath(request.getContextPath())
-                    .path("/")
-                    .build()
-                    : absoluteUriBuilder.replacePath(request.getContextPath())
-                            .path(filterContextPath)
-                            .path("/")
-                            .build();
+            // depending on circumstances, use the correct path to replace in the absolute request URI
+            final String pickedUrlMapping = pickUrlMapping(request.getRequestURL().toString(), filterUrlMappings);
+            final String replacingPath = pickedUrlMapping != null
+                    ? pickedUrlMapping
+                    : (filterContextPath != null ? filterContextPath : "");
+
+            baseUri = absoluteUriBuilder.replacePath(request.getContextPath()).path(replacingPath).path("/").build();
+
 
             requestUri = absoluteUriBuilder.replacePath(requestURI)
                     .replaceQuery(ContainerUtils.encodeUnsafeCharacters(queryString))
@@ -588,6 +606,49 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
                 chain.doFilter(request, response);
             }
         }
+    }
+
+    /**
+     * Picks the most suitable url mapping (in case more than one is defined) based on the request URI.
+     *
+     * @param requestUri String representation of the request URI
+     * @param filterUrlMappings set of configured filter url-patterns
+     * @return the most suitable context path, or {@code null} if empty
+     */
+    private String pickUrlMapping(final String requestUri, final List<String> filterUrlMappings) {
+        if (filterUrlMappings == null || filterUrlMappings.isEmpty()) {
+            return null;
+        }
+
+        if (filterUrlMappings.size() == 1) {
+            return filterUrlMappings.get(0);
+        }
+
+        for (final String pattern : filterUrlMappings) {
+            if (requestUri.contains(pattern)) {
+                return pattern;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve the {@link FilterUrlMappingsProvider} service via hk2.
+     *
+     * Will only work in Servlet 3 container, as the older API version
+     * does not provide access to the filter mapping structure.
+     *
+     * @return {@code FilterContextPath} instance, if available, {@code null} otherwise.
+     */
+    private FilterUrlMappingsProvider getFilterUrlMappingsProvider() {
+        FilterUrlMappingsProvider filterUrlMappingsProvider = null;
+        final Iterator<FilterUrlMappingsProvider> providers = Providers.getAllProviders(
+                getApplicationHandler().getServiceLocator(), FilterUrlMappingsProvider.class).iterator();
+        if (providers.hasNext()) {
+             filterUrlMappingsProvider = providers.next();
+        }
+        return filterUrlMappingsProvider;
     }
 
     /**
