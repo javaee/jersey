@@ -62,6 +62,7 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import javax.annotation.Priority;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.internal.LocalizationMessages;
@@ -77,6 +78,7 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
+import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.base.Predicate;
@@ -640,6 +642,8 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
+
+            registerManagedObjectsFinalizer(locator);
             // Next, configure all features
             configureFeatures(
                     locator,
@@ -649,6 +653,15 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
             // At last, configure any new binders added by features
             configureBinders(locator, configuredBinders);
         }
+    }
+
+    private void registerManagedObjectsFinalizer(ServiceLocator locator) {
+        DynamicConfiguration dc = Injections.getConfiguration(locator);
+        ScopedBindingBuilder<ManagedObjectsFinalizer> binder = Injections.newBinder(ManagedObjectsFinalizer.class)
+                .to(ManagedObjectsFinalizer.class)
+                .in(Singleton.class);
+        Injections.addBinding(binder, dc);
+        dc.commit();
     }
 
     private Set<Binder> configureBinders(final ServiceLocator locator, final Set<Binder> configured) {
@@ -684,6 +697,8 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
                                    final Set<FeatureRegistration> processed,
                                    final List<FeatureRegistration> unprocessed) {
 
+        ManagedObjectsFinalizer managedObjectsFinalizer = locator.getService(ManagedObjectsFinalizer.class);
+
         FeatureContextWrapper featureContextWrapper = null;
         for (final FeatureRegistration registration : unprocessed) {
             if (processed.contains(registration)) {
@@ -694,6 +709,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
             Feature feature = registration.getFeature();
             if (feature == null) {
                 feature = locator.createAndInitialize(registration.getFeatureClass());
+                managedObjectsFinalizer.registerForPreDestroyCall(feature);
             } else {
                 // Disable injection of Feature instances on the client-side. Instances may be registered into multiple
                 // web-targets which means that injecting anything into these instances is not safe.
