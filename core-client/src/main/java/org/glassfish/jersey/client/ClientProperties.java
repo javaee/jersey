@@ -140,6 +140,10 @@ public final class ClientProperties {
      * {@link org.glassfish.jersey.client.ClientAsyncExecutor}).
      * </p>
      * <p>
+     * If {@link #ASYNC_USE_CONNECTOR} is set then it should be used by connector to
+     * define a size of it's internal thread pool.
+     * </p>
+     * <p>
      * A default value is not set.
      * </p>
      * <p>
@@ -147,6 +151,27 @@ public final class ClientProperties {
      * </p>
      */
     public static final String ASYNC_THREADPOOL_SIZE = "jersey.config.client.async.threadPoolSize";
+
+    /**
+     * Use async capabilities of {@link org.glassfish.jersey.client.spi.Connector} for async requests.
+     * <p>
+     * Should only be used if connector supports async execution,
+     * e.g. it is a NIO connector or is backed by a thread pool.
+     * </p>
+     * <p>
+     * The value MUST be an instance of {@link java.lang.Boolean}.
+     * </p>
+     * <p>
+     * If the property is absent it is treated as false.
+     * </p>
+     * <p>
+     * A default value is not set.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     */
+    public static final String ASYNC_USE_CONNECTOR = "jersey.config.client.async.useConnector";
 
     /**
      * If {@link org.glassfish.jersey.client.filter.EncodingFilter} is

@@ -85,6 +85,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
 
     private final Connector connector;
     private final ClientConfig config;
+    private final boolean asyncUseConnector;
 
     private final RequestScope requestScope;
     private final LazyValue<ExecutorService> asyncRequestExecutor;
@@ -114,6 +115,9 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
 
         this.config = config;
         this.connector = connector;
+
+        Object asyncUseConnectorValue = config.getProperty(ClientProperties.ASYNC_USE_CONNECTOR);
+        asyncUseConnector = Boolean.TRUE.equals(asyncUseConnectorValue);
 
         this.requestScope = locator.getService(RequestScope.class);
 
@@ -148,8 +152,15 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
      * @param callback asynchronous response callback.
      */
     public void submit(final ClientRequest request, final ResponseCallback callback) {
-        submit(asyncRequestExecutor.get(), new Runnable() {
+        if (asyncUseConnector) {
+            submitToConnector(request, callback);
+        } else {
+            submitToExecutor(request, callback);
+        }
+    }
 
+    private void submitToExecutor(final ClientRequest request, final ResponseCallback callback) {
+        submitToExecutor(asyncRequestExecutor.get(), new Runnable() {
             @Override
             public void run() {
                 try {
@@ -187,6 +198,51 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
         });
     }
 
+    private void submitToConnector(final ClientRequest request, final ResponseCallback callback) {
+        requestScope.runInScope(new Runnable() {
+            @Override
+            public void run() {
+                final RequestScope.Instance scopeInstance = requestScope.referenceCurrent();
+                try {
+                    ClientRequest processedRequest;
+                    try {
+                        processedRequest = Stages.process(request, requestProcessingRoot);
+                        processedRequest = addUserAgent(processedRequest, connector.getName());
+                    } catch (final AbortException aborted) {
+                        processResponse(aborted.getAbortResponse(), callback);
+                        return;
+                    }
+
+                    final AsyncConnectorCallback connectorCallback = new AsyncConnectorCallback() {
+
+                        @Override
+                        public void response(final ClientResponse response) {
+                            requestScope.runInScope(scopeInstance, new Runnable() {
+                                @Override
+                                public void run() {
+                                    processResponse(response, callback);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void failure(final Throwable failure) {
+                            requestScope.runInScope(scopeInstance, new Runnable() {
+                                @Override
+                                public void run() {
+                                    processFailure(failure, callback);
+                                }
+                            });
+                        }
+                    };
+                    connector.apply(processedRequest, connectorCallback);
+                } catch (final Throwable throwable) {
+                    processFailure(throwable, callback);
+                }
+            }
+        });
+    }
+
     private void processResponse(final ClientResponse response, final ResponseCallback callback) {
         final ClientResponse processedResponse;
         try {
@@ -203,7 +259,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
                 ? (ProcessingException) failure : new ProcessingException(failure));
     }
 
-    private Future<?> submit(final ExecutorService executor, final Runnable task) {
+    private Future<?> submitToExecutor(final ExecutorService executor, final Runnable task) {
         return executor.submit(new Runnable() {
             @Override
             public void run() {
