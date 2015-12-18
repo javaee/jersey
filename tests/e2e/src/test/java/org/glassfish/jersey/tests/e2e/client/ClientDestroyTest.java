@@ -53,6 +53,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
@@ -86,6 +88,7 @@ public class ClientDestroyTest extends JerseyTest {
         destroyed.clear();
         destroyed.put("filter", false);
         destroyed.put("reader", false);
+        destroyed.put("feature", false);
 
         super.setUp();
     }
@@ -126,11 +129,25 @@ public class ClientDestroyTest extends JerseyTest {
         }
     }
 
+    public static class MyFeature implements Feature {
+
+        @PreDestroy
+        public void preDestroy() {
+            destroyed.put("feature", true);
+        }
+
+        @Override
+        public boolean configure(final FeatureContext context) {
+            return true;
+        }
+    }
+
     @Test
     public void testClientInvokePreDestroyMethodOnProviderClass() throws Exception {
         final Client client = ClientBuilder.newClient()
                 .register(MyFilter.class)
-                .register(MyReader.class);
+                .register(MyReader.class)
+                .register(MyFeature.class);
 
         assertThat(client.target(getBaseUri()).request().get(String.class), is("reader-resource-bar"));
 
