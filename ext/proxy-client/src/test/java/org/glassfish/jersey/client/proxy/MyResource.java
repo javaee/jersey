@@ -42,6 +42,7 @@ package org.glassfish.jersey.client.proxy;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 
 import java.util.List;
 import java.util.Set;
@@ -185,5 +186,20 @@ public class MyResource implements MyResourceIfc {
     @Override
     public String putIt(MyBean dummyBean) {
         return headers.getHeaderString(HttpHeaders.CONTENT_TYPE);
+    }
+
+    @Override
+    public MyBean entityAndSecurityContext(MyBean bean, SecurityContext sc) {
+        return bean;
+    }
+
+    @Override
+    public MyBean securityContextAndEntity(SecurityContext sc, MyBean bean) {
+        return bean;
+    }
+
+    @Override
+    public MyBean headerAndEntityAndSecurityContext(String header, MyBean bean, SecurityContext sc) {
+        return bean;
     }
 }

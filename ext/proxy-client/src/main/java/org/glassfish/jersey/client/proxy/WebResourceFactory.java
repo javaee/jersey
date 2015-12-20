@@ -96,7 +96,9 @@ public final class WebResourceFactory implements InvocationHandler {
     private final MultivaluedMap<String, Object> headers;
     private final List<Cookie> cookies;
     private final Form form;
+    private final int entityIndex;
 
+    private static final int NO_ENTITY_PARAM = -1;
     private static final MultivaluedMap<String, Object> EMPTY_HEADERS = new MultivaluedHashMap<>();
     private static final Form EMPTY_FORM = new Form();
     private static final List<Class> PARAM_ANNOTATION_CLASSES = Arrays.<Class>asList(PathParam.class, QueryParam.class,
@@ -116,7 +118,29 @@ public final class WebResourceFactory implements InvocationHandler {
      * be used for making requests to the server.
      */
     public static <C> C newResource(final Class<C> resourceInterface, final WebTarget target) {
-        return newResource(resourceInterface, target, false, EMPTY_HEADERS, Collections.<Cookie>emptyList(), EMPTY_FORM);
+        return newResource(resourceInterface, target, false, EMPTY_HEADERS,
+                           Collections.<Cookie>emptyList(), EMPTY_FORM, NO_ENTITY_PARAM);
+    }
+
+    /**
+     * Creates a new client-side representation of a resource described by
+     * the interface passed in the first argument. This overloaded method
+     * allows for the specification of the entity index within the resource
+     * method.
+     * <p/>
+     * Calling this method has the same effect as calling {@code WebResourceFactory.newResource(resourceInterface, rootTarget,
+     *false)}.
+     *
+     * @param <C> Type of the resource to be created.
+     * @param resourceInterface Interface describing the resource to be created.
+     * @param target WebTarget pointing to the resource or the parent of the resource.
+     * @param entityIndex The resource method parameter index (0 based) of the entity.
+     * @return Instance of a class implementing the resource interface that can
+     * be used for making requests to the server.
+     */
+    public static <C> C newResource(final Class<C> resourceInterface, final WebTarget target, final int entityIndex) {
+        return newResource(resourceInterface, target, false, EMPTY_HEADERS,
+                           Collections.<Cookie>emptyList(), EMPTY_FORM, entityIndex);
     }
 
     /**
@@ -142,18 +166,48 @@ public final class WebResourceFactory implements InvocationHandler {
                                     final List<Cookie> cookies,
                                     final Form form) {
 
+        return newResource(resourceInterface, target, ignoreResourcePath, headers,
+                           cookies, form, NO_ENTITY_PARAM);
+    }
+
+    /**
+     * Creates a new client-side representation of a resource described by
+     * the interface passed in the first argument. This overloaded method
+     * allows for the specification of the entity index within the resource
+     * method.
+     *
+     * @param <C> Type of the resource to be created.
+     * @param resourceInterface Interface describing the resource to be created.
+     * @param target WebTarget pointing to the resource or the parent of the resource.
+     * @param ignoreResourcePath If set to true, ignores path annotation on the resource interface (this is used when creating
+     * sub-resources)
+     * @param headers Header params collected from parent resources (used when creating a sub-resource)
+     * @param cookies Cookie params collected from parent resources (used when creating a sub-resource)
+     * @param form Form params collected from parent resources (used when creating a sub-resource)
+     * @param entityIndex The resource method parameter index (0 based) of the entity.
+     * @return Instance of a class implementing the resource interface that can
+     * be used for making requests to the server.
+     */
+    public static <C> C newResource(final Class<C> resourceInterface,
+                                    final WebTarget target,
+                                    final boolean ignoreResourcePath,
+                                    final MultivaluedMap<String, Object> headers,
+                                    final List<Cookie> cookies,
+                                    final Form form,
+                                    final int entityIndex) {
         return (C) Proxy.newProxyInstance(AccessController.doPrivileged(ReflectionHelper.getClassLoaderPA(resourceInterface)),
                 new Class[] {resourceInterface},
                 new WebResourceFactory(ignoreResourcePath ? target : addPathFromAnnotation(resourceInterface, target),
-                        headers, cookies, form));
+                        headers, cookies, form, entityIndex));
     }
 
     private WebResourceFactory(final WebTarget target, final MultivaluedMap<String, Object> headers,
-                               final List<Cookie> cookies, final Form form) {
+                               final List<Cookie> cookies, final Form form, int entityIndex) {
         this.target = target;
         this.headers = headers;
         this.cookies = cookies;
         this.form = form;
+        this.entityIndex = entityIndex;
     }
 
     @Override
@@ -203,14 +257,35 @@ public final class WebResourceFactory implements InvocationHandler {
         final Annotation[][] paramAnns = method.getParameterAnnotations();
         Object entity = null;
         Type entityType = null;
+
+        if (entityIndex > paramAnns.length) {
+            throw new ArrayIndexOutOfBoundsException("No parameter at index "
+                    + entityIndex + " for resource method " + method.getName());
+        } else {
+            if (entityIndex >= 0) {
+                final Map<Class, Annotation> anns = getClassAnnotationMap(paramAnns[entityIndex]);
+                if (hasAnyParamAnnotation(anns)) {
+                    // TODO: Should we throw exception or let it ride with a log warning?
+                    throw new IllegalArgumentException("Parameter at index "
+                            + entityIndex + " is not an entity parameter.");
+                } else {
+                    entity = args[entityIndex];
+                    entityType = method.getGenericParameterTypes()[entityIndex];
+                }
+            }
+        }
+
         for (int i = 0; i < paramAnns.length; i++) {
-            final Map<Class, Annotation> anns = new HashMap<>();
+            final Map<Class, Annotation> anns = getClassAnnotationMap(paramAnns[i]);
             for (final Annotation ann : paramAnns[i]) {
                 anns.put(ann.annotationType(), ann);
             }
             Annotation ann;
             Object value = args[i];
-            if (!hasAnyParamAnnotation(anns)) {
+
+            // If entityIndex < 0, either the user entered a negative index
+            // or no index was entered. Either way we procede normally.
+            if ((entityIndex < 0) && !hasAnyParamAnnotation(anns)) {
                 entityType = method.getGenericParameterTypes()[i];
                 entity = value;
             } else {
@@ -346,6 +421,14 @@ public final class WebResourceFactory implements InvocationHandler {
         }
 
         return result;
+    }
+
+    private static Map<Class, Annotation> getClassAnnotationMap(Annotation[] paramAnns) {
+        final Map<Class, Annotation> anns = new HashMap<>();
+        for (final Annotation ann : paramAnns) {
+            anns.put(ann.annotationType(), ann);
+        }
+        return anns;
     }
 
     private boolean hasAnyParamAnnotation(final Map<Class, Annotation> anns) {
