@@ -1676,7 +1676,7 @@
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
-                <version>1.1</version>
+                <version>${commons-logging.version}</version>
             </dependency>
 
             <!-- Weld -->
@@ -1888,6 +1888,7 @@
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>
         <commons-lang3.version>3.3.2</commons-lang3.version>
+        <commons-logging.version>1.2</commons-logging.version>
         <checkstyle.mvn.plugin.version>2.16</checkstyle.mvn.plugin.version>
         <checkstyle.version>6.8.1</checkstyle.version>
         <easymock.version>3.3</easymock.version>

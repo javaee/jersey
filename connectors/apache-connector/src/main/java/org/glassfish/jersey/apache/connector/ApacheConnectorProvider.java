@@ -60,6 +60,7 @@ import org.apache.http.client.HttpClient;
  * <li>{@link ApacheClientProperties#REQUEST_CONFIG}</li>
  * <li>{@link ApacheClientProperties#CREDENTIALS_PROVIDER}</li>
  * <li>{@link ApacheClientProperties#DISABLE_COOKIES}</li>
+ * <li>{@link ApacheClientProperties#REUSE_USER_TOKEN}</li>
  * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_URI}</li>
  * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_USERNAME}</li>
  * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_PASSWORD}</li>

@@ -52,8 +52,10 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -75,6 +77,8 @@ import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.internal.guava.Cache;
+import org.glassfish.jersey.internal.guava.CacheBuilder;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.HeaderUtils;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
@@ -83,7 +87,12 @@ import org.glassfish.jersey.message.internal.Statuses;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
@@ -122,6 +131,7 @@ import org.apache.http.impl.conn.ManagedHttpClientConnectionFactory;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.io.ChunkedOutputStream;
 import org.apache.http.io.SessionOutputBuffer;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.TextUtils;
 import org.apache.http.util.VersionInfo;
 
@@ -183,7 +193,6 @@ import org.apache.http.util.VersionInfo;
  * @author Arul Dhesiaseelan (aruld at acm.org)
  * @see ApacheClientProperties#CONNECTION_MANAGER
  */
-@SuppressWarnings("deprecation")
 class ApacheConnector implements Connector {
 
     private static final Logger LOGGER = Logger.getLogger(ApacheConnector.class.getName());
@@ -241,7 +250,7 @@ class ApacheConnector implements Connector {
         clientBuilder.setConnectionManager(getConnectionManager(client, config, sslContext));
         clientBuilder.setConnectionManagerShared(
                 PropertiesHelper.getValue(config.getProperties(), ApacheClientProperties.CONNECTION_MANAGER_SHARED, false, null));
-        clientBuilder.setSslcontext(sslContext);
+        clientBuilder.setSSLContext(sslContext);
 
         final RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
 
@@ -253,6 +262,16 @@ class ApacheConnector implements Connector {
         final Object retryHandler = config.getProperties().get(ApacheClientProperties.RETRY_HANDLER);
         if (retryHandler != null && (retryHandler instanceof HttpRequestRetryHandler)) {
             clientBuilder.setRetryHandler((HttpRequestRetryHandler) retryHandler);
+        }
+
+        final Boolean reuseUserToken = ClientProperties.getValue(config.getProperties(), ApacheClientProperties.REUSE_USER_TOKEN,
+                Boolean.FALSE);
+        if (reuseUserToken) {
+            final int userTokenTimeout = sslContext != null && sslContext.getClientSessionContext() != null ? sslContext
+                    .getClientSessionContext().getSessionTimeout() : 86400;
+            final UserTokenProvider userTokenProvider = new UserTokenProvider(userTokenTimeout, TimeUnit.SECONDS);
+            clientBuilder.addInterceptorLast((HttpRequestInterceptor) userTokenProvider)
+                    .addInterceptorLast((HttpResponseInterceptor) userTokenProvider);
         }
 
         final Object proxyUri;
@@ -400,7 +419,6 @@ class ApacheConnector implements Connector {
      *
      * @return the {@link HttpClient}.
      */
-    @SuppressWarnings("UnusedDeclaration")
     public HttpClient getHttpClient() {
         return client;
     }
@@ -491,6 +509,7 @@ class ApacheConnector implements Connector {
 
     @Override
     public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
+<<<<<<< HEAD
         try {
             ClientResponse response = apply(request);
             callback.response(response);
@@ -501,6 +520,18 @@ class ApacheConnector implements Connector {
             future.completeExceptionally(t);
             return future;
         }
+=======
+        return MoreExecutors.newDirectExecutorService().submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    callback.response(apply(request));
+                } catch (final Throwable t) {
+                    callback.failure(t);
+                }
+            }
+        });
+>>>>>>> 87ae821... JERSEY-2583: Reusable user token in ApacheConnector preventing SSL handshakes on every request when client authentiation is required.
     }
 
     @Override
@@ -689,4 +720,41 @@ class ApacheConnector implements Connector {
             return super.createOutputStream(len, outbuffer);
         }
     }
+
+    private static class UserTokenProvider implements HttpRequestInterceptor, HttpResponseInterceptor {
+
+        private final Cache<AuthScope, Object> userTokens;
+
+        private UserTokenProvider(long userTokenTimeout, TimeUnit unit) {
+            userTokens = CacheBuilder.newBuilder()
+                    .expireAfterAccess(userTokenTimeout, unit)
+                    .build();
+        }
+
+        @Override
+        public void process(HttpRequest request, HttpContext context) throws HttpException, IOException {
+            final HttpClientContext clientContext = HttpClientContext.adapt(context);
+            final AuthScope authScope = new AuthScope(clientContext.getTargetHost());
+            final Object userToken = userTokens.getIfPresent(authScope);
+            if (clientContext.getUserToken() == null) {
+                if (userToken != null) {
+                    clientContext.setUserToken(userToken);
+                }
+            } else if (!Objects.equals(clientContext.getUserToken(), userToken)) {
+                userTokens.put(authScope, clientContext.getUserToken());
+            }
+        }
+
+        @Override
+        public void process(HttpResponse response, HttpContext context) throws HttpException, IOException {
+            final HttpClientContext clientContext = HttpClientContext.adapt(context);
+            final AuthScope authScope = new AuthScope(clientContext.getTargetHost());
+            final Object userToken = userTokens.getIfPresent(authScope);
+            if (!Objects.equals(clientContext.getUserToken(), userToken)) {
+                userTokens.put(authScope, clientContext.getUserToken());
+            }
+        }
+
+    }
+
 }
