@@ -250,7 +250,7 @@ class ApacheConnector implements Connector {
         }
 
         final Boolean reuseUserToken = ClientProperties.getValue(config.getProperties(), ApacheClientProperties.REUSE_USER_TOKEN,
-                Boolean.TRUE);
+                Boolean.False);
         if (reuseUserToken) {
             final UserTokenProvider userTokenProvider = new UserTokenProvider();
             clientBuilder.addInterceptorLast((HttpRequestInterceptor) userTokenProvider)

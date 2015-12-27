@@ -152,7 +152,7 @@ public final class ApacheClientProperties {
      * <p/>
      * The value MUST be an instance of {@link java.lang.Boolean}.
      * <p/>
-     * The default value is {@code true}.
+     * The default value is {@code false}.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
