@@ -61,7 +61,7 @@ public class JMustacheMvcFeature implements Feature {
      * <p/>
      * The default value is not set.
      * <p/>
-     * The name of the configuration property is <tt>{@value}</tt>.     
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String TEMPLATE_OBJECT_FACTORY =
         MvcFeature.TEMPLATE_OBJECT_FACTORY + SUFFIX;

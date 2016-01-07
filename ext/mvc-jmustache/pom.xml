@@ -36,17 +36,10 @@
             <artifactId>jersey-mvc</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.samskivert</groupId>
             <artifactId>jmustache</artifactId>
             <version>1.9</version>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>${servlet2.version}</version>
         </dependency>
     </dependencies>
 
