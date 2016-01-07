@@ -14,7 +14,6 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
 import org.jvnet.hk2.annotations.Optional;
@@ -31,7 +30,7 @@ public class JMustacheTemplateProcessor extends
     public JMustacheTemplateProcessor(final Configuration config,
         final ServiceLocator serviceLocator,
         @Optional final ServletContext servletContext) {
-        super(config, servletContext, "jmustache", "mustache", "xml", "json");
+        super(config, servletContext, "jmustache", "mustache", "xml", "json", "html");
     }
 
     @Override
@@ -48,7 +47,8 @@ public class JMustacheTemplateProcessor extends
     @Override
     protected Template resolve(String templatePath, Reader reader)
         throws Exception {
-        return Mustache.compiler().compile(reader);
+        Mustache.Compiler compiler = Mustache.compiler().defaultValue("");
+        return compiler.compile(reader);
     }
 
 }
