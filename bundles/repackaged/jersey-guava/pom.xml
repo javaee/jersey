@@ -160,6 +160,9 @@
                     <plugin>
                         <groupId>org.fortasoft</groupId>
                         <artifactId>gradle-maven-plugin</artifactId>
+                        <configuration>
+                            <gradleInstallationDir>${gradleHome}</gradleInstallationDir>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>proguard</id>
@@ -168,7 +171,6 @@
                                     <goal>invoke</goal>
                                 </goals>
                                 <configuration>
-                                    <gradleInstallationDir>${gradleHome}</gradleInstallationDir>
                                     <tasks>
                                         <task>deleteClasses</task>
                                         <task>generateProGuardConfig</task>
