@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -463,8 +463,8 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
                     And, of course, we add the necessary container extension module dependency:
 
                     <programlisting language="xml" linenumbering="numbered">&lt;dependency&gt;
-    &lt;groupId&gt;org.eclipse.jetty&lt;/groupId&gt;
-    &lt;artifactId&gt;jetty-server&lt;/artifactId&gt;
+    &lt;groupId&gt;org.glassfish.jersey.containers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-container-jetty-http&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
                 </example>
