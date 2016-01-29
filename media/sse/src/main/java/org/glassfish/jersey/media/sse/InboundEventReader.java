@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,6 +76,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
     private Provider<MessageBodyWorkers> messageBodyWorkers;
 
     private enum State {
+        SKIPPING_PREPENDED_EMPTY_EVENTS,
         NEW_LINE,
         COMMENT,
         FIELD,
@@ -106,10 +107,31 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
                 new InboundEvent.Builder(messageBodyWorkers.get(), annotations, mediaType, headers);
 
         int b = -1;
-        State currentState = State.NEW_LINE;
+        State currentState = State.SKIPPING_PREPENDED_EMPTY_EVENTS;
         loop:
         do {
             switch (currentState) {
+                /* There is a problem with the SSE event parsing, because Jersey uses ChunkedInput to separate events.
+                   The problem is that ChunkedInput uses fixed character string as a separator, which is \r\n\r\n when it
+                   parses SSE.
+                   The problem is that SSE events are separated only by \r\n and \r\n also works as an end of a field inside
+                   the event, so the fixed separator \r\n\r\n  only works if the server does not send empty events.
+                   For example:
+
+                    event: e1\r\n
+                    data: d1\r\n
+                    \r\n
+                    \r\n
+                    event: e2\r\n
+                    data: d2\r\n
+                    \r\n
+
+                    is a stream of <e1> <empty event> <e2>
+                    Unfortunately the ChunkedInput parser will parse it only into 2 events <e1> and <e2> and <e2> will have
+                    \r\n (an empty event) prepended at the beginning. This is not fixable on the ChunkedInput parser level,
+                    which is not SSE aware, so this InboundEventReader must be aware of this and skip any prepended empty events.
+                    Also as a result Jersey will not deliver empty events to the user. */
+                case SKIPPING_PREPENDED_EMPTY_EVENTS:
                 case NEW_LINE:
                     if (b == '\r') {
                         // read next byte in case of CRLF delimiter
@@ -120,6 +142,10 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
                     }
 
                     if (b == '\n' || b == '\r' || b == -1) {
+                        if (currentState == State.SKIPPING_PREPENDED_EMPTY_EVENTS) {
+                            break;
+                        }
+
                         break loop;
                     }
 
