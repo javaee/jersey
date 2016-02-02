@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,9 +43,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.net.ConnectException;
-import java.net.NoRouteToHostException;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
@@ -67,12 +64,11 @@ import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.net.ssl.SSLException;
-
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
+import org.glassfish.jersey.internal.util.ExceptionUtils;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
@@ -515,6 +511,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     /* package */ void doWriteEntity(final MessageBodyWorkers writeWorkers, final GenericType<?> entityType) throws IOException {
         OutputStream entityStream = null;
         boolean connectionFailed = false;
+        boolean runtimeException = false;
         try {
             try {
                 entityStream = writeWorkers.writeTo(
@@ -532,6 +529,9 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                 // JERSEY-2728 - treat SSLException as connection failure
                 connectionFailed = true;
                 throw e;
+            } catch (final RuntimeException e) {
+                runtimeException = true;
+                throw e;
             }
         } finally {
             // in case we've seen the ConnectException, we won't try to close/commit stream as this would produce just
@@ -542,14 +542,22 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                 if (entityStream != null) {
                     try {
                         entityStream.close();
-                    } catch (final IOException ex) {
-                        LOGGER.log(Level.FINE, LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), ex);
+                    } catch (final IOException e) {
+                        ExceptionUtils.conditionallyReThrow(e, !runtimeException, LOGGER,
+                                LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), Level.FINE);
+                    } catch (final RuntimeException e) {
+                        ExceptionUtils.conditionallyReThrow(e, !runtimeException, LOGGER,
+                                LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), Level.FINE);
                     }
                 }
                 try {
                     commitStream();
                 } catch (final IOException e) {
-                    LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), e);
+                    ExceptionUtils.conditionallyReThrow(e, !runtimeException, LOGGER,
+                            LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), Level.SEVERE);
+                } catch (final RuntimeException e) {
+                    ExceptionUtils.conditionallyReThrow(e, !runtimeException, LOGGER,
+                            LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), Level.SEVERE);
                 }
             }
         }
