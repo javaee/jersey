@@ -45,7 +45,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.server.ParamException;
 
 /**
- * * A parameter-based exception for errors with {@link FormDataParam}.
+ * A parameter-based exception for errors with {@link FormDataParam}.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */

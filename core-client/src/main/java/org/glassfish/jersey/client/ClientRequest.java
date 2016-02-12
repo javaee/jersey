@@ -554,10 +554,10 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                     commitStream();
                 } catch (final IOException e) {
                     ExceptionUtils.conditionallyReThrow(e, !runtimeException, LOGGER,
-                            LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), Level.SEVERE);
+                            LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), Level.FINE);
                 } catch (final RuntimeException e) {
                     ExceptionUtils.conditionallyReThrow(e, !runtimeException, LOGGER,
-                            LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), Level.SEVERE);
+                            LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), Level.FINE);
                 }
             }
         }
