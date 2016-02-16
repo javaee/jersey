@@ -178,7 +178,7 @@ public class Errors {
                         warnings.append(LocalizationMessages.WARNING_MSG(error.getMessage())).append('\n');
                         break;
                     case HINT:
-                        warnings.append(LocalizationMessages.HINT_MSG(error.getMessage())).append('\n');
+                        hints.append(LocalizationMessages.HINT_MSG(error.getMessage())).append('\n');
                         break;
                 }
             }
