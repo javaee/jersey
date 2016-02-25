@@ -1309,7 +1309,6 @@
         <module>incubator</module>
         <module>media</module>
         <module>security</module>
-        <module>jersey-test</module>
     </modules>
 
     <dependencyManagement>
