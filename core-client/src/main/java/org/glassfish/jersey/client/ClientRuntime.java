@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -161,18 +161,19 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
 
                         @Override
                         public void response(final ClientResponse response) {
-                              requestScope.runInScope(new Runnable(){
-                                 public void run() {
-                                      processResponse(response, callback);
-                                 }});
+                            requestScope.runInScope(new Runnable() {
+                                public void run() {
+                                    processResponse(response, callback);
+                                }
+                            });
                         }
 
                         @Override
                         public void failure(final Throwable failure) {
-                              requestScope.runInScope(new Runnable() {
-                                    public void run() {
-                                        processFailure(failure, callback);
-                                    }
+                            requestScope.runInScope(new Runnable() {
+                                public void run() {
+                                    processFailure(failure, callback);
+                                }
                             });
                         }
                     };
@@ -242,7 +243,6 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
      *
      * @param request client request to be invoked.
      * @return client response.
-     *
      * @throws javax.ws.rs.ProcessingException in case of an invocation failure.
      */
     public ClientResponse invoke(final ClientRequest request) {
@@ -284,7 +284,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
      * This will be used as the last resort to clean things up
      * in the case that this instance gets garbage collected
      * before the client itself gets released.
-     *
+     * <p>
      * Close will be invoked either via finalizer
      * or via JerseyClient onShutdown hook, whatever comes first.
      */
