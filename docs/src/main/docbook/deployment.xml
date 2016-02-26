@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -463,8 +463,8 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
                     And, of course, we add the necessary container extension module dependency:
 
                     <programlisting language="xml" linenumbering="numbered">&lt;dependency&gt;
-    &lt;groupId&gt;org.eclipse.jetty&lt;/groupId&gt;
-    &lt;artifactId&gt;jetty-server&lt;/artifactId&gt;
+    &lt;groupId&gt;org.glassfish.jersey.containers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-container-jetty-http&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
                 </example>
@@ -554,6 +554,16 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
 &lt;/web-app&gt;</programlisting>
                 </example>
             </para>
+
+            <important>
+                <para>
+                    Servlet 2.x API does not provide a way how to programmatically read the filter mappings. To make application
+                    deployed using filter work correctly, either Servlet 3.x container must be used
+                    (<literal>jersey-container-servlet</literal> instead of <literal>jersey-container-servlet-core</literal>), or
+                    the context path of the app needs to be defined using init parameter
+                    <literal>jersey.config.servlet.filter.contextPath</literal>.
+                </para>
+            </important>
 
             <para>
                 The content of the <literal>&lt;init-param&gt;</literal> element will vary depending on the way you decide to

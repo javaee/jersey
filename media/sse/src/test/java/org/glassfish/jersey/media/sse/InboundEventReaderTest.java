@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -84,14 +84,14 @@ public class InboundEventReaderTest {
     @Test
     public void testReadWithStartsWithLF() throws Exception {
         InboundEvent event = parse(new ByteArrayInputStream("\nevent: custom-message".getBytes()));
-        assertNull(event.getName());
+        assertEquals("custom-message", event.getName());
         assertEquals(0, event.getRawData().length);
     }
 
     @Test
     public void testReadWithStartsWithCR() throws Exception {
         InboundEvent event = parse(new ByteArrayInputStream("\revent: custom-message".getBytes()));
-        assertNull(event.getName());
+        assertEquals("custom-message", event.getName());
         assertEquals(0, event.getRawData().length);
     }
 

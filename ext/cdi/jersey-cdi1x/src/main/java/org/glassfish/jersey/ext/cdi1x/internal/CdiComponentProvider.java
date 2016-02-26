@@ -902,7 +902,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             delegate.inject(t, cc);
 
             final ServiceLocator il = multipleLocators ? getEffectiveLocator() : effectiveLocator;
-            final ServiceLocator injectingLocator = (il != null) ? il : effectiveLocator;
+            final ServiceLocator injectingLocator = (il != null) ? il : getEffectiveLocator();
 
             if (injectingLocator != null) {
                 injectingLocator.inject(t, CdiComponentProvider.CDI_CLASS_ANALYZER);

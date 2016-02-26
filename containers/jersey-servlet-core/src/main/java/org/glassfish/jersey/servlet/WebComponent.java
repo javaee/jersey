@@ -103,6 +103,7 @@ import org.glassfish.jersey.servlet.internal.spi.RequestScopedInitializerProvide
 import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
+import org.glassfish.jersey.servlet.spi.FilterUrlMappingsProvider;
 import org.glassfish.jersey.uri.UriComponent;
 
 import org.glassfish.hk2.api.Factory;
@@ -297,6 +298,7 @@ public class WebComponent {
             }).to(WebConfig.class).in(Singleton.class);
 
             install(new ServiceFinderBinder<>(AsyncContextDelegateProvider.class, applicationProperties, RuntimeType.SERVER));
+            install(new ServiceFinderBinder<>(FilterUrlMappingsProvider.class, applicationProperties, RuntimeType.SERVER));
         }
     }
 

@@ -42,6 +42,9 @@ package org.glassfish.jersey.client;
 
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
@@ -66,7 +69,8 @@ class DefaultClientAsyncExecutorProvider extends ThreadPoolExecutorProvider {
      * @param poolSize size of the default executor thread pool (if used). Zero or negative values are ignored.
      *                 See also {@link org.glassfish.jersey.client.ClientProperties#ASYNC_THREADPOOL_SIZE}.
      */
-    public DefaultClientAsyncExecutorProvider(final int poolSize) {
+    @Inject
+    public DefaultClientAsyncExecutorProvider(@Named("ClientAsyncThreadPoolSize") final int poolSize) {
         super("jersey-client-async-executor");
 
         this.asyncThreadPoolSize = Values.lazy(new Value<Integer>() {

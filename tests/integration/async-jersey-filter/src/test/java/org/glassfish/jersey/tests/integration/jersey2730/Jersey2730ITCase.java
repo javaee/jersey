@@ -58,7 +58,7 @@ import static org.junit.Assert.assertFalse;
 public class Jersey2730ITCase extends AbstractAsyncJerseyTest {
 
     private void assertLastThreadNotStuck() {
-        final boolean lastThreadGotStuck = target("exception/rpc/lastthreadstuck").request().get(boolean.class);
+        final boolean lastThreadGotStuck = target("/exceptionTest/exception/rpc/lastthreadstuck").request().get(boolean.class);
 
         assertFalse("Thread processing last request got stuck while processing the request for "
                         + TestExceptionResource.class.getCanonicalName(),
@@ -66,32 +66,32 @@ public class Jersey2730ITCase extends AbstractAsyncJerseyTest {
     }
 
     @Test
-    public void asyncResourceNullThrowableReturns500AndDoesNotStuck() throws Exception {
-        final Response response = target("/exception/null").request().get();
+    public void asyncResourceNullThrowableReturns500AndDoesNotStuck() throws Exception  {
+        final Response response = target("/exceptionTest/exception/null").request().get();
 
         assertEquals(500, response.getStatus());
         assertLastThreadNotStuck();
     }
 
     @Test
-    public void asyncResourceUnmappedExceptionReturns500AndDoesNotStuck() throws Exception {
-        final Response response = target("/exception/unmapped").request().get();
+    public void asyncResourceUnmappedExceptionReturns500AndDoesNotStuck() throws Exception  {
+        final Response response = target("/exceptionTest/exception/unmapped").request().get();
 
         assertEquals(500, response.getStatus());
         assertLastThreadNotStuck();
     }
 
     @Test
-    public void asyncResourceUnmappedRuntimeExceptionReturns500AndDoesNotStuck() throws Exception {
-        final Response response = target("/exception/runtime").request().get();
+    public void asyncResourceUnmappedRuntimeExceptionReturns500AndDoesNotStuck() throws Exception  {
+        final Response response = target("/exceptionTest/exception/runtime").request().get();
 
         assertEquals(500, response.getStatus());
         assertLastThreadNotStuck();
     }
 
     @Test
-    public void asyncResourceMappedExceptionReturns432() throws Exception {
-        final Response response = target("/exception/mapped").request().get();
+    public void asyncResourceMappedExceptionReturns432() throws Exception  {
+        final Response response = target("/exceptionTest/exception/mapped").request().get();
 
         assertEquals(432, response.getStatus());
         assertLastThreadNotStuck();
@@ -99,7 +99,7 @@ public class Jersey2730ITCase extends AbstractAsyncJerseyTest {
 
     @Test
     public void asyncResourceNonExistentReturns404() throws Exception {
-        final Response response = target("/exception/notfound").request().get();
+        final Response response = target("/exceptionTest/exception/notfound").request().get();
 
         assertEquals(404, response.getStatus());
     }

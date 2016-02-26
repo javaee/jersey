@@ -68,16 +68,16 @@
 
     <filter-mapping>
         <filter-name>jersey2812</filter-name>
-        <url-pattern>/async/wait/*</url-pattern>
+        <url-pattern>/asyncTest/async/wait/*</url-pattern>
     </filter-mapping>
 
     <filter-mapping>
         <filter-name>jersey</filter-name>
-        <url-pattern>/exception/*</url-pattern>
+        <url-pattern>/exceptionTest/*</url-pattern>
     </filter-mapping>
     <filter-mapping>
         <filter-name>jersey</filter-name>
-        <url-pattern>/async/*</url-pattern>
+        <url-pattern>/asyncTest/*</url-pattern>
     </filter-mapping>
 
     <absolute-ordering />

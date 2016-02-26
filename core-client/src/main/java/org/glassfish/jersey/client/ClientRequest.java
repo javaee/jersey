@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,9 +41,8 @@ package org.glassfish.jersey.client;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.ConnectException;
-import java.net.NoRouteToHostException;
-import java.net.SocketTimeoutException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
@@ -59,6 +58,7 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.ReaderInterceptor;
@@ -68,6 +68,7 @@ import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
+import org.glassfish.jersey.internal.util.ExceptionUtils;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
@@ -495,11 +496,25 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         entityWritten = true;
         ensureMediaType();
         final GenericType<?> entityType = new GenericType(getEntityType());
+        doWriteEntity(workers, entityType);
+    }
+
+    /**
+     * Added only to make the code testable.
+     *
+     * @param writeWorkers Message body workers instance used to write the entity.
+     * @param entityType   entity type.
+     * @throws IOException when {@link MessageBodyWorkers#writeTo(Object, Class, Type, Annotation[], MediaType,
+     *                     MultivaluedMap, PropertiesDelegate, OutputStream, Iterable)} throws an {@link IOException}.
+     *                     This state is always regarded as connection failure.
+     */
+    /* package */ void doWriteEntity(final MessageBodyWorkers writeWorkers, final GenericType<?> entityType) throws IOException {
         OutputStream entityStream = null;
         boolean connectionFailed = false;
+        boolean runtimeException = false;
         try {
             try {
-                entityStream = workers.writeTo(
+                entityStream = writeWorkers.writeTo(
                         getEntity(),
                         entityType.getRawType(),
                         entityType.getType(),
@@ -510,22 +525,12 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                         getEntityStream(),
                         writerInterceptors);
                 setEntityStream(entityStream);
-            } catch (final ConnectException ce) {
-                // MessageBodyWorkers.writeTo() produces more general IOException, but we are only interested in specifying if
-                // the failure was caused by connection problems or by other circumstances
-                connectionFailed = true;
-                throw ce;
-            } catch (final SocketTimeoutException e) {
-                // if MessageBodyWorkers.writeTo() fails because of non-routable target, SocketTimeOutException is thrown.
-                // In that case, exception is rethrown and the connectionFailed flag is set to prevent the attempt to commit.
-                // Calling commitStream() would lead to another wait time and the final timeout time would be twice as long
-                // as described in JERSEY-1984. Depending on a system and configuration, NoRouteToHostException may be thrown
-                // instead of SocketTimeoutException (see below).
+            } catch (final IOException e) {
+                // JERSEY-2728 - treat SSLException as connection failure
                 connectionFailed = true;
                 throw e;
-            } catch (final NoRouteToHostException e) {
-                // to cover all the cases, also NoRouteToHostException is to be handled similarly.
-                connectionFailed = true;
+            } catch (final RuntimeException e) {
+                runtimeException = true;
                 throw e;
             }
         } finally {
@@ -537,14 +542,22 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                 if (entityStream != null) {
                     try {
                         entityStream.close();
-                    } catch (final IOException ex) {
-                        LOGGER.log(Level.FINE, LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), ex);
+                    } catch (final IOException e) {
+                        ExceptionUtils.conditionallyReThrow(e, !runtimeException, LOGGER,
+                                LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), Level.FINE);
+                    } catch (final RuntimeException e) {
+                        ExceptionUtils.conditionallyReThrow(e, !runtimeException, LOGGER,
+                                LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), Level.FINE);
                     }
                 }
                 try {
                     commitStream();
                 } catch (final IOException e) {
-                    LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), e);
+                    ExceptionUtils.conditionallyReThrow(e, !runtimeException, LOGGER,
+                            LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), Level.FINE);
+                } catch (final RuntimeException e) {
+                    ExceptionUtils.conditionallyReThrow(e, !runtimeException, LOGGER,
+                            LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), Level.FINE);
                 }
             }
         }

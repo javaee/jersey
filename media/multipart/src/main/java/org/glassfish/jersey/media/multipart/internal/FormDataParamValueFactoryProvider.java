@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,7 +53,6 @@ import java.util.logging.Logger;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 
 import javax.inject.Inject;
@@ -66,11 +65,11 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.glassfish.jersey.media.multipart.FormDataParamException;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageUtils;
 import org.glassfish.jersey.message.internal.Utils;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueFactory;
 import org.glassfish.jersey.server.internal.inject.AbstractValueFactoryProvider;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor;
@@ -97,13 +96,6 @@ import jersey.repackaged.com.google.common.collect.Lists;
 final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
     private static final Logger LOGGER = Logger.getLogger(FormDataParamValueFactoryProvider.class.getName());
-
-    private static final class FormDataParamException extends ParamException {
-
-        protected FormDataParamException(final Throwable cause, final String name, final String defaultStringValue) {
-            super(cause, Response.Status.BAD_REQUEST, FormDataParam.class, name, defaultStringValue);
-        }
-    }
 
     /**
      * {@link FormDataParam} injection resolver.

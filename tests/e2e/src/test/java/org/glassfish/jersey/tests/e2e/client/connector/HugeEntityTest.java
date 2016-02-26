@@ -37,13 +37,15 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.grizzly.connector;
+package org.glassfish.jersey.tests.e2e.client.connector;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.POST;
@@ -59,10 +61,15 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.RequestEntityProcessing;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
+import org.glassfish.jersey.jdk.connector.JdkConnectorProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -71,6 +78,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
+@RunWith(Parameterized.class)
 public class HugeEntityTest extends JerseyTest {
 
     private static final int BUFFER_LENGTH = 1024 * 1024; // 1M
@@ -113,6 +121,17 @@ public class HugeEntityTest extends JerseyTest {
         }
     }
 
+    private final ConnectorProvider connectorProvider;
+
+    public HugeEntityTest(ConnectorProvider connectorProvider) {
+        this.connectorProvider = connectorProvider;
+    }
+
+    @Parameterized.Parameters
+    public static List<? extends ConnectorProvider> testData() {
+        return Arrays.asList(new GrizzlyConnectorProvider(), new JdkConnectorProvider());
+    }
+
     @Override
     protected Application configure() {
         return new ResourceConfig(ConsumerResource.class);
@@ -122,7 +141,7 @@ public class HugeEntityTest extends JerseyTest {
     protected void configureClient(ClientConfig config) {
         config.register(TestEntityWriter.class);
         config.property(ClientProperties.REQUEST_ENTITY_PROCESSING, RequestEntityProcessing.CHUNKED);
-        config.connectorProvider(new GrizzlyConnectorProvider());
+        config.connectorProvider(connectorProvider);
     }
 
     public static class TestEntity {
