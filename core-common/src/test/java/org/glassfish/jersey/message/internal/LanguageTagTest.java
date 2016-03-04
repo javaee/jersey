@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,8 @@ import java.util.Locale;
 import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link LanguageTag} class.
@@ -68,6 +70,22 @@ public class LanguageTagTest {
     @Test
     public void testLanguageRegion() throws Exception {
         _test("es", "419");
+    }
+
+    @Test
+    public void testEquals() {
+        LanguageTag lt1 = new LanguageTag("en", "us");
+        LanguageTag lt2 = new LanguageTag("en", "us");
+
+        assertTrue(lt1.equals(lt2));
+    }
+
+    @Test
+    public void testNonEquals() {
+        LanguageTag lt1 = new LanguageTag("en", "us");
+        LanguageTag lt2 = new LanguageTag("en", "gb");
+
+        assertFalse(lt1.equals(lt2));
     }
 
     private void _test(final String primary, final String sub) throws Exception {
