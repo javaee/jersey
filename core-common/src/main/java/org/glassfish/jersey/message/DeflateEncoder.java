@@ -122,7 +122,7 @@ public class DeflateEncoder extends ContentEncoder {
         }
 
         return deflateWithoutZLib
-                ? new DeflaterOutputStream(entityStream, new Deflater(Deflater.DEFAULT_COMPRESSION, true))
-                : new DeflaterOutputStream(entityStream);
+                ? new DeflaterOutputStream(entityStream, new Deflater(Deflater.DEFAULT_COMPRESSION, true), true)
+                : new DeflaterOutputStream(entityStream, true);
     }
 }
