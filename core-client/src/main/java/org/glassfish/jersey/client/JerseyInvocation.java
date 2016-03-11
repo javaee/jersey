@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -693,6 +693,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
         final ClientRuntime runtime = request().getClientRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
+        //noinspection Duplicates
         return requestScope.runInScope(new Producer<T>() {
             @Override
             public T call() throws ProcessingException {
@@ -715,6 +716,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
         final ClientRuntime runtime = request().getClientRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
+        //noinspection Duplicates
         return requestScope.runInScope(new Producer<T>() {
             @Override
             public T call() throws ProcessingException {
@@ -761,6 +763,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
         }
         final SettableFuture<T> responseFuture = SettableFuture.create();
+        //noinspection Duplicates
         request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
 
             @Override
@@ -823,6 +826,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
         }
         final SettableFuture<T> responseFuture = SettableFuture.create();
+        //noinspection Duplicates
         request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
 
             @Override
@@ -866,7 +870,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             try {
                 return response.readEntity(responseType);
             } catch (final ProcessingException ex) {
-                throw new ResponseProcessingException(new InboundJaxrsResponse(response, scope), ex.getCause());
+                throw new ResponseProcessingException(
+                        new InboundJaxrsResponse(response, scope),
+                        ex.getCause() != null ? ex.getCause() : ex);
             } catch (final WebApplicationException ex) {
                 throw new ResponseProcessingException(new InboundJaxrsResponse(response, scope), ex);
             } catch (final Exception ex) {
@@ -910,7 +916,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
             if (responseType == null) {
                 // If we don't have response use callback to obtain param types.
-                callbackParamType = ReflectionHelper.getParameterizedTypeArguments(pair)[0];
+                final Type[] typeArguments = ReflectionHelper.getParameterizedTypeArguments(pair);
+                if (typeArguments == null || typeArguments.length == 0) {
+                    callbackParamType = Object.class;
+                } else {
+                    callbackParamType = typeArguments[0];
+                }
                 callbackParamClass = ReflectionHelper.erasure(callbackParamType);
             } else {
                 callbackParamType = responseType.getType();
@@ -958,6 +969,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             request().getClientRuntime().submit(requestForCall(requestContext), responseCallback);
         } catch (final Throwable error) {
             final ProcessingException ce;
+            //noinspection ChainOfInstanceofChecks
             if (error instanceof ProcessingException) {
                 ce = (ProcessingException) error;
                 responseFuture.setException(ce);
