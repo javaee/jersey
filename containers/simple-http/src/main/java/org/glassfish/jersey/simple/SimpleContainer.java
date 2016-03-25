@@ -170,7 +170,10 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
           : statusInfo.getReasonPhrase();
       response.setCode(code);
       response.setDescription(reason);
-      response.setContentLength(contentLength);
+      
+      if(contentLength != -1) {
+        response.setContentLength(contentLength);
+      }
       for (final Map.Entry<String, List<String>> e : context.getStringHeaders().entrySet()) {
         for (final String value : e.getValue()) {
           response.addValue(e.getKey(), value);
