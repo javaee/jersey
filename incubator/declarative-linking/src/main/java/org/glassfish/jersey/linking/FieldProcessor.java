@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,6 +47,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
@@ -133,7 +134,7 @@ class FieldProcessor<T> {
             }
         }
 
-        // If entity is an array or collection then process members
+        // If entity is an array, collection, or map then process members
         Class<?> instanceClass = instance.getClass();
         if (instanceClass.isArray() && Object[].class.isAssignableFrom(instanceClass)) {
             Object array[] = (Object[]) instance;
@@ -143,6 +144,11 @@ class FieldProcessor<T> {
         } else if (instance instanceof Iterable) {
             Iterable iterable = (Iterable) instance;
             for (Object member : iterable) {
+                processMember(entity, resource, member, processed, uriInfo, rmc);
+            }
+        } else if (instance instanceof Map) {
+            Map map = (Map) instance;
+            for (Object member : map.entrySet()) {
                 processMember(entity, resource, member, processed, uriInfo, rmc);
             }
         }

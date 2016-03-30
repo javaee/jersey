@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,8 +43,10 @@ package org.glassfish.jersey.linking;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Filter;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -344,6 +346,21 @@ public class FieldProcessorTest {
         instance.processLinks(list, mockUriInfo, mockRmc);
         assertEquals("widgets/10", list.get(0).link);
         assertEquals("widgets/20", list.get(1).link);
+    }
+
+    @Test
+    public void testMap() {
+        LOG.info("Map");
+        FieldProcessor<Map> instance = new FieldProcessor(Map.class);
+        TestClassE item1 = new TestClassE("10");
+        TestClassE item2 = new TestClassE("20");
+        Map<String, TestClassE> map = new HashMap<>();
+        for (TestClassE item : Arrays.asList(item1, item2)) {
+            map.put(item.getId(), item);
+        }
+        instance.processLinks(map, mockUriInfo, mockRmc);
+        assertEquals("widgets/10", map.get("10").link);
+        assertEquals("widgets/20", map.get("20").link);
     }
 
     public static class TestClassG {
