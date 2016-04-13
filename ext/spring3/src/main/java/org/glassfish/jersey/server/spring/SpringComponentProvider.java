@@ -57,7 +57,7 @@ import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 
 import org.jvnet.hk2.spring.bridge.api.SpringBridge;
 import org.jvnet.hk2.spring.bridge.api.SpringIntoHK2Bridge;
-
+import org.springframework.aop.framework.Advised;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -188,6 +188,13 @@ public class SpringComponentProvider implements ComponentProvider {
         @Override
         public Object provide() {
             Object bean = ctx.getBean(beanName);
+            if (bean instanceof Advised) {
+                try {
+                    bean = ((Advised) bean).getTargetSource().getTarget();
+                } catch (Exception e) {
+                    // Ignore and let the injection happen as it normally would.
+                }
+            }
             locator.inject(bean);
             return bean;
         }
