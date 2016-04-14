@@ -190,12 +190,16 @@ public class SpringComponentProvider implements ComponentProvider {
             Object bean = ctx.getBean(beanName);
             if (bean instanceof Advised) {
                 try {
-                    bean = ((Advised) bean).getTargetSource().getTarget();
+                    // Unwrap the bean and inject the values inside of it
+                    Object localBean = ((Advised) bean).getTargetSource().getTarget();
+                    locator.inject(localBean);
                 } catch (Exception e) {
                     // Ignore and let the injection happen as it normally would.
+                    locator.inject(bean);
                 }
+            } else {
+                locator.inject(bean);
             }
-            locator.inject(bean);
             return bean;
         }
 
