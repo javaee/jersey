@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,11 +44,12 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import org.glassfish.grizzly.http.server.HttpServer;
+import static org.glassfish.jersey.logging.LoggingFeature.Verbosity.PAYLOAD_ANY;
 
 /**
  * Jersey example application for custom executors managed async resources.
@@ -95,7 +96,7 @@ public class App {
     public static ResourceConfig create() {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .registerClasses(BlockingPostChatResource.class, FireAndForgetChatResource.class, SimpleLongRunningResource.class)
-                .registerInstances(new LoggingFilter(Logger.getLogger(App.class.getName()), true));
+                .registerInstances(new LoggingFeature(Logger.getLogger(App.class.getName()), PAYLOAD_ANY));
 
         return resourceConfig;
     }

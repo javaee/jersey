@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
@@ -105,7 +105,7 @@ public class HelloWorldResourceITCase extends JerseyTest {
     @Test
     public void testHelloWorld() throws Exception {
         WebTarget t = target(appPath);
-        t.register(new LoggingFilter());
+        t.register(LoggingFeature.class);
         Response r = t.path(resourcePath).request().get();
         assertEquals(200, r.getStatus());
         assertEquals("Hello " + helloName + "!", r.readEntity(String.class));

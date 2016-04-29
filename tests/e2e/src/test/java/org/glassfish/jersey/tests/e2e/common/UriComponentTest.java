@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.uri.UriComponent;
@@ -75,13 +75,13 @@ public class UriComponentTest extends JerseyTest {
     @Override
     protected Application configure() {
         ResourceConfig resourceConfig = new ResourceConfig(MyResource.class);
-        resourceConfig.register(LoggingFilter.class);
+        resourceConfig.register(LoggingFeature.class);
         return resourceConfig;
     }
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.register(LoggingFilter.class);
+        config.register(LoggingFeature.class);
         super.configureClient(config);
     }
 

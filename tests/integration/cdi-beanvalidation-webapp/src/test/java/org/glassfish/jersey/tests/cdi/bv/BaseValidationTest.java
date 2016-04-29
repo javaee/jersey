@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,20 +41,14 @@ package org.glassfish.jersey.tests.cdi.bv;
 
 import java.net.URI;
 
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-
-import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.experimental.theories.Theory;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -81,7 +75,7 @@ public abstract class BaseValidationTest extends JerseyTest {
 
     public static void _testParamValidatedResourceNoParam(final WebTarget target) throws Exception {
 
-        Integer errors = target.register(LoggingFilter.class)
+        Integer errors = target.register(LoggingFeature.class)
                 .path("validated").path("param").path("validate")
                 .request().get(Integer.class);
 
@@ -94,7 +88,7 @@ public abstract class BaseValidationTest extends JerseyTest {
     }
 
     public static void _testParamValidatedResourceParamProvided(WebTarget target) throws Exception {
-        Integer errors = target.register(LoggingFilter.class).path("validated").path("field").path("validate")
+        Integer errors = target.register(LoggingFeature.class).path("validated").path("field").path("validate")
                 .queryParam("q", "one").request().get(Integer.class);
         assertThat(errors, is(0));
     }
@@ -106,7 +100,7 @@ public abstract class BaseValidationTest extends JerseyTest {
 
     public static void _testFieldValidatedResourceNoParam(final WebTarget target) throws Exception {
 
-        Integer errors = target.register(LoggingFilter.class)
+        Integer errors = target.register(LoggingFeature.class)
                 .path("validated").path("field").path("validate")
                 .request().get(Integer.class);
 
@@ -119,7 +113,7 @@ public abstract class BaseValidationTest extends JerseyTest {
     }
 
     public static void _testFieldValidatedResourceParamProvided(final WebTarget target) throws Exception {
-        Integer errors = target.register(LoggingFilter.class).path("validated").path("field").path("validate")
+        Integer errors = target.register(LoggingFeature.class).path("validated").path("field").path("validate")
                 .queryParam("q", "one").request().get(Integer.class);
         assertThat(errors, is(0));
     }
@@ -131,7 +125,7 @@ public abstract class BaseValidationTest extends JerseyTest {
 
     public static void _testPropertyValidatedResourceNoParam(final WebTarget target) throws Exception {
 
-        Integer errors = target.register(LoggingFilter.class)
+        Integer errors = target.register(LoggingFeature.class)
                 .path("validated").path("property").path("validate")
                 .request().get(Integer.class);
 
@@ -144,7 +138,7 @@ public abstract class BaseValidationTest extends JerseyTest {
     }
 
     public static void _testPropertyValidatedResourceParamProvided(final WebTarget target) throws Exception {
-        Integer errors = target.register(LoggingFilter.class).path("validated").path("property").path("validate")
+        Integer errors = target.register(LoggingFeature.class).path("validated").path("property").path("validate")
                 .queryParam("q", "one").request().get(Integer.class);
         assertThat(errors, is(0));
     }
@@ -156,7 +150,7 @@ public abstract class BaseValidationTest extends JerseyTest {
 
     public static void _testOldFashionedResourceNoParam(final WebTarget target) {
 
-        Response response = target.register(LoggingFilter.class)
+        Response response = target.register(LoggingFeature.class)
                 .path("old").path("fashioned").path("validate")
                 .request().get();
 
@@ -169,13 +163,13 @@ public abstract class BaseValidationTest extends JerseyTest {
     }
 
     public static void _testOldFashionedResourceParamProvided(final WebTarget target) throws Exception {
-        String response = target.register(LoggingFilter.class).path("old").path("fashioned").path("validate")
+        String response = target.register(LoggingFeature.class).path("old").path("fashioned").path("validate")
                 .queryParam("q", "one").request().get(String.class);
         assertThat(response, is("one"));
     }
 
     public static void _testNonJaxRsValidationFieldValidatedResourceNoParam(final WebTarget target) {
-        Integer errors = target.register(LoggingFilter.class)
+        Integer errors = target.register(LoggingFeature.class)
                 .path("validated").path("field").path("validate").path("non-jaxrs")
                 .queryParam("q", "not-important-just-to-get-this-through-jax-rs").request().get(Integer.class);
 
@@ -183,7 +177,7 @@ public abstract class BaseValidationTest extends JerseyTest {
     }
 
     public static void _testNonJaxRsValidationFieldValidatedResourceParamProvided(final WebTarget target) {
-        Integer errors = target.register(LoggingFilter.class)
+        Integer errors = target.register(LoggingFeature.class)
                 .path("validated").path("field").path("validate").path("non-jaxrs")
                 .queryParam("q", "not-important-just-to-get-this-through-jax-rs")
                 .queryParam("h", "bummer")

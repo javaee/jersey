@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,7 +70,7 @@ import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
 import org.glassfish.jersey.client.oauth2.OAuth2Parameters;
 import org.glassfish.jersey.client.oauth2.TokenResult;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -96,7 +96,7 @@ public class OAuth2Test extends JerseyTest {
     @Override
     protected Application configure() {
         return new ResourceConfig(MoxyJsonFeature.class, AuthorizationResource.class)
-                .register(new LoggingFilter(Logger.getAnonymousLogger(), true));
+                .register(new LoggingFeature(Logger.getAnonymousLogger(), LoggingFeature.Verbosity.PAYLOAD_ANY));
     }
 
     @Path("oauth")

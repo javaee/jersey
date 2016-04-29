@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -164,13 +164,13 @@ public class AsyncTest extends JerseyTest {
     @Override
     protected Application configure() {
         return new ResourceConfig(AsyncResource.class)
-                .register(new LoggingFilter(LOGGER, true));
+                .register(new LoggingFeature(LOGGER, LoggingFeature.Verbosity.PAYLOAD_ANY));
     }
 
     @Override
     protected void configureClient(ClientConfig config) {
         // TODO: fails with true on request - should be fixed by resolving JERSEY-2273
-        config.register(new LoggingFilter(LOGGER, false));
+        config.register(new LoggingFeature(LOGGER, LoggingFeature.Verbosity.HEADERS_ONLY));
         config.connectorProvider(new JettyConnectorProvider());
     }
 

@@ -407,6 +407,27 @@
 <!ENTITY jersey.jetty.JettyWebContainerFactory "<link xlink:href='&jersey.javadoc.uri.prefix;/jetty/servlet/JettyWebContainerFactory.html'>JettyWebContainerFactory</link>">
 <!ENTITY jersey.jetty.JettyClientProperties.ENABLE_SSL_HOSTNAME_VERIFICATION "<link xlink:href='&jersey.javadoc.uri.prefix;/client/JettyClientProperties.html#ENABLE_SSL_HOSTNAME_VERIFICATION'>JettyClientProperties.ENABLE_SSL_HOSTNAME_VERIFICATION</link>" >
 <!ENTITY jersey.linking.DeclarativeLinkingFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/linking/DeclarativeLinkingFeature.html'>DeclarativeLinkingFeature</link>">
+<!ENTITY jersey.logging.LoggingFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html'>LoggingFeature</link>">
+<!ENTITY jersey.logging.LoggingFeature.DEFAULT_LOGGER_NAME "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#DEFAULT_LOGGER_NAME'>LoggingFeature.DEFAULT_LOGGER_NAME</link>">
+<!ENTITY jersey.logging.LoggingFeature.DEFAULT_LOGGER_LEVEL "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#DEFAULT_LOGGER_LEVEL'>LoggingFeature.DEFAULT_LOGGER_LEVEL</link>">
+<!ENTITY jersey.logging.LoggingFeature.DEFAULT_VERBOSITY "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#DEFAULT_VERBOSITY'>LoggingFeature.DEFAULT_VERBOSITY</link>">
+<!ENTITY jersey.logging.LoggingFeature.DEFAULT_MAX_ENTITY_SIZE "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#DEFAULT_MAX_ENTITY_SIZE'>LoggingFeature.DEFAULT_MAX_ENTITY_SIZE</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_NAME "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_LOGGER_NAME'>LoggingFeature.LOGGING_FEATURE_LOGGER_NAME</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_LOGGER_LEVEL'>LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_VERBOSITY "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_VERBOSITY'>LoggingFeature.LOGGING_FEATURE_VERBOSITY</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_MAX_ENTITY_SIZE'>LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_NAME_CLIENT "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_LOGGER_NAME_CLIENT'>LoggingFeature.LOGGING_FEATURE_LOGGER_NAME_CLIENT</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_LOGGER_LEVEL_CLIENT'>LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_VERBOSITY_CLIENT'>LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE_CLIENT "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_MAX_ENTITY_SIZE_CLIENT'>LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE_CLIENT</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_NAME_SERVER "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_LOGGER_NAME_SERVER'>LoggingFeature.LOGGING_FEATURE_LOGGER_NAME_SERVER</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_SERVER "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_LOGGER_LEVEL_SERVER'>LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_SERVER</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_VERBOSITY_SERVER "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_VERBOSITY_SERVER'>LoggingFeature.LOGGING_FEATURE_VERBOSITY_SERVER</link>">
+<!ENTITY jersey.logging.LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE_SERVER "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.html#LOGGING_FEATURE_MAX_ENTITY_SIZE_SERVER'>LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE_SERVER</link>">
+<!ENTITY jersey.logging.LoggingFeature.Verbosity "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.Verbosity.html'>LoggingFeature.Verbosity</link>">
+<!ENTITY jersey.logging.LoggingFeature.Verbosity.HEADERS_ONLY "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.Verbosity.html#HEADERS_ONLY'>LoggingFeature.Verbosity.HEADERS_ONLY</link>">
+<!ENTITY jersey.logging.LoggingFeature.Verbosity.PAYLOAD_ANY "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.Verbosity.html#PAYLOAD_ANY'>LoggingFeature.Verbosity.PAYLOAD_ANY</link>">
+<!ENTITY jersey.logging.LoggingFeature.Verbosity.PAYLOAD_TEXT "<link xlink:href='&jersey.javadoc.uri.prefix;/logging/LoggingFeature.Verbosity.html#PAYLOAD_TEXT'>LoggingFeature.Verbosity.PAYLOAD_TEXT</link>">
 <!ENTITY jersey.media.Jackson1Feature "<link xlink:href='&jersey.javadoc.uri.prefix;/jackson1/Jackson1Feature.html'>Jackson1Feature</link>" >
 <!ENTITY jersey.media.JacksonFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/jackson/JacksonFeature.html'>JacksonFeature</link>" >
 <!ENTITY jersey.media.JettisonConfig "<link xlink:href='&jersey.javadoc.uri.prefix;/jettison/JettisonConfig.html'>JettisonConfig</link>" >
@@ -866,6 +887,28 @@
 <!ENTITY lit.jersey.jetty.JettyHttpContainerProvider "<literal>JettyHttpContainerProvider</literal>">
 <!ENTITY lit.jersey.jetty.JettyWebContainerFactory "<literal>JettyWebContainerFactory</literal>">
 <!ENTITY lit.jersey.linking.DeclarativeLinkingFeature "<literal>DeclarativeLinkingFeature</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature "<literal>LoggingFeature</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.DEFAULT_LOGGER_NAME "<literal>LoggingFeature.DEFAULT_LOGGER_NAME</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.DEFAULT_LOGGER_LEVEL "<literal>LoggingFeature.DEFAULT_LOGGER_LEVEL</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.DEFAULT_VERBOSITY "<literal>LoggingFeature.DEFAULT_VERBOSITY</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.DEFAULT_MAX_ENTITY_SIZE "<literal>LoggingFeature.DEFAULT_MAX_ENTITY_SIZE</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_NAME "<literal>LoggingFeature.LOGGING_FEATURE_LOGGER_NAME</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL "<literal>LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_VERBOSITY "<literal>LoggingFeature.LOGGING_FEATURE_VERBOSITY</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE "<literal>LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_NAME_CLIENT "<literal>LoggingFeature.LOGGING_FEATURE_LOGGER_NAME_CLIENT</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT "<literal>LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT "<literal>LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE_CLIENT "<literal>LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE_CLIENT</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_NAME_SERVER "<literal>LoggingFeature.LOGGING_FEATURE_LOGGER_NAME_SERVER</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_SERVER "<literal>LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_SERVER</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_VERBOSITY_SERVER "<literal>LoggingFeature.LOGGING_FEATURE_VERBOSITY_SERVER</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE_SERVER "<literal>LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE_SERVER</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.Verbosity "<literal>LoggingFeature.Verbosity</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.Verbosity.HEADERS_ONLY "<literal>LoggingFeature.Verbosity.HEADERS_ONLY</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.Verbosity.PAYLOAD_ANY "<literal>LoggingFeature.Verbosity.PAYLOAD_ANY</literal>">
+<!ENTITY lit.jersey.logging.LoggingFeature.Verbosity.PAYLOAD_TEXT "<literal>LoggingFeature.Verbosity.PAYLOAD_TEXT</literal>">
+<!ENTITY lit.jersey.logging.LoggingFilter "<literal>LoggingFilter</literal>">
 <!ENTITY lit.jersey.media.JacksonFeature "<literal>JacksonFeature</literal>" >
 <!ENTITY lit.jersey.media.JettisonConfig "<literal>JettisonConfig</literal>" >
 <!ENTITY lit.jersey.media.JettisonJaxbContext "<literal>JettisonJaxbContext</literal>" >
