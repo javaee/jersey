@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -91,7 +91,7 @@ public class RestrictedHeaderTest extends JerseyTest {
     @Override
     protected ResourceConfig configure() {
         enable(TestProperties.LOG_TRAFFIC);
-        return new ResourceConfig(MyResource.class, LoggingFilter.class);
+        return new ResourceConfig(MyResource.class, LoggingFeature.class);
     }
 
     @Ignore("The setting of allowRestrictedHeaders system property is global and cached. Only "
@@ -133,7 +133,7 @@ public class RestrictedHeaderTest extends JerseyTest {
     }
 
     private Response testHeaders(Client client) {
-        client.register(new LoggingFilter());
+        client.register(LoggingFeature.class);
         Invocation.Builder builder = client.target(getBaseUri()).path("/").request()
                 .header("Origin", "http://example.com")
                 .header("Access-Control-Request-Method", "POST")

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.server.wadl;
 
 import java.io.File;
@@ -65,9 +66,9 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.util.SaxHelper;
 import org.glassfish.jersey.internal.util.SimpleNamespaceResolver;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -95,7 +96,7 @@ public class ResourceExtendedFlagTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(MyResource.class, AllExtended.class, LoggingFilter.class);
+        return new ResourceConfig(MyResource.class, AllExtended.class, LoggingFeature.class);
     }
 
     @Path("all-extended")
