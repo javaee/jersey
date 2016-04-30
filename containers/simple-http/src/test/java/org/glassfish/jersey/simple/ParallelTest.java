@@ -62,72 +62,72 @@ import static org.junit.Assert.assertEquals;
  */
 public class ParallelTest extends AbstractSimpleServerTester {
 
-    // Server-side dispatcher and selector pool configuration
-    private static final int selectorThreads = Runtime.getRuntime().availableProcessors();
-    private static final int dispatcherThreads = Math.max(8, selectorThreads * 2);
+  // Server-side dispatcher and selector pool configuration
+  private static final int selectorThreads = Runtime.getRuntime().availableProcessors();
+  private static final int dispatcherThreads = Math.max(8, selectorThreads * 2);
 
-    private static final int numberOfThreads = 100;
+  private static final int numberOfThreads = 100;
 
-    private static final String PATH = "test";
-    private static AtomicInteger receivedCounter = new AtomicInteger(0);
-    private static AtomicInteger resourceCounter = new AtomicInteger(0);
-    private static CountDownLatch latch = new CountDownLatch(numberOfThreads);
+  private static final String PATH = "test";
+  private static AtomicInteger receivedCounter = new AtomicInteger(0);
+  private static AtomicInteger resourceCounter = new AtomicInteger(0);
+  private static CountDownLatch latch = new CountDownLatch(numberOfThreads);
 
-    @Path(PATH)
-    public static class MyResource {
+  @Path(PATH)
+  public static class MyResource {
 
-        @GET
-        public String get() {
-            this.sleep();
-            resourceCounter.addAndGet(1);
-            return "GET";
-        }
-
-        private void sleep() {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(ParallelTest.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+    @GET
+    public String get() {
+      this.sleep();
+      resourceCounter.addAndGet(1);
+      return "GET";
     }
 
-    private class ResourceThread extends Thread {
+    private void sleep() {
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException ex) {
+        Logger.getLogger(ParallelTest.class.getName()).log(Level.SEVERE, null, ex);
+      }
+    }
+  }
 
-        private WebTarget target;
-        private String path;
+  private class ResourceThread extends Thread {
 
-        public ResourceThread(WebTarget target, String path) {
-            this.target = target;
-            this.path = path;
-        }
+    private WebTarget target;
+    private String path;
 
-        @Override
-        public void run() {
-            assertEquals("GET", target.path(path).request().get(String.class));
-            receivedCounter.addAndGet(1);
-            latch.countDown();
-        }
+    public ResourceThread(WebTarget target, String path) {
+      this.target = target;
+      this.path = path;
     }
 
-    @Test
-    public void testParallel() {
-        ResourceConfig config = new ResourceConfig(MyResource.class);
-        startServer(config, dispatcherThreads, selectorThreads);
-        WebTarget target = ClientBuilder.newClient().target(getUri().path("/").build());
-
-        for (int i = 1; i <= numberOfThreads; i++) {
-            ResourceThread rt = new ResourceThread(target, PATH);
-            rt.start();
-        }
-
-        try {
-            latch.await();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(ParallelTest.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        int result = receivedCounter.get();
-        assertEquals(numberOfThreads, result);
+    @Override
+    public void run() {
+      assertEquals("GET", target.path(path).request().get(String.class));
+      receivedCounter.addAndGet(1);
+      latch.countDown();
     }
+  }
+
+  @Test
+  public void testParallel() {
+    ResourceConfig config = new ResourceConfig(MyResource.class);
+    startServer(config, dispatcherThreads, selectorThreads);
+    WebTarget target = ClientBuilder.newClient().target(getUri().path("/").build());
+
+    for (int i = 1; i <= numberOfThreads; i++) {
+      ResourceThread rt = new ResourceThread(target, PATH);
+      rt.start();
+    }
+
+    try {
+      latch.await();
+    } catch (InterruptedException ex) {
+      Logger.getLogger(ParallelTest.class.getName()).log(Level.SEVERE, null, ex);
+    }
+
+    int result = receivedCounter.get();
+    assertEquals(numberOfThreads, result);
+  }
 }
