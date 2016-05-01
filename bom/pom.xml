@@ -243,22 +243,7 @@
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.ext.rx</groupId>
-                <artifactId>jersey-rx-client</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.ext.rx</groupId>
                 <artifactId>jersey-rx-client-guava</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.ext.rx</groupId>
-                <artifactId>jersey-rx-client-java8</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.ext.rx</groupId>
-                <artifactId>jersey-rx-client-jsr166e</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

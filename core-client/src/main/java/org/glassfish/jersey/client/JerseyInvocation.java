@@ -42,9 +42,13 @@ package org.glassfish.jersey.client;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
@@ -62,10 +66,13 @@ import javax.ws.rs.RedirectionException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.CompletionStageRxInvoker;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
+import javax.ws.rs.client.NioInvoker;
 import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
@@ -75,7 +82,9 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.client.spi.RxInvokerProvider;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -162,6 +171,15 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
      */
     public static class Builder implements javax.ws.rs.client.Invocation.Builder {
 
+        private static final Set<RxInvokerProvider> INVOKER_PROVIDERS = new HashSet<>();
+        private static final Map<Class<? extends RxInvoker>, RxInvokerProvider> PROVIDER_MAP = new IdentityHashMap<>();
+
+        static {
+            for (final RxInvokerProvider provider : ServiceFinder.find(RxInvokerProvider.class)) {
+                INVOKER_PROVIDERS.add(provider);
+            }
+        }
+
         private final ClientRequest requestContext;
 
         /**
@@ -233,6 +251,47 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         @Override
         public javax.ws.rs.client.AsyncInvoker async() {
             return new AsyncInvoker(this);
+        }
+
+        @Override
+        public NioInvoker nio() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public CompletionStageRxInvoker rx() {
+            return rx(CompletionStageRxInvoker.class, null);
+        }
+
+        @Override
+        public CompletionStageRxInvoker rx(final ExecutorService executorService) {
+            return rx(CompletionStageRxInvoker.class, executorService);
+        }
+
+        @Override
+        public <T extends RxInvoker> T rx(final Class<T> clazz) {
+            return rx(clazz, null);
+        }
+
+        @Override
+        public <T extends RxInvoker> T rx(final Class<T> clazz, final ExecutorService executorService) {
+            final RxInvokerProvider provider = PROVIDER_MAP.get(clazz);
+            RxInvoker customInvoker = null;
+
+            if (provider == null) {
+                for (final RxInvokerProvider invokerProvider : INVOKER_PROVIDERS) {
+                    customInvoker = invokerProvider.getInvoker(clazz, this, executorService);
+
+                    if (customInvoker != null) {
+                        PROVIDER_MAP.put(clazz, invokerProvider);
+                        break;
+                    }
+                }
+            } else {
+                customInvoker = provider.getInvoker(clazz, this, executorService);
+            }
+
+            return clazz.cast(customInvoker);
         }
 
         @Override

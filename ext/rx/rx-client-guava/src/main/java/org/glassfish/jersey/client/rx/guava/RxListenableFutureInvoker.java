@@ -40,13 +40,12 @@
 
 package org.glassfish.jersey.client.rx.guava;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.client.rx.RxInvoker;
-
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Reactive invoker providing support for {@link com.google.common.util.concurrent.ListenableFuture ListenableFuture} from Guava.

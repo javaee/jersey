@@ -38,22 +38,30 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx;
+package org.glassfish.jersey.client.spi;
 
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.FeatureContext;
+import org.glassfish.jersey.client.JerseyCompletionStageRxInvoker;
 
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
+import javax.ws.rs.client.CompletionStageRxInvoker;
+import javax.ws.rs.client.Invocation;
+import java.util.concurrent.ExecutorService;
 
 /**
- * @author Michal Gajdos
+ * Reactive invoker provider for the default reactive invoker based on {@link java.util.concurrent.CompletionStage}.
+ *
+ * @author Sebastian Daschner
+ * @see CompletionStageRxInvoker
+ * @since 3.0
  */
-@ConstrainedTo(RuntimeType.CLIENT)
-public class RxClientAutoDiscoverable implements AutoDiscoverable {
+public final class CompletionStageRxInvokerProvider implements RxInvokerProvider {
 
     @Override
-    public void configure(final FeatureContext context) {
-        context.register(TerminalClientRequestFilter.class);
+    public <T> T getInvoker(final Class<T> invokerType, final Invocation.Builder builder, final ExecutorService executor) {
+        if (CompletionStageRxInvoker.class.isAssignableFrom(invokerType)) {
+            return invokerType.cast(new JerseyCompletionStageRxInvoker(builder, executor));
+        }
+        return null;
     }
+
 }
+

@@ -161,7 +161,7 @@
         </dependency>
     </dependencies>
     <properties>
-        <java.version>1.6</java.version>
+        <java.version>1.8</java.version>
     </properties>
 
     <profiles>

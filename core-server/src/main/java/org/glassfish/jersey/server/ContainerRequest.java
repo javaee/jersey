@@ -60,6 +60,9 @@ import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.NioCompletionHandler;
+import javax.ws.rs.core.NioErrorHandler;
+import javax.ws.rs.core.NioReaderHandler;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -221,6 +224,26 @@ public class ContainerRequest extends InboundMessageContext
      */
     public void setWriter(final ContainerResponseWriter responseWriter) {
         this.responseWriter = responseWriter;
+    }
+
+    @Override
+    public void entity(final NioReaderHandler reader) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void entity(final NioReaderHandler reader, final NioCompletionHandler completion) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void entity(final NioReaderHandler reader, final NioErrorHandler error) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void entity(final NioReaderHandler reader, final NioCompletionHandler completion, final NioErrorHandler error) {
+        throw new UnsupportedOperationException();
     }
 
     /**

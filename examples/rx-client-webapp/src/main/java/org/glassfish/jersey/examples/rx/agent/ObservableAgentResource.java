@@ -43,7 +43,6 @@ package org.glassfish.jersey.examples.rx.agent;
 import java.util.List;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.WebTarget;
@@ -53,8 +52,6 @@ import javax.ws.rs.core.GenericType;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.client.rx.RxWebTarget;
-import org.glassfish.jersey.client.rx.rxjava.RxObservable;
 import org.glassfish.jersey.client.rx.rxjava.RxObservableInvoker;
 import org.glassfish.jersey.examples.rx.domain.AgentResponse;
 import org.glassfish.jersey.examples.rx.domain.Calculation;
@@ -129,22 +126,22 @@ public class ObservableAgentResource {
     }
 
     private Observable<List<Destination>> visited() {
-        return RxObservable.from(destination).path("visited").request()
+        return destination.path("visited").request()
                 // Identify the user.
                 .header("Rx-User", "RxJava")
                 // Reactive invoker.
-                .rx()
+                .rx(RxObservableInvoker.class)
                 // Return a list of destinations.
                 .get(new GenericType<List<Destination>>() {});
     }
 
     private Observable<List<Recommendation>> recommended() {
         // Recommended places.
-        final Observable<Destination> recommended = RxObservable.from(destination).path("recommended").request()
+        final Observable<Destination> recommended = destination.path("recommended").request()
                 // Identify the user.
                 .header("Rx-User", "RxJava")
                 // Reactive invoker.
-                .rx()
+                .rx(RxObservableInvoker.class)
                 // Return a list of destinations.
                 .get(new GenericType<List<Destination>>() {})
                 // Emit destinations one-by-one.
@@ -158,22 +155,20 @@ public class ObservableAgentResource {
                 .cache();
 
         // Forecasts. (depend on recommended destinations)
-        final RxWebTarget<RxObservableInvoker> rxForecast = RxObservable.from(forecast);
         final Observable<Forecast> forecasts = recommended.flatMap(new Func1<Destination, Observable<Forecast>>() {
             @Override
             public Observable<Forecast> call(final Destination destination) {
-                return rxForecast.resolveTemplate("destination", destination.getDestination())
-                        .request().rx().get(Forecast.class);
+                return forecast.resolveTemplate("destination", destination.getDestination())
+                        .request().rx(RxObservableInvoker.class).get(Forecast.class);
             }
         });
 
         // Calculations. (depend on recommended destinations)
-        final RxWebTarget<RxObservableInvoker> rxCalculation = RxObservable.from(calculation);
         final Observable<Calculation> calculations = recommended.flatMap(new Func1<Destination, Observable<Calculation>>() {
             @Override
             public Observable<Calculation> call(final Destination destination) {
-                return rxCalculation.resolveTemplate("from", "Moon").resolveTemplate("to", destination.getDestination())
-                        .request().rx().get(Calculation.class);
+                return calculation.resolveTemplate("from", "Moon").resolveTemplate("to", destination.getDestination())
+                        .request().rx(RxObservableInvoker.class).get(Calculation.class);
             }
         });
 
