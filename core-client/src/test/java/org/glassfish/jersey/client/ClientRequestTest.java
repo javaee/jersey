@@ -42,7 +42,6 @@ package org.glassfish.jersey.client;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.net.URI;
 
 import javax.ws.rs.core.GenericType;
@@ -57,26 +56,38 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import org.hamcrest.core.Is;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import mockit.Mock;
-import mockit.MockUp;
-import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.same;
 
 /**
  * {@code ClientRequest} unit tests.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@RunWith(JMockit.class)
+@RunWith(MockitoJUnitRunner.class)
 public class ClientRequestTest {
+
+    @Mock
+    private MessageBodyWorkers workers;
+    @Mock
+    private GenericType<?> entityType;
+
+    @Before
+    public void initMocks() {
+        MockitoAnnotations.initMocks(this);
+    }
 
     /**
      * Test of resolving properties in the client request.
@@ -157,26 +168,27 @@ public class ClientRequestTest {
         assertEquals("value-request", request.resolveProperty("name", "value-default"));
     }
 
-    @Test
-    public void testSSLExceptionHandling(@Mocked MessageBodyWorkers workers, @Mocked GenericType<?> entityType)
-            throws Exception {
+    private ClientRequest mockThrowing(Exception exception) throws IOException {
         JerseyClient client = new JerseyClientBuilder().build();
         final ClientRequest request = new ClientRequest(
                 URI.create("http://example.org"),
                 client.getConfiguration(),
                 new MapPropertiesDelegate());
 
+        Mockito.doThrow(exception).when(workers)
+                .writeTo(any(), same(entityType.getRawType()), same(entityType.getType()),
+                        Mockito.<Annotation[]>any(), Mockito.<MediaType>any(),
+                        Mockito.<MultivaluedMap<String, Object>>any(), Mockito.<PropertiesDelegate>any(),
+                        Mockito.<OutputStream>any(), Mockito.<Iterable<WriterInterceptor>>any());
+        return request;
+    }
+
+    @Test
+    public void testSSLExceptionHandling()
+            throws Exception {
         final IOException ioException = new IOException("Test");
-        new MockUp<MessageBodyWorkers>(workers) {
-            @Mock
-            OutputStream writeTo(Object entity, Class<?> rawType, Type type, Annotation[] annotations,
-                                 MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
-                                 PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-                                 Iterable<WriterInterceptor> writerInterceptors)
-                    throws java.io.IOException, javax.ws.rs.WebApplicationException {
-                throw ioException;
-            }
-        };
+
+        final ClientRequest request = mockThrowing(ioException);
 
         try {
             request.doWriteEntity(workers, entityType);
@@ -186,26 +198,14 @@ public class ClientRequestTest {
                     e, Is.is(ioException));
         }
     }
+
     @Test
-    public void testRuntimeExceptionBeingReThrown(@Mocked MessageBodyWorkers workers, @Mocked GenericType<?> entityType)
+    public void testRuntimeExceptionBeingReThrown()
             throws Exception {
-        JerseyClient client = new JerseyClientBuilder().build();
-        final ClientRequest request = new ClientRequest(
-                URI.create("http://example.org"),
-                client.getConfiguration(),
-                new MapPropertiesDelegate());
 
         final RuntimeException runtimeException = new RuntimeException("Test");
-        new MockUp<MessageBodyWorkers>(workers) {
-            @Mock
-            OutputStream writeTo(Object entity, Class<?> rawType, Type type, Annotation[] annotations,
-                                 MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
-                                 PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-                                 Iterable<WriterInterceptor> writerInterceptors)
-                    throws java.io.IOException, javax.ws.rs.WebApplicationException {
-                throw runtimeException;
-            }
-        };
+
+        ClientRequest request = mockThrowing(runtimeException);
 
         try {
             request.doWriteEntity(workers, entityType);
