@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.tests.e2e.common;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -50,10 +51,20 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -79,7 +90,8 @@ import static org.hamcrest.Matchers.lessThan;
 @Suite.SuiteClasses({
         LoggingFeatureTest.ClientTest.class,
         LoggingFeatureTest.ContainerTest.class,
-        LoggingFeatureTest.ContainerAutodiscoveryTest.class
+        LoggingFeatureTest.ContainerAutodiscoveryTest.class,
+        LoggingFeatureTest.FiltersOrderTest.class
 })
 public class LoggingFeatureTest {
 
@@ -371,5 +383,92 @@ public class LoggingFeatureTest {
         }
 
         return loggingFilterRecords;
+    }
+
+    public static class FiltersOrderTest extends JerseyTest {
+
+        @Priority(1000)
+        private static class CustomFilter implements ClientRequestFilter, ClientResponseFilter,
+                                                     ContainerRequestFilter, ContainerResponseFilter {
+
+            static final String CUSTOM_HEADER = "custom_header";
+
+            @Override
+            public void filter(final ClientRequestContext requestContext) throws IOException {
+                requestContext.getHeaders().add(CUSTOM_HEADER, "client/request");
+            }
+
+            @Override
+            public void filter(final ClientRequestContext requestContext, final ClientResponseContext responseContext)
+                    throws IOException {
+                responseContext.getHeaders().add(CUSTOM_HEADER, "client/response");
+            }
+
+            @Override
+            public void filter(final ContainerRequestContext requestContext) throws IOException {
+                requestContext.getHeaders().add(CUSTOM_HEADER, "container/request");
+            }
+
+            @Override
+            public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
+                    throws IOException {
+                responseContext.getHeaders().add(CUSTOM_HEADER, "container/response");
+            }
+        }
+
+        @Override
+        protected Application configure() {
+            set(TestProperties.RECORD_LOG_LEVEL, Level.INFO.intValue());
+
+            return new ResourceConfig(MyResource.class)
+                    .property(LoggingFeature.LOGGING_FEATURE_LOGGER_NAME, LOGGER_NAME)
+                    .property(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL, "INFO")
+                    .register(CustomFilter.class);
+        }
+
+        @Test
+        public void testFilterAsContainerFilter() throws Exception {
+            // Correct response status.
+            assertThat(target()
+                    .register(CustomFilter.class)
+                    .register(new LoggingFeature(Logger.getLogger(LOGGER_NAME),
+                            Level.INFO,
+                            LoggingFeature.Verbosity.HEADERS_ONLY,
+                            0))
+                    .request().get().getStatus(), is(Response.Status.OK.getStatusCode()));
+
+            for (LogRecord record : getLoggedRecords()) {
+                System.out.println(record.getMessage());
+            }
+
+            // --- client request log entry
+            // client added header before request has sent (and logged)
+            assertThat(getLoggedRecords().get(0).getMessage(),
+                    containsString("1 > custom_header: client/request\n"));
+
+
+            // --- container request log entry
+            // container receives header from client request
+            assertThat(getLoggedRecords().get(1).getMessage(),
+                    containsString("1 > custom_header: client/request\n"));
+            // container has added its own header after logging filter logged message
+            assertThat(getLoggedRecords().get(1).getMessage(),
+                    not(containsString("1 > custom_header: container/request\n")));
+
+
+            // --- container response log entry
+            // container added header to the response and it was logged
+            assertThat(getLoggedRecords().get(2).getMessage(),
+                    containsString("1 < custom_header: container/response\n"));
+
+            // --- client response log entry
+            // client received header
+            assertThat(getLoggedRecords().get(3).getMessage(),
+                    containsString("1 < custom_header: container/response\n"));
+            assertThat(getLoggedRecords().get(3).getMessage(),
+                    not(containsString("1 < custom_header: client/response\n")));
+
+        }
+
     }
 }
