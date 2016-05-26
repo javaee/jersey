@@ -71,7 +71,7 @@ import org.glassfish.jersey.message.MessageUtils;
  */
 @ConstrainedTo(RuntimeType.CLIENT)
 @PreMatching
-@Priority(Integer.MIN_VALUE)
+@Priority(Integer.MAX_VALUE)
 @SuppressWarnings("ClassWithMultipleLoggers")
 final class ClientLoggingFilter extends LoggingInterceptor implements ClientRequestFilter, ClientResponseFilter {
 
