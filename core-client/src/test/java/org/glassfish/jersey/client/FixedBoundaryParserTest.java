@@ -52,7 +52,7 @@ import static org.junit.Assert.assertNull;
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  **/
-public class ChunkedInputTest {
+public class FixedBoundaryParserTest {
 
     public static final String DELIMITER_4 = "1234";
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,7 +53,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -81,6 +81,7 @@ public class NoEntityTest extends JerseyTest {
 
     @XmlRootElement
     public static class MyEntity {
+
         @XmlAttribute
         private String name;
 
@@ -95,6 +96,7 @@ public class NoEntityTest extends JerseyTest {
 
     @Path("resource")
     public static class MyResource {
+
         @GET
         @Produces("application/json")
         @Path("no-entity")
@@ -123,8 +125,8 @@ public class NoEntityTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        LoggingFilter loggingFilter = new LoggingFilter(Logger.getLogger(NoEntityTest.class.toString()), true);
-        config.register(loggingFilter);
+        config.register(
+                new LoggingFeature(Logger.getLogger(NoEntityTest.class.toString()), LoggingFeature.Verbosity.PAYLOAD_ANY));
     }
 
     /**

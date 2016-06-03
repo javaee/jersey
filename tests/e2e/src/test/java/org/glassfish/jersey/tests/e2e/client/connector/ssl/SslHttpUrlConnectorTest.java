@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,7 +56,7 @@ import javax.net.ssl.SSLSocketFactory;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -94,7 +94,7 @@ public class SslHttpUrlConnectorTest extends AbstractConnectorServerTest {
                 .withConfig(cc)
                 .sslContext(sslContext)
                 .register(HttpAuthenticationFeature.basic("user", "password"))
-                .register(new LoggingFilter())
+                .register(LoggingFeature.class)
                 .build();
 
         final Response response = client.target(Server.BASE_URI).path("/").request().get();

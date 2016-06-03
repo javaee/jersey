@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -198,7 +198,8 @@ public class ResponseReadAndBufferEntityTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
         enable(TestProperties.LOG_TRAFFIC);
 
-        return new ResourceConfig(Resource.class).registerInstances(new LoggingFilter(LOGGER, true));
+        return new ResourceConfig(Resource.class)
+                .registerInstances(new LoggingFeature(LOGGER, LoggingFeature.Verbosity.PAYLOAD_ANY));
     }
 
     @Test
@@ -267,7 +268,7 @@ public class ResponseReadAndBufferEntityTest extends JerseyTest {
     /**
      * This method tests behavior of input stream operations in case the underlying input stream throws an exception when closed.
      * Reproducer for JRFCAF-1344.
-     *
+     * <p>
      * UC-1 : Read unbuffered entity and then try to close the context
      */
     @Test
@@ -310,7 +311,7 @@ public class ResponseReadAndBufferEntityTest extends JerseyTest {
     /**
      * This method tests behavior of input stream operations in case the underlying input stream throws an exception when closed.
      * Reproducer for JRFCAF-1344.
-     *
+     * <p>
      * UC-2 : Read buffered entity multiple times and then try to close the context
      */
     @Test
@@ -360,7 +361,7 @@ public class ResponseReadAndBufferEntityTest extends JerseyTest {
     /**
      * This method tests behavior of input stream operations in case the underlying input stream throws an exception when closed.
      * Reproducer for JRFCAF-1344.
-     *
+     * <p>
      * UC-3 : Try to close the response - underlying exception should be reported.
      */
     @Test

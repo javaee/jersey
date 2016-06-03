@@ -46,8 +46,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -107,18 +110,23 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
         return new FixedBoundaryParser(boundary);
     }
 
-    private static class FixedBoundaryParser implements ChunkParser {
+    /**
+     * Create a new chunk multi-parser that will split the response entity input stream
+     * based on multiple fixed boundary strings.
+     *
+     * @param boundaries chunk boundaries.
+     * @return new fixed boundary string-based chunk parser.
+     */
+    public static ChunkParser createMultiParser(final String... boundaries) {
+        return new FixedMultiBoundaryParser(boundaries);
+    }
 
-        private final byte[] delimiter;
-
-        public FixedBoundaryParser(final byte[] boundary) {
-            delimiter = Arrays.copyOf(boundary, boundary.length);
-        }
+    private abstract static class AbstractBoundaryParser implements ChunkParser {
 
         @Override
         public byte[] readChunk(final InputStream in) throws IOException {
             final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            byte[] delimiterBuffer = new byte[delimiter.length];
+            byte[] delimiterBuffer = new byte[getDelimiterBufferSize()];
 
             int data;
             int dPos;
@@ -126,15 +134,17 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                 dPos = 0;
                 while ((data = in.read()) != -1) {
                     final byte b = (byte) data;
+                    byte[] delimiter = getDelimiter(b, dPos, delimiterBuffer);
 
                     // last read byte is part of the chunk delimiter
-                    if (b == delimiter[dPos]) {
+                    if (delimiter != null && b == delimiter[dPos]) {
                         delimiterBuffer[dPos++] = b;
                         if (dPos == delimiter.length) {
                             // found chunk delimiter
                             break;
                         }
                     } else if (dPos > 0) {
+                        delimiter = getDelimiter(dPos - 1, delimiterBuffer);
                         delimiterBuffer[dPos] = b;
 
                         int matched = matchTail(delimiterBuffer, 1, dPos, delimiter);
@@ -159,13 +169,43 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
 
             } while (data != -1 && buffer.size() == 0); // skip an empty chunk
 
-            if (dPos > 0 && dPos != delimiter.length) {
+            if (dPos > 0 && dPos != getDelimiter(dPos - 1, delimiterBuffer).length) {
                 // flush the delimiter buffer, if not empty - parsing finished in the middle of a potential delimiter sequence
                 buffer.write(delimiterBuffer, 0, dPos);
             }
 
             return (buffer.size() > 0) ? buffer.toByteArray() : null;
         }
+
+        /**
+         * Selects a delimiter which corresponds to delimiter buffer. Method automatically appends {@code b} param on the
+         * {@code pos} position of {@code delimiterBuffer} array and then starts the selection process with a newly created array.
+         *
+         * @param b               byte which will be added on the {@code pos} position of {@code delimiterBuffer} array
+         * @param pos             number of bytes from the delimiter buffer which will be used in processing
+         * @param delimiterBuffer current content of the delimiter buffer
+         * @return delimiter which corresponds to delimiterBuffer
+         */
+        abstract byte[] getDelimiter(byte b, int pos, byte[] delimiterBuffer);
+
+        /**
+         * Selects a delimiter which corresponds to delimiter buffer.
+         *
+         * @param pos             position of the last read byte
+         * @param delimiterBuffer number of bytes from the delimiter buffer which will be used in processing
+         * @return delimiter which corresponds to delimiterBuffer
+         */
+        abstract byte[] getDelimiter(int pos, byte[] delimiterBuffer);
+
+        /**
+         * Returns a delimiter buffer size depending on the selected strategy.
+         * <p>
+         * If a strategy has multiple registered delimiters, then the delimiter buffer should be a length of the longest
+         * delimiter.
+         *
+         * @return length of the delimiter buffer
+         */
+        abstract int getDelimiterBufferSize();
 
         /**
          * Tries to find an element intersection between two arrays in a way that intersecting elements must be
@@ -192,6 +232,10 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
          * any part of the head of the pattern, otherwise returns number of overlapping elements.
          */
         private static int matchTail(byte[] buffer, int offset, int length, byte[] pattern) {
+            if (pattern == null) {
+                return 0;
+            }
+
             outer:
             for (int i = 0; i < length; i++) {
                 final int tailLength = length - i;
@@ -206,6 +250,87 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                 return tailLength;
             }
             return 0;
+        }
+    }
+
+    private static class FixedBoundaryParser extends AbstractBoundaryParser {
+
+        private final byte[] delimiter;
+
+        public FixedBoundaryParser(final byte[] boundary) {
+            delimiter = Arrays.copyOf(boundary, boundary.length);
+        }
+
+        @Override
+        byte[] getDelimiter(byte b, int pos, byte[] delimiterBuffer) {
+            return delimiter;
+        }
+
+        @Override
+        byte[] getDelimiter(int pos, byte[] delimiterBuffer) {
+            return delimiter;
+        }
+
+        @Override
+        int getDelimiterBufferSize() {
+            return delimiter.length;
+        }
+    }
+
+    private static class FixedMultiBoundaryParser extends AbstractBoundaryParser {
+
+        private final List<byte[]> delimiters = new ArrayList<byte[]>();
+
+        private final int longestDelimiterLength;
+
+        public FixedMultiBoundaryParser(String... boundaries) {
+            for (String boundary: boundaries) {
+                byte[] boundaryBytes = boundary.getBytes();
+                delimiters.add(Arrays.copyOf(boundaryBytes, boundaryBytes.length));
+            }
+
+            Collections.sort(delimiters, new Comparator<byte[]>() {
+                @Override
+                public int compare(byte[] o1, byte[] o2) {
+                    return Integer.compare(o1.length, o2.length);
+                }
+            });
+
+            byte[] longestDelimiter = delimiters.get(delimiters.size() - 1);
+            this.longestDelimiterLength = longestDelimiter.length;
+        }
+
+        @Override
+        byte[] getDelimiter(byte b, int pos, byte[] delimiterBuffer) {
+            byte[] buffer = Arrays.copyOf(delimiterBuffer, delimiterBuffer.length);
+            buffer[pos] = b;
+
+            return getDelimiter(pos, buffer);
+        }
+
+        @Override
+        byte[] getDelimiter(int pos, byte[] delimiterBuffer) {
+            outer:
+            for (byte[] delimiter: delimiters) {
+                if (pos > delimiter.length) {
+                    continue;
+                }
+
+                for (int i = 0; i <= pos && i < delimiter.length; i++) {
+                    if (delimiter[i] != delimiterBuffer[i]) {
+                        continue outer;
+                    } else if (pos == i) {
+                        return delimiter;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        int getDelimiterBufferSize() {
+            return this.longestDelimiterLength;
         }
     }
 

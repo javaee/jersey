@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -103,7 +103,7 @@ public abstract class AbstractJettyServerTester {
 
     public void startServer(Class... resources) {
         ResourceConfig config = new ResourceConfig(resources);
-        config.register(new LoggingFilter(LOGGER, true));
+        config.register(new LoggingFeature(LOGGER, LoggingFeature.Verbosity.PAYLOAD_ANY));
         final URI baseUri = getBaseUri();
         server = JettyHttpContainerFactory.createServer(baseUri, config);
         LOGGER.log(Level.INFO, "Jetty-http server started on base uri: " + baseUri);

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,8 +47,8 @@ import javax.ws.rs.Path;
 
 import javax.validation.constraints.NotNull;
 
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
@@ -186,7 +186,7 @@ public class PropertyValidationTest {
 
     private ResourceConfig initResourceConfig(final Boolean disableValidation,
                                               final Boolean disableAutoDiscovery, final boolean registerFeature) {
-        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class).register(LoggingFilter.class);
+        final ResourceConfig resourceConfig = new ResourceConfig(Resource.class).register(LoggingFeature.class);
 
         if (registerFeature) {
             resourceConfig.register(ValidationFeature.class);

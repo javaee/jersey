@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,7 +49,7 @@ import javax.net.ssl.SSLContext;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,7 +84,7 @@ public class SslConnectorConfigurationTest extends AbstractConnectorServerTest {
 
         // client basic auth demonstration
         client.register(HttpAuthenticationFeature.basic("user", "password"));
-        final WebTarget target = client.target(Server.BASE_URI).register(new LoggingFilter());
+        final WebTarget target = client.target(Server.BASE_URI).register(LoggingFeature.class);
 
         final Response response = target.path("/").request().get(Response.class);
 
@@ -107,7 +107,7 @@ public class SslConnectorConfigurationTest extends AbstractConnectorServerTest {
                 .sslContext(sslContext)
                 .build();
 
-        final WebTarget target = client.target(Server.BASE_URI).register(new LoggingFilter());
+        final WebTarget target = client.target(Server.BASE_URI).register(LoggingFeature.class);
 
         final Response response = target.path("/").request().get(Response.class);
 
@@ -130,7 +130,7 @@ public class SslConnectorConfigurationTest extends AbstractConnectorServerTest {
                 .sslContext(sslContext)
                 .build();
 
-        WebTarget target = client.target(Server.BASE_URI).register(new LoggingFilter());
+        WebTarget target = client.target(Server.BASE_URI).register(LoggingFeature.class);
 
         boolean caught = false;
         try {

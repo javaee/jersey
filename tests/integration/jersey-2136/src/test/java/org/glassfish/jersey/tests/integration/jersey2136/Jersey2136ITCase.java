@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,7 @@ import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -69,6 +70,11 @@ public class Jersey2136ITCase extends JerseyTest {
         return new ExternalTestContainerFactory();
     }
 
+    // This test requires app engine to be launched by a maven plugin,
+    // which was causing intermittent problems with hanging app engine process.
+    // After un-ignoring this test, make sure to uncomment the app engine plugin
+    // execution in the project's pom.xml
+    @Ignore
     @Test
     public void testGet() throws Exception {
         final Response response = target().request().get();

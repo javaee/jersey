@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -319,13 +319,18 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
     }
 
     private void copyProviders(Configuration source, Configurable<?> target) {
+        final Configuration targetConfig = target.getConfiguration();
         for (Class<?> c : source.getClasses()) {
-            target.register(c, source.getContracts(c));
+            if (!targetConfig.isRegistered(c)) {
+                target.register(c, source.getContracts(c));
+            }
         }
 
         for (Object o : source.getInstances()) {
             Class<?> c = o.getClass();
-            target.register(c, source.getContracts(c));
+            if (!targetConfig.isRegistered(o)) {
+                target.register(c, source.getContracts(c));
+            }
         }
     }
 

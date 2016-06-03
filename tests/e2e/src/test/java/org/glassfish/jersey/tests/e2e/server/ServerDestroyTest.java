@@ -51,6 +51,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
@@ -97,6 +99,7 @@ public class ServerDestroyTest extends JerseyTest {
         destroyed.put("filter", false);
         destroyed.put("writer", false);
         destroyed.put("singleton-factory", false);
+        destroyed.put("feature", false);
 
         super.setUp();
     }
@@ -153,7 +156,12 @@ public class ServerDestroyTest extends JerseyTest {
 
         @Override
         public Set<Class<?>> getClasses() {
-            return Sets.<Class<?>>newHashSet(Resource.class, MyFilter.class, MyWriter.class, MyContainerLifecycleListener.class);
+            return Sets.<Class<?>>newHashSet(
+                    Resource.class,
+                    MyFilter.class,
+                    MyWriter.class,
+                    MyContainerLifecycleListener.class,
+                    MyFeature.class);
         }
 
         @Override
@@ -211,6 +219,19 @@ public class ServerDestroyTest extends JerseyTest {
         @Override
         public void onShutdown(final Container container) {
             assertThat(instance, notNullValue());
+        }
+    }
+
+    public static class MyFeature implements Feature {
+
+        @PreDestroy
+        public void preDestroy() {
+            destroyed.put("feature", true);
+        }
+
+        @Override
+        public boolean configure(final FeatureContext context) {
+            return true;
         }
     }
 

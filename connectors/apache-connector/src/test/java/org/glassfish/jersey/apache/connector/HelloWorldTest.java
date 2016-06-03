@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,7 +65,7 @@ import javax.ws.rs.core.Response;
 import javax.net.ssl.SSLSession;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -102,6 +102,7 @@ public class HelloWorldTest extends JerseyTest {
 
     @Path("helloworld")
     public static class HelloWorldResource {
+
         public static final String CLICHED_MESSAGE = "Hello World!";
 
         @GET
@@ -129,7 +130,8 @@ public class HelloWorldTest extends JerseyTest {
     @Override
     protected Application configure() {
         ResourceConfig config = new ResourceConfig(HelloWorldResource.class);
-        config.register(new LoggingFilter(LOGGER, true));
+        config.register(new LoggingFeature(LOGGER, Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY,
+                LoggingFeature.DEFAULT_MAX_ENTITY_SIZE));
         return config;
     }
 
@@ -352,7 +354,7 @@ public class HelloWorldTest extends JerseyTest {
 
     /**
      * JERSEY-2157 reproducer.
-     *
+     * <p>
      * The test ensures that entities of the error responses which cause
      * WebApplicationException being thrown by a JAX-RS client are buffered
      * and that the underlying input connections are automatically released

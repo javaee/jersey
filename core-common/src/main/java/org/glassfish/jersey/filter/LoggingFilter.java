@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,11 +76,13 @@ import org.glassfish.jersey.message.MessageUtils;
 /**
  * Universal logging filter.
  * <p/>
- * Can be used on client or server side. Has the highest priority.
+ * As of Jersey 2.23 and later, this filter has been deprecated and will be removed soon.
+ * Please use the {@link org.glassfish.jersey.logging.LoggingFeature} instead.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula
  */
+@Deprecated
 @PreMatching
 @Priority(Integer.MIN_VALUE)
 @SuppressWarnings("ClassWithMultipleLoggers")

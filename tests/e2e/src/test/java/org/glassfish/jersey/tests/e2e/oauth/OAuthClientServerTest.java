@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,7 +64,7 @@ import org.glassfish.jersey.client.oauth1.AccessToken;
 import org.glassfish.jersey.client.oauth1.ConsumerCredentials;
 import org.glassfish.jersey.client.oauth1.OAuth1AuthorizationFlow;
 import org.glassfish.jersey.client.oauth1.OAuth1ClientSupport;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.oauth1.DefaultOAuth1Provider;
 import org.glassfish.jersey.server.oauth1.OAuth1Provider;
@@ -114,7 +114,8 @@ public class OAuthClientServerTest extends JerseyTest {
         final ResourceConfig resourceConfig = new ResourceConfig();
         resourceConfig.register(oAuth1ServerFeature);
         resourceConfig.register(MyProtectedResource.class);
-        resourceConfig.register(new LoggingFilter(Logger.getLogger(OAuthClientServerTest.class.getName()), true));
+        resourceConfig.register(new LoggingFeature(Logger.getLogger(OAuthClientServerTest.class.getName()),
+                LoggingFeature.Verbosity.PAYLOAD_ANY));
         resourceConfig.register(OAuthAuthorizationResource.class);
         resourceConfig.property(OAuth1ServerProperties.TIMESTAMP_UNIT, "SECONDS");
         resourceConfig.property(OAuth1ServerProperties.MAX_NONCE_CACHE_SIZE, 20);

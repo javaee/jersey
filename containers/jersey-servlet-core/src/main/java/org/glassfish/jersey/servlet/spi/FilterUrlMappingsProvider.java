@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,23 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.servlet.spi;
+
+import javax.servlet.FilterConfig;
+import java.util.List;
+
 /**
- * Jersey Request & Response Filtering support & utility classes.
+ * Provides an access to context path from the filter configuration.
+ *
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-package org.glassfish.jersey.filter;
+public interface FilterUrlMappingsProvider {
+
+    /**
+     * Return configured context path from the filter configuration.
+     *
+     * @param filterConfig the {@link FilterConfig} object
+     * @returns the {@code List} of url-patterns
+     */
+    List<String> getFilterUrlMappings(final FilterConfig filterConfig);
+}

@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,7 @@
     <parent>
         <groupId>org.glassfish.jersey.tests</groupId>
         <artifactId>project</artifactId>
-        <version>2.23-SNAPSHOT</version>
+        <version>2.24-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.tests.integration</groupId>
@@ -113,6 +113,7 @@
         <module>security-digest</module>
         <module>servlet-2.5-autodiscovery-1</module>
         <module>servlet-2.5-autodiscovery-2</module>
+        <module>servlet-2.5-filter</module>
         <module>servlet-2.5-inflector-1</module>
         <module>servlet-2.5-init-1</module>
         <module>servlet-2.5-init-2</module>
@@ -128,6 +129,7 @@
         <module>servlet-2.5-reload</module>
         <module>servlet-3-async</module>
         <module>servlet-3-chunked-io</module>
+        <module>servlet-3-filter</module>
         <module>servlet-3-gf-async</module>
         <module>servlet-3-inflector-1</module>
         <module>servlet-3-init-1</module>

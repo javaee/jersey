@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,10 +62,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -190,7 +190,7 @@ public abstract class JerseyTest {
 
     /**
      * Initialize JerseyTest instance.
-     *
+     * <p>
      * This constructor can be used from an extending subclass.
      * <p>
      * When this constructor is used, the extending concrete subclass must implement one of the
@@ -209,7 +209,7 @@ public abstract class JerseyTest {
 
     /**
      * Initialize JerseyTest instance and specify the test container factory to be used by this test.
-     *
+     * <p>
      * This constructor can be used from an extending subclass.
      * <p>
      * When this constructor is used, the extending concrete subclass must implement one of the
@@ -230,7 +230,7 @@ public abstract class JerseyTest {
 
     /**
      * Initialize JerseyTest instance.
-     *
+     * <p>
      * This constructor can be used from an extending subclass.
      * <p>
      * When this constructor is used, the extending concrete subclass must implement one of the
@@ -387,7 +387,7 @@ public abstract class JerseyTest {
 
     /**
      * Create the tested JAX-RS /Jersey application.
-     *
+     * <p>
      * This method may be overridden by subclasses to provide the configured JAX-RS /Jersey application to be tested.
      * The method may be also used to configure {@code JerseyTest} instance properties.
      * <p>
@@ -415,7 +415,7 @@ public abstract class JerseyTest {
 
     /**
      * Create and configure deployment context for the tested application.
-     *
+     * <p>
      * This method may be overridden by subclasses to provide custom test container deployment context for the tested
      * application. The method may be also used to configure {@code JerseyTest} instance properties.
      * <p>
@@ -434,7 +434,6 @@ public abstract class JerseyTest {
      * </p>
      *
      * @return configured deployment context for the tested application.
-     *
      * @since 2.8
      */
     protected DeploymentContext configureDeployment() {
@@ -443,7 +442,7 @@ public abstract class JerseyTest {
 
     /**
      * Return an instance of {@link TestContainerFactory} class.
-     *
+     * <p>
      * <p>
      * This method is used only once during {@code JerseyTest} instance construction to retrieve the factory responsible
      * for providing {@link org.glassfish.jersey.test.spi.TestContainer} that will be used to deploy the tested application.
@@ -465,7 +464,6 @@ public abstract class JerseyTest {
      * </p>
      *
      * @return an instance of {@link TestContainerFactory} class.
-     *
      * @throws TestContainerException if the initialization of {@link TestContainerFactory} instance is not successful.
      */
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
@@ -598,7 +596,7 @@ public abstract class JerseyTest {
      * @throws TestContainerException if the default test container factory cannot be obtained,
      *                                or the test application deployment context is not supported
      *                                by the test container factory.
-     * @throws Exception if an exception is thrown during setting up the test environment.
+     * @throws Exception              if an exception is thrown during setting up the test environment.
      */
     @Before
     public void setUp() throws Exception {
@@ -682,7 +680,10 @@ public abstract class JerseyTest {
 
         //check if logging is required
         if (isEnabled(TestProperties.LOG_TRAFFIC)) {
-            clientConfig.register(new LoggingFilter(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
+            clientConfig.register(new LoggingFeature(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)
+                    ? LoggingFeature.Verbosity.PAYLOAD_ANY
+                    : LoggingFeature.Verbosity.HEADERS_ONLY));
+
         }
 
         configureClient(clientConfig);
@@ -692,7 +693,7 @@ public abstract class JerseyTest {
 
     /**
      * Configure the test client.
-     *
+     * <p>
      * The method can be overridden by {@code JerseyTest} subclasses to conveniently configure the test client instance
      * used by Jersey test framework (either returned from {@link #client()} method or used to create
      * {@link javax.ws.rs.client.WebTarget} instances returned from one of the {@code target} methods
