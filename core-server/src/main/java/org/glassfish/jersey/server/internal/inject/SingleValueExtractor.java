@@ -39,12 +39,12 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import org.glassfish.jersey.internal.inject.ExtractorException;
+
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverter;
-
-import org.glassfish.jersey.internal.inject.ExtractorException;
 
 /**
  * Extract value of the parameter using a single parameter value and the underlying
@@ -81,7 +81,9 @@ final class SingleValueExtractor<T> extends AbstractParamValueExtractor<T> imple
     public T extract(final MultivaluedMap<String, String> parameters) {
         final String value = parameters.getFirst(getName());
         try {
-            return fromString((value == null && isDefaultValueRegistered()) ? getDefaultValueString() : value);
+            String val = (value == null && isDefaultValueRegistered()) ? getDefaultValueString() : value;
+            if (val == null) return null;
+            return fromString(val);
         } catch (final WebApplicationException | ProcessingException ex) {
             throw ex;
         } catch (final IllegalArgumentException ex) {

@@ -40,21 +40,20 @@
 
 package org.glassfish.jersey.media.multipart.internal;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.StringWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import jersey.repackaged.com.google.common.collect.Sets;
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.Verifications;
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.glassfish.jersey.media.multipart.MultiPart;
+import org.junit.Test;
+import org.jvnet.mimepull.MIMEMessage;
+import org.jvnet.mimepull.MIMEParsingException;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -71,18 +70,27 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.StringWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import org.glassfish.jersey.media.multipart.BodyPart;
-import org.glassfish.jersey.media.multipart.BodyPartEntity;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.glassfish.jersey.media.multipart.MultiPart;
-
-import org.junit.Test;
-import org.jvnet.mimepull.MIMEMessage;
-import org.jvnet.mimepull.MIMEParsingException;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -91,11 +99,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import jersey.repackaged.com.google.common.collect.Sets;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
 
 /**
  * Tests for multipart {@code MessageBodyReader} and {@code MessageBodyWriter} as well as {@code FormDataMultiPart} and {@code
@@ -121,6 +124,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
                 DefaultFormDataParamResource.class,
                 NonContentTypeForPartResource.class,
                 MediaTypeWithBoundaryResource.class,
+                JAXBResource.class,
                 FileResource.class,
                 InputStreamResource.class);
     }
@@ -656,6 +660,72 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         assertEquals("OK", connection.getResponseMessage());
     }
 
+    @Path("JAXBResource")
+    @Consumes("multipart/form-data")
+    @Produces("text/plain")
+    public static class JAXBResource {
+        @XmlAccessorType(XmlAccessType.FIELD)
+        @XmlType(name = "person", propOrder = { "name", "address"})
+        @XmlRootElement(name = "Person")
+        public class Person {
+
+            @XmlElement(required = false)
+            private String name;
+
+            @XmlElement(required = false)
+            private String address;
+
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String value) {
+                this.name = value;
+            }
+
+            public String getAddress() {
+                return address;
+            }
+
+            public void setAddress(String value) {
+                this.address = value;
+            }
+
+
+
+        }
+
+        /**
+         * This method takes an optional data object making it null similiar to how it was in Jersey 2.12
+         * This test is really validating the SingleValueExtractor code submitted for Jersey 3113
+         */
+        @POST
+        @Path("PersonResource")
+        public long fileSize2(@FormDataParam("person") final Person personResource, @FormDataParam("file") final File file) {
+            assertNull(personResource);
+            return file.length();
+        }
+
+    }
+
+    /**
+     * JERSEY-3113 reproducer. Make sure that optional JAXB objects are treated correctly rather than a NullPointerException
+     */
+    @Test
+    public void testOptionalJAXBObject() throws Exception {
+        final FormDataMultiPart multipart = new FormDataMultiPart();
+        final byte[] content = new byte[2 * 8192];
+        final FormDataBodyPart bodypart = new FormDataBodyPart(FormDataContentDisposition.name("file").fileName("file").build(),
+                content, MediaType.TEXT_PLAIN_TYPE);
+        multipart.bodyPart(bodypart);
+
+        final Response response = target().path("JAXBResource").path("PersonResource")
+                .request()
+                .post(Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA));
+        assertNotNull(response.readEntity(int.class));
+    }
+
     @Path("/FileResource")
     @Consumes("multipart/form-data")
     @Produces("text/plain")
@@ -688,6 +758,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
             return file.length();
         }
     }
+
 
     /**
      * JERSEY-2663 reproducer. Make sure that temporary file created by MIMEPull is not copied into new temporary file created
