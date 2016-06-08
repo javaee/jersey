@@ -386,7 +386,7 @@
                     <configuration>
                         <mavenExecutorId>forked-path</mavenExecutorId>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <preparationGoals>clean install</preparationGoals>
+                        <preparationGoals>${release.preparationGoals}</preparationGoals>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
                         <arguments>${release.tests.args} ${release.arguments}</arguments>
@@ -713,7 +713,7 @@
                 </property>
             </activation>
             <properties>
-                <skip.release.tests>-Dmaven.test.skip=true -Dskip.tests=true</skip.release.tests>
+                <release.tests.args>-Dskip.tests=true</release.tests.args>
                 <skip.tests>true</skip.tests>
             </properties>
         </profile>
@@ -792,6 +792,20 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.sonatype.plugins</groupId>
+                            <artifactId>nexus-staging-maven-plugin</artifactId>
+                            <version>1.6.7</version>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-gpg-plugin</artifactId>
+                            <version>1.6</version>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -804,6 +818,26 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-deploy-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>default-deploy</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>deploy</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <serverId>jvnet-nexus-staging</serverId>
+                            <nexusUrl>https://maven.java.net/</nexusUrl>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -1820,6 +1854,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <release.tests.args>-Dmaven.test.skip=false</release.tests.args>
+        <release.preparationGoals>clean install</release.preparationGoals>
         <skip.tests>false</skip.tests>
         <xdk.absolute.path />
         <surefire.security.argline />
