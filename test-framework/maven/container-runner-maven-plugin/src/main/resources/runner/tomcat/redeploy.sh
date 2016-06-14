@@ -1,7 +1,7 @@
 #!/bin/sh
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 #
-# Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
 #
 # The contents of this file are subject to the terms of either the GNU
 # General Public License Version 2 only ("GPL") or the Common Development
@@ -55,14 +55,14 @@ fi
 
 ab -n50 -c5 "http://localhost:$PORT/$REQUEST_PATH_QUERY"
 
-all_proxy="" http_proxy="" curl "http://tomcat:tomcat@localhost:$PORT/manager/text/undeploy?path=/$CONTEXT_ROOT"
+all_proxy="" http_proxy="" curl -sS "http://tomcat:tomcat@localhost:$PORT/manager/text/undeploy?path=/$CONTEXT_ROOT"
 
 if [ "$SKIP_REDEPLOY" = "true" ]; then
     echo Skipping redeploy.
     exit
 fi
 
-all_proxy="" http_proxy="" curl --upload-file "$WAR_PATH" "http://tomcat:tomcat@localhost:$PORT/manager/text/deploy?path=/$CONTEXT_ROOT&tag=$APPLICATION_NAME"
+all_proxy="" http_proxy="" curl -sS --upload-file "$WAR_PATH" "http://tomcat:tomcat@localhost:$PORT/manager/text/deploy?path=/$CONTEXT_ROOT&tag=$APPLICATION_NAME"
 
 EXIT_CODE=$?
 echo Redeployment finished with $EXIT_CODE
