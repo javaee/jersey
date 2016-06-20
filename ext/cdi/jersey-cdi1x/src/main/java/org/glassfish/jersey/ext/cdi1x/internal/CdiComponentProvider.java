@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -82,16 +82,8 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
-import javax.enterprise.inject.spi.WithAnnotations;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Qualifier;
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 
@@ -656,7 +648,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         Hk2InjectedCdiTarget target = null;
         if (isJerseyOrDependencyType(componentClass)) {
-            target = new Hk2InjectedCdiTarget(componentClass, it) {
+            target = new Hk2InjectedCdiTarget(it) {
 
                 @Override
                 public Set<InjectionPoint> getInjectionPoints() {
@@ -667,7 +659,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             };
         } else if (isJaxRsComponentType(componentClass)
                 || jaxrsInjectableTypes.contains(event.getAnnotatedType().getBaseType())) {
-            target = new Hk2InjectedCdiTarget(componentClass, it) {
+            target = new Hk2InjectedCdiTarget(it) {
 
                 @Override
                 public Set<InjectionPoint> getInjectionPoints() {
@@ -880,18 +872,11 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @SuppressWarnings("unchecked")
     private abstract class Hk2InjectedCdiTarget implements Hk2InjectedTarget {
 
-        private final Class<?> componentClass;
         private final InjectionTarget delegate;
-        private final ClassLoader targetClassLoader;
-
         private volatile ServiceLocator effectiveLocator;
-        private volatile boolean multipleLocators = false;
 
-        public Hk2InjectedCdiTarget(final Class<?> componentClass,
-                                    final InjectionTarget delegate) {
-            this.componentClass = componentClass;
+        public Hk2InjectedCdiTarget(InjectionTarget delegate) {
             this.delegate = delegate;
-            this.targetClassLoader = componentClass.getClassLoader();
         }
 
         @Override
@@ -901,8 +886,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         public void inject(final Object t, final CreationalContext cc) {
             delegate.inject(t, cc);
 
-            final ServiceLocator il = multipleLocators ? getEffectiveLocator() : effectiveLocator;
-            final ServiceLocator injectingLocator = (il != null) ? il : getEffectiveLocator();
+            ServiceLocator injectingLocator = getEffectiveLocator();
+            if (injectingLocator == null) {
+                injectingLocator = effectiveLocator;
+            }
 
             if (injectingLocator != null) {
                 injectingLocator.inject(t, CdiComponentProvider.CDI_CLASS_ANALYZER);
@@ -931,9 +918,6 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         @Override
         public void setLocator(final ServiceLocator effectiveLocator) {
-            if (this.effectiveLocator != null) {
-                this.multipleLocators = true;
-            }
             this.effectiveLocator = effectiveLocator;
         }
     }
