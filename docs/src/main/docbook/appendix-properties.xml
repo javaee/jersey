@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -116,6 +116,54 @@
                                 determine its size and set the value of HTTP <literal>Content-Length</literal> header. Default
                                 value is <literal>8192</literal>.
                             </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_NAME;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.logging.logger.name</literal>
+                        </entry>
+                        <entry>
+                            Logger name of the logging filter.
+                            See <link linkend="logging.xml">logging</link> chapter for more information.
+                            The default value is <literal>org.glassfish.jersey.logging.LoggingFeature</literal>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.logging.logger.level</literal>
+                        </entry>
+                        <entry>
+                            Level of logging filter's logger at which the messages will be logged.
+                            See <link linkend="logging.xml">logging</link> chapter for more information.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_VERBOSITY;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.logging.verbosity</literal>
+                        </entry>
+                        <entry>
+                            Verbosity of logging filter describes how verbose the logging filter will be.
+                            There are 3 possible values &lit.jersey.logging.LoggingFeature.Verbosity.HEADERS_ONLY;,
+                            &lit.jersey.logging.LoggingFeature.Verbosity.PAYLOAD_TEXT; or
+                            &lit.jersey.logging.LoggingFeature.Verbosity.PAYLOAD_ANY;.
+                            See <link linkend="logging.xml">logging</link> chapter for more information.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.logging.entity.maxSize</literal>
+                        </entry>
+                        <entry>
+                            The maximum number of bytes of the entity which will be logged.
+                            See <link linkend="logging.xml">logging</link> chapter for more information.
                         </entry>
                     </row>
                 </tbody>
@@ -511,6 +559,54 @@
                             </para>
                         </entry>
                     </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_NAME_SERVER;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.server.logging.logger.name</literal>
+                        </entry>
+                        <entry>
+                            Logger name of the logging filter.
+                            See <link linkend="logging.xml">logging</link> chapter for more information.
+                            The default value is <literal>org.glassfish.jersey.logging.LoggingFeature</literal>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_SERVER;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.server.logging.logger.level</literal>
+                        </entry>
+                        <entry>
+                            Level of logging filter's logger at which the messages will be logged.
+                            See <link linkend="logging.xml">logging</link> chapter for more information.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_VERBOSITY_SERVER;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.server.logging.verbosity</literal>
+                        </entry>
+                        <entry>
+                            Verbosity of logging filter describes how verbose the logging filter will be.
+                            There are 3 possible values &lit.jersey.logging.LoggingFeature.Verbosity.HEADERS_ONLY;,
+                            &lit.jersey.logging.LoggingFeature.Verbosity.PAYLOAD_TEXT; or
+                            &lit.jersey.logging.LoggingFeature.Verbosity.PAYLOAD_ANY;.
+                            See <link linkend="logging.xml">logging</link> chapter for more information.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE_SERVER;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.server.logging.entity.maxSize</literal>
+                        </entry>
+                        <entry>
+                            The maximum number of bytes of the entity which will be logged.
+                            See <link linkend="logging.xml">logging</link> chapter for more information.
+                        </entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>
@@ -788,6 +884,54 @@
                                 Indicates the value of <literal>Content-Encoding</literal> property the
                                 &jersey.client.EncodingFilter; should be adding. Default value is not set.
                             </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_NAME_CLIENT;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.client.logging.logger.name</literal>
+                        </entry>
+                        <entry>
+                            Logger name of the logging filter.
+                            See <link linkend="logging.xml">logging</link> chapter for more information.
+                            The default value is <literal>org.glassfish.jersey.logging.LoggingFeature</literal>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.client.logging.logger.level</literal>
+                        </entry>
+                        <entry>
+                            Level of logging filter's logger at which the messages will be logged.
+                            See <link linkend="logging_chapter">logging</link> chapter for more information.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.client.logging.verbosity</literal>
+                        </entry>
+                        <entry>
+                            Verbosity of logging filter describes how verbose the logging filter will be.
+                            There are 3 possible values &lit.jersey.logging.LoggingFeature.Verbosity.HEADERS_ONLY;,
+                            &lit.jersey.logging.LoggingFeature.Verbosity.PAYLOAD_TEXT; or
+                            &lit.jersey.logging.LoggingFeature.Verbosity.PAYLOAD_ANY;.
+                            See <link linkend="logging_chapter">logging</link> chapter for more information.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.logging.LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE_CLIENT;
+                        </entry>
+                        <entry>
+                            <literal>jersey.config.client.logging.entity.maxSize</literal>
+                        </entry>
+                        <entry>
+                            The maximum number of bytes of the entity which will be logged.
+                            See <link linkend="logging_chapter">logging</link> chapter for more information.
                         </entry>
                     </row>
                 </tbody>

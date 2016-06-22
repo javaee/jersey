@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,7 @@ package org.glassfish.jersey.examples.jaxrstypeinjection;
 
 import javax.ws.rs.client.WebTarget;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -109,7 +109,7 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
 
     private WebTarget prepareTarget(String path) {
         final WebTarget target = target();
-        target.register(LoggingFilter.class);
+        target.register(LoggingFeature.class);
         return target.path(path).resolveTemplate("p1", "v1").resolveTemplate("p2",
                 "v2").queryParam("q1", 1).queryParam("q2", "v2").queryParam("q2", "v3");
     }

@@ -53,7 +53,7 @@
 
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>jersey-bom</artifactId>
-    <version>2.23-SNAPSHOT</version>
+    <version>2.24-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>jersey-bom</name>
 
@@ -432,6 +432,41 @@
                     <url>http://localhost</url>
                 </site>
             </distributionManagement>
+        </profile>
+        <profile>
+            <id>release</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.7</version>
+                        <executions>
+                            <execution>
+                                <id>default-deploy</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>deploy</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <serverId>jvnet-nexus-staging</serverId>
+                            <nexusUrl>https://maven.java.net/</nexusUrl>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

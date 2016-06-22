@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -54,6 +54,31 @@
 
     <section xml:id="mig-2.23">
         <title>Migrating from Jersey 2.22 to 2.23</title>
+        <section xml:id="mig-2.23-highlights">
+            <title>Release 2.23 Highlights</title>
+            <section>
+                <title>Introducing LoggingFeature</title>
+                <para>
+                    From version 2.23 onwards, &lit.jersey.logging.LoggingFilter; has been replaced
+                    with &jersey.logging.LoggingFeature;.
+                </para>
+            </section>
+        </section>
+        <section xml:id="mig-2.23-new-deprecated">
+            <title>Deprecated APIs</title>
+            <para>Following APIs were deprecated:</para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            &lit.jersey.logging.LoggingFilter; has been marked as deprecated and will be removed in a subsequent
+                            release. Use &jersey.logging.LoggingFeature; instead. See chapter <link linkend="logging">
+                            logging</link>.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
         <section xml:id="mig-2.23-breaking-changes">
             <title>Breaking Changes</title>
                 <para>

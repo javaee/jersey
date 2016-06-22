@@ -1,7 +1,7 @@
 #!/bin/sh
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 #
-# Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
 #
 # The contents of this file are subject to the terms of either the GNU
 # General Public License Version 2 only ("GPL") or the Common Development
@@ -63,7 +63,8 @@ if [ "$DIST_DIR" = "" -o "$DIST_TGT_LOCATION" = "" -o "$DIST_URL" = "" ]; then
 fi
 
 if [ ! -f "$DIST_TGT_LOCATION" -o "$DOWNLOAD_IF_EXISTS" = "true" ]; then
-    curl -o "$DIST_TGT_LOCATION" "$DIST_URL"
+    mkdir -p "$(dirname "$DIST_TGT_LOCATION")"
+    curl -sS -o "$DIST_TGT_LOCATION" "$DIST_URL"
 fi
 
 if [ "$OVERWRITE" = "true" -o ! -d "$DIST_DIR"/"$DIST_SUBDIR" ]; then

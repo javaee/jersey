@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,6 +38,10 @@
  * holder.
  */
 /**
- * Jersey Request & Response Filtering support & utility classes.
+ * Logging feature provides the logging of requests and responses on server and client.
+ * The package contains internal server-side and client-side filters, a base abstract logging interceptor, logging feature class
+ * and it's auto-discoverable class.
+ * <p>
+ * See {@link org.glassfish.jersey.logging.LoggingFeature} for more information.
  */
-package org.glassfish.jersey.filter;
+package org.glassfish.jersey.logging;

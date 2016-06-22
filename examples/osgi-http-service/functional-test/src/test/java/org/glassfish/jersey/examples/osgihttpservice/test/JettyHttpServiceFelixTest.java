@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,17 +40,15 @@
 
 package org.glassfish.jersey.examples.osgihttpservice.test;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 @RunWith(PaxExam.class)
@@ -59,11 +57,8 @@ public class JettyHttpServiceFelixTest extends AbstractHttpServiceTest {
     @Override
     public List<Option> osgiRuntimeOptions() {
         return Arrays.asList(CoreOptions.options(
-                mavenBundle()
-                        .groupId("org.apache.felix").artifactId("org.apache.felix.eventadmin")
-                        .versionAsInProject()
-        )
-        );
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.eventadmin").versionAsInProject()
+        ));
     }
 
     @Override

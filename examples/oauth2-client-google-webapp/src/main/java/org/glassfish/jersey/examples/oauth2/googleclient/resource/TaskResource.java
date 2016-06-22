@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,8 +67,8 @@ import org.glassfish.jersey.examples.oauth2.googleclient.entity.TaskRootBean;
 import org.glassfish.jersey.examples.oauth2.googleclient.model.AllTaskListsModel;
 import org.glassfish.jersey.examples.oauth2.googleclient.model.TaskListModel;
 import org.glassfish.jersey.examples.oauth2.googleclient.model.TaskModel;
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.mvc.Template;
 
 /**
@@ -138,7 +138,7 @@ public class TaskResource {
      */
     private Response getTasksResponse(final Client client) {
         client.register(JacksonFeature.class);
-        client.register(new LoggingFilter(Logger.getLogger("example.client.tasks"), true));
+        client.register(new LoggingFeature(Logger.getLogger("example.client.tasks"), LoggingFeature.Verbosity.PAYLOAD_ANY));
 
         final WebTarget baseTarget = client.target(GOOGLE_TASKS_BASE_URI);
         final Response response = baseTarget.path("users/@me/lists").request().get();

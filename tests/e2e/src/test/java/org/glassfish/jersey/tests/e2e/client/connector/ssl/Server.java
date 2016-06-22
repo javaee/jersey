@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -116,7 +116,7 @@ final class Server {
         sslContext.setTrustStorePass("asdfgh");
 
         ResourceConfig rc = new ResourceConfig();
-        rc.register(new LoggingFilter(LOGGER, true));
+        rc.register(new LoggingFeature(LOGGER, LoggingFeature.Verbosity.PAYLOAD_ANY));
         rc.registerClasses(RootResource.class, SecurityFilter.class, AuthenticationExceptionMapper.class);
 
         final HttpServer grizzlyServer = GrizzlyHttpServerFactory.createHttpServer(

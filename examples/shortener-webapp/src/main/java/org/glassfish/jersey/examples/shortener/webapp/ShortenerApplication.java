@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,12 +37,13 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.examples.shortener.webapp;
 
 import javax.ws.rs.ApplicationPath;
 
 import org.glassfish.jersey.examples.shortener.webapp.resource.ShortenerResource;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.mvc.beanvalidation.MvcBeanValidationFeature;
 import org.glassfish.jersey.server.mvc.mustache.MustacheMvcFeature;
@@ -63,7 +64,7 @@ public class ShortenerApplication extends ResourceConfig {
         register(MvcBeanValidationFeature.class);
 
         // Providers.
-        register(LoggingFilter.class);
+        register(LoggingFeature.class);
         register(MustacheMvcFeature.class);
 
         // Properties.

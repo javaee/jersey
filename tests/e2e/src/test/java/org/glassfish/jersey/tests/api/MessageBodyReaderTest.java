@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Provider;
 
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -129,7 +129,7 @@ public class MessageBodyReaderTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resource.class).register(LoggingFilter.class).register(AppOctetReader.class);
+        return new ResourceConfig(Resource.class).register(LoggingFeature.class).register(AppOctetReader.class);
     }
 
     /**

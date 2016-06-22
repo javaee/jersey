@@ -1,0 +1,247 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2016 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents;]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+        version="5.0"
+        xml:lang="en"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:xi="http://www.w3.org/2001/XInclude"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+        xml:id="logging_chapter">
+    <title>Logging</title>
+    <section xml:id="logging">
+        <title>Logging traffic</title>
+        <section>
+            <title>Introduction</title>
+            <para>
+                Jersey Logging supports the logging request and response via internal client and server filters, which are
+                configured and registered by &jersey.logging.LoggingFeature; 's properties. &lit.jersey.logging.LoggingFeature;
+                has been introduced in Jersey 2.23 version and deprecates an older &lit.jersey.logging.LoggingFilter;.
+            </para>
+            <para>
+                &lit.jersey.logging.LoggingFeature; might be discovered by
+                <link linkend="deployment.autodiscoverable">auto-discoverable mechanism</link>
+                or initialized by registering on client or server components. Client or server logging filter is initialized
+                depending on which context is &lit.jersey.logging.LoggingFeature; registered with.
+            </para>
+        </section>
+        <section>
+            <title>Configuration and registering</title>
+            <section>
+                <title>Configuration options</title>
+                <para>
+                    <itemizedlist>
+                        <title>Configurable options</title>
+                        <listitem>
+                            <para>
+                                <literal>Logger name</literal>
+                            </para>
+                            <para>
+                                Defines a logger used to log request and response messages.
+                            </para>
+                            <para>Default value is &jersey.logging.LoggingFeature.DEFAULT_LOGGER_NAME;.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <literal>Logger level</literal>
+                            </para>
+                            <para>
+                                Defines level that will be used to log messages by logging filters. Messages will be logged only
+                                if the effective level of the logger allows it.
+                            </para>
+                            <para>Default value is &jersey.logging.LoggingFeature.DEFAULT_LOGGER_LEVEL;.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <literal>Verbosity</literal>
+                            </para>
+                            <para>
+                                Verbosity determines how detailed message will be logged.
+                                See &jersey.logging.LoggingFeature.Verbosity; javadoc.
+                                <itemizedlist>
+                                    <listitem>
+                                        <para>
+                                            The lowest verbosity &jersey.logging.LoggingFeature.Verbosity.HEADERS_ONLY; will log
+                                            only request/response headers.
+                                        </para>
+                                    </listitem>
+                                    <listitem>
+                                        <para>
+                                            The medium verbosity (&jersey.logging.LoggingFeature.Verbosity.PAYLOAD_TEXT;) will log
+                                            request/response headers, as well as an entity if considered a readable text. The
+                                            entity is considered a readable text, if &jaxrs.core.MediaType; is
+                                            <literal>text/*</literal>
+                                            or is one of
+                                            <itemizedlist>
+                                                <listitem>
+                                                    <para>
+                                                        <literal>application/atom+xml</literal>
+                                                    </para>
+                                                </listitem>
+                                                <listitem>
+                                                    <para>
+                                                        <literal>application/json</literal>
+                                                    </para>
+                                                </listitem>
+                                                <listitem>
+                                                    <para>
+                                                        <literal>application/svg+xml</literal>
+                                                    </para>
+                                                </listitem>
+                                                <listitem>
+                                                    <para>
+                                                        <literal>application/x-www-form-urlencoded</literal>
+                                                    </para>
+                                                </listitem>
+                                                <listitem>
+                                                    <para>
+                                                        <literal>application/xhtml+xml</literal>
+                                                    </para>
+                                                </listitem>
+                                                <listitem>
+                                                    <para>
+                                                        <literal>application/xml</literal>
+                                                    </para>
+                                                </listitem>
+                                            </itemizedlist>
+                                        </para>
+                                    </listitem>
+                                    <listitem>
+                                        <para>
+                                            The highest verbosity &jersey.logging.LoggingFeature.Verbosity.PAYLOAD_ANY;
+                                            will log all types of an entity (besides the request/response headers.
+                                        </para>
+                                    </listitem>
+                                </itemizedlist>
+                                Note that the entity is logged up to the specified maximum number of bytes
+                                (see &jersey.logging.LoggingFeature.LOGGING_FEATURE_MAX_ENTITY_SIZE;).
+                            </para>
+                            <para>
+                                Default value is &jersey.logging.LoggingFeature.DEFAULT_VERBOSITY;.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <literal>Maximum entity size</literal>
+                            </para>
+                            <para>
+                                Maximum number of entity bytes to be logged (and buffered) - if the entity is larger, logging
+                                filter will print (and buffer in memory) only the specified number of bytes and print "...more..."
+                                string at the end. Negative values are interpreted as zero.
+                            </para>
+                            <para>Default value &jersey.logging.LoggingFeature.DEFAULT_MAX_ENTITY_SIZE;.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+            </section>
+            <section>
+                <title>Configuration properties</title>
+                <para>
+                    The feature is enabled on when auto-discoverable mechanism is not disabled and at least one of the feature's
+                    property is set. For enabling client or server logging filter one of the
+                    <link linkend="appendix-properties-common">common properties</link> or
+                    <literal>_CLIENT</literal>
+                    suffixed <link linkend="appendix-properties-client">properties</link>, or
+                    <literal>_SERVER</literal> <link linkend="appendix-properties-server">properties</link>
+                    respectively.
+                </para>
+                <para>
+                    An example of initializing server-side logging with the highest verbosity.
+                    <example>
+                        <title>Logging on client-side</title>
+                        <programlisting language="java" linenumbering="numbered"><![CDATA[    ClientConfig clientConfig = new ClientConfig();
+    clientConfig.property(LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT, LoggingFeature.Verbosity.PAYLOAD_ANY);
+    Client client = ClientBuilder.newBuilder(clientConfig);]]>
+                        </programlisting>
+                    </example>
+                </para>
+                <para>
+                    The &lit.jersey.logging.LoggingFeature; might be registered explicitly on &jersey.server.ResourceConfig; for
+                    server-side logging or on &jaxrs.client.Client; for client-side logging.
+                </para>
+                <example>
+                    <title>Register &lit.jersey.logging.LoggingFeature; via constructor
+                    </title>
+                    <programlisting language="java" linenumbering="numbered"><![CDATA[        ResourceConfig config = new ResourceConfig(HelloWorldResource.class);
+        config.register(new LoggingFeature(LOGGER, LoggingFeature.Verbosity.PAYLOAD_ANY));
+]]></programlisting>
+                </example>
+            </section>
+            <section>
+                <para>
+                    Following examples demonstrate registering &lit.jersey.logging.LoggingFeature; on server-side with default
+                    values and values defined by one of the public constructors (see &jersey.logging.LoggingFeature;).
+                </para>
+                <example>
+                    <title>Register &lit.jersey.logging.LoggingFeature; class
+                    </title>
+                    <programlisting language="java" linenumbering="numbered"><![CDATA[        ResourceConfig config = new ResourceConfig(HelloWorldResource.class);
+        config.register(LoggingFeature.class);
+]]></programlisting>
+                </example>
+                <para>An example of server-side logging with entity
+                    <literal>Hello World!</literal>
+                </para>
+                <screen linenumbering="numbered"><![CDATA[May 09, 2016 2:55:33 PM org.glassfish.jersey.logging.LoggingInterceptor log
+INFO: 1 * Server has received a request on thread grizzly-http-server-0
+1 > GET http://localhost:9998/helloworld
+1 > accept: text/plain
+1 > accept-encoding: gzip,deflate
+1 > connection: Keep-Alive
+1 > host: localhost:9998
+1 > user-agent: Jersey/3.0-SNAPSHOT (Apache HttpClient 4.5)
+
+May 09, 2016 2:55:33 PM org.glassfish.jersey.logging.LoggingInterceptor log
+INFO: 1 * Server responded with a response on thread grizzly-http-server-0
+1 < 200
+1 < Content-Type: text/plain
+Hello World!]]></screen>
+            </section>
+        </section>
+    </section>
+</chapter>

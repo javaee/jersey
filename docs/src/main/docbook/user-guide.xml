@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -133,6 +133,7 @@ This line fits the page width.
     <xi:include href="bean-validation.xml" />
     <xi:include href="entity-filtering.xml" />
     <xi:include href="mvc.xml" />
+    <xi:include href="logging.xml" />
     <xi:include href="monitoring.xml" />
     <xi:include href="custom-di.xml" />
     <xi:include href="cdi.xml" />

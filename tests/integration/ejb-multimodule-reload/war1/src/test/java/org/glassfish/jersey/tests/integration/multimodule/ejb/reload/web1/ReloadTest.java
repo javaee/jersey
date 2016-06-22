@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,15 +45,13 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
 
 /**
  * Test reload functionality for two web app test case.
@@ -74,7 +72,7 @@ public class ReloadTest extends JerseyTest {
 
     @Override
     protected void configureClient(final ClientConfig config) {
-        config.register(LoggingFilter.class);
+        config.register(LoggingFeature.class);
     }
 
     @Test

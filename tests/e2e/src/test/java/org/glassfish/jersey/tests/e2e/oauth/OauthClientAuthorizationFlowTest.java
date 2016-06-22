@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,7 +56,7 @@ import org.glassfish.jersey.client.oauth1.ConsumerCredentials;
 import org.glassfish.jersey.client.oauth1.OAuth1AuthorizationFlow;
 import org.glassfish.jersey.client.oauth1.OAuth1Builder;
 import org.glassfish.jersey.client.oauth1.OAuth1ClientSupport;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.oauth1.signature.OAuth1Parameters;
 import org.glassfish.jersey.oauth1.signature.OAuth1SignatureFeature;
 import org.glassfish.jersey.oauth1.signature.PlaintextMethod;
@@ -105,7 +105,7 @@ public class OauthClientAuthorizationFlowTest extends JerseyTest {
         final Feature feature = oAuth1Builder.feature().build();
 
         final Client client = client();
-        client.register(new LoggingFilter());
+        client.register(LoggingFeature.class);
         final WebTarget target = client.target(baseUri);
 
         // simulate request for Request Token (temporary credentials)
@@ -166,7 +166,7 @@ public class OauthClientAuthorizationFlowTest extends JerseyTest {
         params.nonce("kllo9940pd9333jh").signatureMethod("HMAC-SHA1").timestamp("1191242096");
 
         // Check Authorized Client.
-        final Client flowClient = authFlow.getAuthorizedClient().register(LoggingFilter.class);
+        final Client flowClient = authFlow.getAuthorizedClient().register(LoggingFeature.class);
 
         String responseEntity = flowClient.target(uri).path("/photos")
                 .queryParam("file", "vacation.jpg")
@@ -178,7 +178,7 @@ public class OauthClientAuthorizationFlowTest extends JerseyTest {
 
         // Check Feature.
         final Client featureClient = ClientBuilder.newClient()
-                .register(authFlow.getOAuth1Feature()).register(LoggingFilter.class);
+                .register(authFlow.getOAuth1Feature()).register(LoggingFeature.class);
 
         responseEntity = featureClient.target(uri).path("/photos")
                 .queryParam("file", "vacation.jpg")

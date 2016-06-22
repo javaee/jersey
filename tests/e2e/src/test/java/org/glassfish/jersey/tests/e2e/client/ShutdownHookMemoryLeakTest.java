@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,7 +56,7 @@ import org.glassfish.jersey.client.ClientLifecycleListener;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -140,7 +140,7 @@ public class ShutdownHookMemoryLeakTest extends JerseyTest {
                 public void onClose() {
                     listenersClosed.incrementAndGet();
                 }
-            }).register(new LoggingFilter()).request().get();
+            }).register(LoggingFeature.class).request().get();
             assertEquals("GET", response.readEntity(String.class));
         }
 

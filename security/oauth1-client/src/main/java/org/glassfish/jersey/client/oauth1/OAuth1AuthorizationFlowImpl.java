@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,8 +54,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.oauth1.internal.LocalizationMessages;
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.oauth1.signature.OAuth1Parameters;
 import org.glassfish.jersey.oauth1.signature.OAuth1Secrets;
 
@@ -170,8 +170,8 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
 
         final Configuration config = this.client.getConfiguration();
 
-        if (enableLogging && !config.isRegistered(LoggingFilter.class)) {
-            this.client.register(new LoggingFilter(LOGGER, true));
+        if (enableLogging && !config.isRegistered(LoggingFeature.class)) {
+            this.client.register(new LoggingFeature(LOGGER, LoggingFeature.Verbosity.PAYLOAD_ANY));
         }
         if (!config.isRegistered(OAuth1ClientFeature.class)) {
             this.client.register(new OAuth1ClientFeature(params, secrets));

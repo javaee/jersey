@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,10 +48,9 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-
 import org.junit.After;
 
 /**
@@ -103,7 +102,7 @@ public abstract class AbstractSimpleServerTester {
 
     public void startServer(Class... resources) {
         ResourceConfig config = new ResourceConfig(resources);
-        config.register(LoggingFilter.class);
+        config.register(LoggingFeature.class);
         final URI baseUri = getBaseUri();
         server = SimpleContainerFactory.create(baseUri, config);
         LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
@@ -111,14 +110,14 @@ public abstract class AbstractSimpleServerTester {
 
     public void startServer(ResourceConfig config) {
         final URI baseUri = getBaseUri();
-        config.register(LoggingFilter.class);
+        config.register(LoggingFeature.class);
         server = SimpleContainerFactory.create(baseUri, config);
         LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
     }
 
     public void startServer(ResourceConfig config, int count, int select) {
         final URI baseUri = getBaseUri();
-        config.register(LoggingFilter.class);
+        config.register(LoggingFeature.class);
         server = SimpleContainerFactory.create(baseUri, config, count, select);
         LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
     }
