@@ -57,9 +57,10 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.servlet.ServletContext;
 
+import org.glassfish.jersey.client.oauth2.InMemoryClientCredentialsStore;
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
-import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
 import org.glassfish.jersey.client.oauth2.OAuth2FlowGoogleBuilder;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2InteractiveWorkflow;
 import org.glassfish.jersey.examples.oauth2.googleclient.SimpleOAuthService;
 import org.glassfish.jersey.examples.oauth2.googleclient.entity.TaskBean;
 import org.glassfish.jersey.examples.oauth2.googleclient.entity.TaskListBean;
@@ -115,16 +116,21 @@ public class TaskResource {
         final String redirectURI = UriBuilder.fromUri(uriInfo.getBaseUri())
                 .path("oauth2/authorize").build().toString();
 
-        final OAuth2CodeGrantFlow flow = OAuth2ClientSupport.googleFlowBuilder(
-                SimpleOAuthService.getClientIdentifier(),
+        InMemoryClientCredentialsStore clientCredentialsStore = new InMemoryClientCredentialsStore();
+        clientCredentialsStore.addClient(SimpleOAuthService.getClientIdentifier());
+
+        final OAuth2InteractiveWorkflow flow = OAuth2ClientSupport.googleFlowBuilder(
+                clientCredentialsStore,
                 redirectURI,
                 "https://www.googleapis.com/auth/tasks.readonly")
                 .prompt(OAuth2FlowGoogleBuilder.Prompt.CONSENT).build();
 
         SimpleOAuthService.setFlow(flow);
 
-        // start the flow
-        final String googleAuthURI = flow.start();
+        // execute the flow
+        flow.execute();
+
+        final String googleAuthURI = flow.getAuthorizationRequestUri();
 
         // redirect user to Google Authorization URI.
         return Response.seeOther(UriBuilder.fromUri(googleAuthURI).build()).build();

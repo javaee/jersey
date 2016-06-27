@@ -41,7 +41,7 @@
 package org.glassfish.jersey.examples.oauth2.googleclient;
 
 import org.glassfish.jersey.client.oauth2.ClientIdentifier;
-import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2InteractiveWorkflow;
 
 /**
  * Store of credentials and Authorization flow. This is very simple one user store for credentials.
@@ -54,7 +54,7 @@ public class SimpleOAuthService {
     /**
      * Contains null or actually authorization flow.
      */
-    private static OAuth2CodeGrantFlow flow;
+    private static OAuth2InteractiveWorkflow flow;
     private static ClientIdentifier clientIdentifier;
 
     public static String getAccessToken() {
@@ -65,11 +65,11 @@ public class SimpleOAuthService {
         SimpleOAuthService.accessToken = accessToken;
     }
 
-    public static OAuth2CodeGrantFlow getFlow() {
+    public static OAuth2InteractiveWorkflow getFlow() {
         return flow;
     }
 
-    public static void setFlow(OAuth2CodeGrantFlow flow) {
+    public static void setFlow(OAuth2InteractiveWorkflow flow) {
         SimpleOAuthService.flow = flow;
     }
 

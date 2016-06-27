@@ -38,62 +38,42 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.oauth2;
+package org.glassfish.jersey.client.oauth2.workflows.steps;
 
-import java.io.IOException;
-
-import javax.ws.rs.Priorities;
-import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.core.HttpHeaders;
-
-import javax.annotation.Priority;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2InteractiveWorkflow;
+import org.glassfish.jersey.client.oauth2.OAuth2Parameters;
+import org.glassfish.jersey.client.oauth2.internal.LocalizationMessages;
 
 /**
- * Client filter that adds access token to the {@code Authorization} http header. The filter uses {@code bearer}
- * token specification.
- *
- * @author Miroslav Fuksa
- * @since 2.3
+ * Resumption state for {@link OAuth2InteractiveWorkflow} once authorizationCode is
+ * available.
+ * @author Deepak Pol on 6/14/16.
  */
-@Priority(Priorities.AUTHENTICATION)
-public class OAuth2ClientFilter implements ClientRequestFilter {
+public class AuthorizationResponse implements OAuth2WorkflowStep {
 
-    private final String accessToken;
+    private OAuth2InteractiveWorkflow workflowContext;
+    private String state;
+    private String authorizationCode;
 
-    /**
-     * Create a new filter with predefined access token.
-     *
-     * @param accessToken Access token.
-     */
-    public OAuth2ClientFilter(String accessToken) {
-        this.accessToken = accessToken;
+    public AuthorizationResponse(OAuth2InteractiveWorkflow workflowContext,
+                                 String authorizationCode, String state) {
+        this.workflowContext = workflowContext;
+        this.authorizationCode = authorizationCode;
+        this.state = state;
     }
 
     /**
-     * Create a new filter with no default access token. The token must be specified with
-     * each request using {@link OAuth2ClientSupport#OAUTH2_PROPERTY_ACCESS_TOKEN}.
+     * Checks the {@code state} shared by client which should match the one shared
+     * by authorization server, sets {@code authorizationCode} in workflow context and
+     * moves the workflow in {@link RequestingAccessToken} state
      */
-    public OAuth2ClientFilter() {
-        this.accessToken = null;
-    }
-
     @Override
-    public void filter(ClientRequestContext request) throws IOException {
-        String token = this.accessToken;
-        final String propertyToken = (String) request.getProperty(OAuth2ClientSupport.OAUTH2_PROPERTY_ACCESS_TOKEN);
-        if (propertyToken != null) {
-            token = propertyToken;
+    public void execute() {
+        if (!workflowContext.getAuthorizationProperties().get(OAuth2Parameters.STATE).equals(state)) {
+            throw new IllegalArgumentException(LocalizationMessages.ERROR_FLOW_WRONG_STATE());
         }
-        request.removeProperty(OAuth2ClientSupport.OAUTH2_PROPERTY_ACCESS_TOKEN);
-        if (token == null) {
-            return;
-        }
-        String authentication = "Bearer " + token;
+        workflowContext.getAccessTokenProperties().put(OAuth2Parameters.CODE, authorizationCode);
 
-        if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-            request.getHeaders().add(HttpHeaders.AUTHORIZATION, authentication);
-        }
-
+        workflowContext.setState(new RequestingAccessToken(workflowContext));
     }
 }

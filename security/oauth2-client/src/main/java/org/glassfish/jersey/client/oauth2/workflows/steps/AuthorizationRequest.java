@@ -38,62 +38,42 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.oauth2;
+package org.glassfish.jersey.client.oauth2.workflows.steps;
 
-import java.io.IOException;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2InteractiveWorkflow;
 
-import javax.ws.rs.Priorities;
-import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.core.HttpHeaders;
-
-import javax.annotation.Priority;
+import javax.ws.rs.core.UriBuilder;
+import java.util.Map;
 
 /**
- * Client filter that adds access token to the {@code Authorization} http header. The filter uses {@code bearer}
- * token specification.
+ * Prepares {@code authorizationRequestUri} to be used by client by redirecting
+ * resource owner (user) to grant authorization page.
+ * Sets workflow in {@link AwaitingAuthorizationResponse} state that can be resumed
+ * by calling {@link OAuth2InteractiveWorkflow#resume(String, String)}
  *
- * @author Miroslav Fuksa
- * @since 2.3
+ * @author Deepak Pol on 6/14/16.
  */
-@Priority(Priorities.AUTHENTICATION)
-public class OAuth2ClientFilter implements ClientRequestFilter {
+public class AuthorizationRequest implements OAuth2WorkflowStep {
 
-    private final String accessToken;
+    private OAuth2InteractiveWorkflow workflowContext;
 
-    /**
-     * Create a new filter with predefined access token.
-     *
-     * @param accessToken Access token.
-     */
-    public OAuth2ClientFilter(String accessToken) {
-        this.accessToken = accessToken;
+    public AuthorizationRequest(OAuth2InteractiveWorkflow workflowContext) {
+        this.workflowContext = workflowContext;
     }
 
     /**
-     * Create a new filter with no default access token. The token must be specified with
-     * each request using {@link OAuth2ClientSupport#OAUTH2_PROPERTY_ACCESS_TOKEN}.
+     * Prepare {@code authorizationRequestUri} by setting appropriate query params and move workflow in
+     * {@code AwaitingAuthorizationResponse} state
      */
-    public OAuth2ClientFilter() {
-        this.accessToken = null;
-    }
-
     @Override
-    public void filter(ClientRequestContext request) throws IOException {
-        String token = this.accessToken;
-        final String propertyToken = (String) request.getProperty(OAuth2ClientSupport.OAUTH2_PROPERTY_ACCESS_TOKEN);
-        if (propertyToken != null) {
-            token = propertyToken;
-        }
-        request.removeProperty(OAuth2ClientSupport.OAUTH2_PROPERTY_ACCESS_TOKEN);
-        if (token == null) {
-            return;
-        }
-        String authentication = "Bearer " + token;
-
-        if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-            request.getHeaders().add(HttpHeaders.AUTHORIZATION, authentication);
+    public void execute() {
+        final UriBuilder uriBuilder = UriBuilder.fromUri(workflowContext.getAuthorizationUri());
+        for (final Map.Entry<String, String> entry : workflowContext.getAuthorizationProperties().entrySet()) {
+            uriBuilder.queryParam(entry.getKey(), entry.getValue());
         }
 
+        workflowContext.setState(
+                new AwaitingAuthorizationResponse(workflowContext, uriBuilder.build().toString())
+        );
     }
 }

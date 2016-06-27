@@ -40,20 +40,26 @@
 
 package org.glassfish.jersey.client.oauth2;
 
+import org.glassfish.jersey.client.oauth2.workflows.AbstractOAuth2InteractiveWorkflow;
+import org.glassfish.jersey.client.oauth2.workflows.AuthorizationCodeFlow;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2InteractiveWorkflow;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2Workflow;
+
 /**
- * Class that provides methods to build {@link OAuth2CodeGrantFlow} pre-configured for usage
+ * Class that provides methods to build {@link OAuth2InteractiveWorkflow} pre-configured for usage
  * with Google provider.
  *
  * @author Miroslav Fuksa
  * @since 2.3
  */
-public class OAuth2FlowGoogleBuilder extends AbstractAuthorizationCodeGrantBuilder<OAuth2FlowGoogleBuilder> {
+public class OAuth2FlowGoogleBuilder extends AbstractOAuth2InteractiveWorkflow.Builder<OAuth2FlowGoogleBuilder>
+        implements OAuth2InteractiveWorkflow.Builder<OAuth2FlowGoogleBuilder> {
 
     /**
      * Create a new google flow builder.
      */
     OAuth2FlowGoogleBuilder() {
-        super(new AuthCodeGrantImpl.Builder());
+        super();
     }
 
     /**
@@ -62,7 +68,7 @@ public class OAuth2FlowGoogleBuilder extends AbstractAuthorizationCodeGrantBuild
      * @return a google authorization flow builder.
      */
     public OAuth2FlowGoogleBuilder accessType(AccessType accessType) {
-        return property(OAuth2CodeGrantFlow.Phase.AUTHORIZATION, AccessType.getKey(), accessType.getValue());
+        return property(OAuth2Workflow.Phase.AUTHORIZATION, AccessType.getKey(), accessType.getValue());
     }
 
     /**
@@ -71,7 +77,7 @@ public class OAuth2FlowGoogleBuilder extends AbstractAuthorizationCodeGrantBuild
      * @return a google authorization flow builder.
      */
     public OAuth2FlowGoogleBuilder prompt(Prompt prompt) {
-        return property(OAuth2CodeGrantFlow.Phase.AUTHORIZATION, Prompt.getKey(), prompt.getValue());
+        return property(OAuth2Workflow.Phase.AUTHORIZATION, Prompt.getKey(), prompt.getValue());
     }
 
     /**
@@ -80,7 +86,7 @@ public class OAuth2FlowGoogleBuilder extends AbstractAuthorizationCodeGrantBuild
      * @return a google authorization flow builder.
      */
     public OAuth2FlowGoogleBuilder display(Display display) {
-        return property(OAuth2CodeGrantFlow.Phase.AUTHORIZATION, Display.getKey(), display.getValue());
+        return property(OAuth2Workflow.Phase.AUTHORIZATION, Display.getKey(), display.getValue());
     }
 
     /**
@@ -89,7 +95,27 @@ public class OAuth2FlowGoogleBuilder extends AbstractAuthorizationCodeGrantBuild
      * @return a google authorization flow builder.
      */
     public OAuth2FlowGoogleBuilder loginHint(String loginHint) {
-        return property(OAuth2CodeGrantFlow.Phase.AUTHORIZATION, Display.getKey(), loginHint);
+        return property(OAuth2Workflow.Phase.AUTHORIZATION, Display.getKey(), loginHint);
+    }
+
+    @Override
+    protected OAuth2FlowGoogleBuilder self() {
+        return this;
+    }
+
+    @Override
+    public OAuth2InteractiveWorkflow build() {
+        return new AuthorizationCodeFlow(clientIdentifier,
+                client,
+                authorizationUri,
+                accessTokenUri,
+                refreshTokenUri,
+                redirectUri,
+                scope,
+                authorizationProperties,
+                accessTokenProperties,
+                refreshTokenProperties
+        );
     }
 
     /**

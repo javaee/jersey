@@ -53,12 +53,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 
+import org.glassfish.jersey.client.oauth2.workflows.AuthorizationCodeFlow;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2InteractiveWorkflow;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 
 import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
- * Class that provides methods to build {@link OAuth2CodeGrantFlow} pre-configured for usage
+ * Class that provides methods to build {@link OAuth2InteractiveWorkflow} pre-configured for usage
  * with Facebook provider.
  *
  * @author Miroslav Fuksa
@@ -75,10 +77,10 @@ class OAuth2FlowFacebookBuilder {
      * @param client Client instance that should be used to perform Access token request.
      * @return Builder instance.
      */
-    public static OAuth2CodeGrantFlow.Builder getFacebookAuthorizationBuilder(ClientIdentifier clientIdentifier,
-                                                                              String redirectUri, Client client) {
+    public static OAuth2InteractiveWorkflow.Builder getFacebookAuthorizationBuilder(ClientIdentifier clientIdentifier,
+                                                                                    String redirectUri, Client client) {
 
-        final AuthCodeGrantImpl.Builder builder = new AuthCodeGrantImpl.Builder();
+        final AuthorizationCodeFlow.Builder builder = new AuthorizationCodeFlow.Builder();
         builder.accessTokenUri("https://graph.facebook.com/oauth/access_token");
         builder.authorizationUri("https://www.facebook.com/dialog/oauth");
         builder.redirectUri(redirectUri);
