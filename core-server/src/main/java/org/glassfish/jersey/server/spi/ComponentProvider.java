@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,7 +70,7 @@ public interface ComponentProvider {
      *
      * @param locator an HK2 service locator.
      */
-    public void initialize(final ServiceLocator locator);
+    void initialize(final ServiceLocator locator);
 
     /**
      * Jersey will invoke this method before binding of each component class internally
@@ -84,7 +84,7 @@ public interface ComponentProvider {
      * @param providerContracts provider contracts implemented by given component.
      * @return true if the component class has been bound by the provider, false otherwise
      */
-    public boolean bind(final Class<?> component, Set<Class<?>> providerContracts);
+    boolean bind(final Class<?> component, Set<Class<?>> providerContracts);
 
     /**
      * Jersey will invoke this method after all component classes have been bound.
@@ -92,5 +92,5 @@ public interface ComponentProvider {
      * If the component provider wants to do some actions after it has seen all component classes
      * registered with the application, this is the right place for the corresponding code.
      */
-    public void done();
+    void done();
 }
