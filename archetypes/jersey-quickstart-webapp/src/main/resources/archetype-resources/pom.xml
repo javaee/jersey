@@ -9,6 +9,9 @@
     <version>\${version}</version>
     <name>\${artifactId}</name>
 
+	
+		
+	
     <build>
         <finalName>\${artifactId}</finalName>
         <plugins>
@@ -43,6 +46,7 @@
             <artifactId>jersey-container-servlet-core</artifactId>
             <!-- use the following artifactId if you don't need servlet 2.x compatibility -->
             <!-- artifactId>jersey-container-servlet</artifactId -->
+			<!-- -->
         </dependency>
         <!-- uncomment this to get JSON support
         <dependency>
