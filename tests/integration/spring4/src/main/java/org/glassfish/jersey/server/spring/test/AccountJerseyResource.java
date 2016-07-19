@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,6 +50,7 @@ import javax.ws.rs.PathParam;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -86,6 +87,9 @@ public class AccountJerseyResource {
     @Qualifier("AccountService-prototype-1")
     private AccountService accountServicePrototype2;
 
+    @Autowired
+    private HttpServletRequest httpServletRequest;
+
     @Inject
     private HK2ServiceSingleton hk2Singleton;
 
@@ -111,6 +115,37 @@ public class AccountJerseyResource {
     public String setMessage(final String message) {
         this.message = message;
         return message;
+    }
+
+    // JERSEY-2506 FIX VERIFICATION
+    @GET
+    @Path("server")
+    public String verifyServletRequestInjection() {
+        return "PASSED: " + httpServletRequest.getServerName();
+    }
+
+    @GET
+    @Path("singleton/server")
+    public String verifyServletRequestInjectionIntoSingleton() {
+        return accountServiceInject.verifyServletRequestInjection();
+    }
+
+    @GET
+    @Path("singleton/autowired/server")
+    public String verifyServletRequestInjectionIntoAutowiredSingleton() {
+        return accountServiceAutowired.verifyServletRequestInjection();
+    }
+
+    @GET
+    @Path("request/server")
+    public String verifyServletRequestInjectionIntoRequestScopedBean() {
+        return accountServiceRequest1.verifyServletRequestInjection();
+    }
+
+    @GET
+    @Path("prototype/server")
+    public String verifyServletRequestInjectionIntoPrototypeScopedBean() {
+        return accountServicePrototype1.verifyServletRequestInjection();
     }
 
     // resource methods for testing singleton scoped beans

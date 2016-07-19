@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,6 +47,10 @@ import java.math.BigDecimal;
  * @author Marko Asplund (marko.asplund at yahoo.com)
  */
 public interface AccountService {
+
     void setAccountBalance(String accountId, BigDecimal balance);
+
     BigDecimal getAccountBalance(String accountId);
+
+    String verifyServletRequestInjection();
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.spring.scope;
 import javax.ws.rs.container.ContainerRequestContext;
 
 import org.glassfish.jersey.server.spring.LocalizationMessages;
-
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.AbstractRequestAttributes;
 
@@ -50,6 +49,7 @@ import org.springframework.web.context.request.AbstractRequestAttributes;
  * JAX-RS based Spring RequestAttributes implementation.
  *
  * @author Marko Asplund (marko.asplund at yahoo.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class JaxrsRequestAttributes extends AbstractRequestAttributes {
 
@@ -57,6 +57,7 @@ class JaxrsRequestAttributes extends AbstractRequestAttributes {
 
     /**
      * Create a new instance.
+     *
      * @param requestContext JAX-RS container request context
      */
     public JaxrsRequestAttributes(ContainerRequestContext requestContext) {
@@ -70,7 +71,7 @@ class JaxrsRequestAttributes extends AbstractRequestAttributes {
 
     @Override
     public Object getAttribute(String name, int scope) {
-            return requestContext.getProperty(name);
+        return requestContext.getProperty(name);
     }
 
     @Override

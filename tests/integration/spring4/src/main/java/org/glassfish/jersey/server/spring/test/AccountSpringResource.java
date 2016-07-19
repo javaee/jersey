@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,18 +39,18 @@
  */
 package org.glassfish.jersey.server.spring.test;
 
-
 import java.math.BigDecimal;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -89,6 +89,9 @@ public class AccountSpringResource {
     @Qualifier("AccountService-prototype-1")
     private AccountService accountServicePrototype2;
 
+    @Autowired
+    private HttpServletRequest httpServletRequest;
+
     @Inject
     private HK2ServiceSingleton hk2Singleton;
 
@@ -114,6 +117,37 @@ public class AccountSpringResource {
     public String setMessage(String message) {
         this.message = message;
         return message;
+    }
+
+    // JERSEY-2506 FIX VERIFICATION
+    @GET
+    @Path("server")
+    public String verifyServletRequestInjection() {
+        return "PASSED: " + httpServletRequest.getServerName();
+    }
+
+    @GET
+    @Path("singleton/server")
+    public String verifyServletRequestInjectionIntoSingleton() {
+        return accountServiceInject.verifyServletRequestInjection();
+    }
+
+    @GET
+    @Path("singleton/autowired/server")
+    public String verifyServletRequestInjectionIntoAutowiredSingleton() {
+        return accountServiceAutowired.verifyServletRequestInjection();
+    }
+
+    @GET
+    @Path("request/server")
+    public String verifyServletRequestInjectionIntoRequestScopedBean() {
+        return accountServiceRequest1.verifyServletRequestInjection();
+    }
+
+    @GET
+    @Path("prototype/server")
+    public String verifyServletRequestInjectionIntoPrototypeScopedBean() {
+        return accountServicePrototype1.verifyServletRequestInjection();
     }
 
     // resource methods for testing singleton scoped beans

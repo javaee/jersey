@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,27 +37,42 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld.spring;
+package org.glassfish.jersey.server.spring.scope;
+
+import javax.ws.rs.container.ContainerRequestContext;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
- * Simple {@link GreetingService} implementation to just say hello.
+ * JAX-RS based Spring RequestAttributes implementation for Servlet-based applications.
  *
- * @author Marko Asplund (marko.asplund at yahoo.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class GreetingServiceImpl implements GreetingService {
+class JaxrsServletRequestAttributes extends ServletRequestAttributes {
 
-    @Autowired
-    private HttpServletRequest servletRequest;
+    private final ContainerRequestContext requestContext;
 
-    @Override
-    public String greet(String who) {
-        final String serverName = servletRequest.getServerName();
-        return String.format("hello, %s! Greetings from server %s!", who, serverName);
+    /**
+     * Create a new JAX-RS ServletRequestAttributes instance for the given request.
+     *
+     * @param request        current HTTP request
+     * @param requestContext JAX-RS request context
+     */
+    public JaxrsServletRequestAttributes(final HttpServletRequest request, final ContainerRequestContext requestContext) {
+        super(request);
+        this.requestContext = requestContext;
     }
 
+    @Override
+    public Object resolveReference(String key) {
+        if (REFERENCE_REQUEST.equals(key)) {
+            return this.requestContext;
+        } else if (REFERENCE_SESSION.equals(key)) {
+            return super.getSession(true);
+        } else {
+            return null;
+        }
+    }
 }
