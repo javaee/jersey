@@ -243,9 +243,9 @@ public class PreMatchingFilter implements ContainerRequestFilter {
     <section>
         <title>Client filters</title>
             <para>
-                Client filters are similar to container filters. The response can also be aborted
+                Client filters are similar to container filters. The request can also be aborted
                 in the &jaxrs.client.ClientRequestFilter; which would cause that no request will actually be sent to the server at all.
-                A new response is passed to the <literal>abort</literal> method. This response will be used and delivered
+                A new response is passed to the <literal>abortWith</literal> method. This response will be used and delivered
                 as a result of the request invocation. Such a response goes through the client response filters.
                 This is similar to what happens on the server side. The process is shown in the following example:
             </para>
