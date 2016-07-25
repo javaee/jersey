@@ -475,6 +475,37 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
                     </para>
                 </note>
             </section>
+
+            <section xml:id="deployment.http.netty">
+                <title>Netty HTTP Server</title>
+                <para>
+                    Netty is a NIO client server framework which enables quick and easy development of network
+                    applications such as protocol servers and clients. Jersey supports Netty as a container and
+                    as a client connector - this chapter will present how to use the container.
+                </para>
+
+                <example>
+                    <title>Using Jersey with Netty HTTP Server</title>
+
+                    <programlisting language="java" linenumbering="numbered">URI baseUri = UriBuilder.fromUri("http://localhost/").port(9998).build();
+ResourceConfig resourceConfig = new ResourceConfig(HelloWorldResource.class);
+Channel server = NettyHttpContainerProvider.createServer(baseUri, resourceConfig, false);</programlisting>
+
+                    And, of course, we add the necessary container extension module dependency:
+
+                    <programlisting language="xml" linenumbering="numbered">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.containers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-container-netty-http&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                </example>
+                <note>
+                    <para>
+                        Netty HTTP container does not support deployment on context paths other than
+                        root path ("<literal>/</literal>"). Non-root context path is ignored during deployment.
+                    </para>
+                </note>
+            </section>
         </section>
     </section>
 

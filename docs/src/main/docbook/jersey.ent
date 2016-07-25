@@ -299,7 +299,6 @@
 <!ENTITY jee6.servlet.HttpServletRequest "<link xlink:href='&jee.javadoc.uri;/javax/servlet/http/HttpServletRequest.html'>HttpServletRequest</link>">
 <!ENTITY jee6.servlet.HttpSession "<link xlink:href='&jee.javadoc.uri;/javax/servlet/http/HttpSession.html'>HttpSession</link>">
 
-<!ENTITY jersey.apache.ApacheConnector "<link xlink:href='&jersey.javadoc.uri.prefix;/apache/connector/ApacheConnector.html'>ApacheConnector</link>">
 <!ENTITY jersey.apache.ApacheConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/apache/connector/ApacheConnectorProvider.html'>ApacheConnectorProvider</link>">
 <!ENTITY jersey.client.ChunkParser "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ChunkParser.html'>ChunkParser</link>">
 <!ENTITY jersey.client.ChunkedInput "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ChunkedInput.html'>ChunkedInput</link>">
@@ -332,7 +331,6 @@
 <!ENTITY jersey.client.EncodingFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/client/filter/EncodingFeature.html'>EncodingFeature</link>">
 <!ENTITY jersey.client.EncodingFilter "<link xlink:href='&jersey.javadoc.uri.prefix;/client/filter/EncodingFilter.html'>EncodingFilter</link>">
 <!ENTITY jersey.client.HttpAuthenticationFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/client/authentication/HttpAuthenticationFeature.html'>HttpAuthenticationFeature</link>">
-<!ENTITY jersey.client.HttpUrlConnector "<link xlink:href='&jersey.javadoc.uri.prefix;/client/HttpUrlConnector.html'>HttpUrlConnector</link>">
 <!ENTITY jersey.client.HttpUrlConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/client/HttpUrlConnector.html'>HttpUrlConnectorProvider</link>">
 <!ENTITY jersey.client.HttpUrlConnectorProvider.SET_METHOD_WORKAROUND "<link xlink:href='&jersey.javadoc.uri.prefix;/client/HttpUrlConnectorProvider.html#SET_METHOD_WORKAROUND'>HttpUrlConnector.SET_METHOD_WORKAROUND</link>" >
 <!ENTITY jersey.client.HttpUrlConnectorProvider.USE_FIXED_LENGTH_STREAMING "<link xlink:href='&jersey.javadoc.uri.prefix;/client/HttpUrlConnectorProvider.html#USE_FIXED_LENGTH_STREAMING'>HttpUrlConnectorProvider.USE_FIXED_LENGTH_STREAMING</link>">
@@ -390,7 +388,6 @@
 <!ENTITY jersey.ext.rx.client.rxjava.RxObservable "<link xlink:href='&jersey.javadoc.uri.prefix;/client/rx/rxjava/RxObservable.html'>RxObservable</link>">
 <!ENTITY jersey.ext.rx.client.rxjava.RxObservableInvoker "<link xlink:href='&jersey.javadoc.uri.prefix;/client/rx/rxjava/RxObservableInvoker.html'>RxObservableInvoker</link>">
 <!ENTITY jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/ext/cdi1x/spi/Hk2CustomBoundTypesProvider.html'>Hk2CustomBoundTypesProvider</link>">
-<!ENTITY jersey.grizzly.GrizzlyConnector "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly/connector/GrizzlyConnector.html'>GrizzlyConnector</link>">
 <!ENTITY jersey.grizzly.GrizzlyConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly/connector/GrizzlyConnectorProvider.html'>GrizzlyConnectorProvider</link>">
 <!ENTITY jersey.grizzly.GrizzlyHttpContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly2/httpserver/GrizzlyHttpContainer.html'>GrizzlyHttpContainer</link>">
 <!ENTITY jersey.grizzly.GrizzlyHttpContainerProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/grizzly2/httpserver/GrizzlyHttpContainerProvider.html'>GrizzlyHttpContainerProvider</link>">
@@ -399,7 +396,6 @@
 <!ENTITY jersey.jdkhttp.JdkHttpHandlerContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/jdkhttp/JdkHttpHandlerContainer.html'>JdkHttpHandlerContainer</link>">
 <!ENTITY jersey.jdkhttp.JdkHttpHandlerContainerProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/jdkhttp/JdkHttpHandlerContainerProvider.html'>JdkHttpHandlerContainerProvider</link>">
 <!ENTITY jersey.jdkhttp.JdkHttpServerFactory "<link xlink:href='&jersey.javadoc.uri.prefix;/jdkhttp/JdkHttpServerFactory.html'>JdkHttpServerFactory</link>">
-<!ENTITY jersey.jetty.JettyConnector "<link xlink:href='&jersey.javadoc.uri.prefix;/jetty/connector/JettyConnector.html'>JettyConnector</link>">
 <!ENTITY jersey.jetty.JettyConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/jetty/connector/JettyConnectorProvider.html'>JettyConnectorProvider</link>">
 <!ENTITY jersey.jetty.JettyHttpContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/jetty/JettyHttpContainer.html'>JettyHttpContainer</link>">
 <!ENTITY jersey.jetty.JettyHttpContainerFactory "<link xlink:href='&jersey.javadoc.uri.prefix;/jetty/JettyHttpContainerFactory.html'>JettyHttpContainerFactory</link>">
@@ -463,6 +459,7 @@
 <!ENTITY jersey.message.filtering.SecurityAnnotations "<link xlink:href='&jersey.javadoc.uri.prefix;/message/filtering/SecurityAnnotations.html'>SecurityAnnotations</link>">
 <!ENTITY jersey.message.filtering.SecurityEntityFilteringFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/message/filtering/SecurityEntityFilteringFeature.html'>SecurityEntityFilteringFeature</link>">
 <!ENTITY jersey.message.filtering.SelectableEntityFilteringFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/message/filtering/SelectableEntityFilteringFeature.html'>SelectableEntityFilteringFeature</link>">
+<!ENTITY jersey.netty.NettyConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/netty/connector/NettyConnectorProvider.html'>NettyConnectorProvider</link>">
 <!ENTITY jersey.server.ApplicationHandler "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ApplicationHandler.html'>ApplicationHandler</link>">
 <!ENTITY jersey.server.BackgroundScheduler "<link xlink:href='&jersey.javadoc.uri.prefix;/server/BackgroundScheduler.html'>@BackgroundScheduler</link>">
 <!ENTITY jersey.server.BackgroundSchedulerLiteral "<link xlink:href='&jersey.javadoc.uri.prefix;/server/BackgroundSchedulerLiteral.html'>BackgroundSchedulerLiteral</link>">
@@ -792,7 +789,6 @@
 <!ENTITY lit.jee6.servlet.HttpServletRequest "<literal>HttpServletRequest</literal>">
 <!ENTITY lit.jee6.servlet.HttpSession "<literal>HttpSession</literal>">
 
-<!ENTITY lit.jersey.apache.ApacheConnector "<literal>ApacheConnector</literal>">
 <!ENTITY lit.jersey.apache.ApacheConnectorProvider "<literal>ApacheConnectorProvider</literal>">
 <!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">
 <!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">
@@ -825,7 +821,6 @@
 <!ENTITY lit.jersey.client.CsrfProtectionFilter "<literal>CsrfProtectionFilter</literal>">
 <!ENTITY lit.jersey.client.EncodingFeature "<literal>EncodingFeature</literal>">
 <!ENTITY lit.jersey.client.HttpAuthenticationFeature "<literal>HttpAuthenticationFeature</literal>">
-<!ENTITY lit.jersey.client.HttpUrlConnector "<literal>HttpUrlConnector</literal>">
 <!ENTITY lit.jersey.client.HttpUrlConnectorProvider "<literal>HttpUrlConnectorProvider</literal>">
 <!ENTITY lit.jersey.client.ServiceLocatorClientProvider "<literal>ServiceLocatorClientProvider</literal>">
 <!ENTITY lit.jersey.client.oauth1.AccessToken "<literal>AccessToken</literal>">
@@ -871,7 +866,6 @@
 <!ENTITY lit.jersey.ext.rx.client.jsr166e.RxCompletableFutureInvoker "<literal>RxCompletableFutureInvoker</literal>">
 <!ENTITY lit.jersey.ext.rx.client.rxjava.RxObservable "<literal>RxObservable</literal>">
 <!ENTITY lit.jersey.ext.rx.client.rxjava.RxObservableInvoker "<literal>RxObservableInvoker</literal>">
-<!ENTITY lit.jersey.grizzly.GrizzlyConnector "<literal>GrizzlyConnector</literal>">
 <!ENTITY lit.jersey.grizzly.GrizzlyConnectorProvider "<literal>GrizzlyConnectorProvider</literal>">
 <!ENTITY lit.jersey.grizzly.GrizzlyHttpContainer "<literal>GrizzlyHttpContainer</literal>">
 <!ENTITY lit.jersey.grizzly.GrizzlyHttpContainerProvider "<literal>GrizzlyHttpContainerProvider</literal>">
@@ -880,7 +874,6 @@
 <!ENTITY lit.jersey.jdkhttp.JdkHttpHandlerContainer "<literal>JdkHttpHandlerContainer</literal>">
 <!ENTITY lit.jersey.jdkhttp.JdkHttpHandlerContainerProvider "<literal>JdkHttpHandlerContainerProvider</literal>">
 <!ENTITY lit.jersey.jdkhttp.JdkHttpServerFactory "<literal>JdkHttpServerFactory</literal>">
-<!ENTITY lit.jersey.jetty.JettyConnector "<literal>JettyConnector</literal>">
 <!ENTITY lit.jersey.jetty.JettyConnectorProvider "<literal>JettyConnectorProvider</literal>">
 <!ENTITY lit.jersey.jetty.JettyHttpContainer "<literal>JettyHttpContainer</literal>">
 <!ENTITY lit.jersey.jetty.JettyHttpContainerFactory "<literal>JettyHttpContainerFactory</literal>">
@@ -926,6 +919,7 @@
 <!ENTITY lit.jersey.message.MessageProperties "<literal>MessageProperties</literal>">
 <!ENTITY lit.jersey.message.filtering.EntityFilteringFeature "<literal>EntityFilteringFeature</literal>">
 <!ENTITY lit.jersey.message.filtering.SecurityEntityFilteringFeature "<literal>SecurityEntityFilteringFeature</literal>">
+<!ENTITY lit.jersey.netty.NettyConnectorProvider "<literal>NettyConnectorProvider</literal>">
 <!ENTITY lit.jersey.server.ApplicationHandler "<literal>ApplicationHandler</literal>">
 <!ENTITY lit.jersey.server.BackgroundScheduler "<literal>@BackgroundScheduler</literal>">
 <!ENTITY lit.jersey.server.BackgroundSchedulerLiteral "<literal>BackgroundSchedulerLiteral</literal>">

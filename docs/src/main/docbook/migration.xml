@@ -1353,98 +1353,78 @@
                             Before Jersey 2.5 release entity buffering has been used by default. The size of the chunk can still
                             be controlled by &jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE; property, this property
                             however no longer enforces the use of chunked encoding. To control request entity buffering and
-                            chunked transfer coding selection, please utilize use the
-                            new &jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING; property. The behaviour of the property
-                            is however not unified across the available &jersey.client.Connector; implementations and depends on
-                            the connector implementation configured for the &jaxrs.client.Client; instance. Default connector
-                            produced by &jersey.client.HttpUrlConnectorProvider; still uses buffering as default options due to
-                            bugs in<literal>HttpURLConnection</literal>. On the other hand, Jetty HTTP Client based connectors
-                            produced by &jersey.jetty.JettyConnectorProvider; do not support chunked encoding at all.
-                        </para>
-                        <para>
-                            Please note that this is not a newly introduced limitation - it's merely an official acknowledgement
-                            of the fact that different connectors have different capabilities and limitations - something that has
-                            always been part of the individual connector implementations, it just was not publicly acknowledged.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            New &jersey.client.ConnectorProvider; SPI has been introduced to decouple &jersey.client.Connector;
-                            instantiation from &jaxrs.client.Client; instance boot-strapping. As such, the
-                            <literal>connector(Connector)</literal>
-                            method has been removed from &jersey.client.ClientConfig; API. It has been replaced with a newly
-                            introduced
-                            <literal>connectorProvider(ConnectorProvider)</literal>
-                            method.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            <literal>org.glassfish.jersey.client.HttpUrlConnector</literal>
-                            has been removed from the public API. &jersey.client.HttpUrlConnectorProvider; should be used to
-                            produce &jdk6.HttpUrlConnection; connector instances instead.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            <literal>ClientProperties.HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND</literal>
-                            property has been moved to the new &jersey.client.HttpUrlConnectorProvider; has been introduced in
-                            Jersey 2.4) has been moved to the new &jersey.client.HttpUrlConnectorProvider; class as this property
-                            is specific to the connector instances created by &lit.jersey.client.HttpUrlConnectorProvider; only.
-                            The property has been also renamed to &jersey.client.HttpUrlConnectorProvider.SET_METHOD_WORKAROUND;.
-                            The name of the property remains the same -<literal>
-                            jersey.config.client.httpUrlConnection.setMethodWorkaround</literal>.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            <literal>ClientProperties.HTTP_URL_CONNECTOR_FIX_LENGTH_STREAMING</literal>
-                            property (that class as this property is specific to the connector instances created
-                            by &lit.jersey.client.HttpUrlConnectorProvider; only. The property has been also renamed
-                            to &jersey.client.HttpUrlConnectorProvider.USE_FIXED_LENGTH_STREAMING; and the new property name is
-                            <literal>jersey.config.client.httpUrlConnector.useFixedLengthStreaming</literal>.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            <literal>org.glassfish.jersey.grizzly.connector.GrizzlyConnector</literal>
-                            has been removed from the public API. &jersey.grizzly.GrizzlyConnectorProvider; should be used to
-                            produce Grizzly Asynchronous HTTP Client connector instances instead.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            Public constructor has been removed from the &jersey.apache.ApacheConnector;
-                            API. &jersey.apache.ApacheConnectorProvider; should be used to provide Apache HTTP Client connector
-                            instances instead.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            Public constructor has been removed from the &jersey.jetty.JettyConnector;
-                            API. &jersey.jetty.JettyConnectorProvider; should be used to provide Jetty HTTP Client connector
-                            instances instead.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            Renamed property
-                            <literal>CACHING_TEMPLATES_ENABLED</literal>
-                            in &jersey.server.mvc.MustacheMvcFeature; from
-                            <literal>jersey.config.server.mvc.caching.mustache.enabled</literal>
-                            to
-                            <literal>jersey.config.server.mvc.caching.mustache</literal>.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            Authentication filters
-                            <literal>org.glassfish.jersey.client.filter.HttpBasicAuthFilter</literal>
-                            and
-                            <literal>org.glassfish.jersey.client.filter.HttpDigestAuthFilter</literal>
-                            were deprecated and replaced by &jersey.client.HttpAuthenticationFeature;.
-                        </para>
-                    </listitem>
+                            chunked transfer coding selection, please utilize use the new
+                            &jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING; property. The behaviour of the property
+                            is however not unified across the available &jersey.client.Connector; implementations and depends
+                            on the connector implementation configured for the &jaxrs.client.Client; instance.
+                            Default connector produced by &jersey.client.HttpUrlConnectorProvider; still uses
+                            buffering as default options due to bugs in <literal>HttpURLConnection</literal>. On the other hand,
+                            Jetty HTTP Client based connectors produced by &jersey.jetty.JettyConnectorProvider; do not support
+                            chunked encoding at all.
+                        </para><para>
+                            Please note that this is not a newly introduced limitation - it's merely
+                            an official acknowledgement of the fact that different connectors have different capabilities and
+                            limitations - something that has always been part of the individual connector implementations, it
+                            just was not publicly acknowledged.
+                        </para></listitem>
+                    <listitem><para>
+                        New &jersey.client.ConnectorProvider; SPI has been introduced to decouple &jersey.client.Connector;
+                        instantiation from &jaxrs.client.Client; instance boot-strapping. As such, the
+                        <literal>connector(Connector)</literal>
+                        method has been removed from &jersey.client.ClientConfig;
+                        API. It has been replaced with a newly introduced
+                        <literal>connectorProvider(ConnectorProvider)</literal>
+                        method.
+                    </para></listitem>
+                    <listitem><para>
+                        <literal>org.glassfish.jersey.client.HttpUrlConnector</literal>
+                        has been removed from the public API.
+                        &jersey.client.HttpUrlConnectorProvider; should be used to produce &jdk6.HttpUrlConnection;
+                        connector instances instead.
+                    </para></listitem>
+                    <listitem><para>
+                        <literal>ClientProperties.HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND</literal>
+                        property has been moved to the new &jersey.client.HttpUrlConnectorProvider;
+                        has been introduced in Jersey 2.4) has been moved to the new &jersey.client.HttpUrlConnectorProvider;
+                        class as this property is specific to the connector instances created by
+                        &lit.jersey.client.HttpUrlConnectorProvider; only. The property has been also renamed to
+                        &jersey.client.HttpUrlConnectorProvider.SET_METHOD_WORKAROUND;. The name of the property
+                        remains the same - <literal>jersey.config.client.httpUrlConnection.setMethodWorkaround</literal>.
+                    </para></listitem>
+                    <listitem><para>
+                        <literal>ClientProperties.HTTP_URL_CONNECTOR_FIX_LENGTH_STREAMING</literal>
+                        property (that
+                        class as this property is specific to the connector instances created by
+                        &lit.jersey.client.HttpUrlConnectorProvider; only. The property has been also renamed to
+                        &jersey.client.HttpUrlConnectorProvider.USE_FIXED_LENGTH_STREAMING; and the new property name
+                        is <literal>jersey.config.client.httpUrlConnector.useFixedLengthStreaming</literal>.
+                    </para></listitem>
+                    <listitem><para>
+                        <literal>org.glassfish.jersey.grizzly.connector.GrizzlyConnector</literal>
+                        has been removed from the public
+                        API. &jersey.grizzly.GrizzlyConnectorProvider; should be used to produce Grizzly Asynchronous HTTP Client
+                        connector instances instead.
+                    </para></listitem>
+                    <listitem><para>
+                        Public constructor has been removed from the <literal>org.glassfish.jersey.apache.connector.ApacheConnector</literal>; API.
+                        &jersey.apache.ApacheConnectorProvider; should be used to provide Apache HTTP Client
+                        connector instances instead.
+                    </para></listitem>
+                    <listitem><para>
+                        Public constructor has been removed from the <literal>org.glassfish.jersey.jetty.connector.JettyConnector</literal>; API.
+                        &jersey.jetty.JettyConnectorProvider; should be used to provide Jetty HTTP Client
+                        connector instances instead.
+                    </para></listitem>
+                    <listitem><para>
+                        Renamed property <literal>CACHING_TEMPLATES_ENABLED</literal> in &jersey.server.mvc.MustacheMvcFeature;
+                        from <literal>jersey.config.server.mvc.caching.mustache.enabled</literal> to
+                        <literal>jersey.config.server.mvc.caching.mustache</literal>.
+                    </para></listitem>
+                    <listitem><para>
+                        Authentication filters <literal>org.glassfish.jersey.client.filter.HttpBasicAuthFilter</literal>
+                        and <literal>org.glassfish.jersey.client.filter.HttpDigestAuthFilter</literal>
+                        were deprecated and replaced by &jersey.client.HttpAuthenticationFeature;.
+                    </para></listitem>
                 </itemizedlist>
             </para>
         </section>
