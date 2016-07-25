@@ -1450,6 +1450,12 @@
             </dependency>
 
             <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>${httpclient.version}</version>
@@ -1925,6 +1931,7 @@
         <mimepull.version>1.9.6</mimepull.version>
         <moxy.version>2.6.0</moxy.version>
         <mustache.version>0.8.17</mustache.version>
+        <netty.version>4.1.4.Final</netty.version>
         <osgi.version>4.2.0</osgi.version>
         <pax.exam.version>4.9.1</pax.exam.version>
         <pax.web.version>0.7.4</pax.web.version><!-- TODO: UPGRADE! -->

@@ -1193,12 +1193,12 @@ public class Bookstore { ... }</programlisting>
                         connector instances instead.
                     </para></listitem>
                     <listitem><para>
-                        Public constructor has been removed from the &jersey.apache.ApacheConnector; API.
+                        Public constructor has been removed from the <literal>org.glassfish.jersey.apache.connector.ApacheConnector</literal>; API.
                         &jersey.apache.ApacheConnectorProvider; should be used to provide Apache HTTP Client
                         connector instances instead.
                     </para></listitem>
                     <listitem><para>
-                        Public constructor has been removed from the &jersey.jetty.JettyConnector; API.
+                        Public constructor has been removed from the <literal>org.glassfish.jersey.jetty.connector.JettyConnector</literal>; API.
                         &jersey.jetty.JettyConnectorProvider; should be used to provide Jetty HTTP Client
                         connector instances instead.
                     </para></listitem>

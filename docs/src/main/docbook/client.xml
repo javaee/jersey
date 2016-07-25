@@ -45,7 +45,6 @@
          version="5.0"
          xml:lang="en"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:xlink="http://www.w3.org/1999/xlink"
          xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
                              http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
@@ -623,12 +622,45 @@ webTarget.request().post(Entity.entity(f, MediaType.TEXT_PLAIN_TYPE));
             You can implement and/or register your own &lit.jersey.client.Connector; instance to the Jersey
             &lit.jaxrs.client.Client; implementation, that will replace the default &lit.jdk6.HttpUrlConnection;-based
             transport layer. Jersey provides several alternative client transport connector implementations that are ready-to-use.
-            You can use &jersey.apache.ApacheConnectorProvider; (add a maven dependency to
-            <literal>org.glassfish.jersey.connectors:jersey-apache-connector</literal>)
-            or &jersey.grizzly.GrizzlyConnectorProvider; (add a maven dependency to
-            <literal>org.glassfish.jersey.connectors:jersey-grizzly-connector</literal>)
-            or &jersey.jetty.JettyConnectorProvider; (add a maven dependency to
-            <literal>org.glassfish.jersey.connectors:jersey-jetty-connector</literal>) alternatively.
+
+            <table>
+                <title>List of Jersey Connectors</title>
+                <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+                    <colspec colname="c1"/>
+                    <colspec colname="c2"/>
+                    <colspec colname="c3"/>
+                    <thead>
+                        <row>
+                            <entry>Transport framework</entry>
+                            <entry>Jersey Connector implementation</entry>
+                            <entry>Maven dependency</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>Grizzly NIO framework</entry>
+                            <entry>&jersey.grizzly.GrizzlyConnectorProvider;</entry>
+                            <entry><literal>org.glassfish.jersey.connectors:jersey-grizzly-connector</literal></entry>
+                        </row>
+                        <row>
+                            <entry>Apache HTTP client</entry>
+                            <entry>&jersey.apache.ApacheConnectorProvider;</entry>
+                            <entry><literal>org.glassfish.jersey.connectors:jersey-apache-connector</literal></entry>
+                        </row>
+                        <row>
+                            <entry>Jetty HTTP client</entry>
+                            <entry>&jersey.jetty.JettyConnectorProvider;</entry>
+                            <entry><literal>org.glassfish.jersey.connectors:jersey-jetty-connector</literal></entry>
+                        </row>
+                        <row>
+                            <entry>Netty NIO framework</entry>
+                            <entry>&jersey.netty.NettyConnectorProvider;</entry>
+                            <entry><literal>org.glassfish.jersey.connectors:jersey-netty-connector</literal></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+
             <warning xml:id="connectors.warning" xreflabel="Header modification issue">
                 <para>
                     Be aware of using other than default &lit.jersey.client.Connector; implementation.
@@ -636,7 +668,7 @@ webTarget.request().post(Entity.entity(f, MediaType.TEXT_PLAIN_TYPE));
                     &lit.jaxrs.WriterInterceptor; or &lit.jaxrs.ext.MessageBodyWriter;.
                     If you need to change header fields do not use nor
                     &lit.jersey.apache.ApacheConnectorProvider; nor &lit.jersey.grizzly.GrizzlyConnectorProvider;
-                    neither &lit.jersey.jetty.JettyConnectorProvider;.
+                    nor &lit.jersey.jetty.JettyConnectorProvider; neither &lit.jersey.netty.NettyConnectorProvider;.
                     The issue for example applies to Jersey <xref linkend="multipart" endterm="multipart.short"/>
                     feature that also modifies HTTP headers.
                 </para>
@@ -860,12 +892,12 @@ Client client = ClientBuilder.newBuilder().sslContext(sslContext).build();</prog
         <important>
             <para>
                 A behaviour of &jdk6.HostnameVerifier; is dependent on an http client implementation.
-                &lit.jersey.client.HttpUrlConnector; and &lit.jersey.apache.ApacheConnector; work properly, that means that after
+                &lit.jersey.client.HttpUrlConnectorProvider; and &lit.jersey.apache.ApacheConnectorProvider; work properly, that means that after
                 the unsuccessful URL verification &lit.jdk6.HostnameVerifier; is called and by means of it is possible to
                 revalidate URL using a custom implementation of &lit.jdk6.HostnameVerifier; and go on in a handskahe processing.
-                &lit.jersey.jetty.JettyConnector; and &lit.jersey.grizzly.GrizzlyConnector; provide only host URL verification
+                &lit.jersey.jetty.JettyConnectorProvider; and &lit.jersey.grizzly.GrizzlyConnectorProvider; provide only host URL verification
                 and throw a &lit.jdk6.CertificateException; without any possibility to use custom &lit.jdk6.HostnameVerifier;.
-                Moreover, in case of &lit.jersey.jetty.JettyConnector; there is a property
+                Moreover, in case of &lit.jersey.jetty.JettyConnectorProvider; there is a property
                 &jersey.jetty.JettyClientProperties.ENABLE_SSL_HOSTNAME_VERIFICATION; to disable an entire host URL verification
                 mechanism in a handshake.
             </para>
