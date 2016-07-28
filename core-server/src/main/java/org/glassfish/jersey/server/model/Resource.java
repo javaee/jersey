@@ -43,7 +43,9 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.Path;
@@ -565,27 +567,35 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         private List<Resource.Data> mergeResources(List<Resource.Data> resources) {
             List<Resource.Data> mergedResources = Lists.newArrayList();
+
+            if (resources.size() <= 1) {
+                mergedResources.addAll(resources);
+                return mergedResources;
+            }
+
+            LinkedHashMap<String, List<Resource.Data>> merging = new LinkedHashMap<>();
+
             for (int i = 0; i < resources.size(); i++) {
                 Resource.Data outer = resources.get(i);
-                Resource.Builder builder = null;
-
-                for (int j = i + 1; j < resources.size(); j++) {
-                    Resource.Data inner = resources.get(j);
-
-                    if (outer.path.equals(inner.path)) {
-                        if (builder == null) {
-                            builder = Resource.builder(outer);
-                        }
-                        builder.mergeWith(inner);
-                        resources.remove(j);
-                        //noinspection AssignmentToForLoopParameter
-                        j--;
-                    }
+                List<Data> resourceList = merging.get(outer.path);
+                if (resourceList == null) {
+                    resourceList = new LinkedList<>();
+                    merging.put(outer.path, resourceList);
                 }
-                if (builder == null) {
-                    mergedResources.add(outer);
-                } else {
+                resourceList.add(outer);
+            }
+
+            for (Map.Entry<String, List<Resource.Data>> entry : merging.entrySet()) {
+                final List<Data> innerResources = entry.getValue();
+                if (innerResources.size() > 1) {
+                    Resource.Builder builder = Resource.builder(innerResources.get(0));
+                    for (int i = 1; i < innerResources.size(); i++) {
+                        builder.mergeWith(innerResources.get(i));
+                    }
                     mergedResources.add(builder.buildResourceData());
+
+                } else {
+                    mergedResources.add(innerResources.get(0));
                 }
             }
             return mergedResources;
