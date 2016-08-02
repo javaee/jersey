@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,6 +54,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
@@ -64,9 +65,9 @@ import javax.ws.rs.ext.ExceptionMapper;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.RequestContextBuilder;
-
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Not sure whether this is relevant anymore.
@@ -81,8 +82,14 @@ public class ParamExceptionMappingTest extends AbstractTest {
 
         public Response toResponse(T exception, String entity) {
             assertEquals("x", exception.getParameterName());
-            if (exception.getParameterType() != PathParam.class) {
+
+            // path param and form param can be integers in this test, thus different default value
+            if (!exception.getParameterType().equals(PathParam.class)
+                    && !exception.getParameterType().equals(FormParam.class)) {
+
                 assertEquals("default", exception.getDefaultStringValue());
+            } else {
+                assertTrue(exception.getDefaultStringValue().equals("default") || exception.getDefaultStringValue().equals("1"));
             }
             return Response.fromResponse(exception.getResponse()).entity(entity).build();
         }
@@ -124,7 +131,7 @@ public class ParamExceptionMappingTest extends AbstractTest {
     }
 
     public static class
-            CookieExceptionMapper extends BaseExceptionMapper<ParamException.CookieParamException> {
+    CookieExceptionMapper extends BaseExceptionMapper<ParamException.CookieParamException> {
 
         public Response toResponse(ParamException.CookieParamException exception) {
             return toResponse(exception, "cookie");
@@ -150,7 +157,7 @@ public class ParamExceptionMappingTest extends AbstractTest {
 
         @Path("path/{x}")
         @GET
-        public String getPath(@PathParam("x") URI x) {
+        public String getPath(@DefaultValue("1") @PathParam("x") int x) {
             return "";
         }
 
@@ -184,19 +191,26 @@ public class ParamExceptionMappingTest extends AbstractTest {
         public String postForm(@DefaultValue("default") @FormParam("x") URI x) {
             return "";
         }
+
+        @Path("form-int")
+        @POST
+        @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+        public String postForm(@DefaultValue("1") @FormParam("x") int x) {
+            return "";
+        }
     }
 
     @Test
     public void testParamException() throws ExecutionException, InterruptedException {
         initiateWebApplication(ParamExceptionMapperResource.class,
-                PathExceptionMapper.class,
-                MatrixExceptionMapper.class,
-                QueryExceptionMapper.class,
-                CookieExceptionMapper.class,
-                HeaderExceptionMapper.class,
-                FormExceptionMapper.class);
+                               PathExceptionMapper.class,
+                               MatrixExceptionMapper.class,
+                               QueryExceptionMapper.class,
+                               CookieExceptionMapper.class,
+                               HeaderExceptionMapper.class,
+                               FormExceptionMapper.class);
 
-        ContainerResponse responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ 123").build().toString());
+        ContainerResponse responseContext = getResponseContext(UriBuilder.fromPath("/").path("path/ test").build().toString());
         assertEquals("path", responseContext.getEntity());
 
         responseContext = getResponseContext(UriBuilder.fromPath("/").path("matrix;x= 123").build().toString());
@@ -223,6 +237,23 @@ public class ParamExceptionMappingTest extends AbstractTest {
                         .entity(f)
                         .build()
         );
+        assertEquals("form", responseContext.getEntity());
+    }
+
+    @Test
+    public void testFormParamPrimitiveValidation() throws ExecutionException, InterruptedException {
+        initiateWebApplication(ParamExceptionMapperResource.class,
+                               FormExceptionMapper.class);
+
+        Form f = new Form();
+        f.param("x", "http://oracle.com");
+        ContainerResponseContext responseContext = apply(
+                RequestContextBuilder.from("/form-int", "POST")
+                                     .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+                                     .entity(f)
+                                     .build()
+        );
+
         assertEquals("form", responseContext.getEntity());
     }
 
