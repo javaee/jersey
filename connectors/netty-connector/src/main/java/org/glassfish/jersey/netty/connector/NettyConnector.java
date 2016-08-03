@@ -77,8 +77,10 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.proxy.HttpProxyHandler;
-import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.JdkSslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.concurrent.GenericFutureListener;
 import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
@@ -97,6 +99,7 @@ class NettyConnector implements Connector {
 
     final ExecutorService executorService;
     final EventLoopGroup group;
+    final Client client;
 
     NettyConnector(Client client) {
 
@@ -109,6 +112,7 @@ class NettyConnector implements Connector {
         }
 
         this.group = new NioEventLoopGroup();
+        this.client = client;
     }
 
     @Override
@@ -173,8 +177,9 @@ class NettyConnector implements Connector {
 
                      // Enable HTTPS if necessary.
                      if ("https".equals(requestUri.getScheme())) {
-                         // TODO how to transform client.getSslContext (JDK) to Netty SslContext?
-                         p.addLast(SslContextBuilder.forClient().build().newHandler(ch.alloc()));
+                         // making client authentication optional for now; it could be extracted to configurable property
+                         JdkSslContext jdkSslContext = new JdkSslContext(client.getSslContext(), true, ClientAuth.NONE);
+                         p.addLast(jdkSslContext.newHandler(ch.alloc()));
                      }
 
                      // http proxy
@@ -208,7 +213,20 @@ class NettyConnector implements Connector {
             }
 
             // Make the connection attempt.
-            Channel ch = b.connect(host, port).sync().channel();
+            final Channel ch = b.connect(host, port).sync().channel();
+
+            // guard against prematurely closed channel
+            final GenericFutureListener<io.netty.util.concurrent.Future<? super Void>> closeListener =
+                    new GenericFutureListener<io.netty.util.concurrent.Future<? super Void>>() {
+                        @Override
+                        public void operationComplete(io.netty.util.concurrent.Future<? super Void> future) throws Exception {
+                            if (!settableFuture.isDone()) {
+                                settableFuture.setException(new IOException("Channel closed."));
+                            }
+                        }
+                    };
+
+            ch.closeFuture().addListener(closeListener);
 
             HttpRequest nettyRequest;
 
@@ -238,10 +256,9 @@ class NettyConnector implements Connector {
                 }
             }
 
-            // Send the HTTP request.
-            ch.writeAndFlush(nettyRequest);
-
             if (jerseyRequest.hasEntity()) {
+                // Send the HTTP request.
+                ch.writeAndFlush(nettyRequest);
 
                 final JerseyChunkedInput jerseyChunkedInput = new JerseyChunkedInput(ch);
                 jerseyRequest.setStreamProvider(new OutboundMessageContext.StreamProvider() {
@@ -260,6 +277,9 @@ class NettyConnector implements Connector {
                 executorService.execute(new Runnable() {
                     @Override
                     public void run() {
+                        // close listener is not needed any more.
+                        ch.closeFuture().removeListener(closeListener);
+
                         try {
                             jerseyRequest.writeEntity();
                         } catch (IOException e) {
@@ -270,10 +290,14 @@ class NettyConnector implements Connector {
                 });
 
                 ch.flush();
+            } else {
+                // close listener is not needed any more.
+                ch.closeFuture().removeListener(closeListener);
+
+                // Send the HTTP request.
+                ch.writeAndFlush(nettyRequest);
             }
 
-            // Wait for the server to close the connection.
-            // ch.closeFuture().sync();
         } catch (InterruptedException e) {
             settableFuture.setException(e);
             return settableFuture;

@@ -168,16 +168,14 @@ class JerseyClientHandler extends SimpleChannelInboundHandler<HttpObject> {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, final Throwable cause) {
         if (asyncConnectorCallback != null) {
-
-            if (asyncConnectorCallback != null) {
-                connector.executorService.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        asyncConnectorCallback.failure(cause);
-                    }
-                });
-            }
+            connector.executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    asyncConnectorCallback.failure(cause);
+                }
+            });
         }
+        future.setException(cause);
         isList.add(NettyInputStream.END_OF_INPUT_ERROR);
     }
 }
