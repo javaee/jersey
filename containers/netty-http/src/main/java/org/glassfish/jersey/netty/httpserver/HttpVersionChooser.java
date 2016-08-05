@@ -37,45 +37,49 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.helloworld.netty;
+
+package org.glassfish.jersey.netty.httpserver;
 
 import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import io.netty.channel.Channel;
-import org.glassfish.jersey.netty.httpserver.NettyHttpContainerProvider;
-import org.glassfish.jersey.server.ResourceConfig;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http2.Http2Codec;
+import io.netty.handler.ssl.ApplicationProtocolNames;
+import io.netty.handler.ssl.ApplicationProtocolNegotiationHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
 
 /**
- * Hello world!
+ * Choose the handler implementation based on Http protocol.
+ *
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class App {
+class HttpVersionChooser extends ApplicationProtocolNegotiationHandler {
 
-    static final String ROOT_PATH = "helloworld";
+    private final URI baseUri;
+    private final NettyHttpContainer container;
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/");
+    HttpVersionChooser(URI baseUri, NettyHttpContainer container) {
+        super(ApplicationProtocolNames.HTTP_1_1);
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Hello World\" Jersey Example App on Netty container.");
+        this.baseUri = baseUri;
+        this.container = container;
+    }
 
-            ResourceConfig resourceConfig = new ResourceConfig(HelloWorldResource.class);
-            final Channel server = NettyHttpContainerProvider.createHttp2Server(BASE_URI, resourceConfig, null);
-
-            Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    server.close();
-                }
-            }));
-
-            System.out.println(String.format("Application started. (HTTP/2 enabled!)\nTry out %s%s\nStop the application using "
-                                                     + "CTRL+C.", BASE_URI, ROOT_PATH));
-            Thread.currentThread().join();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+    @Override
+    protected void configurePipeline(ChannelHandlerContext ctx, String protocol) throws Exception {
+        if (ApplicationProtocolNames.HTTP_2.equals(protocol)) {
+            ctx.pipeline().addLast(new Http2Codec(true, new JerseyHttp2ServerHandler(baseUri, container)));
+            return;
         }
 
+        if (ApplicationProtocolNames.HTTP_1_1.equals(protocol)) {
+            ctx.pipeline().addLast(new HttpServerCodec(),
+                                   new ChunkedWriteHandler(),
+                                   new JerseyServerHandler(baseUri, container));
+            return;
+        }
+
+        throw new IllegalStateException("Unknown protocol: " + protocol);
     }
 }
