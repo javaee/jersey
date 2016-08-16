@@ -43,6 +43,7 @@ package org.glassfish.jersey.tests.e2e.container;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory;
@@ -53,12 +54,8 @@ import org.glassfish.jersey.test.netty.NettyTestContainerFactory;
 import org.glassfish.jersey.test.simple.SimpleTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * @author Michal Gajdos
@@ -77,13 +74,7 @@ public abstract class JerseyContainerTest extends JerseyTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<TestContainerFactory[]> parameters() throws Exception {
-        return Lists.transform(FACTORIES, new Function<TestContainerFactory, TestContainerFactory[]>() {
-
-            @Override
-            public TestContainerFactory[] apply(final TestContainerFactory input) {
-                return new TestContainerFactory[]{input};
-            }
-        });
+        return FACTORIES.stream().map(input -> new TestContainerFactory[]{input}).collect(Collectors.toList());
     }
 
     @Parameterized.Parameter(0)

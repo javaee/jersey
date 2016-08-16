@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,10 +37,13 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.net.URI;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.core.AbstractMultivaluedMap;
@@ -57,8 +60,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * {@link HeaderUtils} unit tests.
@@ -135,21 +136,24 @@ public class HeaderUtilsTest {
         assertTrue(HeaderUtils.asStringList(null, null).isEmpty());
 
         final URI uri = new URI("test");
-        final ArrayList<Object> values = Lists.<Object>newArrayList("value", null, uri);
+        final List<Object> values = new LinkedList<Object>() {{
+            add("value");
+            add(null);
+            add(uri);
+        }};
 
         // test string values
         final List<String> stringList = HeaderUtils.asStringList(values, null);
-        assertEquals(Lists.newArrayList("value", "[null]", uri.toASCIIString()),
-                stringList);
+        assertEquals(Arrays.asList("value", "[null]", uri.toASCIIString()),
+                     stringList);
 
         // tests live view
         values.add("value2");
-        assertEquals(Lists.newArrayList("value", "[null]", uri.toASCIIString(), "value2"),
-                stringList);
+        assertEquals(Arrays.asList("value", "[null]", uri.toASCIIString(), "value2"),
+                     stringList);
         values.remove(1);
-        assertEquals(Lists.newArrayList("value", uri.toASCIIString(), "value2"),
-                stringList);
-
+        assertEquals(Arrays.asList("value", uri.toASCIIString(), "value2"),
+                     stringList);
     }
 
     @Test
@@ -169,22 +173,22 @@ public class HeaderUtilsTest {
         final MultivaluedMap<String, String> stringHeaders = HeaderUtils.asStringHeaders(headers);
 
         // test string values
-        assertEquals(Lists.newArrayList("value", "value2"),
-                stringHeaders.get("k1"));
-        assertEquals(Lists.newArrayList(uri.toASCIIString()),
-                stringHeaders.get("k2"));
-        assertEquals(Lists.newArrayList("value3"),
-                stringHeaders.get("k3"));
+        assertEquals(Arrays.asList("value", "value2"),
+                     stringHeaders.get("k1"));
+        assertEquals(Collections.singletonList(uri.toASCIIString()),
+                     stringHeaders.get("k2"));
+        assertEquals(Collections.singletonList("value3"),
+                     stringHeaders.get("k3"));
 
         // test live view
         headers.get("k1").remove(1);
         headers.add("k2", "value4");
         headers.remove("k3");
 
-        assertEquals(Lists.newArrayList("value"),
-                stringHeaders.get("k1"));
-        assertEquals(Lists.newArrayList(uri.toASCIIString(), "value4"),
-                stringHeaders.get("k2"));
+        assertEquals(Collections.singletonList("value"),
+                     stringHeaders.get("k1"));
+        assertEquals(Arrays.asList(uri.toASCIIString(), "value4"),
+                     stringHeaders.get("k2"));
         assertFalse(stringHeaders.containsKey("k3"));
     }
 
@@ -193,7 +197,7 @@ public class HeaderUtilsTest {
         assertNull(HeaderUtils.asHeaderString(null, null));
 
         final URI uri = new URI("test");
-        final ArrayList<Object> values = Lists.<Object>newArrayList("value", null, uri);
+        final List<Object> values = Arrays.asList("value", null, uri);
 
         // test string values
         final String result = HeaderUtils.asHeaderString(values, null);

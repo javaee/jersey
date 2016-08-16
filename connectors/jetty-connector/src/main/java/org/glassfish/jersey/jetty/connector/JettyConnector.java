@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -96,10 +97,6 @@ import org.eclipse.jetty.util.HttpCookieStore;
 import org.eclipse.jetty.util.Jetty;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
-
-import jersey.repackaged.com.google.common.util.concurrent.FutureCallback;
-import jersey.repackaged.com.google.common.util.concurrent.Futures;
-import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
 
 /**
  * A {@link Connector} that utilizes the Jetty HTTP Client to send and receive
@@ -388,20 +385,16 @@ class JettyConnector implements Connector {
         final AtomicBoolean callbackInvoked = new AtomicBoolean(false);
         final Throwable failure;
         try {
-            final SettableFuture<ClientResponse> responseFuture = SettableFuture.create();
-            Futures.addCallback(responseFuture, new FutureCallback<ClientResponse>() {
-                @Override
-                public void onSuccess(final ClientResponse result) {
-                }
+            final CompletableFuture<ClientResponse> responseFuture =
+                    new CompletableFuture<ClientResponse>().whenComplete(
+                            (clientResponse, throwable) -> {
+                                if (throwable != null && throwable instanceof CancellationException) {
+                                    // take care of future cancellation
+                                    jettyRequest.abort(throwable);
 
-                @Override
-                public void onFailure(final Throwable t) {
-                    if (t instanceof CancellationException) {
-                        // take care of future cancellation
-                        jettyRequest.abort(t);
-                    }
-                }
-            });
+                                }
+                            });
+
             final AtomicReference<ClientResponse> jerseyResponse = new AtomicReference<>();
             final ByteBufferInputStream entityStream = new ByteBufferInputStream();
             jettyRequest.send(new Response.Listener.Adapter() {
@@ -429,7 +422,7 @@ class JettyConnector implements Connector {
                         final ProcessingException pe = new ProcessingException(ex);
                         entityStream.closeQueue(pe);
                         // try to complete the future with an exception
-                        responseFuture.setException(pe);
+                        responseFuture.completeExceptionally(pe);
                         Thread.currentThread().interrupt();
                     }
                 }
@@ -438,14 +431,14 @@ class JettyConnector implements Connector {
                 public void onComplete(final Result result) {
                     entityStream.closeQueue();
                     // try to complete the future with the response only once truly done
-                    responseFuture.set(jerseyResponse.get());
+                    responseFuture.complete(jerseyResponse.get());
                 }
 
                 @Override
                 public void onFailure(final Response response, final Throwable t) {
                     entityStream.closeQueue(t);
                     // try to complete the future with an exception
-                    responseFuture.setException(t);
+                    responseFuture.completeExceptionally(t);
                     if (callbackInvoked.compareAndSet(false, true)) {
                         callback.failure(t);
                     }
@@ -460,7 +453,9 @@ class JettyConnector implements Connector {
         if (callbackInvoked.compareAndSet(false, true)) {
             callback.failure(failure);
         }
-        return Futures.immediateFailedFuture(failure);
+        CompletableFuture<Object> future = new CompletableFuture<>();
+        future.completeExceptionally(failure);
+        return future;
     }
 
     private static ClientResponse translateResponse(final ClientRequest jerseyRequest,

@@ -66,7 +66,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 
 /**
  * Asynchronous servlet-deployed resource test.

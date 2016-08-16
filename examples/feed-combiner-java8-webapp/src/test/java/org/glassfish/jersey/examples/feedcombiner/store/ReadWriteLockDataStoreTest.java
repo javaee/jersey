@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.examples.feedcombiner.store;
 
 import java.io.ByteArrayInputStream;
@@ -46,6 +47,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.glassfish.jersey.examples.feedcombiner.model.CombinedFeed;
@@ -65,8 +67,6 @@ import static org.easymock.EasyMock.capture;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-
-import jersey.repackaged.com.google.common.base.Objects;
 
 /**
  * @author Petr Bouda (petr.bouda at oracle.com)
@@ -339,7 +339,7 @@ public class ReadWriteLockDataStoreTest extends EasyMockSupport {
         assertEquals(1, newlySavedEntities.size());
         boolean exists = newlySavedEntities.stream()
                 .map(CombinedFeed.class::cast)
-                .anyMatch(entity -> Objects.equal(entity.getId(), id2));
+                .anyMatch(entity -> Objects.equals(entity.getId(), id2));
         if (!exists) {
             fail("The new stored CombinedFeed was not found.");
         }

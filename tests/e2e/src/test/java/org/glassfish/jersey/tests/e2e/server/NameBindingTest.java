@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,7 +45,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -70,8 +73,6 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Test-suite ensuring the correct functionality of name binding.
@@ -183,7 +184,7 @@ public class NameBindingTest extends JerseyTest {
     private static final Set<Class<?>> FILTERS = initialize();
 
     private static Set<Class<?>> initialize() {
-        final Set<Class<?>> set = Sets.newHashSet();
+        final Set<Class<?>> set = new HashSet<>();
         set.add(FooFilter.class);
         set.add(BarFilter.class);
         set.add(FooBarFilter.class);
@@ -191,7 +192,7 @@ public class NameBindingTest extends JerseyTest {
     }
 
     private void checkCalled(final Response response, final Class<?>... filtersThatShouldBeCalled) {
-        final Set<Class<?>> positiveFilters = Sets.newHashSet(filtersThatShouldBeCalled);
+        final Set<Class<?>> positiveFilters = Arrays.stream(filtersThatShouldBeCalled).collect(Collectors.toSet());
         for (final Class<?> filter : FILTERS) {
             if (positiveFilters.contains(filter)) {
                 assertEquals("Filter '" + filter.getSimpleName() + "' should be called.", "called", response.getHeaders()

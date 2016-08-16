@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.io.ByteArrayInputStream;
@@ -49,6 +50,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientResponseContext;
@@ -66,11 +68,6 @@ import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.Statuses;
 
 import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.base.MoreObjects;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Jersey client response context.
@@ -241,27 +238,26 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
 
     @Override
     public Set<Link> getLinks() {
-        return Sets.newHashSet(Collections2.transform(super.getLinks(), new Function<Link, Link>() {
-            @Override
-            public Link apply(Link link) {
-                if (link.getUri().isAbsolute()) {
-                    return link;
-                }
+        return super.getLinks()
+                    .stream()
+                    .map(link -> {
+                        if (link.getUri().isAbsolute()) {
+                            return link;
+                        }
 
-                return Link.fromLink(link).baseUri(getResolvedRequestUri()).build();
-            }
-        }));
+                        return Link.fromLink(link).baseUri(getResolvedRequestUri()).build();
+                    })
+                    .collect(Collectors.toSet());
     }
 
     @Override
     public String toString() {
-        return MoreObjects
-                .toStringHelper(this)
-                .add("method", requestContext.getMethod())
-                .add("uri", requestContext.getUri())
-                .add("status", status.getStatusCode())
-                .add("reason", status.getReasonPhrase())
-                .toString();
+        return "ClientResponse{"
+                + "method=" + requestContext.getMethod()
+                + ", uri=" + requestContext.getUri()
+                + ", status=" + status.getStatusCode()
+                + ", reason=" + status.getReasonPhrase()
+                + "}";
     }
 
     /**

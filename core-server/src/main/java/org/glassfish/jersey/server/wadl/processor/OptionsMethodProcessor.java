@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.wadl.processor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -60,8 +61,6 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelProcessorUtil;
 
-import jersey.repackaged.com.google.common.collect.Lists;
-
 /**
  * {@link ModelProcessor Model processor} enhancing {@link ResourceModel resource model} and {@link Resource sub resources}
  * by default OPTIONS methods defined by JAX-RS specification.
@@ -77,7 +76,7 @@ public class OptionsMethodProcessor implements ModelProcessor {
      * Creates new instance.
      */
     public OptionsMethodProcessor() {
-        methodList = Lists.newArrayList();
+        methodList = new ArrayList<>();
         methodList.add(new ModelProcessorUtil.Method(HttpMethod.OPTIONS, MediaType.WILDCARD_TYPE, MediaType.TEXT_PLAIN_TYPE,
                 PlainTextOptionsInflector.class));
 

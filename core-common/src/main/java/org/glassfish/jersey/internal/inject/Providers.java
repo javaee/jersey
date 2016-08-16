@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
@@ -72,9 +75,6 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
@@ -263,16 +263,11 @@ public final class Providers {
     @SuppressWarnings("TypeMayBeWeakened")
     public static <T> Iterable<T> sortRankedProviders(final RankedComparator<T> comparator,
                                                       final Iterable<RankedProvider<T>> providers) {
-        final List<RankedProvider<T>> rankedProviders = Lists.newArrayList(providers);
 
-        Collections.sort(rankedProviders, comparator);
-
-        return Collections2.transform(rankedProviders, new Function<RankedProvider<T>, T>() {
-            @Override
-            public T apply(final RankedProvider<T> input) {
-                return input.getProvider();
-            }
-        });
+        return StreamSupport.stream(providers.spliterator(), false)
+                            .sorted(comparator)
+                            .map(RankedProvider::getProvider)
+                            .collect(Collectors.toList());
     }
 
     /**
@@ -287,20 +282,12 @@ public final class Providers {
     @SuppressWarnings("TypeMayBeWeakened")
     public static <T> Iterable<T> mergeAndSortRankedProviders(final RankedComparator<T> comparator,
                                                               final Iterable<Iterable<RankedProvider<T>>> providerIterables) {
-        final List<RankedProvider<T>> rankedProviders = Lists.newArrayList();
 
-        for (final Iterable<RankedProvider<T>> providers : providerIterables) {
-            rankedProviders.addAll(Lists.<RankedProvider<T>>newLinkedList(providers));
-        }
-
-        Collections.sort(rankedProviders, comparator);
-
-        return Collections2.transform(rankedProviders, new Function<RankedProvider<T>, T>() {
-            @Override
-            public T apply(final RankedProvider<T> input) {
-                return input.getProvider();
-            }
-        });
+        return StreamSupport.stream(providerIterables.spliterator(), false)
+                            .flatMap(rankedProviders -> StreamSupport.stream(rankedProviders.spliterator(), false))
+                            .sorted(comparator)
+                            .map(RankedProvider::getProvider)
+                            .collect(Collectors.toList());
     }
 
     /**
@@ -389,7 +376,8 @@ public final class Providers {
         if (hk2Providers.isEmpty()) {
             return Sets.newLinkedHashSet();
         } else {
-            return Sets.newLinkedHashSet(Collections2.transform(hk2Providers, new ProviderToService<T>()));
+            return hk2Providers.stream().map(new ProviderToService<T>())
+                               .collect(Collectors.toCollection(LinkedHashSet::new));
         }
     }
 
@@ -411,9 +399,8 @@ public final class Providers {
         if (hk2Providers.isEmpty()) {
             return Sets.newTreeSet(comparator);
         } else {
-            final TreeSet<T> set = Sets.newTreeSet(comparator);
-            set.addAll(Collections2.transform(hk2Providers, new ProviderToService<T>()));
-            return set;
+            return hk2Providers.stream().map(new ProviderToService<T>())
+                               .collect(Collectors.toCollection(() -> new TreeSet<T>(comparator)));
         }
     }
 

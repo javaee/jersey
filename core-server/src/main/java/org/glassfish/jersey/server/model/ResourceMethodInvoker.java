@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,18 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -89,9 +95,6 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerP
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
-
 /**
  * Server-side request-response {@link Inflector inflector} for invoking methods
  * of annotation-based resource classes.
@@ -108,8 +111,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
     private final ResourceMethodDispatcher dispatcher;
     private final Method resourceMethod;
     private final Class<?> resourceClass;
-    private final List<RankedProvider<ContainerRequestFilter>> requestFilters = Lists.newArrayList();
-    private final List<RankedProvider<ContainerResponseFilter>> responseFilters = Lists.newArrayList();
+    private final List<RankedProvider<ContainerRequestFilter>> requestFilters = new ArrayList<>();
+    private final List<RankedProvider<ContainerResponseFilter>> responseFilters = new ArrayList<>();
     private final Iterable<ReaderInterceptor> readerInterceptors;
     private final Iterable<WriterInterceptor> writerInterceptors;
 
@@ -179,7 +182,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         }
 
         final ComponentBag componentBag = config.getComponentBag();
-        final List<Object> providers = Lists.newArrayList(componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS));
+        final List<Object> providers = new ArrayList<>(componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS));
 
         // Get instances of providers.
         final Set<Class<?>> providerClasses = componentBag.getClasses(ComponentBag.EXCLUDE_META_PROVIDERS);
@@ -196,10 +199,10 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             }
         }
 
-        final List<RankedProvider<ReaderInterceptor>> _readerInterceptors = Lists.newLinkedList();
-        final List<RankedProvider<WriterInterceptor>> _writerInterceptors = Lists.newLinkedList();
-        final List<RankedProvider<ContainerRequestFilter>> _requestFilters = Lists.newLinkedList();
-        final List<RankedProvider<ContainerResponseFilter>> _responseFilters = Lists.newLinkedList();
+        final List<RankedProvider<ReaderInterceptor>> _readerInterceptors = new LinkedList<>();
+        final List<RankedProvider<WriterInterceptor>> _writerInterceptors = new LinkedList<>();
+        final List<RankedProvider<ContainerRequestFilter>> _requestFilters = new LinkedList<>();
+        final List<RankedProvider<ContainerResponseFilter>> _responseFilters = new LinkedList<>();
 
         for (final Object provider : providers) {
             final ContractProvider model = componentBag.getModel(provider.getClass());
@@ -234,8 +237,12 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             }
         }
 
-        _readerInterceptors.addAll(Lists.newLinkedList(processingProviders.getGlobalReaderInterceptors()));
-        _writerInterceptors.addAll(Lists.newLinkedList(processingProviders.getGlobalWriterInterceptors()));
+        _readerInterceptors.addAll(
+                StreamSupport.stream(processingProviders.getGlobalReaderInterceptors().spliterator(), false)
+                             .collect(Collectors.toList()));
+        _writerInterceptors.addAll(
+                StreamSupport.stream(processingProviders.getGlobalWriterInterceptors().spliterator(), false)
+                             .collect(Collectors.toList()));
 
         if (resourceMethod != null) {
             addNameBoundFiltersAndInterceptors(
@@ -244,10 +251,10 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     method);
         }
 
-        this.readerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.sortRankedProviders(
-                new RankedComparator<ReaderInterceptor>(), _readerInterceptors)));
-        this.writerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.sortRankedProviders(
-                new RankedComparator<WriterInterceptor>(), _writerInterceptors)));
+        this.readerInterceptors = Collections.unmodifiableList(StreamSupport.stream(Providers.sortRankedProviders(
+                new RankedComparator<>(), _readerInterceptors).spliterator(), false).collect(Collectors.toList()));
+        this.writerInterceptors = Collections.unmodifiableList(StreamSupport.stream(Providers.sortRankedProviders(
+                new RankedComparator<>(), _writerInterceptors).spliterator(), false).collect(Collectors.toList()));
         this.requestFilters.addAll(_requestFilters);
         this.responseFilters.addAll(_responseFilters);
 

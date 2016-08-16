@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,9 @@ package org.glassfish.jersey.config;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.ws.rs.RuntimeType;
 
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -52,14 +55,8 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-
-import javax.ws.rs.RuntimeType;
-
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Service finder injection binder unit test.
@@ -94,13 +91,10 @@ public class ServiceFinderBinderTest {
         final Set<TestContract> providers = Providers.getProviders(locator, TestContract.class);
         assertEquals(4, providers.size());
 
-        final Collection<String> providerNames = Collections2.transform(providers, new Function<TestContract, String>() {
-
-            @Override
-            public String apply(TestContract input) {
-                return input.name();
-            }
-        });
+        final Collection<String> providerNames =
+                providers.stream()
+                         .map(TestContract::name)
+                         .collect(Collectors.toList());
 
         assertTrue(providerNames.contains(TestServiceA.class.getName()));
         assertTrue(providerNames.contains(TestServiceB.class.getName()));

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@
 package org.glassfish.jersey.client.rx;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -49,8 +50,6 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.client.rx.spi.AbstractRxInvoker;
-
-import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * @author Michal Gajdos
@@ -63,13 +62,8 @@ class RxTestInvoker extends AbstractRxInvoker<Future> implements RxFutureInvoker
 
     @Override
     public <R> Future<R> method(final String name, final Entity<?> entity, final Class<R> responseType) {
-        final Callable<R> task = new Callable<R>() {
-            @Override
-            public R call() throws Exception {
-                return getBuilder().method(name, entity, responseType);
-            }
-        };
-        return getExecutorService() != null ? getExecutorService().submit(task) : MoreExecutors.sameThreadExecutor().submit(task);
+        final Callable<R> task = () -> getBuilder().method(name, entity, responseType);
+        return getExecutorService() != null ? getExecutorService().submit(task) : execute(task);
     }
 
     @Override
@@ -80,6 +74,16 @@ class RxTestInvoker extends AbstractRxInvoker<Future> implements RxFutureInvoker
                 return getBuilder().method(name, entity, responseType);
             }
         };
-        return getExecutorService() != null ? getExecutorService().submit(task) : MoreExecutors.sameThreadExecutor().submit(task);
+        return getExecutorService() != null ? getExecutorService().submit(task) : execute(task);
+    }
+
+    private <R> Future<R> execute(Callable<R> task) {
+        CompletableFuture<R> future = new CompletableFuture<>();
+        try {
+            future.complete(task.call());
+        } catch (Exception e) {
+            future.completeExceptionally(e);
+        }
+        return future;
     }
 }

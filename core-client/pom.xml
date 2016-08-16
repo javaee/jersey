@@ -160,9 +160,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <properties>
-        <java.version>1.6</java.version>
-    </properties>
 
     <profiles>
         <profile>

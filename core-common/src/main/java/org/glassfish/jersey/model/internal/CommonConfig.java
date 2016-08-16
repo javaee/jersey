@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,22 +37,26 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.model.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.Priorities;
@@ -80,12 +84,6 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.base.Predicate;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
-
 /**
  * Common immutable {@link javax.ws.rs.core.Configuration} implementation for
  * server and client.
@@ -96,12 +94,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
 public class CommonConfig implements FeatureContext, ExtendedConfig {
 
     private static final Logger LOGGER = Logger.getLogger(CommonConfig.class.getName());
-    private static final Function<Object, Binder> CAST_TO_BINDER = new Function<Object, Binder>() {
-        @Override
-        public Binder apply(final Object input) {
-            return Binder.class.cast(input);
-        }
-    };
+    private static final Function<Object, Binder> CAST_TO_BINDER = Binder.class::cast;
 
     /**
      * Configuration runtime type.
@@ -158,7 +151,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
          *
          * @return registered feature class.
          */
-        public Class<? extends Feature> getFeatureClass() {
+        Class<? extends Feature> getFeatureClass() {
             return featureClass;
         }
 
@@ -227,8 +220,8 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
         this.newFeatureRegistrations = new LinkedList<FeatureRegistration>();
 
-        this.enabledFeatureClasses = Sets.newIdentityHashSet();
-        this.enabledFeatures = Sets.newHashSet();
+        this.enabledFeatureClasses = Collections.newSetFromMap(new IdentityHashMap<>());
+        this.enabledFeatures = new HashSet<>();
 
         this.disableMetaProviderConfiguration = false;
     }
@@ -247,9 +240,9 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
         this.componentBag = config.componentBag.copy();
 
-        this.newFeatureRegistrations = Lists.newLinkedList();
-        this.enabledFeatureClasses = Sets.newIdentityHashSet();
-        this.enabledFeatures = Sets.newHashSet();
+        this.newFeatureRegistrations = new LinkedList<>();
+        this.enabledFeatureClasses = Collections.newSetFromMap(new IdentityHashMap<>());
+        this.enabledFeatures = new HashSet<>();
 
         copy(config, false);
     }
@@ -565,7 +558,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     private Set<Class<?>> asNewIdentitySet(final Class<?>... contracts) {
-        final Set<Class<?>> result = Sets.newIdentityHashSet();
+        final Set<Class<?>> result = Collections.newSetFromMap(new IdentityHashMap<>());
         result.addAll(Arrays.asList(contracts));
         return result;
     }
@@ -591,20 +584,17 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     public void configureAutoDiscoverableProviders(final ServiceLocator locator, final boolean forcedOnly) {
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
-            final Set<AutoDiscoverable> providers = new TreeSet<AutoDiscoverable>(new Comparator<AutoDiscoverable>() {
-                @Override
-                public int compare(final AutoDiscoverable o1, final AutoDiscoverable o2) {
-                    final int p1 = o1.getClass().isAnnotationPresent(Priority.class)
-                            ? o1.getClass().getAnnotation(Priority.class).value() : Priorities.USER;
-                    final int p2 = o2.getClass().isAnnotationPresent(Priority.class)
-                            ? o2.getClass().getAnnotation(Priority.class).value() : Priorities.USER;
+            final Set<AutoDiscoverable> providers = new TreeSet<>((o1, o2) -> {
+                final int p1 = o1.getClass().isAnnotationPresent(Priority.class)
+                        ? o1.getClass().getAnnotation(Priority.class).value() : Priorities.USER;
+                final int p2 = o2.getClass().isAnnotationPresent(Priority.class)
+                        ? o2.getClass().getAnnotation(Priority.class).value() : Priorities.USER;
 
-                    return (p1 < p2 || p1 == p2) ? -1 : 1;
-                }
+                return (p1 < p2 || p1 == p2) ? -1 : 1;
             });
 
             // Forced (always invoked).
-            final List<ForcedAutoDiscoverable> forcedAutoDiscroverables = new LinkedList<ForcedAutoDiscoverable>();
+            final List<ForcedAutoDiscoverable> forcedAutoDiscroverables = new LinkedList<>();
             for (Class<ForcedAutoDiscoverable> forcedADType : ServiceFinder.find(ForcedAutoDiscoverable.class, true)
                     .toClassArray()) {
                 forcedAutoDiscroverables.add(locator.createAndInitialize(forcedADType));
@@ -638,7 +628,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
      */
     public void configureMetaProviders(final ServiceLocator locator) {
         // First, configure existing binders
-        final Set<Binder> configuredBinders = configureBinders(locator, Collections.<Binder>emptySet());
+        final Set<Binder> configuredBinders = configureBinders(locator, Collections.emptySet());
 
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
@@ -647,7 +637,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
             // Next, configure all features
             configureFeatures(
                     locator,
-                    new HashSet<FeatureRegistration>(),
+                    new HashSet<>(),
                     resetRegistrations());
 
             // At last, configure any new binders added by features
@@ -665,7 +655,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     private Set<Binder> configureBinders(final ServiceLocator locator, final Set<Binder> configured) {
-        final Set<Binder> allConfigured = Sets.newIdentityHashSet();
+        final Set<Binder> allConfigured = Collections.newSetFromMap(new IdentityHashMap<>());
         allConfigured.addAll(configured);
 
         final Collection<Binder> binders = getBinders(configured);
@@ -683,14 +673,11 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     private Collection<Binder> getBinders(final Set<Binder> configured) {
-        return Collections2.filter(
-                Collections2.transform(componentBag.getInstances(ComponentBag.BINDERS_ONLY), CAST_TO_BINDER),
-                new Predicate<Binder>() {
-                    @Override
-                    public boolean apply(final Binder binder) {
-                        return !configured.contains(binder);
-                    }
-                });
+
+        return componentBag.getInstances(ComponentBag.BINDERS_ONLY)
+                           .stream()
+                           .map(CAST_TO_BINDER)
+                           .filter(binder -> !configured.contains(binder)).collect(Collectors.toList());
     }
 
     private void configureFeatures(final ServiceLocator locator,
@@ -741,7 +728,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     private List<FeatureRegistration> resetRegistrations() {
-        final List<FeatureRegistration> result = new ArrayList<FeatureRegistration>(newFeatureRegistrations);
+        final List<FeatureRegistration> result = new ArrayList<>(newFeatureRegistrations);
         newFeatureRegistrations.clear();
         return result;
     }

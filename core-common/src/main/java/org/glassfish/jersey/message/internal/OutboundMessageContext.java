@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
@@ -54,8 +55,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
@@ -73,10 +76,6 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Base outbound message context implementation.
@@ -246,14 +245,11 @@ public class OutboundMessageContext {
      * @return the message date, otherwise {@code null} if not present.
      */
     public Date getDate() {
-        return singleHeader(HttpHeaders.DATE, Date.class, new Function<String, Date>() {
-            @Override
-            public Date apply(String input) {
-                try {
-                    return HttpHeaderReader.readDate(input);
-                } catch (ParseException e) {
-                    throw new ProcessingException(e);
-                }
+        return singleHeader(HttpHeaders.DATE, Date.class, input -> {
+            try {
+                return HttpHeaderReader.readDate(input);
+            } catch (ParseException e) {
+                throw new ProcessingException(e);
             }
         }, false);
     }
@@ -264,14 +260,11 @@ public class OutboundMessageContext {
      * @return the language of the entity or {@code null} if not specified
      */
     public Locale getLanguage() {
-        return singleHeader(HttpHeaders.CONTENT_LANGUAGE, Locale.class, new Function<String, Locale>() {
-            @Override
-            public Locale apply(String input) {
-                try {
-                    return new LanguageTag(input).getAsLocale();
-                } catch (ParseException e) {
-                    throw new ProcessingException(e);
-                }
+        return singleHeader(HttpHeaders.CONTENT_LANGUAGE, Locale.class, input -> {
+            try {
+                return new LanguageTag(input).getAsLocale();
+            } catch (ParseException e) {
+                throw new ProcessingException(e);
             }
         }, false);
     }
@@ -283,12 +276,7 @@ public class OutboundMessageContext {
      * message entity).
      */
     public MediaType getMediaType() {
-        return singleHeader(HttpHeaders.CONTENT_TYPE, MediaType.class, new Function<String, MediaType>() {
-            @Override
-            public MediaType apply(String input) {
-                return MediaType.valueOf(input);
-            }
-        }, false);
+        return singleHeader(HttpHeaders.CONTENT_TYPE, MediaType.class, MediaType::valueOf, false);
     }
 
     /**
@@ -304,7 +292,7 @@ public class OutboundMessageContext {
         if (values == null || values.isEmpty()) {
             return WILDCARD_ACCEPTABLE_TYPE_SINGLETON_LIST;
         }
-        final List<MediaType> result = new ArrayList<MediaType>(values.size());
+        final List<MediaType> result = new ArrayList<>(values.size());
         final RuntimeDelegate rd = RuntimeDelegate.getInstance();
         boolean conversionApplied = false;
         for (final Object value : values) {
@@ -324,12 +312,10 @@ public class OutboundMessageContext {
 
         if (conversionApplied) {
             // cache converted
-            headers.put(HttpHeaders.ACCEPT, Lists.transform(result, new Function<MediaType, Object>() {
-                @Override
-                public Object apply(MediaType input) {
-                    return input;
-                }
-            }));
+            headers.put(HttpHeaders.ACCEPT,
+                        result.stream()
+                              .map((Function<MediaType, Object>) mediaType -> mediaType)
+                              .collect(Collectors.toList()));
         }
 
         return Collections.unmodifiableList(result);
@@ -357,14 +343,10 @@ public class OutboundMessageContext {
             } else {
                 conversionApplied = true;
                 try {
-                    result.addAll(Lists.transform(HttpHeaderReader.readAcceptLanguage(HeaderUtils.asString(value, rd)),
-                            new Function<AcceptableLanguageTag, Locale>() {
-
-                                @Override
-                                public Locale apply(AcceptableLanguageTag input) {
-                                    return input.getAsLocale();
-                                }
-                            }));
+                    result.addAll(HttpHeaderReader.readAcceptLanguage(HeaderUtils.asString(value, rd))
+                                                  .stream()
+                                                  .map(LanguageTag::getAsLocale)
+                                                  .collect(Collectors.toList()));
                 } catch (java.text.ParseException e) {
                     throw exception(HttpHeaders.ACCEPT_LANGUAGE, value, e);
                 }
@@ -373,12 +355,10 @@ public class OutboundMessageContext {
 
         if (conversionApplied) {
             // cache converted
-            headers.put(HttpHeaders.ACCEPT_LANGUAGE, Lists.transform(result, new Function<Locale, Object>() {
-                @Override
-                public Object apply(Locale input) {
-                    return input;
-                }
-            }));
+            headers.put(HttpHeaders.ACCEPT_LANGUAGE,
+                        result.stream()
+                              .map((Function<Locale, Object>) locale -> locale)
+                              .collect(Collectors.toList()));
         }
 
         return Collections.unmodifiableList(result);
@@ -429,14 +409,11 @@ public class OutboundMessageContext {
      * cases returns -1.
      */
     public int getLength() {
-        return singleHeader(HttpHeaders.CONTENT_LENGTH, Integer.class, new Function<String, Integer>() {
-            @Override
-            public Integer apply(String input) {
-                try {
-                    return (input != null && !input.isEmpty()) ? Integer.parseInt(input) : -1;
-                } catch (NumberFormatException ex) {
-                    throw new ProcessingException(ex);
-                }
+        return singleHeader(HttpHeaders.CONTENT_LENGTH, Integer.class, input -> {
+            try {
+                return (input != null && !input.isEmpty()) ? Integer.parseInt(input) : -1;
+            } catch (NumberFormatException ex) {
+                throw new ProcessingException(ex);
             }
         }, true);
     }
@@ -546,12 +523,10 @@ public class OutboundMessageContext {
 
         if (conversionApplied) {
             // cache converted
-            headers.put(HttpHeaders.LINK, new ArrayList<Object>(Collections2.transform(result, new Function<Link, Object>() {
-                @Override
-                public Object apply(Link input) {
-                    return input;
-                }
-            })));
+            headers.put(HttpHeaders.LINK,
+                        result.stream()
+                              .map((Function<Link, Object>) link -> link)
+                              .collect(Collectors.toList()));
         }
 
         return Collections.unmodifiableSet(result);

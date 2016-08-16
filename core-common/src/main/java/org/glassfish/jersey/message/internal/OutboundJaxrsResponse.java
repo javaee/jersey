@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.io.ByteArrayInputStream;
@@ -65,8 +66,6 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-
-import jersey.repackaged.com.google.common.base.MoreObjects;
 
 /**
  * An outbound JAX-RS response message.
@@ -304,14 +303,12 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
     @Override
     public String toString() {
-        return MoreObjects
-                .toStringHelper(this)
-                .add("status", status.getStatusCode())
-                .add("reason", status.getReasonPhrase())
-                .add("hasEntity", context.hasEntity())
-                .add("closed", closed)
-                .add("buffered", buffered)
-                .toString();
+        return "OutboundJaxrsResponse{"
+                + "status=" + status.getStatusCode()
+                + ", reason=" + status.getReasonPhrase()
+                + ", hasEntity=" + context.hasEntity()
+                + ", closed=" + closed
+                + ", buffered=" + buffered + "}";
     }
 
     /**

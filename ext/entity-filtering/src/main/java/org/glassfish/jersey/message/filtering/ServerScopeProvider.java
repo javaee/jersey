@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package org.glassfish.jersey.message.filtering;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -62,8 +63,6 @@ import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.ResourceMethod;
 
 import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Server-side implementation of {@link org.glassfish.jersey.message.filtering.spi.ScopeProvider scope provider}. In addition to
@@ -143,7 +142,7 @@ class ServerScopeProvider extends CommonScopeProvider {
 
     private static List<ResourceMethod> getMatchedMethods(final ExtendedUriInfo uriInfo) {
         final List<ResourceMethod> matchedResourceLocators = uriInfo.getMatchedResourceLocators();
-        final List<ResourceMethod> methods = Lists.newArrayListWithCapacity(1 + matchedResourceLocators.size());
+        final List<ResourceMethod> methods = new ArrayList<>(1 + matchedResourceLocators.size());
 
         methods.add(uriInfo.getMatchedResourceMethod());
         methods.addAll(matchedResourceLocators);

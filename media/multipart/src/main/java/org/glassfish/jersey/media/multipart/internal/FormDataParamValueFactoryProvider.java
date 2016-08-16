@@ -49,14 +49,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 
-import javax.inject.Inject;
-
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
@@ -76,14 +78,7 @@ import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-
 import org.jvnet.mimepull.MIMEParsingException;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Value factory provider supporting the {@link FormDataParam} injection annotation and entity ({@link FormDataMultiPart})
@@ -179,12 +174,9 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
         public List<FormDataContentDisposition> provide() {
             final List<FormDataBodyPart> parts = getEntity().getFields(name);
 
-            return parts == null ? null : Lists.transform(parts, new Function<FormDataBodyPart, FormDataContentDisposition>() {
-                @Override
-                public FormDataContentDisposition apply(final FormDataBodyPart part) {
-                    return part.getFormDataContentDisposition();
-                }
-            });
+            return parts == null ? null : parts.stream()
+                                               .map(FormDataBodyPart::getFormDataContentDisposition)
+                                               .collect(Collectors.toList());
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,8 +37,10 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.server;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -57,9 +59,6 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Testing that {@link Context injection} is done before invoking method annotated with {@link PostConstruct}.
@@ -101,12 +100,12 @@ public class PostConstructTest extends JerseyTest {
 
         @Override
         public Set<Class<?>> getClasses() {
-            return Sets.<Class<?>>newHashSet(Resource.class);
+            return Collections.singleton(Resource.class);
         }
 
         @Override
         public Map<String, Object> getProperties() {
-            final HashMap<String, Object> map = Maps.newHashMap();
+            final HashMap<String, Object> map = new HashMap<>();
             map.put("value", value);
             return map;
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.routing;
 
 import java.lang.reflect.Method;
@@ -44,11 +45,14 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,6 +66,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.glassfish.jersey.internal.guava.Primitives;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.ReaderModel;
 import org.glassfish.jersey.message.WriterModel;
@@ -74,11 +79,6 @@ import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
-import jersey.repackaged.com.google.common.primitives.Primitives;
 
 /**
  * A single router responsible for selecting a single method from all the methods
@@ -152,7 +152,7 @@ final class MethodSelectingRouter implements Router {
 
         this.consumesProducesAcceptors = new HashMap<>();
 
-        final Set<String> httpMethods = Sets.newHashSet();
+        final Set<String> httpMethods = new HashSet<>();
         for (final MethodRouting methodRouting : methodRoutings) {
             final String httpMethod = methodRouting.method.getHttpMethod();
             httpMethods.add(httpMethod);
@@ -383,7 +383,7 @@ final class MethodSelectingRouter implements Router {
         boolean producesFromWorkers = fillMediaTypes(effectiveOutputTypes, resourceMethod,
                 resourceMethod.getProducedTypes(), false);
 
-        final Set<ConsumesProducesAcceptor> acceptorSet = Sets.newHashSet();
+        final Set<ConsumesProducesAcceptor> acceptorSet = new HashSet<>();
         for (MediaType consumes : effectiveInputTypes) {
             for (MediaType produces : effectiveOutputTypes) {
 
@@ -467,7 +467,7 @@ final class MethodSelectingRouter implements Router {
         }
 
         final List<ConsumesProducesAcceptor> satisfyingAcceptors = new LinkedList<>();
-        final Set<ResourceMethod> differentInvokableMethods = Sets.newIdentityHashSet();
+        final Set<ResourceMethod> differentInvokableMethods = Collections.newSetFromMap(new IdentityHashMap<>());
         for (ConsumesProducesAcceptor cpi : acceptors) {
             if (cpi.isConsumable(request)) {
                 satisfyingAcceptors.add(cpi);
@@ -559,7 +559,7 @@ final class MethodSelectingRouter implements Router {
 
         // Media types producible by method.
         final List<MediaType> methodProducesTypes = !resourceMethod.getProducedTypes().isEmpty()
-                ? resourceMethod.getProducedTypes() : Lists.newArrayList(MediaType.WILDCARD_TYPE);
+                ? resourceMethod.getProducedTypes() : Collections.singletonList(MediaType.WILDCARD_TYPE);
         // Applicable entity providers
         final List<WriterModel> writersForEntityType = workers.getWritersModelsForType(responseEntityClass);
 
@@ -746,7 +746,7 @@ final class MethodSelectingRouter implements Router {
             StringBuilder msgBuilder =
                     new StringBuilder(LocalizationMessages.AMBIGUOUS_RESOURCE_METHOD(acceptableTypes)).append('\n');
             msgBuilder.append('\t').append(selected.methodRouting.method).append('\n');
-            final Set<ResourceMethod> reportedMethods = Sets.newHashSet();
+            final Set<ResourceMethod> reportedMethods = new HashSet<>();
             reportedMethods.add(selected.methodRouting.method);
             for (RequestSpecificConsumesProducesAcceptor i : sameFitnessAcceptors) {
                 if (!reportedMethods.contains(i.methodRouting.method)) {

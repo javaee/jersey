@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,12 +43,12 @@ package org.glassfish.jersey.message.internal;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-
-import jersey.repackaged.com.google.common.base.Preconditions;
+import org.glassfish.jersey.internal.guava.Preconditions;
 
 /**
  * A committing output stream with optional serialized entity buffering functionality
@@ -86,12 +86,7 @@ final class CommittingOutputStream extends OutputStream {
      * Null stream provider.
      */
     private static final OutboundMessageContext.StreamProvider NULL_STREAM_PROVIDER =
-            new OutboundMessageContext.StreamProvider() {
-                @Override
-                public OutputStream getOutputStream(int contentLength) throws IOException {
-                    return new NullOutputStream();
-                }
-            };
+            contentLength -> new NullOutputStream();
     /**
      * Default size of the buffer which will be used if no user defined size is specified.
      */
@@ -133,7 +128,7 @@ final class CommittingOutputStream extends OutputStream {
      * Creates new committing output stream. The returned stream instance still needs to be initialized before
      * writing first bytes.
      */
-    public CommittingOutputStream() {
+    CommittingOutputStream() {
     }
 
     /**
@@ -146,7 +141,7 @@ final class CommittingOutputStream extends OutputStream {
         if (isClosed) {
             throw new IllegalStateException(LocalizationMessages.OUTPUT_STREAM_CLOSED());
         }
-        Preconditions.checkNotNull(streamProvider);
+        Objects.nonNull(streamProvider);
 
         if (this.streamProvider != null) {
             LOGGER.log(Level.WARNING, LocalizationMessages.COMMITTING_STREAM_ALREADY_INITIALIZED());
@@ -161,9 +156,9 @@ final class CommittingOutputStream extends OutputStream {
      *                   will be passed to the
      *                   {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#getOutputStream(int) callback}.
      */
-    public void enableBuffering(int bufferSize) {
+    void enableBuffering(int bufferSize) {
         Preconditions.checkState(!isCommitted && (this.buffer == null || this.buffer.size() == 0),
-                COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE);
+                                 COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE);
         this.bufferSize = bufferSize;
         if (bufferSize <= 0) {
             this.directWrite = true;
@@ -177,7 +172,7 @@ final class CommittingOutputStream extends OutputStream {
     /**
      * Enable buffering of the serialized entity with the {@link #DEFAULT_BUFFER_SIZE default buffer size }.
      */
-    public void enableBuffering() {
+    void enableBuffering() {
         enableBuffering(DEFAULT_BUFFER_SIZE);
     }
 

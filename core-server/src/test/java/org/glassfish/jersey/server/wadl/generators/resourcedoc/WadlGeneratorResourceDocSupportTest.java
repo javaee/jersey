@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.wadl.generators.resourcedoc;
 
 import java.io.StringWriter;
@@ -44,6 +45,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collections;
 
 import javax.ws.rs.POST;
 
@@ -67,8 +69,6 @@ import org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model.Re
 import org.junit.Test;
 
 import com.sun.research.ws.wadl.Application;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 public class WadlGeneratorResourceDocSupportTest {
     @Test
@@ -99,7 +99,7 @@ public class WadlGeneratorResourceDocSupportTest {
 
         WadlBuilder wb = new WadlBuilder(wg, false, null);
         Resource resource = Resource.from(TestResource.class);
-        ApplicationDescription app = wb.generate(Lists.newArrayList(resource));
+        ApplicationDescription app = wb.generate(Collections.singletonList(resource));
 
 
         /* Confirm that it can be marshalled without error */

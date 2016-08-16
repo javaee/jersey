@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package org.glassfish.jersey.process.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,10 +61,7 @@ import org.glassfish.hk2.api.Context;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-import jersey.repackaged.com.google.common.base.MoreObjects;
-import jersey.repackaged.com.google.common.collect.Sets;
-
-import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
+import static org.glassfish.jersey.internal.guava.Preconditions.checkState;
 
 /**
  * Scopes a single request/response processing execution on a single thread.
@@ -545,9 +543,7 @@ public class RequestScope implements Context<RequestScoped> {
         public void release() {
             if (referenceCounter.decrementAndGet() < 1) {
                 try {
-                    for (final ActiveDescriptor<?> descriptor : Sets.newHashSet(store.keySet())) {
-                        remove(descriptor);
-                    }
+                    new HashSet<>(store.keySet()).forEach(this::remove);
                 } finally {
                     logger.debugLog("Released scope instance {0}", this);
                 }
@@ -556,8 +552,11 @@ public class RequestScope implements Context<RequestScoped> {
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this).add("id", id.value()).add("referenceCounter", referenceCounter.get())
-                    .add("store size", store.size()).toString();
+            return "Instance{"
+                    + "id=" + id
+                    + ", referenceCounter=" + referenceCounter
+                    + ", store size=" + store.size()
+                    + '}';
         }
     }
 }

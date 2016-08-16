@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,8 @@ package org.glassfish.jersey.server.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,8 +69,6 @@ import org.glassfish.hk2.utilities.AliasDescriptor;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-import jersey.repackaged.com.google.common.collect.Sets;
-
 /**
  * Jersey implementation of JAX-RS {@link ResourceContext resource context}.
  *
@@ -92,7 +92,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
     JerseyResourceContext(ServiceLocator locator) {
         this.locator = locator;
 
-        this.bindingCache = Sets.newIdentityHashSet();
+        this.bindingCache = Collections.newSetFromMap(new IdentityHashMap<>());
         this.bindingCacheLock = new Object();
     }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,12 +37,16 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.server;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -75,8 +79,6 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Assert that pre destroy method on application, resources and providers is invoked.
@@ -156,17 +158,17 @@ public class ServerDestroyTest extends JerseyTest {
 
         @Override
         public Set<Class<?>> getClasses() {
-            return Sets.<Class<?>>newHashSet(
+            return Arrays.asList(
                     Resource.class,
                     MyFilter.class,
                     MyWriter.class,
                     MyContainerLifecycleListener.class,
-                    MyFeature.class);
+                    MyFeature.class).stream().collect(Collectors.toSet());
         }
 
         @Override
         public Set<Object> getSingletons() {
-            return Sets.<Object>newHashSet(new AbstractBinder() {
+            return Collections.singleton(new AbstractBinder() {
                 @Override
                 protected void configure() {
                     bindFactory(SingletonFactory.class)

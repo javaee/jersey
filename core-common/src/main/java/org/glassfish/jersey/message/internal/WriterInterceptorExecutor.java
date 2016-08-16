@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
@@ -48,6 +49,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
@@ -64,8 +67,6 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import jersey.repackaged.com.google.common.collect.Lists;
-
 /**
  * Represents writer interceptor chain executor for both client and server side.
  * It constructs wrapped interceptor chain and invokes it. At the end of the chain
@@ -75,7 +76,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * @author Miroslav Fuksa
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor>
+final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor>
         implements WriterInterceptorContext, ServiceLocatorSupplier {
 
     private static final Logger LOGGER = Logger.getLogger(WriterInterceptorExecutor.class.getName());
@@ -111,16 +112,16 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
      * @param writerInterceptors Writer interceptors that are to be used to intercept writing of an entity.
      * @param serviceLocator Service locator.
      */
-    public WriterInterceptorExecutor(final Object entity, final Class<?> rawType,
-                                     final Type type,
-                                     final Annotation[] annotations,
-                                     final MediaType mediaType,
-                                     final MultivaluedMap<String, Object> headers,
-                                     final PropertiesDelegate propertiesDelegate,
-                                     final OutputStream entityStream,
-                                     final MessageBodyWorkers workers,
-                                     final Iterable<WriterInterceptor> writerInterceptors,
-                                     final ServiceLocator serviceLocator) {
+    WriterInterceptorExecutor(final Object entity, final Class<?> rawType,
+                              final Type type,
+                              final Annotation[] annotations,
+                              final MediaType mediaType,
+                              final MultivaluedMap<String, Object> headers,
+                              final PropertiesDelegate propertiesDelegate,
+                              final OutputStream entityStream,
+                              final MessageBodyWorkers workers,
+                              final Iterable<WriterInterceptor> writerInterceptors,
+                              final ServiceLocator serviceLocator) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.entity = entity;
@@ -128,7 +129,8 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
         this.outputStream = entityStream;
         this.serviceLocator = serviceLocator;
 
-        final List<WriterInterceptor> effectiveInterceptors = Lists.newArrayList(writerInterceptors);
+        final List<WriterInterceptor> effectiveInterceptors = StreamSupport.stream(writerInterceptors.spliterator(), false)
+                                                                           .collect(Collectors.toList());
         effectiveInterceptors.add(new TerminalWriterInterceptor(workers));
 
         this.iterator = effectiveInterceptors.iterator();
@@ -140,7 +142,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
      *
      * @return Next interceptor.
      */
-    public WriterInterceptor getNextInterceptor() {
+    private WriterInterceptor getNextInterceptor() {
         if (!iterator.hasNext()) {
             return null;
         }
@@ -217,7 +219,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
     private class TerminalWriterInterceptor implements WriterInterceptor {
         private final MessageBodyWorkers workers;
 
-        public TerminalWriterInterceptor(final MessageBodyWorkers workers) {
+        TerminalWriterInterceptor(final MessageBodyWorkers workers) {
             super();
             this.workers = workers;
         }

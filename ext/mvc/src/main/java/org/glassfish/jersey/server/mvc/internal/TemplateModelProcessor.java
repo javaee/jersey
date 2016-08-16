@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.mvc.internal;
 
 import java.security.AccessController;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -72,8 +73,6 @@ import org.glassfish.jersey.server.model.internal.ModelHelper;
 import org.glassfish.jersey.server.model.internal.ModelProcessorUtil;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.server.mvc.Viewable;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * {@link ModelProcessor Model processor} enhancing (sub-)resources with {@value HttpMethod#GET} methods responsible of producing
@@ -188,7 +187,7 @@ class TemplateModelProcessor implements ModelProcessor {
          * @return a non-empty list of template names.
          */
         private List<String> getTemplateNames(final ContainerRequestContext requestContext) {
-            final List<String> templateNames = Lists.newArrayList();
+            final List<String> templateNames = new ArrayList<>();
 
             // Template name extracted from path param.
             final String pathTemplate = requestContext.getUriInfo().getPathParameters().getFirst(IMPLICIT_VIEW_PATH_PARAMETER);
@@ -317,7 +316,7 @@ class TemplateModelProcessor implements ModelProcessor {
      * @return list of enhancing methods.
      */
     private List<ModelProcessorUtil.Method> getEnhancingMethods(final RuntimeResource runtimeResource) {
-        final List<ModelProcessorUtil.Method> newMethods = Lists.newArrayList();
+        final List<ModelProcessorUtil.Method> newMethods = new ArrayList<>();
 
         for (final Resource resource : runtimeResource.getResources()) {
             // Handler classes.

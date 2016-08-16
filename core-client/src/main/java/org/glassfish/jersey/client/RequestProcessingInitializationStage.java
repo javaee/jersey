@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,13 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.util.Collections;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
@@ -53,9 +57,6 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.model.internal.RankedComparator;
 
 import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Function that can be put to an acceptor chain to properly initialize
@@ -85,10 +86,18 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
             ServiceLocator locator) {
         this.requestRefProvider = requestRefProvider;
         this.workersProvider = workersProvider;
-        writerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(locator,
-                WriterInterceptor.class, new RankedComparator<WriterInterceptor>())));
-        readerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(locator,
-                ReaderInterceptor.class, new RankedComparator<ReaderInterceptor>())));
+        writerInterceptors = Collections.unmodifiableList(
+                StreamSupport.stream(
+                        Providers.getAllProviders(locator, WriterInterceptor.class, new RankedComparator<>()).spliterator(),
+                        false
+                ).collect(Collectors.toList())
+        );
+        readerInterceptors = Collections.unmodifiableList(
+                StreamSupport.stream(
+                        Providers.getAllProviders(locator, ReaderInterceptor.class, new RankedComparator<>()).spliterator(),
+                        false
+                ).collect(Collectors.toList())
+        );
     }
 
     @Override

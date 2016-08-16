@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
 * only if the new code is made subject to such option by the copyright
 * holder.
 */
+
 package org.glassfish.jersey.tests.e2e.common;
 
 import java.io.ByteArrayOutputStream;
@@ -46,6 +47,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -75,8 +77,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -375,7 +375,7 @@ public class ProvidersOrderingTest extends JerseyTest {
             fail("Request was not handled correctly, most likely fault in MessageBodyWorker selection.");
         }
 
-        ArrayList<Class<?>> classes = Lists.newArrayList(
+        List<Class<?>> classes = Arrays.asList(
                 MyMBR3.class, // MBR - smallest type distance (MBR1 and MBR2 are not called because of that)
                 MyMBW4.class, // MBW - type distance
                 MyMBW1.class, // MBW - most specific media type application/test1

@@ -57,13 +57,7 @@ import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -74,7 +68,17 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -105,14 +109,6 @@ import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 import org.glassfish.jersey.servlet.spi.FilterUrlMappingsProvider;
 import org.glassfish.jersey.uri.UriComponent;
-
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-
-import jersey.repackaged.com.google.common.base.Predicate;
-import jersey.repackaged.com.google.common.collect.Collections2;
 
 /**
  * An common Jersey web component that may be extended by a Servlet and/or
@@ -713,13 +709,9 @@ public class WebComponent {
      * @return list of form param values for given name without values of query param of the same name.
      */
     private List<String> filterQueryParams(final String name, final List<String> values, final Collection<String> params) {
-        return new ArrayList<>(Collections2.filter(values, new Predicate<String>() {
-            @Override
-            public boolean apply(final String input) {
-                return !params.remove(name + "=" + input)
-                        && !params.remove(name + "[]=" + input);
-            }
-        }));
+        return values.stream()
+                     .filter(s -> !params.remove(name + "=" + s) && !params.remove(name + "[]=" + s))
+                     .collect(Collectors.toList());
     }
 
     /**

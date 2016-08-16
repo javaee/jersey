@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
@@ -45,6 +46,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Encoded;
 
@@ -60,9 +63,6 @@ import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.base.Predicate;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Abstract base class for resolving JAX-RS {@code &#64;XxxParam} injection.
@@ -82,13 +82,7 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
      * @param valueFactoryProviderClass parameter value factory provider class.
      */
     public ParamInjectionResolver(final Class<? extends ValueFactoryProvider> valueFactoryProviderClass) {
-        this.concreteValueFactoryClassFilter = new Predicate<ValueFactoryProvider>() {
-
-            @Override
-            public boolean apply(ValueFactoryProvider input) {
-                return valueFactoryProviderClass.isInstance(input);
-            }
-        };
+        this.concreteValueFactoryClassFilter = valueFactoryProviderClass::isInstance;
     }
 
     @Override
@@ -115,8 +109,10 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
         }
         final Class<?> targetType = ReflectionHelper.erasure(targetGenericType);
 
-        Set<ValueFactoryProvider> providers = Sets.filter(Providers.getProviders(locator, ValueFactoryProvider.class),
-                concreteValueFactoryClassFilter);
+        Set<ValueFactoryProvider> providers = Providers.getProviders(locator, ValueFactoryProvider.class)
+                                                       .stream()
+                                                       .filter(concreteValueFactoryClassFilter)
+                                                       .collect(Collectors.toSet());
         final ValueFactoryProvider valueFactoryProvider = providers.iterator().next(); // get first provider in the set
         final Parameter parameter = Parameter.create(
                 componentClass,

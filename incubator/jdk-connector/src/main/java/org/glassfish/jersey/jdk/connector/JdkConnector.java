@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.jdk.connector;
 
 import java.io.IOException;
@@ -45,6 +46,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.ProcessingException;
@@ -58,8 +60,6 @@ import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
-
-import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
 
 /**
  * @author Petr Janouch (petr.janouch at oracle.com)
@@ -101,19 +101,19 @@ class JdkConnector implements Connector {
 
     @Override
     public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
-        final SettableFuture<ClientResponse> responseFuture = SettableFuture.create();
+        final CompletableFuture<ClientResponse> responseFuture = new CompletableFuture<>();
         // just so we don't have to drag around both the future and callback
         final AsyncConnectorCallback internalCallback = new AsyncConnectorCallback() {
             @Override
             public void response(ClientResponse response) {
                 callback.response(response);
-                responseFuture.set(response);
+                responseFuture.complete(response);
             }
 
             @Override
             public void failure(Throwable failure) {
                 callback.failure(failure);
-                responseFuture.setException(failure);
+                responseFuture.completeExceptionally(failure);
             }
         };
 

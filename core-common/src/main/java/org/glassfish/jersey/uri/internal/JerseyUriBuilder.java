@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.uri.internal;
 
 import java.lang.reflect.AnnotatedElement;
@@ -44,6 +45,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.AccessController;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +60,6 @@ import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
 
-import jersey.repackaged.com.google.common.collect.Maps;
 import jersey.repackaged.com.google.common.net.InetAddresses;
 
 /**
@@ -641,7 +642,7 @@ public class JerseyUriBuilder extends UriBuilder {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("value"));
         }
 
-        final Map<String, Object> templateValues = Maps.newHashMap();
+        final Map<String, Object> templateValues = new HashMap<>();
         templateValues.put(name, value);
         resolveTemplates(templateValues, encode, encodeSlashInPath);
         return this;

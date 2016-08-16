@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -86,8 +88,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Taken from Jersey 1: jersey-server:com.sun.jersey.server.impl.modelapi.validation.ResourceModelValidatorTest.java
@@ -314,7 +314,7 @@ public class ValidatorTest {
         return Errors.process(new Producer<List<ResourceModelIssue>>() {
             @Override
             public List<ResourceModelIssue> call() {
-                List<Resource> resources = Lists.newArrayList();
+                List<Resource> resources = new ArrayList<>();
                 for (Class<?> clazz : resourceClasses) {
                     final Resource res = Resource.builder(clazz).build();
                     if (res.getPath() != null) {

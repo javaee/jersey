@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,13 +43,14 @@ package org.glassfish.jersey.model;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
-
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Jersey contract provider model.
@@ -88,14 +89,14 @@ public final class ContractProvider implements Scoped, NameBound {
 
         private static final ContractProvider EMPTY_MODEL = new ContractProvider(
                 Singleton.class,
-                Collections.<Class<?>, Integer>emptyMap(),
+                Collections.emptyMap(),
                 NO_PRIORITY,
-                Collections.<Class<? extends Annotation>>emptySet());
+                Collections.emptySet());
 
         private Class<? extends Annotation> scope = null;
-        private Map<Class<?>, Integer> contracts = Maps.newHashMap();
+        private Map<Class<?>, Integer> contracts = new HashMap<>();
         private int defaultPriority = NO_PRIORITY;
-        private Set<Class<? extends Annotation>> nameBindings = Sets.newIdentityHashSet();
+        private Set<Class<? extends Annotation>> nameBindings = Collections.newSetFromMap(new IdentityHashMap<>());
 
         private Builder() {
         }
@@ -234,16 +235,18 @@ public final class ContractProvider implements Scoped, NameBound {
             }
 
             final Map<Class<?>, Integer> _contracts = (contracts.isEmpty())
-                    ? Collections.<Class<?>, Integer>emptyMap()
-                    : Maps.transformEntries(contracts, new Maps.EntryTransformer<Class<?>, Integer, Integer>() {
-                        @Override
-                        public Integer transformEntry(final Class<?> contract, final Integer priority) {
-                            return (priority != NO_PRIORITY) ? priority : defaultPriority;
-                        }
-                    });
+                    ? Collections.emptyMap()
+                    : contracts.entrySet()
+                               .stream()
+                               .collect(Collectors.toMap((Function<Map.Entry<Class<?>, Integer>, Class<?>>) Map.Entry::getKey,
+                                                         classIntegerEntry -> {
+                                                             Integer priority = classIntegerEntry.getValue();
+                                                             return (priority != NO_PRIORITY) ? priority : defaultPriority;
+                                                         }));
+
 
             final Set<Class<? extends Annotation>> bindings = (nameBindings.isEmpty())
-                    ? Collections.<Class<? extends Annotation>>emptySet() : Collections.unmodifiableSet(nameBindings);
+                    ? Collections.emptySet() : Collections.unmodifiableSet(nameBindings);
 
             if (scope == Singleton.class && _contracts.isEmpty() && defaultPriority == NO_PRIORITY && bindings.isEmpty()) {
                 return EMPTY_MODEL;

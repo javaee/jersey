@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 /*
  * The contents of this file are subject to the terms
  * of the Common Development and Distribution License
@@ -50,6 +51,8 @@
  */
 package org.glassfish.jersey.server.model;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.glassfish.jersey.Severity;
@@ -58,8 +61,6 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 
 import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * A resource model validator that checks the given resource model.
@@ -89,10 +90,10 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 public final class ComponentModelValidator {
 
-    private final List<ResourceModelIssue> issueList = Lists.newLinkedList();
+    private final List<ResourceModelIssue> issueList = new LinkedList<>();
 
     public ComponentModelValidator(ServiceLocator locator) {
-        validators = Lists.newArrayList();
+        validators = new ArrayList<>();
         validators.add(new ResourceValidator());
         validators.add(new RuntimeResourceModelValidator(locator.getService(MessageBodyWorkers.class)));
         validators.add(new ResourceMethodValidator(locator));

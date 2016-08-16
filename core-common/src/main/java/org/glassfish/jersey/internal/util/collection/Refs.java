@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,8 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.util.collection;
 
-import jersey.repackaged.com.google.common.base.MoreObjects;
+package org.glassfish.jersey.internal.util.collection;
 
 /**
  * A collection of {@link Ref reference} factory & utility methods.
@@ -59,7 +58,7 @@ public final class Refs {
 
         private final T reference;
 
-        public ImmutableRefImpl(final T value) {
+        ImmutableRefImpl(final T value) {
             this.reference = value;
         }
 
@@ -75,7 +74,9 @@ public final class Refs {
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this).add("reference", reference).toString();
+            return "ImmutableRefImpl{"
+                    + "reference=" + reference
+                    + '}';
         }
 
         @Override
@@ -106,11 +107,11 @@ public final class Refs {
 
         private T reference;
 
-        public DefaultRefImpl() {
+        DefaultRefImpl() {
             this.reference = null;
         }
 
-        public DefaultRefImpl(final T value) {
+        DefaultRefImpl(final T value) {
             this.reference = value;
         }
 
@@ -126,7 +127,9 @@ public final class Refs {
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this).add("reference", reference).toString();
+            return "DefaultRefImpl{"
+                    + "reference=" + reference
+                    + '}';
         }
 
         @Override
@@ -158,11 +161,11 @@ public final class Refs {
 
         private volatile T reference;
 
-        public ThreadSafeRefImpl() {
+        ThreadSafeRefImpl() {
             this.reference = null;
         }
 
-        public ThreadSafeRefImpl(final T value) {
+        ThreadSafeRefImpl(final T value) {
             this.reference = value;
         }
 
@@ -178,7 +181,9 @@ public final class Refs {
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this).add("reference", reference).toString();
+            return "ThreadSafeRefImpl{"
+                    + "reference=" + reference
+                    + '}';
         }
 
         @Override

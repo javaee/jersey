@@ -43,6 +43,9 @@ import java.net.URI;
 import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -72,9 +75,6 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.After;
 import org.junit.Before;
-
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Parent class for testing JAX-RS and Jersey-based applications using Jersey test framework.
@@ -177,16 +177,16 @@ public abstract class JerseyTest {
      * JerseyTest property bag that can be used to configure the test behavior.
      * These properties can be overridden with a system property.
      */
-    private final Map<String, String> propertyMap = Maps.newHashMap();
+    private final Map<String, String> propertyMap = new HashMap<>();
 
     /**
      * JerseyTest forced property bag that can be used to configure the test behavior.
      * These property cannot be overridden with a system property.
      */
-    private final Map<String, String> forcedPropertyMap = Maps.newHashMap();
+    private final Map<String, String> forcedPropertyMap = new HashMap<>();
 
     private JerseyTestLogHandler logHandler;
-    private final Map<Logger, Level> logLevelMap = Maps.newIdentityHashMap();
+    private final Map<Logger, Level> logLevelMap = new IdentityHashMap<>();
 
     /**
      * Initialize JerseyTest instance.
@@ -803,7 +803,7 @@ public abstract class JerseyTest {
         final LogManager logManager = LogManager.getLogManager();
         final Enumeration<String> loggerNames = logManager.getLoggerNames();
 
-        final Set<Logger> rootLoggers = Sets.newHashSet();
+        final Set<Logger> rootLoggers = new HashSet<>();
 
         while (loggerNames.hasMoreElements()) {
             Logger logger = logManager.getLogger(loggerNames.nextElement());

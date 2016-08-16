@@ -64,7 +64,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 
 /**
  * @author Michal Gajdos

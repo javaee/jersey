@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.process;
 
 import java.io.Closeable;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -47,8 +50,6 @@ import java.util.logging.Logger;
 
 import org.glassfish.jersey.server.CloseableService;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Default implementation of {@link CloseableService}.
@@ -63,7 +64,7 @@ class DefaultCloseableService implements CloseableService {
     private static final Logger LOGGER = Logger.getLogger(DefaultCloseableService.class.getName());
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
-    private final Set<Closeable> closeables = Sets.newIdentityHashSet();
+    private final Set<Closeable> closeables = Collections.newSetFromMap(new IdentityHashMap<>());
 
     @Override
     public boolean add(final Closeable closeable) {

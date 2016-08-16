@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,12 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client.internal;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
@@ -55,9 +55,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
@@ -81,12 +83,7 @@ import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
-import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
-
-import jersey.repackaged.com.google.common.base.Predicates;
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Default client transport connector using {@link HttpURLConnection}.
@@ -113,7 +110,7 @@ public class HttpUrlConnector implements Connector {
             "Via"
     };
 
-    private static final Set<String> restrictedHeaderSet = new HashSet<String>(restrictedHeaders.length);
+    private static final Set<String> restrictedHeaderSet = new HashSet<>(restrictedHeaders.length);
 
     static {
         for (String headerName : restrictedHeaders) {
@@ -201,7 +198,7 @@ public class HttpUrlConnector implements Connector {
              * IOException} which might be questionable. Nevertheless, our contract is {@link InputStream} and as such, the
              * stream we're offering must comply with it.
              *
-             * @throws IOException
+             * @throws IOException when the stream is closed.
              */
             private void throwIOExceptionIfClosed() throws IOException {
                 if (closed) {
@@ -290,18 +287,16 @@ public class HttpUrlConnector implements Connector {
 
     @Override
     public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
-        return MoreExecutors.sameThreadExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    callback.response(_apply(request));
-                } catch (IOException ex) {
-                    callback.failure(new ProcessingException(ex));
-                } catch (Throwable t) {
-                    callback.failure(t);
-                }
-            }
-        });
+
+        try {
+            callback.response(_apply(request));
+        } catch (IOException ex) {
+            callback.failure(new ProcessingException(ex));
+        } catch (Throwable t) {
+            callback.failure(t);
+        }
+
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -377,13 +372,9 @@ public class HttpUrlConnector implements Connector {
                 }
             }
 
-            request.setStreamProvider(new OutboundMessageContext.StreamProvider() {
-
-                @Override
-                public OutputStream getOutputStream(int contentLength) throws IOException {
-                    setOutboundHeaders(request.getStringHeaders(), uc);
-                    return uc.getOutputStream();
-                }
+            request.setStreamProvider(contentLength -> {
+                setOutboundHeaders(request.getStringHeaders(), uc);
+                return uc.getOutputStream();
             });
             request.writeEntity();
 
@@ -403,7 +394,14 @@ public class HttpUrlConnector implements Connector {
         }
 
         ClientResponse responseContext = new ClientResponse(status, request, resolvedRequestUri);
-        responseContext.headers(Maps.filterKeys(uc.getHeaderFields(), Predicates.notNull()));
+        responseContext.headers(
+                uc.getHeaderFields()
+                  .entrySet()
+                  .stream()
+                  .filter(stringListEntry -> stringListEntry.getKey() != null)
+                  .collect(Collectors.toMap(Map.Entry::getKey,
+                                            Map.Entry::getValue))
+        );
         responseContext.setEntityStream(getInputStream(uc));
 
         return responseContext;
@@ -486,9 +484,7 @@ public class HttpUrlConnector implements Connector {
                                         setRequestMethodViaJreBugWorkaround(delegateConnection, method);
                                     } catch (NoSuchFieldException e) {
                                         // Ignore for now, keep going
-                                    } catch (IllegalArgumentException e) {
-                                        throw new RuntimeException(e);
-                                    } catch (IllegalAccessException e) {
+                                    } catch (IllegalArgumentException | IllegalAccessException e) {
                                         throw new RuntimeException(e);
                                     }
                                     try {

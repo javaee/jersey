@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
@@ -74,10 +75,6 @@ import org.glassfish.jersey.server.mvc.internal.LocalizationMessages;
 import org.glassfish.jersey.server.mvc.internal.TemplateHelper;
 
 import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Default implementation of {@link org.glassfish.jersey.server.mvc.spi.TemplateProcessor template processor} that can be used to
@@ -121,15 +118,13 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
         this.suffix = '.' + propertySuffix;
 
         this.servletContext = servletContext;
-        this.supportedExtensions = Sets.newHashSet(Collections2.transform(
-                Arrays.asList(supportedExtensions), new Function<String, String>() {
-
-                    @Override
-                    public String apply(String input) {
-                        input = input.toLowerCase();
-                        return input.startsWith(".") ? input : "." + input;
-                    }
-                }));
+        this.supportedExtensions =
+                Arrays.stream(supportedExtensions)
+                      .map(input -> {
+                          input = input.toLowerCase();
+                          return input.startsWith(".") ? input : "." + input;
+                      })
+                      .collect(Collectors.toSet());
 
         // Resolve property values.
         final Map<String, Object> properties = config.getProperties();
@@ -261,12 +256,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
             }
         }
 
-        return Collections2.transform(supportedExtensions, new Function<String, String>() {
-            @Override
-            public String apply(final String input) {
-                return templatePath + input;
-            }
-        });
+        return supportedExtensions.stream().map(input -> templatePath + input).collect(Collectors.toSet());
     }
 
     /**

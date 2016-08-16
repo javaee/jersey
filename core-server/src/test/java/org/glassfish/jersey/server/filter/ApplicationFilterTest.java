@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.filter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -67,8 +68,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Test for JAX-RS filters.
@@ -111,7 +110,7 @@ public class ApplicationFilterTest {
 
         final AtomicInteger called = new AtomicInteger(0);
 
-        final List<ContainerRequestFilter> requestFilters = Lists.newArrayList();
+        final List<ContainerRequestFilter> requestFilters = new ArrayList<>();
         requestFilters.add(new ContainerRequestFilter() {
             @Override
             public void filter(final ContainerRequestContext context) throws IOException {
@@ -141,7 +140,7 @@ public class ApplicationFilterTest {
     public void testSingleResponseFilter() throws Exception {
         final AtomicInteger called = new AtomicInteger(0);
 
-        final List<ContainerResponseFilter> responseFilterList = Lists.newArrayList();
+        final List<ContainerResponseFilter> responseFilterList = new ArrayList<>();
         responseFilterList.add(new ContainerResponseFilter() {
             @Override
             public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
@@ -295,7 +294,7 @@ public class ApplicationFilterTest {
         filter10.setFilters(filter1, filter100);
         filter100.setFilters(filter1, filter10);
 
-        final List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
+        final List<ContainerRequestFilter> requestFilterList = new ArrayList<>();
         requestFilterList.add(filter100);
         requestFilterList.add(filter1);
         requestFilterList.add(filter10);
@@ -328,7 +327,7 @@ public class ApplicationFilterTest {
     @Test
     public void testFilterExceptionHandling() throws Exception {
 
-        final List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
+        final List<ContainerRequestFilter> requestFilterList = new ArrayList<>();
         requestFilterList.add(new ExceptionFilter());
 
         final ResourceConfig resourceConfig = new ResourceConfig()

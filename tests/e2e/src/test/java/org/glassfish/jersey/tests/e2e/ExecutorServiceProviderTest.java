@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -51,6 +54,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -61,22 +66,16 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.glassfish.jersey.client.ClientAsyncExecutor;
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.ManagedAsyncExecutor;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.ExecutorServiceProvider;
 import org.glassfish.jersey.test.JerseyTest;
-
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-
-import jersey.repackaged.com.google.common.collect.Sets;
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * {@link org.glassfish.jersey.spi.ExecutorServiceProvider} E2E tests.
@@ -138,7 +137,7 @@ public class ExecutorServiceProviderTest extends JerseyTest {
     @Named("custom")
     public static class CustomExecutorProvider implements ExecutorServiceProvider {
 
-        private final Set<ExecutorService> executors = Sets.newIdentityHashSet();
+        private final Set<ExecutorService> executors = Collections.newSetFromMap(new IdentityHashMap<>());
         private volatile int executorCreationCount = 0;
         private volatile int executorReleaseCount = 0;
 

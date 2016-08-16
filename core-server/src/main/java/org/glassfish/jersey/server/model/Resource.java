@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,29 +37,31 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
 import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.guava.Preconditions;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.internal.ModelHelper;
 import org.glassfish.jersey.uri.PathPattern;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.base.Preconditions;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Model of a single resource component.
@@ -220,12 +222,12 @@ public final class Resource implements Routed, ResourceModelComponent {
         private boolean extended;
 
         private Builder(final Resource.Builder parentResource) {
-            this.methodBuilders = Sets.newLinkedHashSet();
-            this.childResourceBuilders = Sets.newLinkedHashSet();
-            this.childResources = Lists.newLinkedList();
-            this.resourceMethods = Lists.newLinkedList();
-            this.handlerClasses = Sets.newIdentityHashSet();
-            this.handlerInstances = Sets.newIdentityHashSet();
+            this.methodBuilders = new LinkedHashSet<>();
+            this.childResourceBuilders = new LinkedHashSet<>();
+            this.childResources = new LinkedList<>();
+            this.resourceMethods = new LinkedList<>();
+            this.handlerClasses = Collections.newSetFromMap(new IdentityHashMap<>());
+            this.handlerInstances = Collections.newSetFromMap(new IdentityHashMap<>());
             this.parentResource = parentResource;
 
             name("[unnamed]");
@@ -265,7 +267,8 @@ public final class Resource implements Routed, ResourceModelComponent {
          * @see org.glassfish.jersey.server.model.Resource#getName()
          */
         public Builder name(final String name) {
-            this.names = Lists.newArrayList(name);
+            this.names = new ArrayList<>();
+            this.names.add(name);
             return this;
         }
 
@@ -564,7 +567,7 @@ public final class Resource implements Routed, ResourceModelComponent {
         }
 
         private List<Resource.Data> mergeResources(List<Resource.Data> resources) {
-            List<Resource.Data> mergedResources = Lists.newArrayList();
+            List<Resource.Data> mergedResources = new ArrayList<>();
             for (int i = 0; i < resources.size(); i++) {
                 Resource.Data outer = resources.get(i);
                 Resource.Builder builder = null;
@@ -600,8 +603,8 @@ public final class Resource implements Routed, ResourceModelComponent {
             processChildResourceBuilders();
 
             final List<Data> mergedChildResources = mergeResources(childResources);
-            Set<Class<?>> classes = Sets.newHashSet(handlerClasses);
-            Set<Object> instances = Sets.newHashSet(handlerInstances);
+            Set<Class<?>> classes = new HashSet<>(handlerClasses);
+            Set<Object> instances = new HashSet<>(handlerInstances);
             for (Data childResource : mergedChildResources) {
                 classes.addAll(childResource.handlerClasses);
                 instances.addAll(childResource.handlerInstances);
@@ -868,16 +871,11 @@ public final class Resource implements Routed, ResourceModelComponent {
     }
 
     private static List<Resource> transform(final Resource parent, final List<Data> list) {
-        return Lists.transform(list, new Function<Data, Resource>() {
-            @Override
-            public Resource apply(Data data) {
-                return new Resource(parent, data);
-            }
-        });
+        return list.stream().map(data -> new Resource(parent, data)).collect(Collectors.toList());
     }
 
     private static <T> List<T> immutableCopy(List<T> list) {
-        return list.isEmpty() ? Collections.<T>emptyList() : Collections.unmodifiableList(Lists.newArrayList(list));
+        return list.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(list);
     }
 
     private static <T> Set<T> immutableCopy(Set<T> set) {
@@ -885,7 +883,7 @@ public final class Resource implements Routed, ResourceModelComponent {
             return Collections.emptySet();
         }
 
-        final Set<T> result = Sets.newIdentityHashSet();
+        final Set<T> result = Collections.newSetFromMap(new IdentityHashMap<>());
         result.addAll(set);
         return set;
     }
@@ -988,7 +986,7 @@ public final class Resource implements Routed, ResourceModelComponent {
      * @return List of resource methods and resource locator.
      */
     public List<ResourceMethod> getAllMethods() {
-        final LinkedList<ResourceMethod> methodsAndLocators = Lists.newLinkedList(getResourceMethods());
+        final LinkedList<ResourceMethod> methodsAndLocators = new LinkedList<>(getResourceMethods());
         final ResourceMethod loc = getResourceLocator();
         if (loc != null) {
             methodsAndLocators.add(loc);

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ package org.glassfish.jersey.message.internal;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.RuntimeType;
@@ -57,8 +58,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Test the {@link CommittingOutputStream}.
@@ -239,7 +238,7 @@ public class CommittingOutputStreamTest {
     @Test
     public void testPropertiesWithMessageContext() throws IOException {
         final int size = 20;
-        Map<String, Object> properties = Maps.newHashMap();
+        Map<String, Object> properties = new HashMap<>();
         properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, size);
         final RuntimeType runtime = RuntimeType.CLIENT;
 
@@ -249,7 +248,7 @@ public class CommittingOutputStreamTest {
     @Test
     public void testPropertiesWithMessageContextVeryBigBuffer() throws IOException {
         final int size = 200000;
-        Map<String, Object> properties = Maps.newHashMap();
+        Map<String, Object> properties = new HashMap<>();
         properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, size);
         final RuntimeType runtime = RuntimeType.CLIENT;
 
@@ -259,7 +258,7 @@ public class CommittingOutputStreamTest {
     @Test
     public void testPropertiesWithMessageContextMissingServerSpecific() throws IOException {
         final int size = 22;
-        Map<String, Object> properties = Maps.newHashMap();
+        Map<String, Object> properties = new HashMap<>();
         properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, size);
         properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER + ".client", size * 2);
         checkBufferSize(size, properties, RuntimeType.SERVER);
@@ -268,7 +267,7 @@ public class CommittingOutputStreamTest {
     @Test
     public void testPropertiesWithMessageContextMissingServerAtAll() throws IOException {
         final int size = 22;
-        Map<String, Object> properties = Maps.newHashMap();
+        Map<String, Object> properties = new HashMap<>();
         properties.put(PropertiesHelper.getPropertyNameForRuntime(
                         CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, RuntimeType.CLIENT), size);
         checkBufferSize(CommittingOutputStream.DEFAULT_BUFFER_SIZE, properties, RuntimeType.SERVER);
@@ -278,7 +277,7 @@ public class CommittingOutputStreamTest {
     @Test
     public void testPropertiesWithMessageContextClientOverrides() throws IOException {
         final int size = 22;
-        Map<String, Object> properties = Maps.newHashMap();
+        Map<String, Object> properties = new HashMap<>();
         properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, size);
         properties.put(PropertiesHelper.getPropertyNameForRuntime(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER,
                 RuntimeType.CLIENT), size * 2);
@@ -289,7 +288,7 @@ public class CommittingOutputStreamTest {
 
     @Test
     public void testPropertiesWithMessageContextDefaultNoProps() throws IOException {
-        Map<String, Object> properties = Maps.newHashMap();
+        Map<String, Object> properties = new HashMap<>();
         final RuntimeType runtime = RuntimeType.CLIENT;
 
         checkBufferSize(CommittingOutputStream.DEFAULT_BUFFER_SIZE, properties, runtime);

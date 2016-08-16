@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,8 @@
 package org.glassfish.jersey.tests.e2e.server.filter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,12 +58,8 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
-
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  *
@@ -72,12 +70,12 @@ public class UriConnegMediaTypeTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        Map<String, MediaType> mediaTypes = Maps.newHashMap();
+        Map<String, MediaType> mediaTypes = new HashMap<>();
         mediaTypes.put("foo", MediaType.valueOf("application/foo"));
         mediaTypes.put("bar", MediaType.valueOf("application/bar"));
         mediaTypes.put("foot", MediaType.valueOf("application/foot"));
 
-        Set<Class<?>> classes = Sets.newHashSet();
+        Set<Class<?>> classes = new HashSet<>();
 
         for (Class<?> c : UriConnegMediaTypeTest.class.getClasses()) {
             if (c.getAnnotation(Path.class) != null) {

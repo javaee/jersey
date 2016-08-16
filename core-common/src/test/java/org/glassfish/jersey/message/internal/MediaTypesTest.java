@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +53,6 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import jersey.repackaged.com.google.common.collect.Lists;
-
 /**
  * MediaTypes utility method tests.
  *
@@ -63,21 +63,20 @@ public class MediaTypesTest {
 
     @Test
     public void testConvertToString() {
-        final List<MediaType> emptyList = Lists.newArrayList();
+        final List<MediaType> emptyList = Collections.emptyList();
         Assert.assertEquals("", MediaTypes.convertToString(emptyList));
 
 
-        Assert.assertEquals("\"text/plain\"", MediaTypes.convertToString(Lists.newArrayList(
-                MediaType.TEXT_PLAIN_TYPE)));
+        Assert.assertEquals("\"text/plain\"", MediaTypes.convertToString(Collections.singleton(MediaType.TEXT_PLAIN_TYPE)));
 
         Assert.assertEquals("\"text/plain\", \"application/json\"",
-                MediaTypes.convertToString(Lists.newArrayList(MediaType.TEXT_PLAIN_TYPE,
-                        MediaType.APPLICATION_JSON_TYPE)));
+                MediaTypes.convertToString(Arrays.asList(MediaType.TEXT_PLAIN_TYPE,
+                                                         MediaType.APPLICATION_JSON_TYPE)));
 
         Assert.assertEquals("\"text/plain\", \"application/json\", \"text/html\"",
-                MediaTypes.convertToString(Lists.newArrayList(MediaType.TEXT_PLAIN_TYPE,
-                        MediaType.APPLICATION_JSON_TYPE,
-                        MediaType.TEXT_HTML_TYPE)));
+                            MediaTypes.convertToString(Arrays.asList(MediaType.TEXT_PLAIN_TYPE,
+                                                                     MediaType.APPLICATION_JSON_TYPE,
+                                                                     MediaType.TEXT_HTML_TYPE)));
     }
 
     @Test
@@ -86,7 +85,7 @@ public class MediaTypesTest {
         MediaType m1;
         MediaType m2;
 
-        /*** wildcard type ***/
+        /* wildcard type */
         m1 = MediaType.WILDCARD_TYPE;
 
         // wildcard type #1 - concrete type wins
@@ -104,7 +103,7 @@ public class MediaTypesTest {
         _testMostSpecific(m1, m2, m1);
         _testMostSpecific(m2, m1, m2);
 
-        /*** wildcard subtype ***/
+        /* wildcard subtype */
         m1 = new MediaType("moo", "*");
 
         // wildcard subtype #1 - concrete type wins
@@ -117,14 +116,14 @@ public class MediaTypesTest {
         _testMostSpecific(m1, m2, m1);
         _testMostSpecific(m2, m1, m2);
 
-        /*** concrete types ***/
+        /* concrete types */
         // concrete types - first parameter in method wins
         m1 = new MediaType("moo", "boo");
         m2 = new MediaType("foo", "bar");
         _testMostSpecific(m1, m2, m1);
         _testMostSpecific(m2, m1, m2);
 
-        /*** concrete type with parameters ***/
+        /* concrete type with parameters */
         m1 = new MediaType("foo", "bar", asMap("p1=v1;p2=v2"));
 
         // concrete type with parameters #1 - wildcard type looses

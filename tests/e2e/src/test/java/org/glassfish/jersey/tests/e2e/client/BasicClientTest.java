@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,8 +43,10 @@ package org.glassfish.jersey.tests.e2e.client;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -80,10 +82,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
 
 import static javax.ws.rs.client.Entity.text;
 
@@ -166,24 +164,22 @@ public class BasicClientTest extends JerseyTest {
         });
         assertEquals(
                 Arrays.asList("a", "b", "c").toString(),
-                Collections2.transform(f3.get(), new Function<JaxbString, String>() {
-                    @Override
-                    public String apply(JaxbString input) {
-                        return input.value;
-                    }
-                }).toString());
+                f3.get().stream().map(input -> input.value).collect(Collectors.toList()).toString());
 
-        final TestCallback<Response> c1 = new TestCallback<Response>() {
+        CompletableFuture<String> future1 = new CompletableFuture<>();
+        final TestCallback<Response> c1 = new TestCallback<Response>(future1) {
 
             @Override
             protected String process(Response result) {
                 return result.readEntity(String.class);
             }
         };
-        resource.request().async().post(text("post"), c1);
-        assertEquals("post", c1.get());
 
-        final TestCallback<String> c2 = new TestCallback<String>() {
+        resource.request().async().post(text("post"), c1);
+        assertEquals("post", future1.get());
+
+        CompletableFuture<String> future2 = new CompletableFuture<>();
+        final TestCallback<String> c2 = new TestCallback<String>(future2) {
 
             @Override
             protected String process(String result) {
@@ -191,22 +187,18 @@ public class BasicClientTest extends JerseyTest {
             }
         };
         resource.request().async().post(text("post"), c2);
-        assertEquals("post", c2.get());
+        assertEquals("post", future2.get());
 
-        final TestCallback<List<JaxbString>> c3 = new TestCallback<List<JaxbString>>() {
+        CompletableFuture<String> future3 = new CompletableFuture<>();
+        final TestCallback<List<JaxbString>> c3 = new TestCallback<List<JaxbString>>(future3) {
 
             @Override
             protected String process(List<JaxbString> result) {
-                return Collections2.transform(result, new Function<JaxbString, String>() {
-                    @Override
-                    public String apply(JaxbString input) {
-                        return input.value;
-                    }
-                }).toString();
+                return result.stream().map(jaxbString -> jaxbString.value).collect(Collectors.toList()).toString();
             }
         };
         resource.request().async().get(c3);
-        assertEquals(Arrays.asList("a", "b", "c").toString(), c3.get());
+        assertEquals(Arrays.asList("a", "b", "c").toString(), future3.get());
     }
 
     @Test
@@ -244,7 +236,8 @@ public class BasicClientTest extends JerseyTest {
             assertEquals("error", r.readEntity(String.class));
         }
 
-        final TestCallback<Response> c1 = new TestCallback<Response>() {
+        CompletableFuture<String> future1 = new CompletableFuture<>();
+        final TestCallback<Response> c1 = new TestCallback<Response>(future1) {
 
             @Override
             protected String process(Response result) {
@@ -252,9 +245,10 @@ public class BasicClientTest extends JerseyTest {
             }
         };
         errorResource.request().async().get(c1);
-        assertEquals("error", c1.get());
+        assertEquals("error", future1.get());
 
-        final TestCallback<String> c2 = new TestCallback<String>() {
+        CompletableFuture<String> future2 = new CompletableFuture<>();
+        final TestCallback<String> c2 = new TestCallback<String>(future2) {
 
             @Override
             protected String process(String result) {
@@ -263,7 +257,7 @@ public class BasicClientTest extends JerseyTest {
         };
         errorResource.request().async().get(c2);
         try {
-            c2.get();
+            future2.get();
             fail("ExecutionException expected.");
         } catch (ExecutionException ex) {
             Throwable cause = ex.getCause();
@@ -273,21 +267,17 @@ public class BasicClientTest extends JerseyTest {
             assertEquals("error", r.readEntity(String.class));
         }
 
-        final TestCallback<List<JaxbString>> c3 = new TestCallback<List<JaxbString>>() {
+        CompletableFuture<String> future3 = new CompletableFuture<>();
+        final TestCallback<List<JaxbString>> c3 = new TestCallback<List<JaxbString>>(future3) {
 
             @Override
             protected String process(List<JaxbString> result) {
-                return Collections2.transform(result, new Function<JaxbString, String>() {
-                    @Override
-                    public String apply(JaxbString input) {
-                        return input.value;
-                    }
-                }).toString();
+                return result.stream().map(jaxbString -> jaxbString.value).collect(Collectors.toList()).toString();
             }
         };
         target().path("resource").path("errorlist").request().async().get(c3);
         try {
-            c3.get();
+            future3.get();
             fail("ExecutionException expected.");
         } catch (ExecutionException ex) {
             Throwable cause = ex.getCause();
@@ -310,14 +300,8 @@ public class BasicClientTest extends JerseyTest {
 
         List<JaxbString> r3 = resource.request().get(new GenericType<List<JaxbString>>() {
         });
-        assertEquals(
-                Arrays.asList("a", "b", "c").toString(),
-                Collections2.transform(r3, new Function<JaxbString, String>() {
-                    @Override
-                    public String apply(JaxbString input) {
-                        return input.value;
-                    }
-                }).toString());
+        assertEquals(Arrays.asList("a", "b", "c").toString(),
+                     r3.stream().map(input -> input.value).collect(Collectors.toList()).toString());
     }
 
     @Test
@@ -432,14 +416,20 @@ public class BasicClientTest extends JerseyTest {
         }
     }
 
-    private abstract static class TestCallback<T> extends AbstractFuture<String> implements InvocationCallback<T> {
+    private abstract static class TestCallback<T> implements InvocationCallback<T> {
+
+        private final CompletableFuture<String> completableFuture;
+
+        TestCallback(CompletableFuture<String> completableFuture) {
+            this.completableFuture = completableFuture;
+        }
 
         @Override
         public void completed(T result) {
             try {
-                set(process(result));
+                completableFuture.complete(process(result));
             } catch (Throwable t) {
-                setException(t);
+                completableFuture.completeExceptionally(t);
             }
         }
 
@@ -448,9 +438,9 @@ public class BasicClientTest extends JerseyTest {
         @Override
         public void failed(Throwable error) {
             if (error.getCause() instanceof WebApplicationException) {
-                setException(error.getCause());
+                completableFuture.completeExceptionally(error.getCause());
             } else {
-                setException(error);
+                completableFuture.completeExceptionally((error));
             }
         }
     }

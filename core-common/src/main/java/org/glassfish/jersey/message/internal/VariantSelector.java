@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.util.Collections;
@@ -46,15 +47,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Utility for selecting variant that best matches request from a list of variants.
@@ -71,7 +70,7 @@ public final class VariantSelector {
      * Interface to get a dimension value from a variant and check if an
      * acceptable dimension value is compatible with a dimension value.
      */
-    private static interface DimensionChecker<T, U> {
+    private interface DimensionChecker<T, U> {
 
         /**
          * Get the dimension value from the variant.
@@ -219,7 +218,7 @@ public final class VariantSelector {
         int cq = Quality.MINIMUM;
         int cqs = Quality.MINIMUM;
 
-        final LinkedList<VariantHolder> selected = new LinkedList<VariantHolder>();
+        final LinkedList<VariantHolder> selected = new LinkedList<>();
 
         // Iterate over the acceptable entries
         // This assumes the entries are ordered by the quality
@@ -275,18 +274,18 @@ public final class VariantSelector {
         private final Variant v;
         private final int mediaTypeQs;
 
-        public VariantHolder(final Variant v) {
+        VariantHolder(final Variant v) {
             this(v, Quality.DEFAULT);
         }
 
-        public VariantHolder(final Variant v, final int mediaTypeQs) {
+        VariantHolder(final Variant v, final int mediaTypeQs) {
             this.v = v;
             this.mediaTypeQs = mediaTypeQs;
         }
     }
 
     private static LinkedList<VariantHolder> getVariantHolderList(final List<Variant> variants) {
-        final LinkedList<VariantHolder> l = new LinkedList<VariantHolder>();
+        final LinkedList<VariantHolder> l = new LinkedList<>();
         for (final Variant v : variants) {
             final MediaType mt = v.getMediaType();
             if (mt != null) {
@@ -335,7 +334,7 @@ public final class VariantSelector {
                                                final Ref<String> varyHeaderValue) {
         LinkedList<VariantHolder> vhs = getVariantHolderList(variants);
 
-        final Set<String> vary = new HashSet<String>();
+        final Set<String> vary = new HashSet<>();
         vhs = selectVariants(vhs, context.getQualifiedAcceptableMediaTypes(), MEDIA_TYPE_DC, vary);
         vhs = selectVariants(vhs, context.getQualifiedAcceptableLanguages(), LANGUAGE_TAG_DC, vary);
         vhs = selectVariants(vhs, context.getQualifiedAcceptCharset(), CHARSET_DC, vary);
@@ -355,12 +354,10 @@ public final class VariantSelector {
             if (!varyValue.isEmpty()) {
                 varyHeaderValue.set(varyValue);
             }
-            return Lists.transform(vhs, new Function<VariantHolder, Variant>() {
-                @Override
-                public Variant apply(final VariantHolder holder) {
-                    return holder.v;
-                }
-            });
+
+            return vhs.stream()
+                      .map(variantHolder -> variantHolder.v)
+                      .collect(Collectors.toList());
         }
     }
 }

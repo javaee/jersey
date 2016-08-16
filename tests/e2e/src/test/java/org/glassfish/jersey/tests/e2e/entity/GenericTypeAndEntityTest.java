@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -68,18 +69,14 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.glassfish.jersey.message.internal.ReaderWriter;
-
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  *
@@ -132,15 +129,9 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
         public List<Integer> readFrom(final Class<List<Integer>> type, final Type genericType, final Annotation[] annotations,
                                       final MediaType mediaType, final MultivaluedMap<String, String> httpHeaders,
                                       final InputStream entityStream) throws IOException, WebApplicationException {
-            return Lists.transform(
-                    Arrays.asList(ReaderWriter.readFromAsString(entityStream, mediaType).split(",")),
-                    new Function<String, Integer>() {
-                        @Override
-                        public Integer apply(final String input) {
-                            return Integer.valueOf(input.trim());
-                        }
-                    }
-            );
+            return Arrays.stream(ReaderWriter.readFromAsString(entityStream, mediaType).split(","))
+                         .map(input -> Integer.valueOf(input.trim()))
+                         .collect(Collectors.toList());
         }
     }
 

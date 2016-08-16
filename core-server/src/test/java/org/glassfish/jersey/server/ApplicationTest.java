@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,8 +37,10 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -46,8 +48,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 
 import org.junit.Test;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -64,12 +64,15 @@ public class ApplicationTest {
         Application a = new Application() {
             @Override
             public Set<Class<?>> getClasses() {
-                return Sets.<Class<?>>newHashSet(null, DummyResource.class);
+                return new HashSet<Class<?>>() {{
+                    add(null);
+                    add(DummyResource.class);
+                }};
             }
 
             @Override
             public Set<Object> getSingletons() {
-                return new HashSet<Object>();
+                return Collections.emptySet();
             }
         };
 
@@ -81,12 +84,15 @@ public class ApplicationTest {
         Application a = new Application() {
             @Override
             public Set<Class<?>> getClasses() {
-                return new HashSet<Class<?>>();
+                return Collections.emptySet();
             }
 
             @Override
             public Set<Object> getSingletons() {
-                return Sets.<Object>newHashSet(null, new DummyResource());
+                return new HashSet<Object>() {{
+                    add(null);
+                    add(new DummyResource());
+                }};
             }
         };
 
@@ -98,7 +104,7 @@ public class ApplicationTest {
         Application a = new Application() {
             @Override
             public Set<Class<?>> getClasses() {
-                return new HashSet<Class<?>>();
+                return Collections.emptySet();
             }
 
             @Override
@@ -120,7 +126,7 @@ public class ApplicationTest {
 
             @Override
             public Set<Object> getSingletons() {
-                return new HashSet<Object>();
+                return Collections.emptySet();
             }
         };
 

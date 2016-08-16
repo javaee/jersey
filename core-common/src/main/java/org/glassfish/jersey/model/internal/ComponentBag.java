@@ -43,8 +43,11 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.core.Feature;
@@ -56,16 +59,10 @@ import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
 
 import org.glassfish.hk2.utilities.Binder;
-
-import jersey.repackaged.com.google.common.base.Predicate;
-import jersey.repackaged.com.google.common.base.Predicates;
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * An internal Jersey container for custom component classes and instances.
@@ -95,23 +92,20 @@ public class ComponentBag {
      * that represent a model containing only recognized meta-provider contracts.
      * </p>
      */
-    public static final Predicate<ContractProvider> EXCLUDE_META_PROVIDERS = new Predicate<ContractProvider>() {
-        @Override
-        public boolean apply(ContractProvider model) {
-            final Set<Class<?>> contracts = model.getContracts();
-            if (contracts.isEmpty()) {
-                return true;
-            }
-
-            byte count = 0;
-            if (contracts.contains(Feature.class)) {
-                count++;
-            }
-            if (contracts.contains(Binder.class)) {
-                count++;
-            }
-            return contracts.size() > count;
+    public static final Predicate<ContractProvider> EXCLUDE_META_PROVIDERS = model -> {
+        final Set<Class<?>> contracts = model.getContracts();
+        if (contracts.isEmpty()) {
+            return true;
         }
+
+        byte count = 0;
+        if (contracts.contains(Feature.class)) {
+            count++;
+        }
+        if (contracts.contains(Binder.class)) {
+            count++;
+        }
+        return contracts.size() > count;
     };
 
     /**
@@ -121,12 +115,7 @@ public class ComponentBag {
      * that represent a provider registered to provide HK2 {@link org.glassfish.hk2.utilities.Binder} contract.
      * </p>
      */
-    public static final Predicate<ContractProvider> BINDERS_ONLY = new Predicate<ContractProvider>() {
-        @Override
-        public boolean apply(ContractProvider model) {
-            return model.getContracts().contains(Binder.class);
-        }
-    };
+    public static final Predicate<ContractProvider> BINDERS_ONLY = model -> model.getContracts().contains(Binder.class);
 
     /**
      * A filtering strategy that excludes models with no recognized contracts.
@@ -135,12 +124,7 @@ public class ComponentBag {
      * that are empty, i.e. do not contain any recognized contracts.
      * </p>
      */
-    public static final Predicate<ContractProvider> EXCLUDE_EMPTY = new Predicate<ContractProvider>() {
-        @Override
-        public boolean apply(ContractProvider model) {
-            return !model.getContracts().isEmpty();
-        }
-    };
+    public static final Predicate<ContractProvider> EXCLUDE_EMPTY = model -> !model.getContracts().isEmpty();
 
     /**
      * A filtering strategy that accepts any contract provider model.
@@ -148,19 +132,13 @@ public class ComponentBag {
      * This filter predicate returns {@code true} for any contract provider model.
      * </p>
      */
-    public static final Predicate<ContractProvider> INCLUDE_ALL = Predicates.alwaysTrue();
+    public static final Predicate<ContractProvider> INCLUDE_ALL = contractProvider -> true;
 
     /**
      * Contract provider model enhancer that builds a model as is, without any
      * modifications.
      */
-    public static final Inflector<ContractProvider.Builder, ContractProvider> AS_IS =
-            new Inflector<ContractProvider.Builder, ContractProvider>() {
-                @Override
-                public ContractProvider apply(ContractProvider.Builder builder) {
-                    return builder.build();
-                }
-            };
+    static final Inflector<ContractProvider.Builder, ContractProvider> AS_IS = ContractProvider.Builder::build;
 
     /**
      * Contract provider model registration strategy.
@@ -199,9 +177,9 @@ public class ComponentBag {
     private ComponentBag(Predicate<ContractProvider> registrationStrategy) {
         this.registrationStrategy = registrationStrategy;
 
-        this.classes = Sets.newLinkedHashSet();
-        this.instances = Sets.newLinkedHashSet();
-        this.models = Maps.newIdentityHashMap();
+        this.classes = new LinkedHashSet<>();
+        this.instances = new LinkedHashSet<>();
+        this.models = new IdentityHashMap<>();
 
         this.classesView = Collections.unmodifiableSet(classes);
         this.instancesView = Collections.unmodifiableSet(instances);
@@ -395,26 +373,23 @@ public class ComponentBag {
                                   final Map<Class<?>, Integer> contractMap,
                                   final Inflector<ContractProvider.Builder, ContractProvider> modelEnhancer) {
 
-        return Errors.process(new Producer<Boolean>() {
-            @Override
-            public Boolean call() {
-                if (models.containsKey(componentClass)) {
-                    Errors.error(LocalizationMessages.COMPONENT_TYPE_ALREADY_REGISTERED(componentClass),
-                            Severity.HINT);
-                    return false;
-                }
-
-                // Register contracts
-                final ContractProvider model = modelFor(componentClass, defaultPriority, contractMap, modelEnhancer);
-
-                // Apply registration strategy
-                if (!registrationStrategy.apply(model)) {
-                    return false;
-                }
-
-                models.put(componentClass, model);
-                return true;
+        return Errors.process(() -> {
+            if (models.containsKey(componentClass)) {
+                Errors.error(LocalizationMessages.COMPONENT_TYPE_ALREADY_REGISTERED(componentClass),
+                        Severity.HINT);
+                return false;
             }
+
+            // Register contracts
+            final ContractProvider model = modelFor(componentClass, defaultPriority, contractMap, modelEnhancer);
+
+            // Apply registration strategy
+            if (!registrationStrategy.test(model)) {
+                return false;
+            }
+
+            models.put(componentClass, model);
+            return true;
         });
     }
 
@@ -500,7 +475,7 @@ public class ComponentBag {
     }
 
     private static Map<Class<?>, Integer> asMap(Set<Class<?>> contractSet) {
-        Map<Class<?>, Integer> contracts = new IdentityHashMap<Class<?>, Integer>();
+        Map<Class<?>, Integer> contracts = new IdentityHashMap<>();
         for (Class<?> contract : contractSet) {
             contracts.put(contract, ContractProvider.NO_PRIORITY);
         }
@@ -537,13 +512,12 @@ public class ComponentBag {
      * @return filtered subset of registered component classes.
      */
     public Set<Class<?>> getClasses(final Predicate<ContractProvider> filter) {
-        return Sets.filter(classesView, new Predicate<Class<?>>() {
-            @Override
-            public boolean apply(Class<?> input) {
-                final ContractProvider model = getModel(input);
-                return filter.apply(model);
-            }
-        });
+        return classesView.stream()
+                          .filter(input -> {
+                              final ContractProvider model = getModel(input);
+                              return filter.test(model);
+                          })
+                          .collect(Collectors.toSet());
     }
 
     /**
@@ -556,13 +530,13 @@ public class ComponentBag {
      * @return filtered subset of registered component instances.
      */
     public Set<Object> getInstances(final Predicate<ContractProvider> filter) {
-        return Sets.filter(instancesView, new Predicate<Object>() {
-            @Override
-            public boolean apply(Object input) {
-                final ContractProvider model = getModel(input.getClass());
-                return filter.apply(model);
-            }
-        });
+
+        return instancesView.stream()
+                            .filter(input -> {
+                                final ContractProvider model = getModel(input.getClass());
+                                return filter.test(model);
+                            })
+                            .collect(Collectors.toSet());
     }
 
     /**
@@ -596,9 +570,9 @@ public class ComponentBag {
     public ComponentBag copy() {
         return new ComponentBag(
                 registrationStrategy,
-                Sets.newLinkedHashSet(classes),
-                Sets.newLinkedHashSet(instances),
-                new IdentityHashMap<Class<?>, ContractProvider>(models));
+                new LinkedHashSet<>(classes),
+                new LinkedHashSet<>(instances),
+                new IdentityHashMap<>(models));
     }
 
     /**
@@ -625,7 +599,7 @@ public class ComponentBag {
      *
      * @param bag component bag to initialize this one with.
      */
-    public void loadFrom(final ComponentBag bag) {
+    void loadFrom(final ComponentBag bag) {
         clear();
 
         this.classes.addAll(bag.classes);
@@ -639,11 +613,11 @@ public class ComponentBag {
      * @author Marek Potociar (marek.potociar at oracle.com)
      */
     private static class ImmutableComponentBag extends ComponentBag {
-        public ImmutableComponentBag(ComponentBag original) {
+        ImmutableComponentBag(ComponentBag original) {
             super(original.registrationStrategy,
-                    Sets.newLinkedHashSet(original.classes),
-                    Sets.newLinkedHashSet(original.instances),
-                    new IdentityHashMap<Class<?>, ContractProvider>(original.models));
+                  new LinkedHashSet<>(original.classes),
+                  new LinkedHashSet<>(original.instances),
+                  new IdentityHashMap<>(original.models));
         }
 
         @Override

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.lang.ref.Reference;
@@ -64,8 +65,8 @@ import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.internal.util.collection.Values;
 
-import static jersey.repackaged.com.google.common.base.Preconditions.checkNotNull;
-import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
+import static org.glassfish.jersey.internal.guava.Preconditions.checkNotNull;
+import static org.glassfish.jersey.internal.guava.Preconditions.checkState;
 
 /**
  * Jersey implementation of {@link javax.ws.rs.client.Client JAX-RS Client}

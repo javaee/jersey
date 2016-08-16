@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.lang.annotation.Annotation;
@@ -57,8 +58,6 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.process.internal.RequestScope;
-
-import jersey.repackaged.com.google.common.base.MoreObjects;
 
 /**
  * Implementation of an inbound client-side JAX-RS {@link Response} message.
@@ -256,10 +255,7 @@ class InboundJaxrsResponse extends Response {
 
     @Override
     public String toString() {
-        return MoreObjects
-                .toStringHelper(this)
-                .add("context", context)
-                .toString();
+        return "InboundJaxrsResponse{" + "context=" + context + "}";
     }
 
     private <T> T runInScopeIfPossible(Producer<T> producer) {

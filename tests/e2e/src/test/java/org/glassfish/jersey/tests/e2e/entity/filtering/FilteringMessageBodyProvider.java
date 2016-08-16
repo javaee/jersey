@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -64,8 +65,6 @@ import javax.inject.Inject;
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.message.filtering.spi.ObjectGraph;
 import org.glassfish.jersey.message.filtering.spi.ObjectProvider;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * @author Michal Gajdos
@@ -141,7 +140,7 @@ public class FilteringMessageBodyProvider implements MessageBodyReader<Object>, 
     }
 
     private static List<String> objectGraphToFields(final String prefix, final ObjectGraph objectGraph) {
-        final List<String> fields = Lists.newArrayList();
+        final List<String> fields = new ArrayList<>();
 
         // Fields.
         for (final String field : objectGraph.getFields()) {

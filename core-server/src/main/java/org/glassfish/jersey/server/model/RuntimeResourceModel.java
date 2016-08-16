@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,15 +40,13 @@
 
 package org.glassfish.jersey.server.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.glassfish.jersey.uri.PathTemplate;
-
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Maps;
-
 
 /**
  * Runtime Resource model contains structured information about runtime resources.
@@ -65,7 +63,7 @@ public class RuntimeResourceModel {
      * @param resources List of all resource that should be base for the model.
      */
     public RuntimeResourceModel(List<Resource> resources) {
-        this.runtimeResources = Lists.newArrayList();
+        this.runtimeResources = new ArrayList<>();
         for (RuntimeResource.Builder builder : getRuntimeResources(resources)) {
             runtimeResources.add(builder.build(null));
         }
@@ -73,7 +71,7 @@ public class RuntimeResourceModel {
     }
 
     private List<RuntimeResource.Builder> getRuntimeResources(List<Resource> resources) {
-        Map<String, List<Resource>> regexMap = Maps.newHashMap();
+        Map<String, List<Resource>> regexMap = new HashMap<>();
 
         for (Resource resource : resources) {
             String path = resource.getPath();
@@ -87,17 +85,17 @@ public class RuntimeResourceModel {
 
             List<Resource> listFromMap = regexMap.get(regex);
             if (listFromMap == null) {
-                listFromMap = Lists.newArrayList();
+                listFromMap = new ArrayList<>();
                 regexMap.put(regex, listFromMap);
             }
             listFromMap.add(resource);
         }
 
-        List<RuntimeResource.Builder> runtimeResources = Lists.newArrayList();
+        List<RuntimeResource.Builder> runtimeResources = new ArrayList<>();
         for (Map.Entry<String, List<Resource>> entry : regexMap.entrySet()) {
             final List<Resource> resourcesWithSameRegex = entry.getValue();
 
-            List<Resource> childResources = Lists.newArrayList();
+            List<Resource> childResources = new ArrayList<>();
             for (final Resource res : resourcesWithSameRegex) {
                 childResources.addAll(res.getChildResources());
             }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.process.internal;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.Priority;
@@ -50,8 +52,6 @@ import org.glassfish.jersey.model.internal.RankedProvider;
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
-import jersey.repackaged.com.google.common.collect.Lists;
-
 /**
  * Tests {@link org.glassfish.jersey.model.internal.RankedComparator}.
  * @author Miroslav Fuksa
@@ -61,7 +61,7 @@ public class RankedComparatorTest {
 
     @Test
     public void testPriorityComparator() {
-        List<RankedProvider<Object>> list = Lists.newLinkedList();
+        List<RankedProvider<Object>> list = new LinkedList<>();
         list.add(new RankedProvider<Object>(new F1000()));
         list.add(new RankedProvider<Object>(new FF200()));
         list.add(new RankedProvider<Object>(new F0()));

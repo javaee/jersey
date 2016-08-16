@@ -60,7 +60,7 @@ import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.utils.Charsets;
 
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 
 /**
  * Factory for creating Grizzly Http Server.

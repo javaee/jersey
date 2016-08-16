@@ -42,7 +42,10 @@ package org.glassfish.jersey.tests.e2e.oauth;
 
 import java.net.URI;
 import java.security.Principal;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -77,8 +80,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.sun.security.auth.UserPrincipal;
 
-import jersey.repackaged.com.google.common.collect.Sets;
-
 /**
  * Tests client and server OAuth 1 functionality.
  *
@@ -107,7 +108,8 @@ public class OAuthClientServerTest extends JerseyTest {
         };
 
         oAuthProvider.addAccessToken(PROMETHEUS_TOKEN, PROMETHEUS_SECRET, CONSUMER_KEY,
-                "http://callback.url", prometheusPrincipal, Sets.newHashSet("admin", "user"),
+                "http://callback.url", prometheusPrincipal,
+                Arrays.asList("admin", "user").stream().collect(Collectors.toSet()),
                 new MultivaluedHashMap<String, String>());
         final OAuth1ServerFeature oAuth1ServerFeature = new OAuth1ServerFeature(oAuthProvider,
                 "requestTokenSpecialUri", "accessTokenSpecialUri");
@@ -155,7 +157,7 @@ public class OAuthClientServerTest extends JerseyTest {
             return defProvider.authorizeToken(
                     defProvider.getRequestToken(token),
                     new UserPrincipal("homer"),
-                    Sets.newHashSet("user"));
+                    Collections.singleton("user"));
         }
     }
 

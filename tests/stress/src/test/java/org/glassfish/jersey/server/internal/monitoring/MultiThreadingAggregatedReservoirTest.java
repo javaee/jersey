@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.monitoring;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,13 +51,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Multi Threading concurrency test of Jersey monitoring internals.
@@ -95,8 +97,8 @@ public class MultiThreadingAggregatedReservoirTest {
     private final AggregatedSlidingWindowTimeReservoir time10DaysAggregatedReservoir = new AggregatedSlidingWindowTimeReservoir(
             10, TimeUnit.DAYS,
             startTime(), startUnitTime, trimmer);
-    private final List<AggregatedSlidingWindowTimeReservoir> aggregatedTimeReservoirs = Lists
-            .newCopyOnWriteArrayList(Lists.newArrayList(
+    private final List<AggregatedSlidingWindowTimeReservoir> aggregatedTimeReservoirs = new CopyOnWriteArrayList<>(
+            Arrays.asList(
                     new AggregatedSlidingWindowTimeReservoir(1, TimeUnit.SECONDS, startTime(), startUnitTime, trimmer),
                     time1DayAggregatedReservoir,
                     time10DaysAggregatedReservoir

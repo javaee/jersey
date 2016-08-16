@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.tests.e2e.server;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -72,8 +73,6 @@ import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Test model processor.
@@ -189,13 +188,8 @@ public class ModelProcessorTest extends JerseyTest {
     }
 
     private static List<ResourceMethod> sortResourceMethods(List<ResourceMethod> resourceMethods) {
-        List<ResourceMethod> newList = Lists.newArrayList(resourceMethods);
-        Collections.sort(newList, new Comparator<ResourceMethod>() {
-            @Override
-            public int compare(ResourceMethod o1, ResourceMethod o2) {
-                return o1.getHttpMethod().compareTo(o2.getHttpMethod());
-            }
-        });
+        List<ResourceMethod> newList = new ArrayList<>(resourceMethods);
+        Collections.sort(newList, (o1, o2) -> o1.getHttpMethod().compareTo(o2.getHttpMethod()));
         return newList;
     }
 

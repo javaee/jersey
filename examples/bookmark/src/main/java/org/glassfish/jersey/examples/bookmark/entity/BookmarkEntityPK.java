@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,14 +37,13 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.examples.bookmark.entity;
 
 import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-
-import jersey.repackaged.com.google.common.base.MoreObjects;
 
 /**
  * Primary Key class BookmarkEntityPK for entity class BookmarkEntity.
@@ -164,7 +163,9 @@ public class BookmarkEntityPK implements Serializable {
      */
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("bmid", bmid).add("userid", userid).toString();
+        return "BookmarkEntityPK{"
+                + "userid='" + userid + '\''
+                + ", bmid='" + bmid + '\''
+                + '}';
     }
-
 }

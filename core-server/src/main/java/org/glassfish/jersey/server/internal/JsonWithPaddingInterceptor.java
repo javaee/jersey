@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,13 +37,17 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -62,9 +66,6 @@ import org.glassfish.jersey.message.MessageUtils;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.JSONP;
 
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
-
 /**
  * A {@link WriterInterceptor} implementation for JSONP format. This interceptor wraps a JSON stream obtained by a underlying
  * JSON provider into a callback function that can be defined by the {@link JSONP} annotation.
@@ -80,10 +81,12 @@ public class JsonWithPaddingInterceptor implements WriterInterceptor {
     private static final Map<String, Set<String>> JAVASCRIPT_TYPES;
 
     static {
-        JAVASCRIPT_TYPES = Maps.newHashMapWithExpectedSize(2);
+        JAVASCRIPT_TYPES = new HashMap<>(2);
 
-        JAVASCRIPT_TYPES.put("application", Sets.newHashSet("x-javascript", "ecmascript", "javascript"));
-        JAVASCRIPT_TYPES.put("text", Sets.newHashSet("javascript", "x-javascript", "ecmascript", "jscript"));
+        JAVASCRIPT_TYPES.put("application", Arrays.asList("x-javascript", "ecmascript", "javascript")
+                                                  .stream().collect(Collectors.toSet()));
+        JAVASCRIPT_TYPES.put("text", Arrays.asList("javascript", "x-javascript", "ecmascript", "jscript")
+                                           .stream().collect(Collectors.toSet()));
     }
 
     @Inject

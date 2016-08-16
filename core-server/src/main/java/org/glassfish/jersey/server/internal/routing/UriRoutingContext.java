@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,16 +37,20 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.routing;
 
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.MatchResult;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -66,9 +70,6 @@ import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
-
 /**
  * Default implementation of the routing context as well as URI information provider.
  *
@@ -76,18 +77,18 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 public class UriRoutingContext implements RoutingContext {
 
-    private final LinkedList<MatchResult> matchResults = Lists.newLinkedList();
-    private final LinkedList<Object> matchedResources = Lists.newLinkedList();
-    private final LinkedList<UriTemplate> templates = Lists.newLinkedList();
+    private final LinkedList<MatchResult> matchResults = new LinkedList<>();
+    private final LinkedList<Object> matchedResources = new LinkedList<>();
+    private final LinkedList<UriTemplate> templates = new LinkedList<>();
 
     private final MultivaluedHashMap<String, String> encodedTemplateValues = new MultivaluedHashMap<>();
     private final ImmutableMultivaluedMap<String, String> encodedTemplateValuesView =
             new ImmutableMultivaluedMap<>(encodedTemplateValues);
 
-    private final LinkedList<String> paths = Lists.newLinkedList();
-    private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
-    private final LinkedList<ResourceMethod> matchedLocators = Lists.newLinkedList();
-    private final LinkedList<Resource> locatorSubResources = Lists.newLinkedList();
+    private final LinkedList<String> paths = new LinkedList<>();
+    private final LinkedList<RuntimeResource> matchedRuntimeResources = new LinkedList<>();
+    private final LinkedList<ResourceMethod> matchedLocators = new LinkedList<>();
+    private final LinkedList<Resource> locatorSubResources = new LinkedList<>();
 
     private final TracingLogger tracingLogger;
 
@@ -268,21 +269,13 @@ public class UriRoutingContext implements RoutingContext {
         return getMatchedURIs(true);
     }
 
-    // TODO Replace with Java SE 8 lambda sometime in the future.
-    private static final Function<String, String> PATH_DECODER = new Function<String, String>() {
-
-        @Override
-        public String apply(final String input) {
-            return UriComponent.decode(input, UriComponent.Type.PATH);
-        }
-
-    };
+    private static final Function<String, String> PATH_DECODER = input -> UriComponent.decode(input, UriComponent.Type.PATH);
 
     @Override
     public List<String> getMatchedURIs(final boolean decode) {
         final List<String> result;
         if (decode) {
-            result = Lists.transform(paths, PATH_DECODER);
+            result = paths.stream().map(PATH_DECODER).collect(Collectors.toList());
         } else {
             result = paths;
         }
@@ -315,13 +308,8 @@ public class UriRoutingContext implements RoutingContext {
                     decodedTemplateValues.put(
                             UriComponent.decode(e.getKey(), UriComponent.Type.PATH_SEGMENT),
                             // we need to keep the ability to add new entries
-                            new LinkedList<>(Lists.transform(e.getValue(), new Function<String, String>() {
-
-                                @Override
-                                public String apply(final String input) {
-                                    return UriComponent.decode(input, UriComponent.Type.PATH);
-                                }
-                            })));
+                            e.getValue().stream().map(s -> UriComponent.decode(s, UriComponent.Type.PATH))
+                                    .collect(Collectors.toCollection(ArrayList::new)));
                 }
             }
             decodedTemplateValuesView = new ImmutableMultivaluedMap<>(decodedTemplateValues);

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,9 +44,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.WebApplicationException;
@@ -74,12 +77,6 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.base.Predicate;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * ServiceProviders unit test.
@@ -126,7 +123,7 @@ public class ProviderBinderTest {
     }
 
     private static org.glassfish.hk2.utilities.Binder[] initBinders(org.glassfish.hk2.utilities.Binder... binders) {
-        List<org.glassfish.hk2.utilities.Binder> binderList = Lists.newArrayList(binders);
+        List<org.glassfish.hk2.utilities.Binder> binderList = Arrays.stream(binders).collect(Collectors.toList());
 
         binderList.add(new ContextInjectionResolver.Binder());
         binderList.add(new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER));
@@ -163,7 +160,7 @@ public class ProviderBinderTest {
     public void testProvidersMbr() {
         ServiceLocator locator = Injections.createLocator(initBinders());
         ProviderBinder providerBinder = new ProviderBinder(locator);
-        providerBinder.bindClasses(Sets.<Class<?>>newHashSet(MyProvider.class));
+        providerBinder.bindClasses(Collections.singleton(MyProvider.class));
         Set<MessageBodyReader> providers = Providers.getCustomProviders(locator, MessageBodyReader.class);
         assertEquals(1, instancesOfType(MyProvider.class, providers).size());
     }
@@ -172,7 +169,7 @@ public class ProviderBinderTest {
     public void testProvidersMbw() {
         ServiceLocator locator = Injections.createLocator(initBinders());
         ProviderBinder providerBinder = new ProviderBinder(locator);
-        providerBinder.bindClasses(Sets.<Class<?>>newHashSet(MyProvider.class));
+        providerBinder.bindClasses(Collections.singleton(MyProvider.class));
 
         Set<MessageBodyWriter> providers = Providers.getCustomProviders(locator, MessageBodyWriter.class);
         final Collection<MyProvider> myProviders = instancesOfType(MyProvider.class, providers);
@@ -183,7 +180,7 @@ public class ProviderBinderTest {
     public void testProvidersMbrInstance() {
         ServiceLocator locator = Injections.createLocator(initBinders());
         ProviderBinder providerBinder = new ProviderBinder(locator);
-        providerBinder.bindInstances(Sets.<Object>newHashSet(new MyProvider()));
+        providerBinder.bindInstances(Collections.singleton(new MyProvider()));
         Set<MessageBodyReader> providers = Providers.getCustomProviders(locator, MessageBodyReader.class);
         assertEquals(1, instancesOfType(MyProvider.class, providers).size());
     }
@@ -192,26 +189,18 @@ public class ProviderBinderTest {
     public void testProvidersMbwInstance() {
         ServiceLocator locator = Injections.createLocator(initBinders());
         ProviderBinder providerBinder = new ProviderBinder(locator);
-        providerBinder.bindInstances(Sets.newHashSet((Object) new MyProvider()));
+        providerBinder.bindInstances(Collections.singleton(new MyProvider()));
 
         Set<MessageBodyWriter> providers = Providers.getCustomProviders(locator, MessageBodyWriter.class);
         assertEquals(instancesOfType(MyProvider.class, providers).size(), 1);
     }
 
     private <T> Collection<T> instancesOfType(final Class<T> c, Collection<?> collection) {
-        return Collections2.transform(Collections2.filter(collection, new Predicate<Object>() {
 
-            @Override
-            public boolean apply(Object input) {
-                return input.getClass() == c;
-            }
-        }), new Function<Object, T>() {
-
-            @Override
-            public T apply(Object input) {
-                return c.cast(input);
-            }
-        });
+        return collection.stream()
+                  .filter((java.util.function.Predicate<Object>) o -> o.getClass() == c)
+                  .map((java.util.function.Function<Object, T>) c::cast)
+                  .collect(Collectors.toList());
     }
 
 

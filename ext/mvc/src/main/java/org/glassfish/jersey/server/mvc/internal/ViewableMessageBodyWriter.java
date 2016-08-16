@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,10 +44,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ProcessingException;
@@ -62,21 +64,15 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import javax.inject.Inject;
-
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ExtendedUriInfo;
-import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.ResolvedViewable;
 import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
 import org.glassfish.jersey.server.mvc.spi.ViewableContext;
 import org.glassfish.jersey.server.mvc.spi.ViewableContextException;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * {@link javax.ws.rs.ext.MessageBodyWriter Message body writer} for {@link org.glassfish.jersey.server.mvc.Viewable viewable}
@@ -210,7 +206,7 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
      * @return set of template processors.
      */
     private Set<TemplateProcessor> getTemplateProcessors() {
-        final Set<TemplateProcessor> templateProcessors = Sets.newLinkedHashSet();
+        final Set<TemplateProcessor> templateProcessors = new LinkedHashSet<>();
 
         templateProcessors.addAll(Providers.getCustomProviders(serviceLocator, TemplateProcessor.class));
         templateProcessors.addAll(Providers.getProviders(serviceLocator, TemplateProcessor.class));

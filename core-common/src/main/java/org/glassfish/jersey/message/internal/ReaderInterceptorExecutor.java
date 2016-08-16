@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
@@ -47,6 +48,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ProcessingException;
@@ -65,8 +68,6 @@ import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Represents reader interceptor chain executor for both client and server side.
@@ -113,16 +114,16 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
      *                           reader will be translated into a {@link javax.ws.rs.BadRequestException} as required by
      * @param serviceLocator Service locator.
      */
-    public ReaderInterceptorExecutor(final Class<?> rawType, final Type type,
-                                     final Annotation[] annotations,
-                                     final MediaType mediaType,
-                                     final MultivaluedMap<String, String> headers,
-                                     final PropertiesDelegate propertiesDelegate,
-                                     final InputStream inputStream,
-                                     final MessageBodyWorkers workers,
-                                     final Iterable<ReaderInterceptor> readerInterceptors,
-                                     final boolean translateNce,
-                                     final ServiceLocator serviceLocator) {
+    ReaderInterceptorExecutor(final Class<?> rawType, final Type type,
+                              final Annotation[] annotations,
+                              final MediaType mediaType,
+                              final MultivaluedMap<String, String> headers,
+                              final PropertiesDelegate propertiesDelegate,
+                              final InputStream inputStream,
+                              final MessageBodyWorkers workers,
+                              final Iterable<ReaderInterceptor> readerInterceptors,
+                              final boolean translateNce,
+                              final ServiceLocator serviceLocator) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
@@ -131,7 +132,8 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
         this.translateNce = translateNce;
         this.serviceLocator = serviceLocator;
 
-        final List<ReaderInterceptor> effectiveInterceptors = Lists.newArrayList(readerInterceptors);
+        final List<ReaderInterceptor> effectiveInterceptors = StreamSupport.stream(readerInterceptors.spliterator(), false)
+                                                                           .collect(Collectors.toList());
         effectiveInterceptors.add(new TerminalReaderInterceptor());
 
         this.interceptors = effectiveInterceptors.iterator();

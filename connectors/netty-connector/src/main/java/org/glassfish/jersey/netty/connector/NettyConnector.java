@@ -46,6 +46,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -81,7 +82,6 @@ import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.JdkSslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.concurrent.GenericFutureListener;
-import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
@@ -160,7 +160,7 @@ class NettyConnector implements Connector {
     @Override
     public Future<?> apply(final ClientRequest jerseyRequest, final AsyncConnectorCallback jerseyCallback) {
 
-        final SettableFuture<Object> settableFuture = SettableFuture.create();
+        final CompletableFuture<Object> settableFuture = new CompletableFuture<>();
 
         final URI requestUri = jerseyRequest.getUri();
         String host = requestUri.getHost();
@@ -221,7 +221,7 @@ class NettyConnector implements Connector {
                         @Override
                         public void operationComplete(io.netty.util.concurrent.Future<? super Void> future) throws Exception {
                             if (!settableFuture.isDone()) {
-                                settableFuture.setException(new IOException("Channel closed."));
+                                settableFuture.completeExceptionally(new IOException("Channel closed."));
                             }
                         }
                     };
@@ -284,7 +284,7 @@ class NettyConnector implements Connector {
                             jerseyRequest.writeEntity();
                         } catch (IOException e) {
                             jerseyCallback.failure(e);
-                            settableFuture.setException(e);
+                            settableFuture.completeExceptionally(e);
                         }
                     }
                 });
@@ -299,7 +299,7 @@ class NettyConnector implements Connector {
             }
 
         } catch (InterruptedException e) {
-            settableFuture.setException(e);
+            settableFuture.completeExceptionally(e);
             return settableFuture;
         }
 

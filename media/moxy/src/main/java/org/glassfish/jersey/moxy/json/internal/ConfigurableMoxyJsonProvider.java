@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.moxy.json.internal;
 
 import java.lang.annotation.Annotation;
@@ -44,32 +45,29 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.security.AccessController;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
-
-import javax.inject.Singleton;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
 
-import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
-
 import org.eclipse.persistence.internal.core.helper.CoreClassConstants;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.eclipse.persistence.jaxb.UnmarshallerProperties;
 import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
-
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 
 /**
  * Jersey specific {@link MOXyJsonProvider} that can be configured via {@code ContextResolver<JsonMoxyConfiguration>} instance.
@@ -88,7 +86,7 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
     }
 
     private static Set<String> getPropertyNames(final Class<?> propertiesClass) {
-        final Set<String> propertyNames = Sets.newHashSet();
+        final Set<String> propertyNames = new HashSet<>();
 
         for (final Field field : AccessController.doPrivileged(ReflectionHelper.getDeclaredFieldsPA(propertiesClass))) {
             if (String.class == field.getType()
@@ -122,7 +120,7 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
     }
 
     private Map<String, Object> getConfigProperties(final Configuration config, final Set<String> propertyNames) {
-        final Map<String, Object> properties = Maps.newHashMap();
+        final Map<String, Object> properties = new HashMap<>();
 
         for (final String propertyName : propertyNames) {
             final Object property = config.getProperty(propertyName);
@@ -165,7 +163,7 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
     }
 
     private Map<String, Object> getProperties(final boolean forMarshaller) {
-        final Map<String, Object> properties = Maps.newHashMap(forMarshaller
+        final Map<String, Object> properties = new HashMap<>(forMarshaller
                 ? getGlobalConfig().getMarshallerProperties()
                 : getGlobalConfig().getUnmarshallerProperties());
 

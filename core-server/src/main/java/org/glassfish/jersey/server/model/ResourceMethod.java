@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,18 +37,23 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.container.AsyncResponse;
@@ -59,11 +64,6 @@ import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.model.NameBound;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.uri.PathPattern;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Model of a method available on a resource. Covers resource method, sub-resource
@@ -188,8 +188,8 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
 
             this.httpMethod = null;
 
-            this.consumedTypes = Sets.newLinkedHashSet();
-            this.producedTypes = Sets.newLinkedHashSet();
+            this.consumedTypes = new LinkedHashSet<>();
+            this.producedTypes = new LinkedHashSet<>();
 
             this.suspended = false;
             this.suspendTimeout = AsyncResponse.NO_TIMEOUT;
@@ -199,7 +199,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
 
             this.encodedParams = false;
 
-            this.nameBindings = Sets.newLinkedHashSet();
+            this.nameBindings = new LinkedHashSet<>();
         }
 
         /**
@@ -210,12 +210,12 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          */
         /* package */ Builder(final Resource.Builder parent, ResourceMethod originalMethod) {
             this.parent = parent;
-            this.consumedTypes = Sets.newLinkedHashSet(originalMethod.getConsumedTypes());
-            this.producedTypes = Sets.newLinkedHashSet(originalMethod.getProducedTypes());
+            this.consumedTypes = new LinkedHashSet<>(originalMethod.getConsumedTypes());
+            this.producedTypes = new LinkedHashSet<>(originalMethod.getProducedTypes());
             this.suspended = originalMethod.isSuspendDeclared();
             this.suspendTimeout = originalMethod.getSuspendTimeout();
             this.suspendTimeoutUnit = originalMethod.getSuspendTimeoutUnit();
-            this.handlerParameters = Sets.newLinkedHashSet(originalMethod.getInvocable().getHandler().getParameters());
+            this.handlerParameters = new LinkedHashSet<>(originalMethod.getInvocable().getHandler().getParameters());
             this.nameBindings = originalMethod.getNameBindings();
             this.httpMethod = originalMethod.getHttpMethod();
             this.managedAsync = originalMethod.isManagedAsyncDeclared();
@@ -343,13 +343,10 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          * @return updated builder object.
          */
         public Builder nameBindings(final Annotation... nameBindings) {
-            return nameBindings(Collections2.transform(Arrays.asList(nameBindings),
-                            new Function<Annotation, Class<? extends Annotation>>() {
-                                @Override
-                                public Class<? extends Annotation> apply(Annotation input) {
-                                    return input.annotationType();
-                                }
-                            })
+            return nameBindings(
+                    Arrays.stream(nameBindings)
+                            .map((Function<Annotation, Class<? extends Annotation>>) Annotation::annotationType)
+                            .collect(Collectors.toList())
             );
         }
 
@@ -594,14 +591,14 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
 
             this.httpMethod = (httpMethod == null) ? httpMethod : httpMethod.toUpperCase();
 
-            this.consumedTypes = Collections.unmodifiableList(Lists.newArrayList(consumedTypes));
-            this.producedTypes = Collections.unmodifiableList(Lists.newArrayList(producedTypes));
+            this.consumedTypes = Collections.unmodifiableList(new ArrayList<>(consumedTypes));
+            this.producedTypes = Collections.unmodifiableList(new ArrayList<>(producedTypes));
             this.invocable = invocable;
             this.suspended = suspended;
             this.suspendTimeout = suspendTimeout;
             this.suspendTimeoutUnit = suspendTimeoutUnit;
 
-            this.nameBindings = Collections.unmodifiableCollection(Lists.newArrayList(nameBindings));
+            this.nameBindings = Collections.unmodifiableCollection(new ArrayList<>(nameBindings));
             this.extended = extended;
         }
 
@@ -730,12 +727,9 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
      * @return transformed resource method models.
      */
     static List<ResourceMethod> transform(final Resource parent, final List<Data> list) {
-        return Lists.transform(list, new Function<Data, ResourceMethod>() {
-            @Override
-            public ResourceMethod apply(Data data) {
-                return (data == null) ? null : new ResourceMethod(parent, data);
-            }
-        });
+        return list.stream()
+                   .map(data1 -> (data1 == null) ? null : new ResourceMethod(parent, data1))
+                   .collect(Collectors.toList());
     }
 
     private final Data data;
