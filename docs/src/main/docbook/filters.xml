@@ -162,7 +162,7 @@ public class AuthorizationRequestFilter implements ContainerRequestFilter {
 
             <para>
                 The request filter is similar to the response filter but does not have access to the ContainerResponseContext
-                as no response is accessible yet. Response filter inherits from &jaxrs.client.ClientResponseFilter;.
+                as no response is accessible yet. Response filter inherits from &jaxrs.container.ContainerResponseFilter;.
                 Request filter is executed before the resource method is run and before the
                 response is created. The filter has possibility to manipulate the request parameters including request
                 headers or entity.
@@ -363,7 +363,7 @@ public class PreMatchingFilter implements ContainerRequestFilter {
             and deserialization purposes.
         </para>
         <para>
-            Let's now look at an example of a &lit.jaxrs.WriterInterceptor;
+            Let's now look at an example of a &lit.jaxrs.ReaderInterceptor;
         </para>
         <para>
             <example>

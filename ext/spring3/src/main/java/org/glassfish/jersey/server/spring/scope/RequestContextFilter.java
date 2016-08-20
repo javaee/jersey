@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,10 +49,14 @@ import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.request.AbstractRequestAttributes;
+import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
 /**
@@ -60,6 +64,7 @@ import org.springframework.web.context.request.RequestContextHolder;
  *
  * @author Marko Asplund (marko.asplund at yahoo.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Provider
 @PreMatching
@@ -79,11 +84,11 @@ public final class RequestContextFilter implements ContainerRequestFilter, Conta
         }
     };
 
-    private static interface SpringAttributeController {
+    private interface SpringAttributeController {
 
-        public void setAttributes(final ContainerRequestContext requestContext);
+        void setAttributes(final ContainerRequestContext requestContext);
 
-        public void resetAttributes(final ContainerRequestContext requestContext);
+        void resetAttributes(final ContainerRequestContext requestContext);
     }
 
     /**
@@ -93,20 +98,28 @@ public final class RequestContextFilter implements ContainerRequestFilter, Conta
      */
     @Inject
     public RequestContextFilter(final ServiceLocator locator) {
-        final ApplicationContext ctx = locator.getService(ApplicationContext.class);
-        attributeController = (ctx != null) ? new SpringAttributeController() {
+        final ApplicationContext appCtx = locator.getService(ApplicationContext.class);
+        final boolean isWebApp = appCtx instanceof WebApplicationContext;
+
+        attributeController = appCtx != null ? new SpringAttributeController() {
 
             @Override
             public void setAttributes(final ContainerRequestContext requestContext) {
-                final JaxrsRequestAttributes attributes = new JaxrsRequestAttributes(requestContext);
+                final RequestAttributes attributes;
+                if (isWebApp) {
+                    final HttpServletRequest httpRequest = locator.getService(HttpServletRequest.class);
+                    attributes = new JaxrsServletRequestAttributes(httpRequest, requestContext);
+                } else {
+                    attributes = new JaxrsRequestAttributes(requestContext);
+                }
                 requestContext.setProperty(REQUEST_ATTRIBUTES_PROPERTY, attributes);
                 RequestContextHolder.setRequestAttributes(attributes);
             }
 
             @Override
             public void resetAttributes(final ContainerRequestContext requestContext) {
-                final JaxrsRequestAttributes attributes = (JaxrsRequestAttributes) requestContext
-                        .getProperty(REQUEST_ATTRIBUTES_PROPERTY);
+                final AbstractRequestAttributes attributes =
+                        (AbstractRequestAttributes) requestContext.getProperty(REQUEST_ATTRIBUTES_PROPERTY);
                 RequestContextHolder.resetRequestAttributes();
                 attributes.requestCompleted();
             }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,14 +39,25 @@
  */
 package org.glassfish.jersey.examples.helloworld.spring;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * Simple {@link GreetingService} implementation to just say hello.
  *
  * @author Marko Asplund (marko.asplund at yahoo.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class GreetingServiceImpl implements GreetingService {
+
+    @Autowired
+    private HttpServletRequest servletRequest;
+
     @Override
     public String greet(String who) {
-        return String.format("hello, %s!", who);
+        final String serverName = servletRequest.getServerName();
+        return String.format("hello, %s! Greetings from server %s!", who, serverName);
     }
+
 }

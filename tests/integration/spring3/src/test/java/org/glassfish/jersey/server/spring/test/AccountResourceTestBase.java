@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,9 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * Base class for JAX-RS resource tests.
@@ -80,5 +82,25 @@ public abstract class AccountResourceTestBase extends ResourceTestBase {
         final WebTarget t = target(getResourceFullPath());
         final BigDecimal balance = t.path("prototype/abc456").request().put(Entity.text(newBalance), BigDecimal.class);
         assertEquals(new BigDecimal("987.65"), balance);
+    }
+
+    @Test
+    public void testServletInjection() {
+        final WebTarget t = target(getResourceFullPath());
+
+        String server = t.path("server").request().get(String.class);
+        assertThat(server, startsWith("PASSED: "));
+
+        server = t.path("singleton/server").request().get(String.class);
+        assertThat(server, startsWith("PASSED: "));
+
+        server = t.path("singleton/autowired/server").request().get(String.class);
+        assertThat(server, startsWith("PASSED: "));
+
+        server = t.path("request/server").request().get(String.class);
+        assertThat(server, startsWith("PASSED: "));
+
+        server = t.path("prototype/server").request().get(String.class);
+        assertThat(server, startsWith("PASSED: "));
     }
 }

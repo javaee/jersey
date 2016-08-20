@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,6 +58,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -67,13 +74,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -128,8 +128,8 @@ public class WebComponent {
 
     private static final Logger LOGGER = Logger.getLogger(WebComponent.class.getName());
 
-    private final Type REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
-    private final Type RESPONSE_TYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
+    private static final Type REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
+    private static final Type RESPONSE_TYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
 
     private static final AsyncContextDelegate DEFAULT_ASYNC_DELEGATE = new AsyncContextDelegate() {
 
@@ -146,7 +146,7 @@ public class WebComponent {
     private final RequestScopedInitializerProvider requestScopedInitializer;
     private final boolean requestResponseBindingExternalized;
 
-    private final RequestScopedInitializerProvider DEFAULT_REQUEST_SCOPE_INITIALIZER_PROVIDER =
+    private static final RequestScopedInitializerProvider DEFAULT_REQUEST_SCOPE_INITIALIZER_PROVIDER =
             new RequestScopedInitializerProvider() {
                 @Override
                 public RequestScopedInitializer get(final RequestContextProvider context) {

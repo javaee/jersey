@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,10 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * AccountService implementation.
  *
@@ -52,6 +56,10 @@ public class AccountServiceImpl implements AccountService {
 
     private Map<String, BigDecimal> accounts = new HashMap<>();
     private BigDecimal defaultAccountBalance;
+
+    // JERSEY-2506 FIX VERIFICATION
+    @Autowired
+    private HttpServletRequest httpServletRequest;
 
     @Override
     public void setAccountBalance(String accountId, BigDecimal balance) {
@@ -69,6 +77,10 @@ public class AccountServiceImpl implements AccountService {
 
     public void setDefaultAccountBalance(String defaultAccountBalance) {
         this.defaultAccountBalance = new BigDecimal(defaultAccountBalance);
+    }
+
+    public String verifyServletRequestInjection() {
+        return "PASSED: " + httpServletRequest.getServerName();
     }
 
 }

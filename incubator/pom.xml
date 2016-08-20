@@ -61,7 +61,7 @@
     <modules>
         <module>declarative-linking</module>
         <module>gae-integration</module>
-        <module>html-json</module>
+        <!--<module>html-json</module>-->
         <module>kryo</module>
     </modules>
 
