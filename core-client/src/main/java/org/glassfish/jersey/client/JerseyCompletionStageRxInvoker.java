@@ -38,91 +38,44 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx;
+package org.glassfish.jersey.client;
 
-import java.util.concurrent.Future;
-
+import javax.ws.rs.client.CompletionStageRxInvoker;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 
 /**
+ * Implementation of the default reactive invoker based on {@code CompletionStage}.
+ *
+ * @author Sebastian Daschner
  * @author Michal Gajdos
+ * @since 3.0
  */
-public interface RxFutureInvoker extends RxInvoker<Future> {
+public final class JerseyCompletionStageRxInvoker extends AbstractRxInvoker<CompletionStage> implements CompletionStageRxInvoker {
+
+    public JerseyCompletionStageRxInvoker(final Invocation.Builder builder, final ExecutorService executor) {
+        super(builder, executor);
+    }
 
     @Override
-    public Future<Response> get();
+    public <T> CompletionStage<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
+        final ExecutorService executorService = getExecutorService();
+
+        return executorService == null
+                ? CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType))
+                : CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType), executorService);
+    }
 
     @Override
-    public <R> Future<R> get(Class<R> responseType);
+    public <T> CompletionStage<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
+        final ExecutorService executorService = getExecutorService();
 
-    @Override
-    public <R> Future<R> get(GenericType<R> responseType);
-
-    @Override
-    public Future<Response> put(Entity<?> entity);
-
-    @Override
-    public <R> Future<R> put(Entity<?> entity, Class<R> responseType);
-
-    @Override
-    public <R> Future<R> put(Entity<?> entity, GenericType<R> responseType);
-
-    @Override
-    public Future<Response> post(Entity<?> entity);
-
-    @Override
-    public <R> Future<R> post(Entity<?> entity, Class<R> responseType);
-
-    @Override
-    public <R> Future<R> post(Entity<?> entity, GenericType<R> responseType);
-
-    @Override
-    public Future<Response> delete();
-
-    @Override
-    public <R> Future<R> delete(Class<R> responseType);
-
-    @Override
-    public <R> Future<R> delete(GenericType<R> responseType);
-
-    @Override
-    public Future<Response> head();
-
-    @Override
-    public Future<Response> options();
-
-    @Override
-    public <R> Future<R> options(Class<R> responseType);
-
-    @Override
-    public <R> Future<R> options(GenericType<R> responseType);
-
-    @Override
-    public Future<Response> trace();
-
-    @Override
-    public <R> Future<R> trace(Class<R> responseType);
-
-    @Override
-    public <R> Future<R> trace(GenericType<R> responseType);
-
-    @Override
-    public Future<Response> method(String name);
-
-    @Override
-    public <R> Future<R> method(String name, Class<R> responseType);
-
-    @Override
-    public <R> Future<R> method(String name, GenericType<R> responseType);
-
-    @Override
-    public Future<Response> method(String name, Entity<?> entity);
-
-    @Override
-    public <R> Future<R> method(String name, Entity<?> entity, Class<R> responseType);
-
-    @Override
-    public <R> Future<R> method(String name, Entity<?> entity, GenericType<R> responseType);
+        return executorService == null
+                ? CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType))
+                : CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType), executorService);
+    }
 }

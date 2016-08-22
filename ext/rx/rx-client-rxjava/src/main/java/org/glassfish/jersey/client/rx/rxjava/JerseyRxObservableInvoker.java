@@ -47,8 +47,8 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.core.GenericType;
 
+import org.glassfish.jersey.client.AbstractRxInvoker;
 import org.glassfish.jersey.client.JerseyInvocation;
-import org.glassfish.jersey.client.rx.spi.AbstractRxInvoker;
 
 import rx.Observable;
 import rx.Scheduler;

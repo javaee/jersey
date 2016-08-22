@@ -41,10 +41,9 @@
 package org.glassfish.jersey.client.rx.rxjava;
 
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.client.rx.RxInvoker;
 
 import rx.Observable;
 
@@ -52,8 +51,7 @@ import rx.Observable;
  * Reactive invoker providing support for {@link rx.Observable observable} from RxJava.
  * <p/>
  * Requests are by default invoked on a separate thread (as JAX-RS Async client requests). This behavior can be overridden by
- * providing a {@link java.util.concurrent.ExecutorService executor service} when client extension is being created
- * (in {@link org.glassfish.jersey.client.rx.rxjava.RxObservable RxObservable}).
+ * providing a {@link java.util.concurrent.ExecutorService executor service} when reactive client is being created.
  * <p/>
  * The observables produced by method calls are cold observables. That means that request to the service is invoked only when a
  * subscriber is subscribed to the observable.

@@ -40,12 +40,11 @@
 
 package org.glassfish.jersey.client.rx.guava;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import org.glassfish.jersey.client.spi.RxInvokerProvider;
 
 import javax.ws.rs.client.Invocation;
-
-import org.glassfish.jersey.client.rx.spi.RxInvokerProvider;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Invoker provider for invokers based on Guava's {@code ListenableFuture}.

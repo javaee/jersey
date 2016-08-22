@@ -40,11 +40,10 @@
 
 package org.glassfish.jersey.client.rx.rxjava;
 
-import java.util.concurrent.ExecutorService;
+import org.glassfish.jersey.client.spi.RxInvokerProvider;
 
 import javax.ws.rs.client.Invocation;
-
-import org.glassfish.jersey.client.rx.spi.RxInvokerProvider;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Invoker provider for invokers based on RxJava's {@code Observable}.

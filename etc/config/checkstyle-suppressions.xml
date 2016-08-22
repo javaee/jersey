@@ -51,6 +51,7 @@
 
     <!-- Suppress all checks for all Jersey repackaged libraries. -->
     <suppress files="jersey[\\/]repackaged" checks=".*"/>
+    <suppress files="javax[\\/]ws[\\/]rs" checks=".*"/>
 
     <!-- Suppress all checks for specific classes. -->
     <suppress files="LocalizationMessages" checks=".*"/>

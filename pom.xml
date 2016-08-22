@@ -558,7 +558,7 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>2.3.7</version>
+                    <version>2.4.0</version>
                     <extensions>true</extensions>
                     <configuration>
                         <instructions>
@@ -631,7 +631,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>2.2</version>
+                    <version>2.4.3</version>
                     <executions>
                         <execution>
                             <id>shade-archive</id>
@@ -983,41 +983,6 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>jdk1.8</id>
-            <activation>
-                <jdk>1.8</jdk>
-            </activation>
-            <modules>
-                <module>ext/rx/rx-client-java8</module>
-            </modules>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-javadoc-plugin</artifactId>
-                            <inherited>true</inherited>
-                            <configuration>
-                                <additionalparam>-Xdoclint:none</additionalparam>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-            <reporting>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <inherited>true</inherited>
-                        <configuration>
-                            <additionalparam>-Xdoclint:none</additionalparam>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </reporting>
-        </profile>
         <profile> <!-- examples jdk1.8 modules will be automatically included if jdk8 is present unless examples.excluded env variable is set -->
             <id>examplesIncludedJdk1.8</id>
             <activation>
@@ -1029,7 +994,6 @@
             <modules>
                 <module>examples/feed-combiner-java8-webapp</module>
                 <module>examples/java8-webapp</module>
-                <module>examples/rx-client-java8-webapp</module>
             </modules>
             <build>
                 <pluginManagement>
@@ -1916,8 +1880,8 @@
         <javax.validation.api.version>1.1.0.Final</javax.validation.api.version>
         <jaxb.api.version>2.2.7</jaxb.api.version>
         <jaxb.ri.version>2.2.7</jaxb.ri.version>
-        <jaxrs.api.spec.version>2.0</jaxrs.api.spec.version>
-        <jaxrs.api.impl.version>2.0.1</jaxrs.api.impl.version>
+        <jaxrs.api.spec.version>2.1</jaxrs.api.spec.version>
+        <jaxrs.api.impl.version>2.1-SNAPSHOT</jaxrs.api.impl.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jersey1.version>1.19</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>
@@ -1958,4 +1922,13 @@
         <xerces.version>2.11.0</xerces.version>
         <xmlunit.version>1.6</xmlunit.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>java.net-snapshot</id>
+            <name>Java.net Maven SNAPSHOT Repository</name>
+            <url>https://maven.java.net/content/repositories/snapshots/</url>
+            <snapshots />
+        </repository>
+    </repositories>
 </project>

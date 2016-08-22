@@ -62,6 +62,9 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.NioErrorHandler;
+import javax.ws.rs.core.NioWriterHandler;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
@@ -425,6 +428,16 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
         public ResponseBuilder entity(Object entity, Annotation[] annotations) {
             context.setEntity(entity, annotations);
             return this;
+        }
+
+        @Override
+        public ResponseBuilder entity(final NioWriterHandler writer) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ResponseBuilder entity(final NioWriterHandler writer, final NioErrorHandler error) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

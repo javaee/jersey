@@ -38,45 +38,49 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx.java8;
+package org.glassfish.jersey.client;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutorService;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.List;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.GenericType;
-
-import org.glassfish.jersey.client.rx.spi.AbstractRxInvoker;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 /**
- * Implementation of Reactive Invoker for {@code CompletionStage}.
- *
  * @author Michal Gajdos
- * @since 2.13
  */
-final class JerseyRxCompletionStageInvoker extends AbstractRxInvoker<CompletionStage> implements RxCompletionStageInvoker {
-
-    JerseyRxCompletionStageInvoker(final Invocation.Builder builder, final ExecutorService executor) {
-        super(builder, executor);
-    }
+class TerminalClientRequestFilter implements ClientRequestFilter {
 
     @Override
-    public <T> CompletionStage<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
-        final ExecutorService executorService = getExecutorService();
+    public void filter(final ClientRequestContext requestContext) throws IOException {
+        // Obtain entity - from request or create new.
+        final ByteArrayInputStream entity = new ByteArrayInputStream(
+                requestContext.hasEntity() ? requestContext.getEntity().toString().getBytes() : "NO-ENTITY".getBytes()
+        );
 
-        return executorService == null
-                ? CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType))
-                : CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType), executorService);
-    }
+        final int responseStatus = requestContext.getHeaders().getFirst("Response-Status") != null
+                ? (int) requestContext.getHeaders().getFirst("Response-Status") : 200;
+        Response.ResponseBuilder response = Response.status(responseStatus)
+                .entity(entity)
+                .type("text/plain")
+                // Test properties.
+                .header("Test-Thread", Thread.currentThread().getName())
+                .header("Test-Uri", requestContext.getUri().toString())
+                .header("Test-Method", requestContext.getMethod());
 
-    @Override
-    public <T> CompletionStage<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
-        final ExecutorService executorService = getExecutorService();
+        // Request headers -> Response headers (<header> -> Test-Header-<header>)
+        for (final MultivaluedMap.Entry<String, List<String>> entry : requestContext.getStringHeaders().entrySet()) {
+            response = response.header("Test-Header-" + entry.getKey(), entry.getValue());
+        }
 
-        return executorService == null
-                ? CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType))
-                : CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType), executorService);
+        // Request properties -> Response headers (<header> -> Test-Property-<header>)
+        for (final String property : requestContext.getPropertyNames()) {
+            response = response.header("Test-Property-" + property, requestContext.getProperty(property));
+        }
+
+        requestContext.abortWith(response.build());
     }
 }

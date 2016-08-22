@@ -38,7 +38,45 @@
  * holder.
  */
 
+package org.glassfish.jersey.client.spi;
+
+import org.glassfish.jersey.spi.Contract;
+
+import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.client.Invocation;
+import java.util.concurrent.ExecutorService;
+
 /**
- * Jersey Reactive Client - Java 8 (CompletionStage) provider.
+ * Client-provider interface for creating {@link javax.ws.rs.client.RxInvoker reactive invoker} instances.
+ * <p>
+ * If supported by the provider, an invoker instance of the requested Java type will be created.
+ * <p/>
+ * A provider shall support a one-to-one mapping between a type, provided the type is not {@link Object}. A provider may also
+ * support mapping of sub-types of a type (provided the type is not {@code Object}). It is expected that each provider supports
+ * mapping for distinct set of types and subtypes so that different providers do not conflict with each other.
+ * <p/>
+ * An implementation can identify itself by placing a Java service provider configuration file (if not already present) -
+ * {@code org.glassfish.jersey.client.spi.RxInvokerProvider} - in the resource directory {@code META-INF/services}, and adding
+ * the fully qualified service-provider-class of the implementation in the file.
+ *
+ * @author Sebastian Daschner
+ * @author Michal Gajdos
+ * @since 3.0
  */
-package org.glassfish.jersey.client.rx.java8;
+@Contract
+@ConstrainedTo(RuntimeType.CLIENT)
+public interface RxInvokerProvider {
+
+    /**
+     * Creates an invoker of a given type.
+     *
+     * @param invokerType the invoker type.
+     * @param builder     the builder to create JAX-RS {@link Invocation invocation} invoked in reactive way.
+     * @param executor    the executor service to execute reactive requests.
+     * @param <RX>        the concrete reactive invocation type.
+     * @return the invoker, otherwise {@code null} if the provider does not support the requested {@code type}.
+     * @throws javax.ws.rs.ProcessingException if there is an error creating the invoker.
+     */
+    public <RX> RX getInvoker(Class<RX> invokerType, Invocation.Builder builder, ExecutorService executor);
+}

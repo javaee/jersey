@@ -38,27 +38,26 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx.spi;
-
-import java.util.concurrent.ExecutorService;
+package org.glassfish.jersey.client;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.client.rx.RxInvoker;
+import java.util.concurrent.ExecutorService;
 
 /**
- * Default implementation of {@link org.glassfish.jersey.client.rx.RxInvoker reactive invoker}. Extensions of this class are
- * supposed to implement {@link #method(String, javax.ws.rs.client.Entity, Class)} and
- * {@link #method(String, javax.ws.rs.client.Entity, javax.ws.rs.core.GenericType)} methods to which implementations of the rest
+ * Default implementation of {@link RxInvoker reactive invoker}. Extensions of this class are
+ * supposed to implement {@link #method(String, Entity, Class)} and
+ * {@link #method(String, Entity, GenericType)} methods to which implementations of the rest
  * of the methods from the contract delegate to.
  *
  * @param <T> the asynchronous/event-based completion aware type. The given type should be parametrized with the actual
  *            response type.
  * @author Michal Gajdos
- * @since 2.13
+ * @author Sebastian Daschner
+ * @since 3.0
  */
 public abstract class AbstractRxInvoker<T> implements RxInvoker<T> {
 

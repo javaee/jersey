@@ -40,18 +40,15 @@
 
 package org.glassfish.jersey.client.rx.guava;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import org.glassfish.jersey.client.AbstractRxInvoker;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.GenericType;
-
-import org.glassfish.jersey.client.rx.spi.AbstractRxInvoker;
-
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Implementation of Reactive Invoker for {@code ListenableFuture}.
@@ -71,21 +68,11 @@ final class JerseyRxListenableFutureInvoker extends AbstractRxInvoker<Listenable
 
     @Override
     public <T> ListenableFuture<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
-        return service.submit(new Callable<T>() {
-            @Override
-            public T call() throws Exception {
-                return getBuilder().method(name, entity, responseType);
-            }
-        });
+        return service.submit(() -> getBuilder().method(name, entity, responseType));
     }
 
     @Override
     public <T> ListenableFuture<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
-        return service.submit(new Callable<T>() {
-            @Override
-            public T call() throws Exception {
-                return getBuilder().method(name, entity, responseType);
-            }
-        });
+        return service.submit(() -> getBuilder().method(name, entity, responseType));
     }
 }
