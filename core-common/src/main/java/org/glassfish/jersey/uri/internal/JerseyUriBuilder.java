@@ -55,12 +55,11 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.guava.InetAddresses;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
-
-import jersey.repackaged.com.google.common.net.InetAddresses;
 
 /**
  * A Jersey implementation of {@link UriBuilder}.

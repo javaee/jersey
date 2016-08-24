@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,9 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.guava.CacheBuilder;
+import org.glassfish.jersey.internal.guava.CacheLoader;
+import org.glassfish.jersey.internal.guava.LoadingCache;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
@@ -64,10 +67,6 @@ import org.glassfish.jersey.server.model.ResourceModelComponent;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 
 import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.cache.CacheBuilder;
-import jersey.repackaged.com.google.common.cache.CacheLoader;
-import jersey.repackaged.com.google.common.cache.LoadingCache;
 
 /**
  * Base for sub-resource locator runtime model builder.

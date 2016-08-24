@@ -47,6 +47,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -74,8 +75,6 @@ import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Utility class providing a set of utility methods for easier and more type-safe
@@ -374,7 +373,7 @@ public final class Providers {
 
     private static <T> Set<T> getClasses(final Collection<ServiceHandle<T>> hk2Providers) {
         if (hk2Providers.isEmpty()) {
-            return Sets.newLinkedHashSet();
+            return new LinkedHashSet<T>();
         } else {
             return hk2Providers.stream().map(new ProviderToService<T>())
                                .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -397,7 +396,7 @@ public final class Providers {
                                                 final Comparator<T> comparator) {
         final Collection<ServiceHandle<T>> hk2Providers = getServiceHandles(locator, contract);
         if (hk2Providers.isEmpty()) {
-            return Sets.newTreeSet(comparator);
+            return new TreeSet<T>(comparator);
         } else {
             return hk2Providers.stream().map(new ProviderToService<T>())
                                .collect(Collectors.toCollection(() -> new TreeSet<T>(comparator)));
@@ -413,7 +412,7 @@ public final class Providers {
      * @return set of provider contracts implemented by the given class.
      */
     public static Set<Class<?>> getProviderContracts(final Class<?> clazz) {
-        final Set<Class<?>> contracts = Sets.newIdentityHashSet();
+        final Set<Class<?>> contracts = Collections.newSetFromMap(new IdentityHashMap<>());
         computeProviderContracts(clazz, contracts);
         return contracts;
     }

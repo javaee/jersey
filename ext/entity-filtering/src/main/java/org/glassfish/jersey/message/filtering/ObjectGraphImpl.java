@@ -53,8 +53,6 @@ import org.glassfish.jersey.message.filtering.spi.EntityGraph;
 import org.glassfish.jersey.message.filtering.spi.ObjectGraph;
 import org.glassfish.jersey.message.filtering.spi.ScopeProvider;
 
-import jersey.repackaged.com.google.common.collect.Sets;
-
 /**
  * Default implementation of {@link ObjectGraph}.
  *
@@ -91,7 +89,10 @@ final class ObjectGraphImpl implements ObjectGraph {
     public Set<String> getFields(final String parent) {
         final Set<String> childFilteringScopes = getFilteringScopes(parent);
         if (fields == null) {
-            fields = graph.getFields(Sets.union(childFilteringScopes, Collections.singleton(ScopeProvider.DEFAULT_SCOPE)));
+            fields = graph.getFields(
+                    Views.setUnionView(
+                            childFilteringScopes,
+                            Collections.singleton(ScopeProvider.DEFAULT_SCOPE)));
         }
         return fields;
     }

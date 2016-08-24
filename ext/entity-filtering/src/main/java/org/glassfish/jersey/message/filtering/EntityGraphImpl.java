@@ -48,12 +48,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.glassfish.jersey.internal.guava.HashBasedTable;
+import org.glassfish.jersey.internal.guava.HashMultimap;
+import org.glassfish.jersey.internal.guava.Table;
 import org.glassfish.jersey.message.filtering.spi.EntityGraph;
 import org.glassfish.jersey.message.filtering.spi.ScopeProvider;
-
-import jersey.repackaged.com.google.common.collect.HashBasedTable;
-import jersey.repackaged.com.google.common.collect.HashMultimap;
-import jersey.repackaged.com.google.common.collect.Table;
 
 /**
  * Default implementation of {@link EntityGraph}.

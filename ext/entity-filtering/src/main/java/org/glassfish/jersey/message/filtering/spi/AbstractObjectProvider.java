@@ -50,8 +50,8 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import jersey.repackaged.com.google.common.cache.Cache;
-import jersey.repackaged.com.google.common.cache.CacheBuilder;
+import org.glassfish.jersey.internal.guava.Cache;
+import org.glassfish.jersey.internal.guava.CacheBuilder;
 
 /**
  * Common implementation of {@link ObjectProvider object provider} and {@link ObjectGraphTransformer object graph transformer}.

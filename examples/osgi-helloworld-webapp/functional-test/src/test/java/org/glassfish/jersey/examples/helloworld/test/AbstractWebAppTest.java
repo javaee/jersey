@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -182,8 +182,6 @@ public abstract class AbstractWebAppTest {
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core")
                 .versionAsInProject(),
-                // Guava
-                mavenBundle().groupId("org.glassfish.jersey.bundles.repackaged").artifactId("jersey-guava").versionAsInProject(),
                 // Those two bundles have different (unique) maven coordinates, but represent the same OSGi bundle in two
                 // different versions.
                 // (see the maven bundle plugin configuration in each of the two pom.xml files

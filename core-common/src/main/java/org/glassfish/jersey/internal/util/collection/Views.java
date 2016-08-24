@@ -43,12 +43,17 @@ package org.glassfish.jersey.internal.util.collection;
 import java.util.AbstractMap;
 import java.util.AbstractSequentialList;
 import java.util.AbstractSet;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import static org.glassfish.jersey.internal.guava.Preconditions.checkNotNull;
 
 /**
  * Collections utils, which provide transforming views for {@link List} and {@link Map}.
@@ -63,14 +68,14 @@ public class Views {
 
     /**
      * Create a {@link List} view, which transforms the values of provided original list.
-     *
+     * <p>
      * Removing elements from the view is supported, adding and setting isn't and
      * throws {@link UnsupportedOperationException} when invoked.
      *
      * @param originalList original list.
-     * @param transformer transforming functions.
-     * @param <T> transformed type parameter.
-     * @param <R> type of the element from provided list.
+     * @param transformer  transforming functions.
+     * @param <T>          transformed type parameter.
+     * @param <R>          type of the element from provided list.
      * @return transformed list view.
      */
     public static <T, R> List<T> listView(List<R> originalList, Function<R, T> transformer) {
@@ -137,15 +142,15 @@ public class Views {
 
     /**
      * Create a {@link Map} view, which transforms the values of provided original map.
-     *
+     * <p>
      * Removing elements from the map view is supported, adding and setting isn't and
      * throws {@link UnsupportedOperationException} when invoked.
      *
-     * @param originalMap provided map.
+     * @param originalMap       provided map.
      * @param valuesTransformer values transformer.
-     * @param <K> key type.
-     * @param <V> transformed value type.
-     * @param <O> original value type.
+     * @param <K>               key type.
+     * @param <V>               transformed value type.
+     * @param <O>               original value type.
      * @return transformed map view.
      */
     public static <K, V, O> Map<K, V> mapView(Map<K, O> originalMap, Function<O, V> valuesTransformer) {
@@ -201,6 +206,80 @@ public class Views {
                         return originalSet.size();
                     }
                 };
+            }
+        };
+    }
+
+    /**
+     * Create a view of an union of provided sets.
+     * <p>
+     * View is updated whenever any of the provided set changes.
+     *
+     * @param set1 first set.
+     * @param set2 second set.
+     * @param <E>  set item type.
+     * @return union view of given sets.
+     */
+    public static <E> Set<E> setUnionView(final Set<? extends E> set1, final Set<? extends E> set2) {
+        checkNotNull(set1, "set1");
+        checkNotNull(set2, "set2");
+
+        return new AbstractSet<E>() {
+            @Override
+            public Iterator<E> iterator() {
+                return getUnion(set1, set2).iterator();
+            }
+
+            @Override
+            public int size() {
+                return getUnion(set1, set2).size();
+            }
+
+            private Set<E> getUnion(Set<? extends E> set1, Set<? extends E> set2) {
+                HashSet<E> hashSet = new HashSet<>(set1);
+                hashSet.addAll(set2);
+                return hashSet;
+            }
+        };
+    }
+
+    /**
+     * Create a view of a difference of provided sets.
+     * <p>
+     * View is updated whenever any of the provided set changes.
+     *
+     * @param set1 first set.
+     * @param set2 second set.
+     * @param <E>  set item type.
+     * @return union view of given sets.
+     */
+    public static <E> Set<E> setDiffView(final Set<? extends E> set1, final Set<? extends E> set2) {
+        checkNotNull(set1, "set1");
+        checkNotNull(set2, "set2");
+
+        return new AbstractSet<E>() {
+            @Override
+            public Iterator<E> iterator() {
+                return getDiff(set1, set2).iterator();
+            }
+
+            @Override
+            public int size() {
+                return getDiff(set1, set2).size();
+            }
+
+            private Set<E> getDiff(Set<? extends E> set1, Set<? extends E> set2) {
+                HashSet<E> hashSet = new HashSet<>();
+
+                hashSet.addAll(set1);
+                hashSet.addAll(set2);
+
+                return hashSet.stream().filter(new Predicate<E>() {
+                    @Override
+                    public boolean test(E e) {
+                        return set1.contains(e) && !set2.contains(e);
+                    }
+                }).collect(Collectors.toSet());
             }
         };
     }

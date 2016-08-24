@@ -41,12 +41,16 @@
 package org.glassfish.jersey.internal.util.collection;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -228,5 +232,122 @@ public class ViewsTest {
         }
 
         fail("UnsupportedOperationException expected.");
+    }
+
+    @Test
+    public void testSetUnionViewNulls() {
+        // should pass
+        Set<Object> union = Views.setUnionView(Collections.emptySet(), Collections.emptySet());
+
+        assertNotNull(union);
+
+        // should fail
+        try {
+            Views.setUnionView(Collections.emptySet(), null);
+            fail();
+        } catch (NullPointerException e) {
+            // expected.
+        }
+
+        // should fail
+        try {
+            Views.setUnionView(null, Collections.emptySet());
+            fail();
+        } catch (NullPointerException e) {
+            // expected.
+        }
+    }
+
+    @Test
+    public void testSetUnionViewModify() {
+        HashSet<String> set1 = new HashSet<>();
+        HashSet<String> set2 = new HashSet<>();
+
+        // should pass
+        Set<Object> union = Views.setUnionView(set1, set2);
+
+        assertNotNull(union);
+        assertEquals(0, union.size());
+
+        set1.add("test1");
+        set2.add("test2");
+
+        assertEquals(2, union.size());
+
+        set1.clear();
+
+        assertEquals(1, union.size());
+    }
+
+    @Test
+    public void testSetDiffViewNulls() {
+        // should pass
+        Set<Object> diff = Views.setDiffView(Collections.emptySet(), Collections.emptySet());
+
+        assertNotNull(diff);
+
+        // should fail
+        try {
+            Views.setDiffView(Collections.emptySet(), null);
+            fail();
+        } catch (NullPointerException e) {
+            // expected.
+        }
+
+        // should fail
+        try {
+            Views.setDiffView(null, Collections.emptySet());
+            fail();
+        } catch (NullPointerException e) {
+            // expected.
+        }
+    }
+
+    @Test
+    public void testSetDiffViewModify() {
+        HashSet<String> set1 = new HashSet<>();
+        HashSet<String> set2 = new HashSet<>();
+
+        // should pass
+        Set<Object> diff = Views.setDiffView(set1, set2);
+
+        assertNotNull(diff);
+        assertEquals(0, diff.size());
+
+        set1.add("test1");
+        set1.add("test2");
+        set1.add("test3");
+
+        set2.add("test3");
+        set2.add("test4");
+        set2.add("test5");
+
+        assertEquals(2, diff.size());
+
+        set1.clear();
+
+        assertEquals(0, diff.size());
+    }
+
+    @Test
+    public void testSetDiffViewEmpty() {
+        Set<String> set1 = Collections.emptySet();
+        HashSet<String> set2 = new HashSet<>();
+
+        // should pass
+        Set<Object> diff = Views.setDiffView(set1, set2);
+
+        assertNotNull(diff);
+        assertEquals(0, diff.size());
+
+        set2.add("test3");
+        set2.add("test4");
+        set2.add("test5");
+
+        assertEquals(0, diff.size());
+
+        set2.clear();
+
+        assertEquals(0, diff.size());
     }
 }

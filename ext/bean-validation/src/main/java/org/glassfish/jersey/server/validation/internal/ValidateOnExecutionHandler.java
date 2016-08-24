@@ -61,10 +61,9 @@ import javax.validation.ValidationException;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
 
+import org.glassfish.jersey.internal.guava.Multimap;
+import org.glassfish.jersey.internal.guava.Multimaps;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-
-import jersey.repackaged.com.google.common.collect.Multimap;
-import jersey.repackaged.com.google.common.collect.Multimaps;
 
 /**
  * Handler providing methods to determine whether an executable should be validated during the validation process based on the
