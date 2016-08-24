@@ -226,6 +226,7 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
             // if so, need to set fileNameFix to true to handle issue http://java.net/jira/browse/JERSEY-759
             final String userAgent = headers.getFirst(HttpHeaders.USER_AGENT);
             // The above "feature" seems to be present in IE11 and Edge also
+            // See issue https://java.net/jira/browse/JERSEY-3159
             fileNameFix = userAgent != null && (userAgent.contains(" MSIE ") || userAgent.contains("Trident/") || userAgent.contains("Edge/"));
         }
 
