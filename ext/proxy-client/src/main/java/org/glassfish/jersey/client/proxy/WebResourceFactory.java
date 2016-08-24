@@ -40,9 +40,14 @@
 
 package org.glassfish.jersey.client.proxy;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
@@ -56,6 +61,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.DefaultValue;
@@ -100,7 +106,7 @@ public final class WebResourceFactory implements InvocationHandler {
     private static final MultivaluedMap<String, Object> EMPTY_HEADERS = new MultivaluedHashMap<>();
     private static final Form EMPTY_FORM = new Form();
     private static final List<Class> PARAM_ANNOTATION_CLASSES = Arrays.<Class>asList(PathParam.class, QueryParam.class,
-            HeaderParam.class, CookieParam.class, MatrixParam.class, FormParam.class);
+            HeaderParam.class, CookieParam.class, MatrixParam.class, FormParam.class, BeanParam.class);
 
     /**
      * Creates a new client-side representation of a resource described by
@@ -204,79 +210,14 @@ public final class WebResourceFactory implements InvocationHandler {
         Object entity = null;
         Type entityType = null;
         for (int i = 0; i < paramAnns.length; i++) {
-            final Map<Class, Annotation> anns = new HashMap<>();
-            for (final Annotation ann : paramAnns[i]) {
-                anns.put(ann.annotationType(), ann);
-            }
-            Annotation ann;
+            final Map<Class, Annotation> anns = getAnnotationsMap(paramAnns[i]);
             Object value = args[i];
             if (!hasAnyParamAnnotation(anns)) {
                 entityType = method.getGenericParameterTypes()[i];
                 entity = value;
             } else {
-                if (value == null && (ann = anns.get(DefaultValue.class)) != null) {
-                    value = ((DefaultValue) ann).value();
-                }
-
-                if (value != null) {
-                    if ((ann = anns.get(PathParam.class)) != null) {
-                        newTarget = newTarget.resolveTemplate(((PathParam) ann).value(), value);
-                    } else if ((ann = anns.get((QueryParam.class))) != null) {
-                        if (value instanceof Collection) {
-                            newTarget = newTarget.queryParam(((QueryParam) ann).value(), convert((Collection) value));
-                        } else {
-                            newTarget = newTarget.queryParam(((QueryParam) ann).value(), value);
-                        }
-                    } else if ((ann = anns.get((HeaderParam.class))) != null) {
-                        if (value instanceof Collection) {
-                            headers.addAll(((HeaderParam) ann).value(), convert((Collection) value));
-                        } else {
-                            headers.addAll(((HeaderParam) ann).value(), value);
-                        }
-
-                    } else if ((ann = anns.get((CookieParam.class))) != null) {
-                        final String name = ((CookieParam) ann).value();
-                        Cookie c;
-                        if (value instanceof Collection) {
-                            for (final Object v : ((Collection) value)) {
-                                if (!(v instanceof Cookie)) {
-                                    c = new Cookie(name, v.toString());
-                                } else {
-                                    c = (Cookie) v;
-                                    if (!name.equals(((Cookie) v).getName())) {
-                                        // is this the right thing to do? or should I fail? or ignore the difference?
-                                        c = new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion());
-                                    }
-                                }
-                                cookies.add(c);
-                            }
-                        } else {
-                            if (!(value instanceof Cookie)) {
-                                cookies.add(new Cookie(name, value.toString()));
-                            } else {
-                                c = (Cookie) value;
-                                if (!name.equals(((Cookie) value).getName())) {
-                                    // is this the right thing to do? or should I fail? or ignore the difference?
-                                    cookies.add(new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion()));
-                                }
-                            }
-                        }
-                    } else if ((ann = anns.get((MatrixParam.class))) != null) {
-                        if (value instanceof Collection) {
-                            newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), convert((Collection) value));
-                        } else {
-                            newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), value);
-                        }
-                    } else if ((ann = anns.get((FormParam.class))) != null) {
-                        if (value instanceof Collection) {
-                            for (final Object v : ((Collection) value)) {
-                                form.param(((FormParam) ann).value(), v.toString());
-                            }
-                        } else {
-                            form.param(((FormParam) ann).value(), value.toString());
-                        }
-                    }
-                }
+                newTarget = setupParameter(method.getParameterTypes()[i], anns, headers, cookies,
+                        form, newTarget, value);
             }
         }
 
@@ -377,5 +318,134 @@ public final class WebResourceFactory implements InvocationHandler {
     private static String getHttpMethodName(final AnnotatedElement ae) {
         final HttpMethod a = ae.getAnnotation(HttpMethod.class);
         return a == null ? null : a.value();
+    }
+
+    private WebTarget setupParameter(final Class<?> paramType,
+                                     final Map<Class, Annotation> anns,
+                                     final MultivaluedHashMap<String, Object> headers,
+                                     final LinkedList<Cookie> cookies,
+                                     final Form form,
+                                     WebTarget newTarget,
+                                     Object value)
+            throws IllegalAccessException, InvocationTargetException, IntrospectionException {
+        Annotation ann;
+
+        if (value == null && (ann = anns.get(DefaultValue.class)) != null) {
+            value = ((DefaultValue) ann).value();
+        }
+
+        if (value != null) {
+            if ((ann = anns.get(PathParam.class)) != null) {
+                newTarget = newTarget.resolveTemplate(((PathParam) ann).value(), value);
+            } else if ((ann = anns.get((QueryParam.class))) != null) {
+                if (value instanceof Collection) {
+                    newTarget = newTarget.queryParam(((QueryParam) ann).value(), convert((Collection) value));
+                } else {
+                    newTarget = newTarget.queryParam(((QueryParam) ann).value(), value);
+                }
+            } else if ((ann = anns.get((HeaderParam.class))) != null) {
+                if (value instanceof Collection) {
+                    headers.addAll(((HeaderParam) ann).value(), convert((Collection) value));
+                } else {
+                    headers.addAll(((HeaderParam) ann).value(), value);
+                }
+
+            } else if ((ann = anns.get((CookieParam.class))) != null) {
+                final String name = ((CookieParam) ann).value();
+                Cookie c;
+                if (value instanceof Collection) {
+                    for (final Object v : ((Collection) value)) {
+                        if (!(v instanceof Cookie)) {
+                            c = new Cookie(name, v.toString());
+                        } else {
+                            c = (Cookie) v;
+                            if (!name.equals(((Cookie) v).getName())) {
+                                // is this the right thing to do? or should I fail? or ignore the difference?
+                                c = new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion());
+                            }
+                        }
+                        cookies.add(c);
+                    }
+                } else {
+                    if (!(value instanceof Cookie)) {
+                        cookies.add(new Cookie(name, value.toString()));
+                    } else {
+                        c = (Cookie) value;
+                        if (!name.equals(((Cookie) value).getName())) {
+                            // is this the right thing to do? or should I fail? or ignore the difference?
+                            cookies.add(new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion()));
+                        }
+                    }
+                }
+            } else if ((ann = anns.get((MatrixParam.class))) != null) {
+                if (value instanceof Collection) {
+                    newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), convert((Collection) value));
+                } else {
+                    newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), value);
+                }
+            } else if ((ann = anns.get((FormParam.class))) != null) {
+                if (value instanceof Collection) {
+                    for (final Object v : ((Collection) value)) {
+                        form.param(((FormParam) ann).value(), v.toString());
+                    }
+                } else {
+                    form.param(((FormParam) ann).value(), value.toString());
+                }
+            } else if ((ann = anns.get((BeanParam.class))) != null) {
+                newTarget = extractParamsFromBeanParamClass(paramType, headers, cookies, form, newTarget, value);
+            }
+        }
+        return newTarget;
+    }
+
+    private WebTarget extractParamsFromBeanParamClass(final Class<?> beanParamType,
+                                                      final MultivaluedHashMap<String, Object> headers,
+                                                      final LinkedList<Cookie> cookies,
+                                                      final Form form,
+                                                      WebTarget newTarget,
+                                                      final Object bean)
+            throws IllegalAccessException, InvocationTargetException, IntrospectionException {
+        Field fields[] = AccessController.doPrivileged(ReflectionHelper.getAllFieldsPA(beanParamType));
+        for (Field field : fields) {
+            final Map<Class, Annotation> anns =
+                    getAnnotationsMap(field.getAnnotations());
+
+            if (hasAnyParamAnnotation(anns)) {
+                if (!field.isAccessible()) {
+                    field.setAccessible(true);
+                }
+                newTarget = setupParameter(field.getType(), anns, headers, cookies, form, newTarget,
+                        field.get(bean));
+            }
+        }
+
+        PropertyDescriptor propertyDescriptors[] = Introspector.getBeanInfo(beanParamType,
+                Introspector.USE_ALL_BEANINFO).getPropertyDescriptors();
+        for (PropertyDescriptor propertyDesc : propertyDescriptors) {
+            Method beanSetterMethod = propertyDesc.getWriteMethod();
+            if (beanSetterMethod != null) {
+                final Map<Class, Annotation> anns =
+                        getAnnotationsMap(beanSetterMethod.getAnnotations());
+
+                if (hasAnyParamAnnotation(anns)) {
+                    Method beanGetterMethod = propertyDesc.getReadMethod();
+                    if (!beanGetterMethod.isAccessible()) {
+                        beanGetterMethod.setAccessible(true);
+                    }
+                    newTarget = setupParameter(beanGetterMethod.getReturnType(), anns, headers,
+                            cookies, form, newTarget, beanGetterMethod.invoke(bean));
+                }
+            }
+        }
+
+        return newTarget;
+    }
+
+    private Map<Class, Annotation> getAnnotationsMap(Annotation[] annotations) {
+        final Map<Class, Annotation> anns = new HashMap<>();
+        for (final Annotation ann : annotations) {
+            anns.put(ann.annotationType(), ann);
+        }
+        return anns;
     }
 }

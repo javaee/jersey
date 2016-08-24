@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.client.proxy;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -89,6 +90,12 @@ public class MyResource implements MyResourceIfc {
     @Override
     public String getByNameMatrix(String name) {
         return name;
+    }
+
+    @Override
+    public String getByBean(@BeanParam MyBeanParam bean) {
+        return bean.getQueryName() + bean.getCookieName() + bean.getHeaderName()
+                + bean.getSetterQueryName() + bean.getSetterCookieName() + bean.getSetterHeaderName();
     }
 
     @Override
