@@ -43,8 +43,10 @@ package org.glassfish.jersey.linking;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Filter;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -344,6 +346,34 @@ public class FieldProcessorTest {
         instance.processLinks(list, mockUriInfo, mockRmc);
         assertEquals("widgets/10", list.get(0).link);
         assertEquals("widgets/20", list.get(1).link);
+    }
+
+    @Test
+    public void testMapValues() {
+        LOG.info("Map Values");
+        FieldProcessor<Map> instance = new FieldProcessor(Map.class);
+        TestClassE item1 = new TestClassE("10");
+        TestClassE item2 = new TestClassE("20");
+        Map<String, TestClassE> map = new HashMap<>();
+        map.put("1", item1);
+        map.put("2", item2);
+        instance.processLinks(map, mockUriInfo, mockRmc);
+        assertEquals("widgets/10", item1.link);
+        assertEquals("widgets/20", item2.link);
+    }
+
+    @Test
+    public void testMapKeys() {
+        LOG.info("Map Keys");
+        FieldProcessor<Map> instance = new FieldProcessor(Map.class);
+        TestClassE item1 = new TestClassE("10");
+        TestClassE item2 = new TestClassE("20");
+        Map<TestClassE, String> map = new HashMap<>();
+        map.put(item1, "1");
+        map.put(item2, "2");
+        instance.processLinks(map, mockUriInfo, mockRmc);
+        assertEquals("widgets/10", item1.link);
+        assertEquals("widgets/20", item2.link);
     }
 
     public static class TestClassG {

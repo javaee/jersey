@@ -43,6 +43,8 @@ package org.glassfish.jersey.linking;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.HashSet;
@@ -144,6 +146,15 @@ class FieldProcessor<T> {
             Iterable iterable = (Iterable) instance;
             for (Object member : iterable) {
                 processMember(entity, resource, member, processed, uriInfo, rmc);
+            }
+        } else if (instance instanceof Map){
+            Set keys = ((Map) instance).keySet();
+            for (Object key : keys) {
+                processMember(entity, resource, key, processed, uriInfo, rmc);
+            }
+            Collection values = ((Map) instance).values();
+            for (Object value : values) {
+                processMember(entity, resource, value, processed, uriInfo, rmc);
             }
         }
 
