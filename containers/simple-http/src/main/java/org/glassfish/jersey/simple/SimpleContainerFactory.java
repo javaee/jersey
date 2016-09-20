@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,19 +57,18 @@ import org.glassfish.jersey.simple.internal.LocalizationMessages;
 import org.glassfish.hk2.api.ServiceLocator;
 
 import org.simpleframework.http.core.Container;
-import org.simpleframework.http.core.ContainerServer;
-import org.simpleframework.transport.Server;
+import org.simpleframework.http.core.ContainerSocketProcessor;
+import org.simpleframework.transport.SocketProcessor;
 import org.simpleframework.transport.connect.Connection;
 import org.simpleframework.transport.connect.SocketConnection;
 
 /**
- * Factory for creating and starting Simple server containers. This returns
- * a handle to the started server as {@link Closeable} instances, which allows
- * the server to be stopped by invoking the {@link Closeable#close} method.
+ * Factory for creating and starting Simple server containers. This returns a handle to the started
+ * server as {@link Closeable} instances, which allows the server to be stopped by invoking the
+ * {@link Closeable#close} method.
  * <p/>
- * To start the server in HTTPS mode an {@link SSLContext} can be provided.
- * This will be used to decrypt and encrypt information sent over the
- * connected TCP socket channel.
+ * To start the server in HTTPS mode an {@link SSLContext} can be provided. This will be used to
+ * decrypt and encrypt information sent over the connected TCP socket channel.
  *
  * @author Arul Dhesiaseelan (aruld at acm.org)
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -81,32 +80,28 @@ public final class SimpleContainerFactory {
     }
 
     /**
-     * Create a {@link Closeable} that registers an {@link Container} that
-     * in turn manages all root resource and provider classes declared by the
-     * resource configuration.
+     * Create a {@link Closeable} that registers an {@link Container} that in turn manages all root
+     * resource and provider classes declared by the resource configuration.
      *
-     * @param address the URI to create the http server. The URI scheme must be
-     *                equal to "http". The URI user information and host
-     *                are ignored If the URI port is not present then port 80 will be
-     *                used. The URI path, query and fragment components are ignored.
+     * @param address the URI to create the http server. The URI scheme must be equal to "http". The
+     *                URI user information and host are ignored If the URI port is not present then port 80
+     *                will be used. The URI path, query and fragment components are ignored.
      * @param config  the resource configuration.
      * @return the closeable connection, with the endpoint started.
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
     public static SimpleServer create(final URI address, final ResourceConfig config) {
-        return create(address, null,  new SimpleContainer(config));
+        return create(address, null, new SimpleContainer(config));
     }
 
     /**
-     * Create a {@link Closeable} that registers an {@link Container} that
-     * in turn manages all root resource and provider classes declared by the
-     * resource configuration.
+     * Create a {@link Closeable} that registers an {@link Container} that in turn manages all root
+     * resource and provider classes declared by the resource configuration.
      *
-     * @param address the URI to create the http server. The URI scheme must be
-     *                equal to "http". The URI user information and host
-     *                are ignored If the URI port is not present then port 80 will be
-     *                used. The URI path, query and fragment components are ignored.
+     * @param address the URI to create the http server. The URI scheme must be equal to "http". The
+     *                URI user information and host are ignored If the URI port is not present then port 80
+     *                will be used. The URI path, query and fragment components are ignored.
      * @param config  the resource configuration.
      * @param count   this is the number of threads to be used.
      * @param select  this is the number of selector threads to use.
@@ -114,40 +109,38 @@ public final class SimpleContainerFactory {
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
-    public static SimpleServer create(final URI address, final ResourceConfig config, final int count, final int select) {
-        return create(address, null,  new SimpleContainer(config), count, select);
+    public static SimpleServer create(final URI address, final ResourceConfig config, final int count,
+                                      final int select) {
+        return create(address, null, new SimpleContainer(config), count, select);
     }
 
     /**
-     * Create a {@link Closeable} that registers an {@link Container} that
-     * in turn manages all root resource and provider classes declared by the
-     * resource configuration.
+     * Create a {@link Closeable} that registers an {@link Container} that in turn manages all root
+     * resource and provider classes declared by the resource configuration.
      *
-     * @param address the URI to create the http server. The URI scheme must be
-     *                equal to {@code https}. The URI user information and host
-     *                are ignored. If the URI port is not present then port
-     *                {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
-     *                used. The URI path, query and fragment components are ignored.
+     * @param address the URI to create the http server. The URI scheme must be equal to {@code https}
+     *                . The URI user information and host are ignored. If the URI port is not present then
+     *                port {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be used.
+     *                The URI path, query and fragment components are ignored.
      * @param context this is the SSL context used for SSL connections.
      * @param config  the resource configuration.
      * @return the closeable connection, with the endpoint started.
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
-    public static SimpleServer create(final URI address, final SSLContext context, final ResourceConfig config) {
-        return create(address, context,  new SimpleContainer(config));
+    public static SimpleServer create(final URI address, final SSLContext context,
+                                      final ResourceConfig config) {
+        return create(address, context, new SimpleContainer(config));
     }
 
     /**
-     * Create a {@link Closeable} that registers an {@link Container} that
-     * in turn manages all root resource and provider classes declared by the
-     * resource configuration.
+     * Create a {@link Closeable} that registers an {@link Container} that in turn manages all root
+     * resource and provider classes declared by the resource configuration.
      *
-     * @param address the URI to create the http server. The URI scheme must be
-     *                equal to {@code https}. The URI user information and host
-     *                are ignored. If the URI port is not present then port
-     *                {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
-     *                used. The URI path, query and fragment components are ignored.
+     * @param address the URI to create the http server. The URI scheme must be equal to {@code https}
+     *                . The URI user information and host are ignored. If the URI port is not present then
+     *                port {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be used.
+     *                The URI path, query and fragment components are ignored.
      * @param context this is the SSL context used for SSL connections.
      * @param config  the resource configuration.
      * @param count   this is the number of threads to be used.
@@ -162,53 +155,47 @@ public final class SimpleContainerFactory {
     }
 
     /**
-     * Create a {@link Closeable} that registers an {@link Container} that
-     * in turn manages all root resource and provider classes found by searching the
-     * classes referenced in the java classpath.
+     * Create a {@link Closeable} that registers an {@link Container} that in turn manages all root
+     * resource and provider classes found by searching the classes referenced in the java classpath.
      *
-     * @param address   the URI to create the http server. The URI scheme must be
-     *                  equal to {@code https}. The URI user information and host
-     *                  are ignored. If the URI port is not present then port
-     *                  {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
-     *                  used. The URI path, query and fragment components are ignored.
+     * @param address   the URI to create the http server. The URI scheme must be equal to {@code https}
+     *                  . The URI user information and host are ignored. If the URI port is not present then
+     *                  port {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be used.
+     *                  The URI path, query and fragment components are ignored.
      * @param context   this is the SSL context used for SSL connections.
      * @param container the container that handles all HTTP requests.
      * @return the closeable connection, with the endpoint started.
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
-    public static SimpleServer create(final URI address,
-                                      final SSLContext context,
+    public static SimpleServer create(final URI address, final SSLContext context,
                                       final SimpleContainer container) {
-        return _create(address, context, container, new UnsafeValue<Server, IOException>() {
+        return _create(address, context, container, new UnsafeValue<SocketProcessor, IOException>() {
             @Override
-            public Server get() throws IOException {
-                return new ContainerServer(container);
+            public SocketProcessor get() throws IOException {
+                return new ContainerSocketProcessor(container);
             }
         });
     }
 
     /**
-     * Create a {@link Closeable} that registers an {@link Container} that
-     * in turn manages all root resource and provider classes declared by the
-     * resource configuration.
+     * Create a {@link Closeable} that registers an {@link Container} that in turn manages all root
+     * resource and provider classes declared by the resource configuration.
      *
-     * @param address the URI to create the http server. The URI scheme must be
-     *                equal to {@code https}. The URI user information and host
-     *                are ignored. If the URI port is not present then port
-     *                {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
-     *                used. The URI path, query and fragment components are ignored.
-     * @param context this is the SSL context used for SSL connections.
-     * @param config  the resource configuration.
-     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
-     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
-     * @param count   this is the number of threads to be used.
-     * @param select  this is the number of selector threads to use.
+     * @param address       the URI to create the http server. The URI scheme must be equal to {@code https}
+     *                      . The URI user information and host are ignored. If the URI port is not present then
+     *                      port {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be used.
+     *                      The URI path, query and fragment components are ignored.
+     * @param context       this is the SSL context used for SSL connections.
+     * @param config        the resource configuration.
+     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the
+     *                      locator used by {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param count         this is the number of threads to be used.
+     * @param select        this is the number of selector threads to use.
      * @return the closeable connection, with the endpoint started.
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      * @see org.glassfish.hk2.api.ServiceLocator
-     *
      * @since 2.12
      */
     public static SimpleServer create(final URI address, final SSLContext context,
@@ -218,15 +205,13 @@ public final class SimpleContainerFactory {
     }
 
     /**
-     * Create a {@link Closeable} that registers an {@link Container} that
-     * in turn manages all root resource and provider classes found by searching the
-     * classes referenced in the java classpath.
+     * Create a {@link Closeable} that registers an {@link Container} that in turn manages all root
+     * resource and provider classes found by searching the classes referenced in the java classpath.
      *
-     * @param address   the URI to create the http server. The URI scheme must be
-     *                  equal to {@code https}. The URI user information and host
-     *                  are ignored. If the URI port is not present then port
-     *                  {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be
-     *                  used. The URI path, query and fragment components are ignored.
+     * @param address   the URI to create the http server. The URI scheme must be equal to {@code https}
+     *                  . The URI user information and host are ignored. If the URI port is not present then
+     *                  port {@value org.glassfish.jersey.server.spi.Container#DEFAULT_HTTPS_PORT} will be used.
+     *                  The URI path, query and fragment components are ignored.
      * @param context   this is the SSL context used for SSL connections.
      * @param container the container that handles all HTTP requests.
      * @param count     this is the number of threads to be used.
@@ -235,24 +220,22 @@ public final class SimpleContainerFactory {
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
-    public static SimpleServer create(final URI address,
-                                   final SSLContext context,
-                                   final SimpleContainer container,
-                                   final int count,
-                                   final int select) throws ProcessingException {
+    public static SimpleServer create(final URI address, final SSLContext context,
+                                      final SimpleContainer container, final int count, final int select)
+            throws ProcessingException {
 
-        return _create(address, context, container, new UnsafeValue<Server, IOException>() {
+        return _create(address, context, container, new UnsafeValue<SocketProcessor, IOException>() {
             @Override
-            public Server get() throws IOException {
-                return new ContainerServer(container, count, select);
+            public SocketProcessor get() throws IOException {
+                return new ContainerSocketProcessor(container, count, select);
             }
         });
     }
 
-    private static SimpleServer _create(final URI address,
-                                     final SSLContext context,
-                                     final SimpleContainer container,
-                                     final UnsafeValue<Server, IOException> serverProvider) throws ProcessingException {
+    private static SimpleServer _create(final URI address, final SSLContext context,
+                                        final SimpleContainer container,
+                                        final UnsafeValue<SocketProcessor, IOException> serverProvider)
+            throws ProcessingException {
         if (address == null) {
             throw new IllegalArgumentException(LocalizationMessages.URI_CANNOT_BE_NULL());
         }
@@ -277,8 +260,10 @@ public final class SimpleContainerFactory {
         final InetSocketAddress listen = new InetSocketAddress(port);
         final Connection connection;
         try {
-            final Server server = serverProvider.get();
-            connection = new SocketConnection(server);
+            final SimpleTraceAnalyzer analyzer = new SimpleTraceAnalyzer();
+            final SocketProcessor server = serverProvider.get();
+            connection = new SocketConnection(server, analyzer);
+
 
             final SocketAddress socketAddr = connection.connect(listen, context);
             container.onServerStart();
@@ -288,12 +273,27 @@ public final class SimpleContainerFactory {
                 @Override
                 public void close() throws IOException {
                     container.onServerStop();
+                    analyzer.stop();
                     connection.close();
                 }
 
                 @Override
                 public int getPort() {
                     return ((InetSocketAddress) socketAddr).getPort();
+                }
+
+                @Override
+                public boolean isDebug() {
+                    return analyzer.isActive();
+                }
+
+                @Override
+                public void setDebug(boolean enable) {
+                    if (enable) {
+                        analyzer.start();
+                    } else {
+                        analyzer.stop();
+                    }
                 }
             };
         } catch (final IOException ex) {

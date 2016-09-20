@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,11 +37,8 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.simple;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+package org.glassfish.jersey.simple;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -50,6 +47,9 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -97,7 +97,8 @@ public class OptionsTest extends AbstractSimpleServerTester {
 
     @Test
     public void testFooBarOptions() {
-        Response response = client.target(getUri()).path("helloworld").request().header("Accept", "foo/bar").options();
+        Response response =
+                client.target(getUri()).path("helloworld").request().header("Accept", "foo/bar").options();
         assertEquals(200, response.getStatus());
         final String allowHeader = response.getHeaderString("Allow");
         _checkAllowContent(allowHeader);
