@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.simple;
 
 import java.io.IOException;
@@ -47,7 +48,11 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -70,19 +75,22 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
+import org.simpleframework.common.thread.DaemonFactory;
 import org.simpleframework.http.Address;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 import org.simpleframework.http.Status;
 
 /**
- * Jersey {@code Container} implementation based on Simple framework {@link org.simpleframework.http.core.Container}.
+ * Jersey {@code Container} implementation based on Simple framework
+ * {@link org.simpleframework.http.core.Container}.
  *
  * @author Arul Dhesiaseelan (aruld@acm.org)
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -120,48 +128,57 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     }
 
     /**
-     * An internal binder to enable Simple HTTP container specific types injection.
-     * This binder allows to inject underlying Grizzly HTTP request and response instances.
+     * An internal binder to enable Simple HTTP container specific types injection. This binder allows
+     * to inject underlying Grizzly HTTP request and response instances.
      */
     private static class SimpleBinder extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bindFactory(SimpleRequestReferencingFactory.class).to(Request.class)
-                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
-            })
-                    .in(RequestScoped.class);
+            bindFactory(SimpleRequestReferencingFactory.class).to(Request.class).proxy(true)
+                                                              .proxyForSameScope(false).in(RequestScoped.class);
+            bindFactory(ReferencingFactory.<Request>referenceFactory())
+                    .to(new TypeLiteral<Ref<Request>>() {
+                    }).in(RequestScoped.class);
 
-            bindFactory(SimpleResponseReferencingFactory.class).to(Response.class)
-                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<Response>referenceFactory()).to(new TypeLiteral<Ref<Response>>() {
-            })
-                    .in(RequestScoped.class);
+            bindFactory(SimpleResponseReferencingFactory.class).to(Response.class).proxy(true)
+                                                               .proxyForSameScope(false).in(RequestScoped.class);
+            bindFactory(ReferencingFactory.<Response>referenceFactory())
+                    .to(new TypeLiteral<Ref<Response>>() {
+                    }).in(RequestScoped.class);
         }
     }
 
+    private volatile ScheduledExecutorService scheduler;
     private volatile ApplicationHandler appHandler;
 
-    private static final class Writer implements ContainerResponseWriter {
+    private static final class ResponseWriter implements ContainerResponseWriter {
 
+        private final AtomicReference<TimeoutTimer> reference;
+        private final ScheduledExecutorService scheduler;
         private final Response response;
 
-        Writer(final Response response) {
+        ResponseWriter(final Response response, final ScheduledExecutorService scheduler) {
+            this.reference = new AtomicReference<TimeoutTimer>();
             this.response = response;
+            this.scheduler = scheduler;
         }
 
         @Override
-        public OutputStream writeResponseStatusAndHeaders(final long contentLength, final ContainerResponse context)
-                throws ContainerException {
+        public OutputStream writeResponseStatusAndHeaders(final long contentLength,
+                                                          final ContainerResponse context) throws ContainerException {
             final javax.ws.rs.core.Response.StatusType statusInfo = context.getStatusInfo();
 
             final int code = statusInfo.getStatusCode();
-            final String reason = statusInfo.getReasonPhrase() == null ? Status.getDescription(code)
+            final String reason = statusInfo.getReasonPhrase() == null
+                    ? Status.getDescription(code)
                     : statusInfo.getReasonPhrase();
             response.setCode(code);
             response.setDescription(reason);
-            response.setContentLength(contentLength);
+
+            if (contentLength != -1) {
+                response.setContentLength(contentLength);
+            }
             for (final Map.Entry<String, List<String>> e : context.getStringHeaders().entrySet()) {
                 for (final String value : e.getValue()) {
                     response.addValue(e.getKey(), value);
@@ -176,13 +193,41 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
         }
 
         @Override
-        public boolean suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) {
-            throw new UnsupportedOperationException("Method suspend is not supported by the container.");
+        public boolean suspend(final long timeOut, final TimeUnit timeUnit,
+                               final TimeoutHandler timeoutHandler) {
+            try {
+                TimeoutTimer timer = reference.get();
+
+                if (timer == null) {
+                    TimeoutDispatcher task = new TimeoutDispatcher(this, timeoutHandler);
+                    ScheduledFuture<?> future =
+                            scheduler.schedule(task, timeOut == 0 ? Integer.MAX_VALUE : timeOut,
+                                    timeOut == 0 ? TimeUnit.SECONDS : timeUnit);
+                    timer = new TimeoutTimer(scheduler, future, task);
+                    reference.set(timer);
+                    return true;
+                }
+                return false;
+            } catch (final IllegalStateException ex) {
+                return false;
+            } finally {
+                logger.debugLog("suspend(...) called");
+            }
         }
 
         @Override
-        public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit) throws IllegalStateException {
-            throw new UnsupportedOperationException("Method suspend is not supported by the container.");
+        public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit)
+                throws IllegalStateException {
+            try {
+                TimeoutTimer timer = reference.get();
+
+                if (timer == null) {
+                    throw new IllegalStateException("Response has not been suspended");
+                }
+                timer.reschedule(timeOut, timeUnit);
+            } finally {
+                logger.debugLog("setTimeout(...) called");
+            }
         }
 
         @Override
@@ -194,6 +239,10 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
             } finally {
                 logger.debugLog("commit() called");
             }
+        }
+
+        public boolean isSuspended() {
+            return reference.get() != null;
         }
 
         @Override
@@ -231,19 +280,64 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
 
     }
 
+    private static final class TimeoutTimer {
+
+        private final AtomicReference<ScheduledFuture<?>> reference;
+        private final ScheduledExecutorService service;
+        private final TimeoutDispatcher task;
+
+        public TimeoutTimer(ScheduledExecutorService service, ScheduledFuture<?> future,
+                            TimeoutDispatcher task) {
+            this.reference = new AtomicReference<ScheduledFuture<?>>();
+            this.service = service;
+            this.task = task;
+        }
+
+        public void reschedule(long timeOut, TimeUnit timeUnit) {
+            ScheduledFuture<?> future = reference.getAndSet(null);
+
+            if (future != null) {
+                if (future.cancel(false)) {
+                    future = service.schedule(task, timeOut == 0 ? Integer.MAX_VALUE : timeOut,
+                            timeOut == 0 ? TimeUnit.SECONDS : timeUnit);
+                    reference.set(future);
+                }
+            } else {
+                future = service.schedule(task, timeOut == 0 ? Integer.MAX_VALUE : timeOut,
+                        timeOut == 0 ? TimeUnit.SECONDS : timeUnit);
+                reference.set(future);
+            }
+        }
+    }
+
+    private static final class TimeoutDispatcher implements Runnable {
+
+        private final ResponseWriter writer;
+        private final TimeoutHandler handler;
+
+        public TimeoutDispatcher(ResponseWriter writer, TimeoutHandler handler) {
+            this.writer = writer;
+            this.handler = handler;
+        }
+
+        public void run() {
+            try {
+                handler.onTimeout(writer);
+            } catch (Exception e) {
+                logger.log(Level.INFO, "Failed to call timeout handler", e);
+            }
+        }
+    }
+
     @Override
     public void handle(final Request request, final Response response) {
-        final Writer responseWriter = new Writer(response);
+        final ResponseWriter responseWriter = new ResponseWriter(response, scheduler);
         final URI baseUri = getBaseUri(request);
         final URI requestUri = getRequestUri(request, baseUri);
 
         try {
-            final ContainerRequest requestContext = new ContainerRequest(
-                    baseUri,
-                    requestUri,
-                    request.getMethod(),
-                    getSecurityContext(request),
-                    new MapPropertiesDelegate());
+            final ContainerRequest requestContext = new ContainerRequest(baseUri, requestUri,
+                    request.getMethod(), getSecurityContext(request), new MapPropertiesDelegate());
             requestContext.setEntityStream(request.getInputStream());
             for (final String headerName : request.getNames()) {
                 requestContext.headers(headerName, request.getValue(headerName));
@@ -261,7 +355,9 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
         } catch (final Exception ex) {
             throw new RuntimeException(ex);
         } finally {
-            close(response);
+            if (!responseWriter.isSuspended()) {
+                close(response);
+            }
         }
     }
 
@@ -282,7 +378,8 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     }
 
     private String getServerAddress(final URI baseUri) throws URISyntaxException {
-        return new URI(baseUri.getScheme(), null,  baseUri.getHost(), baseUri.getPort(), null, null, null).toString();
+        return new URI(baseUri.getScheme(), null, baseUri.getHost(), baseUri.getPort(), null, null,
+                null).toString();
     }
 
     private URI getBaseUri(final Request request) {
@@ -294,7 +391,8 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
                 return new URI(scheme + "://" + hostHeader + "/");
             } else {
                 final Address address = request.getAddress();
-                return new URI(address.getScheme(), null, address.getDomain(), address.getPort(), "/", null, null);
+                return new URI(address.getScheme(), null, address.getDomain(), address.getPort(), "/", null,
+                        null);
             }
         } catch (final URISyntaxException ex) {
             throw new IllegalArgumentException(ex);
@@ -316,7 +414,7 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
 
             @Override
             public Principal getUserPrincipal() {
-                return request.getSecuritySession().getLocalPrincipal();
+                return null;
             }
 
             @Override
@@ -349,6 +447,7 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
         appHandler.onShutdown(this);
 
         appHandler = new ApplicationHandler(configuration.register(new SimpleBinder()));
+        scheduler = new ScheduledThreadPoolExecutor(2, new DaemonFactory(TimeoutDispatcher.class));
         appHandler.onReload(this);
         appHandler.onStartup(this);
     }
@@ -360,7 +459,7 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
 
     /**
      * Inform this container that the server has been started.
-     *
+     * <p/>
      * This method must be implicitly called after the server containing this container is started.
      */
     void onServerStart() {
@@ -369,29 +468,34 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
 
     /**
      * Inform this container that the server is being stopped.
-     *
+     * <p/>
      * This method must be implicitly called before the server containing this container is stopped.
      */
     void onServerStop() {
         appHandler.onShutdown(this);
+        scheduler.shutdown();
     }
 
     /**
      * Create a new Simple framework HTTP container.
      *
-     * @param application JAX-RS / Jersey application to be deployed on Simple framework HTTP container.
+     * @param application   JAX-RS / Jersey application to be deployed on Simple framework HTTP
+     *                      container.
      * @param parentLocator parent HK2 service locator.
      */
     SimpleContainer(final Application application, final ServiceLocator parentLocator) {
         this.appHandler = new ApplicationHandler(application, new SimpleBinder(), parentLocator);
+        this.scheduler = new ScheduledThreadPoolExecutor(2, new DaemonFactory(TimeoutDispatcher.class));
     }
 
     /**
      * Create a new Simple framework HTTP container.
      *
-     * @param application JAX-RS / Jersey application to be deployed on Simple framework HTTP container.
+     * @param application JAX-RS / Jersey application to be deployed on Simple framework HTTP
+     *                    container.
      */
     SimpleContainer(final Application application) {
         this.appHandler = new ApplicationHandler(application, new SimpleBinder());
+        this.scheduler = new ScheduledThreadPoolExecutor(2, new DaemonFactory(TimeoutDispatcher.class));
     }
 }
