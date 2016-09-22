@@ -39,6 +39,9 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
+import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
+import org.glassfish.jersey.uri.UriComponent;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,12 +51,12 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
-import org.glassfish.jersey.uri.UriComponent;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * A "jar", "zip" and "wsjar" scheme URI scanner that recursively jar files.
@@ -61,6 +64,7 @@ import org.glassfish.jersey.uri.UriComponent;
  *
  * @author Paul Sandoz
  * @author Gerard Davison (gerard.davison at oracle.com)
+ * @author Qunfei Wu (wu.qunfei@gmail.com) modified
  */
 final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
 
@@ -79,7 +83,7 @@ final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinder
 
     @Override
     public JarZipSchemeScanner create(final URI uri, final boolean recursive) {
-        final String ssp = uri.getRawSchemeSpecificPart();
+        final String ssp = uri.toString();
         final String jarUrlString = ssp.substring(0, ssp.lastIndexOf('!'));
         final String parent = ssp.substring(ssp.lastIndexOf('!') + 2);
 
@@ -155,7 +159,7 @@ final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinder
      * <li><code>zip:/tmp/fishfingers.zip!/example.txt</code></li>
      * <li><code>zip:d:/tempfishfingers.zip!/example.txt</code></li>
      * </ul>
-     * <p/>
+     * <p>
      * This method will first attempt to create a {@link InputStream} as follows:
      * <pre>
      *   new URL(jarUrlString).openStream();
@@ -172,12 +176,55 @@ final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinder
      * @return a {@link InputStream}.
      * @throws IOException if there is an error opening the stream.
      */
-    private InputStream getInputStream(final String jarUrlString) throws IOException {
+    private InputStream getInputStream(String jarUrlString) throws IOException {
         try {
-            return new URL(jarUrlString).openStream();
-        } catch (final MalformedURLException e) {
+            InputStream inputStream = null;
+            if (jarUrlString.contains("!")) {
+                jarUrlString = jarUrlString.replace("file:", "");
+                inputStream = getInnerJarInputStream(jarUrlString, inputStream);
+            } else {
+                inputStream = new URL(jarUrlString).openStream();
+            }
+            if (inputStream == null) {
+                Logger.getLogger(JarZipSchemeScanner.class.getName()).log(Level.WARNING, "Unable to load this library "
+                        + jarUrlString);
+            }
+            return inputStream;
+
+        } catch (MalformedURLException e) {
             return new FileInputStream(
                     UriComponent.decode(jarUrlString, UriComponent.Type.PATH));
         }
+    }
+
+    private InputStream getInnerJarInputStream(String jarUrlString, InputStream inputStream) throws IOException {
+        String jars[] = jarUrlString.split("!");
+        if (jars.length == 2) {
+            inputStream = readInnerJar(inputStream, jars);
+        }
+        return inputStream;
+    }
+
+    private InputStream readInnerJar(InputStream inputStream, String[] jars) throws IOException {
+        String jarFileName = jars[0];
+        String libFileName = jars[1].substring(1);
+        if (this.isLibraryFile(jarFileName) && this.isLibraryFile(libFileName)) {
+            ZipFile zip = new ZipFile(jarFileName);
+            inputStream = zip.getInputStream(new ZipEntry(libFileName));
+        }
+        return inputStream;
+    }
+
+    private boolean isLibraryFile(String fileName) {
+        boolean flag = false;
+        Iterator iterator = this.getSchemes().iterator();
+        while (iterator.hasNext()) {
+            String fileType = "." + iterator.next();
+            if (fileName.contains(fileType)) {
+                flag = true;
+                break;
+            }
+        }
+        return flag;
     }
 }
