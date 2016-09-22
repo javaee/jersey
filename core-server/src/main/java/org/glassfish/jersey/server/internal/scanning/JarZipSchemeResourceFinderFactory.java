@@ -83,7 +83,7 @@ final class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinder
 
     @Override
     public JarZipSchemeScanner create(final URI uri, final boolean recursive) {
-        final String ssp = uri.getRawSchemeSpecificPart();
+        final String ssp = uri.toString();
         final String jarUrlString = ssp.substring(0, ssp.lastIndexOf('!'));
         final String parent = ssp.substring(ssp.lastIndexOf('!') + 2);
 
