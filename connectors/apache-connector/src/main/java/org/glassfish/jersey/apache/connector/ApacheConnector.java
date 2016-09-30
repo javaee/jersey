@@ -105,6 +105,7 @@ import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.ContentLengthStrategy;
@@ -432,6 +433,23 @@ class ApacheConnector implements Connector {
                 authCache.put(getHost(request), basicScheme);
                 context.setAuthCache(authCache);
             }
+
+            Object cookiespecRegistry = clientRequest.getConfiguration().getProperties()
+                .get(HttpClientContext.COOKIESPEC_REGISTRY);
+            if (cookiespecRegistry != null) {
+                if (!(cookiespecRegistry instanceof Registry)) {
+                    LOGGER.log(
+                            Level.WARNING,
+                            LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                                    HttpClientContext.COOKIESPEC_REGISTRY,
+                                    cookiespecRegistry.getClass().getName(),
+                                    Registry.class.getName())
+                    );
+                    cookiespecRegistry = null;
+                }
+            }
+            context.setCookieSpecRegistry((Registry<CookieSpecProvider>) cookiespecRegistry);
+
             response = client.execute(getHost(request), request, context);
             HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, clientRequest.getHeaders(), this.getClass().getName());
 
