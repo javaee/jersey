@@ -95,6 +95,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.ConnectionConfig;
+import org.apache.http.config.Lookup;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
@@ -199,6 +200,7 @@ class ApacheConnector implements Connector {
     private final CookieStore cookieStore;
     private final boolean preemptiveBasicAuth;
     private final RequestConfig requestConfig;
+    private final Lookup<CookieSpecProvider> cookiespecRegistry;
 
     /**
      * Create the new Apache HTTP Client connector.
@@ -231,6 +233,24 @@ class ApacheConnector implements Connector {
                                 RequestConfig.class.getName())
                 );
                 reqConfig = null;
+            }
+        }
+
+        Object cookiespecRegistryObj = config.getProperties().get(HttpClientContext.COOKIESPEC_REGISTRY);
+        if (cookiespecRegistryObj == null) {
+            cookiespecRegistry = null;
+        } else {
+            if (cookiespecRegistryObj instanceof Lookup) {
+                cookiespecRegistry = (Lookup<CookieSpecProvider>) cookiespecRegistryObj;
+            } else {
+                LOGGER.log(
+                        Level.WARNING,
+                        LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                                HttpClientContext.COOKIESPEC_REGISTRY,
+                                cookiespecRegistryObj.getClass().getName(),
+                                Registry.class.getName())
+                );
+                cookiespecRegistry = null;
             }
         }
 
@@ -434,20 +454,9 @@ class ApacheConnector implements Connector {
                 context.setAuthCache(authCache);
             }
 
-            Object cookiespecRegistry = clientRequest.getConfiguration().getProperties().get(HttpClientContext.COOKIESPEC_REGISTRY);
             if (cookiespecRegistry != null) {
-                if (!(cookiespecRegistry instanceof Registry)) {
-                    LOGGER.log(
-                            Level.WARNING,
-                            LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
-                                    HttpClientContext.COOKIESPEC_REGISTRY,
-                                    cookiespecRegistry.getClass().getName(),
-                                    Registry.class.getName())
-                    );
-                    cookiespecRegistry = null;
-                }
+                context.setCookieSpecRegistry(cookiespecRegistry);
             }
-            context.setCookieSpecRegistry((Registry<CookieSpecProvider>) cookiespecRegistry);
 
             response = client.execute(getHost(request), request, context);
             HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, clientRequest.getHeaders(), this.getClass().getName());
