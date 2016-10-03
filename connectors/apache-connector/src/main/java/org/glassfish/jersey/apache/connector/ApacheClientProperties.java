@@ -40,6 +40,7 @@
 package org.glassfish.jersey.apache.connector;
 
 import java.util.Map;
+
 import org.glassfish.jersey.internal.util.PropertiesClass;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 
