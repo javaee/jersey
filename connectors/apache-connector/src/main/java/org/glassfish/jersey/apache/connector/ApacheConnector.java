@@ -136,6 +136,7 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
  * <li>{@link ApacheClientProperties#REQUEST_CONFIG}</li>
  * <li>{@link ApacheClientProperties#CREDENTIALS_PROVIDER}</li>
  * <li>{@link ApacheClientProperties#DISABLE_COOKIES}</li>
+ * <li>{@link ApacheClientProperties#COOKIESPEC_REGISTRY}</li>
  * <li>{@link ClientProperties#PROXY_URI}</li>
  * <li>{@link ClientProperties#PROXY_USERNAME}</li>
  * <li>{@link ClientProperties#PROXY_PASSWORD}</li>
