@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,7 +76,7 @@ import org.glassfish.jersey.server.model.AnnotatedMethod;
  * If the {@code &#64;PermitAll} annotation is declared and is not overridden then
  * this filter will not be applied.
  * <p/>
- * If a user is not authenticated and annotated method is restricted for certain roles then a 401
+ * If a user is not authenticated and annotated method is restricted for certain roles then a 403
  * (Not Authenticated) response is returned.
  *
  * @author Paul Sandoz
