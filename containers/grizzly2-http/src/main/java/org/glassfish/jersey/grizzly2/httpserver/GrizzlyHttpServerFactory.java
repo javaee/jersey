@@ -59,6 +59,7 @@ import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.utils.Charsets;
+import org.glassfish.grizzly.PortRange;
 
 import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 
@@ -96,6 +97,20 @@ public final class GrizzlyHttpServerFactory {
      * Create new {@link HttpServer} instance.
      *
      * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
+     *              as context path, the rest as well as the port will be ignored.
+     * @param portRange port range on which the {@link ApplicationHandler} will be bound. One available port will be
+     *                  randomly chosen between this port range.
+     * @return newly created {@code HttpServer}.
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     */
+    public static HttpServer createHttpServer(final URI uri, final PortRange portRange) {
+        return createHttpServer(uri, portRange, (GrizzlyHttpContainer) null, false, null, true);
+    }
+
+    /**
+     * Create new {@link HttpServer} instance.
+     *
+     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
      *              as context path, the rest will be ignored.
      * @param start if set to false, server will not get started, which allows to configure the underlying transport
      *              layer, see above for details.
@@ -104,6 +119,22 @@ public final class GrizzlyHttpServerFactory {
      */
     public static HttpServer createHttpServer(final URI uri, final boolean start) {
         return createHttpServer(uri, (GrizzlyHttpContainer) null, false, null, start);
+    }
+
+    /**
+     * Create new {@link HttpServer} instance.
+     *
+     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
+     *              as context path, the rest as well as the port will be ignored.
+     * @param portRange port range on which the {@link ApplicationHandler} will be bound. One available port will be
+     *                  randomly chosen between this port range.
+     * @param start if set to false, server will not get started, which allows to configure the underlying transport
+     *              layer, see above for details.
+     * @return newly created {@code HttpServer}.
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     */
+    public static HttpServer createHttpServer(final URI uri, final PortRange portRange, final boolean start) {
+        return createHttpServer(uri, portRange, (GrizzlyHttpContainer) null, false, null, start);
     }
 
     /**
@@ -118,6 +149,29 @@ public final class GrizzlyHttpServerFactory {
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) {
         return createHttpServer(
                 uri,
+                new GrizzlyHttpContainer(configuration),
+                false,
+                null,
+                true
+        );
+    }
+
+    /**
+     * Create new {@link HttpServer} instance.
+     *
+     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
+     *              as context path, the rest as well as the port will be ignored.
+     * @param portRange port range on which the {@link ApplicationHandler} will be bound. One available port will be
+     *                  randomly chosen between this port range.
+     * @param configuration web application configuration.
+     * @return newly created {@code HttpServer}.
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     */
+    public static HttpServer createHttpServer(final URI uri, final PortRange portRange,
+                                              final ResourceConfig configuration) {
+        return createHttpServer(
+                uri,
+                portRange,
                 new GrizzlyHttpContainer(configuration),
                 false,
                 null,
@@ -148,6 +202,30 @@ public final class GrizzlyHttpServerFactory {
     /**
      * Create new {@link HttpServer} instance.
      *
+     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
+     *              as context path, the rest as well as the port will be ignored.
+     * @param portRange port range on which the {@link ApplicationHandler} will be bound. One available port will be
+     *                  randomly chosen between this port range.
+     * @param configuration web application configuration.
+     * @param start         if set to false, server will not get started, which allows to configure the underlying
+     *                      transport layer, see above for details.
+     * @return newly created {@code HttpServer}.
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     */
+    public static HttpServer createHttpServer(final URI uri, final PortRange portRange,
+                                              final ResourceConfig configuration, final boolean start) {
+        return createHttpServer(
+                uri,
+                portRange,
+                new GrizzlyHttpContainer(configuration),
+                false,
+                null,
+                start);
+    }
+
+    /**
+     * Create new {@link HttpServer} instance.
+     *
      * @param uri                   URI on which the Jersey web application will be deployed. Only first path segment
      *                              will be used as context path, the rest will be ignored.
      * @param configuration         web application configuration.
@@ -162,6 +240,33 @@ public final class GrizzlyHttpServerFactory {
                                               final SSLEngineConfigurator sslEngineConfigurator) {
         return createHttpServer(
                 uri,
+                new GrizzlyHttpContainer(configuration),
+                secure,
+                sslEngineConfigurator,
+                true);
+    }
+
+    /**
+     * Create new {@link HttpServer} instance.
+     *
+     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
+     *              as context path, the rest as well as the port will be ignored.
+     * @param portRange port range on which the {@link ApplicationHandler} will be bound. One available port will be
+     *                  randomly chosen between this port range.
+     * @param configuration         web application configuration.
+     * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
+     * @return newly created {@code HttpServer}.
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     */
+    public static HttpServer createHttpServer(final URI uri,
+                                              final PortRange portRange,
+                                              final ResourceConfig configuration,
+                                              final boolean secure,
+                                              final SSLEngineConfigurator sslEngineConfigurator) {
+        return createHttpServer(
+                uri,
+                portRange,
                 new GrizzlyHttpContainer(configuration),
                 secure,
                 sslEngineConfigurator,
@@ -197,6 +302,36 @@ public final class GrizzlyHttpServerFactory {
     /**
      * Create new {@link HttpServer} instance.
      *
+     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
+     *              as context path, the rest as well as the port will be ignored.
+     * @param portRange port range on which the {@link ApplicationHandler} will be bound. One available port will be
+     *                  randomly chosen between this port range.
+     * @param configuration         web application configuration.
+     * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
+     * @param start                 if set to false, server will not get started, which allows to configure the
+     *                              underlying transport, see above for details.
+     * @return newly created {@code HttpServer}.
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     */
+    public static HttpServer createHttpServer(final URI uri,
+                                              final PortRange portRange,
+                                              final ResourceConfig configuration,
+                                              final boolean secure,
+                                              final SSLEngineConfigurator sslEngineConfigurator,
+                                              final boolean start) {
+        return createHttpServer(
+                uri,
+                portRange,
+                new GrizzlyHttpContainer(configuration),
+                secure,
+                sslEngineConfigurator,
+                start);
+    }
+
+    /**
+     * Create new {@link HttpServer} instance.
+     *
      * @param uri                   uri on which the {@link ApplicationHandler} will be deployed. Only first path
      *                              segment will be used as context path, the rest will be ignored.
      * @param config                web application configuration.
@@ -216,6 +351,34 @@ public final class GrizzlyHttpServerFactory {
                                               final SSLEngineConfigurator sslEngineConfigurator,
                                               final ServiceLocator parentLocator) {
         return createHttpServer(uri, new GrizzlyHttpContainer(config, parentLocator), secure, sslEngineConfigurator, true);
+    }
+
+    /**
+     * Create new {@link HttpServer} instance.
+     *
+     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
+     *              as context path, the rest as well as the port will be ignored.
+     * @param portRange port range on which the {@link ApplicationHandler} will be bound. One available port will be
+     *                  randomly chosen between this port range.
+     * @param config                web application configuration.
+     * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
+     * @param parentLocator         {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
+     *                              {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @return newly created {@code HttpServer}.
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     * @see GrizzlyHttpContainer
+     * @see org.glassfish.hk2.api.ServiceLocator
+     * @since 2.3.29
+     */
+    public static HttpServer createHttpServer(final URI uri,
+                                              final PortRange portRange,
+                                              final ResourceConfig config,
+                                              final boolean secure,
+                                              final SSLEngineConfigurator sslEngineConfigurator,
+                                              final ServiceLocator parentLocator) {
+        return createHttpServer(uri, portRange, new GrizzlyHttpContainer(config, parentLocator), secure,
+                sslEngineConfigurator, true);
     }
 
     /**
@@ -241,6 +404,29 @@ public final class GrizzlyHttpServerFactory {
     /**
      * Create new {@link HttpServer} instance.
      *
+     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
+     *              as context path, the rest as well as the port will be ignored.
+     * @param portRange port range on which the {@link ApplicationHandler} will be bound. One available port will be
+     *                  randomly chosen between this port range.
+     * @param config        web application configuration.
+     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
+     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @return newly created {@code HttpServer}.
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     * @see GrizzlyHttpContainer
+     * @see org.glassfish.hk2.api.ServiceLocator
+     * @since 2.12
+     */
+    public static HttpServer createHttpServer(final URI uri,
+                                              final PortRange portRange,
+                                              final ResourceConfig config,
+                                              final ServiceLocator parentLocator) {
+        return createHttpServer(uri, portRange, new GrizzlyHttpContainer(config, parentLocator), false, null, true);
+    }
+
+    /**
+     * Create new {@link HttpServer} instance.
+     *
      * @param uri                   uri on which the {@link ApplicationHandler} will be deployed. Only first path
      *                              segment will be used as context path, the rest will be ignored.
      * @param handler               {@link HttpHandler} instance.
@@ -258,12 +444,45 @@ public final class GrizzlyHttpServerFactory {
                                               final SSLEngineConfigurator sslEngineConfigurator,
                                               final boolean start) {
 
-        final String host = (uri.getHost() == null) ? NetworkListener.DEFAULT_NETWORK_HOST : uri.getHost();
-        final int port = (uri.getPort() == -1)
-                ? (secure ? Container.DEFAULT_HTTPS_PORT : Container.DEFAULT_HTTP_PORT)
-                : uri.getPort();
+        return createHttpServer(uri, null, handler, secure, sslEngineConfigurator, start);
+    }
 
-        final NetworkListener listener = new NetworkListener("grizzly", host, port);
+    /**
+     * Create new {@link HttpServer} instance.
+     *
+     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
+     *              as context path, the rest as well as the port will be ignored.
+     * @param portRange port range on which the {@link ApplicationHandler} will be bound. One available port will be
+     *                  randomly chosen between this port range.
+     * @param handler               {@link HttpHandler} instance.
+     * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
+     * @param start                 if set to false, server will not get started, this allows end users to set
+     *                              additional properties on the underlying listener.
+     * @return newly created {@code HttpServer}.
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     * @see GrizzlyHttpContainer
+     */
+    public static HttpServer createHttpServer(final URI uri,
+                                              final PortRange portRange,
+                                              final GrizzlyHttpContainer handler,
+                                              final boolean secure,
+                                              final SSLEngineConfigurator sslEngineConfigurator,
+                                              final boolean start) {
+
+        final String host = (uri.getHost() == null) ? NetworkListener.DEFAULT_NETWORK_HOST : uri.getHost();
+
+        final NetworkListener listener;
+
+        if (portRange != null) {
+            listener = new NetworkListener("grizzly", host, portRange);
+        } else {
+            final int port = (uri.getPort() == -1)
+                    ? (secure ? Container.DEFAULT_HTTPS_PORT : Container.DEFAULT_HTTP_PORT)
+                    : uri.getPort();
+
+            listener = new NetworkListener("grizzly", host, port);
+        }
 
         listener.getTransport().getWorkerThreadPoolConfig().setThreadFactory(new ThreadFactoryBuilder()
                 .setNameFormat("grizzly-http-server-%d")
