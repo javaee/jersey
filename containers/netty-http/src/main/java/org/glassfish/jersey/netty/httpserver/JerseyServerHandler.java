@@ -103,6 +103,7 @@ class JerseyServerHandler extends ChannelInboundHandlerAdapter {
                 ctx.write(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE));
             }
 
+            isList.clear(); // clearing the content - possible leftover from previous request processing.
             final ContainerRequest requestContext = createContainerRequest(ctx, req);
 
             requestContext.setWriter(new NettyResponseWriter(ctx, req, container));

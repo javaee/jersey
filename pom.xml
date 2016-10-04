@@ -1950,7 +1950,7 @@
         <mockito.version>1.10.19</mockito.version>
         <moxy.version>2.6.0</moxy.version>
         <mustache.version>0.8.17</mustache.version>
-        <netty.version>4.1.4.Final</netty.version>
+        <netty.version>4.1.5.Final</netty.version>
         <nexus-staging.mvn.plugin.version>1.6.7</nexus-staging.mvn.plugin.version>
         <osgi.version>4.2.0</osgi.version>
         <pax.exam.version>4.9.1</pax.exam.version>
