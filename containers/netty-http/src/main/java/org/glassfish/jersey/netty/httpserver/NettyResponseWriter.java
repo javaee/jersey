@@ -45,8 +45,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import io.netty.buffer.Unpooled;
+import org.glassfish.jersey.netty.connector.internal.JerseyChunkedInput;
+import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -58,10 +65,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
-import org.glassfish.jersey.netty.connector.internal.JerseyChunkedInput;
-import org.glassfish.jersey.server.ContainerException;
-import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import io.netty.handler.codec.http.LastHttpContent;
 
 /**
  * Netty implementation of {@link ContainerResponseWriter}.
@@ -70,12 +74,23 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
  */
 class NettyResponseWriter implements ContainerResponseWriter {
 
+    private static final Logger LOGGER = Logger.getLogger(NettyResponseWriter.class.getName());
+
+    static final ChannelFutureListener FLUSH_FUTURE = new ChannelFutureListener() {
+        @Override
+        public void operationComplete(ChannelFuture future) throws Exception {
+            future.channel().flush();
+        }
+    };
+
     private final ChannelHandlerContext ctx;
     private final HttpRequest req;
     private final NettyHttpContainer container;
 
     private volatile ScheduledFuture<?> suspendTimeoutFuture;
     private volatile Runnable suspendTimeoutHandler;
+
+    private boolean responseWritten = false;
 
     NettyResponseWriter(ChannelHandlerContext ctx, HttpRequest req, NettyHttpContainer container) {
         this.ctx = ctx;
@@ -84,8 +99,15 @@ class NettyResponseWriter implements ContainerResponseWriter {
     }
 
     @Override
-    public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext)
+    public synchronized OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext)
             throws ContainerException {
+
+        if (responseWritten) {
+            LOGGER.log(Level.FINE, "Response already written.");
+            return null;
+        }
+
+        responseWritten = true;
 
         String reasonPhrase = responseContext.getStatusInfo().getReasonPhrase();
         int statusCode = responseContext.getStatus();
@@ -122,14 +144,14 @@ class NettyResponseWriter implements ContainerResponseWriter {
             JerseyChunkedInput jerseyChunkedInput = new JerseyChunkedInput(ctx.channel());
 
             if (HttpUtil.isTransferEncodingChunked(response)) {
-                ctx.write(new HttpChunkedInput(jerseyChunkedInput)).addListener(ChannelFutureListener.CLOSE);
+                ctx.write(new HttpChunkedInput(jerseyChunkedInput)).addListener(FLUSH_FUTURE);
             } else {
-                ctx.write(jerseyChunkedInput).addListener(ChannelFutureListener.CLOSE);
+                ctx.write(new HttpChunkedInput(jerseyChunkedInput)).addListener(FLUSH_FUTURE);
             }
             return jerseyChunkedInput;
 
         } else {
-            ctx.write(Unpooled.buffer(0)).addListener(ChannelFutureListener.CLOSE);
+            ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
             return null;
         }
     }
@@ -178,8 +200,7 @@ class NettyResponseWriter implements ContainerResponseWriter {
 
     @Override
     public void failure(Throwable error) {
-        ctx.writeAndFlush(
-                new DefaultFullHttpResponse(req.protocolVersion(), HttpResponseStatus.INTERNAL_SERVER_ERROR))
+        ctx.writeAndFlush(new DefaultFullHttpResponse(req.protocolVersion(), HttpResponseStatus.INTERNAL_SERVER_ERROR))
            .addListener(ChannelFutureListener.CLOSE);
     }
 

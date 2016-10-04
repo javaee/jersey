@@ -64,6 +64,11 @@ public class NettyInputStream extends InputStream {
         public int read() throws IOException {
             return 0;
         }
+
+        @Override
+        public String toString() {
+            return "END_OF_INPUT " + super.toString();
+        }
     };
 
     /**
@@ -73,6 +78,11 @@ public class NettyInputStream extends InputStream {
         @Override
         public int read() throws IOException {
             return 0;
+        }
+
+        @Override
+        public String toString() {
+            return "END_OF_INPUT_ERROR " + super.toString();
         }
     };
 

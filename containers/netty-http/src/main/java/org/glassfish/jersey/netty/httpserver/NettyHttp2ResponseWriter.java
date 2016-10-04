@@ -54,6 +54,7 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -134,14 +135,12 @@ class NettyHttp2ResponseWriter implements ContainerResponseWriter {
 
                 @Override
                 public void close() throws IOException {
-                    ctx.writeAndFlush(new DefaultHttp2DataFrame(true));
-                    ctx.close();
+                    ctx.write(new DefaultHttp2DataFrame(true)).addListener(NettyResponseWriter.FLUSH_FUTURE);
                 }
             };
 
         } else {
             ctx.writeAndFlush(new DefaultHttp2DataFrame(true));
-            ctx.close();
             return null;
         }
     }
