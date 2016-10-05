@@ -131,6 +131,7 @@ import org.apache.http.util.VersionInfo;
  * <p/>
  * The following properties are only supported at construction of this class:
  * <ul>
+ * <li>{@link VitamClientProperties#DISABLE_AUTOMATIC_RETRIES}</li>
  * <li>{@link ApacheClientProperties#CONNECTION_MANAGER}</li>
  * <li>{@link ApacheClientProperties#REQUEST_CONFIG}</li>
  * <li>{@link ApacheClientProperties#CREDENTIALS_PROVIDER}</li>
@@ -237,6 +238,13 @@ class ApacheConnector implements Connector {
 
         final SSLContext sslContext = client.getSslContext();
         final HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+
+        final Boolean disableAutomaticRetries = (Boolean) config.getProperties()
+            .get(ApacheClientProperties.DISABLE_AUTOMATIC_RETRIES);
+
+        if (disableAutomaticRetries) {
+            clientBuilder.disableAutomaticRetries();
+        }
 
         clientBuilder.setConnectionManager(getConnectionManager(client, config, sslContext));
         clientBuilder.setConnectionManagerShared(
