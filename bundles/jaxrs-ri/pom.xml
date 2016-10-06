@@ -162,11 +162,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-debug-all</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <scope>provided</scope>
@@ -277,10 +272,10 @@
                         <Export-Package>
                             javax.ws.rs.*;version=${jaxrs.api.impl.version},
                             org.glassfish.jersey.*;version=${project.version},
-                            com.sun.research.ws.wadl.*;version=${project.version}
+                            com.sun.research.ws.wadl.*;version=${project.version},
+                            jersey.repackaged.org.objectweb.asm.*;version=${project.version}
                         </Export-Package>
                         <Import-Package><![CDATA[
-                            !org.objectweb.asm.*,
                             javax.servlet.annotation.*;resolution:=optional;version="$<range;[==,+);${servlet3.version}>",
                             javax.servlet.descriptor.*;resolution:=optional;version="$<range;[==,+);${servlet3.version}>",
                             javax.servlet.*;version="[2.4,4.0)",
@@ -299,19 +294,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <configuration>
-                    <artifactSet>
-                        <includes>
-                            <include>org.ow2.asm:asm-debug-all:*</include>
-                        </includes>
-                    </artifactSet>
-                    <relocations>
-                        <relocation>
-                            <pattern>org.objectweb.asm</pattern>
-                            <shadedPattern>${jersey.repackaged.prefix}.org.objectweb.asm</shadedPattern>
-                        </relocation>
-                    </relocations>
-                </configuration>
             </plugin>
             <!-- producing zipped archives -->
             <plugin>

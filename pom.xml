@@ -1060,16 +1060,6 @@
             </reporting>
         </profile>
         <profile>
-            <id>ide</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.ow2.asm</groupId>
-                    <artifactId>asm-debug-all</artifactId>
-                    <optional>true</optional>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
             <id>sonar</id>
             <properties>
                 <!-- Sonar/Reporting settings (heavily inspired at http://www.aheritier.net/maven-failsafe-sonar-and-jacoco-are-in-a-boat/ -->
@@ -1414,11 +1404,6 @@
                 <groupId>org.glassfish.hk2.external</groupId>
                 <artifactId>aopalliance-repackaged</artifactId>
                 <version>${hk2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.ow2.asm</groupId>
-                <artifactId>asm-debug-all</artifactId>
-                <version>${asm.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.javassist</groupId>
@@ -1894,6 +1879,8 @@
 
         <!-- Dependency versions -->
         <jersey.version>${project.version}</jersey.version>
+        <!-- asm is now source integrated - keeping this property to see the version -->
+        <!-- see core-server/src/main/java/jersey/repackaged/asm/.. -->
         <asm.version>5.0.4</asm.version>
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>
