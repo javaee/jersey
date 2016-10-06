@@ -88,7 +88,6 @@
                             com.sun.research.ws.wadl.*;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            !org.objectweb.asm.*,
                             *
                         </Import-Package>
                     </instructions>
@@ -129,24 +128,6 @@
                         <includeSchema>wadl.xsd</includeSchema>
                     </includeSchemas>
                     <removeOldOutput>true</removeOldOutput>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <inherited>true</inherited>
-                <configuration>
-                    <artifactSet>
-                        <includes>
-                            <include>org.ow2.asm:asm-debug-all:*</include>
-                        </includes>
-                    </artifactSet>
-                    <relocations>
-                        <relocation>
-                            <pattern>org.objectweb.asm</pattern>
-                            <shadedPattern>${jersey.repackaged.prefix}.org.objectweb.asm</shadedPattern>
-                        </relocation>
-                    </relocations>
                 </configuration>
             </plugin>
             <plugin>
@@ -205,11 +186,6 @@
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
             <artifactId>hk2-locator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-debug-all</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -292,13 +268,6 @@
                     </plugin>
                 </plugins>
             </build>
-            <dependencies>
-                <dependency>
-                    <groupId>org.ow2.asm</groupId>
-                    <artifactId>asm-debug-all</artifactId>
-                    <optional>false</optional>
-                </dependency>
-            </dependencies>
         </profile>
     </profiles>
 

@@ -68,3 +68,4 @@ build.readme
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/UniformTimeReservoir.java
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/UniformTimeSnapshot.java
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/UniformTimeValuesSnapshot.java
+/core-server/src/main/java/jersey/repackaged
