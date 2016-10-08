@@ -117,6 +117,8 @@ public class WebComponent {
     private static final Type RequestTYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
     private static final Type ResponseTYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
 
+    public static final String SERVICE_LOCATOR_ATTRIBUTE = "jersey.servlet.WebComponent.ServiceLocator";
+
     private static final AsyncContextDelegate DefaultAsyncDELEGATE = new AsyncContextDelegate() {
 
         @Override
@@ -296,7 +298,9 @@ public class WebComponent {
      *                          resource configuration.
      */
     public WebComponent(final WebConfig webConfig, ResourceConfig resourceConfig) throws ServletException {
+
         this.webConfig = webConfig;
+
         if (resourceConfig == null) {
             resourceConfig = createResourceConfig(webConfig);
         }
@@ -307,7 +311,9 @@ public class WebComponent {
         AbstractBinder webComponentBinder = new WebComponentBinder(resourceConfig.getProperties());
         resourceConfig.register(webComponentBinder);
 
-        this.appHandler = new ApplicationHandler(resourceConfig, webComponentBinder);
+        ServiceLocator locator = (ServiceLocator) webConfig.getServletContext().getAttribute(SERVICE_LOCATOR_ATTRIBUTE);
+
+        this.appHandler = new ApplicationHandler(resourceConfig, webComponentBinder, locator);
 
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
         this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig) &&
@@ -563,5 +569,14 @@ public class WebComponent {
                 }
             }
         }
+    }
+
+    /**
+     * Get {@link ApplicationHandler} used by this web component.
+     * 
+     * @return The application handler
+     */
+    public ApplicationHandler getAppHandler() {
+        return appHandler;
     }
 }

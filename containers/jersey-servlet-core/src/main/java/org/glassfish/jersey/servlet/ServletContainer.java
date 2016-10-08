@@ -589,4 +589,13 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     public ApplicationHandler getApplicationHandler() {
         return webComponent.appHandler;
     }
+
+    /**
+     * Get {@link WebComponent} used by this servlet container.
+     * 
+     * @return The web component.
+     */
+    public WebComponent getWebComponent() {
+        return webComponent;
+    }
 }
