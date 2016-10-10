@@ -48,7 +48,7 @@
         <groupId>org.glassfish.jersey.examples</groupId>
         <artifactId>webapp-example-parent</artifactId>
         <relativePath>../webapp-example-parent/pom.xml</relativePath>
-        <version>2.23-SNAPSHOT</version>
+        <version>2.22.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>managed-beans-webapp</artifactId>

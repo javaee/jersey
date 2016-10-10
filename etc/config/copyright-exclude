@@ -24,7 +24,9 @@
 .zip
 .dat
 .lua
-/docs/src/main/docbook/inc/*.src
+/docs/src/main/docbook/inc/modules_table_footer.src
+/docs/src/main/docbook/inc/modules_table_header.src
+/docs/src/main/docbook/inc/modules_table_row.src
 jaxb.index
 /MANIFEST.MF
 /META-INF/services/
