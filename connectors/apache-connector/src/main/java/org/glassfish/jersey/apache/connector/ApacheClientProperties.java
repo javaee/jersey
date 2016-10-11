@@ -40,7 +40,6 @@
 package org.glassfish.jersey.apache.connector;
 
 import java.util.Map;
-
 import org.glassfish.jersey.internal.util.PropertiesClass;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 
@@ -149,7 +148,12 @@ public final class ApacheClientProperties {
      * An implementation of {@link org.apache.http.config.Lookup} that should be used as a
      * {@link org.apache.http.config.Registry} of {@link org.apache.http.cookie.CookieSpecProvider}s.
      */
-    public static final String COOKIESPEC_REGISTRY = "jersey.config.apache.client.cookiespecRegistry";
+    public static final String COOKIE_SPEC_REGISTRY = "jersey.config.apache.client.cookieSpecRegistry";
+
+    /**
+     * An implementation of {@link org.apache.http.client.CookieStore} that should be used as the cookie store
+     */
+    public static final String COOKIE_STORE = "jersey.config.apache.client.cookieStore";
 
     /**
      * Get the value of the specified property.
