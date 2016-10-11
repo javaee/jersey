@@ -136,7 +136,8 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
  * <li>{@link ApacheClientProperties#REQUEST_CONFIG}</li>
  * <li>{@link ApacheClientProperties#CREDENTIALS_PROVIDER}</li>
  * <li>{@link ApacheClientProperties#DISABLE_COOKIES}</li>
- * <li>{@link ApacheClientProperties#COOKIESPEC_REGISTRY}</li>
+ * <li>{@link ApacheClientProperties#COOKIE_SPEC_REGISTRY}</li>
+ * <li>{@link ApacheClientProperties#COOKIE_STORE}</li>
  * <li>{@link ClientProperties#PROXY_URI}</li>
  * <li>{@link ClientProperties#PROXY_USERNAME}</li>
  * <li>{@link ClientProperties#PROXY_PASSWORD}</li>
@@ -237,7 +238,7 @@ class ApacheConnector implements Connector {
             }
         }
 
-        Object cookiespecRegistryObj = config.getProperties().get(ApacheClientProperties.COOKIESPEC_REGISTRY);
+        Object cookiespecRegistryObj = config.getProperties().get(ApacheClientProperties.COOKIE_SPEC_REGISTRY);
         if (cookiespecRegistryObj == null) {
             cookiespecRegistry = null;
         } else {
@@ -312,8 +313,25 @@ class ApacheConnector implements Connector {
             requestConfig = requestConfigBuilder.build();
         }
 
+
         if (requestConfig.getCookieSpec() == null || !requestConfig.getCookieSpec().equals(CookieSpecs.IGNORE_COOKIES)) {
-            this.cookieStore = new BasicCookieStore();
+            Object cookieStoreObj = config.getProperties().get(ApacheClientProperties.COOKIE_STORE);
+            if (cookieStoreObj == null) {
+                this.cookieStore = new BasicCookieStore();
+            } else {
+                if (cookieStoreObj instanceof CookieStore) {
+                    cookieStore = (CookieStore) cookieStoreObj;
+                } else {
+                    LOGGER.log(
+                            Level.WARNING,
+                            LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                                    HttpClientContext.COOKIE_STORE,
+                                    cookieStoreObj.getClass().getName(),
+                                    Registry.class.getName())
+                    );
+                    this.cookieStore = new BasicCookieStore();
+                }
+            }
             clientBuilder.setDefaultCookieStore(cookieStore);
         } else {
             this.cookieStore = null;
