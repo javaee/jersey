@@ -202,7 +202,7 @@ class ApacheConnector implements Connector {
     private final CookieStore cookieStore;
     private final boolean preemptiveBasicAuth;
     private final RequestConfig requestConfig;
-    private final Lookup<CookieSpecProvider> cookiespecRegistry;
+    private final Lookup<CookieSpecProvider> cookieSpecRegistry;
 
     /**
      * Create the new Apache HTTP Client connector.
@@ -238,21 +238,21 @@ class ApacheConnector implements Connector {
             }
         }
 
-        Object cookiespecRegistryObj = config.getProperties().get(ApacheClientProperties.COOKIE_SPEC_REGISTRY);
-        if (cookiespecRegistryObj == null) {
-            cookiespecRegistry = null;
+        Object cookieSpecRegistryObj = config.getProperties().get(ApacheClientProperties.COOKIE_SPEC_REGISTRY);
+        if (cookieSpecRegistryObj == null) {
+            cookieSpecRegistry = null;
         } else {
-            if (cookiespecRegistryObj instanceof Lookup) {
-                cookiespecRegistry = (Lookup<CookieSpecProvider>) cookiespecRegistryObj;
+            if (cookieSpecRegistryObj instanceof Lookup) {
+                cookieSpecRegistry = (Lookup<CookieSpecProvider>) cookieSpecRegistryObj;
             } else {
                 LOGGER.log(
                         Level.WARNING,
                         LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
                                 HttpClientContext.COOKIESPEC_REGISTRY,
-                                cookiespecRegistryObj.getClass().getName(),
+                                cookieSpecRegistryObj.getClass().getName(),
                                 Registry.class.getName())
                 );
-                cookiespecRegistry = null;
+                cookieSpecRegistry = null;
             }
         }
 
@@ -473,8 +473,8 @@ class ApacheConnector implements Connector {
                 context.setAuthCache(authCache);
             }
 
-            if (cookiespecRegistry != null) {
-                context.setCookieSpecRegistry(cookiespecRegistry);
+            if (cookieSpecRegistry != null) {
+                context.setCookieSpecRegistry(cookieSpecRegistry);
             }
 
             response = client.execute(getHost(request), request, context);
