@@ -78,4 +78,10 @@ public class Aspect4JTest extends JerseyTest {
         target("test2").request().get(String.class);
         assertEquals(1, applicationContext.getBean(TestAspect.class).getInterceptions());
     }
+
+    @Test
+    public void JERSEY_3126() {
+        final String result = target("JERSEY-3126").request().get(String.class);
+        assertEquals("test ok", result);
+    }
 }
