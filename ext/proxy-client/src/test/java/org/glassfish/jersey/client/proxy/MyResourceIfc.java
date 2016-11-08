@@ -194,4 +194,10 @@ public interface MyResourceIfc {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     String putIt(MyBean dummyBean);
+
+    @Path("putItLocalized")
+    @PUT
+    @Consumes(MediaType.APPLICATION_XML)
+    @Produces(MediaType.TEXT_PLAIN)
+    String putItLocalized(MyBean dummyBean);
 }

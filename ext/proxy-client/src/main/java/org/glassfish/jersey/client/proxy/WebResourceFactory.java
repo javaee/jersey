@@ -54,6 +54,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -78,6 +79,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
@@ -340,12 +342,23 @@ public final class WebResourceFactory implements InvocationHandler {
             if (entityType instanceof ParameterizedType) {
                 entity = new GenericEntity(entity, entityType);
             }
-            result = builder.method(httpMethod, Entity.entity(entity, contentType), responseGenericType);
+            result = builder.method(httpMethod,
+                            Entity.entity(entity,
+                            new Variant(MediaType.valueOf(contentType), getLocaleFromHeaders(headers), null)),
+                            responseGenericType);
         } else {
             result = builder.method(httpMethod, responseGenericType);
         }
 
         return result;
+    }
+
+    private Locale getLocaleFromHeaders(MultivaluedMap<String, Object> headers) {
+        final List<Object> contentLanguageEntries = headers.get(HttpHeaders.CONTENT_LANGUAGE);
+        if ((contentLanguageEntries != null) && (!contentLanguageEntries.isEmpty())) {
+            return Locale.forLanguageTag(contentLanguageEntries.get(0).toString());
+        }
+        return null;
     }
 
     private boolean hasAnyParamAnnotation(final Map<Class, Annotation> anns) {

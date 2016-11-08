@@ -70,6 +70,7 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     private MyResourceIfc resource;
     private MyResourceIfc resourceWithXML;
+    private MyResourceIfc resourceWithContentLanguage;
 
     @Override
     protected ResourceConfig configure() {
@@ -91,6 +92,12 @@ public class WebResourceFactoryTest extends JerseyTest {
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML);
         resourceWithXML = WebResourceFactory
                 .newResource(MyResourceIfc.class, target(), false, headers, Collections.<Cookie>emptyList(), new Form());
+
+        final MultivaluedMap<String, Object> headersWithContentLanguage = new MultivaluedHashMap<>(1);
+        headersWithContentLanguage.add(HttpHeaders.CONTENT_LANGUAGE, "en-GB");
+        resourceWithContentLanguage = WebResourceFactory
+                .newResource(MyResourceIfc.class, target(), false, headersWithContentLanguage,
+                            Collections.<Cookie>emptyList(), new Form());
     }
 
     @Test
@@ -333,6 +340,14 @@ public class WebResourceFactoryTest extends JerseyTest {
     public void testPutWithExplicitContentType() {
         assertEquals("Content-Type HTTP header does not match explicitly provided type", resourceWithXML.putIt(new MyBean()),
                 MediaType.APPLICATION_XML);
+    }
+
+    @Test
+    public void testPutWithExplicitContentLanguage() {
+        assertEquals("Content-Language HTTP header does not match explicitly provided language",
+                "en-GB",
+                resourceWithContentLanguage.putItLocalized(new MyBean())
+                );
     }
 
     @Test
