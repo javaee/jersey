@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,12 +58,11 @@ import org.glassfish.jersey.internal.TestRuntimeDelegate;
 import org.junit.Test;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * {@link OutboundMessageContext} test.
@@ -217,5 +216,23 @@ public class OutboundMessageContextTest {
         r.getHeaders().add("Link", link3.toString());
         assertTrue(r.getLink("self").equals(link1));
         assertTrue(r.getLink("update").equals(link2) || r.getLink("update").equals(link3));
+    }
+
+    @Test
+    public void testGetLength() {
+        OutboundMessageContext r = new OutboundMessageContext();
+        r.getHeaders().add("Content-Length", 50);
+        assertEquals(50, r.getLengthLong());
+    }
+
+    @Test
+    public void testGetLength_tooLongForInt() {
+        OutboundMessageContext r = new OutboundMessageContext();
+        long length = Integer.MAX_VALUE + 5;
+        r.getHeaders().add("Content-Length", length);
+
+        // value is not a valid integer -> returning -1 (see the javadoc).
+        assertEquals(-1, r.getLength());
+        assertEquals(length, r.getLengthLong());
     }
 }
