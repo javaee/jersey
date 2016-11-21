@@ -47,6 +47,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
@@ -63,6 +64,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * {@link OutboundMessageContext} test.
@@ -228,11 +230,19 @@ public class OutboundMessageContextTest {
     @Test
     public void testGetLength_tooLongForInt() {
         OutboundMessageContext r = new OutboundMessageContext();
-        long length = Integer.MAX_VALUE + 5;
+        long length = Integer.MAX_VALUE + 5L;
         r.getHeaders().add("Content-Length", length);
 
-        // value is not a valid integer -> returning -1 (see the javadoc).
-        assertEquals(-1, r.getLength());
+
         assertEquals(length, r.getLengthLong());
+
+        // value is not a valid integer -> ProcessingException is thrown.
+        try {
+            r.getLength();
+        } catch (ProcessingException e) {
+            return;
+        }
+
+        fail();
     }
 }

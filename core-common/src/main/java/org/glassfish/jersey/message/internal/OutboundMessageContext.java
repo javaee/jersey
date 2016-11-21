@@ -204,7 +204,8 @@ public class OutboundMessageContext {
             return convertNull ? converter.apply(null) : null;
         }
         if (values.size() > 1) {
-            throw new HeaderValueException(LocalizationMessages.TOO_MANY_HEADER_VALUES(name, values.toString()),
+            throw new HeaderValueException(
+                    LocalizationMessages.TOO_MANY_HEADER_VALUES(name, values.toString()),
                     HeaderValueException.Context.OUTBOUND);
         }
 
@@ -408,8 +409,8 @@ public class OutboundMessageContext {
      * should be preferred over this method, since it returns a {@code long}
      * instead and is therefore more portable.</P>
      *
-     * @return Content-Length as a postive integer if present and valid number. In other
-     * cases returns -1.
+     * @return Content-Length as a postive integer if present and valid number, {@code -1} if negative number.
+     * @throws ProcessingException when {@link Integer#parseInt(String)} (String)} throws {@link NumberFormatException}.
      */
     public int getLength() {
         return singleHeader(HttpHeaders.CONTENT_LENGTH, Integer.class, input -> {
@@ -430,8 +431,8 @@ public class OutboundMessageContext {
     /**
      * Get Content-Length value.
      *
-     * @return Content-Length as a positive long if present and valid number. In other
-     * cases returns -1.
+     * @return Content-Length as a positive long if present and valid number, {@code -1} if negative number.
+     * @throws ProcessingException when {@link Long#parseLong(String)} throws {@link NumberFormatException}.
      */
     public long getLengthLong() {
         return singleHeader(HttpHeaders.CONTENT_LENGTH, Long.class, input -> {
