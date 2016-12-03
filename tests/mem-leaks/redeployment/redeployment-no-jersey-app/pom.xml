@@ -120,7 +120,7 @@
         <profile>
             <id>memleak-reproducer</id>
             <properties>
-                <hk2.version>2.4.0-b26</hk2.version>
+                <hk2.version>2.5.0-b30</hk2.version>
             </properties>
         </profile>
     </profiles>
