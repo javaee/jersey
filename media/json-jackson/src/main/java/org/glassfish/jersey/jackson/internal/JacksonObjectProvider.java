@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -236,7 +236,7 @@ final class JacksonObjectProvider extends AbstractObjectProvider<FilterProvider>
                                           final JsonObjectFormatVisitor objectVisitor,
                                           final SerializerProvider provider) throws JsonMappingException {
             if (include(writer.getName())) {
-                writer.depositSchemaProperty(objectVisitor);
+                writer.depositSchemaProperty(objectVisitor, provider);
             }
         }
 
