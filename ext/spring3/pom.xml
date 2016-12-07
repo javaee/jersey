@@ -167,7 +167,7 @@
     </dependencies>
 
     <properties>
-        <spring3.version>3.2.3.RELEASE</spring3.version>
+        <spring3.version>3.2.17.RELEASE</spring3.version>
     </properties>
 
     <build>

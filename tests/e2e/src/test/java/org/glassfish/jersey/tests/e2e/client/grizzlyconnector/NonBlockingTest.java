@@ -40,7 +40,9 @@
 
 package org.glassfish.jersey.tests.e2e.client.grizzlyconnector;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -83,6 +85,8 @@ public class NonBlockingTest extends JerseyTest {
 
     @Test
     public void testNonBlockingConnector() throws Exception {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
         Future<String> future = target("test")
                 .request()
                 .async()
@@ -90,16 +94,20 @@ public class NonBlockingTest extends JerseyTest {
                     @Override
                     public void completed(String response) {
                         invocationCallbackThreadName = Thread.currentThread().getName();
+                        countDownLatch.countDown();
                     }
 
                     @Override
                     public void failed(Throwable throwable) {
                         invocationCallbackThreadName = Thread.currentThread().getName();
+                        countDownLatch.countDown();
                     }
                 });
 
         String response = future.get();
         assertNotNull(response);
+        assertTrue("Invocation callback was not invoked",
+                countDownLatch.await(5, TimeUnit.SECONDS));
         assertTrue("Invocation callback is not executed on the NIO pool thread.",
                    !invocationCallbackThreadName.contains("jersey-client-async-executor"));
     }
