@@ -421,10 +421,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             unprocessed.add(classParam);
             while (!unprocessed.isEmpty()) {
                 final Class<?> clazz = unprocessed.removeFirst();
-                
+
                 classes.add(clazz);
-                populateInterfaces( unprocessed, Arrays.asList( clazz.getInterfaces() ) );
-                
+                populateInterfaces(unprocessed, Arrays.asList(clazz.getInterfaces()));
+
                 final Class<?> superclazz = clazz.getSuperclass();
                 if (superclazz != null) {
                     unprocessed.add(superclazz);
@@ -435,12 +435,12 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         private void populateInterfaces(List<Class<?>> unprocessed, List<Class<?>> interfaces) {
-            for ( Class<?> i : interfaces ) {
-                if ( unprocessed.contains( i ) ) {
+            for (Class<?> i : interfaces) {
+                if (unprocessed.contains(i)) {
                     continue;
                 }
-                unprocessed.add( i );
-                populateInterfaces( unprocessed, Arrays.asList( i.getInterfaces() ) );
+                unprocessed.add(i);
+                populateInterfaces(unprocessed, Arrays.asList(i.getInterfaces()));
             }
         }
     }
