@@ -62,6 +62,7 @@
     <modules>
         <module>rx-client</module>
         <module>rx-client-guava</module>
+        <module>rx-client-java8</module>
         <module>rx-client-jsr166e</module>
         <module>rx-client-rxjava</module>
     </modules>

@@ -73,7 +73,8 @@
         <module>mvc-jsp</module>
         <module>mvc-mustache</module>
         <module>proxy-client</module>
-        <module>rx</module>
+        <!-- TODO JAX-RS 2.1: rx module cannot be part of the build, since it conflicts with JAX-RS 2.1 m01 API -->
+        <!--<module>rx</module>-->
         <module>servlet-portability</module>
         <module>spring3</module>
         <module>wadl-doclet</module>
