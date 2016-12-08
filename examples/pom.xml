@@ -72,6 +72,7 @@
         <module>entity-filtering-security</module>
         <module>extended-wadl-webapp</module>
         <module>exception-mapping</module>
+        <module>feed-combiner-java8-webapp</module>
         <module>freemarker-webapp</module>
         <module>flight-mgmt-webapp</module>
         <module>groovy</module>
@@ -88,6 +89,7 @@
         <module>http-trace</module>
         <module>https-clientserver-grizzly</module>
         <module>https-server-glassfish</module>
+        <module>java8-webapp</module>
         <module>jaxb</module>
         <module>jaxrs-types-injection</module>
         <module>jersey-ejb</module>
@@ -108,7 +110,9 @@
         <module>oauth-client-twitter</module>
         <module>oauth2-client-google-webapp</module>
         <module>reload</module>
-        <module>rx-client-webapp</module>
+        <!-- TODO JAX-RS 2.1: rx module cannot be part of the build, since it conflicts with JAX-RS 2.1 m01 API -->
+        <!--<module>rx-client-java8-webapp</module>-->
+        <!--<module>rx-client-webapp</module>-->
         <module>server-async</module>
         <module>server-async-managed</module>
         <module>server-async-standalone</module>

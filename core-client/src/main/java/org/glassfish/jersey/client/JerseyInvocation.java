@@ -46,6 +46,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
@@ -63,10 +64,13 @@ import javax.ws.rs.RedirectionException;
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.CompletionStageRxInvoker;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
+import javax.ws.rs.client.NioInvoker;
 import javax.ws.rs.client.ResponseProcessingException;
+import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
@@ -462,6 +466,36 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         public Builder property(final String name, final Object value) {
             requestContext.setProperty(name, value);
             return this;
+        }
+
+        @Override
+        public CompletionStageRxInvoker rx() {
+            // TODO JAX-RS 2.1: to be implemented
+            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
+        }
+
+        @Override
+        public CompletionStageRxInvoker rx(ExecutorService executorService) {
+            // TODO JAX-RS 2.1: to be implemented
+            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
+        }
+
+        @Override
+        public <T extends RxInvoker> T rx(Class<T> clazz) {
+            // TODO JAX-RS 2.1: to be implemented
+            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
+        }
+
+        @Override
+        public <T extends RxInvoker> T rx(Class<T> clazz, ExecutorService executorService) {
+            // TODO JAX-RS 2.1: to be implemented
+            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
+        }
+
+        @Override
+        public NioInvoker nio() {
+            // TODO JAX-RS 2.1: to be implemented
+            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
         }
     }
 

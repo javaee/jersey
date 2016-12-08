@@ -63,6 +63,9 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.NioErrorHandler;
+import javax.ws.rs.core.NioWriterHandler;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
@@ -486,6 +489,18 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
                 header(HttpHeaders.VARY, vary.toString());
             }
             return this;
+        }
+
+        @Override
+        public ResponseBuilder entity(NioWriterHandler writer) {
+            // TODO JAX-RS 2.1: to be implemented
+            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
+        }
+
+        @Override
+        public ResponseBuilder entity(NioWriterHandler writer, NioErrorHandler error) {
+            // TODO JAX-RS 2.1: to be implemented
+            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
         }
 
         private boolean vary(MediaType v, MediaType vary) {

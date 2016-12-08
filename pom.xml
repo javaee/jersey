@@ -984,53 +984,10 @@
             </build>
         </profile>
         <profile>
-            <id>jdk1.8</id>
+            <id>jdk1.8+</id>
             <activation>
-                <jdk>1.8</jdk>
+                <jdk>[1.8,)</jdk>
             </activation>
-            <modules>
-                <module>ext/rx/rx-client-java8</module>
-            </modules>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-javadoc-plugin</artifactId>
-                            <inherited>true</inherited>
-                            <configuration>
-                                <additionalparam>-Xdoclint:none</additionalparam>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-            <reporting>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <inherited>true</inherited>
-                        <configuration>
-                            <additionalparam>-Xdoclint:none</additionalparam>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </reporting>
-        </profile>
-        <profile> <!-- examples jdk1.8 modules will be automatically included if jdk8 is present unless examples.excluded env variable is set -->
-            <id>examplesIncludedJdk1.8</id>
-            <activation>
-                <jdk>1.8</jdk>
-                <property>
-                    <name>!examples.excluded</name>
-                </property>
-            </activation>
-            <modules>
-                <module>examples/feed-combiner-java8-webapp</module>
-                <module>examples/java8-webapp</module>
-                <module>examples/rx-client-java8-webapp</module>
-            </modules>
             <build>
                 <pluginManagement>
                     <plugins>
@@ -1915,8 +1872,8 @@
         <javax.validation.api.version>1.1.0.Final</javax.validation.api.version>
         <jaxb.api.version>2.2.7</jaxb.api.version>
         <jaxb.ri.version>2.2.7</jaxb.ri.version>
-        <jaxrs.api.spec.version>2.0</jaxrs.api.spec.version>
-        <jaxrs.api.impl.version>2.0.1</jaxrs.api.impl.version>
+        <jaxrs.api.spec.version>2.1</jaxrs.api.spec.version>
+        <jaxrs.api.impl.version>2.1-m01</jaxrs.api.impl.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jersey1.version>1.19.3</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>
