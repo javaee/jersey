@@ -46,11 +46,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.AccessController;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.glassfish.jersey.internal.OsgiRegistry;
+import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.server.internal.AbstractResourceFinderAdapter;
@@ -130,15 +133,19 @@ public final class PackageNamesScanner extends AbstractResourceFinderAdapter {
         this.classloader = classLoader;
 
         this.finderFactories = new HashMap<>();
-        add(new JarZipSchemeResourceFinderFactory());
-        add(new FileSchemeResourceFinderFactory());
-        add(new VfsSchemeResourceFinderFactory());
-        add(new BundleSchemeResourceFinderFactory());
 
-        // TODO - Services?
-        // for (UriSchemeResourceFinderFactory s : ServiceFinder.find(UriSchemeResourceFinderFactory.class)) {
-        //     add(s);
-        // }
+        ServiceFinder<UriSchemeResourceFinderFactory> servicesFound = ServiceFinder.find(UriSchemeResourceFinderFactory.class);
+
+        // TODO: ServiceFinder should return an Optional
+        if (servicesFound.toArray().length == 0) {
+            for (UriSchemeResourceFinderFactory s : defaultFinderFactories()) {
+                add(s);
+            }
+        } else {
+            for (UriSchemeResourceFinderFactory s : servicesFound) {
+                add(s);
+            }
+        }
 
         final OsgiRegistry osgiRegistry = ReflectionHelper.getOsgiRegistryInstance();
         if (osgiRegistry != null) {
@@ -338,5 +345,14 @@ public final class PackageNamesScanner extends AbstractResourceFinderAdapter {
             result.append(u.getRef());
         }
         return result.toString();
+    }
+
+    private static final Collection<UriSchemeResourceFinderFactory> defaultFinderFactories() {
+        return Arrays.asList(
+                new JarZipSchemeResourceFinderFactory(),
+                new FileSchemeResourceFinderFactory(),
+                new VfsSchemeResourceFinderFactory(),
+                new BundleSchemeResourceFinderFactory()
+        );
     }
 }
