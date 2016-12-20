@@ -1900,6 +1900,7 @@
         <pax.exam.version>4.9.1</pax.exam.version>
         <pax.web.version>0.7.4</pax.web.version><!-- TODO: UPGRADE! -->
         <paxexam.mvn.plugin.version>1.2.4</paxexam.mvn.plugin.version>
+        <projectreactor.version>3.0.3.RELEASE</projectreactor.version>
         <rxjava.version>1.0.12</rxjava.version>
         <rome.version>1.0</rome.version>
         <rxjava.version>1.2.3</rxjava.version>
