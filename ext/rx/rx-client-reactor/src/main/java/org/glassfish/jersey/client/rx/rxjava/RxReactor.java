@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,22 +49,22 @@ import org.glassfish.jersey.client.rx.Rx;
 import org.glassfish.jersey.client.rx.RxClient;
 import org.glassfish.jersey.client.rx.RxWebTarget;
 
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
 /**
  * Main entry point to the Reactive Client API used to bootstrap {@link org.glassfish.jersey.client.rx.RxClient reactive client}
- * or {@link org.glassfish.jersey.client.rx.RxWebTarget reactive client target} instances based on Reactive Streams's
- * {@link org.reactivestreams publisher} using the Project Reactor implementation.
+ * or {@link org.glassfish.jersey.client.rx.RxWebTarget reactive client target} instances based on Project Reactor's
+ * {@link Mono}.
  *
  * @author Adam Richeimer
  * @see org.glassfish.jersey.client.rx.Rx
- * @since 3.0
  */
-public final class RxPublisher {
+public final class RxReactor {
 
     /**
      * Create a new {@link org.glassfish.jersey.client.rx.RxClient reactive client} instance parameterized with invoker based on
-     * the {@link org.reactivestreams publisher} from Reactive Streams as implemented by Project Reactor.
+     * the {@link Mono} from Project Reactor.
      * <p/>
      * Instance is initialized with a JAX-RS client created using the default client builder implementation class provided by the
      * JAX-RS implementation provider.
@@ -72,13 +72,13 @@ public final class RxPublisher {
      * @return new reactive client extension.
      * @see Rx#newClient(Class)
      */
-    public static RxClient<RxPublisherInvoker> newClient() {
-        return Rx.newClient(RxPublisherInvoker.class);
+    public static RxClient<RxReactorInvoker> newClient() {
+        return Rx.newClient(RxReactorInvoker.class);
     }
 
     /**
      * Create a new {@link org.glassfish.jersey.client.rx.RxClient reactive client} instance parameterized with invoker based on
-     * the {@link org.reactivestreams publisher} from Reactive Streams as implemented by Project Reactor. Reactive requests, invoked using
+     * the {@link Mono} from Project Reactor. Reactive requests, invoked using
      * {@link org.glassfish.jersey.client.rx.RxInvocationBuilder#rx() rx(...)}, operate on a {@link Scheduler} initialized with
      * provided {@link java.util.concurrent.ExecutorService executor service}.
      * <p/>
@@ -89,25 +89,25 @@ public final class RxPublisher {
      * @return new reactive client extension.
      * @see Rx#newClient(Class)
      */
-    public static RxClient<RxPublisherInvoker> newClient(final ExecutorService executorService) {
-        return Rx.newClient(RxPublisherInvoker.class, executorService);
+    public static RxClient<RxReactorInvoker> newClient(final ExecutorService executorService) {
+        return Rx.newClient(RxReactorInvoker.class, executorService);
     }
 
     /**
      * Create a new {@link org.glassfish.jersey.client.rx.RxClient reactive client} instance initialized with given JAX-RS client
-     * instance and parameterized with invoker based on the {@link org.reactivestreams publisher} from Reactive Streams as implemented by Project Reactor.
+     * instance and parameterized with invoker based on the {@link Mono} from Project Reactor.
      *
      * @param client the JAX-RS client used to initialize new reactive client extension.
      * @return new reactive client extension.
      * @see Rx#from(javax.ws.rs.client.Client, Class)
      */
-    public static RxClient<RxPublisherInvoker> from(final Client client) {
-        return Rx.from(client, RxPublisherInvoker.class);
+    public static RxClient<RxReactorInvoker> from(final Client client) {
+        return Rx.from(client, RxReactorInvoker.class);
     }
 
     /**
      * Create a new {@link org.glassfish.jersey.client.rx.RxClient reactive client} instance initialized with given JAX-RS client
-     * instance and parameterized with invoker based on the {@link org.reactivestreams publisher} from Reactive Streams as implemented by Project Reactor. Reactive requests,
+     * instance and parameterized with invoker based on the {@link Mono} from Project Reactor. Reactive requests,
      * invoked using {@link org.glassfish.jersey.client.rx.RxInvocationBuilder#rx() rx(...)}, operate on a {@link Scheduler}
      * initialized with provided {@link java.util.concurrent.ExecutorService executor service}.
      *
@@ -116,25 +116,25 @@ public final class RxPublisher {
      * @return new reactive client extension.
      * @see Rx#from(javax.ws.rs.client.Client, Class)
      */
-    public static RxClient<RxPublisherInvoker> from(final Client client, final ExecutorService executorService) {
-        return Rx.from(client, RxPublisherInvoker.class, executorService);
+    public static RxClient<RxReactorInvoker> from(final Client client, final ExecutorService executorService) {
+        return Rx.from(client, RxReactorInvoker.class, executorService);
     }
 
     /**
      * Create a new {@link org.glassfish.jersey.client.rx.RxWebTarget reactive client target} instance initialized with given
-     * JAX-RS client web target instance and parameterized with invoker based on the {@link org.reactivestreams publisher} from Reactive Streams as implemented by Project Reactor.
+     * JAX-RS client web target instance and parameterized with invoker based on the {@link Mono} from Project Reactor.
      *
      * @param target the JAX-RS client target used to initialize new reactive client target extension.
      * @return new reactive client target extension.
      * @see Rx#from(javax.ws.rs.client.WebTarget, Class)
      */
-    public static RxWebTarget<RxPublisherInvoker> from(final WebTarget target) {
-        return Rx.from(target, RxPublisherInvoker.class);
+    public static RxWebTarget<RxReactorInvoker> from(final WebTarget target) {
+        return Rx.from(target, RxReactorInvoker.class);
     }
 
     /**
      * Create a new {@link org.glassfish.jersey.client.rx.RxWebTarget reactive client target} instance initialized with given
-     * JAX-RS client web target instance and parameterized with invoker based on the {@link org.reactivestreams publisher} from Reactive Streams as implemented by Project Reactor.
+     * JAX-RS client web target instance and parameterized with invoker based on the {@link Mono} from Project Reactor.
      * Reactive requests, invoked using {@link org.glassfish.jersey.client.rx.RxInvocationBuilder#rx() rx(...)}, operate on a
      * {@link Scheduler} initialized with provided {@link java.util.concurrent.ExecutorService executor service}.
      *
@@ -143,14 +143,14 @@ public final class RxPublisher {
      * @return new reactive client target extension.
      * @see Rx#from(javax.ws.rs.client.WebTarget, Class)
      */
-    public static RxWebTarget<RxPublisherInvoker> from(final WebTarget target, final ExecutorService executorService) {
-        return Rx.from(target, RxPublisherInvoker.class, executorService);
+    public static RxWebTarget<RxReactorInvoker> from(final WebTarget target, final ExecutorService executorService) {
+        return Rx.from(target, RxReactorInvoker.class, executorService);
     }
 
     /**
      * Prevent instantiation.
      */
-    private RxPublisher() {
+    private RxReactor() {
         throw new AssertionError("No instances allowed.");
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,90 +45,90 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.rx.RxInvoker;
-import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Mono;
 
 
 /**
- * Reactive invoker providing support for {@link org.reactivestreams publisher} from Reactive Streams as implemented by Project Reactor.
+ * Reactive invoker providing support for {@link Mono} from Project Reactor.
  *
  * @author Adam Richeimer
- * @since 2.13
  */
 @SuppressWarnings("rawtypes")
-public interface RxPublisherInvoker extends RxInvoker<Publisher> {
+public interface RxReactorInvoker extends RxInvoker<Mono> {
 
     @Override
-    public Publisher<Response> get();
+    public Mono<Response> get();
 
     @Override
-    public <T> Publisher<T> get(Class<T> responseType);
+    public <T> Mono<T> get(Class<T> responseType);
 
     @Override
-    public <T> Publisher<T> get(GenericType<T> responseType);
+    public <T> Mono<T> get(GenericType<T> responseType);
 
     @Override
-    public Publisher<Response> put(Entity<?> entity);
+    public Mono<Response> put(Entity<?> entity);
 
     @Override
-    public <T> Publisher<T> put(Entity<?> entity, Class<T> clazz);
+    public <T> Mono<T> put(Entity<?> entity, Class<T> clazz);
 
     @Override
-    public <T> Publisher<T> put(Entity<?> entity, GenericType<T> type);
+    public <T> Mono<T> put(Entity<?> entity, GenericType<T> type);
 
     @Override
-    public Publisher<Response> post(Entity<?> entity);
+    public Mono<Response> post(Entity<?> entity);
 
     @Override
-    public <T> Publisher<T> post(Entity<?> entity, Class<T> clazz);
+    public <T> Mono<T> post(Entity<?> entity, Class<T> clazz);
 
     @Override
-    public <T> Publisher<T> post(Entity<?> entity, GenericType<T> type);
+    public <T> Mono<T> post(Entity<?> entity, GenericType<T> type);
 
     @Override
-    public Publisher<Response> delete();
+    public Mono<Response> delete();
 
     @Override
-    public <T> Publisher<T> delete(Class<T> responseType);
+    public <T> Mono<T> delete(Class<T> responseType);
 
     @Override
-    public <T> Publisher<T> delete(GenericType<T> responseType);
+    public <T> Mono<T> delete(GenericType<T> responseType);
 
     @Override
-    public Publisher<Response> head();
+    public Mono<Response> head();
 
     @Override
-    public Publisher<Response> options();
+    public Mono<Response> options();
 
     @Override
-    public <T> Publisher<T> options(Class<T> responseType);
+    public <T> Mono<T> options(Class<T> responseType);
 
     @Override
-    public <T> Publisher<T> options(GenericType<T> responseType);
+    public <T> Mono<T> options(GenericType<T> responseType);
 
     @Override
-    public Publisher<Response> trace();
+    public Mono<Response> trace();
 
     @Override
-    public <T> Publisher<T> trace(Class<T> responseType);
+    public <T> Mono<T> trace(Class<T> responseType);
 
     @Override
-    public <T> Publisher<T> trace(GenericType<T> responseType);
+    public <T> Mono<T> trace(GenericType<T> responseType);
 
     @Override
-    public Publisher<Response> method(String name);
+    public Mono<Response> method(String name);
 
     @Override
-    public <T> Publisher<T> method(String name, Class<T> responseType);
+    public <T> Mono<T> method(String name, Class<T> responseType);
 
     @Override
-    public <T> Publisher<T> method(String name, GenericType<T> responseType);
+    public <T> Mono<T> method(String name, GenericType<T> responseType);
 
     @Override
-    public Publisher<Response> method(String name, Entity<?> entity);
+    public Mono<Response> method(String name, Entity<?> entity);
 
     @Override
-    public <T> Publisher<T> method(String name, Entity<?> entity, Class<T> responseType);
+    public <T> Mono<T> method(String name, Entity<?> entity, Class<T> responseType);
 
     @Override
-    public <T> Publisher<T> method(String name, Entity<?> entity, GenericType<T> responseType);
+    public <T> Mono<T> method(String name, Entity<?> entity, GenericType<T> responseType);
 }

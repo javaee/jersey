@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,23 +42,49 @@ package org.glassfish.jersey.client.rx.rxjava;
 
 import java.util.concurrent.ExecutorService;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.GenericType;
 
-import org.glassfish.jersey.client.rx.spi.RxInvokerProvider;
+import org.glassfish.jersey.client.rx.spi.AbstractRxInvoker;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
- * Invoker provider for invokers based on RxJava's {@code Observable}.
+ * Implementation of Reactive Invoker for Project Reactor's {@code Mono}.
  *
  * @author Adam Richeimer
- * @since 3.0
  */
-public final class RxPublisherInvokerProvider implements RxInvokerProvider {
+@SuppressWarnings({ "unchecked", "rawtypes" })
+final class JerseyReactorInvoker extends AbstractRxInvoker<Mono> implements RxReactorInvoker {
+
+    private Scheduler scheduler;
+
+    public JerseyReactorInvoker(final Invocation.Builder builder, final ExecutorService executor) {
+        super(builder, executor);
+        if(executor != null){
+            this.scheduler = Schedulers.fromExecutorService(executor);
+        } else {
+            // Reasonable default scheduler
+            this.scheduler = Schedulers.newElastic("jersey-client-async-executor");
+        }
+    }
 
     @Override
-    public <T> T getInvoker(final Class<T> invokerType, final Invocation.Builder builder, final ExecutorService executor) {
-        if (RxPublisherInvoker.class.isAssignableFrom(invokerType)) {
-            return invokerType.cast(new JerseyPublisherInvoker(builder, executor));
-        }
-        return null;
+    public <T> Mono<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
+        return method(name, entity, new GenericType<T>(responseType) {});
+    }
+
+    @Override
+    public <T> Mono<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
+
+        return Mono.fromCallable(() -> {
+            return getBuilder().method(name, entity, responseType);
+        })
+                .publishOn(scheduler)
+                .subscribeOn(scheduler);
+
     }
 }

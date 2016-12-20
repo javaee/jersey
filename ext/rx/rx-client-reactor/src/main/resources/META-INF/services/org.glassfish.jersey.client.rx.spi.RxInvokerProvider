@@ -1,1 +1,1 @@
-org.glassfish.jersey.client.rx.rxjava.RxPublisherInvokerProvider
+org.glassfish.jersey.client.rx.rxjava.RxReactorInvokerProvider

@@ -66,12 +66,11 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
-import reactor.core.publisher.Mono;
 
 /**
  * @author Adam Richeimer
  */
-public class RxPublisherTest {
+public class RxReactorTest {
 
     private Client client;
     private ExecutorService executor;
@@ -95,37 +94,37 @@ public class RxPublisherTest {
 
     @Test
     public void testNewClient() throws Exception {
-        testClient(RxPublisher.newClient().register(TerminalClientRequestFilter.class), false);
+        testClient(RxReactor.newClient().register(TerminalClientRequestFilter.class), false);
     }
 
     @Test
     public void testNewClientExecutor() throws Exception {
-        testClient(RxPublisher.newClient(executor).register(TerminalClientRequestFilter.class), true);
+        testClient(RxReactor.newClient(executor).register(TerminalClientRequestFilter.class), true);
     }
 
     @Test
     public void testFromClient() throws Exception {
-        testClient(RxPublisher.from(client), false);
+        testClient(RxReactor.from(client), false);
     }
 
     @Test
     public void testFromClientExecutor() throws Exception {
-        testClient(RxPublisher.from(client, executor), true);
+        testClient(RxReactor.from(client, executor), true);
     }
 
     @Test
     public void testFromTarget() throws Exception {
-        testTarget(RxPublisher.from(client.target("http://jersey.java.net")), false);
+        testTarget(RxReactor.from(client.target("http://jersey.java.net")), false);
     }
 
     @Test
     public void testFromTargetExecutor() throws Exception {
-        testTarget(RxPublisher.from(client.target("http://jersey.java.net"), executor), true);
+        testTarget(RxReactor.from(client.target("http://jersey.java.net"), executor), true);
     }
 
     @Test
     public void testNotFoundResponse() throws Exception {
-        final RxPublisherInvoker invoker = RxPublisher.from(client.target("http://jersey.java.net"))
+        final RxReactorInvoker invoker = RxReactor.from(client.target("http://jersey.java.net"))
                 .request()
                 .header("Response-Status", 404)
                 .rx();
@@ -136,11 +135,11 @@ public class RxPublisherTest {
     @Test(expected = NotFoundException.class)
     public void testNotFoundReadEntityViaClass() throws Throwable {
 
-            ((Mono<String>) RxPublisher.from(client.target("http://jersey.java.net"))
+            RxReactor.from(client.target("http://jersey.java.net"))
                     .request()
                     .header("Response-Status", 404)
                     .rx()
-                    .get(String.class))
+                    .get(String.class)
                     .block();
 
     }
@@ -148,21 +147,21 @@ public class RxPublisherTest {
     @Test(expected = NotFoundException.class)
     public void testNotFoundReadEntityViaGenericType() throws Throwable {
 
-            ((Mono<String>) RxPublisher.from(client.target("http://jersey.java.net"))
+            RxReactor.from(client.target("http://jersey.java.net"))
                     .request()
                     .header("Response-Status", 404)
                     .rx()
                     .get(new GenericType<String>() {})
-                    ).block();
+                    .block();
     }
 
 
     @Test
     public void testReadEntityViaClass() throws Throwable {
-        final String response = ((Mono<String>) RxPublisher.from(client.target("http://jersey.java.net"))
+        final String response = RxReactor.from(client.target("http://jersey.java.net"))
                 .request()
                 .rx()
-                .get(String.class))
+                .get(String.class)
                 .block();
 
         assertThat(response, is("NO-ENTITY"));
@@ -170,25 +169,25 @@ public class RxPublisherTest {
 
     @Test
     public void testReadEntityViaGenericType() throws Throwable {
-        final String response = ((Mono<String>) RxPublisher.from(client.target("http://jersey.java.net"))
+        final String response = RxReactor.from(client.target("http://jersey.java.net"))
                 .request()
                 .rx()
-                .get(new GenericType<String>() {}))
+                .get(new GenericType<String>() {})
                 .block();
 
         assertThat(response, is("NO-ENTITY"));
     }
 
-    private void testClient(final RxClient<RxPublisherInvoker> rxClient, final boolean testDedicatedThread) throws Exception {
+    private void testClient(final RxClient<RxReactorInvoker> rxClient, final boolean testDedicatedThread) throws Exception {
         testTarget(rxClient.target("http://jersey.java.net"), testDedicatedThread);
     }
 
-    private void testTarget(final RxWebTarget<RxPublisherInvoker> rxTarget, final boolean testDedicatedThread)
+    private void testTarget(final RxWebTarget<RxReactorInvoker> rxTarget, final boolean testDedicatedThread)
             throws Exception {
         testInvoker(rxTarget.request().rx(), 200, testDedicatedThread);
     }
 
-    private void testInvoker(final RxPublisherInvoker rx, final int expectedStatus, final boolean testDedicatedThread)
+    private void testInvoker(final RxReactorInvoker rx, final int expectedStatus, final boolean testDedicatedThread)
             throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Response> responseRef = new AtomicReference<>();
