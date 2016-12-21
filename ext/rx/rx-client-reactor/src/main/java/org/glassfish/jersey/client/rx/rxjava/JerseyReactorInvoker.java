@@ -82,9 +82,7 @@ final class JerseyReactorInvoker extends AbstractRxInvoker<Mono> implements RxRe
 
         return Mono.fromCallable(() -> {
             return getBuilder().method(name, entity, responseType);
-        })
-                .publishOn(scheduler)
-                .subscribeOn(scheduler);
+        }).subscribeOn(scheduler);
 
     }
 }
