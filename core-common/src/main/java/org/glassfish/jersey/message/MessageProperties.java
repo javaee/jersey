@@ -128,6 +128,40 @@ public final class MessageProperties {
     public static final String LEGACY_WORKERS_ORDERING = "jersey.config.workers.legacyOrdering";
 
     /**
+     * If set to {@code true}, {@link javax.ws.rs.ext.MessageBodyReader MessageBodyReaders} and
+     * {@link javax.ws.rs.ext.MessageBodyWriter MessageBodyWriters} will be ordered by rules from JAX-RS 2.x, except that
+     * priority will be used instead of origin (custom/provided); providers are sorted firstly by declaration distance (see
+     * {@link org.glassfish.jersey.message.internal.MessageBodyFactory.DeclarationDistanceComparator}), then by
+     * {@link javax.ws.rs.core.MediaType MediaType} and afterwards by {@link javax.annotation.Priority Priority} (with custom
+     * providers being given additional priority).
+     * <p />
+     * The additional priority given to custom providers is specified by {@link #CUSTOM_WORKERS_ADDITIONAL_PRIORITY}.
+     * <p />
+     * If set to {@code true}, the value of {@link #LEGACY_WORKERS_ORDERING} will be ignored.
+     * <p />
+     * The default value is {@code false}.
+     * <p />
+     * The name of the configuration property is <code>{@value}</code>.
+     */
+    public static final String PRIORITY_WORKERS_ORDERING = "jersey.config.workers.priorityOrdering";
+
+    /**
+     * Value of the property indicates the additional priority given to custom providers when
+     * {@link #PRIORITY_WORKERS_ORDERING} is set to {@code true}.
+     * <p />
+     * The default value is <code>{@value #CUSTOM_WORKERS_DEFAULT_ADDITIONAL_PRIORITY}</code>.
+     * <p />
+     * The name of the configuration property is <code>{@value}</code>.
+     */
+    public static final String CUSTOM_WORKERS_ADDITIONAL_PRIORITY = "jersey.config.workers.customAdditionalPriority";
+
+    /**
+     * The default additional priority ({@value}) given to custom providers when
+     * {@link #PRIORITY_WORKERS_ORDERING} is set to {@code true}.
+     */
+    public static final int CUSTOM_WORKERS_DEFAULT_ADDITIONAL_PRIORITY = 500;
+
+    /**
      * Prevents instantiation.
      */
     private MessageProperties() {

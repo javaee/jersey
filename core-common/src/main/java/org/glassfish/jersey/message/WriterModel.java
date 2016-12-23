@@ -63,9 +63,10 @@ public final class WriterModel extends AbstractEntityProviderModel<MessageBodyWr
      * @param provider modelled message body writer instance.
      * @param types    supported media types as declared in {@code @Consumes} annotation attached to the provider class.
      * @param custom   custom flag.
+     * @param priority provider priority.
      */
-    public WriterModel(MessageBodyWriter provider, List<MediaType> types, Boolean custom) {
-        super(provider, types, custom, MessageBodyWriter.class);
+    public WriterModel(MessageBodyWriter provider, List<MediaType> types, Boolean custom, Integer priority) {
+        super(provider, types, custom, priority, MessageBodyWriter.class);
     }
 
     /**

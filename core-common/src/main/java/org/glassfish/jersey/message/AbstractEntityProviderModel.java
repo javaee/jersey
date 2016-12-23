@@ -56,6 +56,7 @@ public abstract class AbstractEntityProviderModel<T> {
     private final T provider;
     private final List<MediaType> declaredTypes;
     private final boolean custom;
+    private final int priority;
     private final Class<?> providedType;
 
     /**
@@ -67,15 +68,18 @@ public abstract class AbstractEntityProviderModel<T> {
      * @param declaredTypes declared supported media types.
      * @param custom        custom flag; {@code true} is the provider is custom, {@code false} if the provider is one of the
      *                      default Jersey providers.
+     * @param priority      provider priority.
      * @param providerType  parameterized entity provider type (used to retrieve the provided Java type).
      */
     AbstractEntityProviderModel(final T provider,
                                 final List<MediaType> declaredTypes,
                                 final boolean custom,
+                                final int priority,
                                 final Class<T> providerType) {
         this.provider = provider;
         this.declaredTypes = declaredTypes;
         this.custom = custom;
+        this.priority = priority;
         this.providedType = getProviderClassParam(provider, providerType);
     }
 
@@ -105,6 +109,15 @@ public abstract class AbstractEntityProviderModel<T> {
      */
     public boolean isCustom() {
         return custom;
+    }
+
+    /**
+     * Get the provider priority.
+     *
+     * @return the provider priority.
+     */
+    public int priority() {
+        return priority;
     }
 
     /**
