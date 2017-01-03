@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -471,14 +471,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public CompletionStageRxInvoker rx() {
-            // TODO JAX-RS 2.1: to be implemented
-            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
+            return new JerseyCompletionStageRxInvoker(this, null);
         }
 
         @Override
         public CompletionStageRxInvoker rx(ExecutorService executorService) {
-            // TODO JAX-RS 2.1: to be implemented
-            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
+            return new JerseyCompletionStageRxInvoker(this, executorService);
         }
 
         @Override
