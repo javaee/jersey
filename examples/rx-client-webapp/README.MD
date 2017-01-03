@@ -2,7 +2,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,8 @@ This example demonstrates how data from multiple resources and in
 various formats (json, xml) can be combined into a form suitable to ones
 requirements. The example show and compares usage of standard JAX-RS
 sync client, JAX-RS async client, Jersey's Observable (RxJava) client
-extension and Jersey's ListenableFuture (Guava) client extension.
+extension, Jersey's CompletionStage (Java 8) client extension and
+Jersey's ListenableFuture (Guava) client extension.
 
 The application consists of two parts:
 
@@ -66,7 +67,7 @@ The application consists of two parts:
     them together. The combined result is then sent to the client that
     invoked the original request on the orchestration layer.
 
-Every "agent" resource (package `org.glassfish.jersey.examples.rx.agent`) 
+Every "agent" resource (package `org.glassfish.jersey.examples.rx.agent`)
 invokes the following requests to the "remote" resource:
 
 -   Obtain **visited** destinations for a user. (User identification is
@@ -92,14 +93,19 @@ invokes the following requests to the "remote" resource:
 Contents
 --------
 
+> Please note that the example is not fully implemented right now.
+>
+> Available "agent" resources are _/rx/agent/sync_, _/rx/agent/async_ and _/rx/agent/completion_.
+
 The mapping of the URI path space is presented in the following table:
 
 URI path                                           | Resource class                  | HTTP methods   | Allowed values
 -------------------------------------------------- | ------------------------------- | -------------- | ------------------------------------------------------------------------------
 **_/rx/agent/sync_**                               | SyncAgentResource               | GET            | returns JSON
 **_/rx/agent/async_**                              | AsyncAgentResource              | GET            | returns JSON
-**_/rx/agent/observable_**                         | ObservableAgentResource         | GET            | returns JSON
-**_/rx/agent/listenable_**                         | ListenableFutureAgentResource   | GET            | returns JSON
+**_/rx/agent/observable_** **(temporarily n/a)**   | ObservableAgentResource         | GET            | returns JSON
+**_/rx/agent/completion_**                         | CompletionStageAgentResource    | GET            | returns JSON
+**_/rx/agent/listenable_** **(temporarily n/a)**   | ListenableFutureAgentResource   | GET            | returns JSON
 **_/rx/remote/destination/visited_**               | DestinationResource             | GET            | returns JSON
 **_/rx/remote/destination/recommended_**           | DestinationResource             | GET            | returns JSON
 **_/rx/remote/forecast/{destination}_**            | ForecastResource                | GET            | destination - name of a country; returns XML (random value)
@@ -113,41 +119,41 @@ Sample Response
 Agent responses look similar to the following one:
 
 ```javascript
-    {
-      "visited" : [ {
-        "destination" : "Antigua & Barbuda"
-      }, {
-        "destination" : "Guinea"
-      }, {
-        "destination" : "Malta"
-      }, {
-        "destination" : "Denmark"
-      }, {
-        "destination" : "Tajikistan"
-      } ],
-      "recommended" : [ {
-        "destination" : "Bolivia",
-        "forecast" : "Showers",
-        "price" : 1359
-      }, {
-        "destination" : "Yemen",
-        "forecast" : "Haze",
-        "price" : 8032
-      }, {
-        "destination" : "Dominican Republic",
-        "forecast" : "Cloudy",
-        "price" : 1141
-      }, {
-        "destination" : "Korea South",
-        "forecast" : "Mostly Sunny",
-        "price" : 9853
-      }, {
-        "destination" : "Saudi Arabia",
-        "forecast" : "Fog",
-        "price" : 9063
-      } ],
-      "processingTime" : 877
-    }
+{
+  "visited" : [ {
+    "destination" : "Antigua & Barbuda"
+  }, {
+    "destination" : "Guinea"
+  }, {
+    "destination" : "Malta"
+  }, {
+    "destination" : "Denmark"
+  }, {
+    "destination" : "Tajikistan"
+  } ],
+  "recommended" : [ {
+    "destination" : "Bolivia",
+    "forecast" : "Showers",
+    "price" : 1359
+  }, {
+    "destination" : "Yemen",
+    "forecast" : "Haze",
+    "price" : 8032
+  }, {
+    "destination" : "Dominican Republic",
+    "forecast" : "Cloudy",
+    "price" : 1141
+  }, {
+    "destination" : "Korea South",
+    "forecast" : "Mostly Sunny",
+    "price" : 9853
+  }, {
+    "destination" : "Saudi Arabia",
+    "forecast" : "Fog",
+    "price" : 9063
+  } ],
+  "processingTime" : 877
+}
 ```
 
 As can be seen the response entity contains 3 main elements: **visited**
@@ -167,8 +173,9 @@ This deploys current example using Jetty. You can access the application at:
 
 -   <http://localhost:8080/rx/agent/sync>
 -   <http://localhost:8080/rx/agent/async>
--   <http://localhost:8080/rx/agent/listenable>
--   <http://localhost:8080/rx/agent/observable>
+-   <http://localhost:8080/rx/agent/listenable> **(temporarily n/a)**
+-   <http://localhost:8080/rx/agent/observable> **(temporarily n/a)**
+-   <http://localhost:8080/rx/agent/completion>
 
 Resources
 ---------
@@ -182,5 +189,6 @@ This examples is using the following (3-rd party) libraries:
 
 **Guava** by Google
 -   [Homepage](https://code.google.com/p/guava-libraries/)
--   [ListenableFuture Explained](https://code.google.com/p/guava-libraries/wiki/ListenableFutureExplained)
+-   [ListenableFuture
+    Explained](https://code.google.com/p/guava-libraries/wiki/ListenableFutureExplained)
 -   [JavaDoc](http://docs.guava-libraries.googlecode.com/git/javadoc/index.html?overview-summary.html)

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,17 +58,13 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.GenericType;
 
-import org.glassfish.jersey.client.rx.RxWebTarget;
-import org.glassfish.jersey.client.rx.java8.RxCompletionStage;
-import org.glassfish.jersey.client.rx.java8.RxCompletionStageInvoker;
 import org.glassfish.jersey.examples.rx.domain.AgentResponse;
 import org.glassfish.jersey.examples.rx.domain.Calculation;
 import org.glassfish.jersey.examples.rx.domain.Destination;
 import org.glassfish.jersey.examples.rx.domain.Forecast;
 import org.glassfish.jersey.examples.rx.domain.Recommendation;
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.server.Uri;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Obtain information about visited (destination) and recommended (destination, forecast, price) places for "Java8" user. Uses
@@ -81,13 +77,13 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 public class CompletionStageAgentResource {
 
     @Uri("remote/destination")
-    private WebTarget destination;
+    private WebTarget destinationTarget;
 
     @Uri("remote/calculation/from/{from}/to/{to}")
-    private WebTarget calculation;
+    private WebTarget calculationTarget;
 
     @Uri("remote/forecast/{destination}")
-    private WebTarget forecast;
+    private WebTarget forecastTarget;
 
     private final ExecutorService executor;
 
@@ -99,13 +95,12 @@ public class CompletionStageAgentResource {
     @GET
     public void completion(@Suspended final AsyncResponse async) {
         final long time = System.nanoTime();
-        final RxWebTarget<RxCompletionStageInvoker> rxDestination = RxCompletionStage.from(destination, executor);
 
         final Queue<String> errors = new ConcurrentLinkedQueue<>();
 
         CompletableFuture.completedFuture(new AgentResponse())
-                .thenCombine(visited(rxDestination, errors), AgentResponse::visited)
-                .thenCombine(recommended(rxDestination, errors), AgentResponse::recommended)
+                .thenCombine(visited(destinationTarget, executor, errors), AgentResponse::visited)
+                .thenCombine(recommended(destinationTarget, executor, errors), AgentResponse::recommended)
                 .whenCompleteAsync((response, throwable) -> {
                     // Do something with errors.
 
@@ -114,13 +109,14 @@ public class CompletionStageAgentResource {
                 });
     }
 
-    private CompletionStage<List<Destination>> visited(final RxWebTarget<RxCompletionStageInvoker> rxDestination,
+    private CompletionStage<List<Destination>> visited(final WebTarget destinationTarget,
+                                                       final ExecutorService executor,
                                                        final Queue<String> errors) {
-        return rxDestination.path("visited").request()
+        return destinationTarget.path("visited").request()
                 // Identify the user.
                 .header("Rx-User", "Java8")
                 // Reactive invoker.
-                .rx()
+                .rx(executor)
                 // Return a list of destinations.
                 .get(new GenericType<List<Destination>>() {})
                 .exceptionally(throwable -> {
@@ -129,15 +125,16 @@ public class CompletionStageAgentResource {
                 });
     }
 
-    private CompletionStage<List<Recommendation>> recommended(final RxWebTarget<RxCompletionStageInvoker> rxDestination,
+    private CompletionStage<List<Recommendation>> recommended(final WebTarget destinationTarget,
+                                                              final ExecutorService executor,
                                                               final Queue<String> errors) {
         // Recommended places.
-        final CompletionStage<List<Destination>> recommended = rxDestination.path("recommended")
+        final CompletionStage<List<Destination>> recommended = destinationTarget.path("recommended")
                 .request()
                 // Identify the user.
                 .header("Rx-User", "Java8")
                 // Reactive invoker.
-                .rx()
+                .rx(executor)
                 // Return a list of destinations.
                 .get(new GenericType<List<Destination>>() {})
                 .exceptionally(throwable -> {
@@ -146,21 +143,22 @@ public class CompletionStageAgentResource {
                 });
 
         return recommended.thenCompose(destinations -> {
-            final RxWebTarget<RxCompletionStageInvoker> rxForecast = RxCompletionStage.from(forecast, executor);
-            final RxWebTarget<RxCompletionStageInvoker> rxCalculation = RxCompletionStage.from(calculation, executor);
+            final WebTarget finalForecast = forecastTarget;
+            final WebTarget finalCalculation = calculationTarget;
 
             List<CompletionStage<Recommendation>> recommendations = destinations.stream().map(destination -> {
                 // For each destination, obtain a weather forecast ...
-                final CompletionStage<Forecast> forecast = rxForecast.resolveTemplate("destination", destination.getDestination())
-                        .request().rx().get(Forecast.class)
-                        .exceptionally(throwable -> {
-                            errors.offer("Forecast: " + throwable.getMessage());
-                            return new Forecast(destination.getDestination(), "N/A");
-                        });
+                final CompletionStage<Forecast> forecast =
+                        finalForecast.resolveTemplate("destination", destination.getDestination())
+                                     .request().rx(executor).get(Forecast.class)
+                                     .exceptionally(throwable -> {
+                                         errors.offer("Forecast: " + throwable.getMessage());
+                                         return new Forecast(destination.getDestination(), "N/A");
+                                     });
                 // ... and a price calculation
-                final CompletionStage<Calculation> calculation = rxCalculation.resolveTemplate("from", "Moon")
+                final CompletionStage<Calculation> calculation = finalCalculation.resolveTemplate("from", "Moon")
                         .resolveTemplate("to", destination.getDestination())
-                        .request().rx().get(Calculation.class)
+                        .request().rx(executor).get(Calculation.class)
                         .exceptionally(throwable -> {
                             errors.offer("Calculation: " + throwable.getMessage());
                             return new Calculation("Moon", destination.getDestination(), -1);

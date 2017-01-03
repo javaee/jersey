@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,10 +52,24 @@ public class Recommendation {
     public Recommendation() {
     }
 
+    public Recommendation(final String destination) {
+        this.destination = destination;
+    }
+
     public Recommendation(final String destination, final String forecast, final int price) {
         this.destination = destination;
         this.forecast = forecast;
         this.price = price;
+    }
+
+    public Recommendation(final Destination destination) {
+        this.destination = destination.getDestination();
+    }
+
+    public Recommendation(final Destination destination, final Forecast forecast, final Calculation calculation) {
+        this.destination = destination.getDestination();
+        this.forecast = forecast.getForecast();
+        this.price = calculation.getPrice();
     }
 
     public String getDestination() {
@@ -80,5 +94,15 @@ public class Recommendation {
 
     public void setPrice(final int price) {
         this.price = price;
+    }
+
+    public Recommendation forecast(final Forecast forecast) {
+        setForecast(forecast.getForecast());
+        return this;
+    }
+
+    public Recommendation calculation(final Calculation calculation) {
+        setPrice(calculation.getPrice());
+        return this;
     }
 }

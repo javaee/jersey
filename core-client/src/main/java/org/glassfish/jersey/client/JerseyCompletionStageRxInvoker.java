@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,54 +38,44 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.rx;
+package org.glassfish.jersey.client;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.ext.ContextResolver;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
 
-import org.glassfish.jersey.examples.rx.agent.AsyncAgentResource;
-import org.glassfish.jersey.examples.rx.agent.CompletionStageAgentResource;
-import org.glassfish.jersey.examples.rx.agent.ListenableFutureAgentResource;
-import org.glassfish.jersey.examples.rx.agent.ObservableAgentResource;
-import org.glassfish.jersey.examples.rx.agent.SyncAgentResource;
-import org.glassfish.jersey.examples.rx.remote.CalculationResource;
-import org.glassfish.jersey.examples.rx.remote.DestinationResource;
-import org.glassfish.jersey.examples.rx.remote.ForecastResource;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import javax.ws.rs.client.CompletionStageRxInvoker;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.GenericType;
 
 /**
+ * Implementation of Reactive Invoker for {@code CompletionStage}.
+ *
  * @author Michal Gajdos
+ * @since 2.26
  */
-@ApplicationPath("rx")
-public class RxApplication extends ResourceConfig {
+public class JerseyCompletionStageRxInvoker extends AbstractRxInvoker<CompletionStage> implements CompletionStageRxInvoker {
 
-    public RxApplication() {
-        // Remote (Server) Resources.
-        register(DestinationResource.class);
-        register(CalculationResource.class);
-        register(ForecastResource.class);
-
-        // Agent (Client) Resources.
-        register(SyncAgentResource.class);
-        register(AsyncAgentResource.class);
-        register(ObservableAgentResource.class);
-        register(ListenableFutureAgentResource.class);
-        register(CompletionStageAgentResource.class);
-
-        // Providers.
-        register(JacksonFeature.class);
-        register(ObjectMapperProvider.class);
+    public JerseyCompletionStageRxInvoker(Invocation.Builder builder, ExecutorService executor) {
+        super(builder, executor);
     }
 
-    public static class ObjectMapperProvider implements ContextResolver<ObjectMapper> {
+    @Override
+    public <T> CompletionStage<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
+        final ExecutorService executorService = getExecutorService();
 
-        @Override
-        public ObjectMapper getContext(final Class<?> type) {
-            return new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-        }
+        return executorService == null
+                ? CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType))
+                : CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType), executorService);
+    }
+
+    @Override
+    public <T> CompletionStage<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
+        final ExecutorService executorService = getExecutorService();
+
+        return executorService == null
+                ? CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType))
+                : CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType), executorService);
     }
 }
