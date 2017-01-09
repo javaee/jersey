@@ -52,7 +52,7 @@
 
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>jersey-bom</artifactId>
-    <version>2.6.1-SNAPSHOT</version>
+    <version>2.6.rn-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>jersey-bom</name>
 

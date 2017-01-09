@@ -39,12 +39,6 @@
  */
 package org.glassfish.jersey.server.spring;
 
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.servlet.ServletContext;
-
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -53,14 +47,18 @@ import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-
 import org.jvnet.hk2.spring.bridge.api.SpringBridge;
 import org.jvnet.hk2.spring.bridge.api.SpringIntoHK2Bridge;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import javax.servlet.ServletContext;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Custom ComponentProvider class.
@@ -122,7 +120,7 @@ public class SpringComponentProvider implements ComponentProvider {
             return false;
         }
 
-        if(component.isAnnotationPresent(Component.class)) {
+        if(AnnotationUtils.findAnnotation(component, Component.class) != null) {
             DynamicConfiguration c = Injections.getConfiguration(locator);
             String[] beanNames = ctx.getBeanNamesForType(component);
             if(beanNames == null || beanNames.length != 1) {
@@ -133,6 +131,11 @@ public class SpringComponentProvider implements ComponentProvider {
 
             ServiceBindingBuilder bb = Injections.newFactoryBinder(new SpringComponentProvider.SpringManagedBeanFactory(ctx, locator, beanName));
             bb.to(component);
+            if (providerContracts != null) {
+                for (Class<?> providerContract : providerContracts) {
+                    bb.to(providerContract);
+                }
+            }
             Injections.addBinding(bb, c);
             c.commit();
 
