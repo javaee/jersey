@@ -39,8 +39,11 @@
  */
 package org.glassfish.jersey.client;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.security.AccessController;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -480,14 +483,80 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public <T extends RxInvoker> T rx(Class<T> clazz) {
-            // TODO JAX-RS 2.1: to be implemented
-            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
+
+            if (clazz == null) {
+                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("clazz"));
+            }
+
+            Constructor<?> constructor = AccessController.doPrivileged(ReflectionHelper
+                    .getDeclaredConstructorPA(clazz, Invocation.Builder.class));
+
+            if (constructor == null) {
+                throw new IllegalArgumentException(LocalizationMessages.ERROR_REFLECTION_NO_CTOR(
+                        RxInvoker.class.getSimpleName(),
+                        clazz.getName(),
+                        "Invocation.Builder"));
+            }
+
+            try {
+                return (T) constructor.newInstance(this);
+            } catch (InstantiationException e) {
+                throw new IllegalArgumentException(
+                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
+                                RxInvoker.class.getSimpleName(),
+                                clazz.getName()), e);
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException(
+                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
+                                RxInvoker.class.getSimpleName(),
+                                clazz.getName()), e);
+            } catch (InvocationTargetException e) {
+                throw new IllegalArgumentException(
+                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
+                                RxInvoker.class.getSimpleName(),
+                                clazz.getName()), e);
+            }
         }
 
         @Override
         public <T extends RxInvoker> T rx(Class<T> clazz, ExecutorService executorService) {
-            // TODO JAX-RS 2.1: to be implemented
-            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
+
+            if (clazz == null) {
+                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("clazz"));
+            }
+
+            if (executorService == null) {
+                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("executorService"));
+            }
+
+            Constructor<?> constructor = AccessController.doPrivileged(ReflectionHelper
+                    .getDeclaredConstructorPA(clazz, Invocation.Builder.class, ExecutorService.class));
+
+            if (constructor == null) {
+                throw new IllegalArgumentException(LocalizationMessages.ERROR_REFLECTION_NO_CTOR(
+                        RxInvoker.class.getSimpleName(),
+                        clazz.getName(),
+                        "Invocation.Builder, ExecutorService"));
+            }
+
+            try {
+                return (T) constructor.newInstance(this, executorService);
+            } catch (InstantiationException e) {
+                throw new IllegalArgumentException(
+                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
+                                RxInvoker.class.getSimpleName(),
+                                clazz.getName()), e);
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException(
+                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
+                                RxInvoker.class.getSimpleName(),
+                                clazz.getName()), e);
+            } catch (InvocationTargetException e) {
+                throw new IllegalArgumentException(
+                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
+                                RxInvoker.class.getSimpleName(),
+                                clazz.getName()), e);
+            }
         }
 
         @Override
