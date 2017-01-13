@@ -1808,6 +1808,15 @@
         </dependencies>
     </dependencyManagement>
 
+    <!-- TODO: This repository declaration only speeds up turnaround when adopting new JAX-RS milestone builds. -->
+    <!-- TODO: Should be removed before 2.26 final release. -->
+    <repositories>
+        <repository>
+            <id>java.net-releases</id>
+            <url>https://maven.java.net/content/repositories/releases</url>
+        </repository>
+    </repositories>
+
     <properties>
         <archetype.mvn.plugin.version>2.4</archetype.mvn.plugin.version>
 
@@ -1873,7 +1882,7 @@
         <jaxb.api.version>2.2.7</jaxb.api.version>
         <jaxb.ri.version>2.2.7</jaxb.ri.version>
         <jaxrs.api.spec.version>2.1</jaxrs.api.spec.version>
-        <jaxrs.api.impl.version>2.1-m01</jaxrs.api.impl.version>
+        <jaxrs.api.impl.version>2.1-m02</jaxrs.api.impl.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jersey1.version>1.19.3</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>
