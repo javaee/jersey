@@ -322,7 +322,7 @@
                         <doctitle>Jersey ${jersey.version} API Documentation</doctitle>
                         <windowtitle>Jersey ${jersey.version} API</windowtitle>
                         <bottom>
-                            <![CDATA[Copyright &#169; 2007-2016,
+                            <![CDATA[Copyright &#169; 2007-2017,
                                 <a href="http://www.oracle.com">Oracle</a>
                                 and/or its affiliates.
                                 All Rights Reserved. Use is subject to license terms.]]>
@@ -1196,7 +1196,7 @@
                     <doctitle>Jersey ${jersey.version} API Documentation</doctitle>
                     <windowtitle>Jersey ${jersey.version} API</windowtitle>
                     <bottom>
-                        <![CDATA[Copyright &#169; 2007-2016,
+                        <![CDATA[Copyright &#169; 2007-2017,
                             <a href="http://www.oracle.com">Oracle</a>
                             and/or its affiliates.
                             All Rights Reserved. Use is subject to license terms.]]>
