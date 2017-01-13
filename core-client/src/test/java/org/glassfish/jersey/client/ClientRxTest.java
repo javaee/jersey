@@ -48,6 +48,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.RxInvoker;
+import javax.ws.rs.client.RxInvokerProvider;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -82,17 +83,34 @@ public class ClientRxTest {
     }
 
     @Test
-    public void testRxInvoker() {
-        String s = target().request().rx(TestRxInvoker.class).get();
+    public void testRxInvoker1() {
+        String s = target().request().rx(new TestRxInvoker.TestRxInvokerProvider()).get();
 
         assertTrue("Provided RxInvoker was not used.", s.startsWith("rxTestInvoker"));
     }
 
     @Test
-    public void testRxInvokerWithExecutor() {
+    public void testRxInvoker2() {
+        String s = target().request().rx(TestRxInvoker.TestRxInvokerProvider.class).get();
+
+        assertTrue("Provided RxInvoker was not used.", s.startsWith("rxTestInvoker"));
+    }
+
+    @Test
+    public void testRxInvokerWithExecutor1() {
         ExecutorService executorService = Executors
                 .newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("rxTest-%d").build());
-        String s = target().request().rx(TestRxInvoker.class, EXECUTOR_SERVICE).get();
+        String s = target().request().rx(new TestRxInvoker.TestRxInvokerProvider(), EXECUTOR_SERVICE).get();
+
+        assertTrue("Provided RxInvoker was not used.", s.startsWith("rxTestInvoker"));
+        assertTrue("Executor Service was not passed to RxInvoker", s.contains("rxTest-"));
+    }
+
+    @Test
+    public void testRxInvokerWithExecutor2() {
+        ExecutorService executorService = Executors
+                .newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("rxTest-%d").build());
+        String s = target().request().rx(TestRxInvoker.TestRxInvokerProvider.class, EXECUTOR_SERVICE).get();
 
         assertTrue("Provided RxInvoker was not used.", s.startsWith("rxTestInvoker"));
         assertTrue("Executor Service was not passed to RxInvoker", s.contains("rxTest-"));
@@ -102,18 +120,16 @@ public class ClientRxTest {
     public void testRxInvokerInvalid1() {
         Invocation.Builder request = target().request();
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("clazz")));
-        request.rx((Class<RxInvoker>) null).get();
+        thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("rxInvokerProvider")));
+        request.rx((RxInvokerProvider<? extends RxInvoker>) null).get();
     }
 
     @Test
     public void testRxInvokerInvalid2() {
         Invocation.Builder request = target().request();
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(AllOf.allOf(
-                new StringContains("constructor"),
-                new StringContains("Invocation.Builder")));
-        request.rx(InvalidInvoker.class).get();
+        thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("clazz")));
+        request.rx((Class) null).get();
     }
 
     @Test
@@ -123,7 +139,7 @@ public class ClientRxTest {
         thrown.expectMessage(AllOf.allOf(
                 new StringContains("null"),
                 new StringContains("executorService")));
-        request.rx(InvalidInvoker.class, null).get();
+        request.rx(new TestRxInvoker.TestRxInvokerProvider(), null).get();
     }
 
     @Test
@@ -131,18 +147,15 @@ public class ClientRxTest {
         Invocation.Builder request = target().request();
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("clazz")));
-        request.rx((Class<RxInvoker>) null, EXECUTOR_SERVICE).get();
+        request.rx((Class) null, EXECUTOR_SERVICE);
     }
 
     @Test
     public void testRxInvokerWithExecutorInvalid3() {
         Invocation.Builder request = target().request();
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(AllOf.allOf(
-                new StringContains("constructor"),
-                new StringContains("Invocation.Builder"),
-                new StringContains("ExecutorService")));
-        request.rx(InvalidInvoker.class, EXECUTOR_SERVICE).get();
+        thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("rxInvokerProvider")));
+        request.rx((RxInvokerProvider) null, EXECUTOR_SERVICE).get();
     }
 
     private WebTarget target() {
@@ -150,7 +163,12 @@ public class ClientRxTest {
         return CLIENT.target("http://localhost:9999");
     }
 
-    public static class InvalidInvoker implements RxInvoker<Void> {
+    public static class InvalidInvokerProvider implements RxInvokerProvider<InvalidInvokerProvider>, RxInvoker<Void> {
+
+        @Override
+        public InvalidInvokerProvider getRxInvoker(Invocation.Builder invocationBuilder, ExecutorService executorService) {
+            return null;
+        }
 
         @Override
         public Void get() {
@@ -278,13 +296,16 @@ public class ClientRxTest {
         }
     }
 
-    public static class TestRxInvoker extends AbstractRxInvoker<String> {
+    private static class TestRxInvoker extends AbstractRxInvoker<String> {
 
-        public TestRxInvoker(Invocation.Builder builder) {
-            super(builder, null);
+        public static class TestRxInvokerProvider implements RxInvokerProvider<TestRxInvoker> {
+            @Override
+            public TestRxInvoker getRxInvoker(Invocation.Builder invocationBuilder, ExecutorService executorService) {
+                return new TestRxInvoker(invocationBuilder, executorService);
+            }
         }
 
-        public TestRxInvoker(Invocation.Builder builder, ExecutorService executor) {
+        private TestRxInvoker(Invocation.Builder builder, ExecutorService executor) {
             super(builder, executor);
         }
 
@@ -298,5 +319,4 @@ public class ClientRxTest {
             return "rxTestInvoker" + (getExecutorService() == null ? "" : " rxTest-");
         }
     }
-
 }

@@ -39,11 +39,8 @@
  */
 package org.glassfish.jersey.client;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.security.AccessController;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -73,6 +70,7 @@ import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.client.NioInvoker;
 import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.client.RxInvoker;
+import javax.ws.rs.client.RxInvokerProvider;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
@@ -483,81 +481,86 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T extends RxInvoker> T rx(Class<T> clazz) {
-
-            if (clazz == null) {
-                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("clazz"));
+        public <T extends RxInvoker> T rx(RxInvokerProvider<T> rxInvokerProvider) {
+            if (rxInvokerProvider == null) {
+                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("rxInvokerProvider"));
             }
 
-            Constructor<?> constructor = AccessController.doPrivileged(ReflectionHelper
-                    .getDeclaredConstructorPA(clazz, Invocation.Builder.class));
-
-            if (constructor == null) {
-                throw new IllegalArgumentException(LocalizationMessages.ERROR_REFLECTION_NO_CTOR(
-                        RxInvoker.class.getSimpleName(),
-                        clazz.getName(),
-                        "Invocation.Builder"));
-            }
-
-            try {
-                return (T) constructor.newInstance(this);
-            } catch (InstantiationException e) {
-                throw new IllegalArgumentException(
-                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
-                                RxInvoker.class.getSimpleName(),
-                                clazz.getName()), e);
-            } catch (IllegalAccessException e) {
-                throw new IllegalArgumentException(
-                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
-                                RxInvoker.class.getSimpleName(),
-                                clazz.getName()), e);
-            } catch (InvocationTargetException e) {
-                throw new IllegalArgumentException(
-                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
-                                RxInvoker.class.getSimpleName(),
-                                clazz.getName()), e);
-            }
+            return createRxInvoker(rxInvokerProvider, null);
         }
 
         @Override
-        public <T extends RxInvoker> T rx(Class<T> clazz, ExecutorService executorService) {
-
-            if (clazz == null) {
-                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("clazz"));
+        public <T extends RxInvoker> T rx(RxInvokerProvider<T> rxInvokerProvider, ExecutorService executorService) {
+            if (rxInvokerProvider == null) {
+                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("rxInvokerProvider"));
             }
 
             if (executorService == null) {
                 throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("executorService"));
             }
 
-            Constructor<?> constructor = AccessController.doPrivileged(ReflectionHelper
-                    .getDeclaredConstructorPA(clazz, Invocation.Builder.class, ExecutorService.class));
+            return createRxInvoker(rxInvokerProvider, executorService);
+        }
 
-            if (constructor == null) {
-                throw new IllegalArgumentException(LocalizationMessages.ERROR_REFLECTION_NO_CTOR(
-                        RxInvoker.class.getSimpleName(),
-                        clazz.getName(),
-                        "Invocation.Builder, ExecutorService"));
+        @Override
+        public <T extends RxInvoker> T rx(Class<? extends RxInvokerProvider<T>> clazz) {
+            return createRxInvoker(clazz, null);
+        }
+
+        @Override
+        public <T extends RxInvoker> T rx(Class<? extends RxInvokerProvider<T>> clazz, ExecutorService executorService) {
+            if (executorService == null) {
+                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("executorService"));
             }
+
+            return createRxInvoker(clazz, executorService);
+        }
+
+        /**
+         * Create {@link RxInvoker} from provided factory class.
+         *
+         * @param clazz           factory class to be instantiated and used for creating {@code RxInvoker} subclass.
+         * @param executorService to be passed to the factory method invocation.
+         * @param <T>             {@code RxInvoker} subclass to be returned.
+         * @return immutable instance of {@code RxInvoker} subclass.
+         */
+        private <T extends RxInvoker> T createRxInvoker(Class<? extends RxInvokerProvider<T>> clazz,
+                                                        ExecutorService executorService) {
+            if (clazz == null) {
+                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("clazz"));
+            }
+
+            RxInvokerProvider<T> RxInvokerProvider;
 
             try {
-                return (T) constructor.newInstance(this, executorService);
+                RxInvokerProvider = clazz.newInstance();
             } catch (InstantiationException e) {
-                throw new IllegalArgumentException(
-                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
-                                RxInvoker.class.getSimpleName(),
-                                clazz.getName()), e);
+                throw new IllegalArgumentException(LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
+                        RxInvokerProvider.class.getSimpleName(), clazz.getName()), e);
             } catch (IllegalAccessException e) {
-                throw new IllegalArgumentException(
-                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
-                                RxInvoker.class.getSimpleName(),
-                                clazz.getName()), e);
-            } catch (InvocationTargetException e) {
-                throw new IllegalArgumentException(
-                        LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
-                                RxInvoker.class.getSimpleName(),
-                                clazz.getName()), e);
+                throw new IllegalArgumentException(LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
+                        RxInvokerProvider.class.getSimpleName(), clazz.getName()), e);
             }
+
+            return createRxInvoker(RxInvokerProvider, executorService);
+        }
+
+        /**
+         * Create {@link RxInvoker} from provided factory instance.
+         *
+         * @param RxInvokerProvider factory instance.
+         * @param executorService  to be passed to the factory method invocation.
+         * @param <T>              {@code RxInvoker} subclass to be returned.
+         * @return immutable instance of {@code RxInvoker} subclass.
+         */
+        private <T extends RxInvoker> T createRxInvoker(RxInvokerProvider<T> RxInvokerProvider, ExecutorService executorService) {
+            T rxInvoker = RxInvokerProvider.getRxInvoker(this, executorService);
+
+            if (rxInvoker == null) {
+                throw new IllegalStateException(LocalizationMessages.CLIENT_RX_FACTORY_NULL());
+            }
+
+            return rxInvoker;
         }
 
         @Override
