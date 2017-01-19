@@ -83,7 +83,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>org.glassfish.jersey.examples.osgihttpservice</Export-Package>
-                        <Import-Package>javax.servlet.*;version="[2.4,4.0)",*</Import-Package>
+                        <Import-Package>javax.servlet.*;version="[2.4,5.0)",*</Import-Package>
                         <Bundle-Activator>org.glassfish.jersey.examples.osgihttpservice.Activator</Bundle-Activator>
                         <Implementation-Title>jersey-osgi-http-service-bundle</Implementation-Title>
                         <Implementation-Version>${project.version}</Implementation-Version>

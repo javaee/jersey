@@ -94,7 +94,7 @@
                         <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
                         <Import-Package>
                             javax.persistence.*;resolution:=optional,
-                            javax.servlet.*;version="[2.4,4.0)",
+                            javax.servlet.*;version="[2.4,5.0)",
                             javax.annotation.*;version=!,
                             *
                         </Import-Package>

@@ -96,7 +96,7 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
-                            javax.servlet.*;version="[2.4,4.0)",
+                            javax.servlet.*;version="[2.4,5.0)",
                             *
                         </Import-Package>
                     </instructions>
