@@ -45,7 +45,7 @@
     <parent>
         <groupId>org.glassfish.jersey.archetypes</groupId>
         <artifactId>project</artifactId>
-        <version>2.25.1</version>
+        <version>2.25.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>jersey-example-java8-webapp</artifactId>
