@@ -102,7 +102,7 @@ public class JerseyUriBuilder extends UriBuilder {
         query = new StringBuilder();
     }
 
-    private JerseyUriBuilder(final JerseyUriBuilder that) {
+    protected JerseyUriBuilder(final JerseyUriBuilder that) {
         this.scheme = that.scheme;
         this.ssp = that.ssp;
         this.authority = that.authority;
