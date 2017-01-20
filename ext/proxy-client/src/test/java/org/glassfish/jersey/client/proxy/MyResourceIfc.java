@@ -194,4 +194,11 @@ public interface MyResourceIfc {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     String putIt(MyBean dummyBean);
+
+    @Path("postItWithSecret")
+    @POST
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_PLAIN)
+    @SpecialFormatter("secret-message")
+    String postItSpecial(MyMessage myMessage);
 }

@@ -96,6 +96,7 @@ public final class WebResourceFactory implements InvocationHandler {
     private final MultivaluedMap<String, Object> headers;
     private final List<Cookie> cookies;
     private final Form form;
+    private final WebResourceInvocationCallback invocationCallback;
 
     private static final MultivaluedMap<String, Object> EMPTY_HEADERS = new MultivaluedHashMap<>();
     private static final Form EMPTY_FORM = new Form();
@@ -116,7 +117,8 @@ public final class WebResourceFactory implements InvocationHandler {
      * be used for making requests to the server.
      */
     public static <C> C newResource(final Class<C> resourceInterface, final WebTarget target) {
-        return newResource(resourceInterface, target, false, EMPTY_HEADERS, Collections.<Cookie>emptyList(), EMPTY_FORM);
+        return newResource(resourceInterface, target, false, EMPTY_HEADERS, Collections.<Cookie>emptyList(), EMPTY_FORM,
+                null);
     }
 
     /**
@@ -131,29 +133,33 @@ public final class WebResourceFactory implements InvocationHandler {
      * @param headers Header params collected from parent resources (used when creating a sub-resource)
      * @param cookies Cookie params collected from parent resources (used when creating a sub-resource)
      * @param form Form params collected from parent resources (used when creating a sub-resource)
+     * @param invocationCallback Callback invoked before dispatching the request.
      * @return Instance of a class implementing the resource interface that can
      * be used for making requests to the server.
      */
     @SuppressWarnings("unchecked")
     public static <C> C newResource(final Class<C> resourceInterface,
-                                    final WebTarget target,
-                                    final boolean ignoreResourcePath,
-                                    final MultivaluedMap<String, Object> headers,
-                                    final List<Cookie> cookies,
-                                    final Form form) {
+            final WebTarget target,
+            final boolean ignoreResourcePath,
+            final MultivaluedMap<String, Object> headers,
+            final List<Cookie> cookies,
+            final Form form,
+            final WebResourceInvocationCallback invocationCallback) {
 
         return (C) Proxy.newProxyInstance(AccessController.doPrivileged(ReflectionHelper.getClassLoaderPA(resourceInterface)),
                 new Class[] {resourceInterface},
                 new WebResourceFactory(ignoreResourcePath ? target : addPathFromAnnotation(resourceInterface, target),
-                        headers, cookies, form));
+                        headers, cookies, form, invocationCallback));
     }
 
     private WebResourceFactory(final WebTarget target, final MultivaluedMap<String, Object> headers,
-                               final List<Cookie> cookies, final Form form) {
+                               final List<Cookie> cookies, final Form form,
+                               final WebResourceInvocationCallback invocationCallback) {
         this.target = target;
         this.headers = headers;
         this.cookies = cookies;
         this.form = form;
+        this.invocationCallback = invocationCallback;
     }
 
     @Override
@@ -282,7 +288,7 @@ public final class WebResourceFactory implements InvocationHandler {
 
         if (httpMethod == null) {
             // the method is a subresource locator
-            return WebResourceFactory.newResource(responseType, newTarget, true, headers, cookies, form);
+            return WebResourceFactory.newResource(responseType, newTarget, true, headers, cookies, form, null);
         }
 
         // accepted media types
@@ -333,6 +339,10 @@ public final class WebResourceFactory implements InvocationHandler {
                     // TODO: should at least log some warning here
                 }
             }
+        }
+
+        if (invocationCallback != null) {
+            invocationCallback.beforeInvocation(builder, proxy, method, args);
         }
 
         final GenericType responseGenericType = new GenericType(method.getGenericReturnType());
