@@ -39,29 +39,15 @@
  */
 package org.glassfish.jersey.client.proxy;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.*;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-
 import org.junit.Ignore;
 import org.junit.Test;
+
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.*;
+import java.util.*;
 
 import static org.glassfish.jersey.client.proxy.SpecialFormatter.SPECIAL_FORMATTER_PROPERTY_KEY;
 import static org.junit.Assert.assertEquals;
