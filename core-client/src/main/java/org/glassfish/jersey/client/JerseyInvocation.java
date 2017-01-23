@@ -72,6 +72,7 @@ import javax.ws.rs.client.NioInvoker;
 import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.client.RxInvokerProvider;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
@@ -82,6 +83,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -480,34 +482,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T extends RxInvoker> T rx(RxInvokerProvider<T> rxInvokerProvider) {
-            if (rxInvokerProvider == null) {
-                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("rxInvokerProvider"));
-            }
-
-            return createRxInvoker(rxInvokerProvider, null);
-        }
-
-        @Override
-        public <T extends RxInvoker> T rx(RxInvokerProvider<T> rxInvokerProvider, ExecutorService executorService) {
-            if (rxInvokerProvider == null) {
-                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("rxInvokerProvider"));
-            }
-
-            if (executorService == null) {
-                throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("executorService"));
-            }
-
-            return createRxInvoker(rxInvokerProvider, executorService);
-        }
-
-        @Override
-        public <T extends RxInvoker> T rx(Class<? extends RxInvokerProvider<T>> clazz) {
+        public <T extends RxInvoker> T rx(Class<T> clazz) {
             return createRxInvoker(clazz, null);
         }
 
         @Override
-        public <T extends RxInvoker> T rx(Class<? extends RxInvokerProvider<T>> clazz, ExecutorService executorService) {
+        public <T extends RxInvoker> T rx(Class<T> clazz, ExecutorService executorService) {
             if (executorService == null) {
                 throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("executorService"));
             }
@@ -516,50 +496,42 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         /**
-         * Create {@link RxInvoker} from provided factory class.
+         * Create {@link RxInvoker} from provided {@code RxInvoker} subclass.
+         * <p>
+         * The method does a lookup for {@link RxInvokerProvider}, which provides given {@code RxInvoker} subclass
+         * and if found, calls {@link RxInvokerProvider#getRxInvoker(SyncInvoker, ExecutorService)}
          *
-         * @param clazz           factory class to be instantiated and used for creating {@code RxInvoker} subclass.
+         * @param clazz           {@code RxInvoker} subclass to be created.
          * @param executorService to be passed to the factory method invocation.
          * @param <T>             {@code RxInvoker} subclass to be returned.
-         * @return immutable instance of {@code RxInvoker} subclass.
+         * @return thread safe instance of {@code RxInvoker} subclass.
+         * @throws IllegalStateException when provider for given class is not registered.
          */
-        private <T extends RxInvoker> T createRxInvoker(Class<? extends RxInvokerProvider<T>> clazz,
+        private <T extends RxInvoker> T createRxInvoker(Class<? extends RxInvoker> clazz,
                                                         ExecutorService executorService) {
             if (clazz == null) {
                 throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("clazz"));
             }
 
-            RxInvokerProvider<T> RxInvokerProvider;
+            Iterable<RxInvokerProvider> allProviders = Providers.getAllProviders(
+                    this.requestContext.getServiceLocator(),
+                    RxInvokerProvider.class);
 
-            try {
-                RxInvokerProvider = clazz.newInstance();
-            } catch (InstantiationException e) {
-                throw new IllegalArgumentException(LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
-                        RxInvokerProvider.class.getSimpleName(), clazz.getName()), e);
-            } catch (IllegalAccessException e) {
-                throw new IllegalArgumentException(LocalizationMessages.ERROR_REFLECTION_INSTANCE_CREATE(
-                        RxInvokerProvider.class.getSimpleName(), clazz.getName()), e);
+            for (RxInvokerProvider invokerProvider : allProviders) {
+                if (invokerProvider.isProviderFor(clazz)) {
+
+                    RxInvoker rxInvoker = invokerProvider.getRxInvoker(this, executorService);
+
+                    if (rxInvoker == null) {
+                        throw new IllegalStateException(LocalizationMessages.CLIENT_RX_PROVIDER_NULL());
+                    }
+
+                    return (T) rxInvoker;
+                }
             }
 
-            return createRxInvoker(RxInvokerProvider, executorService);
-        }
-
-        /**
-         * Create {@link RxInvoker} from provided factory instance.
-         *
-         * @param RxInvokerProvider factory instance.
-         * @param executorService  to be passed to the factory method invocation.
-         * @param <T>              {@code RxInvoker} subclass to be returned.
-         * @return immutable instance of {@code RxInvoker} subclass.
-         */
-        private <T extends RxInvoker> T createRxInvoker(RxInvokerProvider<T> RxInvokerProvider, ExecutorService executorService) {
-            T rxInvoker = RxInvokerProvider.getRxInvoker(this, executorService);
-
-            if (rxInvoker == null) {
-                throw new IllegalStateException(LocalizationMessages.CLIENT_RX_FACTORY_NULL());
-            }
-
-            return rxInvoker;
+            throw new IllegalStateException(
+                    LocalizationMessages.CLIENT_RX_PROVIDER_NOT_REGISTERED(clazz.getSimpleName()));
         }
 
         @Override

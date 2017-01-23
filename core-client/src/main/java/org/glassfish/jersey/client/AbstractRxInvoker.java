@@ -43,8 +43,8 @@ package org.glassfish.jersey.client;
 import java.util.concurrent.ExecutorService;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.RxInvoker;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
@@ -61,15 +61,15 @@ import javax.ws.rs.core.Response;
  */
 public abstract class AbstractRxInvoker<T> implements RxInvoker<T> {
 
-    private final Invocation.Builder builder;
+    private final SyncInvoker syncInvoker;
     private final ExecutorService executorService;
 
-    public AbstractRxInvoker(final Invocation.Builder builder, final ExecutorService executor) {
-        if (builder == null) {
+    public AbstractRxInvoker(final SyncInvoker syncInvoker, final ExecutorService executor) {
+        if (syncInvoker == null) {
             throw new IllegalArgumentException("Invocation builder cannot be null.");
         }
 
-        this.builder = builder;
+        this.syncInvoker = syncInvoker;
         this.executorService = executor;
     }
 
@@ -78,8 +78,8 @@ public abstract class AbstractRxInvoker<T> implements RxInvoker<T> {
      *
      * @return non-null invocation builder.
      */
-    protected Invocation.Builder getBuilder() {
-        return builder;
+    protected SyncInvoker getSyncInvoker() {
+        return syncInvoker;
     }
 
     /**

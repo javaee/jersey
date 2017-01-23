@@ -66,8 +66,8 @@ public class JerseyCompletionStageRxInvoker extends AbstractRxInvoker<Completion
         final ExecutorService executorService = getExecutorService();
 
         return executorService == null
-                ? CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType))
-                : CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType), executorService);
+                ? CompletableFuture.supplyAsync(() -> getSyncInvoker().method(name, entity, responseType))
+                : CompletableFuture.supplyAsync(() -> getSyncInvoker().method(name, entity, responseType), executorService);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class JerseyCompletionStageRxInvoker extends AbstractRxInvoker<Completion
         final ExecutorService executorService = getExecutorService();
 
         return executorService == null
-                ? CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType))
-                : CompletableFuture.supplyAsync(() -> getBuilder().method(name, entity, responseType), executorService);
+                ? CompletableFuture.supplyAsync(() -> getSyncInvoker().method(name, entity, responseType))
+                : CompletableFuture.supplyAsync(() -> getSyncInvoker().method(name, entity, responseType), executorService);
     }
 }
