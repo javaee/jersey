@@ -49,12 +49,14 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.client.RxInvokerProvider;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.ext.Provider;
 
 import org.hamcrest.core.AllOf;
 import org.hamcrest.core.StringContains;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -72,102 +74,81 @@ public class ClientRxTest {
     public static final ExecutorService EXECUTOR_SERVICE =
             Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("rxTest-%d").build());
 
-    public static final Client CLIENT = ClientBuilder.newClient();
+    public final Client client = ClientBuilder.newClient();
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    @AfterClass
-    public static void afterClass() {
-        CLIENT.close();
+    @After
+    public void afterClass() {
+        client.close();
     }
 
     @Test
-    public void testRxInvoker1() {
-        String s = target().request().rx(new TestRxInvoker.TestRxInvokerProvider()).get();
+    public void testRxInvoker() {
+        // explicit register is not necessary, but it can be used.
+        client.register(TestRxInvokerProvider.class, RxInvokerProvider.class);
+
+        String s = target(client).request().rx(TestRxInvoker.class).get();
 
         assertTrue("Provided RxInvoker was not used.", s.startsWith("rxTestInvoker"));
     }
 
     @Test
-    public void testRxInvoker2() {
-        String s = target().request().rx(TestRxInvoker.TestRxInvokerProvider.class).get();
+    public void testRxInvokerWithExecutor() {
+        // implicit register (not saying that the contract is RxInvokerProvider).
+        client.register(TestRxInvokerProvider.class);
 
-        assertTrue("Provided RxInvoker was not used.", s.startsWith("rxTestInvoker"));
-    }
-
-    @Test
-    public void testRxInvokerWithExecutor1() {
         ExecutorService executorService = Executors
                 .newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("rxTest-%d").build());
-        String s = target().request().rx(new TestRxInvoker.TestRxInvokerProvider(), EXECUTOR_SERVICE).get();
+        String s = target(client).request().rx(TestRxInvoker.class, EXECUTOR_SERVICE).get();
 
         assertTrue("Provided RxInvoker was not used.", s.startsWith("rxTestInvoker"));
         assertTrue("Executor Service was not passed to RxInvoker", s.contains("rxTest-"));
     }
 
     @Test
-    public void testRxInvokerWithExecutor2() {
-        ExecutorService executorService = Executors
-                .newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("rxTest-%d").build());
-        String s = target().request().rx(TestRxInvoker.TestRxInvokerProvider.class, EXECUTOR_SERVICE).get();
-
-        assertTrue("Provided RxInvoker was not used.", s.startsWith("rxTestInvoker"));
-        assertTrue("Executor Service was not passed to RxInvoker", s.contains("rxTest-"));
-    }
-
-    @Test
-    public void testRxInvokerInvalid1() {
-        Invocation.Builder request = target().request();
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("rxInvokerProvider")));
-        request.rx((RxInvokerProvider<? extends RxInvoker>) null).get();
-    }
-
-    @Test
-    public void testRxInvokerInvalid2() {
-        Invocation.Builder request = target().request();
+    public void testRxInvokerInvalid() {
+        Invocation.Builder request = target(client).request();
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("clazz")));
         request.rx((Class) null).get();
     }
 
     @Test
-    public void testRxInvokerWithExecutorInvalid1() {
-        Invocation.Builder request = target().request();
-        thrown.expect(IllegalArgumentException.class);
+    public void testRxInvokerNotRegistered() {
+        Invocation.Builder request = target(client).request();
+        thrown.expect(IllegalStateException.class);
         thrown.expectMessage(AllOf.allOf(
-                new StringContains("null"),
-                new StringContains("executorService")));
-        request.rx(new TestRxInvoker.TestRxInvokerProvider(), null).get();
+                new StringContains("TestRxInvoker"),
+                new StringContains("not registered"),
+                new StringContains("RxInvokerProvider")));
+        request.rx(TestRxInvoker.class).get();
     }
 
     @Test
-    public void testRxInvokerWithExecutorInvalid2() {
-        Invocation.Builder request = target().request();
+    public void testRxInvokerWithExecutorInvalid() {
+        Invocation.Builder request = target(client).request();
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("clazz")));
         request.rx((Class) null, EXECUTOR_SERVICE);
     }
 
-    @Test
-    public void testRxInvokerWithExecutorInvalid3() {
-        Invocation.Builder request = target().request();
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("rxInvokerProvider")));
-        request.rx((RxInvokerProvider) null, EXECUTOR_SERVICE).get();
-    }
-
-    private WebTarget target() {
+    private WebTarget target(Client client) {
         // Uri is not relevant, the call won't be ever executed.
-        return CLIENT.target("http://localhost:9999");
+        return client.target("http://localhost:9999");
     }
 
     public static class InvalidInvokerProvider implements RxInvokerProvider<InvalidInvokerProvider>, RxInvoker<Void> {
 
         @Override
-        public InvalidInvokerProvider getRxInvoker(Invocation.Builder invocationBuilder, ExecutorService executorService) {
+        public InvalidInvokerProvider getRxInvoker(SyncInvoker invocationBuilder, ExecutorService executorService) {
             return null;
+        }
+
+        @Override
+        public boolean isProviderFor(Class<?> clazz) {
+            return true;
         }
 
         @Override
@@ -296,17 +277,23 @@ public class ClientRxTest {
         }
     }
 
-    private static class TestRxInvoker extends AbstractRxInvoker<String> {
-
-        public static class TestRxInvokerProvider implements RxInvokerProvider<TestRxInvoker> {
-            @Override
-            public TestRxInvoker getRxInvoker(Invocation.Builder invocationBuilder, ExecutorService executorService) {
-                return new TestRxInvoker(invocationBuilder, executorService);
-            }
+    @Provider
+    public static class TestRxInvokerProvider implements RxInvokerProvider<TestRxInvoker> {
+        @Override
+        public TestRxInvoker getRxInvoker(SyncInvoker syncInvoker, ExecutorService executorService) {
+            return new TestRxInvoker(syncInvoker, executorService);
         }
 
-        private TestRxInvoker(Invocation.Builder builder, ExecutorService executor) {
-            super(builder, executor);
+        @Override
+        public boolean isProviderFor(Class<?> clazz) {
+            return TestRxInvoker.class.equals(clazz);
+        }
+    }
+
+    private static class TestRxInvoker extends AbstractRxInvoker<String> {
+
+        private TestRxInvoker(SyncInvoker syncInvoker, ExecutorService executor) {
+            super(syncInvoker, executor);
         }
 
         @Override
