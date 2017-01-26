@@ -67,8 +67,8 @@ import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.server.Uri;
 
 /**
- * Obtain information about visited (destination) and recommended (destination, forecast, price) places for "Java8" user. Uses
- * Java 8 CompletionStage and Jersey Client to obtain the data.
+ * Obtain information about visited (destination) and recommended (destination, forecast, price) places for
+ * "CompletionStage" user. Uses Java 8 CompletionStage and Jersey Client to obtain the data.
  *
  * @author Michal Gajdos
  */
@@ -114,7 +114,7 @@ public class CompletionStageAgentResource {
                                                        final Queue<String> errors) {
         return destinationTarget.path("visited").request()
                 // Identify the user.
-                .header("Rx-User", "Java8")
+                .header("Rx-User", "CompletionStage")
                 // Reactive invoker.
                 .rx(executor)
                 // Return a list of destinations.
@@ -132,7 +132,7 @@ public class CompletionStageAgentResource {
         final CompletionStage<List<Destination>> recommended = destinationTarget.path("recommended")
                 .request()
                 // Identify the user.
-                .header("Rx-User", "Java8")
+                .header("Rx-User", "CompletionStage")
                 // Reactive invoker.
                 .rx(executor)
                 // Return a list of destinations.

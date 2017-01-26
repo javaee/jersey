@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,14 +40,16 @@
 
 package org.glassfish.jersey.client.rx.guava;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.core.GenericType;
 
-import org.glassfish.jersey.client.rx.spi.AbstractRxInvoker;
+import org.glassfish.jersey.client.AbstractRxInvoker;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -57,35 +59,40 @@ import com.google.common.util.concurrent.MoreExecutors;
  * Implementation of Reactive Invoker for {@code ListenableFuture}.
  *
  * @author Michal Gajdos
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @since 2.13
  */
 final class JerseyRxListenableFutureInvoker extends AbstractRxInvoker<ListenableFuture> implements RxListenableFutureInvoker {
 
+    private static final LazyValue<ListeningExecutorService> DEFAULT_EXECUTOR_SERVICE =
+            Values.lazy(new Value<ListeningExecutorService>() {
+                @Override
+                public ListeningExecutorService get() {
+                    return MoreExecutors.newDirectExecutorService();
+                }
+            });
+
     private final ListeningExecutorService service;
 
-    JerseyRxListenableFutureInvoker(final Invocation.Builder builder, final ExecutorService executor) {
-        super(builder, executor);
+    JerseyRxListenableFutureInvoker(final SyncInvoker syncInvoker, final ExecutorService executor) {
+        super(syncInvoker, executor);
 
-        service = MoreExecutors.listeningDecorator(executor);
+        if (executor == null) {
+            // TODO: use JAX-RS client scheduler
+            // TODO: https://java.net/jira/browse/JAX_RS_SPEC-523
+            service = DEFAULT_EXECUTOR_SERVICE.get();
+        } else {
+            service = MoreExecutors.listeningDecorator(executor);
+        }
     }
 
     @Override
     public <T> ListenableFuture<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
-        return service.submit(new Callable<T>() {
-            @Override
-            public T call() throws Exception {
-                return getBuilder().method(name, entity, responseType);
-            }
-        });
+        return service.submit(() -> getSyncInvoker().method(name, entity, responseType));
     }
 
     @Override
     public <T> ListenableFuture<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
-        return service.submit(new Callable<T>() {
-            @Override
-            public T call() throws Exception {
-                return getBuilder().method(name, entity, responseType);
-            }
-        });
+        return service.submit(() -> getSyncInvoker().method(name, entity, responseType));
     }
 }

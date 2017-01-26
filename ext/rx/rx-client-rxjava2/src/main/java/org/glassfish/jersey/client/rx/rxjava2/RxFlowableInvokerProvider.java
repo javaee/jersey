@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,29 +38,30 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx.guava;
+package org.glassfish.jersey.client.rx.rxjava2;
 
 import java.util.concurrent.ExecutorService;
 
 import javax.ws.rs.client.RxInvokerProvider;
 import javax.ws.rs.client.SyncInvoker;
 
+
 /**
- * Invoker provider for invokers based on Guava's {@code ListenableFuture}.
+ * Invoker provider for invokers based on RxJava's {@code Flowable}.
  *
  * @author Michal Gajdos
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @since 2.13
+ * @since 2.26
  */
-public final class RxListenableFutureInvokerProvider implements RxInvokerProvider<RxListenableFutureInvoker> {
+public class RxFlowableInvokerProvider implements RxInvokerProvider<RxFlowableInvoker> {
 
     @Override
-    public boolean isProviderFor(Class clazz) {
-        return RxListenableFutureInvoker.class.equals(clazz);
+    public boolean isProviderFor(Class<?> clazz) {
+        return RxFlowableInvoker.class.equals(clazz);
     }
 
     @Override
-    public JerseyRxListenableFutureInvoker getRxInvoker(SyncInvoker syncInvoker, ExecutorService executorService) {
-        return new JerseyRxListenableFutureInvoker(syncInvoker, executorService);
+    public RxFlowableInvoker getRxInvoker(SyncInvoker syncInvoker, ExecutorService executorService) {
+        return new JerseyRxFlowableInvoker(syncInvoker, executorService);
     }
 }
