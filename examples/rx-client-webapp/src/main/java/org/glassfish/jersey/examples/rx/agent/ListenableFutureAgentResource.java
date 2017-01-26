@@ -51,9 +51,8 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.GenericType;
 
-import org.glassfish.jersey.client.rx.RxWebTarget;
-import org.glassfish.jersey.client.rx.guava.RxListenableFuture;
 import org.glassfish.jersey.client.rx.guava.RxListenableFutureInvoker;
+import org.glassfish.jersey.client.rx.guava.RxListenableFutureInvokerProvider;
 import org.glassfish.jersey.examples.rx.domain.AgentResponse;
 import org.glassfish.jersey.examples.rx.domain.Calculation;
 import org.glassfish.jersey.examples.rx.domain.Destination;
@@ -69,10 +68,11 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * Obtain information about visited (destination) and recommended (destination, forecast, price) places for "RxJava" user. Uses
- * RxJava Observable and Jersey Client to obtain the data.
+ * Obtain information about visited (destination) and recommended (destination, forecast, price) places for "Guava" user. Uses
+ * Guava ListenableFuture and Jersey Client to obtain the data.
  *
  * @author Michal Gajdos
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 @Path("agent/listenable")
 @Produces("application/json")
@@ -100,28 +100,31 @@ public class ListenableFutureAgentResource {
         // ... and when we have them, return response to the client.
         Futures.addCallback(successful, new FutureCallback<List<AgentResponse>>() {
 
-                @Override
-                public void onSuccess(final List<AgentResponse> result) {
-                    response.setProcessingTime((System.nanoTime() - time) / 1000000);
-                    async.resume(response);
-                }
+            @Override
+            public void onSuccess(final List<AgentResponse> result) {
+                response.setProcessingTime((System.nanoTime() - time) / 1000000);
+                async.resume(response);
+            }
 
-                @Override
-                public void onFailure(final Throwable t) {
-                    async.resume(t);
-                }
-            });
+            @Override
+            public void onFailure(final Throwable t) {
+                async.resume(t);
+            }
+        });
     }
 
     private ListenableFuture<AgentResponse> visited(final AgentResponse response) {
+        destination.register(RxListenableFutureInvokerProvider.class);
+
         // Get a list of visited destinations ...
-        final ListenableFuture<List<Destination>> visited = RxListenableFuture.from(destination).path("visited").request()
-                // Identify the user.
-                .header("Rx-User", "Guava")
-                // Reactive invoker.
-                .rx()
-                // Return a list of destinations.
-                .get(new GenericType<List<Destination>>() {});
+        final ListenableFuture<List<Destination>> visited = destination.path("visited").request()
+                                                                       // Identify the user.
+                                                                       .header("Rx-User", "Guava")
+                                                                       // Reactive invoker.
+                                                                       .rx(RxListenableFutureInvoker.class)
+                                                                       // Return a list of destinations.
+                                                                       .get(new GenericType<List<Destination>>() {
+                                                                       });
 
         // ... and set them to the final response.
         return Futures.transform(visited, (AsyncFunction<List<Destination>, AgentResponse>) destinations -> {
@@ -132,74 +135,82 @@ public class ListenableFutureAgentResource {
     }
 
     private ListenableFuture<AgentResponse> recommended(final AgentResponse response) {
+        destination.register(RxListenableFutureInvokerProvider.class);
+
         // Get a list of recommended destinations ...
-        final ListenableFuture<List<Destination>> destinations = RxListenableFuture.from(destination).path("recommended")
-                .request()
-                // Identify the user.
-                .header("Rx-User", "Guava")
-                // Reactive invoker.
-                .rx()
-                // Return a list of destinations.
-                .get(new GenericType<List<Destination>>() {});
+        final ListenableFuture<List<Destination>> destinations = destination.path("recommended")
+                                                                            .request()
+                                                                            // Identify the user.
+                                                                            .header("Rx-User", "Guava")
+                                                                            // Reactive invoker.
+                                                                            .rx(RxListenableFutureInvoker.class)
+                                                                            // Return a list of destinations.
+                                                                            .get(new GenericType<List<Destination>>() {
+                                                                            });
 
         // ... transform them to Recommendation instances ...
-        final ListenableFuture<List<Recommendation>> recommendations = Futures.transform(destinations,
+        final ListenableFuture<List<Recommendation>> recommendations = Futures.transform(
+                destinations,
                 (AsyncFunction<List<Destination>, List<Recommendation>>) destinationList -> {
                     // Create new array list to avoid multiple remote calls.
-                    final List<Recommendation> recommendationList = Lists.newArrayList(Lists.transform(destinationList,
+                    final List<Recommendation> recommendationList = Lists.newArrayList(Lists.transform(
+                            destinationList,
                             destination -> new Recommendation(destination.getDestination(), null, 0)));
 
                     return Futures.immediateFuture(recommendationList);
                 });
 
         // ... add forecasts and calculations ...
-        final ListenableFuture<List<List<Recommendation>>> filledRecommendations = Futures.successfulAsList(Arrays.asList(
-                // Add Forecasts to Recommendations.
-                forecasts(recommendations),
-                // Add Forecasts to Recommendations.
-                calculations(recommendations)));
+        final ListenableFuture<List<List<Recommendation>>> filledRecommendations = Futures
+                .successfulAsList(Arrays.asList(
+                        // Add Forecasts to Recommendations.
+                        forecasts(recommendations),
+                        // Add Forecasts to Recommendations.
+                        calculations(recommendations)));
 
         // ... and transform the list into agent response with filled recommendations.
-        return Futures.transform(filledRecommendations, (AsyncFunction<List<List<Recommendation>>, AgentResponse>) input -> {
-                response.setRecommended(input.get(0));
+        return Futures
+                .transform(filledRecommendations, (AsyncFunction<List<List<Recommendation>>, AgentResponse>) input -> {
+                    response.setRecommended(input.get(0));
 
-                return Futures.immediateFuture(response);
-        });
+                    return Futures.immediateFuture(response);
+                });
     }
 
     private ListenableFuture<List<Recommendation>> forecasts(final ListenableFuture<List<Recommendation>> recommendations) {
-        final RxWebTarget<RxListenableFutureInvoker> rxForecast = RxListenableFuture.from(forecast);
+        forecast.register(RxListenableFutureInvokerProvider.class);
 
         // Fill the list with weather forecast.
         return Futures.transform(recommendations, (AsyncFunction<List<Recommendation>, List<Recommendation>>) list ->
-                        // For each recommendation ...
-                        Futures.successfulAsList(Lists.transform(list, recommendation -> Futures.transform(
-                                // ... get the weather forecast ...
-                                rxForecast.resolveTemplate("destination", recommendation.getDestination()).request().rx()
-                                        .get(Forecast.class),
-                                // ... and set it to the recommendation.
-                                (AsyncFunction<Forecast, Recommendation>) forecast -> {
-                                    recommendation.setForecast(forecast.getForecast());
-                                    return Futures.immediateFuture(recommendation);
-                                }))));
+                // For each recommendation ...
+                Futures.successfulAsList(Lists.transform(list, recommendation -> Futures.transform(
+                        // ... get the weather forecast ...
+                        forecast.resolveTemplate("destination", recommendation.getDestination()).request()
+                                .rx(RxListenableFutureInvoker.class)
+                                .get(Forecast.class),
+                        // ... and set it to the recommendation.
+                        (AsyncFunction<Forecast, Recommendation>) forecast -> {
+                            recommendation.setForecast(forecast.getForecast());
+                            return Futures.immediateFuture(recommendation);
+                        }))));
     }
 
     private ListenableFuture<List<Recommendation>> calculations(final ListenableFuture<List<Recommendation>> recommendations) {
-        final RxWebTarget<RxListenableFutureInvoker> rxCalculation = RxListenableFuture.from(calculation);
+        calculation.register(RxListenableFutureInvokerProvider.class);
 
         // Fill the list with price calculations.
         return Futures.transform(recommendations, (AsyncFunction<List<Recommendation>, List<Recommendation>>) list ->
-                        // For each recommendation ...
-                        Futures.successfulAsList(Lists.transform(list, recommendation -> Futures.transform(
-                                // ... get the price calculation ...
-                                rxCalculation.resolveTemplate("from", "Moon")
-                                        .resolveTemplate("to", recommendation.getDestination())
-                                        .request().rx().get(Calculation.class),
-                                // ... and set it to the recommendation.
-                                (AsyncFunction<Calculation, Recommendation>) calculation -> {
-                                    recommendation.setPrice(calculation.getPrice());
-                                    return Futures.immediateFuture(recommendation);
-                                })))
+                // For each recommendation ...
+                Futures.successfulAsList(Lists.transform(list, recommendation -> Futures.transform(
+                        // ... get the price calculation ...
+                        calculation.resolveTemplate("from", "Moon")
+                                   .resolveTemplate("to", recommendation.getDestination())
+                                   .request().rx(RxListenableFutureInvoker.class).get(Calculation.class),
+                        // ... and set it to the recommendation.
+                        (AsyncFunction<Calculation, Recommendation>) calculation -> {
+                            recommendation.setPrice(calculation.getPrice());
+                            return Futures.immediateFuture(recommendation);
+                        })))
         );
     }
 }

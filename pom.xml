@@ -1901,9 +1901,9 @@
         <pax.exam.version>4.9.1</pax.exam.version>
         <pax.web.version>0.7.4</pax.web.version><!-- TODO: UPGRADE! -->
         <paxexam.mvn.plugin.version>1.2.4</paxexam.mvn.plugin.version>
-        <rxjava.version>1.0.12</rxjava.version>
+        <rxjava.version>1.2.5</rxjava.version>
+        <rxjava2.version>2.0.4</rxjava2.version>
         <rome.version>1.0</rome.version>
-        <rxjava.version>1.2.3</rxjava.version>
         <servlet2.version>2.4</servlet2.version>
         <servlet3.version>3.0.1</servlet3.version>
         <simple.version>6.0.1</simple.version>

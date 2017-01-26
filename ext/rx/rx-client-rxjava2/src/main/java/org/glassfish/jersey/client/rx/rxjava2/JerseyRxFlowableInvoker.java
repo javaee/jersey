@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,7 +38,7 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx.rxjava;
+package org.glassfish.jersey.client.rx.rxjava2;
 
 import java.util.concurrent.ExecutorService;
 
@@ -48,31 +48,35 @@ import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.client.AbstractRxInvoker;
 
-import rx.Observable;
-import rx.Scheduler;
-import rx.schedulers.Schedulers;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
 
 /**
- * Implementation of Reactive Invoker for {@code Observable}. If no executor service is provided the JAX-RS Async client is used
+ * Implementation of Reactive Invoker for {@code Flowable}. If no executor service is provided the JAX-RS Async client is used
  * to retrieve data when a subscriber is subscribed. When an executor service is provided a sync call is invoked on a thread
  * provided on from this service.
  *
  * @author Michal Gajdos
- * @since 2.13
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @since 2.16
  */
-final class JerseyRxObservableInvoker extends AbstractRxInvoker<Observable> implements RxObservableInvoker {
+final class JerseyRxFlowableInvoker extends AbstractRxInvoker<Flowable> implements RxFlowableInvoker {
 
-    JerseyRxObservableInvoker(final SyncInvoker syncInvoker, final ExecutorService executor) {
+    JerseyRxFlowableInvoker(SyncInvoker syncInvoker, ExecutorService executor) {
         super(syncInvoker, executor);
     }
 
     @Override
-    public <T> Observable<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
+    public <T> Flowable<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
         return method(name, entity, new GenericType<T>(responseType) { });
     }
 
     @Override
-    public <T> Observable<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
+    public <T> Flowable<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
         final Scheduler scheduler;
 
         if (getExecutorService() != null) {
@@ -84,23 +88,17 @@ final class JerseyRxObservableInvoker extends AbstractRxInvoker<Observable> impl
         }
 
         // Invoke as sync JAX-RS client request and subscribe/observe on a scheduler initialized with executor service.
-        return Observable.create((Observable.OnSubscribe<T>) subscriber -> {
-            if (!subscriber.isUnsubscribed()) {
-                try {
-                    final T response = getSyncInvoker().method(name, entity, responseType);
-
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onNext(response);
+        return Flowable.create(new FlowableOnSubscribe<T>() {
+            @Override
+            public void subscribe(FlowableEmitter<T> flowableEmitter) throws Exception {
+                    try {
+                        final T response = getSyncInvoker().method(name, entity, responseType);
+                        flowableEmitter.onNext(response);
+                        flowableEmitter.onComplete();
+                    } catch (final Throwable throwable) {
+                        flowableEmitter.onError(throwable);
                     }
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onCompleted();
-                    }
-                } catch (final Throwable throwable) {
-                    if (!subscriber.isUnsubscribed()) {
-                        subscriber.onError(throwable);
-                    }
-                }
             }
-        }).subscribeOn(scheduler).observeOn(scheduler);
+        }, BackpressureStrategy.DROP).subscribeOn(scheduler).observeOn(scheduler);
     }
 }

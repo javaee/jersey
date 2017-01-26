@@ -55,9 +55,8 @@ import javax.ws.rs.core.GenericType;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.client.rx.RxWebTarget;
-import org.glassfish.jersey.client.rx.rxjava.RxObservable;
 import org.glassfish.jersey.client.rx.rxjava.RxObservableInvoker;
+import org.glassfish.jersey.client.rx.rxjava.RxObservableInvokerProvider;
 import org.glassfish.jersey.examples.rx.domain.AgentResponse;
 import org.glassfish.jersey.examples.rx.domain.Calculation;
 import org.glassfish.jersey.examples.rx.domain.Destination;
@@ -73,6 +72,7 @@ import rx.schedulers.Schedulers;
  * RxJava Observable and Jersey Client to obtain the data.
  *
  * @author Michal Gajdos
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 @Singleton
 @Path("agent/observable")
@@ -94,80 +94,90 @@ public class ObservableAgentResource {
         final Queue<String> errors = new ConcurrentLinkedQueue<>();
 
         Observable.just(new AgentResponse())
-                // Obtain visited destinations.
-                .zipWith(visited(errors), (response, visited) -> {
-                    response.setVisited(visited);
-                    return response;
-                })
-                // Obtain recommended destinations. (does not depend on visited ones)
-                .zipWith(recommended(errors), (response, recommendations) -> {
-                    response.setRecommended(recommendations);
-                    return response;
-                })
-                // Observe on another thread than the one processing visited or recommended destinations.
-                .observeOn(Schedulers.io())
-                // Subscribe.
-                .subscribe(response -> {
-                    // Do something with errors.
+                  // Obtain visited destinations.
+                  .zipWith(visited(errors), (response, visited) -> {
+                      response.setVisited(visited);
+                      return response;
+                  })
+                  // Obtain recommended destinations. (does not depend on visited ones)
+                  .zipWith(recommended(errors), (response, recommendations) -> {
+                      response.setRecommended(recommendations);
+                      return response;
+                  })
+                  // Observe on another thread than the one processing visited or recommended destinations.
+                  .observeOn(Schedulers.io())
+                  // Subscribe.
+                  .subscribe(response -> {
+                      // Do something with errors.
 
-                    response.setProcessingTime((System.nanoTime() - time) / 1000000);
-                    async.resume(response);
-                }, async::resume);
+                      response.setProcessingTime((System.nanoTime() - time) / 1000000);
+                      async.resume(response);
+                  }, async::resume);
     }
 
     private Observable<List<Destination>> visited(final Queue<String> errors) {
-        return RxObservable.from(destination).path("visited").request()
-                // Identify the user.
-                .header("Rx-User", "RxJava")
-                // Reactive invoker.
-                .rx()
-                // Return a list of destinations.
-                .get(new GenericType<List<Destination>>() {})
-                // Handle Errors.
-                .onErrorReturn(throwable -> {
-                    errors.offer("Visited: " + throwable.getMessage());
-                    return Collections.emptyList();
-                });
+        destination.register(RxObservableInvokerProvider.class);
+
+        return destination.path("visited").request()
+                          // Identify the user.
+                          .header("Rx-User", "RxJava")
+                          // Reactive invoker.
+                          .rx(RxObservableInvoker.class)
+                          // Return a list of destinations.
+                          .get(new GenericType<List<Destination>>() {
+                          })
+                          // Handle Errors.
+                          .onErrorReturn(throwable -> {
+                              errors.offer("Visited: " + throwable.getMessage());
+                              return Collections.emptyList();
+                          });
     }
 
     private Observable<List<Recommendation>> recommended(final Queue<String> errors) {
+        destination.register(RxObservableInvokerProvider.class);
+
         // Recommended places.
-        final Observable<Destination> recommended = RxObservable.from(destination).path("recommended").request()
-                // Identify the user.
-                .header("Rx-User", "RxJava")
-                // Reactive invoker.
-                .rx()
-                // Return a list of destinations.
-                .get(new GenericType<List<Destination>>() {})
-                // Handle Errors.
-                .onErrorReturn(throwable -> {
-                    errors.offer("Recommended: " + throwable.getMessage());
-                    return Collections.emptyList();
-                })
-                // Emit destinations one-by-one.
-                .flatMap(Observable::from)
-                // Remember emitted items for dependant requests.
-                .cache();
+        final Observable<Destination> recommended = destination.path("recommended").request()
+                                                               // Identify the user.
+                                                               .header("Rx-User", "RxJava")
+                                                               // Reactive invoker.
+                                                               .rx(RxObservableInvoker.class)
+                                                               // Return a list of destinations.
+                                                               .get(new GenericType<List<Destination>>() {
+                                                               })
+                                                               // Handle Errors.
+                                                               .onErrorReturn(throwable -> {
+                                                                   errors.offer("Recommended: " + throwable
+                                                                           .getMessage());
+                                                                   return Collections.emptyList();
+                                                               })
+                                                               // Emit destinations one-by-one.
+                                                               .flatMap(Observable::from)
+                                                               // Remember emitted items for dependant requests.
+                                                               .cache();
+
+        forecast.register(RxObservableInvokerProvider.class);
 
         // Forecasts. (depend on recommended destinations)
-        final RxWebTarget<RxObservableInvoker> rxForecast = RxObservable.from(forecast);
         final Observable<Forecast> forecasts = recommended.flatMap(destination ->
-                rxForecast
-                        .resolveTemplate("destination", destination.getDestination()).request().rx().get(Forecast.class)
+                forecast
+                        .resolveTemplate("destination", destination.getDestination())
+                        .request().rx(RxObservableInvoker.class).get(Forecast.class)
                         .onErrorReturn(throwable -> {
                             errors.offer("Forecast: " + throwable.getMessage());
                             return new Forecast(destination.getDestination(), "N/A");
                         }));
 
+        calculation.register(RxObservableInvokerProvider.class);
+
         // Calculations. (depend on recommended destinations)
-        final RxWebTarget<RxObservableInvoker> rxCalculation = RxObservable.from(calculation);
         final Observable<Calculation> calculations = recommended.flatMap(destination ->
-                rxCalculation.resolveTemplate("from", "Moon").resolveTemplate("to", destination.getDestination())
-                        .request().rx().get(Calculation.class)
-                        .onErrorReturn(throwable -> {
-                            errors.offer("Calculation: " + throwable.getMessage());
-                            return new Calculation("Moon", destination.getDestination(), -1);
-                        }));
+                calculation.resolveTemplate("from", "Moon").resolveTemplate("to", destination.getDestination())
+                           .request().rx(RxObservableInvoker.class).get(Calculation.class)
+                           .onErrorReturn(throwable -> {
+                               errors.offer("Calculation: " + throwable.getMessage());
+                               return new Calculation("Moon", destination.getDestination(), -1);
+                           }));
 
         return Observable.zip(recommended, forecasts, calculations, Recommendation::new).toList();
     }

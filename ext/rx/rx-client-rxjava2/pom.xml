@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,8 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -49,10 +50,10 @@
         <version>2.26-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jersey-rx-client-guava</artifactId>
-    <name>jersey-ext-rx-client-guava</name>
+    <artifactId>jersey-rx-client-rxjava2</artifactId>
+    <name>jersey-ext-rx-client-rxjava2</name>
 
-    <description>Jersey Reactive Client - Guava (ListenableFuture) provider.</description>
+    <description>Jersey Reactive Client - RxJava2 (Flowable) provider.</description>
 
     <dependencies>
         <dependency>
@@ -62,8 +63,14 @@
         </dependency>
 
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
+            <groupId>io.reactivex.rxjava2</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>${rxjava2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.reactivestreams</groupId>
+            <artifactId>reactive-streams</artifactId>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 </project>

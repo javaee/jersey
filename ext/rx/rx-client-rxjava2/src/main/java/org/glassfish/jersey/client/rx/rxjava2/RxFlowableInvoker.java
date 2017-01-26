@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,95 +38,100 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx.guava;
+package org.glassfish.jersey.client.rx.rxjava2;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import io.reactivex.Flowable;
+
 
 /**
- * Reactive invoker providing support for {@link com.google.common.util.concurrent.ListenableFuture ListenableFuture} from Guava.
+ * Reactive invoker providing support for {@link Flowable flowable} from RxJava.
+ * <p/>
+ * Requests are by default invoked on a separate thread (as JAX-RS Async client requests). This behavior can be overridden by
+ * providing a {@link java.util.concurrent.ExecutorService executor service} when client extension is being created.
  *
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Michal Gajdos
- * @since 2.13
+ * @since 2.26
  */
-public interface RxListenableFutureInvoker extends RxInvoker<ListenableFuture> {
+public interface RxFlowableInvoker extends RxInvoker<Flowable> {
 
     @Override
-    public ListenableFuture<Response> get();
+    Flowable<Response> get();
 
     @Override
-    public <T> ListenableFuture<T> get(Class<T> responseType);
+    <R> Flowable<R> get(Class<R> responseType);
 
     @Override
-    public <T> ListenableFuture<T> get(GenericType<T> responseType);
+    <R> Flowable<R> get(GenericType<R> responseType);
 
     @Override
-    public ListenableFuture<Response> put(Entity<?> entity);
+    Flowable<Response> put(Entity<?> entity);
 
     @Override
-    public <T> ListenableFuture<T> put(Entity<?> entity, Class<T> clazz);
+    <R> Flowable<R> put(Entity<?> entity, Class<R> responseType);
 
     @Override
-    public <T> ListenableFuture<T> put(Entity<?> entity, GenericType<T> type);
+    <R> Flowable<R> put(Entity<?> entity, GenericType<R> responseType);
 
     @Override
-    public ListenableFuture<Response> post(Entity<?> entity);
+    Flowable<Response> post(Entity<?> entity);
 
     @Override
-    public <T> ListenableFuture<T> post(Entity<?> entity, Class<T> clazz);
+    <R> Flowable<R> post(Entity<?> entity, Class<R> responseType);
 
     @Override
-    public <T> ListenableFuture<T> post(Entity<?> entity, GenericType<T> type);
+    <R> Flowable<R> post(Entity<?> entity, GenericType<R> responseType);
 
     @Override
-    public ListenableFuture<Response> delete();
+    Flowable<Response> delete();
 
     @Override
-    public <T> ListenableFuture<T> delete(Class<T> responseType);
+    <R> Flowable<R> delete(Class<R> responseType);
 
     @Override
-    public <T> ListenableFuture<T> delete(GenericType<T> responseType);
+    <R> Flowable<R> delete(GenericType<R> responseType);
 
     @Override
-    public ListenableFuture<Response> head();
+    Flowable<Response> head();
 
     @Override
-    public ListenableFuture<Response> options();
+    Flowable<Response> options();
 
     @Override
-    public <T> ListenableFuture<T> options(Class<T> responseType);
+    <R> Flowable<R> options(Class<R> responseType);
 
     @Override
-    public <T> ListenableFuture<T> options(GenericType<T> responseType);
+    <R> Flowable<R> options(GenericType<R> responseType);
 
     @Override
-    public ListenableFuture<Response> trace();
+    Flowable<Response> trace();
 
     @Override
-    public <T> ListenableFuture<T> trace(Class<T> responseType);
+    <R> Flowable<R> trace(Class<R> responseType);
 
     @Override
-    public <T> ListenableFuture<T> trace(GenericType<T> responseType);
+    <R> Flowable<R> trace(GenericType<R> responseType);
 
     @Override
-    public ListenableFuture<Response> method(String name);
+    Flowable<Response> method(String name);
 
     @Override
-    public <T> ListenableFuture<T> method(String name, Class<T> responseType);
+    <R> Flowable<R> method(String name, Class<R> responseType);
 
     @Override
-    public <T> ListenableFuture<T> method(String name, GenericType<T> responseType);
+    <R> Flowable<R> method(String name, GenericType<R> responseType);
 
     @Override
-    public ListenableFuture<Response> method(String name, Entity<?> entity);
+    Flowable<Response> method(String name, Entity<?> entity);
 
     @Override
-    public <T> ListenableFuture<T> method(String name, Entity<?> entity, Class<T> responseType);
+    <R> Flowable<R> method(String name, Entity<?> entity, Class<R> responseType);
 
     @Override
-    public <T> ListenableFuture<T> method(String name, Entity<?> entity, GenericType<T> responseType);
+    <R> Flowable<R> method(String name, Entity<?> entity, GenericType<R> responseType);
 }

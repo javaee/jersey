@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,10 +38,12 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx.guava;
+package org.glassfish.jersey.client.rx.rxjava2;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
@@ -51,21 +53,21 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 
-import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * @author Michal Gajdos
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class RxListenableFutureTest {
+public class RxFlowableTest {
 
     private Client client;
     private ExecutorService executor;
@@ -73,6 +75,7 @@ public class RxListenableFutureTest {
     @Before
     public void setUp() throws Exception {
         client = ClientBuilder.newClient().register(TerminalClientRequestFilter.class);
+        client.register(RxFlowableInvokerProvider.class);
         executor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
                 .setNameFormat("jersey-rx-client-test-%d")
                 .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
@@ -82,95 +85,121 @@ public class RxListenableFutureTest {
     @After
     public void tearDown() throws Exception {
         executor.shutdown();
+
+        client.close();
         client = null;
     }
 
     @Test
     public void testNotFoundResponse() throws Exception {
-        client.register(RxListenableFutureInvokerProvider.class);
-
-        final RxListenableFutureInvoker invoker = client.target("http://jersey.java.net")
-                                                        .request()
-                                                        .header("Response-Status", 404)
-                                                        .rx(RxListenableFutureInvoker.class);
+        final RxFlowableInvoker invoker = client.target("http://jersey.java.net")
+                                                .request()
+                                                .header("Response-Status", 404)
+                                                .rx(RxFlowableInvoker.class);
 
         testInvoker(invoker, 404, false);
     }
 
+    @Test
+    public void testNotFoundWithCustomExecutor() throws Exception {
+        final RxFlowableInvoker invoker = client.target("http://jersey.java.net")
+                                                .request()
+                                                .header("Response-Status", 404)
+                                                .rx(RxFlowableInvoker.class, executor);
+
+        testInvoker(invoker, 404, true);
+    }
+
     @Test(expected = NotFoundException.class)
     public void testNotFoundReadEntityViaClass() throws Throwable {
-        client.register(RxListenableFutureInvokerProvider.class);
-
         try {
             client.target("http://jersey.java.net")
                   .request()
                   .header("Response-Status", 404)
-                  .rx(RxListenableFutureInvoker.class)
+                  .rx(RxFlowableInvoker.class)
                   .get(String.class)
-                  .get();
+                  .blockingFirst();
         } catch (final Exception expected) {
-
-            // java.util.concurrent.ExecutionException
-            throw expected
-                    // javax.ws.rs.NotFoundException
-                    .getCause();
+            throw expected;
         }
     }
 
     @Test(expected = NotFoundException.class)
     public void testNotFoundReadEntityViaGenericType() throws Throwable {
-        client.register(RxListenableFutureInvokerProvider.class);
-
         try {
             client.target("http://jersey.java.net")
                   .request()
                   .header("Response-Status", 404)
-                  .rx(RxListenableFutureInvoker.class)
+                  .rx(RxFlowableInvoker.class)
                   .get(new GenericType<String>() {
                   })
-                  .get();
+                  .blockingFirst();
         } catch (final Exception expected) {
-
-            expected.printStackTrace();
-
-            // java.util.concurrent.ExecutionException
-            throw expected
-                    // javax.ws.rs.NotFoundException
-                    .getCause();
+            throw expected;
         }
     }
 
     @Test
     public void testReadEntityViaClass() throws Throwable {
-        client.register(RxListenableFutureInvokerProvider.class);
-
         final String response = client.target("http://jersey.java.net")
                                       .request()
-                                      .rx(RxListenableFutureInvoker.class)
+                                      .rx(RxFlowableInvoker.class)
                                       .get(String.class)
-                                      .get();
+                                      .blockingFirst();
 
         assertThat(response, is("NO-ENTITY"));
     }
 
     @Test
     public void testReadEntityViaGenericType() throws Throwable {
-        client.register(RxListenableFutureInvokerProvider.class);
-
         final String response = client.target("http://jersey.java.net")
                                       .request()
-                                      .rx(RxListenableFutureInvoker.class)
-                                      .get(new GenericType<String>() {
-                                      })
-                                      .get();
+                                      .rx(RxFlowableInvoker.class)
+                                      .get(new GenericType<String>() { })
+                                      .blockingFirst();
 
         assertThat(response, is("NO-ENTITY"));
     }
 
-    private void testInvoker(final RxListenableFutureInvoker rx,
+    private void testInvoker(final RxFlowableInvoker rx,
                              final int expectedStatus,
-                             final boolean testDedicatedThread) throws Exception {
-        testResponse(rx.get().get(), expectedStatus, testDedicatedThread);
+                             final boolean testDedicatedThread)
+            throws Exception {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<Response> responseRef = new AtomicReference<>();
+        final AtomicReference<Throwable> errorRef = new AtomicReference<>();
+
+        rx.get().subscribe(new Subscriber<Response>() {
+
+            @Override
+            public void onSubscribe(Subscription s) {
+                s.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onComplete() {
+                latch.countDown();
+            }
+
+            @Override
+            public void onError(final Throwable e) {
+                errorRef.set(e);
+                latch.countDown();
+            }
+
+            @Override
+            public void onNext(final Response response) {
+                responseRef.set(response);
+            }
+        });
+
+        latch.await();
+
+        if (errorRef.get() == null) {
+            testResponse(responseRef.get(), expectedStatus, testDedicatedThread);
+        } else {
+            throw (Exception) errorRef.get();
+        }
     }
 
     private static void testResponse(final Response response, final int expectedStatus, final boolean testDedicatedThread) {
@@ -178,8 +207,8 @@ public class RxListenableFutureTest {
         assertThat(response.readEntity(String.class), is("NO-ENTITY"));
 
         // Executor.
-        final Matcher<String> matcher = containsString("jersey-rx-client-test");
-        assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread ? matcher : not(matcher));
+        assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread
+                ? containsString("jersey-rx-client-test") : containsString("RxCachedThreadScheduler"));
 
         // Properties.
         assertThat(response.getHeaderString("Test-Uri"), is("http://jersey.java.net"));
