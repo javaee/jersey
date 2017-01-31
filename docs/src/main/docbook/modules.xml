@@ -453,6 +453,30 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-guava/dependencies.html">
+    jersey-rx-client-guava
+</link>
+</entry>
+<entry>Jersey Reactive Client - Guava (ListenableFuture) provider.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-rxjava/dependencies.html">
+    jersey-rx-client-rxjava
+</link>
+</entry>
+<entry>Jersey Reactive Client - RxJava (Observable) provider.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-rxjava2/dependencies.html">
+    jersey-rx-client-rxjava2
+</link>
+</entry>
+<entry>Jersey Reactive Client - RxJava2 (Flowable) provider.</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-servlet-portability/dependencies.html">
     jersey-servlet-portability
 </link>
