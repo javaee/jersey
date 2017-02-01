@@ -838,6 +838,7 @@
                         <configuration>
                             <serverId>jvnet-nexus-staging</serverId>
                             <nexusUrl>https://maven.java.net/</nexusUrl>
+                            <stagingProgressTimeoutMinutes>30</stagingProgressTimeoutMinutes>
                         </configuration>
                     </plugin>
                 </plugins>
