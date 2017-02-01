@@ -90,8 +90,4 @@
              </plugin>
         </plugins>
     </build>
-
-    <properties>
-        <java.version>1.6</java.version>
-    </properties>
 </project>

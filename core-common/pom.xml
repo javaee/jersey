@@ -258,7 +258,6 @@
 
     <properties>
         <surefire.security.argline>-Djava.security.manager -Djava.security.policy=${project.build.directory}/test-classes/surefire.policy</surefire.security.argline>
-        <java.version>1.6</java.version>
     </properties>
 
 </project>
