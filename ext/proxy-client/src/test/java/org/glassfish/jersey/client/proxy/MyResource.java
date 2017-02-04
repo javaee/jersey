@@ -172,6 +172,11 @@ public class MyResource implements MyResourceIfc {
     }
 
     @Override
+    public String postBeanParam(MyBeanParam beanParam) {
+        return beanParam.toString();
+    }
+
+    @Override
     public MySubResourceIfc getSubResource() {
         return new MySubResource();
     }
