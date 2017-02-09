@@ -107,8 +107,9 @@ public class NettyHttpContainerProvider implements ContainerProvider {
              .childHandler(new JerseyServerInitializer(baseUri, sslContext, container));
 
             int port = getPort(baseUri);
+            String host = getHost(baseUri);
 
-            Channel ch = b.bind(port).sync().channel();
+            Channel ch = b.bind(host, port).sync().channel();
 
             ch.closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
                 @Override
@@ -176,8 +177,9 @@ public class NettyHttpContainerProvider implements ContainerProvider {
              .childHandler(new JerseyServerInitializer(baseUri, sslContext, container, true));
 
             int port = getPort(baseUri);
+            String host = getHost(baseUri);
 
-            Channel ch = b.bind(port).sync().channel();
+            Channel ch = b.bind(host, port).sync().channel();
 
             ch.closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
                 @Override
@@ -208,5 +210,13 @@ public class NettyHttpContainerProvider implements ContainerProvider {
         }
 
         return uri.getPort();
+    }
+
+    private static String getHost(URI uri) {
+        String host = uri.getHost();
+        if (host == null) {
+            throw new IllegalArgumentException("URI must contain a host.");
+        }
+        return host;
     }
 }
