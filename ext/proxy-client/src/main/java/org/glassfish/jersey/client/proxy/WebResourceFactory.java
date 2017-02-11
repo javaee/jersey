@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -161,6 +161,16 @@ public final class WebResourceFactory implements InvocationHandler {
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
         if (args == null && method.getName().equals("toString")) {
             return toString();
+        }
+
+        if (args == null && method.getName().equals("hashCode")) {
+            //unique instance in the JVM, and no need to override
+            return hashCode();
+        }
+
+        if (args != null && args.length == 1 && method.getName().equals("equals")) {
+            //unique instance in the JVM, and no need to override
+            return equals(args[0]);
         }
 
         // get the interface describing the resource
