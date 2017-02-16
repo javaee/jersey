@@ -342,4 +342,10 @@ public class WebResourceFactoryTest extends JerseyTest {
 
         assertEquals(expected, actual);
     }
+
+    @Test
+    public void testHashCode() throws Exception {
+        resource.hashCode();
+        //no thrown UnsupportedOperationException ==> everything is ok
+    }
 }
