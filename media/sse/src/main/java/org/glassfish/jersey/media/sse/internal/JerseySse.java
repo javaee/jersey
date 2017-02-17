@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,36 +37,48 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-// we do not care about java lib itself
-grant codebase "file:${java.home}/-" {
-  permission java.security.AllPermission;
-};
 
-// we do not care about our dependencies
-grant codebase "file:${settings.localRepository}/-" {
-  permission java.security.AllPermission;
-};
+package org.glassfish.jersey.media.sse.internal;
 
-// this is to be able to set runtime delegate instance in jax-rs from the tests
-// and to run multi-threaded tests
-grant codebase "file:${project.build.directory}/test-classes/-" {
-  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
-  permission java.lang.RuntimePermission "modifyThread";
-  permission java.util.PropertyPermission "*", "write";
-  permission java.lang.RuntimePermission "getClassLoader";
-  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc";
-  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc.*";
-  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
-};
+import javax.ws.rs.sse.OutboundSseEvent;
+import javax.ws.rs.sse.Sse;
+import javax.ws.rs.sse.SseBroadcaster;
 
-grant codebase "file:${project.build.directory}/classes/-" {
-  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc";
-  permission java.lang.RuntimePermission "accessDeclaredMembers";
-  permission java.lang.RuntimePermission "getClassLoader";
-  permission java.lang.RuntimePermission "modifyThread";
-  permission java.util.PropertyPermission "*", "read";
-  permission java.io.FilePermission "<<ALL FILES>>", "read";
-  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc";
-  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc.*";
-  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
-};
+import org.glassfish.jersey.media.sse.OutboundEvent;
+
+/**
+ * Implementation of server-side injectable Server-Sent Event "context".
+ *
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
+ */
+class JerseySse implements Sse {
+
+    private static class JerseySseHolder {
+        private static final JerseySse INSTANCE = new JerseySse();
+    }
+
+    private JerseySse() {
+        // prevent instantiation;
+    }
+
+    @Override
+    public OutboundSseEvent.Builder newEventBuilder() {
+        return new OutboundEvent.Builder();
+    }
+
+    @Override
+    public SseBroadcaster newBroadcaster() {
+        return new JerseySseBroadcaster();
+    }
+
+    /**
+     * Get the single {@code JerseySse} instance.
+     * <p>
+     * The instance should only be obtained via injection into the resource.
+     *
+     * @return {@code JerseySse}, the {link Sse} implementation.
+     */
+    static JerseySse getInstance() {
+        return JerseySseHolder.INSTANCE;
+    }
+}

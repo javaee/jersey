@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,8 +50,10 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.sse.InboundSseEvent;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 
 /**
  * Inbound event.
@@ -59,7 +61,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class InboundEvent {
+public class InboundEvent implements InboundSseEvent {
 
     private static final GenericType<String> STRING_AS_GENERIC_TYPE = new GenericType<>(String.class);
 
@@ -375,7 +377,7 @@ public class InboundEvent {
         final MessageBodyReader reader =
                 messageBodyWorkers.getMessageBodyReader(type.getRawType(), type.getType(), annotations, mediaType);
         if (reader == null) {
-            throw new IllegalStateException(LocalizationMessages.EVENT_DATA_READER_NOT_FOUND());
+            throw new MessageBodyProviderNotFoundException(LocalizationMessages.EVENT_DATA_READER_NOT_FOUND());
         }
         return readAndCast(type, effectiveMediaType, reader);
     }
