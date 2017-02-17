@@ -61,7 +61,7 @@ build.readme
 /test/resources/org/glassfish/jersey/server/config/jaxrs-components
 /tests/e2e/src/test/resources/org/glassfish/jersey/tests/e2e/entity/xxe.txt
 /core-server/src/main/java/com/sun/research/ws/wadl
-/bundles/repackaged/jersey-jsr166e/src/main/java/jersey/repackaged/jsr166e
+/core-common/src/main/java/org/glassfish/jersey/internal/jsr166
 /tests/performance/etc/data/MEASUREMENT_DATA
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/AbstractSlidingWindowTimeReservoir.java
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/TimeReservoir.java

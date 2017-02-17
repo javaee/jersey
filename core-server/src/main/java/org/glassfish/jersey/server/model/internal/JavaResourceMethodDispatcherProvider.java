@@ -47,6 +47,7 @@ import java.util.List;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.sse.SseEventSink;
 
 import javax.inject.Inject;
 
@@ -54,6 +55,7 @@ import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
@@ -78,7 +80,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
                 ParameterValueHelper.createValueProviders(injectionManager, resourceMethod);
         final Class<?> returnType = resourceMethod.getHandlingMethod().getReturnType();
 
-        ResourceMethodDispatcher resourceMethodDispatcher;
+        ResourceMethodDispatcher resourceMethodDispatcher = null;
         if (Response.class.isAssignableFrom(returnType)) {
             resourceMethodDispatcher =
                     new ResponseOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
@@ -91,8 +93,20 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
                         new TypeOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
             }
         } else {
-            resourceMethodDispatcher
-                    = new VoidOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
+            // return type is void
+            int i = 0;
+            for (final Parameter parameter : resourceMethod.getParameters()) {
+                if (SseEventSink.class.equals(parameter.getRawType())) {
+                    resourceMethodDispatcher =
+                            new SseEventSinkInvoker(resourceMethod, invocationHandler, valueProviders, validator, i);
+                    break;
+                }
+                i++;
+            }
+
+            if (resourceMethodDispatcher == null) {
+                resourceMethodDispatcher = new VoidOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
+            }
         }
 
         // Inject validator.
@@ -114,7 +128,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
         private final List<ParamValueFactoryWithSource<?>> valueProviders;
 
-        public AbstractMethodParamInvoker(
+        AbstractMethodParamInvoker(
                 final Invocable resourceMethod,
                 final InvocationHandler handler,
                 final List<ParamValueFactoryWithSource<?>> valueProviders,
@@ -128,9 +142,37 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         }
     }
 
+    private static final class SseEventSinkInvoker extends AbstractMethodParamInvoker {
+
+        private final int parameterIndex;
+
+        SseEventSinkInvoker(
+                final Invocable resourceMethod,
+                final InvocationHandler handler,
+                final List<ParamValueFactoryWithSource<?>> valueProviders,
+                final ConfiguredValidator validator,
+                final int parameterIndex) {
+            super(resourceMethod, handler, valueProviders, validator);
+            this.parameterIndex = parameterIndex;
+        }
+
+        @Override
+        protected Response doDispatch(final Object resource, final ContainerRequest request) throws ProcessingException {
+            final Object[] paramValues = getParamValues();
+            invoke(request, resource, paramValues);
+
+            final SseEventSink eventSink = (SseEventSink) paramValues[parameterIndex];
+
+            if (eventSink == null) {
+                throw new IllegalArgumentException("SseEventSink parameter detected, but not found.");
+            }
+            return Response.ok().entity(eventSink).build();
+        }
+    }
+
     private static final class VoidOutInvoker extends AbstractMethodParamInvoker {
 
-        public VoidOutInvoker(
+        VoidOutInvoker(
                 final Invocable resourceMethod,
                 final InvocationHandler handler,
                 final List<ParamValueFactoryWithSource<?>> valueProviders,
@@ -147,7 +189,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
     private static final class ResponseOutInvoker extends AbstractMethodParamInvoker {
 
-        public ResponseOutInvoker(
+        ResponseOutInvoker(
                 final Invocable resourceMethod,
                 final InvocationHandler handler,
                 final List<ParamValueFactoryWithSource<?>> valueProviders,
@@ -163,7 +205,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
     private static final class ObjectOutInvoker extends AbstractMethodParamInvoker {
 
-        public ObjectOutInvoker(
+        ObjectOutInvoker(
                 final Invocable resourceMethod,
                 final InvocationHandler handler,
                 final List<ParamValueFactoryWithSource<?>> valueProviders,
@@ -191,7 +233,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
         private final Type t;
 
-        public TypeOutInvoker(
+        TypeOutInvoker(
                 final Invocable resourceMethod,
                 final InvocationHandler handler,
                 final List<ParamValueFactoryWithSource<?>> valueProviders,

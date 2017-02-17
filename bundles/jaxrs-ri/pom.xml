@@ -105,6 +105,11 @@
             <artifactId>jersey-container-servlet</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-sse</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- JAX-RS RI Sources -->
         <dependency>
