@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import java.lang.reflect.Constructor;
@@ -49,8 +50,7 @@ import java.util.List;
 import javax.ws.rs.Encoded;
 
 import org.glassfish.jersey.internal.inject.Injections;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Resource method handler model.
@@ -205,17 +205,17 @@ public abstract class MethodHandler implements ResourceModelComponent {
     /**
      * Get the injected resource method handler instance.
      *
-     * @param locator service locator that can be used to inject get the instance.
+     * @param instanceManager instance manager that can be used to inject get the instance.
      * @return injected resource method handler instance.
      */
-    public abstract Object getInstance(final ServiceLocator locator);
+    public abstract Object getInstance(final InstanceManager instanceManager);
 
     /**
-     * Return whether the method handler {@link ServiceLocator creates instances}
+     * Return whether the method handler {@link InstanceManager creates instances}
      * based on {@link Class classes}.
      *
-     * @return True is instances returned bu this method handler are created from {@link Class classes} given to HK2, false\
-     * otherwise (for example when method handler was initialized from instance)
+     * @return True is instances returned by this method handler are created from {@link Class classes} given to
+     * {@code InstanceManager}, false otherwise (for example when method handler was initialized from instance)
      */
     public abstract boolean isClassBased();
 
@@ -280,8 +280,8 @@ public abstract class MethodHandler implements ResourceModelComponent {
         }
 
         @Override
-        public Object getInstance(final ServiceLocator locator) {
-            return Injections.getOrCreate(locator, handlerClass);
+        public Object getInstance(final InstanceManager instanceManager) {
+            return Injections.getOrCreate(instanceManager, handlerClass);
         }
 
         @Override
@@ -339,7 +339,7 @@ public abstract class MethodHandler implements ResourceModelComponent {
         }
 
         @Override
-        public Object getInstance(final ServiceLocator locator) {
+        public Object getInstance(final InstanceManager instanceManager) {
             return handler;
         }
 

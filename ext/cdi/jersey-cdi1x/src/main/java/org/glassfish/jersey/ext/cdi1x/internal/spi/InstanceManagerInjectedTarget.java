@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,20 +42,20 @@ package org.glassfish.jersey.ext.cdi1x.internal.spi;
 
 import javax.enterprise.inject.spi.InjectionTarget;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
- * CDI {@link javax.enterprise.inject.spi.InjectionTarget injection target} that is co-injected by HK2. The injection by HK2 is
- * done via given {@link org.glassfish.hk2.api.ServiceLocator service locator}.
+ * CDI {@link javax.enterprise.inject.spi.InjectionTarget injection target} that is co-injected by instance manager.
+ * The injection by InstanceManager is done via given {@link InstanceManager instance manager}.
  *
  * @author Michal Gajdos
  */
-public interface Hk2InjectedTarget extends InjectionTarget {
+public interface InstanceManagerInjectedTarget extends InjectionTarget {
 
     /**
      * Set the locator to be used to co-inject this injection target.
      *
-     * @param locator effective HK2 locator.
+     * @param instanceManager effective instance manager.
      */
-    void setLocator(ServiceLocator locator);
+    void setInstanceManager(InstanceManager instanceManager);
 }

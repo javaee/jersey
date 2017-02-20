@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.spi.internal;
 
 import java.util.ArrayList;
@@ -56,9 +57,9 @@ import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundExceptio
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.MultiException;
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Utility methods for retrieving values or value providers for the
@@ -116,18 +117,18 @@ public final class ParameterValueHelper {
      * Create list of parameter value providers for the given {@link Parameterized
      * parameterized} resource model component.
      *
-     * @param locator       HK2 service locator.
+     * @param instanceManager instance manager.
      * @param parameterized parameterized resource model component.
      * @return list of parameter value providers for the parameterized component.
      */
-    public static List<ParamValueFactoryWithSource<?>> createValueProviders(final ServiceLocator locator,
-                                                                    final Parameterized parameterized) {
+    public static List<ParamValueFactoryWithSource<?>> createValueProviders(InstanceManager instanceManager,
+                                                                    Parameterized parameterized) {
         if ((null == parameterized.getParameters()) || (0 == parameterized.getParameters().size())) {
             return Collections.emptyList();
         }
 
         List<ValueSupplierProvider> valueSupplierProviders = new ArrayList<ValueSupplierProvider>(
-                Providers.getProviders(locator, ValueSupplierProvider.class));
+                Providers.getProviders(instanceManager, ValueSupplierProvider.class));
 
         Collections.sort(valueSupplierProviders, new Comparator<ValueSupplierProvider>() {
 

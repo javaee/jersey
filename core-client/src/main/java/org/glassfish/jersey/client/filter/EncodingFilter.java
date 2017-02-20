@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,8 +57,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.ContentEncoder;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Client filter adding support for {@link org.glassfish.jersey.spi.ContentEncoder content encoding}. The filter adds
@@ -75,7 +74,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 public final class EncodingFilter implements ClientRequestFilter {
     @Inject
-    private ServiceLocator serviceLocator;
+    private InstanceManager instanceManager;
     private volatile List<Object> supportedEncodings = null;
 
     @Override
@@ -106,7 +105,7 @@ public final class EncodingFilter implements ClientRequestFilter {
         // may be set twice, but it does not break anything
         if (supportedEncodings == null) {
             SortedSet<String> se = new TreeSet<>();
-            List<ContentEncoder> encoders = serviceLocator.getAllServices(ContentEncoder.class);
+            List<ContentEncoder> encoders = instanceManager.getAllInstances(ContentEncoder.class);
             for (ContentEncoder encoder : encoders) {
                 se.addAll(encoder.getSupportedEncodings());
             }

@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.util.Arrays;
@@ -50,8 +51,7 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * A parameter value supplier provider that provides parameter value factories
@@ -65,7 +65,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 public abstract class AbstractValueSupplierProvider implements ValueSupplierProvider {
 
     private final MultivaluedParameterExtractorProvider mpep;
-    private final ServiceLocator locator;
+    private final InstanceManager instanceManager;
     private final Set<Parameter.Source> compatibleSources;
     private final Provider<ContainerRequest> requestProvider;
 
@@ -73,17 +73,16 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
      * Initialize the provider.
      *
      * @param mpep              multivalued map parameter extractor provider.
-     * @param locator           HK2 service locator.
+     * @param instanceManager   instance manager.
      * @param compatibleSources compatible parameter sources.
      */
     protected AbstractValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
-                                            ServiceLocator locator,
+                                            InstanceManager instanceManager,
                                             Parameter.Source... compatibleSources) {
         this.mpep = mpep;
-        this.locator = locator;
+        this.instanceManager = instanceManager;
         this.compatibleSources = new HashSet<>(Arrays.asList(compatibleSources));
-
-        this.requestProvider = Injections.getProvider(locator, ContainerRequest.class);
+        this.requestProvider = Injections.getProvider(instanceManager, ContainerRequest.class);
     }
 
     /**
@@ -128,7 +127,7 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
         }
         final Supplier<?> valueSupplier = createValueSupplier(parameter, requestProvider);
         if (valueSupplier != null) {
-            locator.inject(valueSupplier);
+            instanceManager.inject(valueSupplier);
         }
         return valueSupplier;
     }
@@ -139,11 +138,11 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
     }
 
     /**
-     * Get the service locator.
+     * Get the instance manager.
      *
-     * @return service locator.
+     * @return instance manager.
      */
-    protected final ServiceLocator getLocator() {
-        return locator;
+    protected final InstanceManager getInstanceManager() {
+        return instanceManager;
     }
 }

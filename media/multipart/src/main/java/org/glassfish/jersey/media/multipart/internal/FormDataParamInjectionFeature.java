@@ -44,14 +44,14 @@ import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.core.GenericType;
 
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.InjectionResolver;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Feature providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
@@ -68,7 +68,7 @@ public final class FormDataParamInjectionFeature implements Feature {
             @Override
             protected void configure() {
                 bind(FormDataParamValueSupplierProvider.InjectionResolver.class)
-                        .to(new TypeLiteral<InjectionResolver<FormDataParam>>() {})
+                        .to(new GenericType<InjectionResolver<FormDataParam>>() {})
                         .in(Singleton.class);
             }
         });

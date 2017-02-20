@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,20 +38,22 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal.inject;
+package org.glassfish.jersey.spi.inject;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import java.util.Collection;
 
 /**
- * Implementation of this interface is capable of returning {@link org.glassfish.hk2.api.ServiceLocator}.
+ * Interface dedicated to keep some level of code compatibility between previous HK2 implementation and new DI SPI.
  *
- * @author Miroslav Fuksa
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public interface ServiceLocatorSupplier {
+public interface Binder {
+
     /**
-     * Get service locator.
+     * Gets a collection of descriptors registered in this jersey binder.
      *
-     * @return Service locator;
+     * @return collection of descriptors.
      */
-    public ServiceLocator getServiceLocator();
+    Collection<Descriptor> getDescriptors();
+
 }

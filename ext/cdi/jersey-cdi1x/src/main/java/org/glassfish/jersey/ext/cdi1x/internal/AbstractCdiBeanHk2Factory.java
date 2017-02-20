@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.ext.cdi1x.internal;
 
 import java.lang.annotation.Annotation;
@@ -51,7 +52,6 @@ import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.InjectionTargetFactory;
 
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Abstract HK2 factory to provide CDI components obtained from CDI bean manager.
@@ -64,51 +64,20 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 public abstract class AbstractCdiBeanHk2Factory<T> implements Factory<T> {
 
-    private interface InstanceManager<T> {
-
-        /**
-         * Get me correctly instantiated and injected instance.
-         *
-         * @param clazz type of the component to instantiate.
-         * @return injected component instance.
-         */
-        T getInstance(Class<T> clazz);
-
-        /**
-         * Do whatever needs to be done before given instance is destroyed.
-         *
-         * @param instance to be destroyed.
-         */
-        void preDestroy(T instance);
-    }
-
     final Class<T> clazz;
     final InstanceManager<T> referenceProvider;
     final Annotation[] qualifiers;
-
-    @SuppressWarnings(value = "unchecked")
-    /* package */ T _provide() {
-        final T instance = referenceProvider.getInstance(clazz);
-        if (instance != null) {
-            return instance;
-        }
-        throw new NoSuchElementException(LocalizationMessages.CDI_LOOKUP_FAILED(clazz));
-    }
-
-    @Override
-    public void dispose(final T instance) {
-        referenceProvider.preDestroy(instance);
-    }
-
     /**
      * Create new factory instance for given type and bean manager.
      *
-     * @param rawType     type of the components to provide.
-     * @param locator     actual HK2 service locator instance.
-     * @param beanManager current bean manager to get references from.
-     * @param cdiManaged  set to {@code true} if the component should be managed by CDI.
+     * @param rawType         type of the components to provide.
+     * @param instanceManager actual instance manager instance.
+     * @param beanManager     current bean manager to get references from.
+     * @param cdiManaged      set to {@code true} if the component should be managed by CDI.
      */
-    public AbstractCdiBeanHk2Factory(final Class<T> rawType, final ServiceLocator locator, final BeanManager beanManager,
+    public AbstractCdiBeanHk2Factory(final Class<T> rawType,
+                                     final org.glassfish.jersey.spi.inject.InstanceManager instanceManager,
+                                     final BeanManager beanManager,
                                      final boolean cdiManaged) {
 
         this.clazz = rawType;
@@ -138,8 +107,8 @@ public abstract class AbstractCdiBeanHk2Factory<T> implements Factory<T> {
                 final CreationalContext<T> creationalContext = beanManager.createCreationalContext(null);
                 final T instance = injectionTarget.produce(creationalContext);
                 injectionTarget.inject(instance, creationalContext);
-                if (locator != null) {
-                    locator.inject(instance, CdiComponentProvider.CDI_CLASS_ANALYZER);
+                if (instanceManager != null) {
+                    instanceManager.inject(instance, CdiComponentProvider.CDI_CLASS_ANALYZER);
                 }
                 injectionTarget.postConstruct(instance);
                 return instance;
@@ -150,5 +119,37 @@ public abstract class AbstractCdiBeanHk2Factory<T> implements Factory<T> {
                 injectionTarget.preDestroy(instance);
             }
         };
+    }
+
+    @SuppressWarnings(value = "unchecked")
+    /* package */ T _provide() {
+        final T instance = referenceProvider.getInstance(clazz);
+        if (instance != null) {
+            return instance;
+        }
+        throw new NoSuchElementException(LocalizationMessages.CDI_LOOKUP_FAILED(clazz));
+    }
+
+    @Override
+    public void dispose(final T instance) {
+        referenceProvider.preDestroy(instance);
+    }
+
+    private interface InstanceManager<T> {
+
+        /**
+         * Get me correctly instantiated and injected instance.
+         *
+         * @param clazz type of the component to instantiate.
+         * @return injected component instance.
+         */
+        T getInstance(Class<T> clazz);
+
+        /**
+         * Do whatever needs to be done before given instance is destroyed.
+         *
+         * @param instance to be destroyed.
+         */
+        void preDestroy(T instance);
     }
 }

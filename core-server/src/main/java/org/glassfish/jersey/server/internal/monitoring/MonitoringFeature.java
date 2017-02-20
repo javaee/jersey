@@ -45,6 +45,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.core.GenericType;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -58,10 +59,9 @@ import org.glassfish.jersey.server.internal.monitoring.jmx.MBeanExposer;
 import org.glassfish.jersey.server.monitoring.ApplicationInfo;
 import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Feature that enables calculating of {@link MonitoringStatistics monitoring statistics} and
@@ -133,13 +133,12 @@ public final class MonitoringFeature implements Feature {
             context.register(new AbstractBinder() {
                 @Override
                 protected void configure() {
-                    bindFactory(ReferencingFactory.<ApplicationInfo>referenceFactory()).to(
-                            new TypeLiteral<Ref<ApplicationInfo>>() {
-                            }
-                    ).in(Singleton.class);
+                    bindFactory(ReferencingFactory.<ApplicationInfo>referenceFactory())
+                            .to(new GenericType<Ref<ApplicationInfo>>() { })
+                            .in(Singleton.class);
 
-                    bindFactory(ApplicationInfoInjectionFactory.class).to(
-                            ApplicationInfo.class).in(PerLookup.class);
+                    bindFactory(ApplicationInfoInjectionFactory.class)
+                            .to(ApplicationInfo.class).in(PerLookup.class);
                 }
             });
         }
@@ -149,9 +148,9 @@ public final class MonitoringFeature implements Feature {
             context.register(new AbstractBinder() {
                 @Override
                 protected void configure() {
-                    bindFactory(ReferencingFactory.<MonitoringStatistics>referenceFactory()).to(
-                            new TypeLiteral<Ref<MonitoringStatistics>>() {
-                            }).in(Singleton.class);
+                    bindFactory(ReferencingFactory.<MonitoringStatistics>referenceFactory())
+                            .to(new GenericType<Ref<MonitoringStatistics>>() { })
+                            .in(Singleton.class);
 
                     bindFactory(StatisticsInjectionFactory.class).to(MonitoringStatistics.class).in(PerLookup.class);
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,13 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.ext.cdi1x.internal;
 
-import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Vetoed;
 import javax.enterprise.inject.spi.BeanManager;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * HK2 factory to provide CDI managed components where
@@ -54,8 +52,11 @@ import org.glassfish.hk2.api.ServiceLocator;
 @Vetoed
 public final class GenericCdiBeanHk2Factory extends AbstractCdiBeanHk2Factory {
 
-    public GenericCdiBeanHk2Factory(Class rawType, ServiceLocator locator, BeanManager beanManager, boolean cdiManaged) {
-        super(rawType, locator, beanManager, cdiManaged);
+    public GenericCdiBeanHk2Factory(Class rawType,
+                                    org.glassfish.jersey.spi.inject.InstanceManager instanceManager,
+                                    BeanManager beanManager,
+                                    boolean cdiManaged) {
+        super(rawType, instanceManager, beanManager, cdiManaged);
     }
 
     @Override

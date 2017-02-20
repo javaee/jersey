@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.BadRequestException;
@@ -51,8 +52,7 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Provides injection of {@link Request} entity value or {@link Request} instance
@@ -66,12 +66,12 @@ class EntityParamValueSupplierProvider extends AbstractValueSupplierProvider {
     /**
      * Creates new instance initialized with parameters.
      *
-     * @param mpep     Injected multivaluedParameterExtractor provider.
-     * @param injector Injected HK2 injector.
+     * @param mpep            Injected multivaluedParameterExtractor provider.
+     * @param instanceManager Instance manager.
      */
     @Inject
-    EntityParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.ENTITY);
+    EntityParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
+        super(mpep, instanceManager, Parameter.Source.ENTITY);
     }
 
     @Override

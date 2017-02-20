@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,8 +59,7 @@ import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * A resource model validator that checks the given resource model.
@@ -92,11 +91,11 @@ public final class ComponentModelValidator {
 
     private final List<ResourceModelIssue> issueList = new LinkedList<>();
 
-    public ComponentModelValidator(ServiceLocator locator) {
+    public ComponentModelValidator(InstanceManager instanceManager) {
         validators = new ArrayList<>();
         validators.add(new ResourceValidator());
-        validators.add(new RuntimeResourceModelValidator(locator.getService(MessageBodyWorkers.class)));
-        validators.add(new ResourceMethodValidator(locator));
+        validators.add(new RuntimeResourceModelValidator(instanceManager.getInstance(MessageBodyWorkers.class)));
+        validators.add(new ResourceMethodValidator(instanceManager));
         validators.add(new InvocableValidator());
     }
 

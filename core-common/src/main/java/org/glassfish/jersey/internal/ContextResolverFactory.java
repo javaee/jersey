@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal;
 
 import java.lang.reflect.Type;
@@ -60,9 +61,8 @@ import org.glassfish.jersey.internal.util.collection.KeyComparatorHashMap;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.spi.ContextResolvers;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * A factory implementation for managing {@link ContextResolver} instances.
@@ -90,16 +90,16 @@ public class ContextResolverFactory implements ContextResolvers {
             new HashMap<Type, ConcurrentHashMap<MediaType, ContextResolver>>(3);
 
     /**
-     * Create new context resolver factory backed by the supplied {@link ServiceLocator HK2 service locator}.
+     * Create new context resolver factory backed by the supplied {@link InstanceManager instance manager}.
      *
-     * @param locator HK2 service locator.
+     * @param instanceManager instance manager.
      */
     @Inject
-    public ContextResolverFactory(final ServiceLocator locator) {
+    public ContextResolverFactory(final InstanceManager instanceManager) {
         final Map<Type, Map<MediaType, List<ContextResolver>>> rs =
                 new HashMap<Type, Map<MediaType, List<ContextResolver>>>();
 
-        final Iterable<ContextResolver> providers = Providers.getAllProviders(locator, ContextResolver.class);
+        final Iterable<ContextResolver> providers = Providers.getAllProviders(instanceManager, ContextResolver.class);
         for (final ContextResolver provider : providers) {
             final List<MediaType> ms = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
 

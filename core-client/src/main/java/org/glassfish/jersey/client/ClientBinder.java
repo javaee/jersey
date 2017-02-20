@@ -37,12 +37,14 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.util.Map;
 
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.ext.MessageBodyReader;
 
 import javax.inject.Inject;
@@ -65,9 +67,7 @@ import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.ExecutorServiceProvider;
-
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Registers all binders necessary for {@link Client} runtime.
@@ -125,14 +125,14 @@ class ClientBinder extends AbstractBinder {
                 new JaxrsProviders.Binder(),
                 new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, clientRuntimeProperties, RuntimeType.CLIENT));
 
-        bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {
+        bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new GenericType<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);
 
         bindFactory(RequestContextInjectionFactory.class)
                 .to(ClientRequest.class)
                 .in(RequestScoped.class);
 
-        bindFactory(ReferencingFactory.<ClientRequest>referenceFactory()).to(new TypeLiteral<Ref<ClientRequest>>() {
+        bindFactory(ReferencingFactory.<ClientRequest>referenceFactory()).to(new GenericType<Ref<ClientRequest>>() {
         }).in(RequestScoped.class);
 
         bindFactory(PropertiesDelegateFactory.class, Singleton.class).to(PropertiesDelegate.class).in(RequestScoped.class);

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -73,8 +73,7 @@ import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.internal.LocalizationMessages;
 import org.glassfish.jersey.server.mvc.internal.TemplateHelper;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Default implementation of {@link org.glassfish.jersey.server.mvc.spi.TemplateProcessor template processor} that can be used to
@@ -263,13 +262,13 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
      * Retrieve a template object factory. The factory is, at first, looked for in
      * {@link javax.ws.rs.core.Configuration configuration} and if not found, given default value is used.
      *
-     * @param serviceLocator HK2 service locator to initialize factory if configured as class or class-name.
+     * @param instanceManager instance manager to initialize factory if configured as class or class-name.
      * @param type type of requested template object factory.
      * @param defaultValue default value to be used if no factory reference is present in configuration.
      * @param <F> type of requested template object factory.
      * @return non-{@code null} template object factory.
      */
-    protected <F> F getTemplateObjectFactory(final ServiceLocator serviceLocator, final Class<F> type,
+    protected <F> F getTemplateObjectFactory(final InstanceManager instanceManager, final Class<F> type,
                                              final Value<F> defaultValue) {
         final Object objectFactoryProperty = config.getProperty(MvcFeature.TEMPLATE_OBJECT_FACTORY + suffix);
 
@@ -287,7 +286,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
 
                 if (factoryClass != null) {
                     if (type.isAssignableFrom(factoryClass)) {
-                        return type.cast(serviceLocator.create(factoryClass));
+                        return type.cast(instanceManager.createAndInitialize(factoryClass));
                     } else {
                         LOGGER.log(Level.CONFIG, LocalizationMessages.WRONG_TEMPLATE_OBJECT_FACTORY(factoryClass, type));
                     }

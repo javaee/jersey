@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import java.lang.reflect.Method;
@@ -54,9 +55,9 @@ import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * A common interface for invocable resource components. This includes resource
@@ -314,11 +315,11 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
      * values for parameters of this Invocable returned by {@link #getParameters()}. Value providers are ordered in the same
      * order as parameters.
      *
-     * @param locator HK2 service locator.
+     * @param instanceManager instance manager.
      * @return Set of value providers for this Invocable.
      */
-    public List<? extends Factory<?>> getValueProviders(ServiceLocator locator) {
-        return ParameterValueHelper.createValueProviders(locator, this);
+    public List<? extends Factory<?>> getValueProviders(InstanceManager instanceManager) {
+        return ParameterValueHelper.createValueProviders(instanceManager, this);
     }
 
     @Override

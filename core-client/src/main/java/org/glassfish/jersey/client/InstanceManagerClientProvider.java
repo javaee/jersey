@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,66 +43,65 @@ package org.glassfish.jersey.client;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 
-import org.glassfish.jersey.ServiceLocatorProvider;
+import org.glassfish.jersey.InstanceManagerProvider;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
- * Extension of {@link org.glassfish.jersey.ServiceLocatorProvider} which contains helper static methods
- * that extract {@link org.glassfish.hk2.api.ServiceLocator} from client specific JAX-RS components.
+ * Extension of {@link InstanceManagerProvider} which contains helper static methods
+ * that extract {@link InstanceManager} from client specific JAX-RS components.
  * <p>
- * See javadoc of {@link org.glassfish.jersey.ServiceLocatorProvider} for more details.
+ * See javadoc of {@link InstanceManagerProvider} for more details.
  * </p>
  *
- * @see org.glassfish.jersey.ServiceLocatorProvider
+ * @see InstanceManagerProvider
  * @author Miroslav Fuksa
  * @since 2.6
  */
-public class ServiceLocatorClientProvider extends ServiceLocatorProvider {
+public class InstanceManagerClientProvider extends InstanceManagerProvider {
 
     /**
-     * Extract and return service locator from {@link javax.ws.rs.client.ClientRequestContext clientRequestContext}.
+     * Extract and return instance manager from {@link javax.ws.rs.client.ClientRequestContext clientRequestContext}.
      * The method can be used to inject custom types into a {@link javax.ws.rs.client.ClientRequestFilter}.
      *
      * @param clientRequestContext Client request context.
      *
-     * @return Service locator.
+     * @return instance manager.
      *
      * @throws java.lang.IllegalArgumentException when {@code clientRequestContext} is not a default
      * Jersey implementation provided by Jersey as argument in the
      * {@link javax.ws.rs.client.ClientRequestFilter#filter(javax.ws.rs.client.ClientRequestContext)} method.
      */
-    public static ServiceLocator getServiceLocator(ClientRequestContext clientRequestContext) {
-        if (!(clientRequestContext instanceof ServiceLocatorSupplier)) {
+    public static InstanceManager getInstanceManager(ClientRequestContext clientRequestContext) {
+        if (!(clientRequestContext instanceof InstanceManagerSupplier)) {
             throw new IllegalArgumentException(
                     LocalizationMessages
                             .ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_REQUEST(clientRequestContext.getClass().getName()));
         }
-        return ((ServiceLocatorSupplier) clientRequestContext).getServiceLocator();
+        return ((InstanceManagerSupplier) clientRequestContext).getInstanceManager();
     }
 
     /**
-     * Extract and return service locator from {@link javax.ws.rs.client.ClientResponseContext clientResponseContext}.
+     * Extract and return instance manager from {@link javax.ws.rs.client.ClientResponseContext clientResponseContext}.
      * The method can be used to inject custom types into a {@link javax.ws.rs.client.ClientResponseFilter}.
      *
      * @param clientResponseContext Client response context.
      *
-     * @return Service locator.
+     * @return instance manager.
      *
      * @throws java.lang.IllegalArgumentException when {@code clientResponseContext} is not a default
      * Jersey implementation provided by Jersey as argument in the
      * {@link javax.ws.rs.client.ClientResponseFilter#filter(javax.ws.rs.client.ClientRequestContext, javax.ws.rs.client.ClientResponseContext)}
      * method.
      */
-    public static ServiceLocator getServiceLocator(ClientResponseContext clientResponseContext) {
-        if (!(clientResponseContext instanceof ServiceLocatorSupplier)) {
+    public static InstanceManager getInstanceManager(ClientResponseContext clientResponseContext) {
+        if (!(clientResponseContext instanceof InstanceManagerSupplier)) {
             throw new IllegalArgumentException(
                     LocalizationMessages
                             .ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_RESPONSE(clientResponseContext.getClass().getName()));
         }
-        return ((ServiceLocatorSupplier) clientResponseContext).getServiceLocator();
+        return ((InstanceManagerSupplier) clientResponseContext).getInstanceManager();
     }
 
 }

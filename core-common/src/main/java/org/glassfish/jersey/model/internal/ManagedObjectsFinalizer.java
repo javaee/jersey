@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,18 +47,18 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
- * Invokes {@link PreDestroy} methods on all registered objects, when the service locator is shut down.
+ * Invokes {@link PreDestroy} methods on all registered objects, when the instance manager is shut down.
  * <p/>
- * Some objects managed by Jersey are created using {@link ServiceLocator#createAndInitialize}. This means
+ * Some objects managed by Jersey are created using {@link InstanceManager#createAndInitialize}. This means
  * that such objects are created, dependencies injected and methods annotated with {@link javax.annotation.PostConstruct}
  * invoked. Therefore methods annotated with {@link PreDestroy} should be invoked on such objects too, when they are destroyed.
  * <p/>
- * This service invokes {@link PreDestroy} on all registered objects when {@link ServiceLocator#shutdown()} is invoked
- * on the service locator where this service is registered. Therefore only classes with their lifecycle linked
- * to the service locator that created them should be registered here.
+ * This service invokes {@link PreDestroy} on all registered objects when {@link InstanceManager#shutdown()} is invoked
+ * on the instance manager where this service is registered. Therefore only classes with their lifecycle linked
+ * to the instance manager that created them should be registered here.
  *
  * @author Petr Janouch (petr.janouch at oracle.com)
  */
@@ -66,13 +66,13 @@ import org.glassfish.hk2.api.ServiceLocator;
 public class ManagedObjectsFinalizer {
 
     @Inject
-    private ServiceLocator serviceLocator;
+    private InstanceManager instanceManager;
 
-    private final Set<Object> managedObjects = new HashSet<Object>();
+    private final Set<Object> managedObjects = new HashSet<>();
 
     /**
      * Register an object for invocation of its {@link PreDestroy} method.
-     * It will be invoked when the service locator is shut down.
+     * It will be invoked when the instance manager is shut down.
      *
      * @param object an object to be registered.
      */
@@ -84,7 +84,7 @@ public class ManagedObjectsFinalizer {
     public void preDestroy() {
         try {
             for (Object o : managedObjects) {
-                serviceLocator.preDestroy(o);
+                instanceManager.preDestroy(o);
             }
 
         } finally {

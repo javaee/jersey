@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,40 +37,37 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
 
-import java.util.Map;
+package org.glassfish.jersey.ext.cdi1x.internal.spi;
 
-import org.glassfish.jersey.internal.inject.Injections;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
- * Utility class to create initialized server-side HK2 service locator.
+ * {@link InstanceManager instance manager} designed for Jersey
+ * {@link javax.enterprise.inject.spi.Extension CDI extension}. This SPI is designed to support deployments that can contain
+ * more than one Jersey/InstanceManager managed CDI {@link org.glassfish.jersey.server.spi.ComponentProvider component provider}
+ * (more instance manager) but only single CDI extension instance (e.g. EAR with multiple WARs). Each CDI component provider
+ * instance acknowledges the manager about new instance manager and manager is supposed to return the effective instance manager
+ * for the current context (based on the Servlet context, for example).
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos
+ * @since 2.17
  */
-public final class ServerLocatorFactory {
-    private ServerLocatorFactory() {
-        // prevents instantiation
-    }
+public interface InstanceManagerStore {
 
     /**
-     * Create new initialized server runtime locator.
+     * Register a new {@link InstanceManager instance manager} with this manager.
      *
-     * @return new initialized server runtime locator.
+     * @param instanceManager instance manager to be registered.
      */
-    public static ServiceLocator createLocator() {
-        return Injections.createLocator(new ServerBinder(null));
-    }
+    public void registerInstanceManager(InstanceManager instanceManager);
 
     /**
-     * Create new initialized server runtime locator.
+     * Obtain the effective {@link InstanceManager instance manager}. The implementations are supposed to
+     * decide which of the registered instance managers is the currently effective locator. The decision can be based, for
+     * example, on current Servlet context (if the application is deployed on Servlet container).
      *
-     * @param applicationProperties map of application-specific properties.
-     * @return new initialized server runtime locator.
+     * @return currently effective instance manager.
      */
-    public static ServiceLocator createLocator(Map<String, Object> applicationProperties) {
-        return Injections.createLocator(new ServerBinder(applicationProperties));
-    }
+    public InstanceManager getEffectiveInstanceManager();
 }

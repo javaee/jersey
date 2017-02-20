@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,6 @@ import org.glassfish.grizzly.http.server.HttpServer;
 
 import org.hamcrest.CoreMatchers;
 import org.jboss.weld.environment.se.Weld;
-
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -67,7 +66,7 @@ import org.junit.Test;
 
 /**
  * Test both Jersey apps running simultaneously within a single Grizzly HTTP server
- * to make sure HK2 service locators do not interfere. The test is not executed
+ * to make sure instance managers do not interfere. The test is not executed
  * if other than the default (Grizzly) test container has been set.
  * For Servlet based container testing, the other two tests, {@link RawCdiTest} and {@link RawHk2Test},
  * do the same job, because the WAR application contains both Jersey apps already.

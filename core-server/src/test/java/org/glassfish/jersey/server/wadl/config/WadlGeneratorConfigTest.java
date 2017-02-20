@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,13 +48,12 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.server.ServerLocatorFactory;
+import org.glassfish.jersey.server.InstanceManagerFactory;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -87,7 +86,7 @@ public class WadlGeneratorConfigTest {
                 .generator(generator2)
                 .build();
 
-        final ServiceLocator locator = ServerLocatorFactory.createLocator();
+        final InstanceManager locator = InstanceManagerFactory.createInstanceManager();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
 
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
@@ -96,7 +95,7 @@ public class WadlGeneratorConfigTest {
 
     @Test
     public void testBuildWadlGeneratorFromDescriptions() {
-        final ServiceLocator locator = ServerLocatorFactory.createLocator();
+        final InstanceManager locator = InstanceManagerFactory.createInstanceManager();
         final String propValue = "bar";
         WadlGeneratorConfig config = WadlGeneratorConfig.generator(MyWadlGenerator.class)
                 .prop("foo", propValue)
@@ -135,7 +134,7 @@ public class WadlGeneratorConfigTest {
             }
         }
 
-        final ServiceLocator locator = ServerLocatorFactory.createLocator();
+        final InstanceManager locator = InstanceManagerFactory.createInstanceManager();
 
         WadlGeneratorConfig config = new MyWadlGeneratorConfig();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
@@ -294,7 +293,7 @@ public class WadlGeneratorConfigTest {
                 .generator(MyWadlGenerator3.class)
                 .prop("foo", "string")
                 .prop("bar", new Bar()).build();
-        final ServiceLocator locator = ServerLocatorFactory.createLocator();
+        final InstanceManager locator = InstanceManagerFactory.createInstanceManager();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
 
         Assert.assertEquals(MyWadlGenerator3.class, wadlGenerator.getClass());

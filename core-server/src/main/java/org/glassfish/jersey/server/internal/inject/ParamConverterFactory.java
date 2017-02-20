@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
@@ -52,8 +53,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.Providers;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * An aggregate {@link ParamConverterProvider param converter provider} that loads all
@@ -75,15 +75,14 @@ public class ParamConverterFactory implements ParamConverterProvider {
     private final List<ParamConverterProvider> converterProviders;
 
     @Inject
-    ParamConverterFactory(ServiceLocator locator) {
+    ParamConverterFactory(InstanceManager instanceManager) {
         converterProviders = new ArrayList<>();
-        final Set<ParamConverterProvider> customProviders = Providers.getCustomProviders(locator, ParamConverterProvider.class);
+        Set<ParamConverterProvider> customProviders = Providers.getCustomProviders(instanceManager, ParamConverterProvider.class);
         converterProviders.addAll(customProviders);
 
-        final Set<ParamConverterProvider> providers = Providers.getProviders(locator, ParamConverterProvider.class);
+        Set<ParamConverterProvider> providers = Providers.getProviders(instanceManager, ParamConverterProvider.class);
         providers.removeAll(customProviders);
         converterProviders.addAll(providers);
-
     }
 
     @Override

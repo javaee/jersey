@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,10 +62,9 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
+import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Represents writer interceptor chain executor for both client and server side.
@@ -77,7 +76,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor>
-        implements WriterInterceptorContext, ServiceLocatorSupplier {
+        implements WriterInterceptorContext, InstanceManagerSupplier {
 
     private static final Logger LOGGER = Logger.getLogger(WriterInterceptorExecutor.class.getName());
 
@@ -88,7 +87,7 @@ final class WriterInterceptorExecutor extends InterceptorExecutor<WriterIntercep
     private final Iterator<WriterInterceptor> iterator;
     private int processedCount;
 
-    private final ServiceLocator serviceLocator;
+    private final InstanceManager instanceManager;
 
 
     /**
@@ -110,24 +109,24 @@ final class WriterInterceptorExecutor extends InterceptorExecutor<WriterIntercep
      *            closed after reading the entity.
      * @param workers {@link org.glassfish.jersey.message.MessageBodyWorkers Message body workers}.
      * @param writerInterceptors Writer interceptors that are to be used to intercept writing of an entity.
-     * @param serviceLocator Service locator.
+     * @param instanceManager instance manager.
      */
-    WriterInterceptorExecutor(final Object entity, final Class<?> rawType,
-                              final Type type,
-                              final Annotation[] annotations,
-                              final MediaType mediaType,
-                              final MultivaluedMap<String, Object> headers,
-                              final PropertiesDelegate propertiesDelegate,
-                              final OutputStream entityStream,
-                              final MessageBodyWorkers workers,
-                              final Iterable<WriterInterceptor> writerInterceptors,
-                              final ServiceLocator serviceLocator) {
+    public WriterInterceptorExecutor(final Object entity, final Class<?> rawType,
+                                     final Type type,
+                                     final Annotation[] annotations,
+                                     final MediaType mediaType,
+                                     final MultivaluedMap<String, Object> headers,
+                                     final PropertiesDelegate propertiesDelegate,
+                                     final OutputStream entityStream,
+                                     final MessageBodyWorkers workers,
+                                     final Iterable<WriterInterceptor> writerInterceptors,
+                                     final InstanceManager instanceManager) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.entity = entity;
         this.headers = headers;
         this.outputStream = entityStream;
-        this.serviceLocator = serviceLocator;
+        this.instanceManager = instanceManager;
 
         final List<WriterInterceptor> effectiveInterceptors = StreamSupport.stream(writerInterceptors.spliterator(), false)
                                                                            .collect(Collectors.toList());
@@ -204,8 +203,8 @@ final class WriterInterceptorExecutor extends InterceptorExecutor<WriterIntercep
     }
 
     @Override
-    public ServiceLocator getServiceLocator() {
-        return serviceLocator;
+    public InstanceManager getInstanceManager() {
+        return instanceManager;
     }
 
     /**

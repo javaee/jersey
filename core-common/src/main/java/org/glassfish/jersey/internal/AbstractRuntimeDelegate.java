@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal;
 
 import java.net.URI;
@@ -61,9 +62,8 @@ import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.VariantListBuilder;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * An abstract implementation of {@link RuntimeDelegate} that
@@ -77,18 +77,18 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
     private final Map<Class<?>, HeaderDelegate<?>> map;
 
     /**
-     * Initialization constructor. The service locator will be shut down.
+     * Initialization constructor. The instance manager will be shut down.
      *
-     * @param serviceLocator HK2 service locator.
+     * @param instanceManager instance manager.
      */
-    protected AbstractRuntimeDelegate(final ServiceLocator serviceLocator) {
+    protected AbstractRuntimeDelegate(final InstanceManager instanceManager) {
         try {
-            hps = Providers.getProviders(serviceLocator, HeaderDelegateProvider.class);
+            hps = Providers.getProviders(instanceManager, HeaderDelegateProvider.class);
 
             /**
              * Construct a map for quick look up of known header classes
              */
-            map = new WeakHashMap<Class<?>, HeaderDelegate<?>>();
+            map = new WeakHashMap<>();
             map.put(EntityTag.class, _createHeaderDelegate(EntityTag.class));
             map.put(MediaType.class, _createHeaderDelegate(MediaType.class));
             map.put(CacheControl.class, _createHeaderDelegate(CacheControl.class));
@@ -98,7 +98,7 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
             map.put(Date.class, _createHeaderDelegate(Date.class));
             map.put(String.class, _createHeaderDelegate(String.class));
         } finally {
-            serviceLocator.shutdown();
+            instanceManager.shutdown();
         }
     }
 

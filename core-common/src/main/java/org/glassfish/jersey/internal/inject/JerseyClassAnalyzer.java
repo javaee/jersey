@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
@@ -58,12 +59,12 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.MultiException;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Implementation of the {@link ClassAnalyzer} that supports selection
@@ -83,7 +84,7 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
     public static final String NAME = "JerseyClassAnalyzer";
 
     /**
-     * HK2 binder for the JAX-RS compliant class analyzer implementation.
+     * Binder for the JAX-RS compliant class analyzer implementation.
      */
     public static final class Binder extends AbstractBinder {
 

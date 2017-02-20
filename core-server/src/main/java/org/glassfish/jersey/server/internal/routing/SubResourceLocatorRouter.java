@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.routing;
 
 import java.lang.reflect.InvocationTargetException;
@@ -61,8 +62,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * An methodAcceptorPair to accept sub-resource requests.
@@ -82,26 +82,26 @@ final class SubResourceLocatorRouter implements Router {
     private final RuntimeLocatorModelBuilder runtimeLocatorBuilder;
     private final JerseyResourceContext resourceContext;
 
-    private final ServiceLocator locator;
+    private final InstanceManager instanceManager;
 
     /**
      * Create a new sub-resource locator router.
      *
-     * @param locator                 HK2 locator.
+     * @param instanceManager         DI instance manager.
      * @param locatorModel            resource locator method model.
      * @param resourceContext         resource context to bind sub-resource locator singleton instances.
      * @param runtimeLocatorBuilder   original runtime model builder.
      */
-    SubResourceLocatorRouter(final ServiceLocator locator,
+    SubResourceLocatorRouter(final InstanceManager instanceManager,
                              final ResourceMethod locatorModel,
                              final JerseyResourceContext resourceContext,
                              final RuntimeLocatorModelBuilder runtimeLocatorBuilder) {
         this.runtimeLocatorBuilder = runtimeLocatorBuilder;
         this.locatorModel = locatorModel;
         this.resourceContext = resourceContext;
-        this.locator = locator;
+        this.instanceManager = instanceManager;
 
-        this.valueProviders = ParameterValueHelper.createValueProviders(locator, locatorModel.getInvocable());
+        this.valueProviders = ParameterValueHelper.createValueProviders(instanceManager, locatorModel.getInvocable());
     }
 
     @Override
@@ -128,7 +128,7 @@ final class SubResourceLocatorRouter implements Router {
 
                 if (!runtimeLocatorBuilder.isCached(locatorClass)) {
                     // If we can't create an instance of the class, don't proceed.
-                    subResourceInstance = Injections.getOrCreate(locator, locatorClass);
+                    subResourceInstance = Injections.getOrCreate(instanceManager, locatorClass);
                 }
             }
             routingContext.pushMatchedResource(subResourceInstance);

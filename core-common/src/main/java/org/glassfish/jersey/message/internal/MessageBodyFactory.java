@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.io.Closeable;
@@ -96,9 +97,8 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.message.ReaderModel;
 import org.glassfish.jersey.message.WriterModel;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.jvnet.hk2.annotations.Optional;
 
@@ -175,7 +175,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             };
 
-    private final ServiceLocator serviceLocator;
+    private final InstanceManager instanceManager;
 
     private final Boolean legacyProviderOrdering;
 
@@ -207,19 +207,19 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     /**
      * Create new message body workers factory.
      *
-     * @param locator       service locator.
+     * @param instanceManager   instance manager.
      * @param configuration configuration. Optional - can be null.
      */
     @Inject
-    public MessageBodyFactory(final ServiceLocator locator, @Optional final Configuration configuration) {
-        this.serviceLocator = locator;
+    public MessageBodyFactory(final InstanceManager instanceManager, @Optional final Configuration configuration) {
+        this.instanceManager = instanceManager;
         this.legacyProviderOrdering = configuration != null
                 && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
 
         // Initialize readers
         this.readers = new ArrayList<>();
-        final Set<MessageBodyReader> customMbrs = Providers.getCustomProviders(locator, MessageBodyReader.class);
-        final Set<MessageBodyReader> mbrs = Providers.getProviders(locator, MessageBodyReader.class);
+        final Set<MessageBodyReader> customMbrs = Providers.getCustomProviders(instanceManager, MessageBodyReader.class);
+        final Set<MessageBodyReader> mbrs = Providers.getProviders(instanceManager, MessageBodyReader.class);
 
         addReaders(readers, customMbrs, true);
         mbrs.removeAll(customMbrs);
@@ -244,8 +244,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         // Initialize writers
         this.writers = new ArrayList<>();
 
-        final Set<MessageBodyWriter> customMbws = Providers.getCustomProviders(locator, MessageBodyWriter.class);
-        final Set<MessageBodyWriter> mbws = Providers.getProviders(locator, MessageBodyWriter.class);
+        final Set<MessageBodyWriter> customMbws = Providers.getCustomProviders(instanceManager, MessageBodyWriter.class);
+        final Set<MessageBodyWriter> mbws = Providers.getProviders(instanceManager, MessageBodyWriter.class);
 
         addWriters(writers, customMbws, true);
         mbws.removeAll(customMbws);
@@ -1059,7 +1059,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 this,
                 readerInterceptors,
                 translateNce,
-                serviceLocator);
+                instanceManager);
 
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
         final long timestamp = tracingLogger.timestamp(MsgTraceEvent.RI_SUMMARY);
@@ -1104,7 +1104,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 entityStream,
                 this,
                 writerInterceptors,
-                serviceLocator);
+                instanceManager);
 
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
         final long timestamp = tracingLogger.timestamp(MsgTraceEvent.WI_SUMMARY);

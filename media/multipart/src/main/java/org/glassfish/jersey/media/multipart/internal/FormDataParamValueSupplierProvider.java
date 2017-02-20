@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.media.multipart.internal;
 
 import java.io.ByteArrayInputStream;
@@ -78,8 +79,7 @@ import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.jvnet.mimepull.MIMEParsingException;
 
@@ -407,12 +407,12 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
      * Injection constructor.
      *
      * @param extractorProvider multi-valued map parameter extractor provider.
-     * @param locator           HK2 service locator.
+     * @param instanceManager   instance manager.
      */
     @Inject
-    public FormDataParamValueSupplierProvider(final MultivaluedParameterExtractorProvider extractorProvider,
-                                              final ServiceLocator locator) {
-        super(extractorProvider, locator, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
+    public FormDataParamValueSupplierProvider(
+            MultivaluedParameterExtractorProvider extractorProvider, InstanceManager instanceManager) {
+        super(extractorProvider, instanceManager, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
     }
 
     @Override

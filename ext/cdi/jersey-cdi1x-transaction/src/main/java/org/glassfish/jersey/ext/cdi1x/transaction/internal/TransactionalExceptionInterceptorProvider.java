@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.ext.cdi1x.transaction.internal;
 
 import java.lang.annotation.Retention;
@@ -59,12 +60,10 @@ import javax.transaction.TransactionalException;
 
 import org.glassfish.jersey.ext.cdi1x.internal.CdiUtil;
 import org.glassfish.jersey.ext.cdi1x.internal.GenericCdiBeanHk2Factory;
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
+import org.glassfish.jersey.spi.inject.Descriptor;
+import org.glassfish.jersey.spi.inject.Descriptors;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -84,7 +83,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Priority(value = Interceptor.Priority.PLATFORM_BEFORE + 199)
 public class TransactionalExceptionInterceptorProvider implements ComponentProvider, Extension {
 
-    private ServiceLocator locator;
+    private InstanceManager instanceManager;
     private BeanManager beanManager;
 
     @Qualifier
@@ -94,8 +93,8 @@ public class TransactionalExceptionInterceptorProvider implements ComponentProvi
     }
 
     @Override
-    public void initialize(final ServiceLocator locator) {
-        this.locator = locator;
+    public void initialize(final InstanceManager locator) {
+        this.instanceManager = locator;
         this.beanManager = CdiUtil.getBeanManager();
     }
 
@@ -112,12 +111,11 @@ public class TransactionalExceptionInterceptorProvider implements ComponentProvi
     }
 
     private void bindWaeRestoringExceptionMapper() {
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        final ServiceBindingBuilder bindingBuilder = Injections.newFactoryBinder(
-                new GenericCdiBeanHk2Factory(TransactionalExceptionMapper.class, locator, beanManager, true));
-        bindingBuilder.to(ExceptionMapper.class);
-        Injections.addBinding(bindingBuilder, dc);
-        dc.commit();
+        Descriptor descriptor = Descriptors
+                .factory(new GenericCdiBeanHk2Factory(TransactionalExceptionMapper.class, instanceManager, beanManager, true))
+                .to(ExceptionMapper.class);
+
+        instanceManager.register(descriptor);
     }
 
     @SuppressWarnings("unused")
@@ -127,7 +125,8 @@ public class TransactionalExceptionInterceptorProvider implements ComponentProvi
     }
 
     @SuppressWarnings("unused")
-    private void beforeBeanDiscovery(@Observes final BeforeBeanDiscovery beforeBeanDiscovery, final BeanManager beanManager) {
+    private void beforeBeanDiscovery(@Observes final BeforeBeanDiscovery beforeBeanDiscovery, final javax.enterprise.inject.spi
+            .BeanManager beanManager) {
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(WebAppExceptionHolder.class));
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(WebAppExceptionInterceptor.class));
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(TransactionalExceptionMapper.class));

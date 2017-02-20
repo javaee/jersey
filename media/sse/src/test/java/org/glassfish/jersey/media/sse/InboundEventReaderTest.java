@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.media.sse;
 
 import java.io.ByteArrayInputStream;
@@ -51,18 +52,16 @@ import javax.ws.rs.core.MediaType;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * @author Petr Bouda (petr.bouda at oracle.com)
@@ -71,14 +70,13 @@ public class InboundEventReaderTest {
 
     private static final MultivaluedStringMap headers;
 
-    private static final ServiceLocator locator;
+    private static final InstanceManager INSTANCE_MANAGER;
 
     static {
         headers = new MultivaluedStringMap();
         headers.put("Transfer-Encoding", Collections.singletonList("chunked"));
         headers.put("Content-Type", Collections.singletonList("text/event-stream"));
-
-        locator = ServiceLocatorUtilities.bind(new TestBinder());
+        INSTANCE_MANAGER = Injections.createInstanceManager(new TestBinder());
     }
 
     @Test
@@ -136,7 +134,8 @@ public class InboundEventReaderTest {
     }
 
     private static InboundEvent parse(InputStream stream) throws IOException {
-        return locator.getService(InboundEventReader.class).readFrom(InboundEvent.class, InboundEvent.class, new Annotation[0],
+        return INSTANCE_MANAGER.getInstance(InboundEventReader.class)
+                .readFrom(InboundEvent.class, InboundEvent.class, new Annotation[0],
                 MediaType.valueOf(SseFeature.SERVER_SENT_EVENTS), headers, stream);
     }
 

@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
@@ -75,9 +76,8 @@ import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Value supplier provider supporting the {@link Uri} injection annotation.
@@ -292,12 +292,12 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
     /**
      * Initialize the provider.
      *
-     * @param locator      service locator to be used for injecting into the values factory.
+     * @param instanceManager  instance manager to be used for injecting into the values factory.
      * @param serverConfig server-side configuration.
      */
     @Inject
-    public WebTargetValueSupplierProvider(final ServiceLocator locator, @Context final Configuration serverConfig) {
-        super(null, locator, Parameter.Source.URI);
+    public WebTargetValueSupplierProvider(final InstanceManager instanceManager, @Context final Configuration serverConfig) {
+        super(null, instanceManager, Parameter.Source.URI);
 
         this.serverConfig = serverConfig;
 
@@ -427,7 +427,7 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
             }
         }
 
-        final Configuration cfg = Injections.getOrCreate(getLocator(), configClass);
+        final Configuration cfg = Injections.getOrCreate(getInstanceManager(), configClass);
 
         return (cfg instanceof ClientConfig) ? (ClientConfig) cfg : new ClientConfig().loadFrom(cfg);
     }

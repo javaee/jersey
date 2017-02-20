@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,66 +43,65 @@ package org.glassfish.jersey.ext.cdi1x.internal;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2InjectedTarget;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionTargetListener;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerInjectedTarget;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerStore;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
- * Generic {@link Hk2LocatorManager Locator manager} that allows multiple
- * HK2 service locators to run in parallel. {@link #lookupLocator()}
+ * Generic {@link InstanceManagerStore instance manager store} that allows multiple
+ * instance managers to run in parallel. {@link #lookupInstanceManager()}
  * method must be implemented that shall be utilized at runtime in the case that more than a single
- * HK2 service locator has been registered.
+ * instance manager has been registered.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @since 2.20
  */
-public abstract class GenericHk2LocatorManager implements Hk2LocatorManager, InjectionTargetListener {
+public abstract class GenericInstanceManagerStore implements InstanceManagerStore, InjectionTargetListener {
 
-    private final List<Hk2InjectedTarget> injectionTargets;
+    private final List<InstanceManagerInjectedTarget> injectionTargets;
 
-    private volatile ServiceLocator locator;
+    private volatile InstanceManager instanceManager;
 
-    private volatile boolean multipleLocators = false;
+    private volatile boolean multipleInstanceManagers = false;
 
-    public GenericHk2LocatorManager() {
+    public GenericInstanceManagerStore() {
         injectionTargets = new LinkedList<>();
     }
 
     @Override
-    public void registerLocator(final ServiceLocator locator) {
-        if (!multipleLocators) {
-            if (this.locator == null) { // first one
-                this.locator = locator;
+    public void registerInstanceManager(final InstanceManager instanceManager) {
+        if (!multipleInstanceManagers) {
+            if (this.instanceManager == null) { // first one
+                this.instanceManager = instanceManager;
             } else { // second one
-                this.locator = null;
-                multipleLocators = true;
+                this.instanceManager = null;
+                multipleInstanceManagers = true;
             } // first and second case
         }
 
-        // pass the locator to registered injection targets anyway
-        for (final Hk2InjectedTarget target : injectionTargets) {
-            target.setLocator(locator);
+        // pass the instance manager to registered injection targets anyway
+        for (final InstanceManagerInjectedTarget target : injectionTargets) {
+            target.setInstanceManager(instanceManager);
         }
     }
 
     @Override
-    public ServiceLocator getEffectiveLocator() {
-        return !multipleLocators ? locator : lookupLocator();
+    public InstanceManager getEffectiveInstanceManager() {
+        return !multipleInstanceManagers ? instanceManager : lookupInstanceManager();
     }
 
     /**
-     * CDI container specific method to obtain the actual HK2 service locator
+     * CDI container specific method to obtain the actual instance manager
      * belonging to the Jersey application where the current HTTP requests
      * is being processed.
      *
-     * @return actual HK2 service locator.
+     * @return actual instance manager.
      */
-    public abstract ServiceLocator lookupLocator();
+    public abstract InstanceManager lookupInstanceManager();
 
     @Override
-    public void notify(final Hk2InjectedTarget target) {
+    public void notify(final InstanceManagerInjectedTarget target) {
 
         injectionTargets.add(target);
     }

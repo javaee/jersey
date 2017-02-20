@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.inject;
 
 import java.lang.reflect.Field;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericType;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -55,6 +57,7 @@ import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Factory;
@@ -62,11 +65,9 @@ import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.InjecteeImpl;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.hk2.utilities.cache.Cache;
 import org.glassfish.hk2.utilities.cache.Computable;
 
@@ -80,14 +81,14 @@ import org.glassfish.hk2.utilities.cache.Computable;
 public class ContextInjectionResolver implements InjectionResolver<Context> {
 
     /**
-     * Context injection resolver HK2 binder.
+     * Context injection resolver binder.
      */
     public static final class Binder extends AbstractBinder {
 
         @Override
         protected void configure() {
             // @Context
-            bind(ContextInjectionResolver.class).to(new TypeLiteral<InjectionResolver<Context>>() {
+            bind(ContextInjectionResolver.class).to(new GenericType<InjectionResolver<Context>>() {
             }).in(Singleton.class);
         }
     }

@@ -59,12 +59,12 @@ import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Abstract base class for resolving JAX-RS {@code &#64;XxxParam} injection.
@@ -75,7 +75,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 public abstract class ParamInjectionResolver<A extends Annotation> implements InjectionResolver<A> {
 
     @Inject
-    private ServiceLocator locator;
+    private InstanceManager instanceManager;
     private final Predicate<ValueSupplierProvider> concreteValueFactoryClassFilter;
 
     /**
@@ -111,7 +111,7 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
         }
         final Class<?> targetType = ReflectionHelper.erasure(targetGenericType);
 
-        Set<ValueSupplierProvider> providers = Providers.getProviders(locator, ValueSupplierProvider.class)
+        Set<ValueSupplierProvider> providers = Providers.getProviders(instanceManager, ValueSupplierProvider.class)
                                                        .stream()
                                                        .filter(concreteValueFactoryClassFilter)
                                                        .collect(Collectors.toSet());

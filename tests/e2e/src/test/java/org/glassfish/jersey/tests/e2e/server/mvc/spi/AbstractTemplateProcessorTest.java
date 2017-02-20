@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,10 +61,9 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.spi.TestContainerException;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import org.jvnet.hk2.annotations.Optional;
 
@@ -120,11 +119,11 @@ public class AbstractTemplateProcessorTest {
         private final TestFactory factory;
 
         @Inject
-        public FactoryTemplateProcessor(final Configuration config, final ServiceLocator serviceLocator,
+        public FactoryTemplateProcessor(final Configuration config, final InstanceManager instanceManager,
                                         @Optional final ServletContext servletContext) {
             super(config, servletContext, "factory", "fct");
 
-            this.factory = getTemplateObjectFactory(serviceLocator, TestFactory.class, Values.lazy(new Value<TestFactory>() {
+            this.factory = getTemplateObjectFactory(instanceManager, TestFactory.class, Values.lazy(new Value<TestFactory>() {
                 @Override
                 public TestFactory get() {
                     return new TestFactory("Default Test Factory");

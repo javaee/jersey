@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,10 +37,13 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.servlet.internal.spi;
 
 import java.lang.reflect.Type;
 import java.util.Set;
+
+import javax.ws.rs.core.GenericType;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -49,10 +52,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
 
 /**
  * Basic {@link ExtendedServletContainerProvider} that provides
@@ -63,10 +62,8 @@ import org.glassfish.hk2.api.TypeLiteral;
  */
 public class NoOpServletContainerProvider implements ExtendedServletContainerProvider {
 
-    public final Type HTTP_SERVLET_REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {
-    }).getType();
-    public final Type HTTP_SERVLET_RESPONSE_TYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {
-    }).getType();
+    public final Type HTTP_SERVLET_REQUEST_TYPE = (new GenericType<Ref<HttpServletRequest>>() { }).getType();
+    public final Type HTTP_SERVLET_RESPONSE_TYPE = (new GenericType<Ref<HttpServletResponse>>() { }).getType();
 
     @Override
     public void preInit(final ServletContext servletContext, final Set<Class<?>> classes) throws ServletException {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,36 +38,46 @@
  * holder.
  */
 
-package org.glassfish.jersey.ext.cdi1x.internal.spi;
+package org.glassfish.jersey.spi;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import java.lang.reflect.Type;
+import java.util.Set;
 
 /**
- * {@link org.glassfish.hk2.api.ServiceLocator HK2 locator} manager designed for Jersey
- * {@link javax.enterprise.inject.spi.Extension CDI extension}. This SPI is designed to support deployments that can contain
- * more than one Jersey/HK2 managed CDI {@link org.glassfish.jersey.server.spi.ComponentProvider component provider}
- * (more HK2 service locator) but only single CDI extension instance (e.g. EAR with multiple WARs). Each CDI component provider
- * instance acknowledges the manager about new service locator and manager is supposed to return the effective service locator
- * for the current context (based on the Servlet context, for example).
+ * Implementation of this class is used as a holder for service instance from
+ * {@link org.glassfish.jersey.spi.inject.InstanceManager} along with other information about the provided service.
  *
- * @author Michal Gajdos
- * @since 2.17
+ * @see ServiceHolderImpl
+ * @param <T>
  */
-public interface Hk2LocatorManager {
+public interface ServiceHolder<T> {
 
     /**
-     * Register a new {@link org.glassfish.hk2.api.ServiceLocator service locator} with this manager.
+     * An instance of the service got from {@link org.glassfish.jersey.spi.inject.InstanceManager}.
      *
-     * @param locator locator to be registered.
+     * @return service instance.
      */
-    public void registerLocator(ServiceLocator locator);
+    T getInstance();
 
     /**
-     * Obtain the effective {@link org.glassfish.hk2.api.ServiceLocator service locator}. The implementations are supposed to
-     * decide which of the registered service locators is the currently effective locator. The decision can be based, for
-     * example, on current Servlet context (if the application is deployed on Servlet container).
+     * Gets an implementation class of the instance which is kept in this service holder.
      *
-     * @return currently effective service locator.
+     * @return implementation class of the kept instance.
      */
-    public ServiceLocator getEffectiveLocator();
+    Class<T> getImplementationClass();
+
+    /**
+     * Gets all contracts which represents the kept instance.
+     *
+     * @return all contracts.
+     */
+    Set<Type> getContractTypes();
+
+    /**
+     * Gets ranking of the kept instance.
+     *
+     * @return instance's ranking.
+     */
+    int getRank();
+
 }

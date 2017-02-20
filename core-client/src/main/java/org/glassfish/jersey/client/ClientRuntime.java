@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.util.Arrays;
@@ -50,12 +51,10 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
@@ -65,6 +64,7 @@ import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Client-side request processing runtime.
@@ -84,44 +84,45 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
     private final RequestScope requestScope;
     private final LazyValue<ExecutorService> asyncRequestExecutor;
 
-    private final ServiceLocator locator;
     private final Iterable<ClientLifecycleListener> lifecycleListeners;
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
+
+    private final InstanceManager instanceManager;
 
     /**
      * Create new client request processing runtime.
      *
      * @param config    client runtime configuration.
      * @param connector client transport connector.
-     * @param locator   HK2 service locator.
+     * @param instanceManager   instance manager.
      */
-    public ClientRuntime(final ClientConfig config, final Connector connector, final ServiceLocator locator) {
-        final Stage.Builder<ClientRequest> requestingChainBuilder = Stages
-                .chain(locator.createAndInitialize(RequestProcessingInitializationStage.class));
-        final ChainableStage<ClientRequest> requestFilteringStage = ClientFilteringStages.createRequestFilteringStage(locator);
+    public ClientRuntime(final ClientConfig config, final Connector connector, final InstanceManager instanceManager) {
+        Stage.Builder<ClientRequest> requestingChainBuilder = Stages
+                .chain(instanceManager.createAndInitialize(RequestProcessingInitializationStage.class));
+
+        ChainableStage<ClientRequest> requestFilteringStage = ClientFilteringStages.createRequestFilteringStage(instanceManager);
         this.requestProcessingRoot = requestFilteringStage != null
                 ? requestingChainBuilder.build(requestFilteringStage) : requestingChainBuilder.build();
 
-        final ChainableStage<ClientResponse> responseFilteringStage = ClientFilteringStages.createResponseFilteringStage(locator);
-        this.responseProcessingRoot = responseFilteringStage != null
-                ? responseFilteringStage : Stages.<ClientResponse>identity();
+        ChainableStage<ClientResponse> responseFilteringStage = ClientFilteringStages.createResponseFilteringStage(
+                instanceManager);
+        this.responseProcessingRoot = responseFilteringStage != null ? responseFilteringStage : Stages.identity();
 
         this.config = config;
         this.connector = connector;
 
-        this.requestScope = locator.getService(RequestScope.class);
+        this.requestScope = instanceManager.getInstance(RequestScope.class);
 
         this.asyncRequestExecutor = Values.lazy(new Value<ExecutorService>() {
             @Override
             public ExecutorService get() {
-                return locator.getService(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE);
+                return instanceManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE);
             }
         });
 
-        this.locator = locator;
-
-        this.lifecycleListeners = Providers.getAllProviders(locator, ClientLifecycleListener.class);
+        this.instanceManager = instanceManager;
+        this.lifecycleListeners = Providers.getAllProviders(instanceManager, ClientLifecycleListener.class);
 
         for (final ClientLifecycleListener listener : lifecycleListeners) {
             try {
@@ -221,10 +222,10 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
         } else if (!clientRequest.ignoreUserAgent()) {
             if (connectorName != null && !connectorName.isEmpty()) {
                 headers.put(HttpHeaders.USER_AGENT,
-                        Arrays.<Object>asList(String.format("Jersey/%s (%s)", Version.getVersion(), connectorName)));
+                        Arrays.asList(String.format("Jersey/%s (%s)", Version.getVersion(), connectorName)));
             } else {
                 headers.put(HttpHeaders.USER_AGENT,
-                        Arrays.<Object>asList(String.format("Jersey/%s", Version.getVersion())));
+                        Arrays.asList(String.format("Jersey/%s", Version.getVersion())));
             }
         }
 
@@ -316,7 +317,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
                 try {
                     connector.close();
                 } finally {
-                    Injections.shutdownLocator(locator);
+                    instanceManager.shutdown();
                 }
             }
         }
@@ -327,7 +328,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
      */
     public void preInitialize() {
         // pre-initialize MessageBodyWorkers
-        locator.getService(MessageBodyWorkers.class);
+        instanceManager.getInstance(MessageBodyWorkers.class);
     }
 
     /**
@@ -340,11 +341,11 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
     }
 
     /**
-     * Get service locator.
+     * Get instance manager.
      *
-     * @return Service locator.
+     * @return instance manager.
      */
-    ServiceLocator getServiceLocator() {
-        return locator;
+    InstanceManager getInstanceManager() {
+        return instanceManager;
     }
 }

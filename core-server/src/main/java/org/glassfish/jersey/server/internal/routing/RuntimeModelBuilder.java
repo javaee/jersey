@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.routing;
 
 import java.util.ArrayList;
@@ -56,10 +57,9 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.uri.PathPattern;
 import org.glassfish.jersey.uri.UriTemplate;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * This is a common base for root resource and sub-resource runtime model
@@ -80,7 +80,7 @@ final class RuntimeModelBuilder {
     /**
      * Create a new instance of the runtime model builder.
      *
-     * @param locator                      HK2 service locator.
+     * @param instanceManager              DI instance manager.
      * @param resourceContext              Jersey resource context.
      * @param config                       configuration of the application.
      * @param workers                      message body workers.
@@ -88,7 +88,7 @@ final class RuntimeModelBuilder {
      * @param resourceMethodInvokerBuilder method invoker builder.
      */
     public RuntimeModelBuilder(
-            final ServiceLocator locator,
+            final InstanceManager instanceManager,
             final JerseyResourceContext resourceContext,
             final Configuration config,
             final MessageBodyWorkers workers,
@@ -102,7 +102,7 @@ final class RuntimeModelBuilder {
         this.locatorBuilder = Values.lazy(new Value<RuntimeLocatorModelBuilder>() {
             @Override
             public RuntimeLocatorModelBuilder get() {
-                return new RuntimeLocatorModelBuilder(locator, config, resourceContext, RuntimeModelBuilder.this);
+                return new RuntimeLocatorModelBuilder(instanceManager, config, resourceContext, RuntimeModelBuilder.this);
             }
         });
     }

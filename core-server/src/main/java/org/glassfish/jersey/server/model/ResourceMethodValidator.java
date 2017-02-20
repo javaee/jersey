@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,9 +62,9 @@ import javax.ws.rs.QueryParam;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Validator checking resource methods and sub resource locators. The validator mainly checks the parameters of resource
@@ -74,15 +74,15 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 class ResourceMethodValidator extends AbstractResourceModelVisitor {
 
-    private final ServiceLocator locator;
+    private final InstanceManager instanceManager;
 
     /**
      * Create new resource method validator.
      *
-     * @param locator HK2 service locator.
+     * @param instanceManager instance manager.
      */
-    public ResourceMethodValidator(ServiceLocator locator) {
-        this.locator = locator;
+    public ResourceMethodValidator(InstanceManager instanceManager) {
+        this.instanceManager = instanceManager;
     }
 
     @Override
@@ -162,7 +162,7 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
     }
 
     private void checkValueProviders(ResourceMethod method) {
-        final List<? extends Factory<?>> valueProviders = method.getInvocable().getValueProviders(locator);
+        final List<? extends Factory<?>> valueProviders = method.getInvocable().getValueProviders(instanceManager);
         if (valueProviders.contains(null)) {
             int index = valueProviders.indexOf(null);
             Errors.fatal(method, LocalizationMessages.ERROR_PARAMETER_MISSING_VALUE_PROVIDER(index, method.getInvocable()

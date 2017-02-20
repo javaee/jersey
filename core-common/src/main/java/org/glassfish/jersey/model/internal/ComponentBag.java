@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.model.internal;
 
 import java.lang.annotation.Annotation;
@@ -61,8 +62,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
-
-import org.glassfish.hk2.utilities.Binder;
+import org.glassfish.jersey.spi.inject.Binder;
 
 /**
  * An internal Jersey container for custom component classes and instances.
@@ -109,10 +109,10 @@ public class ComponentBag {
     };
 
     /**
-     * A filtering strategy that includes only models that contain HK2 Binder provider contract.
+     * A filtering strategy that includes only models that contain Binder provider contract.
      * <p>
      * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
-     * that represent a provider registered to provide HK2 {@link org.glassfish.hk2.utilities.Binder} contract.
+     * that represent a provider registered to provide {@link Binder} contract.
      * </p>
      */
     public static final Predicate<ContractProvider> BINDERS_ONLY = model -> model.getContracts().contains(Binder.class);
@@ -435,12 +435,12 @@ public class ComponentBag {
                 boolean failed = false;
                 if (!Providers.isSupportedContract(contract)) {
                     Errors.error(LocalizationMessages.CONTRACT_NOT_SUPPORTED(contract, componentClass),
-                            Severity.WARNING);
+                                 Severity.WARNING);
                     failed = true;
                 }
                 if (!contract.isAssignableFrom(componentClass)) {
                     Errors.error(LocalizationMessages.CONTRACT_NOT_ASSIGNABLE(contract, componentClass),
-                            Severity.WARNING);
+                                 Severity.WARNING);
                     failed = true;
                 }
                 if (failed) {
@@ -484,7 +484,7 @@ public class ComponentBag {
 
     /**
      * Get all registered component classes, including {@link javax.ws.rs.core.Feature features}
-     * and {@link org.glassfish.hk2.utilities.Binder binders} mtea-providers.
+     * and {@link Binder binders} meta-providers.
      *
      * @return all registered component classes.
      */
@@ -494,7 +494,7 @@ public class ComponentBag {
 
     /**
      * Get all registered component instances, including {@link javax.ws.rs.core.Feature features}
-     * and {@link org.glassfish.hk2.utilities.Binder binders} meta-providers.
+     * and {@link Binder binders} meta-providers.
      *
      * @return all registered component instances.
      */

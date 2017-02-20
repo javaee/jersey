@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,15 +45,14 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
- * Utility class with static methods that extract {@link org.glassfish.hk2.api.ServiceLocator service locator}
+ * Utility class with static methods that extract {@link InstanceManager instance manager}
  * from various JAX-RS components. This class can be used when no injection is possible by
  * {@link javax.ws.rs.core.Context} or {@link javax.inject.Inject} annotation due to character of
- * provider but there is a need to get any service from {@link org.glassfish.hk2.api.ServiceLocator}.
+ * provider but there is a need to get any service from {@link InstanceManager}.
  * <p>
  * Injections are not possible for example when a provider is registered as an instance on the client.
  * In this case the runtime will not inject the instance as this instance might be used in other client
@@ -82,8 +81,8 @@ import org.glassfish.hk2.api.ServiceLocator;
  *
  *         &#64;Override
  *         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
- *             final ServiceLocator serviceLocator = ServiceLocatorProvider.getServiceLocator(context);
- *             final MyInjectedService service = serviceLocator.getService(MyInjectedService.class);
+ *             InstanceManager instanceManager = InstanceManagerProvider.getInstanceManager(context);
+ *             MyInjectedService service = instanceManager.getInstance(MyInjectedService.class);
  *             Something something = service.getSomething();
  *             ...
  *         }
@@ -97,7 +96,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * provided by this class.
  * </p>
  * <p>
- * User returned {@code ServiceLocator} only for purpose of getting services (do not change the state of the locator).
+ * User returned {@code InstanceManager} only for purpose of getting services (do not change the state of the instance manager).
  * </p>
  *
  *
@@ -105,53 +104,53 @@ import org.glassfish.hk2.api.ServiceLocator;
  *
  * @since 2.6
  */
-public class ServiceLocatorProvider {
+public class InstanceManagerProvider {
 
     /**
-     * Extract and return service locator from {@link javax.ws.rs.ext.WriterInterceptorContext writerInterceptorContext}.
+     * Extract and return instance manager from {@link javax.ws.rs.ext.WriterInterceptorContext writerInterceptorContext}.
      * The method can be used to inject custom types into a {@link javax.ws.rs.ext.WriterInterceptor}.
      *
      * @param writerInterceptorContext Writer interceptor context.
      *
-     * @return Service locator.
+     * @return instance manager.
      *
      * @throws java.lang.IllegalArgumentException when {@code writerInterceptorContext} is not a default
      * Jersey implementation provided by Jersey as argument in the
      * {@link javax.ws.rs.ext.WriterInterceptor#aroundWriteTo(javax.ws.rs.ext.WriterInterceptorContext)} method.
      */
-    public static ServiceLocator getServiceLocator(WriterInterceptorContext writerInterceptorContext) {
-        if (!(writerInterceptorContext instanceof ServiceLocatorSupplier)) {
+    public static InstanceManager getInstanceManager(WriterInterceptorContext writerInterceptorContext) {
+        if (!(writerInterceptorContext instanceof InstanceManagerSupplier)) {
             throw new IllegalArgumentException(
                     LocalizationMessages.ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_FEATURE_WRITER_INTERCEPTOR_CONTEXT(
                             writerInterceptorContext.getClass().getName()));
         }
-        return ((ServiceLocatorSupplier) writerInterceptorContext).getServiceLocator();
+        return ((InstanceManagerSupplier) writerInterceptorContext).getInstanceManager();
     }
 
     /**
-     * Extract and return service locator from {@link javax.ws.rs.ext.ReaderInterceptorContext readerInterceptorContext}.
+     * Extract and return instance manager from {@link javax.ws.rs.ext.ReaderInterceptorContext readerInterceptorContext}.
      * The method can be used to inject custom types into a {@link javax.ws.rs.ext.ReaderInterceptor}.
      *
      * @param readerInterceptorContext Reader interceptor context.
      *
-     * @return Service locator.
+     * @return instance manager.
      *
      * @throws java.lang.IllegalArgumentException when {@code readerInterceptorContext} is not a default
      * Jersey implementation provided by Jersey as argument in the
      * {@link javax.ws.rs.ext.ReaderInterceptor#aroundReadFrom(javax.ws.rs.ext.ReaderInterceptorContext)} method.
 
      */
-    public static ServiceLocator getServiceLocator(ReaderInterceptorContext readerInterceptorContext) {
-        if (!(readerInterceptorContext instanceof ServiceLocatorSupplier)) {
+    public static InstanceManager getInstanceManager(ReaderInterceptorContext readerInterceptorContext) {
+        if (!(readerInterceptorContext instanceof InstanceManagerSupplier)) {
             throw new IllegalArgumentException(
                     LocalizationMessages.ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_FEATURE_READER_INTERCEPTOR_CONTEXT(
                             readerInterceptorContext.getClass().getName()));
         }
-        return ((ServiceLocatorSupplier) readerInterceptorContext).getServiceLocator();
+        return ((InstanceManagerSupplier) readerInterceptorContext).getInstanceManager();
     }
 
     /**
-     * Extract and return service locator from {@link javax.ws.rs.core.FeatureContext featureContext}.
+     * Extract and return instance manager from {@link javax.ws.rs.core.FeatureContext featureContext}.
      * The method can be used to inject custom types into a {@link javax.ws.rs.core.Feature}.
      * <p>
      * Note that features are utilized during initialization phase when not all providers are registered yet.
@@ -160,18 +159,18 @@ public class ServiceLocatorProvider {
      *
      * @param featureContext Feature context.
      *
-     * @return Service locator.
+     * @return instance manager.
      *
      * @throws java.lang.IllegalArgumentException when {@code writerInterceptorContext} is not a default
      * Jersey instance provided by Jersey
      * in {@link javax.ws.rs.core.Feature#configure(javax.ws.rs.core.FeatureContext)} method.
      */
-    public static ServiceLocator getServiceLocator(FeatureContext featureContext) {
-        if (!(featureContext instanceof ServiceLocatorSupplier)) {
+    public static InstanceManager getInstanceManager(FeatureContext featureContext) {
+        if (!(featureContext instanceof InstanceManagerSupplier)) {
             throw new IllegalArgumentException(
                     LocalizationMessages.ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_FEATURE_CONTEXT(
                             featureContext.getClass().getName()));
         }
-        return ((ServiceLocatorSupplier) featureContext).getServiceLocator();
+        return ((InstanceManagerSupplier) featureContext).getInstanceManager();
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,27 +37,28 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.inject;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.ws.rs.core.GenericType;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.jvnet.hk2.annotations.Optional;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertSame;
 
 /**
@@ -126,14 +127,14 @@ public class ReferencingFactoryTest extends AbstractBinder {
     @Override
     protected void configure() {
         bindFactory(FooReferencingFactory.class).to(Foo.class).in(PerLookup.class);
-        bindFactory(ReferencingFactory.<Foo>referenceFactory()).to(new TypeLiteral<Ref<Foo>>() {}).in(Singleton.class);
+        bindFactory(ReferencingFactory.<Foo>referenceFactory()).to(new GenericType<Ref<Foo>>() {}).in(Singleton.class);
 
-        bindFactory(ListOfIntegerReferencingFactory.class).to(new TypeLiteral<List<Integer>>() {}).in(PerLookup.class);
-        bindFactory(ReferencingFactory.<List<Integer>>referenceFactory()).to(new TypeLiteral<Ref<List<Integer>>>() {
+        bindFactory(ListOfIntegerReferencingFactory.class).to(new GenericType<List<Integer>>() {}).in(PerLookup.class);
+        bindFactory(ReferencingFactory.<List<Integer>>referenceFactory()).to(new GenericType<Ref<List<Integer>>>() {
         }).in(Singleton.class);
 
-        bindFactory(ListOfStringReferencingFactory.class).to(new TypeLiteral<List<String>>() {}).in(PerLookup.class);
-        bindFactory(ReferencingFactory.<List<String>>referenceFactory(expectedStrings)).to(new TypeLiteral<Ref<List<String>>>() {
+        bindFactory(ListOfStringReferencingFactory.class).to(new GenericType<List<String>>() {}).in(PerLookup.class);
+        bindFactory(ReferencingFactory.referenceFactory(expectedStrings)).to(new GenericType<Ref<List<String>>>() {
         }).in(Singleton.class);
     }
 
@@ -142,14 +143,14 @@ public class ReferencingFactoryTest extends AbstractBinder {
      */
     @Test
     public void testReferencedBinding() {
-        ServiceLocator locator = Injections.createLocator(this);
+        InstanceManager instanceManager = Injections.createInstanceManager(this);
 
-        ValueInjected emptyValues = locator.createAndInitialize(ValueInjected.class);
+        ValueInjected emptyValues = instanceManager.createAndInitialize(ValueInjected.class);
         assertSame(expectedFoo, emptyValues.foo);
         assertSame(expectedIntegers, emptyValues.integers);
         assertSame(expectedStrings, emptyValues.strings);
 
-        RefInjected refValues = locator.createAndInitialize(RefInjected.class);
+        RefInjected refValues = instanceManager.createAndInitialize(RefInjected.class);
         expectedFoo = new Foo(10);
         refValues.foo.set(expectedFoo);
         expectedIntegers = new LinkedList<Integer>();
@@ -157,7 +158,7 @@ public class ReferencingFactoryTest extends AbstractBinder {
         expectedStrings = new ArrayList<String>();
         refValues.strings.set(expectedStrings);
 
-        ValueInjected updatedValues = locator.createAndInitialize(ValueInjected.class);
+        ValueInjected updatedValues = instanceManager.createAndInitialize(ValueInjected.class);
         assertSame(expectedFoo, updatedValues.foo);
         assertSame(expectedIntegers, updatedValues.integers);
         assertSame(expectedStrings, updatedValues.strings);

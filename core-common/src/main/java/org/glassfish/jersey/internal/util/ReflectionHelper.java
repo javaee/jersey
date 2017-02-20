@@ -1539,4 +1539,45 @@ public final class ReflectionHelper {
         return loader.getResourceAsStream(name);
     }
 
+    /**
+     * Given the type parameter gets the raw type represented by the type, or null if this has no associated raw class.
+     *
+     * @param type the type to find the raw class on.
+     * @return the raw class associated with this type.
+     */
+    public static Class<?> getRawClass(Type type) {
+        if (type == null) return null;
+
+        if (type instanceof GenericArrayType) {
+            Type componentType = ((GenericArrayType) type).getGenericComponentType();
+
+            if (!(componentType instanceof ParameterizedType) && !(componentType instanceof Class)) {
+                // type variable is not supported
+                return null;
+            }
+
+            Class<?> rawComponentClass = getRawClass(componentType);
+
+            String forNameName = "[L" + rawComponentClass.getName() + ";";
+            try {
+                return Class.forName(forNameName);
+            } catch (Throwable th) {
+                // ignore, but return null
+                return null;
+            }
+        }
+
+        if (type instanceof Class) {
+            return (Class<?>) type;
+        }
+
+        if (type instanceof ParameterizedType) {
+            Type rawType = ((ParameterizedType) type).getRawType();
+            if (rawType instanceof Class) {
+                return (Class<?>) rawType;
+            }
+        }
+
+        return null;
+    }
 }
