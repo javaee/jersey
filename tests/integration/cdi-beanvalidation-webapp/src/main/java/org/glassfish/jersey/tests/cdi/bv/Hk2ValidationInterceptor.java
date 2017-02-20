@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,18 +43,19 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+import javax.ws.rs.core.Context;
+
 import javax.enterprise.inject.Vetoed;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
-import javax.ws.rs.core.Context;
 
-import org.glassfish.jersey.server.spi.ValidationInterceptorContext;
+import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.spi.ValidationInterceptor;
+import org.glassfish.jersey.server.spi.ValidationInterceptorContext;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
@@ -81,7 +82,7 @@ public class Hk2ValidationInterceptor implements ValidationInterceptor {
 
     }
 
-    private static class ValidationInterceptorFactory implements Factory<ValidationInterceptor> {
+    private static class ValidationInterceptorFactory extends SupplierFactory<ValidationInterceptor> {
 
         @Inject
         Provider<Hk2ValidationResult> validationResultProvider;
@@ -90,10 +91,6 @@ public class Hk2ValidationInterceptor implements ValidationInterceptor {
         public ValidationInterceptor provide() {
 
             return new Hk2ValidationInterceptor(validationResultProvider);
-        }
-
-        @Override
-        public void dispose(ValidationInterceptor validationInterceptor) {
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,6 +53,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Providers;
 
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -62,8 +63,6 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.glassfish.hk2.api.Factory;
-
 /**
  * Base XML-based message body provider for collections of JAXB beans.
  *
@@ -72,15 +71,15 @@ import org.glassfish.hk2.api.Factory;
  */
 public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbProvider {
 
-    private final Factory<XMLInputFactory> xif;
+    private final Provider<XMLInputFactory> xif;
 
-    XmlCollectionJaxbProvider(Factory<XMLInputFactory> xif, Providers ps) {
+    XmlCollectionJaxbProvider(Provider<XMLInputFactory> xif, Providers ps) {
         super(ps);
 
         this.xif = xif;
     }
 
-    XmlCollectionJaxbProvider(Factory<XMLInputFactory> xif, Providers ps, MediaType mt) {
+    XmlCollectionJaxbProvider(Provider<XMLInputFactory> xif, Providers ps, MediaType mt) {
         super(ps, mt);
 
         this.xif = xif;
@@ -95,7 +94,7 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
     @Singleton
     public static final class App extends XmlCollectionJaxbProvider {
 
-        public App(@Context Factory<XMLInputFactory> xif, @Context Providers ps) {
+        public App(@Context Provider<XMLInputFactory> xif, @Context Providers ps) {
             super(xif, ps, MediaType.APPLICATION_XML_TYPE);
         }
     }
@@ -109,7 +108,7 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
     @Singleton
     public static final class Text extends XmlCollectionJaxbProvider {
 
-        public Text(@Context Factory<XMLInputFactory> xif, @Context Providers ps) {
+        public Text(@Context Provider<XMLInputFactory> xif, @Context Providers ps) {
             super(xif, ps, MediaType.TEXT_XML_TYPE);
         }
     }
@@ -123,7 +122,7 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
     @Singleton
     public static final class General extends XmlCollectionJaxbProvider {
 
-        public General(@Context Factory<XMLInputFactory> xif, @Context Providers ps) {
+        public General(@Context Provider<XMLInputFactory> xif, @Context Providers ps) {
             super(xif, ps);
         }
 
@@ -139,7 +138,7 @@ public abstract class XmlCollectionJaxbProvider extends AbstractCollectionJaxbPr
                                                        Unmarshaller u,
                                                        InputStream entityStream)
             throws XMLStreamException {
-        return xif.provide().createXMLStreamReader(entityStream);
+        return xif.get().createXMLStreamReader(entityStream);
     }
 
     @Override

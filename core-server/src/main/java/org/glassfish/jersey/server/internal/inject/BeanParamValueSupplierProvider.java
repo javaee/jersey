@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,7 +62,7 @@ import org.glassfish.hk2.utilities.cache.Computable;
  * @author Miroslav Fuksa
  */
 @Singleton
-final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
+final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     @Inject
     private ServiceLocator locator;
@@ -77,11 +77,11 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
          * Creates new resolver.
          */
         public InjectionResolver() {
-            super(BeanParamValueFactoryProvider.class);
+            super(BeanParamValueSupplierProvider.class);
         }
     }
 
-    private static final class BeanParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
+    private static final class BeanParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
         private final Parameter parameter;
         private final ServiceLocator locator;
 
@@ -100,13 +100,13 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
                     }
                 });
 
-        private BeanParamValueFactory(ServiceLocator locator, Parameter parameter) {
+        private BeanParamValueSupplier(ServiceLocator locator, Parameter parameter) {
             this.locator = locator;
             this.parameter = parameter;
         }
 
         @Override
-        public Object provide() {
+        public Object get() {
 
             final Class<?> rawType = parameter.getRawType();
 
@@ -126,12 +126,12 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
      * @param injector HK2 Service locator.
      */
     @Inject
-    public BeanParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
+    public BeanParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
         super(mpep, injector, Parameter.Source.BEAN_PARAM);
     }
 
     @Override
-    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
-        return new BeanParamValueFactory(locator, parameter);
+    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
+        return new BeanParamValueSupplier(locator, parameter);
     }
 }

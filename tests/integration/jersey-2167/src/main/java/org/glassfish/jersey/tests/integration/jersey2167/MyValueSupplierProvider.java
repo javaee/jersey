@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,24 +37,51 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.inject;
 
-import org.glassfish.hk2.api.ServiceHandle;
+package org.glassfish.jersey.tests.integration.jersey2167;
 
-import jersey.repackaged.com.google.common.base.Function;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueSupplier;
+import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
+import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
+import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
+import org.glassfish.jersey.server.model.Parameter;
+
+import org.glassfish.hk2.api.ServiceLocator;
+
 
 /**
- * Helper function converting a HK2 {@link ServiceHandle service provider} into the
- * provided service contract instance.
+ * Custom annotation value supplier provider for JERSEY-2167 reproducer.
  *
- * @param <T> service contract Java type.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public final class ProviderToService<T> implements Function<ServiceHandle<T>, T> {
+@Singleton
+public class MyValueSupplierProvider extends AbstractValueSupplierProvider {
+
+    @Inject
+    public MyValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.UNKNOWN);
+    }
+
+    @Singleton
+    static final class InjectionResolver extends ParamInjectionResolver<MyAnnotation> {
+        public InjectionResolver() {
+            super(MyValueSupplierProvider.class);
+        }
+    }
+
+    private static final class MyValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
+        @Override
+        public Object get() {
+            // returns some testing value
+            return "injected timestamp=" + System.currentTimeMillis();
+        }
+    }
 
     @Override
-    public T apply(ServiceHandle<T> input) {
-        return (input != null) ? input.getService() : null;
+    protected AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
+        return new MyValueSupplier();
     }
 }

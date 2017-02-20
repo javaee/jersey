@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,51 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.server.internal.inject;
 
-package org.glassfish.jersey.tests.integration.jersey2167;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
+import javax.inject.Provider;
 
-import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueFactory;
-import org.glassfish.jersey.server.internal.inject.AbstractValueFactoryProvider;
-import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
-import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
-import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
+import org.glassfish.jersey.server.ContainerRequest;
 
 /**
- * Custom annotation value factory provider for JERSEY-2167 reproducer.
+ * An abstract value supplier that provides access to the current {@link ContainerRequest} instance.
  *
- * @author Adam Lindenthal (adam.lindenthal at oracle.com)
+ * @param <T> the type of the injectable value.
+ * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Singleton
-public class MyValueFactoryProvider extends AbstractValueFactoryProvider {
-
+public abstract class AbstractContainerRequestValueSupplier<T> implements Supplier<T> {
     @Inject
-    public MyValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
-        super(mpep, locator, Parameter.Source.UNKNOWN);
-    }
+    private Provider<ContainerRequest> request;
 
-    @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<MyAnnotation> {
-        public InjectionResolver() {
-            super(MyValueFactoryProvider.class);
-        }
-    }
-
-    private static final class MyValueFactory extends AbstractContainerRequestValueFactory<Object> {
-        @Override
-        public Object provide() {
-            // returns some testing value
-            return "injected timestamp=" + System.currentTimeMillis();
-        }
-    }
-
-    @Override
-    protected AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
-        return new MyValueFactory();
+    /**
+     * Get the container request.
+     *
+     * @return the container request.
+     */
+    protected final ContainerRequest getContainerRequest() {
+        return request.get();
     }
 }

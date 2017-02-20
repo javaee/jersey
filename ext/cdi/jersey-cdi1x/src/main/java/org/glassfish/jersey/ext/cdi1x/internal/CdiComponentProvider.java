@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,8 +56,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
 
 import javax.annotation.ManagedBean;
 import javax.annotation.Priority;
@@ -84,8 +88,6 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Qualifier;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2InjectedTarget;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
@@ -97,7 +99,7 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -281,12 +283,12 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
             if (parameter != null) {
                 final ServiceLocator locator = beanManager.getExtension(CdiComponentProvider.class).getEffectiveLocator();
-                final Set<ValueFactoryProvider> providers = Providers.getProviders(locator, ValueFactoryProvider.class);
+                final Set<ValueSupplierProvider> providers = Providers.getProviders(locator, ValueSupplierProvider.class);
 
-                for (final ValueFactoryProvider vfp : providers) {
-                    final Factory<?> valueFactory = vfp.getValueFactory(parameter);
-                    if (valueFactory != null) {
-                        return (String) valueFactory.provide();
+                for (final ValueSupplierProvider vfp : providers) {
+                    final Supplier<?> paramValueSupplier = vfp.getValueSupplier(parameter);
+                    if (paramValueSupplier != null) {
+                        return (String) paramValueSupplier.get();
                     }
                 }
             }

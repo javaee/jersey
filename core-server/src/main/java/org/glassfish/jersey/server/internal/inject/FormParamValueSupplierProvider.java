@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -77,7 +77,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
+final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     /**
      * {@link FormParam} injection resolver.
@@ -89,22 +89,22 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
          * Create new FormParam injection resolver.
          */
         public InjectionResolver() {
-            super(FormParamValueFactoryProvider.class);
+            super(FormParamValueSupplierProvider.class);
         }
     }
 
-    private static final class FormParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
+    private static final class FormParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
 
-        FormParamValueFactory(MultivaluedParameterExtractor<?> extractor, boolean decode) {
+        FormParamValueSupplier(MultivaluedParameterExtractor<?> extractor, boolean decode) {
             this.extractor = extractor;
             this.decode = decode;
         }
 
         @Override
-        public Object provide() {
+        public Object get() {
             ContainerRequest request = getContainerRequest();
 
             Form form = getCachedForm(request, decode);
@@ -223,12 +223,12 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
      * @param injector injector.
      */
     @Inject
-    public FormParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
+    public FormParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
         super(mpep, injector, Parameter.Source.FORM);
     }
 
     @Override
-    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
         String parameterName = parameter.getSourceName();
 
         if (parameterName == null || parameterName.isEmpty()) {
@@ -240,6 +240,6 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
         if (e == null) {
             return null;
         }
-        return new FormParamValueFactory(e, !parameter.isEncoded());
+        return new FormParamValueSupplier(e, !parameter.isEncoded());
     }
 }

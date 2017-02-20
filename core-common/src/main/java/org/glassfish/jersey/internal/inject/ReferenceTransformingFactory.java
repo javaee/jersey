@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,8 +43,6 @@ import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 
-import org.glassfish.hk2.api.Factory;
-
 /**
  * An abstract injection factory that provides injection of an instance of target type {@code T}
  * by {@link org.glassfish.jersey.internal.inject.ReferenceTransformingFactory.Transformer transforming}
@@ -55,7 +53,7 @@ import org.glassfish.hk2.api.Factory;
  * @param <S> the type of the injected source type {@link Ref reference}.
  * @param <T> the type of provided entity.
  */
-public abstract class ReferenceTransformingFactory<S, T> implements Factory<T> {
+public abstract class ReferenceTransformingFactory<S, T> extends SupplierFactory<T> {
     /**
      * Transforming function responsible for transforming an instance of source type {@code S} into an instance of
      * target type {@code T}.
@@ -90,10 +88,5 @@ public abstract class ReferenceTransformingFactory<S, T> implements Factory<T> {
     @Override
     public T provide() {
         return transformer.transform(refProvider.get().get());
-    }
-
-    @Override
-    public void dispose(T instance) {
-        // not used
     }
 }

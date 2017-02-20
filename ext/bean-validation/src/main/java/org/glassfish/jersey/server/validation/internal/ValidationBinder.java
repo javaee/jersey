@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,6 +67,7 @@ import javax.validation.ValidatorFactory;
 import javax.validation.spi.ValidationProvider;
 
 import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.model.internal.RankedComparator;
@@ -76,7 +77,6 @@ import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.validation.ValidationConfig;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -107,7 +107,7 @@ public final class ValidationBinder extends AbstractBinder {
     /**
      * Factory providing default {@link javax.validation.Configuration} instance.
      */
-    private static class DefaultConfigurationProvider implements Factory<Configuration> {
+    private static class DefaultConfigurationProvider extends SupplierFactory<Configuration> {
 
         private final boolean inOsgi;
 
@@ -144,17 +144,12 @@ public final class ValidationBinder extends AbstractBinder {
                 throw e;
             }
         }
-
-        @Override
-        public void dispose(final Configuration instance) {
-            // NOOP
-        }
     }
 
     /**
      * Factory providing default (un-configured) {@link ValidatorFactory} instance.
      */
-    private static class DefaultValidatorFactoryProvider implements Factory<ValidatorFactory> {
+    private static class DefaultValidatorFactoryProvider extends SupplierFactory<ValidatorFactory> {
 
         @Inject
         private Configuration config;
@@ -163,17 +158,12 @@ public final class ValidationBinder extends AbstractBinder {
         public ValidatorFactory provide() {
             return config.buildValidatorFactory();
         }
-
-        @Override
-        public void dispose(final ValidatorFactory instance) {
-            // NOOP
-        }
     }
 
     /**
      * Factory providing default (un-configured) {@link Validator} instance.
      */
-    private static class DefaultValidatorProvider implements Factory<Validator> {
+    private static class DefaultValidatorProvider extends SupplierFactory<Validator> {
 
         @Inject
         private ValidatorFactory factory;
@@ -182,17 +172,12 @@ public final class ValidationBinder extends AbstractBinder {
         public Validator provide() {
             return factory.getValidator();
         }
-
-        @Override
-        public void dispose(final Validator instance) {
-            // NOOP
-        }
     }
 
     /**
      * Factory providing configured {@link Validator} instance.
      */
-    private static class ConfiguredValidatorProvider implements Factory<ConfiguredValidator> {
+    private static class ConfiguredValidatorProvider extends SupplierFactory<ConfiguredValidator> {
 
         @Inject
         private ServiceLocator locator;
@@ -329,11 +314,6 @@ public final class ValidationBinder extends AbstractBinder {
         private boolean isValidateOnExecutableOverrideCheckDisabled() {
             return PropertiesHelper.isProperty(
                     jaxRsConfig.getProperty(ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK));
-        }
-
-        @Override
-        public void dispose(final ConfiguredValidator instance) {
-            // NOOP
         }
     }
 }

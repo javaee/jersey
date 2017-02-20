@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,22 +52,17 @@ import org.glassfish.hk2.api.Factory;
  * @param <T>
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class ReferencingFactory<T> implements Factory<T> {
+public abstract class ReferencingFactory<T> extends SupplierFactory<T> {
 
-    private static class EmptyReferenceFactory<T> implements Factory<Ref<T>> {
+    private static class EmptyReferenceFactory<T> extends SupplierFactory<Ref<T>> {
 
         @Override
         public Ref<T> provide() {
             return Refs.emptyRef();
         }
-
-        @Override
-        public void dispose(Ref<T> instance) {
-            //not used
-        }
     }
 
-    private static class InitializedReferenceFactory<T> implements Factory<Ref<T>> {
+    private static class InitializedReferenceFactory<T> extends SupplierFactory<Ref<T>> {
 
         private final T initialValue;
 
@@ -78,11 +73,6 @@ public abstract class ReferencingFactory<T> implements Factory<T> {
         @Override
         public Ref<T> provide() {
             return Refs.of(initialValue);
-        }
-
-        @Override
-        public void dispose(Ref<T> instance) {
-            //not used
         }
     }
 
@@ -100,11 +90,6 @@ public abstract class ReferencingFactory<T> implements Factory<T> {
     @Override
     public T provide() {
         return referenceFactory.get().get();
-    }
-
-    @Override
-    public void dispose(T instance) {
-        //not used
     }
 
     /**

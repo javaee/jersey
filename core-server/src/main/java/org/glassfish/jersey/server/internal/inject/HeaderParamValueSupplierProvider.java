@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,73 +39,83 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.HeaderParam;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.ExtractorException;
+import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Provides injection of {@link Request} entity value or {@link Request} instance
- * itself.
+ * Value supplier provider supporting the {@link HeaderParam &#64;HeaderParam} injection annotation.
  *
+ * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider {
+final class HeaderParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     /**
-     * Creates new instance initialized with parameters.
-     *
-     * @param mpep     Injected multivaluedParameterExtractor provider.
-     * @param injector Injected HK2 injector.
+     * {@link HeaderParam &#64;HeaderParam} injection resolver.
      */
-    @Inject
-    EntityParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.ENTITY);
+    @Singleton
+    static final class InjectionResolver extends ParamInjectionResolver<HeaderParam> {
+
+        /**
+         * Create new {@link HeaderParam &#64;HeaderParam} injection resolver.
+         */
+        public InjectionResolver() {
+            super(HeaderParamValueSupplierProvider.class);
+        }
     }
 
-    private static class EntityValueFactory extends AbstractContainerRequestValueFactory<Object> {
+    private static final class HeaderParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
 
-        private final Parameter parameter;
+        private final MultivaluedParameterExtractor<?> extractor;
 
-        public EntityValueFactory(Parameter parameter) {
-            this.parameter = parameter;
+        HeaderParamValueSupplier(MultivaluedParameterExtractor<?> extractor) {
+            this.extractor = extractor;
         }
 
         @Override
-        public Object provide() {
-            final ContainerRequest requestContext = getContainerRequest();
-
-            final Class<?> rawType = parameter.getRawType();
-
-            Object value;
-            if ((Request.class.isAssignableFrom(rawType) || ContainerRequestContext.class.isAssignableFrom(rawType))
-                    && rawType.isInstance(requestContext)) {
-                value = requestContext;
-            } else {
-                value = requestContext.readEntity(rawType, parameter.getType(), parameter.getAnnotations());
-                if (rawType.isPrimitive() && value == null) {
-                    throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-                            .entity(LocalizationMessages.ERROR_PRIMITIVE_TYPE_NULL()).build());
-                }
+        public Object get() {
+            try {
+                return extractor.extract(getContainerRequest().getHeaders());
+            } catch (ExtractorException e) {
+                throw new ParamException.HeaderParamException(e.getCause(),
+                        extractor.getName(), extractor.getDefaultValueString());
             }
-            return value;
-
         }
     }
 
+    /**
+     * Injection constructor.
+     *
+     * @param mpep    multivalued map parameter extractor provider.
+     * @param locator HK2 service locator.
+     */
+    @Inject
+    public HeaderParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.HEADER);
+    }
+
     @Override
-    protected Factory<?> createValueFactory(Parameter parameter) {
-        return new EntityValueFactory(parameter);
+    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
+        String parameterName = parameter.getSourceName();
+        if (parameterName == null || parameterName.length() == 0) {
+            // Invalid header parameter name
+            return null;
+        }
+
+        MultivaluedParameterExtractor e = get(parameter);
+        if (e == null) {
+            return null;
+        }
+
+        return new HeaderParamValueSupplier(e);
     }
 }
