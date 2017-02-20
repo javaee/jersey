@@ -45,9 +45,11 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.core.PathSegment;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.ExtractorException;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
@@ -63,6 +65,36 @@ import org.glassfish.hk2.api.ServiceLocator;
 final class MatrixParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     /**
+     * Injection constructor.
+     *
+     * @param mpep    multivalued map parameter extractor provider.
+     * @param locator HK2 service locator.
+     */
+    @Inject
+    public MatrixParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.MATRIX);
+    }
+
+    @Override
+    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            Parameter parameter,
+            Provider<ContainerRequest> requestProvider) {
+
+        String parameterName = parameter.getSourceName();
+        if (parameterName == null || parameterName.length() == 0) {
+            // Invalid header parameter name
+            return null;
+        }
+
+        MultivaluedParameterExtractor e = get(parameter);
+        if (e == null) {
+            return null;
+        }
+
+        return new MatrixParamValueSupplier(e, !parameter.isEncoded(), requestProvider);
+    }
+
+    /**
      * {@link MatrixParam &#64;MatrixParam} injection resolver.
      */
     @Singleton
@@ -76,19 +108,25 @@ final class MatrixParamValueSupplierProvider extends AbstractValueSupplierProvid
         }
     }
 
-    private static final class MatrixParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
+    private static final class MatrixParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
 
-        MatrixParamValueSupplier(MultivaluedParameterExtractor<?> extractor, boolean decode) {
+        MatrixParamValueSupplier(
+                MultivaluedParameterExtractor<?> extractor,
+                boolean decode,
+                Provider<ContainerRequest> requestProvider) {
+
+            super(requestProvider);
+
             this.extractor = extractor;
             this.decode = decode;
         }
 
         @Override
         public Object get() {
-            List<PathSegment> l = getContainerRequest().getUriInfo().getPathSegments(decode);
+            List<PathSegment> l = getRequest().getUriInfo().getPathSegments(decode);
             PathSegment p = l.get(l.size() - 1);
             try {
                 return extractor.extract(p.getMatrixParameters());
@@ -97,32 +135,5 @@ final class MatrixParamValueSupplierProvider extends AbstractValueSupplierProvid
                         extractor.getName(), extractor.getDefaultValueString());
             }
         }
-    }
-
-    /**
-     * Injection constructor.
-     *
-     * @param mpep    multivalued map parameter extractor provider.
-     * @param locator HK2 service locator.
-     */
-    @Inject
-    public MatrixParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
-        super(mpep, locator, Parameter.Source.MATRIX);
-    }
-
-    @Override
-    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
-        String parameterName = parameter.getSourceName();
-        if (parameterName == null || parameterName.length() == 0) {
-            // Invalid header parameter name
-            return null;
-        }
-
-        MultivaluedParameterExtractor e = get(parameter);
-        if (e == null) {
-            return null;
-        }
-
-        return new MatrixParamValueSupplier(e, !parameter.isEncoded());
     }
 }

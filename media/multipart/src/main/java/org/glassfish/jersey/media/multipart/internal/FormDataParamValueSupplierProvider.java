@@ -57,6 +57,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -71,7 +72,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageUtils;
 import org.glassfish.jersey.message.internal.Utils;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueSupplier;
+import org.glassfish.jersey.server.internal.inject.AbstractRequestDerivedValueSupplier;
 import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
@@ -107,7 +108,11 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
         }
     }
 
-    private abstract class ValueSupplier<T> extends AbstractContainerRequestValueSupplier<T> {
+    private abstract class ValueSupplier<T> extends AbstractRequestDerivedValueSupplier<T> {
+
+        public ValueSupplier(Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+        }
 
         /**
          * Returns a {@code FormDataMultiPart} entity from the request and stores it in the request context properties.
@@ -115,7 +120,7 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
          * @return a form data multi part entity.
          */
         FormDataMultiPart getEntity() {
-            final ContainerRequest request = getContainerRequest();
+            final ContainerRequest request = getRequest();
             final String requestPropertyName = FormDataMultiPart.class.getName();
 
             Object entity = request.getProperty(requestPropertyName);
@@ -136,6 +141,10 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
      */
     private final class FormDataMultiPartSupplier extends ValueSupplier<FormDataMultiPart> {
 
+        public FormDataMultiPartSupplier(final Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+        }
+
         @Override
         public FormDataMultiPart get() {
             return getEntity();
@@ -150,7 +159,9 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
 
         private final String name;
 
-        public ListFormDataBodyPartValueSupplier(final String name) {
+        public ListFormDataBodyPartValueSupplier(final String name, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.name = name;
         }
 
@@ -168,7 +179,9 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
 
         private final String name;
 
-        public ListFormDataContentDispositionSupplier(final String name) {
+        public ListFormDataContentDispositionSupplier(final String name, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.name = name;
         }
 
@@ -190,7 +203,9 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
 
         private final String name;
 
-        public FormDataBodyPartSupplier(final String name) {
+        public FormDataBodyPartSupplier(final String name, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.name = name;
         }
 
@@ -208,7 +223,9 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
 
         private final String name;
 
-        public FormDataContentDispositionSupplier(final String name) {
+        public FormDataContentDispositionSupplier(final String name, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.name = name;
         }
 
@@ -227,7 +244,9 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
 
         private final String name;
 
-        public FileSupplier(final String name) {
+        public FileSupplier(final String name, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.name = name;
         }
 
@@ -263,7 +282,13 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
         private final MultivaluedParameterExtractor<?> extractor;
         private final Parameter parameter;
 
-        public FormDataParamValueSupplier(final Parameter parameter, final MultivaluedParameterExtractor<?> extractor) {
+        public FormDataParamValueSupplier(
+                Parameter parameter,
+                MultivaluedParameterExtractor<?> extractor,
+                Provider<ContainerRequest> requestProvider) {
+
+            super(requestProvider);
+
             this.parameter = parameter;
             this.extractor = extractor;
         }
@@ -276,7 +301,7 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
             final FormDataBodyPart part = parts != null ? parts.get(0) : null;
             final MediaType mediaType = part != null ? part.getMediaType() : MediaType.TEXT_PLAIN_TYPE;
 
-            final ContainerRequest request = getContainerRequest();
+            final ContainerRequest request = getRequest();
             final MessageBodyWorkers messageBodyWorkers = request.getWorkers();
 
             MessageBodyReader reader = messageBodyWorkers.getMessageBodyReader(
@@ -391,12 +416,14 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
     }
 
     @Override
-    protected AbstractContainerRequestValueSupplier<?> createValueSupplier(final Parameter parameter) {
+    protected AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            Parameter parameter, Provider<ContainerRequest> requestProvider) {
+
         final Class<?> rawType = parameter.getRawType();
 
         if (Parameter.Source.ENTITY == parameter.getSource()) {
             if (FormDataMultiPart.class.isAssignableFrom(rawType)) {
-                return new FormDataMultiPartSupplier();
+                return new FormDataMultiPartSupplier(requestProvider);
             } else {
                 return null;
             }
@@ -412,22 +439,22 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
 
                 if (FormDataBodyPart.class == clazz) {
                     // Return a collection of form data body part.
-                    return new ListFormDataBodyPartValueSupplier(paramName);
+                    return new ListFormDataBodyPartValueSupplier(paramName, requestProvider);
                 } else if (FormDataContentDisposition.class == clazz) {
                     // Return a collection of form data content disposition.
-                    return new ListFormDataContentDispositionSupplier(paramName);
+                    return new ListFormDataContentDispositionSupplier(paramName, requestProvider);
                 } else {
                     // Return a collection of specific type.
-                    return new FormDataParamValueSupplier(parameter, get(parameter));
+                    return new FormDataParamValueSupplier(parameter, get(parameter), requestProvider);
                 }
             } else if (FormDataBodyPart.class == rawType) {
-                return new FormDataBodyPartSupplier(paramName);
+                return new FormDataBodyPartSupplier(paramName, requestProvider);
             } else if (FormDataContentDisposition.class == rawType) {
-                return new FormDataContentDispositionSupplier(paramName);
+                return new FormDataContentDispositionSupplier(paramName, requestProvider);
             } else if (File.class == rawType) {
-                return new FileSupplier(paramName);
+                return new FileSupplier(paramName, requestProvider);
             } else {
-                return new FormDataParamValueSupplier(parameter, get(parameter));
+                return new FormDataParamValueSupplier(parameter, get(parameter), requestProvider);
             }
         }
 

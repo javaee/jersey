@@ -42,9 +42,11 @@ package org.glassfish.jersey.server.internal.inject;
 import javax.ws.rs.HeaderParam;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.ExtractorException;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
@@ -60,6 +62,36 @@ import org.glassfish.hk2.api.ServiceLocator;
 final class HeaderParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     /**
+     * Injection constructor.
+     *
+     * @param mpep    multivalued map parameter extractor provider.
+     * @param locator HK2 service locator.
+     */
+    @Inject
+    public HeaderParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.HEADER);
+    }
+
+    @Override
+    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            Parameter parameter,
+            Provider<ContainerRequest> requestProvider) {
+
+        String parameterName = parameter.getSourceName();
+        if (parameterName == null || parameterName.length() == 0) {
+            // Invalid header parameter name
+            return null;
+        }
+
+        MultivaluedParameterExtractor e = get(parameter);
+        if (e == null) {
+            return null;
+        }
+
+        return new HeaderParamValueSupplier(e, requestProvider);
+    }
+
+    /**
      * {@link HeaderParam &#64;HeaderParam} injection resolver.
      */
     @Singleton
@@ -73,49 +105,24 @@ final class HeaderParamValueSupplierProvider extends AbstractValueSupplierProvid
         }
     }
 
-    private static final class HeaderParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
+    private static final class HeaderParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
 
-        HeaderParamValueSupplier(MultivaluedParameterExtractor<?> extractor) {
+        HeaderParamValueSupplier(MultivaluedParameterExtractor<?> extractor, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.extractor = extractor;
         }
 
         @Override
         public Object get() {
             try {
-                return extractor.extract(getContainerRequest().getHeaders());
+                return extractor.extract(getRequest().getHeaders());
             } catch (ExtractorException e) {
                 throw new ParamException.HeaderParamException(e.getCause(),
                         extractor.getName(), extractor.getDefaultValueString());
             }
         }
-    }
-
-    /**
-     * Injection constructor.
-     *
-     * @param mpep    multivalued map parameter extractor provider.
-     * @param locator HK2 service locator.
-     */
-    @Inject
-    public HeaderParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
-        super(mpep, locator, Parameter.Source.HEADER);
-    }
-
-    @Override
-    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
-        String parameterName = parameter.getSourceName();
-        if (parameterName == null || parameterName.length() == 0) {
-            // Invalid header parameter name
-            return null;
-        }
-
-        MultivaluedParameterExtractor e = get(parameter);
-        if (e == null) {
-            return null;
-        }
-
-        return new HeaderParamValueSupplier(e);
     }
 }

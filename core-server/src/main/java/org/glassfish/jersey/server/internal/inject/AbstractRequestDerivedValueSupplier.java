@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.server.ContainerRequest;
@@ -53,16 +52,19 @@ import org.glassfish.jersey.server.ContainerRequest;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class AbstractContainerRequestValueSupplier<T> implements Supplier<T> {
-    @Inject
-    private Provider<ContainerRequest> request;
+public abstract class AbstractRequestDerivedValueSupplier<T> implements Supplier<T> {
+    private final Provider<ContainerRequest> requestProvider;
+
+    protected AbstractRequestDerivedValueSupplier(Provider<ContainerRequest> requestProvider) {
+        this.requestProvider = requestProvider;
+    }
 
     /**
      * Get the container request.
      *
      * @return the container request.
      */
-    protected final ContainerRequest getContainerRequest() {
-        return request.get();
+    protected final ContainerRequest getRequest() {
+        return requestProvider.get();
     }
 }

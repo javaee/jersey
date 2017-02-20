@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,15 +59,4 @@ public interface MultivaluedParameterExtractorProvider {
      * @return extractor for the method parameter.
      */
     MultivaluedParameterExtractor<?> get(Parameter parameter);
-
-    /**
-     * Get the extractor configured to extract value of given {@link Parameter parameter}.
-     * <p />
-     * Any default value set on the parameter will be ignored by the returned
-     * extractor.
-     *
-     * @param parameter server model parameter.
-     * @return extractor for the method parameter.
-     */
-    MultivaluedParameterExtractor<?> getWithoutDefaultValue(Parameter parameter);
 }

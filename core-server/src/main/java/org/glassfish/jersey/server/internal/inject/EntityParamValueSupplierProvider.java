@@ -45,6 +45,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.server.ContainerRequest;
@@ -73,17 +74,27 @@ class EntityParamValueSupplierProvider extends AbstractValueSupplierProvider {
         super(mpep, injector, Parameter.Source.ENTITY);
     }
 
-    private static class EntityValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
+    @Override
+    protected AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            Parameter parameter,
+            Provider<ContainerRequest> requestProvider) {
+
+        return new EntityValueSupplier(parameter, requestProvider);
+    }
+
+    private static class EntityValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
 
         private final Parameter parameter;
 
-        public EntityValueSupplier(Parameter parameter) {
+        public EntityValueSupplier(Parameter parameter, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.parameter = parameter;
         }
 
         @Override
         public Object get() {
-            final ContainerRequest requestContext = getContainerRequest();
+            final ContainerRequest requestContext = getRequest();
 
             final Class<?> rawType = parameter.getRawType();
 
@@ -101,10 +112,5 @@ class EntityParamValueSupplierProvider extends AbstractValueSupplierProvider {
             return value;
 
         }
-    }
-
-    @Override
-    protected AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
-        return new EntityValueSupplier(parameter);
     }
 }

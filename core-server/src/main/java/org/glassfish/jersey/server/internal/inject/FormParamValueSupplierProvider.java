@@ -56,6 +56,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.ExtractorException;
@@ -80,6 +81,36 @@ import org.glassfish.hk2.api.ServiceLocator;
 final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     /**
+     * Injection constructor.
+     *
+     * @param mpep     extractor provider.
+     * @param injector injector.
+     */
+    @Inject
+    public FormParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
+        super(mpep, injector, Parameter.Source.FORM);
+    }
+
+    @Override
+    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            Parameter parameter,
+            Provider<ContainerRequest> requestProvider) {
+
+        String parameterName = parameter.getSourceName();
+
+        if (parameterName == null || parameterName.isEmpty()) {
+            // Invalid query parameter name
+            return null;
+        }
+
+        MultivaluedParameterExtractor e = get(parameter);
+        if (e == null) {
+            return null;
+        }
+        return new FormParamValueSupplier(e, !parameter.isEncoded(), requestProvider);
+    }
+
+    /**
      * {@link FormParam} injection resolver.
      */
     @Singleton
@@ -93,19 +124,54 @@ final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider
         }
     }
 
-    private static final class FormParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
+    private static final class FormParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
 
+        private static final Annotation encodedAnnotation = getEncodedAnnotation();
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
 
-        FormParamValueSupplier(MultivaluedParameterExtractor<?> extractor, boolean decode) {
+        FormParamValueSupplier(
+                MultivaluedParameterExtractor<?> extractor,
+                boolean decode,
+                Provider<ContainerRequest> requestProvider) {
+
+            super(requestProvider);
+
             this.extractor = extractor;
             this.decode = decode;
         }
 
+        private static Form getCachedForm(final ContainerRequest request, boolean decode) {
+            return (Form) request.getProperty(decode ? InternalServerProperties
+                    .FORM_DECODED_PROPERTY : InternalServerProperties.FORM_PROPERTY);
+        }
+
+        private static ContainerRequest ensureValidRequest(final ContainerRequest request) throws IllegalStateException {
+            if (request.getMethod().equals("GET")) {
+                throw new IllegalStateException(
+                        LocalizationMessages.FORM_PARAM_METHOD_ERROR());
+            }
+
+            if (!MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())) {
+                throw new IllegalStateException(
+                        LocalizationMessages.FORM_PARAM_CONTENT_TYPE_ERROR());
+            }
+            return request;
+        }
+
+        private static Annotation getEncodedAnnotation() {
+            /**
+             * Encoded-annotated class.
+             */
+            @Encoded
+            final class EncodedAnnotationTemp {
+            }
+            return EncodedAnnotationTemp.class.getAnnotation(Encoded.class);
+        }
+
         @Override
         public Object get() {
-            ContainerRequest request = getContainerRequest();
+            ContainerRequest request = getRequest();
 
             Form form = getCachedForm(request, decode);
 
@@ -167,36 +233,6 @@ final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider
             return getFormParameters(ensureValidRequest(request));
         }
 
-        private static Form getCachedForm(final ContainerRequest request, boolean decode) {
-            return (Form) request.getProperty(decode ? InternalServerProperties
-                    .FORM_DECODED_PROPERTY : InternalServerProperties.FORM_PROPERTY);
-        }
-
-        private static ContainerRequest ensureValidRequest(final ContainerRequest request) throws IllegalStateException {
-            if (request.getMethod().equals("GET")) {
-                throw new IllegalStateException(
-                        LocalizationMessages.FORM_PARAM_METHOD_ERROR());
-            }
-
-            if (!MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())) {
-                throw new IllegalStateException(
-                        LocalizationMessages.FORM_PARAM_CONTENT_TYPE_ERROR());
-            }
-            return request;
-        }
-
-        private static final Annotation encodedAnnotation = getEncodedAnnotation();
-
-        private static Annotation getEncodedAnnotation() {
-            /**
-             * Encoded-annotated class.
-             */
-            @Encoded
-            final class EncodedAnnotationTemp {
-            }
-            return EncodedAnnotationTemp.class.getAnnotation(Encoded.class);
-        }
-
         private Form getFormParameters(ContainerRequest request) {
             if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())) {
                 request.bufferEntity();
@@ -214,32 +250,5 @@ final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider
                 return new Form();
             }
         }
-    }
-
-    /**
-     * Injection constructor.
-     *
-     * @param mpep     extractor provider.
-     * @param injector injector.
-     */
-    @Inject
-    public FormParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.FORM);
-    }
-
-    @Override
-    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
-        String parameterName = parameter.getSourceName();
-
-        if (parameterName == null || parameterName.isEmpty()) {
-            // Invalid query parameter name
-            return null;
-        }
-
-        MultivaluedParameterExtractor e = get(parameter);
-        if (e == null) {
-            return null;
-        }
-        return new FormParamValueSupplier(e, !parameter.isEncoded());
     }
 }
