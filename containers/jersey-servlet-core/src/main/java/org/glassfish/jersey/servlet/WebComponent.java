@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.servlet;
 
 import java.io.IOException;
@@ -60,6 +61,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -105,11 +107,11 @@ import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 import org.glassfish.jersey.servlet.spi.FilterUrlMappingsProvider;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.uri.UriComponent;
 
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import jersey.repackaged.com.google.common.base.Predicate;
 import jersey.repackaged.com.google.common.collect.Collections2;
@@ -128,8 +130,8 @@ public class WebComponent {
 
     private static final Logger LOGGER = Logger.getLogger(WebComponent.class.getName());
 
-    private static final Type REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
-    private static final Type RESPONSE_TYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
+    private static final Type REQUEST_TYPE = (new GenericType<Ref<HttpServletRequest>>() {}).getType();
+    private static final Type RESPONSE_TYPE = (new GenericType<Ref<HttpServletResponse>>() {}).getType();
 
     private static final AsyncContextDelegate DEFAULT_ASYNC_DELEGATE = new AsyncContextDelegate() {
 
@@ -147,28 +149,20 @@ public class WebComponent {
     private final boolean requestResponseBindingExternalized;
 
     private static final RequestScopedInitializerProvider DEFAULT_REQUEST_SCOPE_INITIALIZER_PROVIDER =
-            new RequestScopedInitializerProvider() {
-                @Override
-                public RequestScopedInitializer get(final RequestContextProvider context) {
-                    return new RequestScopedInitializer() {
-                        @Override
-                        public void initialize(final ServiceLocator locator) {
-                            locator.<Ref<HttpServletRequest>>getService(REQUEST_TYPE).set(context.getHttpServletRequest());
-                            locator.<Ref<HttpServletResponse>>getService(RESPONSE_TYPE).set(context.getHttpServletResponse());
-                        }
-                    };
-                }
+            context -> (RequestScopedInitializer) instanceManager -> {
+                instanceManager.<Ref<HttpServletRequest>>getInstance(REQUEST_TYPE).set(context.getHttpServletRequest());
+                instanceManager.<Ref<HttpServletResponse>>getInstance(RESPONSE_TYPE).set(context.getHttpServletResponse());
             };
 
     /**
      * Return the first found {@link AsyncContextDelegateProvider}
-     * (via {@link Providers#getAllProviders(org.glassfish.hk2.api.ServiceLocator, Class)}) or {@code #DEFAULT_ASYNC_DELEGATE} if
+     * (via {@link Providers#getAllProviders(InstanceManager, Class)}) or {@code #DEFAULT_ASYNC_DELEGATE} if
      * other delegate cannot be found.
      *
      * @return a non-null AsyncContextDelegateProvider.
      */
     private AsyncContextDelegateProvider getAsyncExtensionDelegate() {
-        final Iterator<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getServiceLocator(),
+        final Iterator<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getInstanceManager(),
                 AsyncContextDelegateProvider.class).iterator();
         if (providers.hasNext()) {
             return providers.next();
@@ -226,13 +220,13 @@ public class WebComponent {
                         .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
 
                 bindFactory(ReferencingFactory.<HttpServletRequest>referenceFactory())
-                        .to(new TypeLiteral<Ref<HttpServletRequest>>() {}).in(RequestScoped.class);
+                        .to(new GenericType<Ref<HttpServletRequest>>() {}).in(RequestScoped.class);
 
                 // response
                 bindFactory(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class)
                         .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
                 bindFactory(ReferencingFactory.<HttpServletResponse>referenceFactory())
-                        .to(new TypeLiteral<Ref<HttpServletResponse>>() {}).in(RequestScoped.class);
+                        .to(new GenericType<Ref<HttpServletResponse>>() {}).in(RequestScoped.class);
             }
 
             bindFactory(new SupplierFactory<ServletContext>() {
@@ -380,8 +374,8 @@ public class WebComponent {
         this.queryParamsAsFormParams = !resourceConfig.isProperty(ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED);
         this.configSetStatusOverSendError = ServerProperties.getValue(resourceConfig.getProperties(),
                 ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, false, Boolean.class);
-        this.backgroundTaskScheduler = appHandler.getServiceLocator()
-                .getService(ScheduledExecutorService.class, BackgroundSchedulerLiteral.INSTANCE);
+        this.backgroundTaskScheduler = appHandler.getInstanceManager()
+                .getInstance(ScheduledExecutorService.class, BackgroundSchedulerLiteral.INSTANCE);
     }
 
     /**

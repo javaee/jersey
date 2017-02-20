@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,8 +47,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 
+import org.glassfish.jersey.hk2.HK2InstanceManager;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.Descriptor;
 import org.glassfish.hk2.api.Filter;
@@ -90,27 +92,33 @@ public class BeanParamMemoryLeakTest extends AbstractTest {
 
     @Test
     public void testBeanParam() throws Exception {
-
         initiateWebApplication(BeanParamInjectionResource.class);
-        final ServiceLocator locator = app().getServiceLocator();
+        final InstanceManager instanceManager = app().getInstanceManager();
+
+        if (!(instanceManager instanceof HK2InstanceManager)) {
+            throw new RuntimeException("Bean Manager is not an instance manager");
+        }
+
+        HK2InstanceManager hk2BeanManager = (HK2InstanceManager) instanceManager;
+        ServiceLocator serviceLocator = hk2BeanManager.getServiceLocator();
 
         // we do not expect any descriptor registered yet
-        assertEquals(0, locator.getDescriptors(new ParameterBeanFilter()).size());
+        assertEquals(0, serviceLocator.getDescriptors(new ParameterBeanFilter()).size());
 
         // now make one registered via this call
         assertEquals("one", resource("/jaxrs?q=one").getEntity());
 
         // make sure it got registered
-        assertEquals(1, locator.getDescriptors(new ParameterBeanFilter()).size());
+        assertEquals(1, serviceLocator.getDescriptors(new ParameterBeanFilter()).size());
 
         // make another call
         assertEquals("two", resource("/jaxrs?q=two").getEntity());
-        assertEquals(1, locator.getDescriptors(new ParameterBeanFilter()).size());
+        assertEquals(1, serviceLocator.getDescriptors(new ParameterBeanFilter()).size());
 
         // and some more
         for (int i = 0; i < 20; i++) {
             assertEquals(Integer.toString(i), resource("/jaxrs?q=" + i).getEntity());
-            assertEquals(1, locator.getDescriptors(new ParameterBeanFilter()).size());
+            assertEquals(1, serviceLocator.getDescriptors(new ParameterBeanFilter()).size());
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,9 +47,8 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -103,8 +102,8 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindMappingExtendedExceptions() throws Exception {
-        final ServiceLocator serviceLocator = Injections.createLocator(new ExtendedExceptionMappers());
-        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
+        final InstanceManager instanceManager = Injections.createInstanceManager(new ExtendedExceptionMappers());
+        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(instanceManager);
 
         final ExceptionMapper mapper = mapperFactory.findMapping(new IllegalArgumentException());
 
@@ -133,8 +132,8 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindMapping() throws Exception {
-        final ServiceLocator serviceLocator = Injections.createLocator(new AllMappers());
-        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
+        final InstanceManager instanceManager = Injections.createInstanceManager(new AllMappers());
+        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(instanceManager);
 
         final ExceptionMapper<RuntimeException> mapper = mapperFactory.findMapping(new RuntimeException());
 
@@ -163,8 +162,8 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindExtendedExceptions() throws Exception {
-        final ServiceLocator serviceLocator = Injections.createLocator(new ExtendedExceptionMappers());
-        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(serviceLocator);
+        final InstanceManager instanceManager = Injections.createInstanceManager(new ExtendedExceptionMappers());
+        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(instanceManager);
 
         final ExceptionMapper mapper = mapperFactory.find(IllegalArgumentException.class);
 

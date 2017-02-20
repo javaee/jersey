@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.cdi.bv;
 
 import java.lang.reflect.Field;
@@ -55,9 +56,9 @@ import javax.validation.ValidationException;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.spi.ValidationInterceptorContext;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * HK2 managed validation interceptor.

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,24 +38,33 @@
  * holder.
  */
 
-package org.glassfish.jersey.ext.cdi1x.servlet.internal;
-
-import org.glassfish.jersey.ext.cdi1x.internal.GenericHk2LocatorManager;
-
-import org.glassfish.hk2.api.ServiceLocator;
+package org.glassfish.jersey.spi.inject;
 
 /**
- * {@link org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager Locator manager} for servlet based containers. The provider
- * enables WAR and EAR to be deployed on a servlet container and be properly injected.
+ * Injection binding description of a bean bound via its a Java class.
  *
- * @author Michal Gajdos
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @since 2.17
+ * @param <T> type of the bean described by this injection binding descriptor.
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class ServletHk2LocatorManager extends GenericHk2LocatorManager {
+public class ClassBeanDescriptor<T> extends Descriptor<T, ClassBeanDescriptor<T>> {
 
-    @Override
-    public ServiceLocator lookupLocator() {
-        return CdiExternalRequestScope.actualServiceLocator.get();
+    private final Class<T> service;
+
+    /**
+     * Creates a service as a class.
+     *
+     * @param service service's class.
+     */
+    ClassBeanDescriptor(Class<T> service) {
+        this.service = service;
+    }
+
+    /**
+     * Gets service' class.
+     *
+     * @return service's class.
+     */
+    public Class<T> getService() {
+        return service;
     }
 }

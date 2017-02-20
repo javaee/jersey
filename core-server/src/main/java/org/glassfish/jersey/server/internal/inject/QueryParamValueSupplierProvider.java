@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.QueryParam;
@@ -49,8 +50,7 @@ import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Value supplier provider supporting the {@link QueryParam &#64;QueryParam} injection annotation.
@@ -64,12 +64,12 @@ final class QueryParamValueSupplierProvider extends AbstractValueSupplierProvide
     /**
      * Injection constructor.
      *
-     * @param mpep    multivalued map parameter extractor provider.
-     * @param locator HK2 service locator.
+     * @param mpep            multivalued map parameter extractor provider.
+     * @param instanceManager HK2 service instanceManager.
      */
     @Inject
-    public QueryParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
-        super(mpep, locator, Parameter.Source.QUERY);
+    public QueryParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
+        super(mpep, instanceManager, Parameter.Source.QUERY);
     }
 
     @Override

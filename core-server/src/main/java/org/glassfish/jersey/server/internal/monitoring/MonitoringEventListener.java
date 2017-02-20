@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,9 +57,8 @@ import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.DestroyListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.uri.UriTemplate;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Queues;
@@ -87,7 +86,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
     private static final int EVENT_QUEUE_SIZE = 500_000;
 
     @Inject
-    private ServiceLocator serviceLocator;
+    private InstanceManager instanceManager;
 
     private final Queue<RequestStats> requestQueuedItems = Queues.newArrayBlockingQueue(EVENT_QUEUE_SIZE);
     private final Queue<Integer> responseStatuses = Queues.newArrayBlockingQueue(EVENT_QUEUE_SIZE);
@@ -209,7 +208,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
                 break;
             case RELOAD_FINISHED:
             case INITIALIZATION_FINISHED:
-                this.monitoringStatisticsProcessor = new MonitoringStatisticsProcessor(serviceLocator, this);
+                this.monitoringStatisticsProcessor = new MonitoringStatisticsProcessor(instanceManager, this);
                 this.monitoringStatisticsProcessor.startMonitoringWorker();
                 break;
             case DESTROY_FINISHED:
@@ -224,7 +223,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
 
                 // onDestroy
                 final List<DestroyListener> listeners =
-                        serviceLocator.getAllServices(DestroyListener.class);
+                        instanceManager.getAllInstances(DestroyListener.class);
 
                 for (final DestroyListener listener : listeners) {
                     try {

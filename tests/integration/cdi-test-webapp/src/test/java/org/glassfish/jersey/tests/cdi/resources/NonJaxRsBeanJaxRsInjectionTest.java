@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,7 +66,7 @@ import org.junit.Test;
 
 /**
  * Test two Jersey apps running simultaneously within a single Grizzly HTTP server
- * to make sure two HK2 service locators do not interfere. The test is not executed
+ * to make sure two instance managers do not interfere. The test is not executed
  * if other than the default (Grizzly) test container has been set.
  * For Servlet based container testing, the other two tests, {@link JaxRsInjectedCdiBeanTest}
  * and {@link SecondJaxRsInjectedCdiBeanTest},

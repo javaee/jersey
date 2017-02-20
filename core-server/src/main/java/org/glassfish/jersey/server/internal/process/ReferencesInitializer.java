@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.process;
 
 import javax.inject.Inject;
@@ -44,8 +45,7 @@ import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import jersey.repackaged.com.google.common.base.Function;
 
@@ -56,20 +56,20 @@ import jersey.repackaged.com.google.common.base.Function;
  */
 public final class ReferencesInitializer implements Function<RequestProcessingContext, RequestProcessingContext> {
 
-    private final ServiceLocator locator;
+    private final InstanceManager instanceManager;
     private final Provider<Ref<RequestProcessingContext>> processingContextRefProvider;
 
     /**
      * Injection constructor.
      *
-     * @param locator application service locator.
+     * @param instanceManager application instance manager.
      * @param processingContextRefProvider container request reference provider (request-scoped).
      */
     @Inject
     ReferencesInitializer(
-            final ServiceLocator locator,
+            final InstanceManager instanceManager,
             final Provider<Ref<RequestProcessingContext>> processingContextRefProvider) {
-        this.locator = locator;
+        this.instanceManager = instanceManager;
         this.processingContextRefProvider = processingContextRefProvider;
     }
 
@@ -85,7 +85,7 @@ public final class ReferencesInitializer implements Function<RequestProcessingCo
 
         final RequestScopedInitializer requestScopedInitializer = context.request().getRequestScopedInitializer();
         if (requestScopedInitializer != null) {
-            requestScopedInitializer.initialize(locator);
+            requestScopedInitializer.initialize(instanceManager);
         }
 
         return context;

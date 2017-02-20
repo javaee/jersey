@@ -50,8 +50,7 @@ import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Custom annotation value supplier provider for JERSEY-2167 reproducer.
@@ -62,8 +61,8 @@ import org.glassfish.hk2.api.ServiceLocator;
 public class MyValueSupplierProvider extends AbstractValueSupplierProvider {
 
     @Inject
-    public MyValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
-        super(mpep, locator, Parameter.Source.UNKNOWN);
+    public MyValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
+        super(mpep, instanceManager, Parameter.Source.UNKNOWN);
     }
 
     @Override

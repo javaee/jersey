@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,11 +37,13 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.e2e.server;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -59,13 +61,16 @@ import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.Binder;
+import org.glassfish.jersey.spi.inject.ClassBeanDescriptor;
+import org.glassfish.jersey.spi.inject.Descriptors;
+import org.glassfish.jersey.spi.inject.InstanceBeanDescriptor;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.glassfish.hk2.api.AnnotationLiteral;
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -83,35 +88,26 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
         }};
 
         @Inject
-        public MyApplication(ServiceLocator serviceLocator) {
+        public MyApplication(InstanceManager instanceManager) {
             System.out.println("Registering injectables...");
+            ClassBeanDescriptor<MyInjectablePerRequest> injectClassRequest =
+                    Descriptors.serviceAsContract(MyInjectablePerRequest.class)
+                            .in(RequestScoped.class);
 
-            DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
+            ClassBeanDescriptor<MyInjectableSingleton> injectClassSingleton =
+                    Descriptors.serviceAsContract(MyInjectableSingleton.class)
+                            .in(Singleton.class);
 
-            // request scope binding
-            Injections.addBinding(
-                    Injections.newBinder(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScoped.class),
-                    dc);
+            InstanceBeanDescriptor<MyInjectableSingleton> injectInstanceSingleton =
+                    Descriptors.serviceAsContract(new MyInjectableSingleton());
 
-            // singleton binding
-            Injections.addBinding(
-                    Injections.newBinder(MyInjectableSingleton.class).to(MyInjectableSingleton.class).in(Singleton.class),
-                    dc);
-
-            // singleton instance binding
-            Injections.addBinding(
-                    Injections.newBinder(new MyInjectableSingleton()).to(MyInjectableSingleton.class),
-                    dc);
-
-            // request scope binding with specified custom annotation
-            Injections.addBinding(
-                    Injections.newBinder(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class)
+            ClassBeanDescriptor<MyInjectablePerRequest> injectQualifiedClassRequest =
+                    Descriptors.serviceAsContract(MyInjectablePerRequest.class)
                             .qualifiedBy(new MyQualifierImpl())
-                            .in(RequestScoped.class),
-                    dc);
+                            .in(RequestScoped.class);
 
-            // commits changes
-            dc.commit();
+            instanceManager.register(Arrays.asList(
+                    injectClassRequest, injectClassSingleton, injectInstanceSingleton, injectQualifiedClassRequest));
         }
 
         @Override
@@ -206,8 +202,8 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
 
     @Test
     public void plainHK2Test() throws Exception {
-        final ServiceLocator locator = Injections.createLocator(new RequestScope.Binder(), new JerseyErrorService.Binder(),
-
+        final InstanceManager locator = Injections.createInstanceManager(
+                new RequestScope.Binder(), new JerseyErrorService.Binder(),
                 new AbstractBinder() {
                     @Override
                     protected void configure() {
@@ -216,17 +212,17 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
                     }
                 });
 
-        final RequestScope requestScope = locator.getService(RequestScope.class);
+        final RequestScope requestScope = locator.getInstance(RequestScope.class);
 
-        final MyInjectableSingleton myInjectableSingleton = locator.getService(MyInjectableSingleton.class);
-        assertEquals(myInjectableSingleton, locator.getService(MyInjectableSingleton.class));
+        final MyInjectableSingleton myInjectableSingleton = locator.getInstance(MyInjectableSingleton.class);
+        assertEquals(myInjectableSingleton, locator.getInstance(MyInjectableSingleton.class));
 
         final MyInjectablePerRequest myInjectablePerRequest = requestScope.runInScope(new Callable<MyInjectablePerRequest>() {
 
             @Override
             public MyInjectablePerRequest call() throws Exception {
-                final MyInjectablePerRequest myInjectablePerRequest = locator.getService(MyInjectablePerRequest.class);
-                assertEquals(myInjectablePerRequest, locator.getService(MyInjectablePerRequest.class));
+                final MyInjectablePerRequest myInjectablePerRequest = locator.getInstance(MyInjectablePerRequest.class);
+                assertEquals(myInjectablePerRequest, locator.getInstance(MyInjectablePerRequest.class));
                 return myInjectablePerRequest;
             }
         });
@@ -235,7 +231,7 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
 
             @Override
             public void run() {
-                assertNotSame(myInjectablePerRequest, locator.getService(MyInjectablePerRequest.class));
+                assertNotSame(myInjectablePerRequest, locator.getInstance(MyInjectablePerRequest.class));
             }
         });
 
@@ -243,27 +239,29 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
 
     @Test
     public void plainHK2DynamicTest() throws Exception {
-        final ServiceLocator locator = Injections.createLocator(new RequestScope.Binder());
-        DynamicConfiguration dc = Injections.getConfiguration(locator);
+        InstanceManager instanceManager = Injections.createInstanceManager(new RequestScope.Binder());
+        Binder binder = new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bindAsContract(MyInjectablePerRequest.class)
+                        .in(RequestScoped.class);
 
-        Injections.addBinding(
-                Injections.newBinder(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScoped.class),
-                dc);
-        Injections.addBinding(
-                Injections.newBinder(MyInjectableSingleton.class).to(MyInjectableSingleton.class).in(Singleton.class),
-                dc);
-        dc.commit();
+                bindAsContract(MyInjectableSingleton.class)
+                        .in(Singleton.class);
+            }
+        };
+        instanceManager.register(binder);
 
-        final RequestScope requestScope = locator.getService(RequestScope.class);
+        final RequestScope requestScope = instanceManager.getInstance(RequestScope.class);
 
-        final MyInjectableSingleton myInjectableSingleton = locator.getService(MyInjectableSingleton.class);
-        assertEquals(myInjectableSingleton, locator.getService(MyInjectableSingleton.class));
+        final MyInjectableSingleton myInjectableSingleton = instanceManager.getInstance(MyInjectableSingleton.class);
+        assertEquals(myInjectableSingleton, instanceManager.getInstance(MyInjectableSingleton.class));
 
         final MyInjectablePerRequest myInjectablePerRequest = requestScope.runInScope(new Callable<MyInjectablePerRequest>() {
             @Override
             public MyInjectablePerRequest call() throws Exception {
-                final MyInjectablePerRequest myInjectablePerRequest = locator.getService(MyInjectablePerRequest.class);
-                assertEquals(myInjectablePerRequest, locator.getService(MyInjectablePerRequest.class));
+                final MyInjectablePerRequest myInjectablePerRequest = instanceManager.getInstance(MyInjectablePerRequest.class);
+                assertEquals(myInjectablePerRequest, instanceManager.getInstance(MyInjectablePerRequest.class));
                 return myInjectablePerRequest;
             }
         });
@@ -271,7 +269,7 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
         requestScope.runInScope(new Runnable() {
             @Override
             public void run() {
-                assertNotSame(myInjectablePerRequest, locator.getService(MyInjectablePerRequest.class));
+                assertNotSame(myInjectablePerRequest, instanceManager.getInstance(MyInjectablePerRequest.class));
             }
         });
     }

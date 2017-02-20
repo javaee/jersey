@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.util.List;
@@ -52,8 +53,7 @@ import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Value supplier provider supporting the {@link MatrixParam &#64;MatrixParam} injection annotation.
@@ -71,7 +71,7 @@ final class MatrixParamValueSupplierProvider extends AbstractValueSupplierProvid
      * @param locator HK2 service locator.
      */
     @Inject
-    public MatrixParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+    public MatrixParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager locator) {
         super(mpep, locator, Parameter.Source.MATRIX);
     }
 

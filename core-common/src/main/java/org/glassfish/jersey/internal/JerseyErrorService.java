@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal;
 
 import java.io.PrintWriter;
@@ -44,10 +45,11 @@ import java.io.StringWriter;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+
 import org.glassfish.hk2.api.ErrorInformation;
 import org.glassfish.hk2.api.ErrorService;
 import org.glassfish.hk2.api.MultiException;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Jersey implementation of HK2 Error Service to provide improved reporting
@@ -58,7 +60,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 public final class JerseyErrorService implements ErrorService {
 
     /**
-     * HK2 Binder for the Jersey implementation of HK2 {@link ErrorService} contract.
+     * Binder for the Jersey implementation of HK2 {@link ErrorService} contract.
      */
     public static final class Binder extends AbstractBinder {
 

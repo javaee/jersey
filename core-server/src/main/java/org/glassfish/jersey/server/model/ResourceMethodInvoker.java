@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import java.lang.annotation.Annotation;
@@ -85,9 +86,8 @@ import org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandle
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Lists;
@@ -126,7 +126,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         @Inject
         private ResourceMethodInvocationHandlerFactory invocationHandlerProviderFactory;
         @Inject
-        private ServiceLocator locator;
+        private InstanceManager instanceManager;
         @Inject
         private Configuration globalConfig;
         @Inject
@@ -148,7 +148,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     invocationHandlerProviderFactory,
                     method,
                     processingProviders,
-                    locator,
+                    instanceManager,
                     globalConfig,
                     validatorProvider.get());
         }
@@ -159,7 +159,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             final ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
             final ResourceMethod method,
             final ProcessingProviders processingProviders,
-            ServiceLocator locator,
+            InstanceManager instanceManager,
             final Configuration globalConfig,
             final ConfiguredValidator validator) {
 
@@ -184,7 +184,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         // Get instances of providers.
         final Set<Class<?>> providerClasses = componentBag.getClasses(ComponentBag.EXCLUDE_META_PROVIDERS);
         if (!providerClasses.isEmpty()) {
-            locator = Injections.createLocator(locator, new AbstractBinder() {
+            instanceManager = Injections.createInstanceManager(instanceManager, new AbstractBinder() {
                 @Override
                 protected void configure() {
                     bind(config).to(Configuration.class);
@@ -192,7 +192,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             });
 
             for (final Class<?> providerClass : providerClasses) {
-                providers.add(locator.createAndInitialize(providerClass));
+                providers.add(instanceManager.createAndInitialize(providerClass));
             }
         }
 

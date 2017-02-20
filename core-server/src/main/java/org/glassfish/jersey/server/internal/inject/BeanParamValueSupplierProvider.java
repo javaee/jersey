@@ -49,6 +49,7 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -127,11 +128,11 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
      * Creates new instance initialized from parameters injected by HK2.
      *
      * @param mpep Multivalued parameter extractor provider.
-     * @param injector HK2 Service locator.
+     * @param instanceManager instance manager.
      */
     @Inject
-    public BeanParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.BEAN_PARAM);
+    public BeanParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
+        super(mpep, instanceManager, Parameter.Source.BEAN_PARAM);
     }
 
     @Override

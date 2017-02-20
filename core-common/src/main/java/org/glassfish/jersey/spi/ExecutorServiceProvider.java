@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.spi;
 
 import java.util.concurrent.ExecutorService;
@@ -70,7 +71,7 @@ import java.util.concurrent.ExecutorService;
  * </p>
  * <p>
  * Jersey runtime expects that a concrete executor service provider implementation class is annotated with a
- * {@link javax.inject.Qualifier qualifier} annotation. This qualifier is then used to create a qualified injection point
+ * {@link javax.inject.Qualifier qualifier} annotation. This qualifier is then used to createAndInitialize a qualified injection point
  * for injecting the executor service instance provided by the annotated provider. {@link javax.inject.Named Named} providers
  * are also supported. For example:
  * </p>

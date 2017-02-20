@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,36 +38,20 @@
  * holder.
  */
 
-package org.glassfish.jersey.ext.cdi1x.internal;
+package org.glassfish.jersey.internal.inject;
 
-import javax.ws.rs.WebApplicationException;
-
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
- * Default {@link org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager locator manager} that assumes only one
- * {@link org.glassfish.hk2.api.ServiceLocator service locator} per application is used.
- *
- * @author Michal Gajdos
- * @since 2.17
+ * Implementation of this interface is capable of returning {@link InstanceManager}.
  */
-final class SingleHk2LocatorManager implements Hk2LocatorManager {
+public interface InstanceManagerSupplier {
 
-    private volatile ServiceLocator locator;
+    /**
+     * Get instance manager.
+     *
+     * @return instance manager.
+     */
+    InstanceManager getInstanceManager();
 
-    @Override
-    public void registerLocator(final ServiceLocator locator) {
-        if (this.locator == null) {
-            this.locator = locator;
-        } else if (this.locator != locator) {
-            throw new WebApplicationException(LocalizationMessages.CDI_MULTIPLE_LOCATORS_INTO_SIMPLE_APP());
-        }
-    }
-
-    @Override
-    public ServiceLocator getEffectiveLocator() {
-        return locator;
-    }
 }

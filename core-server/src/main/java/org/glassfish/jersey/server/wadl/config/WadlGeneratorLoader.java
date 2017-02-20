@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,8 +58,7 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGrammarGenerator;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Loads {@link WadlGenerator}s from a provided list of {@link WadlGeneratorDescription}s.<br/>
@@ -105,14 +104,14 @@ class WadlGeneratorLoader {
         return wadlGenerator;
     }
 
-    static WadlGenerator loadWadlGeneratorDescriptions(ServiceLocator serviceLocator,
+    static WadlGenerator loadWadlGeneratorDescriptions(InstanceManager instanceManager,
                                                        WadlGeneratorDescription... wadlGeneratorDescriptions) throws Exception {
         final List<WadlGeneratorDescription> list = wadlGeneratorDescriptions != null
                 ? Arrays.asList(wadlGeneratorDescriptions) : null;
-        return loadWadlGeneratorDescriptions(serviceLocator, list);
+        return loadWadlGeneratorDescriptions(instanceManager, list);
     }
 
-    static WadlGenerator loadWadlGeneratorDescriptions(ServiceLocator serviceLocator,
+    static WadlGenerator loadWadlGeneratorDescriptions(InstanceManager instanceManager,
                                                        List<WadlGeneratorDescription> wadlGeneratorDescriptions)
             throws Exception {
         WadlGenerator wadlGenerator = new WadlGeneratorJAXBGrammarGenerator();
@@ -121,8 +120,8 @@ class WadlGeneratorLoader {
         try {
             if (wadlGeneratorDescriptions != null && !wadlGeneratorDescriptions.isEmpty()) {
                 for (WadlGeneratorDescription wadlGeneratorDescription : wadlGeneratorDescriptions) {
-                    final WadlGeneratorControl control = loadWadlGenerator(serviceLocator, wadlGeneratorDescription,
-                            wadlGenerator);
+                    final WadlGeneratorControl control = loadWadlGenerator(instanceManager, wadlGeneratorDescription,
+                                                                           wadlGenerator);
                     wadlGenerator = control.wadlGenerator;
                     callbacks.add(control.callback);
                 }
@@ -136,11 +135,11 @@ class WadlGeneratorLoader {
 
     }
 
-    private static WadlGeneratorControl loadWadlGenerator(ServiceLocator serviceLocator,
+    private static WadlGeneratorControl loadWadlGenerator(InstanceManager instanceManager,
                                                           WadlGeneratorDescription wadlGeneratorDescription,
                                                           WadlGenerator wadlGeneratorDelegate) throws Exception {
         LOGGER.info("Loading wadlGenerator " + wadlGeneratorDescription.getGeneratorClass().getName());
-        final WadlGenerator generator = Injections.getOrCreate(serviceLocator, wadlGeneratorDescription.getGeneratorClass());
+        final WadlGenerator generator = Injections.getOrCreate(instanceManager, wadlGeneratorDescription.getGeneratorClass());
         generator.setWadlGeneratorDelegate(wadlGeneratorDelegate);
         CallbackList callbacks = null;
         if (wadlGeneratorDescription.getProperties() != null

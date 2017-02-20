@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,10 +55,10 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -244,11 +244,11 @@ public class SingletonResourceTest extends JerseyTest {
     public static class TestResource {
 
         @Inject
-        ServiceLocator locator;
+        InstanceManager instanceManager;
 
         private String compareInstances(Class<?> clazz) {
-            final Object res1 = Injections.getOrCreate(locator, clazz);
-            final Object res2 = Injections.getOrCreate(locator, clazz);
+            final Object res1 = Injections.getOrCreate(instanceManager, clazz);
+            final Object res2 = Injections.getOrCreate(instanceManager, clazz);
             return (res1 == res2) ? "same-instances" : "different-instances";
         }
 

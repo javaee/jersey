@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,11 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.spi;
 
 import java.util.Set;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Component provider interface to allow custom management of 3rd party
@@ -61,20 +62,20 @@ public interface ComponentProvider {
 
 
     /**
-     * Initializes the component provider with a reference to a HK2 service locator
+     * Initializes the component provider with a reference to a instance manager
      * instance, which will get used in the application to manage individual components.
-     * Providers should keep a reference to the HK2 service locator for later use.
+     * Providers should keep a reference to the instance manager for later use.
      * This method will be invoked prior to any bind method calls.
-     * The service locator parameter will not be fully initialized at the time of invocation
+     * The instance manager parameter will not be fully initialized at the time of invocation
      * and should be used as a reference only.
      *
-     * @param locator an HK2 service locator.
+     * @param instanceManager an instance manager.
      */
-    void initialize(final ServiceLocator locator);
+    void initialize(final InstanceManager instanceManager);
 
     /**
      * Jersey will invoke this method before binding of each component class internally
-     * during initialization of it's HK2 service locator.
+     * during initialization of it's instance manager.
      *
      * If the component provider wants to bind the component class
      * itself, it must do so and return true. In that case, Jersey will not

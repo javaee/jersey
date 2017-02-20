@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
@@ -54,20 +55,19 @@ import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
-import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.InjecteeImpl;
 import org.glassfish.hk2.utilities.cache.Cache;
 import org.glassfish.hk2.utilities.cache.Computable;
 
 /**
- * Value factory provider that delegates the injection target lookup to
- * the underlying injection provider (HK2).
+ * Value factory provider that delegates the injection target lookup to the underlying injection provider.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -80,12 +80,12 @@ class DelegatedInjectionValueSupplierProvider implements ValueSupplierProvider {
     /**
      * Injection constructor.
      *
-     * @param locator HK2 service locator.
+     * @param instanceManager instance manager.
      */
     @Inject
-    public DelegatedInjectionValueSupplierProvider(ServiceLocator locator) {
+    public DelegatedInjectionValueSupplierProvider(InstanceManager instanceManager) {
         ContextInjectionResolver result = null;
-        for (InjectionResolver r : Providers.getProviders(locator, InjectionResolver.class)) {
+        for (InjectionResolver r : Providers.getProviders(instanceManager, InjectionResolver.class)) {
             if (ContextInjectionResolver.class.isInstance(r)) {
                 result = ContextInjectionResolver.class.cast(r);
                 break;

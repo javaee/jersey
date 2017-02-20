@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,30 +45,29 @@ import java.util.Map;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.FeatureContext;
 
-import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Wrapper of {@link javax.ws.rs.core.FeatureContext} that can supply instance of
- * {@link org.glassfish.hk2.api.ServiceLocator service locator}.
+ * {@link InstanceManager instance manager}.
  *
  * @author Miroslav Fuksa
  */
-public class FeatureContextWrapper implements FeatureContext, ServiceLocatorSupplier {
+public class FeatureContextWrapper implements FeatureContext, InstanceManagerSupplier {
 
     private final FeatureContext context;
-    private final ServiceLocator serviceLocator;
+    private final InstanceManager instanceManager;
 
     /**
      * Create a new instance of wrapper.
      *
-     * @param context Feature context instance that should be wrapped.
-     * @param serviceLocator Service locator.
+     * @param context     Feature context instance that should be wrapped.
+     * @param instanceManager instance manager.
      */
-    public FeatureContextWrapper(FeatureContext context, ServiceLocator serviceLocator) {
+    public FeatureContextWrapper(FeatureContext context, InstanceManager instanceManager) {
         this.context = context;
-        this.serviceLocator = serviceLocator;
+        this.instanceManager = instanceManager;
     }
 
     @Override
@@ -122,7 +121,7 @@ public class FeatureContextWrapper implements FeatureContext, ServiceLocatorSupp
     }
 
     @Override
-    public ServiceLocator getServiceLocator() {
-        return serviceLocator;
+    public InstanceManager getInstanceManager() {
+        return instanceManager;
     }
 }

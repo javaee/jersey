@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,7 +57,6 @@ import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
@@ -65,10 +64,8 @@ import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.process.internal.ExecutorProviders;
-
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Jersey externalized implementation of client-side JAX-RS {@link javax.ws.rs.core.Configurable
@@ -360,16 +357,16 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             return commonConfig.getConfiguration().getInstances();
         }
 
-        public void configureAutoDiscoverableProviders(final ServiceLocator locator) {
-            commonConfig.configureAutoDiscoverableProviders(locator, false);
+        public void configureAutoDiscoverableProviders(InstanceManager instanceManager) {
+            commonConfig.configureAutoDiscoverableProviders(instanceManager, false);
         }
 
-        public void configureForcedAutoDiscoverableProviders(final ServiceLocator locator) {
-            commonConfig.configureAutoDiscoverableProviders(locator, true);
+        public void configureForcedAutoDiscoverableProviders(InstanceManager instanceManager) {
+            commonConfig.configureAutoDiscoverableProviders(instanceManager, true);
         }
 
-        public void configureMetaProviders(final ServiceLocator locator) {
-            commonConfig.configureMetaProviders(locator);
+        public void configureMetaProviders(InstanceManager instanceManager) {
+            commonConfig.configureMetaProviders(instanceManager);
         }
 
         public ComponentBag getComponentBag() {
@@ -390,19 +387,19 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             final State runtimeCfgState = this.copy();
             runtimeCfgState.markAsShared();
 
-            final ServiceLocator locator = Injections.createLocator(new ClientBinder(runtimeCfgState.getProperties()));
-            locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
+            final InstanceManager instanceManager =
+                    Injections.createInstanceManager(new ClientBinder(runtimeCfgState.getProperties()));
 
             // AutoDiscoverable.
             if (!CommonProperties.getValue(runtimeCfgState.getProperties(), RuntimeType.CLIENT,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
-                runtimeCfgState.configureAutoDiscoverableProviders(locator);
+                runtimeCfgState.configureAutoDiscoverableProviders(instanceManager);
             } else {
-                runtimeCfgState.configureForcedAutoDiscoverableProviders(locator);
+                runtimeCfgState.configureForcedAutoDiscoverableProviders(instanceManager);
             }
 
             // Configure binders and features.
-            runtimeCfgState.configureMetaProviders(locator);
+            runtimeCfgState.configureMetaProviders(instanceManager);
 
             // Bind configuration.
             final AbstractBinder configBinder = new AbstractBinder() {
@@ -411,19 +408,17 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
                     bind(runtimeCfgState).to(Configuration.class);
                 }
             };
-            final DynamicConfiguration dc = Injections.getConfiguration(locator);
-            configBinder.bind(dc);
-            dc.commit();
+            instanceManager.register(configBinder);
 
             // Bind providers.
-            ProviderBinder.bindProviders(runtimeCfgState.getComponentBag(), RuntimeType.CLIENT, null, locator);
+            ProviderBinder.bindProviders(runtimeCfgState.getComponentBag(), RuntimeType.CLIENT, null, instanceManager);
 
             // Bind executors.
-            ExecutorProviders.createInjectionBindings(locator);
+            ExecutorProviders.createInjectionBindings(instanceManager);
 
             final ClientConfig configuration = new ClientConfig(runtimeCfgState);
             final Connector connector = connectorProvider.getConnector(client, configuration);
-            final ClientRuntime crt = new ClientRuntime(configuration, connector, locator);
+            final ClientRuntime crt = new ClientRuntime(configuration, connector, instanceManager);
 
             client.registerShutdownHook(crt);
 

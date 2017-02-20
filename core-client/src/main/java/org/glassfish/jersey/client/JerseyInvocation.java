@@ -514,7 +514,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             }
 
             Iterable<RxInvokerProvider> allProviders = Providers.getAllProviders(
-                    this.requestContext.getServiceLocator(),
+                    this.requestContext.getInstanceManager(),
                     RxInvokerProvider.class);
 
             for (RxInvokerProvider invokerProvider : allProviders) {

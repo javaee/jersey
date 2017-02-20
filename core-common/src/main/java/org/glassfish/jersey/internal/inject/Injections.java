@@ -37,140 +37,146 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.inject;
+
+import java.util.Iterator;
+import java.util.ServiceLoader;
 
 import javax.ws.rs.WebApplicationException;
 
 import javax.inject.Provider;
 
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.DynamicConfigurationService;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.HK2Loader;
+import org.glassfish.jersey.hk2.HK2InstanceManager;
+import org.glassfish.jersey.spi.inject.Binder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
+
 import org.glassfish.hk2.api.MultiException;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.ServiceLocatorFactory;
-import org.glassfish.hk2.utilities.Binder;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
-import org.glassfish.hk2.utilities.binding.BindingBuilder;
-import org.glassfish.hk2.utilities.binding.BindingBuilderFactory;
-import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
-import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 
 /**
- * HK2 injection binding utility methods.
+ * Injection binding utility methods.
  *
  * @author Tom Beerbower
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class Injections {
 
-    private static final ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
-
     /**
-     * Get service locator {@link DynamicConfiguration dynamic configuration}.
-     *
-     * @param locator HK2 service locator.
-     * @return dynamic configuration for a given service locator.
-     */
-    public static DynamicConfiguration getConfiguration(final ServiceLocator locator) {
-        final DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
-        return dcs.createDynamicConfiguration();
-    }
-
-    /**
-     * Create a {@link ServiceLocator}. In case the {@code name} is not specified, the locator
+     * Create a {@link InstanceManager}. In case the {@code name} is not specified, the locator
      * will be unnamed.
      *
-     * @param name    The name of this service locator. Passing a {@code null}
-     *                name will result in a newly created service locator with a
-     *                generated name.
-     * @param parent  The parent of this ServiceLocator. Services can be found in
-     *                the parent (and all grand-parents). May be {@code null}.
-     *                if the returned ServiceLocator should not be parented.
-     * @param binders custom the HK2 {@link Binder binders}.
-     * @return a service locator with all the bindings.
+     * @param name                 The name of this instance manager. Passing a {@code null}
+     *                             name will result in a newly created instance manager with a
+     *                             generated name.
+     * @param parent               The parent of this instance manager. Services can be found in
+     *                             the parent (and all grand-parents). May be {@code null}.
+     *                             if the returned instance manager should not be parented.
+     * @param defaultClassAnalyzer component used during analyzing the classes.
+     * @param binders              custom the {@link Binder binders}.
+     * @return a instance manager with all the bindings.
      */
-    public static ServiceLocator createLocator(final String name, final ServiceLocator parent, final Binder... binders) {
-        return _createLocator(name, parent, binders);
+    public static InstanceManager createInstanceManager(String name,
+                                                        InstanceManager parent,
+                                                        String defaultClassAnalyzer,
+                                                        Binder... binders) {
+        return _instanceManager(name, parent, defaultClassAnalyzer, binders);
     }
 
     /**
-     * Create a {@link ServiceLocator}. In case the {@code name} is not specified, the locator
+     * Create a {@link InstanceManager}. In case the {@code name} is not specified, the locator
      * will be unnamed.
      *
-     * @param name    The name of this service locator. Passing a {@code null}
-     *                name will result in a newly created service locator with a
-     *                generated name.
-     * @param binders custom the HK2 {@link Binder binders}.
-     * @return a service locator with all the bindings.
+     * @param parent               The parent of this instance manager. Services can be found in
+     *                             the parent (and all grand-parents). May be {@code null}.
+     *                             if the returned instance manager should not be parented.
+     * @param defaultClassAnalyzer component used during analyzing the classes.
+     * @param binders              custom the {@link Binder binders}.
+     * @return a instance manager with all the bindings.
      */
-    public static ServiceLocator createLocator(final String name, final Binder... binders) {
-        return _createLocator(name, null, binders);
+    public static InstanceManager createInstanceManager(InstanceManager parent, String defaultClassAnalyzer, Binder... binders) {
+        return _instanceManager(null, parent, defaultClassAnalyzer, binders);
     }
 
     /**
-     * Create an unnamed, parented {@link ServiceLocator}. In case the {@code parent} service locator
+     * Create a {@link InstanceManager}. In case the {@code name} is not specified, the locator
+     * will be unnamed.
+     *
+     * @param binders custom the {@link Binder binders}.
+     * @return a instance manager with all the bindings.
+     */
+    public static InstanceManager createInstanceManager(Binder... binders) {
+        return _instanceManager(null, null, null, binders);
+    }
+
+    /**
+     * Create a {@link InstanceManager}. In case the {@code name} is not specified, the locator
+     * will be unnamed.
+     *
+     * @param name    The name of this instance manager. Passing a {@code null}
+     *                name will result in a newly created instance manager with a
+     *                generated name.
+     * @param binders custom the {@link Binder binders}.
+     * @return a instance manager with all the bindings.
+     */
+    public static InstanceManager createInstanceManager(String name, Binder... binders) {
+        return _instanceManager(name, null, null, binders);
+    }
+
+    /**
+     * Create an unnamed, parented {@link InstanceManager}. In case the {@code parent} instance manager
      * is not specified, the locator will not be parented.
      *
-     * @param parent  The parent of this ServiceLocator. Services can be found in
+     * @param parent  The parent of this underlying DI locator. Services can be found in
      *                the parent (and all grand-parents). May be {@code null}.
-     *                if the returned ServiceLocator should not be parented.
-     * @param binders custom the HK2 {@link Binder binders}.
-     * @return a service locator with all the bindings.
+     *                if the returned BeanManager should not be parented.
+     * @param binders custom the {@link Binder binders}.
+     * @return a instance manager with all the bindings.
      */
-    public static ServiceLocator createLocator(final ServiceLocator parent, final Binder... binders) {
-        return _createLocator(null, parent, binders);
+    public static InstanceManager createInstanceManager(InstanceManager parent, Binder... binders) {
+        return _instanceManager(null, parent, null, binders);
     }
 
     /**
-     * Create an unnamed {@link ServiceLocator}.
+     * Create an unnamed {@link InstanceManager}.
      *
-     * @param binders custom the HK2 {@link Binder binders}.
-     * @return a service locator with all the bindings.
+     * @param defaultClassAnalyzer component used during analyzing the classes.
+     * @param binders              custom the {@link Binder binders}.
+     * @return a instance manager with all the bindings.
      */
-    public static ServiceLocator createLocator(final Binder... binders) {
-        return _createLocator(null, null, binders);
+    public static InstanceManager createInstanceManager(String name, String defaultClassAnalyzer, Binder... binders) {
+        return _instanceManager(name, null, defaultClassAnalyzer, binders);
     }
 
-    private static ServiceLocator _createLocator(final String name, final ServiceLocator parent, final Binder... binders) {
-        // Passing null as service locator generator would force HK2 to find appropriate one.
-        final ServiceLocator result = factory.create(name, parent, null, ServiceLocatorFactory.CreatePolicy.DESTROY);
-
-        result.setNeutralContextClassLoader(false);
-        ServiceLocatorUtilities.enablePerThreadScope(result);
-
-        // HK2 Immediate Scope is commented out due to JERSEY-2979 and other issues
-        // ServiceLocatorUtilities.enableImmediateScope(result);
-
-        for (final Binder binder : binders) {
-            bind(result, binder);
+    private static InstanceManager _instanceManager(String name,
+                                                    InstanceManager parent,
+                                                    String defaultClassAnalyzer,
+                                                    Binder... binders) {
+        Iterator<InstanceManager> iterator = ServiceLoader.load(InstanceManager.class).iterator();
+        InstanceManager instanceManager;
+        if (iterator.hasNext()) {
+            instanceManager = iterator.next();
+        } else {
+            // TODO: Log that there is no explicitly configured InstanceManager, default is used.
+            instanceManager = new HK2InstanceManager();
         }
-        return result;
-    }
 
-    private static void bind(final ServiceLocator locator, final Binder binder) {
-        final DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
-        final DynamicConfiguration dc = dcs.createDynamicConfiguration();
-
-        locator.inject(binder);
-        binder.bind(dc);
-
-        dc.commit();
+        instanceManager.initialize(name, parent, defaultClassAnalyzer, binders);
+        return instanceManager;
     }
 
     /**
      * Get the class by contract or create and inject a new instance.
      *
-     * @param <T>            instance type.
-     * @param serviceLocator HK2 service locator.
-     * @param clazz          class of the instance to be provider.
+     * @param <T>             instance type.
+     * @param instanceManager DI instance manager.
+     * @param clazz           class of the instance to be provider.
      * @return instance of the class either provided as a service or created and injected  by HK2.
      */
-    public static <T> T getOrCreate(final ServiceLocator serviceLocator, final Class<T> clazz) {
+    public static <T> T getOrCreate(InstanceManager instanceManager, final Class<T> clazz) {
         try {
-            final T component = serviceLocator.getService(clazz);
-            return component == null ? serviceLocator.createAndInitialize(clazz) : component;
+            final T component = instanceManager.getInstance(clazz);
+            return component == null ? instanceManager.createAndInitialize(clazz) : component;
+            // TODO: not really MultiException.
         } catch (final MultiException e) {
 
             // Look for WebApplicationException and return it if found. MultiException is thrown when *Param field is
@@ -192,88 +198,12 @@ public class Injections {
     /**
      * Get a provider for a contract.
      *
-     * @param <T>            instance type.
-     * @param serviceLocator HK2 service locator.
-     * @param clazz          class of the instance to be provider.
+     * @param <T>             instance type.
+     * @param instanceManager instance manager.
+     * @param clazz           class of the instance to be provider.
      * @return provider of contract class.
      */
-    public static <T> Provider<T> getProvider(final ServiceLocator serviceLocator, final Class<T> clazz) {
-        return () -> serviceLocator.getService(clazz);
-    }
-
-    /**
-     * Add a binding represented by the binding builder to the HK2 dynamic configuration.
-     *
-     * @param builder       binding builder.
-     * @param configuration HK2 dynamic configuration.
-     */
-    public static void addBinding(final BindingBuilder<?> builder, final DynamicConfiguration configuration) {
-        BindingBuilderFactory.addBinding(builder, configuration);
-    }
-
-    /**
-     * Add a binding represented by the binding builder to the HK2 dynamic configuration.
-     *
-     * @param builder       binding builder.
-     * @param configuration HK2 dynamic configuration.
-     * @param defaultLoader default HK2 service loader that should be used to load the service class
-     *                      in case a custom loader has not been set.
-     */
-    public static void addBinding(final BindingBuilder<?> builder,
-                                  final DynamicConfiguration configuration,
-                                  final HK2Loader defaultLoader) {
-        BindingBuilderFactory.addBinding(builder, configuration, defaultLoader);
-    }
-
-    /**
-     * Get a new factory instance-based service binding builder.
-     *
-     * @param <T>     service type.
-     * @param factory service instance.
-     * @return initialized binding builder.
-     */
-    public static <T> ServiceBindingBuilder<T> newFactoryBinder(final Factory<T> factory) {
-        return BindingBuilderFactory.newFactoryBinder(factory);
-    }
-
-    /**
-     * Get a new class-based service binding builder.
-     *
-     * Does NOT bind the service type itself as a contract type.
-     *
-     * @param <T>         service type.
-     * @param serviceType service class.
-     * @return initialized binding builder.
-     */
-    public static <T> ServiceBindingBuilder<T> newBinder(final Class<T> serviceType) {
-        return BindingBuilderFactory.newBinder(serviceType);
-    }
-
-    /**
-     * Get a new instance-based service binding builder. The binding is naturally
-     * considered to be a {@link javax.inject.Singleton singleton-scoped}.
-     *
-     * Does NOT bind the service type itself as a contract type.
-     *
-     * @param <T>     service type.
-     * @param service service instance.
-     * @return initialized binding builder.
-     */
-    public static <T> ScopedBindingBuilder<T> newBinder(final T service) {
-        return BindingBuilderFactory.newBinder(service);
-    }
-
-    /**
-     * Shutdown {@link org.glassfish.hk2.api.ServiceLocator} - either via service locator factory (if possible) or directly by
-     * calling shutdown method.
-     *
-     * @param locator locator to be shut down.
-     */
-    public static void shutdownLocator(final ServiceLocator locator) {
-        if (factory.find(locator.getName()) != null) {
-            factory.destroy(locator.getName());
-        } else {
-            locator.shutdown();
-        }
+    public static <T> Provider<T> getProvider(final InstanceManager instanceManager, final Class<T> clazz) {
+        return () -> instanceManager.getInstance(clazz);
     }
 }

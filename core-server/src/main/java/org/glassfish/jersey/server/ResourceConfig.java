@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,9 +72,8 @@ import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.Binder;
+import org.glassfish.jersey.spi.inject.Binder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import jersey.repackaged.com.google.common.base.Predicate;
 import jersey.repackaged.com.google.common.collect.Sets;
@@ -149,18 +148,13 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
         @Override
         protected Inflector<ContractProvider.Builder, ContractProvider> getModelEnhancer(final Class<?> componentClass) {
-            return new Inflector<ContractProvider.Builder, ContractProvider>() {
-                @Override
-                public ContractProvider apply(final ContractProvider.Builder builder) {
-                    if (builder.getScope() == null && builder.getContracts().isEmpty()
-                            && Resource.getPath(componentClass) != null) {
-                        builder.scope(RequestScoped.class);
-                    }
-
-                    return builder.build();
+            return builder -> {
+                if (builder.getScope() == null && builder.getContracts().isEmpty() && Resource.getPath(componentClass) != null) {
+                    builder.scope(RequestScoped.class);
                 }
-            };
 
+                return builder.build();
+            };
         }
 
         @Override
@@ -295,12 +289,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         @Override
-        public void configureAutoDiscoverableProviders(final ServiceLocator locator, final boolean forcedOnly) {
+        public void configureAutoDiscoverableProviders(final InstanceManager instanceManager, final boolean forcedOnly) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public void configureMetaProviders(final ServiceLocator locator) {
+        public void configureMetaProviders(final InstanceManager instanceManager) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
     }
@@ -380,7 +374,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     /**
      * Create a defensive resource configuration copy initialized with a given {@code ResourceConfig}.
      *
-     * @param original resource configuration to create a defensive copy from.
+     * @param original resource configuration to createAndInitialize a defensive copy from.
      */
     public ResourceConfig(final ResourceConfig original) {
         this.state = new State(original.state);
@@ -480,12 +474,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * in the {@code ResourceConfig}.
      * <p>
      * Note that registered JAX-RS features are used to initialize and configure
-     * the Jersey runtime {@link ServiceLocator} instance during application deployment, but are
+     * the Jersey runtime {@link InstanceManager} instance during application deployment, but are
      * otherwise ignored by server-side runtime, unless they implement also another contract
      * recognized by Jersey runtime.
      * </p>
      * <p>
-     * Also note that registration of {@link Binder HK2 binder} classes is note supported. HK2 binders
+     * Also note that registration of {@link Binder binder} classes is note supported. Binders
      * must be {@link #registerInstances(Object...) registered as instances}.
      * </p>
      *
@@ -508,12 +502,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * in the {@code ResourceConfig}.
      * <p>
      * Note that registered JAX-RS features are used to initialize and configure
-     * the Jersey runtime {@link ServiceLocator} instance during application deployment, but are
+     * the Jersey runtime {@link InstanceManager} instance during application deployment, but are
      * otherwise ignored by server-side runtime, unless they implement also another contract
      * recognized by Jersey runtime.
      * </p>
      * <p>
-     * Also note that registration of {@link Binder HK2 binder} classes is note supported. HK2 binders
+     * Also note that registration of {@link Binder binder} classes is note supported. Binders
      * must be {@link #registerInstances(Object...) registered as instances}.
      * </p>
      *
@@ -530,10 +524,10 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
     /**
      * Register annotated JAX-RS resource, JAX-RS or Jersey contract provider, JAX-RS feature
-     * or {@link Binder HK2 binder} instances (singletons) in the {@code ResourceConfig}.
+     * {@link Binder Jersey Binder} instances (singletons) in the {@code ResourceConfig}.
      * <p>
-     * Note that registered HK2 binders and JAX-RS features are used to initialize and configure
-     * the Jersey runtime {@link ServiceLocator} instance during application deployment, but are
+     * Note that registered binders and JAX-RS features are used to initialize and configure
+     * the Jersey runtime {@link InstanceManager} instance during application deployment, but are
      * otherwise ignored by server-side runtime, unless they implement also another contract
      * recognized by Jersey runtime.
      * </p>
@@ -553,11 +547,11 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     /**
-     * Register annotated JAX-RS resource, JAX-RS or Jersey contract provider, JAX-RS feature
-     * or {@link Binder HK2 binder} instances (singletons) in the {@code ResourceConfig}.
+     * Register annotated JAX-RS resource, JAX-RS or Jersey contract provider, JAX-RS feature,
+     * {@link Binder Jersey Binder} instances (singletons) in the {@code ResourceConfig}.
      * <p>
-     * Note that registered HK2 binders and JAX-RS features are used to initialize and configure
-     * the Jersey runtime {@link ServiceLocator} instance during application deployment, but are
+     * Note that registered binders and JAX-RS features are used to initialize and configure
+     * the Jersey runtime {@link InstanceManager} instance during application deployment, but are
      * otherwise ignored by server-side runtime, unless they implement also another contract
      * recognized by Jersey runtime.
      * </p>
@@ -805,28 +799,23 @@ public class ResourceConfig extends Application implements Configurable<Resource
     /**
      * Configure auto-discoverables.
      *
-     * @param locator service locator to obtain auto-discoverables from.
+     * @param instanceManager instance manager to obtain auto-discoverables from.
      */
-    final void configureAutoDiscoverableProviders(final ServiceLocator locator) {
-        state.configureAutoDiscoverableProviders(locator, false);
+    final void configureAutoDiscoverableProviders(final InstanceManager instanceManager) {
+        state.configureAutoDiscoverableProviders(instanceManager, false);
     }
 
     /**
      * Configure forced auto-discoverables.
      *
-     * @param locator service locator to obtain auto-discoverables from.
+     * @param instanceManager instance manager to obtain auto-discoverables from.
      */
-    final void configureForcedAutoDiscoverableProviders(final ServiceLocator locator) {
-        state.configureAutoDiscoverableProviders(locator, true);
+    final void configureForcedAutoDiscoverableProviders(final InstanceManager instanceManager) {
+        state.configureAutoDiscoverableProviders(instanceManager, true);
     }
 
-    /**
-     * Configure custom binders registered in the resource config.
-     *
-     * @param locator service locator to update with the custom binders.
-     */
-    final void configureMetaProviders(final ServiceLocator locator) {
-        state.configureMetaProviders(locator);
+    final void configureMetaProviders(InstanceManager InstanceManager) {
+        state.configureMetaProviders(InstanceManager);
     }
 
     @Override

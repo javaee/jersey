@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.io.UnsupportedEncodingException;
@@ -68,8 +69,7 @@ import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.InternalServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Value factory provider supporting the {@link FormParam} injection annotation.
@@ -83,12 +83,12 @@ final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider
     /**
      * Injection constructor.
      *
-     * @param mpep     extractor provider.
-     * @param injector injector.
+     * @param mpep            extractor provider.
+     * @param instanceManager instanceManager.
      */
     @Inject
-    public FormParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.FORM);
+    public FormParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
+        super(mpep, instanceManager, Parameter.Source.FORM);
     }
 
     @Override

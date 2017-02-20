@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,11 +37,13 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.process;
 
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
@@ -66,9 +68,7 @@ import org.glassfish.jersey.spi.ExecutorServiceProvider;
 import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
 import org.glassfish.jersey.spi.ScheduledThreadPoolExecutorProvider;
 import org.glassfish.jersey.spi.ThreadPoolExecutorProvider;
-
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Defines server-side request processing injection bindings.
@@ -81,8 +81,7 @@ public class ServerProcessingBinder extends AbstractBinder {
     protected void configure() {
         // Bind non-proxiable Ref<RequestProcessingContext> injection point
         bindFactory(ReferencingFactory.<RequestProcessingContext>referenceFactory())
-                .to(new TypeLiteral<Ref<RequestProcessingContext>>() {
-                })
+                .to(new GenericType<Ref<RequestProcessingContext>>() { })
                 .proxy(false)
                 .in(RequestScoped.class);
 
@@ -148,12 +147,7 @@ public class ServerProcessingBinder extends AbstractBinder {
 
         @Inject
         protected ContainerRequestFactory(final Provider<Ref<RequestProcessingContext>> refProvider) {
-            super(refProvider, new Transformer<RequestProcessingContext, ContainerRequest>() {
-                @Override
-                public ContainerRequest transform(RequestProcessingContext value) {
-                    return value.request();
-                }
-            });
+            super(refProvider, RequestProcessingContext::request);
         }
 
         @Override
@@ -168,12 +162,7 @@ public class ServerProcessingBinder extends AbstractBinder {
 
         @Inject
         protected UriRoutingContextFactory(final Provider<Ref<RequestProcessingContext>> refProvider) {
-            super(refProvider, new Transformer<RequestProcessingContext, UriRoutingContext>() {
-                @Override
-                public UriRoutingContext transform(RequestProcessingContext value) {
-                    return value.uriRoutingContext();
-                }
-            });
+            super(refProvider, RequestProcessingContext::uriRoutingContext);
         }
 
         @Override
@@ -188,12 +177,7 @@ public class ServerProcessingBinder extends AbstractBinder {
 
         @Inject
         protected CloseableServiceFactory(final Provider<Ref<RequestProcessingContext>> refProvider) {
-            super(refProvider, new Transformer<RequestProcessingContext, CloseableService>() {
-                @Override
-                public CloseableService transform(RequestProcessingContext value) {
-                    return value.closeableService();
-                }
-            });
+            super(refProvider, RequestProcessingContext::closeableService);
         }
 
         @Override
@@ -208,12 +192,7 @@ public class ServerProcessingBinder extends AbstractBinder {
 
         @Inject
         protected AsyncContextFactory(final Provider<Ref<RequestProcessingContext>> refProvider) {
-            super(refProvider, new Transformer<RequestProcessingContext, AsyncContext>() {
-                @Override
-                public AsyncContext transform(RequestProcessingContext value) {
-                    return value.asyncContext();
-                }
-            });
+            super(refProvider, RequestProcessingContext::asyncContext);
         }
 
         @Override

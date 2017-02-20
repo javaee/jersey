@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.InvocationHandler;
@@ -51,10 +52,8 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
-import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * A resource method dispatcher provider factory.
@@ -84,16 +83,13 @@ public final class ResourceMethodDispatcherFactory implements ResourceMethodDisp
     private final Set<ResourceMethodDispatcher.Provider> providers;
 
     @Inject
-    ResourceMethodDispatcherFactory(ServiceLocator locator) {
-        providers = Providers.getProviders(locator, ResourceMethodDispatcher.Provider.class);
+    ResourceMethodDispatcherFactory(InstanceManager instanceManager) {
+        providers = Providers.getProviders(instanceManager, ResourceMethodDispatcher.Provider.class);
     }
 
     // ResourceMethodDispatchProvider
     @Override
-    public ResourceMethodDispatcher create(final Invocable resourceMethod,
-                                            final InvocationHandler handler,
-                                            final ConfiguredValidator validator) {
-
+    public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler handler, ConfiguredValidator validator) {
         for (ResourceMethodDispatcher.Provider provider : providers) {
             try {
                 ResourceMethodDispatcher dispatcher = provider.create(resourceMethod, handler, validator);

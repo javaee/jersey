@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
@@ -67,13 +68,12 @@ import javax.ws.rs.ext.WriterInterceptor;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
+import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
 import org.glassfish.jersey.internal.util.ExceptionUtils;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import jersey.repackaged.com.google.common.base.Preconditions;
 
@@ -82,7 +82,7 @@ import jersey.repackaged.com.google.common.base.Preconditions;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ClientRequest extends OutboundMessageContext implements ClientRequestContext, ServiceLocatorSupplier {
+public class ClientRequest extends OutboundMessageContext implements ClientRequestContext, InstanceManagerSupplier {
 
     // Request-scoped configuration instance
     private final ClientConfig clientConfig;
@@ -619,8 +619,8 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     }
 
     @Override
-    public ServiceLocator getServiceLocator() {
-        return getClientRuntime().getServiceLocator();
+    public InstanceManager getInstanceManager() {
+        return getClientRuntime().getInstanceManager();
     }
 
     /**

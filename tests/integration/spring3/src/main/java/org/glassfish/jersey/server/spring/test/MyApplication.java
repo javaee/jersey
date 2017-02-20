@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,17 +37,20 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.spring.test;
 
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.process.internal.RequestScoped;
+import javax.ws.rs.core.Application;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.core.Application;
+
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.Binder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
+
+import org.glassfish.hk2.api.PerLookup;
 
 /**
  * JAX-RS application class for configuring injectable services in HK2 registry for testing purposes.
@@ -57,18 +60,16 @@ import javax.ws.rs.core.Application;
 public class MyApplication extends Application {
 
     @Inject
-    public MyApplication(ServiceLocator serviceLocator) {
-        DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
+    public MyApplication(final InstanceManager instanceManager) {
+        Binder binder = new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bindAsContract(HK2ServiceSingleton.class).in(Singleton.class);
+                bindAsContract(HK2ServiceRequestScoped.class).in(RequestScoped.class);
+                bindAsContract(HK2ServicePerLookup.class).in(PerLookup.class);
+            }
+        };
 
-        Injections.addBinding(Injections.newBinder(HK2ServiceSingleton.class).to(HK2ServiceSingleton.class)
-                .in(Singleton.class), dc);
-
-        Injections.addBinding(Injections.newBinder(HK2ServiceRequestScoped.class).to(HK2ServiceRequestScoped.class)
-                .in(RequestScoped.class), dc);
-
-        Injections.addBinding(Injections.newBinder(HK2ServicePerLookup.class).to(HK2ServicePerLookup.class)
-                .in(PerLookup.class), dc);
-
-        dc.commit();
+        instanceManager.register(binder);
     }
 }

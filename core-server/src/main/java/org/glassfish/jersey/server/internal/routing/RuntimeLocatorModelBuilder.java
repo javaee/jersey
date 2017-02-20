@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.routing;
 
 import java.util.concurrent.ExecutionException;
@@ -62,8 +63,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.ResourceModelComponent;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import jersey.repackaged.com.google.common.cache.CacheBuilder;
 import jersey.repackaged.com.google.common.cache.CacheLoader;
@@ -78,7 +78,7 @@ final class RuntimeLocatorModelBuilder {
 
     private static final Logger LOGGER = Logger.getLogger(RuntimeLocatorModelBuilder.class.getName());
 
-    private final ServiceLocator locator;
+    private final InstanceManager instanceManager;
     private final Configuration config;
     private final RuntimeModelBuilder runtimeModelBuilder;
     private final JerseyResourceContext resourceContext;
@@ -93,17 +93,17 @@ final class RuntimeLocatorModelBuilder {
     /**
      * Create a new instance of the runtime model builder for sub-resource locators.
      *
-     * @param locator             HK2 service locator.
+     * @param instanceManager     DI instance manager.
      * @param config              configuration of the application.
      * @param resourceContext     resource context to bind sub-resource locator singleton instances.
      * @param runtimeModelBuilder runtime model builder to build routers for locator models.
      */
-    RuntimeLocatorModelBuilder(final ServiceLocator locator,
+    RuntimeLocatorModelBuilder(final InstanceManager instanceManager,
                                final Configuration config,
                                final JerseyResourceContext resourceContext,
                                final RuntimeModelBuilder runtimeModelBuilder) {
 
-        this.locator = locator;
+        this.instanceManager = instanceManager;
         this.config = config;
         this.runtimeModelBuilder = runtimeModelBuilder;
         this.resourceContext = resourceContext;
@@ -162,7 +162,7 @@ final class RuntimeLocatorModelBuilder {
      * @return sub-resource locator router.
      */
     Router getRouter(final ResourceMethod resourceMethod) {
-        return new SubResourceLocatorRouter(locator, resourceMethod, resourceContext, this);
+        return new SubResourceLocatorRouter(instanceManager, resourceMethod, resourceContext, this);
     }
 
     /**
@@ -181,11 +181,11 @@ final class RuntimeLocatorModelBuilder {
     }
 
     /**
-     * Build (or obtain from cache) a resource model and router for given sub-resource locator
+     * Build (or obtain from cache) a resource model and router for given sub-resource instanceManager
      * {@link org.glassfish.jersey.server.model.Resource resource}.
      *
-     * @param subresource sub-resource locator resource to built model and router for.
-     * @return [locator, router] pair with built model and router for sub-resource locator.
+     * @param subresource sub-resource instanceManager resource to built model and router for.
+     * @return [instanceManager, router] pair with built model and router for sub-resource instanceManager.
      */
     LocatorRouting getRouting(final Resource subresource) {
         if (enableJerseyResourceCaching) {
@@ -242,7 +242,7 @@ final class RuntimeLocatorModelBuilder {
         Errors.process(new Runnable() {
             @Override
             public void run() {
-                final ComponentModelValidator validator = new ComponentModelValidator(locator);
+                final ComponentModelValidator validator = new ComponentModelValidator(instanceManager);
                 validator.validate(component);
 
                 if (Errors.fatalIssuesFound() && !ignoreValidationErrors) {
@@ -255,7 +255,7 @@ final class RuntimeLocatorModelBuilder {
 
     private ResourceModel enhance(ResourceModel subResourceModel) {
         final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers
-                .getAllRankedProviders(locator, ModelProcessor.class);
+                .getAllRankedProviders(instanceManager, ModelProcessor.class);
         final Iterable<ModelProcessor> modelProcessors = Providers
                 .sortRankedProviders(new RankedComparator<ModelProcessor>(), allRankedProviders);
 

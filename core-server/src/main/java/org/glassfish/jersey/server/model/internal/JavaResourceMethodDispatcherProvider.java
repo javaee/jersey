@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.InvocationHandler;
@@ -55,8 +56,7 @@ import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * An implementation of {@link ResourceMethodDispatcher.Provider} that
@@ -68,14 +68,14 @@ import org.glassfish.hk2.api.ServiceLocator;
 class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.Provider {
 
     @Inject
-    private ServiceLocator serviceLocator;
+    private InstanceManager instanceManager;
 
     @Override
     public ResourceMethodDispatcher create(final Invocable resourceMethod,
             final InvocationHandler invocationHandler,
             final ConfiguredValidator validator) {
         final List<ParamValueFactoryWithSource<?>> valueProviders =
-                ParameterValueHelper.createValueProviders(serviceLocator, resourceMethod);
+                ParameterValueHelper.createValueProviders(instanceManager, resourceMethod);
         final Class<?> returnType = resourceMethod.getHandlingMethod().getReturnType();
 
         ResourceMethodDispatcher resourceMethodDispatcher;
@@ -96,18 +96,18 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         }
 
         // Inject validator.
-        serviceLocator.inject(resourceMethodDispatcher);
+        instanceManager.inject(resourceMethodDispatcher);
 
         return resourceMethodDispatcher;
     }
 
     /**
-     * Get the application-configured HK2 service locator.
+     * Get the application-configured instance manager.
      *
-     * @return application-configured HK2 service locator.
+     * @return application-configured instance manager.
      */
-    final ServiceLocator getServiceLocator() {
-        return serviceLocator;
+    final InstanceManager getInstanceManager() {
+        return instanceManager;
     }
 
     private abstract static class AbstractMethodParamInvoker extends AbstractJavaResourceMethodDispatcher {

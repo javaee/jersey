@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,19 +40,19 @@
 
 package org.glassfish.jersey.internal.inject;
 
-import static org.junit.Assert.assertTrue;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
+
 import org.glassfish.hk2.api.Immediate;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for the {@link Injections} class.
@@ -69,7 +69,7 @@ public class InjectionsTest {
      * Because Immediate services are instantiated in a separate thread, we use
      * a {@link CountDownLatch} to wait for the service to be created.
      *
-     * After the {@link ServiceLocator} is created, we specifically do not call
+     * After the {@link InstanceManager} is created, we specifically do not call
      * any more methods on it: the locator must instantiate the Immediate
      * service without any further prompting to the locator.
      *
@@ -82,7 +82,7 @@ public class InjectionsTest {
         final CountDownLatch latch = new CountDownLatch(1);
 
         @SuppressWarnings("unused") // It is unused by design
-        ServiceLocator sl = Injections.createLocator(new AbstractBinder() {
+                InstanceManager sl = Injections.createInstanceManager(new AbstractBinder() {
             @Override
             protected void configure() {
                 bind(latch).to(CountDownLatch.class);

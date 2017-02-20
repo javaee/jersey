@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal;
 
 import java.util.Collections;
@@ -51,9 +52,8 @@ import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Binder for testing purposes.
@@ -62,13 +62,14 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  */
 public class TestBinder extends AbstractBinder {
 
-    public static void initProviders(final ServiceLocator locator) {
-        initProviders(locator, Collections.<Class<?>>emptySet(), Collections.<Object>emptySet());
+    public static void initProviders(final InstanceManager instanceManager) {
+        initProviders(instanceManager, Collections.emptySet(), Collections.emptySet());
     }
 
-    public static void initProviders(final ServiceLocator locator, final Iterable<Class<?>> providerClasses,
+    public static void initProviders(final InstanceManager instanceManager,
+                                     final Iterable<Class<?>> providerClasses,
                                      final Iterable<Object> providerInstances) {
-        final ProviderBinder providerBinder = new ProviderBinder(locator);
+        final ProviderBinder providerBinder = new ProviderBinder(instanceManager);
         providerBinder.bindClasses(providerClasses);
         providerBinder.bindInstances(providerInstances);
     }

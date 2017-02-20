@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.BeanParam;
@@ -47,16 +48,16 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.InjectionResolver;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Injection binder providing support for JAX-RS and Jersey injection annotations.
@@ -140,23 +141,23 @@ public class ParameterInjectionBinder extends AbstractBinder {
         bind(BeanParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
 
         // Injection resolvers
-        bind(CookieParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<CookieParam>>() {
+        bind(CookieParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<CookieParam>>() {
         }).in(Singleton.class);
-        bind(FormParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<FormParam>>() {
+        bind(FormParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<FormParam>>() {
         }).in(Singleton.class);
-        bind(HeaderParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<HeaderParam>>() {
+        bind(HeaderParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<HeaderParam>>() {
         }).in(Singleton.class);
-        bind(MatrixParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<MatrixParam>>() {
+        bind(MatrixParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<MatrixParam>>() {
         }).in(Singleton.class);
-        bind(QueryParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<QueryParam>>() {
+        bind(QueryParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<QueryParam>>() {
         }).in(Singleton.class);
-        bind(PathParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<PathParam>>() {
+        bind(PathParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<PathParam>>() {
         }).in(Singleton.class);
-        bind(AsyncResponseValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<Suspended>>() {
+        bind(AsyncResponseValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<Suspended>>() {
         }).in(Singleton.class);
-        bind(WebTargetValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<Uri>>() {
+        bind(WebTargetValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<Uri>>() {
         }).in(Singleton.class);
-        bind(BeanParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<BeanParam>>() {
+        bind(BeanParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<BeanParam>>() {
         }).in(Singleton.class);
 
     }

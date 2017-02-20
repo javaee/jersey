@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,8 +60,7 @@ import org.glassfish.jersey.message.filtering.spi.EntityProcessor;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessorContext;
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.model.internal.RankedComparator;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;
@@ -81,13 +80,13 @@ final class EntityInspectorImpl implements EntityInspector {
     private EntityGraphProvider graphProvider;
 
     /**
-     * Constructor for HK2 expecting {@link ServiceLocator} to be injected.
+     * Constructor expecting {@link InstanceManager} to be injected.
      *
-     * @param locator service locator to be injected.
+     * @param instanceManager instance manager to be injected.
      */
     @Inject
-    public EntityInspectorImpl(final ServiceLocator locator) {
-        this.entityProcessors = Lists.newArrayList(Providers.getAllProviders(locator, EntityProcessor.class,
+    public EntityInspectorImpl(final InstanceManager instanceManager) {
+        this.entityProcessors = Lists.newArrayList(Providers.getAllProviders(instanceManager, EntityProcessor.class,
                 new RankedComparator<EntityProcessor>()));
     }
 

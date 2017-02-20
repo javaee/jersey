@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,11 +37,10 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,8 +52,7 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * An injectable {@link ResourceMethodInvocationHandlerProvider resource method
@@ -73,20 +71,13 @@ import org.glassfish.hk2.api.ServiceLocator;
 @Singleton
 public final class ResourceMethodInvocationHandlerFactory implements ResourceMethodInvocationHandlerProvider {
 
-    private static final InvocationHandler DEFAULT_HANDLER = new InvocationHandler() {
-
-        @Override
-        public Object invoke(Object target, Method method, Object[] args)
-                throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-            return method.invoke(target, args);
-        }
-    };
+    private static final InvocationHandler DEFAULT_HANDLER = (target, method, args) -> method.invoke(target, args);
     private static final Logger LOGGER = Logger.getLogger(ResourceMethodInvocationHandlerFactory.class.getName());
     private final Set<ResourceMethodInvocationHandlerProvider> providers;
 
     @Inject
-    ResourceMethodInvocationHandlerFactory(ServiceLocator locator) {
-        providers = Providers.getProviders(locator, ResourceMethodInvocationHandlerProvider.class);
+    ResourceMethodInvocationHandlerFactory(InstanceManager instanceManager) {
+        providers = Providers.getProviders(instanceManager, ResourceMethodInvocationHandlerProvider.class);
     }
 
     // ResourceMethodInvocationHandlerProvider

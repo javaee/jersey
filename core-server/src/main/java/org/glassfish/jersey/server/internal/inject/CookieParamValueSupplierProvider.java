@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.util.Map;
@@ -54,8 +55,7 @@ import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Value factory provider supporting the {@link CookieParam} injection annotation.
@@ -64,46 +64,13 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvider {
-
-    /**
-     * {@link CookieParam} annotation value factory provider injection constructor.
-     *
-     * @param mpep     multivalued parameter extractor provider.
-     * @param injector injector instance.
-     */
-    @Inject
-    public CookieParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.COOKIE);
-    }
-
-    @Override
-    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter,
-            Provider<ContainerRequest> requestProvider) {
-
-        String parameterName = parameter.getSourceName();
-        if (parameterName == null || parameterName.length() == 0) {
-            // Invalid cookie parameter name
-            return null;
-        }
-
-        if (parameter.getRawType() == Cookie.class) {
-            return new CookieTypeParamValueSupplier(parameterName, requestProvider);
-        } else {
-            MultivaluedParameterExtractor e = get(parameter);
-            if (e == null) {
-                return null;
-            }
-            return new CookieParamValueSupplier(e, requestProvider);
-        }
-    }
+public final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     /**
      * Injection resolver for {@link CookieParam} annotation.
      */
     @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<CookieParam> {
+    public static final class InjectionResolver extends ParamInjectionResolver<CookieParam> {
 
         /**
          * Create new {@link CookieParam} annotation injection resolver.
@@ -154,6 +121,39 @@ final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvid
         @Override
         public Cookie get() {
             return getRequest().getCookies().get(name);
+        }
+    }
+
+    /**
+     * {@link CookieParam} annotation value factory provider injection constructor.
+     *
+     * @param mpep            multivalued parameter extractor provider.
+     * @param instanceManager instance manager.
+     */
+    @Inject
+    public CookieParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
+        super(mpep, instanceManager, Parameter.Source.COOKIE);
+    }
+
+    @Override
+    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            Parameter parameter,
+            Provider<ContainerRequest> requestProvider) {
+
+        String parameterName = parameter.getSourceName();
+        if (parameterName == null || parameterName.length() == 0) {
+            // Invalid cookie parameter name
+            return null;
+        }
+
+        if (parameter.getRawType() == Cookie.class) {
+            return new CookieTypeParamValueSupplier(parameterName, requestProvider);
+        } else {
+            MultivaluedParameterExtractor e = get(parameter);
+            if (e == null) {
+                return null;
+            }
+            return new CookieParamValueSupplier(e, requestProvider);
         }
     }
 }

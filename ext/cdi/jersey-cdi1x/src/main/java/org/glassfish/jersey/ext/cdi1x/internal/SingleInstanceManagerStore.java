@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,24 +38,35 @@
  * holder.
  */
 
-package org.glassfish.jersey.weld.se;
+package org.glassfish.jersey.ext.cdi1x.internal;
 
-import org.glassfish.jersey.ext.cdi1x.internal.GenericHk2LocatorManager;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
+import javax.ws.rs.WebApplicationException;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerStore;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
- * {@link Hk2LocatorManager Locator manager} for Weld SE container. The provider
- * enables multiple Jersey applications to be deployed within a single HTTP container.
+ * Default {@link InstanceManagerStore instance manager} that assumes only one
+ * {@link InstanceManager instance manager} per application is used.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @since 2.20
+ * @author Michal Gajdos
+ * @since 2.17
  */
-public class WeldHk2LocatorManager extends GenericHk2LocatorManager {
+final class SingleInstanceManagerStore implements InstanceManagerStore {
+
+    private volatile InstanceManager instanceManager;
 
     @Override
-    public ServiceLocator lookupLocator() {
-        return WeldRequestScope.actualServiceLocator.get();
+    public void registerInstanceManager(final InstanceManager instanceManager) {
+        if (this.instanceManager == null) {
+            this.instanceManager = instanceManager;
+        } else if (this.instanceManager != instanceManager) {
+            throw new WebApplicationException(LocalizationMessages.CDI_MULTIPLE_LOCATORS_INTO_SIMPLE_APP());
+        }
+    }
+
+    @Override
+    public InstanceManager getEffectiveInstanceManager() {
+        return instanceManager;
     }
 }

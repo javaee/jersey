@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,8 +58,7 @@ import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.message.filtering.spi.ScopeProvider;
 import org.glassfish.jersey.message.filtering.spi.ScopeResolver;
 import org.glassfish.jersey.model.internal.RankedComparator;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;
@@ -82,14 +81,14 @@ class CommonScopeProvider implements ScopeProvider {
 
     /**
      * Create new common scope provider with injected {@link Configuration configuration} and
-     * {@link ServiceLocator HK2 service locator}.
+     * {@link InstanceManager instance manager}.
      */
     @Inject
-    public CommonScopeProvider(final Configuration config, final ServiceLocator serviceLocator) {
+    public CommonScopeProvider(final Configuration config, final InstanceManager instanceManager) {
         this.config = config;
 
         this.resolvers = Lists.newArrayList(Providers.getAllProviders(
-                serviceLocator, ScopeResolver.class, new RankedComparator<ScopeResolver>()));
+                instanceManager, ScopeResolver.class, new RankedComparator<ScopeResolver>()));
     }
 
     @Override

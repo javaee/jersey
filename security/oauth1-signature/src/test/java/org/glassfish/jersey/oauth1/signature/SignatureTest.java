@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,9 +41,8 @@
 package org.glassfish.jersey.oauth1.signature;
 
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.uri.UriComponent;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -233,8 +232,8 @@ public class SignatureTest {
     }
 
     private OAuth1Signature getoAuthSignature() {
-        ServiceLocator serviceLocator = Injections.createLocator(new OAuth1SignatureFeature.Binder());
-        return serviceLocator.getService(OAuth1Signature.class);
+        InstanceManager serviceLocator = Injections.createInstanceManager(new OAuth1SignatureFeature.Binder());
+        return serviceLocator.getInstance(OAuth1Signature.class);
     }
 
     @Test

@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.integration.servlet_request_wrapper_binding2;
 
 import java.io.BufferedReader;
@@ -52,6 +53,8 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import javax.ws.rs.core.GenericType;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -72,6 +75,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
+import org.glassfish.jersey.hk2.HK2InstanceManager;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -82,6 +86,8 @@ import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.spi.NoOpServletContainerProvider;
 import org.glassfish.jersey.servlet.internal.spi.RequestContextProvider;
 import org.glassfish.jersey.servlet.internal.spi.RequestScopedInitializerProvider;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.DescriptorType;
 import org.glassfish.hk2.api.DescriptorVisibility;
@@ -91,7 +97,6 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.jvnet.hk2.internal.ServiceHandleImpl;
 
@@ -112,7 +117,8 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
     public static class DescriptorProvider implements ComponentProvider {
 
         @Override
-        public void initialize(ServiceLocator locator) {
+        public void initialize(InstanceManager instanceManager) {
+            ServiceLocator locator = ((HK2InstanceManager) instanceManager).getServiceLocator();
             ServiceLocatorUtilities.addOneDescriptor(locator, new HttpServletRequestDescriptor(locator));
         }
 
@@ -161,9 +167,9 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
             @Override
             public RequestScopedInitializer get(final RequestContextProvider context) {
                 return new RequestScopedInitializer() {
-
                     @Override
-                    public void initialize(ServiceLocator locator) {
+                    public void initialize(InstanceManager instanceManager) {
+                        ServiceLocator locator = ((HK2InstanceManager) instanceManager).getServiceLocator();
                         locator.<Ref<HttpServletRequest>>getService(REQUEST_TYPE)
                                 .set(finalWrap(context.getHttpServletRequest()));
                         locator.<Ref<HttpServletResponse>>getService(RESPONSE_TYPE)
@@ -183,14 +189,14 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
                     .to(HttpServletRequestWrapper.class).in(RequestScoped.class);
 
             bindFactory(ReferencingFactory.<HttpServletRequestWrapper>referenceFactory())
-                    .to(new TypeLiteral<Ref<HttpServletRequestWrapper>>() {
+                    .to(new GenericType<Ref<HttpServletRequestWrapper>>() {
                     }).in(RequestScoped.class);
 
             bindFactory(HttpServletResponseReferencingFactory.class)
                     .to(HttpServletResponseWrapper.class).in(RequestScoped.class);
 
             bindFactory(ReferencingFactory.<HttpServletResponseWrapper>referenceFactory())
-                    .to(new TypeLiteral<Ref<HttpServletResponseWrapper>>() {
+                    .to(new GenericType<Ref<HttpServletResponseWrapper>>() {
                     }).in(RequestScoped.class);
 
             bindFactory(HttpServletResponseFactory.class).to(HttpServletResponse.class);

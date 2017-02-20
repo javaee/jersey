@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,7 +66,7 @@ import org.glassfish.jersey.spi.Contract;
  * </p>
  * <p>
  * Implementations should be registered into client/server runtime via
- * {@link org.glassfish.hk2.utilities.binding.AbstractBinder HK2 binder} (for more information and common implementation see
+ * {@link org.glassfish.jersey.spi.inject.AbstractBinder jersey binder} (for more information and common implementation see
  * {@link AbstractObjectProvider}):
  * <pre>
  * bindAsContract(MyObjectProvider.class)

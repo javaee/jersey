@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.wadl.config;
 
 import java.io.File;
@@ -49,8 +50,7 @@ import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Provides a configured {@link org.glassfish.jersey.server.wadl.WadlGenerator} with all decorations (the default
@@ -162,7 +162,7 @@ public abstract class WadlGeneratorConfig {
      *
      * @return the initialized {@link org.glassfish.jersey.server.wadl.WadlGenerator}
      */
-    public WadlGenerator createWadlGenerator(final ServiceLocator locator) {
+    public WadlGenerator createWadlGenerator(InstanceManager instanceManager) {
         final WadlGenerator wadlGenerator;
         final List<WadlGeneratorDescription> wadlGeneratorDescriptions;
         try {
@@ -174,7 +174,7 @@ public abstract class WadlGeneratorConfig {
             desc.setConfiguratorClass(this.getClass());
         }
         try {
-            wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(locator, wadlGeneratorDescriptions);
+            wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(instanceManager, wadlGeneratorDescriptions);
         } catch (final Exception e) {
             throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_LOAD(), e);
 

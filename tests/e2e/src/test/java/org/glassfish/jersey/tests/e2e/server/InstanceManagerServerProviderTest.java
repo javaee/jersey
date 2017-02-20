@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,22 +61,21 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
-import org.glassfish.jersey.ServiceLocatorProvider;
+import org.glassfish.jersey.InstanceManagerProvider;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.test.JerseyTest;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests {@link org.glassfish.jersey.ServiceLocatorProvider}.
+ * Tests {@link InstanceManagerProvider}.
  *
  * @author Miroslav Fuksa
  */
-public class ServiceLocatorServerProviderTest extends JerseyTest {
+public class InstanceManagerServerProviderTest extends JerseyTest {
 
     @Path("resource")
     public static class TestResource {
@@ -155,8 +154,8 @@ public class ServiceLocatorServerProviderTest extends JerseyTest {
 
         @Override
         public boolean configure(FeatureContext context) {
-            final ServiceLocator serviceLocator = ServiceLocatorProvider.getServiceLocator(context);
-            final MyInjectedService service = serviceLocator.getService(MyInjectedService.class);
+            final InstanceManager serviceLocator = InstanceManagerProvider.getInstanceManager(context);
+            final MyInjectedService service = serviceLocator.getInstance(MyInjectedService.class);
             context.register(new MyFeatureInterceptor(service.getName()));
             return true;
         }
@@ -191,8 +190,8 @@ public class ServiceLocatorServerProviderTest extends JerseyTest {
 
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
-            final ServiceLocator serviceLocator = ServiceLocatorProvider.getServiceLocator(context);
-            final MyInjectedService service = serviceLocator.getService(MyInjectedService.class);
+            final InstanceManager serviceLocator = InstanceManagerProvider.getInstanceManager(context);
+            final MyInjectedService service = serviceLocator.getInstance(MyInjectedService.class);
             context.setEntity(((String) context.getEntity()) + "-writer-interceptor-" + service.getName());
             context.proceed();
         }
@@ -218,8 +217,8 @@ public class ServiceLocatorServerProviderTest extends JerseyTest {
                 return entity;
             }
             final String stringEntity = (String) entity;
-            final ServiceLocator serviceLocator = ServiceLocatorProvider.getServiceLocator(context);
-            final MyInjectedService service = serviceLocator.getService(MyInjectedService.class);
+            final InstanceManager serviceLocator = InstanceManagerProvider.getInstanceManager(context);
+            final MyInjectedService service = serviceLocator.getInstance(MyInjectedService.class);
             return stringEntity + "-reader-interceptor-" + service.getName();
         }
     }

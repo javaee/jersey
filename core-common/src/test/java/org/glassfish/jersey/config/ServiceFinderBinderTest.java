@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,29 +37,28 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.config;
 
 import java.util.Collection;
 import java.util.Set;
 
+import javax.ws.rs.RuntimeType;
+
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Collections2;
-
-import javax.ws.rs.RuntimeType;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Service finder injection binder unit test.
@@ -68,21 +67,22 @@ import static org.junit.Assert.assertEquals;
  */
 public class ServiceFinderBinderTest {
 
-    private static ServiceLocator locator;
+    private static InstanceManager instanceManager;
 
     public ServiceFinderBinderTest() {
     }
 
     @BeforeClass
     public static void setUpClass() throws Exception {
-        locator = Injections.createLocator(new AbstractBinder() {
+        AbstractBinder binder = new AbstractBinder() {
             @Override
             protected void configure() {
                 bind(TestServiceB.class).to(TestContract.class);
                 bind(TestServiceD.class).to(TestContract.class);
-                new ServiceFinderBinder<TestContract>(TestContract.class, null, RuntimeType.SERVER).bind(this);
+                install(new ServiceFinderBinder<>(TestContract.class, null, RuntimeType.SERVER));
             }
-        });
+        };
+        instanceManager = Injections.createInstanceManager(binder);
     }
 
     @AfterClass
@@ -91,7 +91,7 @@ public class ServiceFinderBinderTest {
 
     @Test
     public void testConfigure() {
-        final Set<TestContract> providers = Providers.getProviders(locator, TestContract.class);
+        final Set<TestContract> providers = Providers.getProviders(instanceManager, TestContract.class);
         assertEquals(4, providers.size());
 
         final Collection<String> providerNames = Collections2.transform(providers, new Function<TestContract, String>() {

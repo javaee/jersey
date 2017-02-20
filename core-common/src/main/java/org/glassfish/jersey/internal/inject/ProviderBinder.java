@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,8 +41,16 @@
 package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.RuntimeType;
 
@@ -50,29 +58,26 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
+import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.Binder;
+import org.glassfish.jersey.spi.inject.ClassBeanDescriptor;
+import org.glassfish.jersey.spi.inject.CompositeBinder;
+import org.glassfish.jersey.spi.inject.InstanceBeanDescriptor;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
-import org.glassfish.hk2.api.ActiveDescriptor;
-import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.AliasDescriptor;
-import org.glassfish.hk2.utilities.BuilderHelper;
-import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
-
-import jersey.repackaged.com.google.common.base.Predicate;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
- * Class used for registration of the custom providers into HK2 service locator.
+ * Class used for registration of the custom providers into instance manager.
  * <p>
  * Custom providers are classes that implements specific JAX-RS or Jersey
  * SPI interfaces (e.g. {@link javax.ws.rs.ext.MessageBodyReader}) and are
- * supplied by the user. These providers will be bound into the HK2 service locator
+ * supplied by the user. These providers will be bound into the instance manager
  * annotated by a {@link Custom &#64;Custom} qualifier annotation.
  * </p>
  * <p>
  * Use the {@code &#64;Custom} qualifier annotation to retrieve these providers
- * from HK2 service locator. You may also use a one of the provider accessor utility
+ * from instance manager. You may also use a one of the provider accessor utility
  * method defined in {@link Providers} class.
  * </p>
  *
@@ -82,16 +87,171 @@ import jersey.repackaged.com.google.common.collect.Sets;
  */
 public class ProviderBinder {
 
-    private final ServiceLocator locator;
+    private final InstanceManager instanceManager;
 
     /**
      * Create new provider binder instance.
      *
-     * @param locator HK2 service locator the binder will use to bind the
-     *                providers into.
+     * @param instanceManager the binder will use to bind the providers into.
      */
-    public ProviderBinder(final ServiceLocator locator) {
-        this.locator = locator;
+    public ProviderBinder(final InstanceManager instanceManager) {
+        this.instanceManager = instanceManager;
+    }
+
+    /**
+     * Bind contract provider model to a provider class using the supplied instance manager.
+     *
+     * @param providerClass provider class.
+     * @param model         contract provider model.
+     */
+    public static void bindProvider(Class<?> providerClass, ContractProvider model, InstanceManager instanceManager) {
+        instanceManager.register(CompositeBinder.wrap(createProviderBinders(providerClass, model)));
+    }
+
+    private static Collection<Binder> createProviderBinders(Class<?> providerClass, ContractProvider model) {
+        /* Create a Binder of the Provider with the concrete contract. */
+        Function<Class, Binder> binderFunction = contract -> new AbstractBinder() {
+            @Override
+            @SuppressWarnings("unchecked")
+            protected void configure() {
+                ClassBeanDescriptor builder = bind(providerClass)
+                        .in(model.getScope())
+                        .qualifiedBy(CustomAnnotationLiteral.INSTANCE)
+                        .to(contract);
+
+                int priority = model.getPriority(contract);
+                if (priority > ContractProvider.NO_PRIORITY) {
+                    builder.ranked(priority);
+                }
+            }
+        };
+
+        /* Create Binders with all contracts and return their collection. */
+        return model.getContracts().stream()
+                .map(binderFunction)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Bind contract provider model to a provider instance using the supplied instance manager.
+     * <p>
+     * Scope value specified in the {@link ContractProvider contract provider model}
+     * is ignored as instances can only be bound as "singletons".
+     *
+     * @param providerInstance provider instance.
+     * @param model            contract provider model.
+     */
+    public static void bindProvider(Object providerInstance, ContractProvider model, InstanceManager instanceManager) {
+        instanceManager.register(CompositeBinder.wrap(createProviderBinders(providerInstance, model)));
+    }
+
+    private static Collection<Binder> createProviderBinders(Object providerInstance, ContractProvider model) {
+        /* Create a Binder of the Provider with the concrete contract. */
+        Function<Class, Binder> binderFunction = contract -> new AbstractBinder() {
+            @Override
+            @SuppressWarnings("unchecked")
+            protected void configure() {
+                InstanceBeanDescriptor builder = bind(providerInstance)
+                        .qualifiedBy(CustomAnnotationLiteral.INSTANCE)
+                        .to(contract);
+
+                int priority = model.getPriority(contract);
+                if (priority > ContractProvider.NO_PRIORITY) {
+                    builder.ranked(priority);
+                }
+            }
+        };
+
+        /* Create Binders with all contracts and return their collection. */
+        return model.getContracts().stream()
+                .map(binderFunction)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Bind all providers contained in {@code providerBag} (classes and instances) using instance manager. Configuration is
+     * also committed.
+     *
+     * @param componentBag    bag of provider classes and instances.
+     * @param instanceManager instance manager the binder will use to bind the providers into.
+     */
+    public static void bindProviders(final ComponentBag componentBag, final InstanceManager instanceManager) {
+        bindProviders(componentBag, null, Collections.emptySet(), instanceManager);
+    }
+
+    /**
+     * Bind all providers contained in {@code p roviderBag} (classes and instances) using instance manager. Configuration is
+     * also committed.
+     *
+     * @param componentBag      bag of provider classes and instances.
+     * @param constrainedTo     current runtime (client or server).
+     * @param registeredClasses classes which are manually registered by the user (not found by the classpath scanning).
+     * @param instanceManager   instance manager the binder will use to bind the providers into.
+     */
+    public static void bindProviders(ComponentBag componentBag,
+                                     RuntimeType constrainedTo,
+                                     Set<Class<?>> registeredClasses,
+                                     InstanceManager instanceManager) {
+        Predicate<ContractProvider> filter =
+                input -> ComponentBag.EXCLUDE_EMPTY.test(input) && ComponentBag.EXCLUDE_META_PROVIDERS.test(input);
+
+        /*
+         * Check the {@code component} whether it is correctly configured for client or server {@link RuntimeType runtime}.
+         */
+        Predicate<Class<?>> correctlyConfigured =
+                componentClass -> Providers.checkProviderRuntime(
+                        componentClass,
+                        componentBag.getModel(componentClass),
+                        constrainedTo,
+                        registeredClasses == null || !registeredClasses.contains(componentClass),
+                        false);
+
+        /*
+         * These binder will be register to Bean Manager at the and of method because of a bulk registration to avoid register
+         * each binder alone.
+         */
+        Collection<Binder> binderToRegister = new ArrayList<>();
+
+        // Bind provider classes except for pure meta-providers and providers with empty contract models (e.g. resources)
+        Set<Class<?>> classes = new LinkedHashSet<>(componentBag.getClasses(filter));
+        if (constrainedTo != null) {
+            classes = classes.stream()
+                    .filter(correctlyConfigured)
+                    .collect(Collectors.toSet());
+        }
+        for (final Class<?> providerClass : classes) {
+            final ContractProvider model = componentBag.getModel(providerClass);
+            binderToRegister.addAll(createProviderBinders(providerClass, model));
+        }
+
+        // Bind pure provider instances except for pure meta-providers and providers with empty contract models (e.g. resources)
+        Set<Object> instances = componentBag.getInstances(filter);
+        if (constrainedTo != null) {
+            instances = instances.stream()
+                    .filter(component -> correctlyConfigured.test(component.getClass()))
+                    .collect(Collectors.toSet());
+        }
+        for (final Object provider : instances) {
+            final ContractProvider model = componentBag.getModel(provider.getClass());
+            binderToRegister.addAll(createProviderBinders(provider, model));
+        }
+
+        instanceManager.register(CompositeBinder.wrap(binderToRegister));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Collection<Binder> createInstanceBinders(T instance) {
+        Function<Class, Binder> binderFunction = contract ->
+                new AbstractBinder() {
+                    @Override
+                    protected void configure() {
+                        bind(instance).to(contract).qualifiedBy(CustomAnnotationLiteral.INSTANCE);
+                    }
+                };
+
+        return Providers.getProviderContracts(instance.getClass()).stream()
+                .map(binderFunction)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -101,11 +261,24 @@ public class ProviderBinder {
      * @param instances custom provider instances.
      */
     public void bindInstances(final Iterable<Object> instances) {
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        for (final Object instance : instances) {
-            bindInstance(instance, dc);
-        }
-        dc.commit();
+        List<Object> instancesList = new ArrayList<>();
+        instances.forEach(instancesList::add);
+        bindInstances(instancesList);
+    }
+
+    /**
+     * Register/bind custom provider instances. Registered providers will be handled
+     * always as Singletons.
+     *
+     * @param instances custom provider instances.
+     */
+    public void bindInstances(final Collection<Object> instances) {
+        List<Binder> binders = instances.stream()
+                .map(ProviderBinder::createInstanceBinders)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+
+        instanceManager.register(CompositeBinder.wrap(binders));
     }
 
     /**
@@ -115,13 +288,7 @@ public class ProviderBinder {
      * @param classes custom provider classes.
      */
     public void bindClasses(final Class<?>... classes) {
-        if (classes != null && classes.length > 0) {
-            final DynamicConfiguration dc = Injections.getConfiguration(locator);
-            for (final Class<?> clazz : classes) {
-                bindClass(clazz, locator, dc, false);
-            }
-            dc.commit();
-        }
+        bindClasses(Arrays.asList(classes), false);
     }
 
     /**
@@ -131,6 +298,18 @@ public class ProviderBinder {
      * @param classes custom provider classes.
      */
     public void bindClasses(final Iterable<Class<?>> classes) {
+        List<Class<?>> classesList = new ArrayList<>();
+        classes.forEach(classesList::add);
+        bindClasses(classesList, false);
+    }
+
+    /**
+     * Register/bind custom provider classes. Registered providers will be handled
+     * always as Singletons unless annotated by {@link PerLookup}.
+     *
+     * @param classes custom provider classes.
+     */
+    public void bindClasses(final Collection<Class<?>> classes) {
         bindClasses(classes, false);
     }
 
@@ -138,7 +317,7 @@ public class ProviderBinder {
      * Register/bind custom provider classes that may also be resources. Registered
      * providers/resources will be handled always as Singletons unless annotated by
      * {@link PerLookup}.
-     *
+     * <p>
      * <p>
      * If {@code bindAsResources} is set to {@code true}, the providers will also be bound
      * as resources.
@@ -148,197 +327,39 @@ public class ProviderBinder {
      * @param bindResources if {@code true}, the provider classes will also be bound as
      *                      resources.
      */
-    public void bindClasses(final Iterable<Class<?>> classes, final boolean bindResources) {
-        if (classes == null || !classes.iterator().hasNext()) {
-            return;
-        }
+    public void bindClasses(Collection<Class<?>> classes, boolean bindResources) {
+        List<Binder> binders = classes.stream()
+                .map(clazz -> createClassBinders(clazz, bindResources))
+                .collect(Collectors.toList());
 
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        for (final Class<?> clazz : classes) {
-            bindClass(clazz, locator, dc, bindResources);
-        }
-        dc.commit();
-    }
-
-    /**
-     * Bind contract provider model to a provider class using the supplied HK2 dynamic configuration.
-     *
-     * @param providerClass provider class.
-     * @param model      contract provider model.
-     * @param dc            HK2 dynamic service locator configuration.
-     */
-    public static void bindProvider(
-            final Class<?> providerClass, final ContractProvider model, final DynamicConfiguration dc) {
-
-        for (final Class contract : model.getContracts()) {
-            final ScopedBindingBuilder bindingBuilder = Injections.newBinder(providerClass)
-                    .in(model.getScope())
-                    .qualifiedBy(CustomAnnotationLiteral.INSTANCE);
-
-            //noinspection unchecked
-            bindingBuilder.to(contract);
-
-            final int priority = model.getPriority(contract);
-            if (priority > ContractProvider.NO_PRIORITY) {
-                bindingBuilder.ranked(priority);
-            }
-
-            Injections.addBinding(bindingBuilder, dc);
-        }
-    }
-
-    /**
-     * Bind contract provider model to a provider instance using the supplied
-     * HK2 dynamic configuration.
-     *
-     * Scope value specified in the {@link ContractProvider contract provider model}
-     * is ignored as instances can only be bound as "singletons".
-     *
-     * @param providerInstance provider instance.
-     * @param model         contract provider model.
-     * @param dc               HK2 dynamic service locator configuration.
-     */
-    public static void bindProvider(
-            final Object providerInstance, final ContractProvider model, final DynamicConfiguration dc) {
-
-        for (final Class contract : model.getContracts()) {
-            final ScopedBindingBuilder bindingBuilder = Injections
-                    .newBinder(providerInstance).qualifiedBy(CustomAnnotationLiteral.INSTANCE);
-
-            //noinspection unchecked
-            bindingBuilder.to(contract);
-
-            final int priority = model.getPriority(contract);
-            if (priority > ContractProvider.NO_PRIORITY) {
-                bindingBuilder.ranked(priority);
-            }
-
-            Injections.addBinding(bindingBuilder, dc);
-        }
-    }
-
-    /**
-     * Bind all providers contained in {@code providerBag} (classes and instances) using HK2 service locator. Configuration is
-     * also committed.
-     *
-     * @param componentBag bag of provider classes and instances.
-     * @param locator      HK2 service locator the binder will use to bind the providers into.
-     */
-    public static void bindProviders(final ComponentBag componentBag, final ServiceLocator locator) {
-        bindProviders(componentBag, null, Collections.<Class<?>>emptySet(), locator);
-    }
-
-    /**
-     * Bind all providers contained in {@code providerBag} (classes and instances) using HK2 service locator. Configuration is
-     * also committed.
-     *
-     * @param componentBag      bag of provider classes and instances.
-     * @param constrainedTo     current runtime (client or server).
-     * @param registeredClasses classes which are manually registered by the user (not found by the classpath scanning).
-     * @param locator           HK2 service locator the binder will use to bind the providers into.
-     */
-    public static void bindProviders(final ComponentBag componentBag,
-                                     final RuntimeType constrainedTo,
-                                     final Set<Class<?>> registeredClasses,
-                                     final ServiceLocator locator) {
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        bindProviders(componentBag, constrainedTo, registeredClasses, dc);
-        dc.commit();
-    }
-
-    /**
-     * Bind all providers contained in {@code providerBag} (classes and instances) using HK2 service locator. Configuration is
-     * not committed.
-     *
-     * @param componentBag         bag of provider classes and instances.
-     * @param constrainedTo        current runtime (client or server).
-     * @param registeredClasses    classes which are manually registered by the user (not found by the classpath scanning).
-     * @param dynamicConfiguration HK2 dynamic service locator configuration.
-     */
-    public static void bindProviders(final ComponentBag componentBag,
-                                     final RuntimeType constrainedTo,
-                                     final Set<Class<?>> registeredClasses,
-                                     final DynamicConfiguration dynamicConfiguration) {
-        final Predicate<ContractProvider> filter = new Predicate<ContractProvider>() {
-            @Override
-            public boolean apply(final ContractProvider input) {
-                return ComponentBag.EXCLUDE_EMPTY.apply(input) && ComponentBag.EXCLUDE_META_PROVIDERS.apply(input);
-            }
-        };
-
-        // Bind provider classes except for pure meta-providers and providers with empty contract models (e.g. resources)
-        Set<Class<?>> classes = Sets.newLinkedHashSet(componentBag.getClasses(filter));
-        if (constrainedTo != null) {
-            classes = Sets.filter(classes, new Predicate<Class<?>>() {
-                @Override
-                public boolean apply(final Class<?> componentClass) {
-                    return Providers.checkProviderRuntime(
-                            componentClass,
-                            componentBag.getModel(componentClass),
-                            constrainedTo,
-                            registeredClasses == null || !registeredClasses.contains(componentClass),
-                            false);
-                }
-            });
-        }
-        for (final Class<?> providerClass : classes) {
-            final ContractProvider model = componentBag.getModel(providerClass);
-            ProviderBinder.bindProvider(providerClass, model, dynamicConfiguration);
-        }
-
-        // Bind pure provider instances except for pure meta-providers and providers with empty contract models (e.g. resources)
-        Set<Object> instances = componentBag.getInstances(filter);
-        if (constrainedTo != null) {
-            instances = Sets.filter(instances, new Predicate<Object>() {
-                @Override
-                public boolean apply(final Object component) {
-                    final Class<?> componentClass = component.getClass();
-                    return Providers.checkProviderRuntime(
-                            componentClass,
-                            componentBag.getModel(componentClass),
-                            constrainedTo,
-                            registeredClasses == null || !registeredClasses.contains(componentClass),
-                            false);
-                }
-            });
-        }
-        for (final Object provider : instances) {
-            final ContractProvider model = componentBag.getModel(provider.getClass());
-            ProviderBinder.bindProvider(provider, model, dynamicConfiguration);
-        }
+        instanceManager.register(CompositeBinder.wrap(binders));
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void bindInstance(final T instance, final DynamicConfiguration dc) {
-        for (final Class contract : Providers.getProviderContracts(instance.getClass())) {
-            Injections.addBinding(Injections.newBinder(instance).to(contract).qualifiedBy(CustomAnnotationLiteral.INSTANCE), dc);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> void bindClass(final Class<T> clazz,
-                               final ServiceLocator locator,
-                               final DynamicConfiguration dc,
-                               final boolean isResource) {
+    private <T> Binder createClassBinders(Class<T> clazz, boolean isResource) {
         final Class<? extends Annotation> scope = getProviderScope(clazz);
 
         if (isResource) {
-            final ActiveDescriptor<?> descriptor = dc.bind(BuilderHelper.activeLink(clazz).to(clazz).in(scope).build());
+            return new AbstractBinder() {
+                @Override
+                protected void configure() {
+                    ClassBeanDescriptor<T> descriptor = bindAsContract(clazz).in(scope);
 
-            for (final Class contract : Providers.getProviderContracts(clazz)) {
-                final AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
-                aliasDescriptor.setScope(scope.getName());
-                aliasDescriptor.addQualifierAnnotation(CustomAnnotationLiteral.INSTANCE);
-
-                dc.bind(aliasDescriptor);
-            }
+                    for (Class contract : Providers.getProviderContracts(clazz)) {
+                        descriptor.addAlias(contract.getName())
+                                .in(scope.getName())
+                                .qualifiedBy(CustomAnnotationLiteral.INSTANCE);
+                    }
+                }
+            };
         } else {
-            final ScopedBindingBuilder<T> bindingBuilder =
-                    Injections.newBinder(clazz).in(scope).qualifiedBy(CustomAnnotationLiteral.INSTANCE);
-            for (final Class contract : Providers.getProviderContracts(clazz)) {
-                bindingBuilder.to(contract);
-            }
-            Injections.addBinding(bindingBuilder, dc);
+            return new AbstractBinder() {
+                @Override
+                protected void configure() {
+                    ClassBeanDescriptor<T> builder = bind(clazz).in(scope).qualifiedBy(CustomAnnotationLiteral.INSTANCE);
+                    Providers.getProviderContracts(clazz).forEach(contract -> builder.to((Class<? super T>) contract));
+                }
+            };
         }
     }
 

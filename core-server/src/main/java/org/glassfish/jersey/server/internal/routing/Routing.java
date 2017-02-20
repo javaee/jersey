@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.routing;
 
 import javax.ws.rs.core.Configuration;
@@ -49,8 +50,7 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Jersey routing entry point.
@@ -93,7 +93,7 @@ public final class Routing {
 
         private final RuntimeResourceModel resourceModel;
 
-        private ServiceLocator locator;
+        private InstanceManager instanceManager;
         private JerseyResourceContext resourceContext;
         private Configuration config;
         private MessageBodyWorkers entityProviders;
@@ -108,13 +108,13 @@ public final class Routing {
         }
 
         /**
-         * Set runtime HK2 locator.
+         * Set runtime DI locator.
          *
-         * @param locator HK2 locator.
+         * @param instanceManager DI locator.
          * @return updated routing builder.
          */
-        public Builder locator(ServiceLocator locator) {
-            this.locator = locator;
+        public Builder beanManager(InstanceManager instanceManager) {
+            this.instanceManager = instanceManager;
             return this;
         }
 
@@ -169,8 +169,8 @@ public final class Routing {
          */
         public ChainableStage<RequestProcessingContext> buildStage() {
             // No L10N - internally used class
-            if (locator == null) {
-                throw new NullPointerException("HK2 locator is not set.");
+            if (instanceManager == null) {
+                throw new NullPointerException("DI locator is not set.");
             }
             if (resourceContext == null) {
                 throw new NullPointerException("Resource context is not set.");
@@ -186,12 +186,12 @@ public final class Routing {
             }
 
             final RuntimeModelBuilder runtimeModelBuilder = new RuntimeModelBuilder(
-                    locator,
+                    instanceManager,
                     resourceContext,
                     config,
                     entityProviders,
                     processingProviders,
-                    locator.getService(ResourceMethodInvoker.Builder.class));
+                    instanceManager.getInstance(ResourceMethodInvoker.Builder.class));
 
             return new RoutingStage(runtimeModelBuilder.buildModel(resourceModel, false));
         }

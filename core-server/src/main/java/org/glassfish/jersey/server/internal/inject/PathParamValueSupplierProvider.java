@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.reflect.ParameterizedType;
@@ -54,8 +55,7 @@ import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException.PathParamException;
 import org.glassfish.jersey.server.model.Parameter;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * {@link PathParam &#64;PathParam} injection value supplier provider.
@@ -72,7 +72,7 @@ final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider
      * @param locator HK2 service locator.
      */
     @Inject
-    public PathParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+    public PathParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager locator) {
         super(mpep, locator, Parameter.Source.PATH);
     }
 

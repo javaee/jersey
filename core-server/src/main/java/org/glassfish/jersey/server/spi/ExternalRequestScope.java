@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.server.spi;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * This is to allow integration with other DI providers that
@@ -64,10 +64,10 @@ public interface ExternalRequestScope<T> extends AutoCloseable {
      * Returned context data will be retained
      * by Jersey runtime for the whole request life-span.
      *
-     * @param locator HK2 service locator
+     * @param instanceManager DI instance manager
      * @return external request context data
      */
-    public ExternalRequestContext<T> open(ServiceLocator locator);
+    ExternalRequestContext<T> open(InstanceManager instanceManager);
 
     /**
      * Suspend request associated with provided context.
@@ -75,9 +75,9 @@ public interface ExternalRequestScope<T> extends AutoCloseable {
      * corresponding to the actual context.
      *
      * @param c       external request context
-     * @param locator HK2 service locator
+     * @param instanceManager DI instance manager
      */
-    public void suspend(ExternalRequestContext<T> c, ServiceLocator locator);
+    void suspend(ExternalRequestContext<T> c, InstanceManager instanceManager);
 
     /**
      * Resume request associated with provided context.
@@ -85,9 +85,9 @@ public interface ExternalRequestScope<T> extends AutoCloseable {
      * previously suspended.
      *
      * @param c       external request context
-     * @param locator HK2 service locator
+     * @param instanceManager DI instance manager
      */
-    public void resume(ExternalRequestContext<T> c, ServiceLocator locator);
+    void resume(ExternalRequestContext<T> c, InstanceManager instanceManager);
 
     /**
      * Finish the actual request. This method will be called
@@ -97,5 +97,5 @@ public interface ExternalRequestScope<T> extends AutoCloseable {
      * as the final close method invocation.
      */
     @Override
-    public void close();
+    void close();
 }

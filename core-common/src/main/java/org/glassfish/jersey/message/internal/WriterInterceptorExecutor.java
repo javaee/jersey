@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
@@ -59,10 +60,9 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
+import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 
@@ -76,7 +76,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor>
-        implements WriterInterceptorContext, ServiceLocatorSupplier {
+        implements WriterInterceptorContext, InstanceManagerSupplier {
 
     private static final Logger LOGGER = Logger.getLogger(WriterInterceptorExecutor.class.getName());
 
@@ -87,7 +87,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
     private final Iterator<WriterInterceptor> iterator;
     private int processedCount;
 
-    private final ServiceLocator serviceLocator;
+    private final InstanceManager instanceManager;
 
 
     /**
@@ -109,7 +109,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
      *            closed after reading the entity.
      * @param workers {@link org.glassfish.jersey.message.MessageBodyWorkers Message body workers}.
      * @param writerInterceptors Writer interceptors that are to be used to intercept writing of an entity.
-     * @param serviceLocator Service locator.
+     * @param instanceManager instance manager.
      */
     public WriterInterceptorExecutor(final Object entity, final Class<?> rawType,
                                      final Type type,
@@ -120,13 +120,13 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
                                      final OutputStream entityStream,
                                      final MessageBodyWorkers workers,
                                      final Iterable<WriterInterceptor> writerInterceptors,
-                                     final ServiceLocator serviceLocator) {
+                                     final InstanceManager instanceManager) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.entity = entity;
         this.headers = headers;
         this.outputStream = entityStream;
-        this.serviceLocator = serviceLocator;
+        this.instanceManager = instanceManager;
 
         final List<WriterInterceptor> effectiveInterceptors = Lists.newArrayList(writerInterceptors);
         effectiveInterceptors.add(new TerminalWriterInterceptor(workers));
@@ -202,8 +202,8 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
     }
 
     @Override
-    public ServiceLocator getServiceLocator() {
-        return serviceLocator;
+    public InstanceManager getInstanceManager() {
+        return instanceManager;
     }
 
     /**
