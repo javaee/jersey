@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,14 +51,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
+import javax.inject.Inject;
+
 import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
@@ -72,25 +71,28 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageUtils;
 import org.glassfish.jersey.message.internal.Utils;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueFactory;
-import org.glassfish.jersey.server.internal.inject.AbstractValueFactoryProvider;
+import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueSupplier;
+import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
 import org.glassfish.jersey.server.model.Parameter;
+
+import org.glassfish.hk2.api.ServiceLocator;
+
 import org.jvnet.mimepull.MIMEParsingException;
 
 /**
- * Value factory provider supporting the {@link FormDataParam} injection annotation and entity ({@link FormDataMultiPart})
+ * Value supplier provider supporting the {@link FormDataParam} injection annotation and entity ({@link FormDataMultiPart})
  * injection.
  *
  * @author Craig McClanahan
  * @author Paul Sandoz
  * @author Michal Gajdos
  */
-final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvider {
+final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
-    private static final Logger LOGGER = Logger.getLogger(FormDataParamValueFactoryProvider.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FormDataParamValueSupplierProvider.class.getName());
 
     /**
      * {@link FormDataParam} injection resolver.
@@ -101,11 +103,11 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
          * Create new {@link FormDataParam} injection resolver.
          */
         public InjectionResolver() {
-            super(FormDataParamValueFactoryProvider.class);
+            super(FormDataParamValueSupplierProvider.class);
         }
     }
 
-    private abstract class ValueFactory<T> extends AbstractContainerRequestValueFactory<T> {
+    private abstract class ValueSupplier<T> extends AbstractContainerRequestValueSupplier<T> {
 
         /**
          * Returns a {@code FormDataMultiPart} entity from the request and stores it in the request context properties.
@@ -130,48 +132,48 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
     }
 
     /**
-     * Provider factory for entity of {@code FormDataMultiPart} type.
+     * Provider supplier for entity of {@code FormDataMultiPart} type.
      */
-    private final class FormDataMultiPartFactory extends ValueFactory<FormDataMultiPart> {
+    private final class FormDataMultiPartSupplier extends ValueSupplier<FormDataMultiPart> {
 
         @Override
-        public FormDataMultiPart provide() {
+        public FormDataMultiPart get() {
             return getEntity();
         }
     }
 
     /**
-     * Provider factory for list of {@link org.glassfish.jersey.media.multipart.FormDataBodyPart} types injected via
+     * Provider supplier for list of {@link org.glassfish.jersey.media.multipart.FormDataBodyPart} types injected via
      * {@link FormDataParam} annotation.
      */
-    private final class ListFormDataBodyPartValueFactory extends ValueFactory<List<FormDataBodyPart>> {
+    private final class ListFormDataBodyPartValueSupplier extends ValueSupplier<List<FormDataBodyPart>> {
 
         private final String name;
 
-        public ListFormDataBodyPartValueFactory(final String name) {
+        public ListFormDataBodyPartValueSupplier(final String name) {
             this.name = name;
         }
 
         @Override
-        public List<FormDataBodyPart> provide() {
+        public List<FormDataBodyPart> get() {
             return getEntity().getFields(name);
         }
     }
 
     /**
-     * Provider factory for list of {@link org.glassfish.jersey.media.multipart.FormDataContentDisposition} types injected via
+     * Provider supplier for list of {@link org.glassfish.jersey.media.multipart.FormDataContentDisposition} types injected via
      * {@link FormDataParam} annotation.
      */
-    private final class ListFormDataContentDispositionFactory extends ValueFactory<List<FormDataContentDisposition>> {
+    private final class ListFormDataContentDispositionSupplier extends ValueSupplier<List<FormDataContentDisposition>> {
 
         private final String name;
 
-        public ListFormDataContentDispositionFactory(final String name) {
+        public ListFormDataContentDispositionSupplier(final String name) {
             this.name = name;
         }
 
         @Override
-        public List<FormDataContentDisposition> provide() {
+        public List<FormDataContentDisposition> get() {
             final List<FormDataBodyPart> parts = getEntity().getFields(name);
 
             return parts == null ? null : parts.stream()
@@ -181,37 +183,37 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
     }
 
     /**
-     * Provider factory for {@link org.glassfish.jersey.media.multipart.FormDataBodyPart} types injected via
+     * Provider supplier for {@link org.glassfish.jersey.media.multipart.FormDataBodyPart} types injected via
      * {@link FormDataParam} annotation.
      */
-    private final class FormDataBodyPartFactory extends ValueFactory<FormDataBodyPart> {
+    private final class FormDataBodyPartSupplier extends ValueSupplier<FormDataBodyPart> {
 
         private final String name;
 
-        public FormDataBodyPartFactory(final String name) {
+        public FormDataBodyPartSupplier(final String name) {
             this.name = name;
         }
 
         @Override
-        public FormDataBodyPart provide() {
+        public FormDataBodyPart get() {
             return getEntity().getField(name);
         }
     }
 
     /**
-     * Provider factory for {@link org.glassfish.jersey.media.multipart.FormDataContentDisposition} types injected via
+     * Provider supplier for {@link org.glassfish.jersey.media.multipart.FormDataContentDisposition} types injected via
      * {@link FormDataParam} annotation.
      */
-    private final class FormDataContentDispositionFactory extends ValueFactory<FormDataContentDisposition> {
+    private final class FormDataContentDispositionSupplier extends ValueSupplier<FormDataContentDisposition> {
 
         private final String name;
 
-        public FormDataContentDispositionFactory(final String name) {
+        public FormDataContentDispositionSupplier(final String name) {
             this.name = name;
         }
 
         @Override
-        public FormDataContentDisposition provide() {
+        public FormDataContentDisposition get() {
             final FormDataBodyPart part = getEntity().getField(name);
 
             return part == null ? null : part.getFormDataContentDisposition();
@@ -219,18 +221,18 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
     }
 
     /**
-     * Provider factory for {@link java.io.File} types injected via {@link FormDataParam} annotation.
+     * Provider supplier for {@link java.io.File} types injected via {@link FormDataParam} annotation.
      */
-    private final class FileFactory extends ValueFactory<File> {
+    private final class FileSupplier extends ValueSupplier<File> {
 
         private final String name;
 
-        public FileFactory(final String name) {
+        public FileSupplier(final String name) {
             this.name = name;
         }
 
         @Override
-        public File provide() {
+        public File get() {
             final FormDataBodyPart part = getEntity().getField(name);
             final BodyPartEntity entity = part != null ? part.getEntityAs(BodyPartEntity.class) : null;
 
@@ -254,20 +256,20 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
     }
 
     /**
-     * Provider factory for generic types injected via {@link FormDataParam} annotation.
+     * Provider supplier for generic types injected via {@link FormDataParam} annotation.
      */
-    private final class FormDataParamValueFactory extends ValueFactory<Object> {
+    private final class FormDataParamValueSupplier extends ValueSupplier<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final Parameter parameter;
 
-        public FormDataParamValueFactory(final Parameter parameter, final MultivaluedParameterExtractor<?> extractor) {
+        public FormDataParamValueSupplier(final Parameter parameter, final MultivaluedParameterExtractor<?> extractor) {
             this.parameter = parameter;
             this.extractor = extractor;
         }
 
         @Override
-        public Object provide() {
+        public Object get() {
             // Return the field value for the field specified by the sourceName property.
             final List<FormDataBodyPart> parts = getEntity().getFields(parameter.getSourceName());
 
@@ -383,18 +385,18 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
      * @param locator           HK2 service locator.
      */
     @Inject
-    public FormDataParamValueFactoryProvider(final MultivaluedParameterExtractorProvider extractorProvider,
-                                             final ServiceLocator locator) {
+    public FormDataParamValueSupplierProvider(final MultivaluedParameterExtractorProvider extractorProvider,
+                                              final ServiceLocator locator) {
         super(extractorProvider, locator, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
     }
 
     @Override
-    protected Factory<?> createValueFactory(final Parameter parameter) {
+    protected AbstractContainerRequestValueSupplier<?> createValueSupplier(final Parameter parameter) {
         final Class<?> rawType = parameter.getRawType();
 
         if (Parameter.Source.ENTITY == parameter.getSource()) {
             if (FormDataMultiPart.class.isAssignableFrom(rawType)) {
-                return new FormDataMultiPartFactory();
+                return new FormDataMultiPartSupplier();
             } else {
                 return null;
             }
@@ -410,22 +412,22 @@ final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvid
 
                 if (FormDataBodyPart.class == clazz) {
                     // Return a collection of form data body part.
-                    return new ListFormDataBodyPartValueFactory(paramName);
+                    return new ListFormDataBodyPartValueSupplier(paramName);
                 } else if (FormDataContentDisposition.class == clazz) {
                     // Return a collection of form data content disposition.
-                    return new ListFormDataContentDispositionFactory(paramName);
+                    return new ListFormDataContentDispositionSupplier(paramName);
                 } else {
                     // Return a collection of specific type.
-                    return new FormDataParamValueFactory(parameter, get(parameter));
+                    return new FormDataParamValueSupplier(parameter, get(parameter));
                 }
             } else if (FormDataBodyPart.class == rawType) {
-                return new FormDataBodyPartFactory(paramName);
+                return new FormDataBodyPartSupplier(paramName);
             } else if (FormDataContentDisposition.class == rawType) {
-                return new FormDataContentDispositionFactory(paramName);
+                return new FormDataContentDispositionSupplier(paramName);
             } else if (File.class == rawType) {
-                return new FileFactory(paramName);
+                return new FileSupplier(paramName);
             } else {
-                return new FormDataParamValueFactory(parameter, get(parameter));
+                return new FormDataParamValueSupplier(parameter, get(parameter));
             }
         }
 

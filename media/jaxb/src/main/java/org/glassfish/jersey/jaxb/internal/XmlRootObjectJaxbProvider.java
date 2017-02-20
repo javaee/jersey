@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,6 +56,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NoContentException;
 import javax.ws.rs.ext.Providers;
 
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -65,8 +66,6 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.message.internal.EntityInputStream;
 
-import org.glassfish.hk2.api.Factory;
-
 /**
  * Base XML-based message body reader for JAXB beans.
  *
@@ -75,15 +74,15 @@ import org.glassfish.hk2.api.Factory;
  */
 public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Object> {
 
-    private final Factory<SAXParserFactory> spf;
+    private final Provider<SAXParserFactory> spf;
 
-    XmlRootObjectJaxbProvider(Factory<SAXParserFactory> spf, Providers ps) {
+    XmlRootObjectJaxbProvider(Provider<SAXParserFactory> spf, Providers ps) {
         super(ps);
 
         this.spf = spf;
     }
 
-    XmlRootObjectJaxbProvider(Factory<SAXParserFactory> spf, Providers ps, MediaType mt) {
+    XmlRootObjectJaxbProvider(Provider<SAXParserFactory> spf, Providers ps, MediaType mt) {
         super(ps, mt);
 
         this.spf = spf;
@@ -103,7 +102,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
     @Singleton
     public static final class App extends XmlRootObjectJaxbProvider {
 
-        public App(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
+        public App(@Context Provider<SAXParserFactory> spf, @Context Providers ps) {
             super(spf, ps, MediaType.APPLICATION_XML_TYPE);
         }
     }
@@ -117,7 +116,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
     @Singleton
     public static final class Text extends XmlRootObjectJaxbProvider {
 
-        public Text(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
+        public Text(@Context Provider<SAXParserFactory> spf, @Context Providers ps) {
             super(spf, ps, MediaType.TEXT_XML_TYPE);
         }
     }
@@ -131,7 +130,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
     @Singleton
     public static final class General extends XmlRootObjectJaxbProvider {
 
-        public General(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
+        public General(@Context Provider<SAXParserFactory> spf, @Context Providers ps) {
             super(spf, ps);
         }
 
@@ -142,7 +141,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
     }
 
     @Override
-    public boolean isReadable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
+    public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         try {
             return Object.class == type && isSupported(mediaType) && getUnmarshaller(type, mediaType) != null;
         } catch (JAXBException cause) {
@@ -154,7 +153,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
     public final Object readFrom(
             Class<Object> type,
             Type genericType,
-            Annotation annotations[],
+            Annotation[] annotations,
             MediaType mediaType,
             MultivaluedMap<String, String> httpHeaders,
             InputStream inputStream) throws IOException {
@@ -166,7 +165,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
 
         try {
             return getUnmarshaller(type, mediaType)
-                    .unmarshal(getSAXSource(spf.provide(), entityStream));
+                    .unmarshal(getSAXSource(spf.get(), entityStream));
         } catch (UnmarshalException ex) {
             throw new BadRequestException(ex);
         } catch (JAXBException ex) {

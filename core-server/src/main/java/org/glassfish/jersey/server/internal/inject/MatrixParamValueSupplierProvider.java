@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,10 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import javax.ws.rs.QueryParam;
+import java.util.List;
+
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.core.PathSegment;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -51,44 +54,46 @@ import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Value factory provider supporting the {@link QueryParam &#64;QueryParam} injection annotation.
+ * Value supplier provider supporting the {@link MatrixParam &#64;MatrixParam} injection annotation.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class QueryParamValueFactoryProvider extends AbstractValueFactoryProvider {
+final class MatrixParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     /**
-     * {@link QueryParam &#64;QueryParam} injection resolver.
+     * {@link MatrixParam &#64;MatrixParam} injection resolver.
      */
     @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<QueryParam> {
+    static final class InjectionResolver extends ParamInjectionResolver<MatrixParam> {
 
         /**
-         * Create new {@link QueryParam &#64;QueryParam} injection resolver.
+         * Create new {@link MatrixParam &#64;MatrixParam} injection resolver.
          */
         public InjectionResolver() {
-            super(QueryParamValueFactoryProvider.class);
+            super(MatrixParamValueSupplierProvider.class);
         }
     }
 
-    private static final class QueryParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
+    private static final class MatrixParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
 
-        QueryParamValueFactory(MultivaluedParameterExtractor<?> extractor, boolean decode) {
+        MatrixParamValueSupplier(MultivaluedParameterExtractor<?> extractor, boolean decode) {
             this.extractor = extractor;
             this.decode = decode;
         }
 
         @Override
-        public Object provide() {
+        public Object get() {
+            List<PathSegment> l = getContainerRequest().getUriInfo().getPathSegments(decode);
+            PathSegment p = l.get(l.size() - 1);
             try {
-                return extractor.extract(getContainerRequest().getUriInfo().getQueryParameters(decode));
+                return extractor.extract(p.getMatrixParameters());
             } catch (ExtractorException e) {
-                throw new ParamException.QueryParamException(e.getCause(),
+                throw new ParamException.MatrixParamException(e.getCause(),
                         extractor.getName(), extractor.getDefaultValueString());
             }
         }
@@ -101,15 +106,15 @@ final class QueryParamValueFactoryProvider extends AbstractValueFactoryProvider 
      * @param locator HK2 service locator.
      */
     @Inject
-    public QueryParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
-        super(mpep, locator, Parameter.Source.QUERY);
+    public MatrixParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.MATRIX);
     }
 
     @Override
-    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
-            // Invalid query parameter name
+            // Invalid header parameter name
             return null;
         }
 
@@ -118,6 +123,6 @@ final class QueryParamValueFactoryProvider extends AbstractValueFactoryProvider 
             return null;
         }
 
-        return new QueryParamValueFactory(e, !parameter.isEncoded());
+        return new MatrixParamValueSupplier(e, !parameter.isEncoded());
     }
 }

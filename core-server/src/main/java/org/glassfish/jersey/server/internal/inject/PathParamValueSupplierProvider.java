@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,12 +56,12 @@ import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * {@link PathParam &#64;PathParam} injection value factory provider.
+ * {@link PathParam &#64;PathParam} injection value supplier provider.
  *
  * @author Paul Sandoz
  */
 @Singleton
-final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
+final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     /**
      * {@link PathParam &#64;PathParam} injection resolver.
@@ -73,22 +73,22 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
          * Create new {@link PathParam &#64;PathParam} injection resolver.
          */
         public InjectionResolver() {
-            super(PathParamValueFactoryProvider.class);
+            super(PathParamValueSupplierProvider.class);
         }
     }
 
-    private static final class PathParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
+    private static final class PathParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
 
-        PathParamValueFactory(MultivaluedParameterExtractor<?> extractor, boolean decode) {
+        PathParamValueSupplier(MultivaluedParameterExtractor<?> extractor, boolean decode) {
             this.extractor = extractor;
             this.decode = decode;
         }
 
         @Override
-        public Object provide() {
+        public Object get() {
             try {
                 return extractor.extract(getContainerRequest().getUriInfo().getPathParameters(decode));
             } catch (ExtractorException e) {
@@ -97,18 +97,18 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
     }
 
-    private static final class PathParamPathSegmentValueFactory extends AbstractContainerRequestValueFactory<PathSegment> {
+    private static final class PathParamPathSegmentValueSupplier extends AbstractContainerRequestValueSupplier<PathSegment> {
 
         private final String name;
         private final boolean decode;
 
-        PathParamPathSegmentValueFactory(String name, boolean decode) {
+        PathParamPathSegmentValueSupplier(String name, boolean decode) {
             this.name = name;
             this.decode = decode;
         }
 
         @Override
-        public PathSegment provide() {
+        public PathSegment get() {
             List<PathSegment> ps = getContainerRequest().getUriInfo().getPathSegments(name, decode);
             if (ps.isEmpty()) {
                 return null;
@@ -117,19 +117,19 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
     }
 
-    private static final class PathParamListPathSegmentValueFactory
-            extends AbstractContainerRequestValueFactory<List<PathSegment>> {
+    private static final class PathParamListPathSegmentValueSupplier
+            extends AbstractContainerRequestValueSupplier<List<PathSegment>> {
 
         private final String name;
         private final boolean decode;
 
-        PathParamListPathSegmentValueFactory(String name, boolean decode) {
+        PathParamListPathSegmentValueSupplier(String name, boolean decode) {
             this.name = name;
             this.decode = decode;
         }
 
         @Override
-        public List<PathSegment> provide() {
+        public List<PathSegment> get() {
             return getContainerRequest().getUriInfo().getPathSegments(name, decode);
         }
     }
@@ -141,12 +141,12 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
      * @param locator HK2 service locator.
      */
     @Inject
-    public PathParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+    public PathParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
         super(mpep, locator, Parameter.Source.PATH);
     }
 
     @Override
-    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
             // Invalid URI parameter name
@@ -155,12 +155,12 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
         final Class<?> rawParameterType = parameter.getRawType();
         if (rawParameterType == PathSegment.class) {
-            return new PathParamPathSegmentValueFactory(parameterName, !parameter.isEncoded());
+            return new PathParamPathSegmentValueSupplier(parameterName, !parameter.isEncoded());
         } else if (rawParameterType == List.class && parameter.getType() instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) parameter.getType();
             Type[] targs = pt.getActualTypeArguments();
             if (targs.length == 1 && targs[0] == PathSegment.class) {
-                return new PathParamListPathSegmentValueFactory(
+                return new PathParamListPathSegmentValueSupplier(
                         parameterName, !parameter.isEncoded());
             }
         }
@@ -170,6 +170,6 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
             return null;
         }
 
-        return new PathParamValueFactory(e, !parameter.isEncoded());
+        return new PathParamValueSupplier(e, !parameter.isEncoded());
     }
 }

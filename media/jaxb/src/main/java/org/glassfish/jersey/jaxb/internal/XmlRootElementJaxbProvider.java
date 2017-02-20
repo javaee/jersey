@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,6 +47,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Providers;
 
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -54,8 +55,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
-
-import org.glassfish.hk2.api.Factory;
 
 /**
  * Base XML-based message body provider for JAXB {@link XmlRootElement root elements}
@@ -67,15 +66,15 @@ import org.glassfish.hk2.api.Factory;
 public abstract class XmlRootElementJaxbProvider extends AbstractRootElementJaxbProvider {
 
     // Delay construction of factory
-    private final Factory<SAXParserFactory> spf;
+    private final Provider<SAXParserFactory> spf;
 
-    XmlRootElementJaxbProvider(Factory<SAXParserFactory> spf, Providers ps) {
+    XmlRootElementJaxbProvider(Provider<SAXParserFactory> spf, Providers ps) {
         super(ps);
 
         this.spf = spf;
     }
 
-    XmlRootElementJaxbProvider(Factory<SAXParserFactory> spf, Providers ps, MediaType mt) {
+    XmlRootElementJaxbProvider(Provider<SAXParserFactory> spf, Providers ps, MediaType mt) {
         super(ps, mt);
 
         this.spf = spf;
@@ -91,7 +90,7 @@ public abstract class XmlRootElementJaxbProvider extends AbstractRootElementJaxb
     @Singleton
     public static final class App extends XmlRootElementJaxbProvider {
 
-        public App(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
+        public App(@Context Provider<SAXParserFactory> spf, @Context Providers ps) {
             super(spf, ps, MediaType.APPLICATION_XML_TYPE);
         }
     }
@@ -106,7 +105,7 @@ public abstract class XmlRootElementJaxbProvider extends AbstractRootElementJaxb
     @Singleton
     public static final class Text extends XmlRootElementJaxbProvider {
 
-        public Text(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
+        public Text(@Context Provider<SAXParserFactory> spf, @Context Providers ps) {
             super(spf, ps, MediaType.TEXT_XML_TYPE);
         }
     }
@@ -121,7 +120,7 @@ public abstract class XmlRootElementJaxbProvider extends AbstractRootElementJaxb
     @Singleton
     public static final class General extends XmlRootElementJaxbProvider {
 
-        public General(@Context Factory<SAXParserFactory> spf, @Context Providers ps) {
+        public General(@Context Provider<SAXParserFactory> spf, @Context Providers ps) {
             super(spf, ps);
         }
 
@@ -135,7 +134,7 @@ public abstract class XmlRootElementJaxbProvider extends AbstractRootElementJaxb
     protected Object readFrom(Class<Object> type, MediaType mediaType,
             Unmarshaller u, InputStream entityStream)
             throws JAXBException {
-        final SAXSource s = getSAXSource(spf.provide(), entityStream);
+        final SAXSource s = getSAXSource(spf.get(), entityStream);
         if (type.isAnnotationPresent(XmlRootElement.class)) {
             return u.unmarshal(s);
         } else {

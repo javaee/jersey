@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -94,6 +94,7 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
@@ -136,7 +137,6 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -214,29 +214,19 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
 
     private class ApplicationBinder extends AbstractBinder {
 
-        private class JaxrsApplicationProvider implements Factory<Application> {
+        private class JaxrsApplicationProvider extends SupplierFactory<Application> {
 
             @Override
             public Application provide() {
                 return ApplicationHandler.this.application;
             }
-
-            @Override
-            public void dispose(final Application instance) {
-                //not used
-            }
         }
 
-        private class RuntimeConfigProvider implements Factory<ServerConfig> {
+        private class RuntimeConfigProvider extends SupplierFactory<ServerConfig> {
 
             @Override
             public ServerConfig provide() {
                 return ApplicationHandler.this.runtimeConfig;
-            }
-
-            @Override
-            public void dispose(final ServerConfig instance) {
-                //not used
             }
         }
 

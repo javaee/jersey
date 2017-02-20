@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,13 +39,13 @@
  */
 package org.glassfish.jersey.server.spi.internal;
 
+import java.util.function.Supplier;
+
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.spi.Contract;
-
-import org.glassfish.hk2.api.Factory;
 
 /**
  * Parameter value factory SPI.
@@ -55,17 +55,17 @@ import org.glassfish.hk2.api.Factory;
  */
 @Contract
 @ConstrainedTo(RuntimeType.SERVER)
-public interface ValueFactoryProvider {
+public interface ValueSupplierProvider {
 
     /**
-     * Get an injected value factory for the parameter. May return {@code null}
-     * in case the parameter is not supported by the value factory provider.
+     * Get an injected value supplier for the parameter. May return {@code null}
+     * in case the parameter is not supported by the value supplier provider.
      *
-     * @param parameter parameter requesting the value factory instance.
-     * @return injected parameter value factory. Returns {@code null} if parameter
+     * @param parameter parameter requesting the value supplier instance.
+     * @return injected parameter value supplier. Returns {@code null} if parameter
      *         is not supported.
      */
-    public Factory<?> getValueFactory(Parameter parameter);
+    Supplier<?> getValueSupplier(Parameter parameter);
 
     /**
      * Gets the priority of this provider.
@@ -74,17 +74,17 @@ public interface ValueFactoryProvider {
      * @see PriorityType
      * @see Priority
      */
-    public PriorityType getPriority();
+    PriorityType getPriority();
 
     /**
      * Priorities are intended to be used as a means to determine the order in which objects are considered whether they are
-     * suitable for a particular action or not (e.g. providing a service like creating a value factory for an injectable
+     * suitable for a particular action or not (e.g. providing a service like creating a value supplier for an injectable
      * parameter).
      * The higher the weight of a priority is the sooner should be an object with this priority examined.
      * <p/>
      * If two objects are of the same priority there is no guarantee which one comes first.
      *
-     * @see org.glassfish.jersey.server.spi.internal.ValueFactoryProvider.Priority
+     * @see ValueSupplierProvider.Priority
      */
     interface PriorityType {
 
@@ -98,7 +98,7 @@ public interface ValueFactoryProvider {
     }
 
     /**
-     * Enumeration of priorities for providers (e.g. {@code ValueFactoryProvider}). At first providers with the {@code HIGH}
+     * Enumeration of priorities for providers (e.g. {@code ValueSupplierProvider}). At first providers with the {@code HIGH}
      * priority are examined then those with {@code NORMAL} priority and at last the ones with the {@code LOW} priority.
      */
     enum Priority implements PriorityType {

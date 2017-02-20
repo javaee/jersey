@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,8 +43,8 @@ package org.glassfish.jersey.tests.integration.jersey2167;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueFactory;
-import org.glassfish.jersey.server.internal.inject.AbstractValueFactoryProvider;
+import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueSupplier;
+import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
 import org.glassfish.jersey.server.model.Parameter;
@@ -53,35 +53,35 @@ import org.glassfish.hk2.api.ServiceLocator;
 
 
 /**
- * Custom annotation value factory provider for JERSEY-2167 reproducer.
+ * Custom annotation value supplier provider for JERSEY-2167 reproducer.
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 @Singleton
-public class MyValueFactoryProvider extends AbstractValueFactoryProvider {
+public class MyValueSupplierProvider extends AbstractValueSupplierProvider {
 
     @Inject
-    public MyValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+    public MyValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
         super(mpep, locator, Parameter.Source.UNKNOWN);
     }
 
     @Singleton
     static final class InjectionResolver extends ParamInjectionResolver<MyAnnotation> {
         public InjectionResolver() {
-            super(MyValueFactoryProvider.class);
+            super(MyValueSupplierProvider.class);
         }
     }
 
-    private static final class MyValueFactory extends AbstractContainerRequestValueFactory<Object> {
+    private static final class MyValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
         @Override
-        public Object provide() {
+        public Object get() {
             // returns some testing value
             return "injected timestamp=" + System.currentTimeMillis();
         }
     }
 
     @Override
-    protected AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
-        return new MyValueFactory();
+    protected AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
+        return new MyValueSupplier();
     }
 }

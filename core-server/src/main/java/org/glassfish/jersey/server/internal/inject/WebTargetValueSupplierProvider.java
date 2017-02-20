@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -78,11 +78,11 @@ import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Value factory provider supporting the {@link Uri} injection annotation.
+ * Value supplier provider supporting the {@link Uri} injection annotation.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
+final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider {
 
     private final Configuration serverConfig;
     private final ConcurrentMap<BindingModel, Value<ManagedClient>> managedClients;
@@ -240,22 +240,22 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
          * Create new injection resolver.
          */
         public InjectionResolver() {
-            super(WebTargetValueFactoryProvider.class);
+            super(WebTargetValueSupplierProvider.class);
         }
     }
 
-    private static final class WebTargetValueFactory extends AbstractContainerRequestValueFactory<WebTarget> {
+    private static final class WebTargetValueSupplier extends AbstractContainerRequestValueSupplier<WebTarget> {
 
         private final String uri;
         private final Value<ManagedClient> client;
 
-        WebTargetValueFactory(String uri, Value<ManagedClient> client) {
+        WebTargetValueSupplier(String uri, Value<ManagedClient> client) {
             this.uri = uri;
             this.client = client;
         }
 
         @Override
-        public WebTarget provide() {
+        public WebTarget get() {
             // no need for try-catch - unlike for @*Param annotations, any issues with @Uri would usually be caused
             // by incorrect server code, so the default runtime exception mapping to 500 is appropriate
             final ExtendedUriInfo uriInfo = getContainerRequest().getUriInfo();
@@ -291,7 +291,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
      * @param serverConfig server-side configuration.
      */
     @Inject
-    public WebTargetValueFactoryProvider(final ServiceLocator locator, @Context final Configuration serverConfig) {
+    public WebTargetValueSupplierProvider(final ServiceLocator locator, @Context final Configuration serverConfig) {
         super(null, locator, Parameter.Source.URI);
 
         this.serverConfig = serverConfig;
@@ -331,11 +331,11 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
     }
 
     @Override
-    protected AbstractContainerRequestValueFactory<?> createValueFactory(final Parameter parameter) {
-        return Errors.processWithException(new Producer<AbstractContainerRequestValueFactory<?>>() {
+    protected AbstractContainerRequestValueSupplier<?> createValueSupplier(final Parameter parameter) {
+        return Errors.processWithException(new Producer<AbstractContainerRequestValueSupplier<?>>() {
 
             @Override
-            public AbstractContainerRequestValueFactory<?> call() {
+            public AbstractContainerRequestValueSupplier<?> call() {
                 String targetUriTemplate = parameter.getSourceName();
                 if (targetUriTemplate == null || targetUriTemplate.length() == 0) {
                     // Invalid URI parameter name
@@ -386,7 +386,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
                             client = previous;
                         }
                     }
-                    return new WebTargetValueFactory(targetUriTemplate, client);
+                    return new WebTargetValueSupplier(targetUriTemplate, client);
                 } else {
                     Errors.warning(this, LocalizationMessages.UNSUPPORTED_URI_INJECTION_TYPE(rawParameterType));
                     return null;
