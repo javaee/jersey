@@ -41,16 +41,17 @@
 package org.glassfish.jersey.tests.integration.jersey2167;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueSupplier;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.inject.AbstractRequestDerivedValueSupplier;
 import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
 import org.glassfish.jersey.server.model.Parameter;
 
 import org.glassfish.hk2.api.ServiceLocator;
-
 
 /**
  * Custom annotation value supplier provider for JERSEY-2167 reproducer.
@@ -65,23 +66,32 @@ public class MyValueSupplierProvider extends AbstractValueSupplierProvider {
         super(mpep, locator, Parameter.Source.UNKNOWN);
     }
 
+    @Override
+    protected AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            Parameter parameter,
+            Provider<ContainerRequest> requestProvider) {
+
+        return new MyValueSupplier(requestProvider);
+    }
+
     @Singleton
     static final class InjectionResolver extends ParamInjectionResolver<MyAnnotation> {
+
         public InjectionResolver() {
             super(MyValueSupplierProvider.class);
         }
     }
 
-    private static final class MyValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
+    private static final class MyValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
+
+        public MyValueSupplier(final Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+        }
+
         @Override
         public Object get() {
             // returns some testing value
             return "injected timestamp=" + System.currentTimeMillis();
         }
-    }
-
-    @Override
-    protected AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
-        return new MyValueSupplier();
     }
 }

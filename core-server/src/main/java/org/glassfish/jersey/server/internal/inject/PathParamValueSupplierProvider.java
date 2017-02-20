@@ -47,9 +47,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.PathSegment;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.ExtractorException;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException.PathParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
@@ -62,6 +64,47 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 @Singleton
 final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider {
+
+    /**
+     * Injection constructor.
+     *
+     * @param mpep    multivalued map parameter extractor provider.
+     * @param locator HK2 service locator.
+     */
+    @Inject
+    public PathParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.PATH);
+    }
+
+    @Override
+    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            Parameter parameter,
+            Provider<ContainerRequest> requestProvider) {
+
+        String parameterName = parameter.getSourceName();
+        if (parameterName == null || parameterName.length() == 0) {
+            // Invalid URI parameter name
+            return null;
+        }
+
+        final Class<?> rawParameterType = parameter.getRawType();
+        if (rawParameterType == PathSegment.class) {
+            return new PathParamPathSegmentValueSupplier(parameterName, !parameter.isEncoded(), requestProvider);
+        } else if (rawParameterType == List.class && parameter.getType() instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) parameter.getType();
+            Type[] targs = pt.getActualTypeArguments();
+            if (targs.length == 1 && targs[0] == PathSegment.class) {
+                return new PathParamListPathSegmentValueSupplier(parameterName, !parameter.isEncoded(), requestProvider);
+            }
+        }
+
+        MultivaluedParameterExtractor<?> e = get(parameter);
+        if (e == null) {
+            return null;
+        }
+
+        return new PathParamValueSupplier(e, !parameter.isEncoded(), requestProvider);
+    }
 
     /**
      * {@link PathParam &#64;PathParam} injection resolver.
@@ -77,12 +120,16 @@ final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider
         }
     }
 
-    private static final class PathParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
+    private static final class PathParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
 
-        PathParamValueSupplier(MultivaluedParameterExtractor<?> extractor, boolean decode) {
+        PathParamValueSupplier(MultivaluedParameterExtractor<?> extractor,
+                               boolean decode,
+                               Provider<ContainerRequest> requestProvider) {
+
+            super(requestProvider);
             this.extractor = extractor;
             this.decode = decode;
         }
@@ -90,26 +137,28 @@ final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider
         @Override
         public Object get() {
             try {
-                return extractor.extract(getContainerRequest().getUriInfo().getPathParameters(decode));
+                return extractor.extract(getRequest().getUriInfo().getPathParameters(decode));
             } catch (ExtractorException e) {
                 throw new PathParamException(e.getCause(), extractor.getName(), extractor.getDefaultValueString());
             }
         }
     }
 
-    private static final class PathParamPathSegmentValueSupplier extends AbstractContainerRequestValueSupplier<PathSegment> {
+    private static final class PathParamPathSegmentValueSupplier extends AbstractRequestDerivedValueSupplier<PathSegment> {
 
         private final String name;
         private final boolean decode;
 
-        PathParamPathSegmentValueSupplier(String name, boolean decode) {
+        PathParamPathSegmentValueSupplier(String name, boolean decode, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.name = name;
             this.decode = decode;
         }
 
         @Override
         public PathSegment get() {
-            List<PathSegment> ps = getContainerRequest().getUriInfo().getPathSegments(name, decode);
+            List<PathSegment> ps = getRequest().getUriInfo().getPathSegments(name, decode);
             if (ps.isEmpty()) {
                 return null;
             }
@@ -118,58 +167,21 @@ final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider
     }
 
     private static final class PathParamListPathSegmentValueSupplier
-            extends AbstractContainerRequestValueSupplier<List<PathSegment>> {
+            extends AbstractRequestDerivedValueSupplier<List<PathSegment>> {
 
         private final String name;
         private final boolean decode;
 
-        PathParamListPathSegmentValueSupplier(String name, boolean decode) {
+        PathParamListPathSegmentValueSupplier(String name, boolean decode, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.name = name;
             this.decode = decode;
         }
 
         @Override
         public List<PathSegment> get() {
-            return getContainerRequest().getUriInfo().getPathSegments(name, decode);
+            return getRequest().getUriInfo().getPathSegments(name, decode);
         }
-    }
-
-    /**
-     * Injection constructor.
-     *
-     * @param mpep    multivalued map parameter extractor provider.
-     * @param locator HK2 service locator.
-     */
-    @Inject
-    public PathParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
-        super(mpep, locator, Parameter.Source.PATH);
-    }
-
-    @Override
-    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
-        String parameterName = parameter.getSourceName();
-        if (parameterName == null || parameterName.length() == 0) {
-            // Invalid URI parameter name
-            return null;
-        }
-
-        final Class<?> rawParameterType = parameter.getRawType();
-        if (rawParameterType == PathSegment.class) {
-            return new PathParamPathSegmentValueSupplier(parameterName, !parameter.isEncoded());
-        } else if (rawParameterType == List.class && parameter.getType() instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) parameter.getType();
-            Type[] targs = pt.getActualTypeArguments();
-            if (targs.length == 1 && targs[0] == PathSegment.class) {
-                return new PathParamListPathSegmentValueSupplier(
-                        parameterName, !parameter.isEncoded());
-            }
-        }
-
-        MultivaluedParameterExtractor<?> e = get(parameter);
-        if (e == null) {
-            return null;
-        }
-
-        return new PathParamValueSupplier(e, !parameter.isEncoded());
     }
 }

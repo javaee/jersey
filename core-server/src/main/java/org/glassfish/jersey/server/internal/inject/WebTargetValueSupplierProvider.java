@@ -43,7 +43,6 @@ import java.lang.annotation.Annotation;
 import java.security.AccessController;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -57,6 +56,7 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.Errors;
@@ -67,6 +67,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ClientBinding;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -75,7 +76,6 @@ import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.base.Predicate;
 import jersey.repackaged.com.google.common.collect.Collections2;
 import jersey.repackaged.com.google.common.collect.Maps;
@@ -249,12 +249,14 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
         }
     }
 
-    private static final class WebTargetValueSupplier extends AbstractContainerRequestValueSupplier<WebTarget> {
+    private static final class WebTargetValueSupplier extends AbstractRequestDerivedValueSupplier<WebTarget> {
 
         private final String uri;
         private final Value<ManagedClient> client;
 
-        WebTargetValueSupplier(String uri, Value<ManagedClient> client) {
+        WebTargetValueSupplier(String uri, Value<ManagedClient> client, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.uri = uri;
             this.client = client;
         }
@@ -263,16 +265,10 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
         public WebTarget get() {
             // no need for try-catch - unlike for @*Param annotations, any issues with @Uri would usually be caused
             // by incorrect server code, so the default runtime exception mapping to 500 is appropriate
-            final ExtendedUriInfo uriInfo = getContainerRequest().getUriInfo();
+            final ExtendedUriInfo uriInfo = getRequest().getUriInfo();
 
-            final Map<String, Object> pathParamValues = Maps.transformValues(uriInfo.getPathParameters(),
-                    new Function<List<String>, Object>() {
-
-                        @Override
-                        public Object apply(List<String> input) {
-                            return input.isEmpty() ? null : input.get(0);
-                        }
-                    });
+            final Map<String, Object> pathParamValues =
+                    Maps.transformValues(uriInfo.getPathParameters(), input -> input.isEmpty() ? null : input.get(0));
             JerseyUriBuilder uriBuilder = new JerseyUriBuilder().uri(this.uri).resolveTemplates(pathParamValues);
 
             final ManagedClient managedClient = client.get();
@@ -335,11 +331,14 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
     }
 
     @Override
-    protected AbstractContainerRequestValueSupplier<?> createValueSupplier(final Parameter parameter) {
-        return Errors.processWithException(new Producer<AbstractContainerRequestValueSupplier<?>>() {
+    protected AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            final Parameter parameter,
+            final Provider<ContainerRequest> requestProvider) {
+
+        return Errors.processWithException(new Producer<AbstractRequestDerivedValueSupplier<?>>() {
 
             @Override
-            public AbstractContainerRequestValueSupplier<?> call() {
+            public AbstractRequestDerivedValueSupplier<?> call() {
                 String targetUriTemplate = parameter.getSourceName();
                 if (targetUriTemplate == null || targetUriTemplate.length() == 0) {
                     // Invalid URI parameter name
@@ -392,7 +391,7 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
                             client = previous;
                         }
                     }
-                    return new WebTargetValueSupplier(targetUriTemplate, client);
+                    return new WebTargetValueSupplier(targetUriTemplate, client, requestProvider);
                 } else {
                     Errors.warning(this, LocalizationMessages.UNSUPPORTED_URI_INJECTION_TYPE(rawParameterType));
                     return null;

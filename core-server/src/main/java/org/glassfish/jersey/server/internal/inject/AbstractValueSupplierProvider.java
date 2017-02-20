@@ -44,6 +44,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import javax.inject.Provider;
+
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
@@ -63,6 +67,7 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
     private final MultivaluedParameterExtractorProvider mpep;
     private final ServiceLocator locator;
     private final Set<Parameter.Source> compatibleSources;
+    private final Provider<ContainerRequest> requestProvider;
 
     /**
      * Initialize the provider.
@@ -76,31 +81,20 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
                                             Parameter.Source... compatibleSources) {
         this.mpep = mpep;
         this.locator = locator;
-        this.compatibleSources = new HashSet<Parameter.Source>(Arrays.asList(compatibleSources));
+        this.compatibleSources = new HashSet<>(Arrays.asList(compatibleSources));
+
+        this.requestProvider = Injections.getProvider(locator, ContainerRequest.class);
     }
 
     /**
-     * Get a parameter extractor that ignores default value set on the parameter.
-     *
-     * @param parameter parameter supported by the returned extractor.
-     * @return extractor supporting the parameter. The returned instance ignores
-     *         any default values set on the parameter.
-     * @see #get(org.glassfish.jersey.server.model.Parameter)
-     */
-    protected final MultivaluedParameterExtractor<?> getWithoutDefaultValue(Parameter parameter) {
-        return mpep.getWithoutDefaultValue(parameter);
-    }
-
-    /**
-     * Get a parameter extractor. Unlike the extractor returned by the
-     * {@link #getWithoutDefaultValue(org.glassfish.jersey.server.model.Parameter)}
-     * method, the extractor returned from this method will use the default value
+     * Get a parameter extractor.
+     * The extractor returned from this method will use the default value
      * set on the parameter, in case the parameter is not found in the supplied
      * {@link javax.ws.rs.core.MultivaluedMap multivalued parameter map}.
      *
      * @param parameter parameter supported by the returned extractor.
      * @return extractor supporting the parameter. The returned instance ignores
-     *         any default values set on the parameter.
+     * any default values set on the parameter.
      */
     protected final MultivaluedParameterExtractor<?> get(Parameter parameter) {
         return mpep.get(parameter);
@@ -110,10 +104,13 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
      * Create a value supplier for the parameter. May return {@code null} in case
      * the parameter is not supported by the value supplier provider.
      *
-     * @param parameter parameter requesting the value supplier instance.
+     * @param parameter       parameter requesting the value supplier instance.
+     * @param requestProvider container request provider that provides request context specific access to the
+     *                        {@link ContainerRequest} instance.
      * @return parameter value supplier. Returns {@code null} if parameter is not supported.
      */
-    protected abstract Supplier<?> createValueSupplier(Parameter parameter);
+    protected abstract AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            Parameter parameter, Provider<ContainerRequest> requestProvider);
 
     /**
      * Get an injected value supplier for the parameter. May return {@code null}
@@ -121,7 +118,7 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
      *
      * @param parameter parameter requesting the value supplier instance.
      * @return injected parameter value supplier. Returns {@code null} if parameter
-     *         is not supported.
+     * is not supported.
      */
     @Override
     public final Supplier<?> getValueSupplier(Parameter parameter) {
@@ -129,8 +126,7 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
             // not compatible
             return null;
         }
-
-        final Supplier<?> valueSupplier = createValueSupplier(parameter);
+        final Supplier<?> valueSupplier = createValueSupplier(parameter, requestProvider);
         if (valueSupplier != null) {
             locator.inject(valueSupplier);
         }

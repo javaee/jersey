@@ -43,9 +43,11 @@ package org.glassfish.jersey.server.internal.inject;
 import javax.ws.rs.BeanParam;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
@@ -81,7 +83,7 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
         }
     }
 
-    private static final class BeanParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
+    private static final class BeanParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
         private final Parameter parameter;
         private final ServiceLocator locator;
 
@@ -100,7 +102,9 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
                     }
                 });
 
-        private BeanParamValueSupplier(ServiceLocator locator, Parameter parameter) {
+        private BeanParamValueSupplier(ServiceLocator locator, Parameter parameter, Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+
             this.locator = locator;
             this.parameter = parameter;
         }
@@ -131,7 +135,10 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
     }
 
     @Override
-    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
-        return new BeanParamValueSupplier(locator, parameter);
+    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
+            Parameter parameter,
+            Provider<ContainerRequest> requestProvider) {
+
+        return new BeanParamValueSupplier(locator, parameter, requestProvider);
     }
 }

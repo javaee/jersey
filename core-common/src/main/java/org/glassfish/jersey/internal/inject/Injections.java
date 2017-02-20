@@ -41,6 +41,8 @@ package org.glassfish.jersey.internal.inject;
 
 import javax.ws.rs.WebApplicationException;
 
+import javax.inject.Provider;
+
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.Factory;
@@ -185,6 +187,18 @@ public class Injections {
 
             throw e;
         }
+    }
+
+    /**
+     * Get a provider for a contract.
+     *
+     * @param <T>            instance type.
+     * @param serviceLocator HK2 service locator.
+     * @param clazz          class of the instance to be provider.
+     * @return provider of contract class.
+     */
+    public static <T> Provider<T> getProvider(final ServiceLocator serviceLocator, final Class<T> clazz) {
+        return () -> serviceLocator.getService(clazz);
     }
 
     /**
