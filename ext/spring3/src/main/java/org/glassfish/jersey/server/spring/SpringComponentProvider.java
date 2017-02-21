@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,17 +46,18 @@ import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 
 import org.jvnet.hk2.spring.bridge.api.SpringBridge;
 import org.jvnet.hk2.spring.bridge.api.SpringIntoHK2Bridge;
+
 import org.springframework.aop.framework.Advised;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -173,7 +174,7 @@ public class SpringComponentProvider implements ComponentProvider {
         return ctx = new ClassPathXmlApplicationContext(contextConfigLocation, "jersey-spring-applicationContext.xml");
     }
 
-    private static class SpringManagedBeanFactory implements Factory {
+    private static class SpringManagedBeanFactory extends SupplierFactory {
 
         private final ApplicationContext ctx;
         private final ServiceLocator locator;
@@ -201,10 +202,6 @@ public class SpringComponentProvider implements ComponentProvider {
                 locator.inject(bean);
             }
             return bean;
-        }
-
-        @Override
-        public void dispose(Object instance) {
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,15 +42,15 @@ package org.glassfish.jersey.server.internal.inject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * A parameter value factory provider that provides parameter value factories
+ * A parameter value supplier provider that provides parameter value factories
  * which are using {@link MultivaluedParameterExtractorProvider} to extract parameter
  * values from the supplied {@link javax.ws.rs.core.MultivaluedMap multivalued
  * parameter map}.
@@ -58,7 +58,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class AbstractValueFactoryProvider implements ValueFactoryProvider {
+public abstract class AbstractValueSupplierProvider implements ValueSupplierProvider {
 
     private final MultivaluedParameterExtractorProvider mpep;
     private final ServiceLocator locator;
@@ -71,9 +71,9 @@ public abstract class AbstractValueFactoryProvider implements ValueFactoryProvid
      * @param locator           HK2 service locator.
      * @param compatibleSources compatible parameter sources.
      */
-    protected AbstractValueFactoryProvider(MultivaluedParameterExtractorProvider mpep,
-                                           ServiceLocator locator,
-                                           Parameter.Source... compatibleSources) {
+    protected AbstractValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+                                            ServiceLocator locator,
+                                            Parameter.Source... compatibleSources) {
         this.mpep = mpep;
         this.locator = locator;
         this.compatibleSources = new HashSet<Parameter.Source>(Arrays.asList(compatibleSources));
@@ -107,35 +107,34 @@ public abstract class AbstractValueFactoryProvider implements ValueFactoryProvid
     }
 
     /**
-     * Create a value factory for the parameter. May return {@code null} in case
-     * the parameter is not supported by the value factory provider.
+     * Create a value supplier for the parameter. May return {@code null} in case
+     * the parameter is not supported by the value supplier provider.
      *
-     * @param parameter parameter requesting the value factory instance.
-     * @return parameter value factory. Returns {@code null} if parameter is
-     *         not supported.
+     * @param parameter parameter requesting the value supplier instance.
+     * @return parameter value supplier. Returns {@code null} if parameter is not supported.
      */
-    protected abstract Factory<?> createValueFactory(Parameter parameter);
+    protected abstract Supplier<?> createValueSupplier(Parameter parameter);
 
     /**
-     * Get an injected value factory for the parameter. May return {@code null}
-     * in case the parameter is not supported by the value factory provider.
+     * Get an injected value supplier for the parameter. May return {@code null}
+     * in case the parameter is not supported by the value supplier provider.
      *
-     * @param parameter parameter requesting the value factory instance.
-     * @return injected parameter value factory. Returns {@code null} if parameter
+     * @param parameter parameter requesting the value supplier instance.
+     * @return injected parameter value supplier. Returns {@code null} if parameter
      *         is not supported.
      */
     @Override
-    public final Factory<?> getValueFactory(Parameter parameter) {
+    public final Supplier<?> getValueSupplier(Parameter parameter) {
         if (!compatibleSources.contains(parameter.getSource())) {
             // not compatible
             return null;
         }
 
-        final Factory<?> valueFactory = createValueFactory(parameter);
-        if (valueFactory != null) {
-            locator.inject(valueFactory);
+        final Supplier<?> valueSupplier = createValueSupplier(parameter);
+        if (valueSupplier != null) {
+            locator.inject(valueSupplier);
         }
-        return valueFactory;
+        return valueSupplier;
     }
 
     @Override

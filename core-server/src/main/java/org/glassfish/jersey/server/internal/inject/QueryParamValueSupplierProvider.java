@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,112 +39,85 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import java.util.Map;
-
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.QueryParam;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.ExtractorException;
-import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Value factory provider supporting the {@link CookieParam} injection annotation.
+ * Value supplier provider supporting the {@link QueryParam &#64;QueryParam} injection annotation.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider {
+final class QueryParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     /**
-     * Injection resolver for {@link CookieParam} annotation.
+     * {@link QueryParam &#64;QueryParam} injection resolver.
      */
     @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<CookieParam> {
+    static final class InjectionResolver extends ParamInjectionResolver<QueryParam> {
 
         /**
-         * Create new {@link CookieParam} annotation injection resolver.
+         * Create new {@link QueryParam &#64;QueryParam} injection resolver.
          */
         public InjectionResolver() {
-            super(CookieParamValueFactoryProvider.class);
+            super(QueryParamValueSupplierProvider.class);
         }
     }
 
-    private static final class CookieParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
+    private static final class QueryParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
+        private final boolean decode;
 
-        CookieParamValueFactory(MultivaluedParameterExtractor<?> extractor) {
+        QueryParamValueSupplier(MultivaluedParameterExtractor<?> extractor, boolean decode) {
             this.extractor = extractor;
+            this.decode = decode;
         }
 
         @Override
-        public Object provide() {
-            // TODO: cache?
-            MultivaluedMap<String, String> cookies = new MultivaluedStringMap();
-
-            for (Map.Entry<String, Cookie> e : getContainerRequest().getCookies().entrySet()) {
-                cookies.putSingle(e.getKey(), e.getValue().getValue());
-            }
-
+        public Object get() {
             try {
-                return extractor.extract(cookies);
-            } catch (ExtractorException ex) {
-                throw new ParamException.CookieParamException(ex.getCause(),
+                return extractor.extract(getContainerRequest().getUriInfo().getQueryParameters(decode));
+            } catch (ExtractorException e) {
+                throw new ParamException.QueryParamException(e.getCause(),
                         extractor.getName(), extractor.getDefaultValueString());
             }
         }
     }
 
-    private static final class CookieTypeParamValueFactory extends AbstractContainerRequestValueFactory<Cookie> {
-
-        private final String name;
-
-        CookieTypeParamValueFactory(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public Cookie provide() {
-            return getContainerRequest().getCookies().get(name);
-        }
-    }
-
     /**
-     * {@link CookieParam} annotation value factory provider injection constructor.
+     * Injection constructor.
      *
-     * @param mpep     multivalued parameter extractor provider.
-     * @param injector injector instance.
+     * @param mpep    multivalued map parameter extractor provider.
+     * @param locator HK2 service locator.
      */
     @Inject
-    public CookieParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.COOKIE);
+    public QueryParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
+        super(mpep, locator, Parameter.Source.QUERY);
     }
 
     @Override
-    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
-            // Invalid cookie parameter name
+            // Invalid query parameter name
             return null;
         }
 
-        if (parameter.getRawType() == Cookie.class) {
-            return new CookieTypeParamValueFactory(parameterName);
-        } else {
-            MultivaluedParameterExtractor e = get(parameter);
-            if (e == null) {
-                return null;
-            }
-            return new CookieParamValueFactory(e);
+        MultivaluedParameterExtractor e = get(parameter);
+        if (e == null) {
+            return null;
         }
+
+        return new QueryParamValueSupplier(e, !parameter.isEncoded());
     }
 }

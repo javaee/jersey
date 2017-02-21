@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -52,10 +53,9 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
@@ -73,7 +73,7 @@ import org.glassfish.hk2.utilities.cache.Computable;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Singleton
-class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
+class DelegatedInjectionValueSupplierProvider implements ValueSupplierProvider {
 
     private final ContextInjectionResolver resolver;
 
@@ -83,7 +83,7 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
      * @param locator HK2 service locator.
      */
     @Inject
-    public DelegatedInjectionValueFactoryProvider(ServiceLocator locator) {
+    public DelegatedInjectionValueSupplierProvider(ServiceLocator locator) {
         ContextInjectionResolver result = null;
         for (InjectionResolver r : Providers.getProviders(locator, InjectionResolver.class)) {
             if (ContextInjectionResolver.class.isInstance(r)) {
@@ -95,24 +95,13 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
     }
 
     @Override
-    public Factory<?> getValueFactory(final Parameter parameter) {
+    public Supplier<?> getValueSupplier(final Parameter parameter) {
         final Source paramSource = parameter.getSource();
         if (paramSource == Parameter.Source.CONTEXT) {
 
             final Injectee effectiveInjectee = getInjectee(parameter);
 
-            return new Factory<Object>() {
-
-                @Override
-                public Object provide() {
-                    return resolver.resolve(effectiveInjectee, null);
-                }
-
-                @Override
-                public void dispose(Object instance) {
-                    //not used
-                }
-            };
+            return (Supplier<Object>) () -> resolver.resolve(effectiveInjectee, null);
         }
         return null;
     }

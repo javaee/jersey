@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,7 +44,6 @@ import javax.ws.rs.core.Configuration;
 import javax.inject.Inject;
 import javax.xml.stream.XMLInputFactory;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerThread;
 
 /**
@@ -53,7 +52,7 @@ import org.glassfish.hk2.api.PerThread;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class XmlInputFactoryInjectionProvider extends AbstractXmlFactory implements Factory<XMLInputFactory> {
+public class XmlInputFactoryInjectionProvider extends AbstractXmlFactory<XMLInputFactory> {
 
     /**
      * Create new XML input factory provider.
@@ -76,10 +75,5 @@ public class XmlInputFactoryInjectionProvider extends AbstractXmlFactory impleme
         }
 
         return factory;
-    }
-
-    @Override
-    public void dispose(XMLInputFactory instance) {
-        //not used
     }
 }

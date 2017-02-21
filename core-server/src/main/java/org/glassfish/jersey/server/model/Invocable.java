@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,6 +53,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -309,7 +310,7 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
     }
 
     /**
-     * Returns list of {@link org.glassfish.jersey.server.spi.internal.ValueFactoryProvider value providers} which provides
+     * Returns list of {@link ValueSupplierProvider value providers} which provides
      * values for parameters of this Invocable returned by {@link #getParameters()}. Value providers are ordered in the same
      * order as parameters.
      *

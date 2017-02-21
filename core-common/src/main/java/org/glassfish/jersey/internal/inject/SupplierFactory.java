@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,76 +38,29 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.internal.inject;
+package org.glassfish.jersey.internal.inject;
 
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.server.internal.process.AsyncContext;
-import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+import java.util.function.Supplier;
 
 import org.glassfish.hk2.api.Factory;
 
 /**
- * Value factory provider supporting the {@link javax.ws.rs.container.Suspended} injection annotation.
+ * Abstract HK2 Factory that also implements Java 8 supplier interface.
+ *
+ * Concrete implementations of this class are also specific in a way that their supplied values do not require explicit disposal.
+ * IOW, the {@link Factory#dispose(Object) dispose} method implementation is empty.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class AsyncResponseValueFactoryProvider implements ValueFactoryProvider {
+public abstract class SupplierFactory<T> implements Supplier<T>, Factory<T> {
 
-    private final Provider<AsyncContext> asyncContextProvider;
-
-    /**
-     * {@link javax.ws.rs.container.Suspended} injection resolver.
-     */
-    static final class InjectionResolver extends ParamInjectionResolver<Suspended> {
-
-        /**
-         * Create new injection resolver.
-         */
-        public InjectionResolver() {
-            super(AsyncResponseValueFactoryProvider.class);
-        }
-    }
-
-    /**
-     * Initialize the provider.
-     *
-     * @param asyncContextProvider async processing context provider.
-     */
-    @Inject
-    public AsyncResponseValueFactoryProvider(Provider<AsyncContext> asyncContextProvider) {
-        this.asyncContextProvider = asyncContextProvider;
+    @Override
+    public final T get() {
+        return provide();
     }
 
     @Override
-    public Factory<?> getValueFactory(final Parameter parameter) {
-        if (parameter.getSource() != Parameter.Source.SUSPENDED) {
-            return null;
-        }
-        if (!AsyncResponse.class.isAssignableFrom(parameter.getRawType())) {
-            return null;
-        }
-
-        return new Factory<AsyncResponse>() {
-            @Override
-            public AsyncResponse provide() {
-                return asyncContextProvider.get();
-            }
-
-            @Override
-            public void dispose(AsyncResponse instance) {
-                // not used
-            }
-        };
-    }
-
-    @Override
-    public PriorityType getPriority() {
-        return Priority.NORMAL;
+    public final void dispose(final T instance) {
+        // NO OP
     }
 }

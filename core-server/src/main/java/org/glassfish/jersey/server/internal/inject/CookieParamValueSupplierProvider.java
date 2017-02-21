@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,90 +39,112 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import java.util.List;
+import java.util.Map;
 
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MultivaluedMap;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.ExtractorException;
+import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Value factory provider supporting the {@link MatrixParam &#64;MatrixParam} injection annotation.
+ * Value factory provider supporting the {@link CookieParam} injection annotation.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class MatrixParamValueFactoryProvider extends AbstractValueFactoryProvider {
+final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     /**
-     * {@link MatrixParam &#64;MatrixParam} injection resolver.
+     * Injection resolver for {@link CookieParam} annotation.
      */
     @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<MatrixParam> {
+    static final class InjectionResolver extends ParamInjectionResolver<CookieParam> {
 
         /**
-         * Create new {@link MatrixParam &#64;MatrixParam} injection resolver.
+         * Create new {@link CookieParam} annotation injection resolver.
          */
         public InjectionResolver() {
-            super(MatrixParamValueFactoryProvider.class);
+            super(CookieParamValueSupplierProvider.class);
         }
     }
 
-    private static final class MatrixParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
+    private static final class CookieParamValueSupplier extends AbstractContainerRequestValueSupplier<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
-        private final boolean decode;
 
-        MatrixParamValueFactory(MultivaluedParameterExtractor<?> extractor, boolean decode) {
+        CookieParamValueSupplier(MultivaluedParameterExtractor<?> extractor) {
             this.extractor = extractor;
-            this.decode = decode;
         }
 
         @Override
-        public Object provide() {
-            List<PathSegment> l = getContainerRequest().getUriInfo().getPathSegments(decode);
-            PathSegment p = l.get(l.size() - 1);
+        public Object get() {
+            // TODO: cache?
+            MultivaluedMap<String, String> cookies = new MultivaluedStringMap();
+
+            for (Map.Entry<String, Cookie> e : getContainerRequest().getCookies().entrySet()) {
+                cookies.putSingle(e.getKey(), e.getValue().getValue());
+            }
+
             try {
-                return extractor.extract(p.getMatrixParameters());
-            } catch (ExtractorException e) {
-                throw new ParamException.MatrixParamException(e.getCause(),
+                return extractor.extract(cookies);
+            } catch (ExtractorException ex) {
+                throw new ParamException.CookieParamException(ex.getCause(),
                         extractor.getName(), extractor.getDefaultValueString());
             }
         }
     }
 
+    private static final class CookieTypeParamValueSupplier extends AbstractContainerRequestValueSupplier<Cookie> {
+
+        private final String name;
+
+        CookieTypeParamValueSupplier(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public Cookie get() {
+            return getContainerRequest().getCookies().get(name);
+        }
+    }
+
     /**
-     * Injection constructor.
+     * {@link CookieParam} annotation value factory provider injection constructor.
      *
-     * @param mpep    multivalued map parameter extractor provider.
-     * @param locator HK2 service locator.
+     * @param mpep     multivalued parameter extractor provider.
+     * @param injector injector instance.
      */
     @Inject
-    public MatrixParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator locator) {
-        super(mpep, locator, Parameter.Source.MATRIX);
+    public CookieParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
+        super(mpep, injector, Parameter.Source.COOKIE);
     }
 
     @Override
-    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueSupplier<?> createValueSupplier(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
-            // Invalid header parameter name
+            // Invalid cookie parameter name
             return null;
         }
 
-        MultivaluedParameterExtractor e = get(parameter);
-        if (e == null) {
-            return null;
+        if (parameter.getRawType() == Cookie.class) {
+            return new CookieTypeParamValueSupplier(parameterName);
+        } else {
+            MultivaluedParameterExtractor e = get(parameter);
+            if (e == null) {
+                return null;
+            }
+            return new CookieParamValueSupplier(e);
         }
-
-        return new MatrixParamValueFactory(e, !parameter.isEncoded());
     }
 }
