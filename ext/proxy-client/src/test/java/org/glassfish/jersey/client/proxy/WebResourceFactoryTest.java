@@ -39,15 +39,29 @@
  */
 package org.glassfish.jersey.client.proxy;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
+
 import org.junit.Ignore;
 import org.junit.Test;
-
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.*;
-import java.util.*;
 
 import static org.glassfish.jersey.client.proxy.SpecialFormatter.SPECIAL_FORMATTER_PROPERTY_KEY;
 import static org.junit.Assert.assertEquals;
