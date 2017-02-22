@@ -298,7 +298,7 @@ public final class WebResourceFactory implements InvocationHandler {
 
         if (httpMethod == null) {
             // the method is a subresource locator
-            return WebResourceFactory.newResource(responseType, newTarget, true, headers, cookies, form, null);
+            return WebResourceFactory.newResource(responseType, newTarget, true, headers, cookies, form, invocationCallback);
         }
 
         // accepted media types
