@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,7 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.server.Uri;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.TypeLiteral;
@@ -127,36 +127,36 @@ public class ParameterInjectionBinder extends AbstractBinder {
         bind(MultivaluedParameterExtractorFactory.class).to(MultivaluedParameterExtractorProvider.class).in(Singleton.class);
 
         // Parameter injection value providers
-        bind(AsyncResponseValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(CookieParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(DelegatedInjectionValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(EntityParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(FormParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(HeaderParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(MatrixParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(PathParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(QueryParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(WebTargetValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(BeanParamValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
+        bind(AsyncResponseValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(CookieParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(DelegatedInjectionValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(EntityParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(FormParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(HeaderParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(MatrixParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(PathParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(QueryParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(WebTargetValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(BeanParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
 
         // Injection resolvers
-        bind(CookieParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<CookieParam>>() {
+        bind(CookieParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<CookieParam>>() {
         }).in(Singleton.class);
-        bind(FormParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<FormParam>>() {
+        bind(FormParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<FormParam>>() {
         }).in(Singleton.class);
-        bind(HeaderParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<HeaderParam>>() {
+        bind(HeaderParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<HeaderParam>>() {
         }).in(Singleton.class);
-        bind(MatrixParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<MatrixParam>>() {
+        bind(MatrixParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<MatrixParam>>() {
         }).in(Singleton.class);
-        bind(QueryParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<QueryParam>>() {
+        bind(QueryParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<QueryParam>>() {
         }).in(Singleton.class);
-        bind(PathParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<PathParam>>() {
+        bind(PathParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<PathParam>>() {
         }).in(Singleton.class);
-        bind(AsyncResponseValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<Suspended>>() {
+        bind(AsyncResponseValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<Suspended>>() {
         }).in(Singleton.class);
-        bind(WebTargetValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<Uri>>() {
+        bind(WebTargetValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<Uri>>() {
         }).in(Singleton.class);
-        bind(BeanParamValueFactoryProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<BeanParam>>() {
+        bind(BeanParamValueSupplierProvider.InjectionResolver.class).to(new TypeLiteral<InjectionResolver<BeanParam>>() {
         }).in(Singleton.class);
 
     }

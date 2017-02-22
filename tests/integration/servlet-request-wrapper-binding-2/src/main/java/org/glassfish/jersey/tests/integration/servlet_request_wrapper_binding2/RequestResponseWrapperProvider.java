@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
@@ -74,6 +73,7 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -85,7 +85,6 @@ import org.glassfish.jersey.servlet.internal.spi.RequestScopedInitializerProvide
 
 import org.glassfish.hk2.api.DescriptorType;
 import org.glassfish.hk2.api.DescriptorVisibility;
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -269,7 +268,7 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
         }
     }
 
-    private static class HttpServletResponseFactory implements Factory<HttpServletResponse> {
+    private static class HttpServletResponseFactory extends SupplierFactory<HttpServletResponse> {
         private final javax.inject.Provider<Ref<HttpServletResponseWrapper>> response;
 
         @Inject
@@ -471,9 +470,6 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
             };
         }
 
-        @Override
-        public void dispose(HttpServletResponse response) {
-        }
     }
 
     @SuppressWarnings("JavaDoc")

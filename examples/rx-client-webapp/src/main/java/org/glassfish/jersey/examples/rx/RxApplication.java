@@ -45,6 +45,9 @@ import javax.ws.rs.ext.ContextResolver;
 
 import org.glassfish.jersey.examples.rx.agent.AsyncAgentResource;
 import org.glassfish.jersey.examples.rx.agent.CompletionStageAgentResource;
+import org.glassfish.jersey.examples.rx.agent.FlowableAgentResource;
+import org.glassfish.jersey.examples.rx.agent.ListenableFutureAgentResource;
+import org.glassfish.jersey.examples.rx.agent.ObservableAgentResource;
 import org.glassfish.jersey.examples.rx.agent.SyncAgentResource;
 import org.glassfish.jersey.examples.rx.remote.CalculationResource;
 import org.glassfish.jersey.examples.rx.remote.DestinationResource;
@@ -70,9 +73,9 @@ public class RxApplication extends ResourceConfig {
         // Agent (Client) Resources.
         register(SyncAgentResource.class);
         register(AsyncAgentResource.class);
-        // TODO: reimplement RX support for RxJava and ListenableFuture
-        // register(ObservableAgentResource.class);
-        // register(ListenableFutureAgentResource.class);
+        register(ObservableAgentResource.class);
+        register(FlowableAgentResource.class);
+        register(ListenableFutureAgentResource.class);
         register(CompletionStageAgentResource.class);
 
         // Providers.

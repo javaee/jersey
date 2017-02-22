@@ -47,7 +47,6 @@ import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.ServletDeploymentContext;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -56,6 +55,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Invoke clients in Agent part of the application.
  *
  * @author Michal Gajdos
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class RxClientsTest extends JerseyTest {
 
@@ -104,13 +104,32 @@ public class RxClientsTest extends JerseyTest {
         System.out.println("Processing Time: " + agentResponse.getProcessingTime());
     }
 
-    @Ignore("TODO: reimplement RX support for RxJava")
     @Test
     public void testRxObservableClient() throws Exception {
         // warmup
         target("agent").path("observable").request().get();
 
         final Response response = target("agent").path("observable").request().get();
+        response.bufferEntity();
+
+        final AgentResponse agentResponse = response.readEntity(AgentResponse.class);
+
+        assertThat(agentResponse.getVisited().size(), is(5));
+        assertThat(agentResponse.getRecommended().size(), is(5));
+
+        assertThat(agentResponse.getProcessingTime() > 850, is(true));
+        assertThat(agentResponse.getProcessingTime() < 4500, is(true));
+
+        System.out.println(response.readEntity(String.class));
+        System.out.println("Processing Time: " + agentResponse.getProcessingTime());
+    }
+
+    @Test
+    public void testRxFlowableClient() throws Exception {
+        // warmup
+        target("agent").path("flowable").request().get();
+
+        final Response response = target("agent").path("flowable").request().get();
         response.bufferEntity();
 
         final AgentResponse agentResponse = response.readEntity(AgentResponse.class);

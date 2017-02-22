@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.ProcessingException;
@@ -56,7 +57,6 @@ import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.MultiException;
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -126,13 +126,13 @@ public final class ParameterValueHelper {
             return Collections.emptyList();
         }
 
-        List<ValueFactoryProvider> valueFactoryProviders = new ArrayList<ValueFactoryProvider>(
-                Providers.getProviders(locator, ValueFactoryProvider.class));
+        List<ValueSupplierProvider> valueSupplierProviders = new ArrayList<ValueSupplierProvider>(
+                Providers.getProviders(locator, ValueSupplierProvider.class));
 
-        Collections.sort(valueFactoryProviders, new Comparator<ValueFactoryProvider>() {
+        Collections.sort(valueSupplierProviders, new Comparator<ValueSupplierProvider>() {
 
             @Override
-            public int compare(ValueFactoryProvider o1, ValueFactoryProvider o2) {
+            public int compare(ValueSupplierProvider o1, ValueSupplierProvider o2) {
                 return o2.getPriority().getWeight() - o1.getPriority().getWeight();
             }
 
@@ -144,9 +144,9 @@ public final class ParameterValueHelper {
         for (final Parameter parameter : parameterized.getParameters()) {
             final Parameter.Source parameterSource = parameter.getSource();
             entityParamFound = entityParamFound || Parameter.Source.ENTITY == parameterSource;
-            final Factory<?> valueFactory = getValueFactory(valueFactoryProviders, parameter);
-            if (valueFactory != null) {
-                providers.add(wrapParamFactory(valueFactory, parameterSource));
+            final Supplier<?> valueSupplier = getParamValueSupplier(valueSupplierProviders, parameter);
+            if (valueSupplier != null) {
+                providers.add(wrapParamValueSupplier(valueSupplier, parameterSource));
             } else {
                 providers.add(null);
             }
@@ -157,12 +157,12 @@ public final class ParameterValueHelper {
             final int entityParamIndex = providers.lastIndexOf(null);
             final Parameter parameter = parameterized.getParameters().get(entityParamIndex);
             if (Parameter.Source.UNKNOWN == parameter.getSource() && !parameter.isQualified()) {
-                final Parameter overridenParameter = Parameter.overrideSource(parameter, Parameter.Source.ENTITY);
-                final Factory<?> valueFactory = getValueFactory(
-                        valueFactoryProviders,
-                        overridenParameter);
-                if (valueFactory != null) {
-                    providers.set(entityParamIndex, wrapParamFactory(valueFactory, overridenParameter.getSource()));
+                final Parameter overriddenParameter = Parameter.overrideSource(parameter, Parameter.Source.ENTITY);
+                final Supplier<?> valueSupplier = getParamValueSupplier(
+                        valueSupplierProviders,
+                        overriddenParameter);
+                if (valueSupplier != null) {
+                    providers.set(entityParamIndex, wrapParamValueSupplier(valueSupplier, overriddenParameter.getSource()));
                 } else {
                     providers.set(entityParamIndex, null);
                 }
@@ -172,17 +172,18 @@ public final class ParameterValueHelper {
         return providers;
     }
 
-    private static <T> ParamValueFactoryWithSource<T> wrapParamFactory(Factory<T> factory, Parameter.Source paramSource) {
+    private static <T> ParamValueFactoryWithSource<T> wrapParamValueSupplier(Supplier<T> factory, Parameter.Source paramSource) {
         return new ParamValueFactoryWithSource<T>(factory, paramSource);
     }
 
-    private static Factory<?> getValueFactory(Collection<ValueFactoryProvider> valueFactoryProviders, final Parameter parameter) {
-        Factory<?> valueFactory = null;
-        final Iterator<ValueFactoryProvider> vfpIterator = valueFactoryProviders.iterator();
-        while (valueFactory == null && vfpIterator.hasNext()) {
-            valueFactory = vfpIterator.next().getValueFactory(parameter);
+    private static Supplier<?> getParamValueSupplier(
+            Collection<ValueSupplierProvider> valueSupplierProviders, final Parameter parameter) {
+        Supplier<?> paramValueSupplier = null;
+        final Iterator<ValueSupplierProvider> vfpIterator = valueSupplierProviders.iterator();
+        while (paramValueSupplier == null && vfpIterator.hasNext()) {
+            paramValueSupplier = vfpIterator.next().getValueSupplier(parameter);
         }
-        return valueFactory;
+        return paramValueSupplier;
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,9 +39,9 @@
  */
 package org.glassfish.jersey.internal.inject;
 
-import java.lang.annotation.Annotation;
-
 import javax.ws.rs.WebApplicationException;
+
+import javax.inject.Provider;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
@@ -190,6 +190,18 @@ public class Injections {
     }
 
     /**
+     * Get a provider for a contract.
+     *
+     * @param <T>            instance type.
+     * @param serviceLocator HK2 service locator.
+     * @param clazz          class of the instance to be provider.
+     * @return provider of contract class.
+     */
+    public static <T> Provider<T> getProvider(final ServiceLocator serviceLocator, final Class<T> clazz) {
+        return () -> serviceLocator.getService(clazz);
+    }
+
+    /**
      * Add a binding represented by the binding builder to the HK2 dynamic configuration.
      *
      * @param builder       binding builder.
@@ -211,32 +223,6 @@ public class Injections {
                                   final DynamicConfiguration configuration,
                                   final HK2Loader defaultLoader) {
         BindingBuilderFactory.addBinding(builder, configuration, defaultLoader);
-    }
-
-    /**
-     * Get a new factory class-based service binding builder.
-     *
-     * @param <T>          service type.
-     * @param factoryType  service factory class.
-     * @param factoryScope factory scope.
-     * @return initialized binding builder.
-     */
-    public static <T> ServiceBindingBuilder<T> newFactoryBinder(
-            final Class<? extends Factory<T>> factoryType, final Class<? extends Annotation> factoryScope) {
-        return BindingBuilderFactory.newFactoryBinder(factoryType, factoryScope);
-    }
-
-    /**
-     * Get a new factory class-based service binding builder.
-     *
-     * The factory itself is bound in a {@link org.glassfish.hk2.api.PerLookup per-lookup} scope.
-     *
-     * @param <T>         service type.
-     * @param factoryType service factory class.
-     * @return initialized binding builder.
-     */
-    public static <T> ServiceBindingBuilder<T> newFactoryBinder(final Class<? extends Factory<T>> factoryType) {
-        return BindingBuilderFactory.newFactoryBinder(factoryType);
     }
 
     /**

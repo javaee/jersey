@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -72,7 +73,6 @@ import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.spi.Contract;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -110,6 +110,7 @@ public final class Providers {
 
         interfaces.put(javax.ws.rs.client.ClientResponseFilter.class, ProviderRuntime.CLIENT);
         interfaces.put(javax.ws.rs.client.ClientRequestFilter.class, ProviderRuntime.CLIENT);
+        interfaces.put(javax.ws.rs.client.RxInvokerProvider.class, ProviderRuntime.CLIENT);
 
         return interfaces;
     }
@@ -149,28 +150,6 @@ public final class Providers {
     }
 
     private Providers() {
-    }
-
-    /**
-     * Wrap an instance into a HK2 service factory.
-     *
-     * @param <T>      Java type if the contract produced by the provider and factory.
-     * @param instance instance to be wrapped into (and provided by) the factory.
-     * @return HK2 service factory wrapping and providing the instance.
-     */
-    public static <T> Factory<T> factoryOf(final T instance) {
-        return new Factory<T>() {
-
-            @Override
-            public T provide() {
-                return instance;
-            }
-
-            @Override
-            public void dispose(final T instance) {
-                //not used
-            }
-        };
     }
 
     /**
@@ -651,5 +630,19 @@ public final class Providers {
             }
         }
         return false;
+    }
+
+    /**
+     * Helper function converting a HK2 {@link ServiceHandle service provider} into the
+     * provided service contract instance.
+     *
+     * @param <T> service contract Java type.
+     */
+    private static final class ProviderToService<T> implements Function<ServiceHandle<T>, T> {
+
+        @Override
+        public T apply(ServiceHandle<T> input) {
+            return (input != null) ? input.getService() : null;
+        }
     }
 }

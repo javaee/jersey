@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,7 +44,6 @@ import javax.ws.rs.core.Configuration;
 import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerThread;
 
 /**
@@ -54,7 +53,7 @@ import org.glassfish.hk2.api.PerThread;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class DocumentBuilderFactoryInjectionProvider extends AbstractXmlFactory implements Factory<DocumentBuilderFactory> {
+public class DocumentBuilderFactoryInjectionProvider extends AbstractXmlFactory<DocumentBuilderFactory> {
 
     /**
      * Create new document builder factory provider.
@@ -81,8 +80,4 @@ public class DocumentBuilderFactoryInjectionProvider extends AbstractXmlFactory 
         return f;
     }
 
-    @Override
-    public void dispose(DocumentBuilderFactory instance) {
-        //not used
-    }
 }

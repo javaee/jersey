@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,9 +45,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.ws.rs.core.Context;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
@@ -130,15 +131,10 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
     }
 
     private Factory asFactory(final ServiceHandle handle) {
-        return new Factory() {
+        return new SupplierFactory() {
             @Override
             public Object provide() {
                 return handle.getService();
-            }
-
-            @Override
-            public void dispose(Object instance) {
-                //not used
             }
         };
     }

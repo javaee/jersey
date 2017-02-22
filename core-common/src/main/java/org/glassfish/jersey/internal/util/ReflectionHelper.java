@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -845,6 +845,29 @@ public final class ReflectionHelper {
             @Override
             public Constructor<?>[] run() {
                 return clazz.getDeclaredConstructors();
+            }
+        };
+    }
+
+    /**
+     * Get privileged action to obtain declared constructor of given class with given parameters.
+     * If run using security manager, the returned privileged action must be invoked within a doPrivileged block.
+     *
+     * @param clazz  The class for which to obtain the constructor.
+     * @param params constructor parameters.
+     * @return privileged action to obtain the constructor or {@code null}, when constructor with given parameters
+     * is not found.
+     * @see AccessController#doPrivileged(java.security.PrivilegedAction)
+     */
+    public static PrivilegedAction<Constructor<?>> getDeclaredConstructorPA(final Class<?> clazz, final Class<?>... params) {
+        return new PrivilegedAction<Constructor<?>>() {
+            @Override
+            public Constructor<?> run() {
+                try {
+                    return clazz.getDeclaredConstructor(params);
+                } catch (NoSuchMethodException e) {
+                    return null;
+                }
             }
         };
     }

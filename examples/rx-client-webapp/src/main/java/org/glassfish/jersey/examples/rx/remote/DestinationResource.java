@@ -75,7 +75,8 @@ public class DestinationResource {
         VISITED.put("Async", Helper.getCountries(5));
         VISITED.put("Guava", Helper.getCountries(5));
         VISITED.put("RxJava", Helper.getCountries(5));
-        VISITED.put("Java8", Helper.getCountries(5));
+        VISITED.put("RxJava2", Helper.getCountries(5));
+        VISITED.put("CompletionStage", Helper.getCountries(5));
     }
 
     @GET

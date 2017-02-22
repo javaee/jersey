@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,11 +40,6 @@
 
 package org.glassfish.jersey.gf.ejb.internal;
 
-import com.sun.ejb.containers.BaseContainer;
-import com.sun.ejb.containers.EjbContainerUtil;
-import com.sun.ejb.containers.EjbContainerUtilImpl;
-import com.sun.enterprise.config.serverbeans.Application;
-import com.sun.enterprise.config.serverbeans.Applications;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -64,27 +59,38 @@ import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.ext.ExceptionMapper;
+
 import javax.annotation.Priority;
 import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.inject.Singleton;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.ws.rs.ext.ExceptionMapper;
-import org.glassfish.ejb.deployment.descriptor.EjbBundleDescriptorImpl;
-import org.glassfish.ejb.deployment.descriptor.EjbDescriptor;
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
-import org.glassfish.internal.data.ApplicationInfo;
-import org.glassfish.internal.data.ApplicationRegistry;
-import org.glassfish.internal.data.ModuleInfo;
+
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
+
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
+
+import org.glassfish.ejb.deployment.descriptor.EjbBundleDescriptorImpl;
+import org.glassfish.ejb.deployment.descriptor.EjbDescriptor;
+import org.glassfish.internal.data.ApplicationInfo;
+import org.glassfish.internal.data.ApplicationRegistry;
+import org.glassfish.internal.data.ModuleInfo;
+
+import com.sun.ejb.containers.BaseContainer;
+import com.sun.ejb.containers.EjbContainerUtil;
+import com.sun.ejb.containers.EjbContainerUtilImpl;
+import com.sun.enterprise.config.serverbeans.Application;
+import com.sun.enterprise.config.serverbeans.Applications;
 
 /**
  * EJB component provider.
@@ -106,7 +112,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
     /**
      * HK2 factory to provide EJB components obtained via JNDI lookup.
      */
-    private static class EjbFactory<T> implements Factory<T> {
+    private static class EjbFactory<T> extends SupplierFactory<T> {
 
         final InitialContext ctx;
         final Class<T> clazz;
@@ -121,11 +127,6 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
                 Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
-        }
-
-        @Override
-        public void dispose(T instance) {
-            // do nothing
         }
 
         public EjbFactory(Class<T> rawType, InitialContext ctx, EjbComponentProvider ejbProvider) {
