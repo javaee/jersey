@@ -54,6 +54,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -96,6 +97,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.message.ReaderModel;
 import org.glassfish.jersey.message.WriterModel;
+import org.glassfish.jersey.model.internal.RankedProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -178,6 +180,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private final ServiceLocator serviceLocator;
 
     private final Boolean legacyProviderOrdering;
+    private final Boolean priorityProviderOrdering;
+    private final Integer customWorkersAdditionalPriority;
 
     private final List<ReaderModel> readers;
     private final List<WriterModel> writers;
@@ -213,17 +217,15 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     @Inject
     public MessageBodyFactory(final ServiceLocator locator, @Optional final Configuration configuration) {
         this.serviceLocator = locator;
+        this.priorityProviderOrdering = configuration != null
+                && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.PRIORITY_WORKERS_ORDERING));
         this.legacyProviderOrdering = configuration != null
+                && !priorityProviderOrdering
                 && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
+        this.customWorkersAdditionalPriority = getCustomWorkersAdditionalPriority(configuration);
 
         // Initialize readers
-        this.readers = new ArrayList<>();
-        final Set<MessageBodyReader> customMbrs = Providers.getCustomProviders(locator, MessageBodyReader.class);
-        final Set<MessageBodyReader> mbrs = Providers.getProviders(locator, MessageBodyReader.class);
-
-        addReaders(readers, customMbrs, true);
-        mbrs.removeAll(customMbrs);
-        addReaders(readers, mbrs, false);
+        this.readers = getProviderModels(locator, MessageBodyReader.class, ReaderModel::new, Consumes.class);
 
         if (legacyProviderOrdering) {
             Collections.sort(readers, new LegacyWorkerComparator<>(MessageBodyReader.class));
@@ -242,14 +244,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         // Initialize writers
-        this.writers = new ArrayList<>();
-
-        final Set<MessageBodyWriter> customMbws = Providers.getCustomProviders(locator, MessageBodyWriter.class);
-        final Set<MessageBodyWriter> mbws = Providers.getProviders(locator, MessageBodyWriter.class);
-
-        addWriters(writers, customMbws, true);
-        mbws.removeAll(customMbws);
-        addWriters(writers, mbws, false);
+        this.writers = getProviderModels(locator, MessageBodyWriter.class, WriterModel::new, Produces.class);
 
         if (legacyProviderOrdering) {
             Collections.sort(writers, new LegacyWorkerComparator<>(MessageBodyWriter.class));
@@ -332,7 +327,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         final Class wantedType;
         final MediaType wantedMediaType;
 
-        private WorkerComparator(final Class wantedType, final MediaType wantedMediaType) {
+        protected WorkerComparator(final Class wantedType, final MediaType wantedMediaType) {
             this.wantedType = wantedType;
             this.wantedMediaType = wantedMediaType;
         }
@@ -357,7 +352,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             return 0;
         }
 
-        private int getMediaTypeDistance(final MediaType wanted, final List<MediaType> mtl) {
+        protected int getMediaTypeDistance(final MediaType wanted, final List<MediaType> mtl) {
             if (wanted == null) {
                 return 0;
             }
@@ -377,7 +372,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             return distance;
         }
 
-        private int compareTypeDistances(final Class<?> providerClassParam1, final Class<?> providerClassParam2) {
+        protected int compareTypeDistances(final Class<?> providerClassParam1, final Class<?> providerClassParam2) {
             return getTypeDistance(providerClassParam1) - getTypeDistance(providerClassParam2);
         }
 
@@ -432,6 +427,54 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             }
 
             return classes.iterator();
+        }
+    }
+
+    /**
+     * {@link AbstractEntityProviderModel} comparator
+     * which works as it is described in JAX-RS 2.x specification, except that priority is used instead of
+     * origin (custom/provided).
+     *
+     * Pairs are sorted by distance from required type, media type and priority (with custom models given additional priority).
+     *
+     * @param <T> MessageBodyReader or MessageBodyWriter.
+     * @see DeclarationDistanceComparator
+     * @see #MEDIA_TYPE_KEY_COMPARATOR
+     */
+    private static class PriorityWorkerComparator<T> extends WorkerComparator<T> {
+
+        private final int customWorkersAdditionalPriority;
+
+        private PriorityWorkerComparator(final Class wantedType,
+                                         final MediaType wantedMediaType,
+                                         final int customWorkersAdditionalPriority) {
+
+            super(wantedType, wantedMediaType);
+            this.customWorkersAdditionalPriority = customWorkersAdditionalPriority;
+        }
+
+        @Override
+        public int compare(final AbstractEntityProviderModel<T> modelA, final AbstractEntityProviderModel<T> modelB) {
+
+            final int distance = compareTypeDistances(modelA.providedType(), modelB.providedType());
+            if (distance != 0) {
+                return distance;
+            }
+
+            final int mediaTypeComparison = getMediaTypeDistance(wantedMediaType, modelA.declaredTypes())
+                    - getMediaTypeDistance(wantedMediaType, modelB.declaredTypes());
+            if (mediaTypeComparison != 0) {
+                return mediaTypeComparison;
+            }
+
+            return getPriority(modelA) - getPriority(modelB);
+        }
+
+        private int getPriority(final AbstractEntityProviderModel<T> model) {
+            if (model.isCustom()) {
+                return model.priority() - customWorkersAdditionalPriority;
+            }
+            return model.priority();
         }
     }
 
@@ -503,18 +546,63 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
     }
 
-    private static void addReaders(final List<ReaderModel> models, final Set<MessageBodyReader> readers, final boolean custom) {
-        for (final MessageBodyReader provider : readers) {
-            final List<MediaType> values = MediaTypes.createFrom(provider.getClass().getAnnotation(Consumes.class));
-            models.add(new ReaderModel(provider, values, custom));
-        }
+    @FunctionalInterface
+    private static interface ProviderModelFactory<TProvider, TModel extends AbstractEntityProviderModel<TProvider>> {
+        TModel apply(TProvider provider, List<MediaType> types, Boolean custom, Integer priority);
     }
 
-    private static void addWriters(final List<WriterModel> models, final Set<MessageBodyWriter> writers, final boolean custom) {
-        for (final MessageBodyWriter provider : writers) {
-            final List<MediaType> values = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
-            models.add(new WriterModel(provider, values, custom));
+    private static Integer getCustomWorkersAdditionalPriority(final Configuration configuration) {
+        if (configuration != null) {
+            final Object value = configuration.getProperty(MessageProperties.CUSTOM_WORKERS_ADDITIONAL_PRIORITY);
+            if (value != null) {
+                final Integer intValue = PropertiesHelper.convertValue(value, Integer.class);
+                if (intValue != null) {
+                    return intValue;
+                }
+            }
         }
+        return MessageProperties.CUSTOM_WORKERS_DEFAULT_ADDITIONAL_PRIORITY;
+    }
+
+    private static <TProvider, TModel extends AbstractEntityProviderModel<TProvider>> List<TModel> getProviderModels(
+            final ServiceLocator locator,
+            final Class<TProvider> providerType,
+            final ProviderModelFactory<TProvider, TModel> modelFactory,
+            final Class<? extends Annotation> mediaTypeAnnotationType) {
+
+        final Iterable<RankedProvider<TProvider>> customProviders = Providers.getCustomRankedProviders(locator, providerType);
+        final Iterable<RankedProvider<TProvider>> defaultProviders = Providers.getRankedProviders(locator, providerType);
+
+        final Map<TProvider, TModel> providerMap = getProviderMap(customProviders, modelFactory, mediaTypeAnnotationType, true);
+        getProviderMap(defaultProviders, modelFactory, mediaTypeAnnotationType, false).forEach(providerMap::putIfAbsent);
+        return new ArrayList<>(providerMap.values());
+    }
+
+    private static <TProvider, TModel extends AbstractEntityProviderModel<TProvider>> Map<TProvider, TModel> getProviderMap(
+            final Iterable<RankedProvider<TProvider>> rankedProviders,
+            final ProviderModelFactory<TProvider, TModel> modelFactory,
+            final Class<? extends Annotation> mediaTypeAnnotationType,
+            final Boolean custom) {
+
+        final Map<TProvider, TModel> providerMap = new LinkedHashMap<>();
+
+        for (RankedProvider<TProvider> rankedProvider : rankedProviders) {
+            final TProvider provider = rankedProvider.getProvider();
+            final Integer priority = rankedProvider.getRank();
+            final List<MediaType> mediaTypes;
+
+            if (mediaTypeAnnotationType == Consumes.class) {
+                mediaTypes = MediaTypes.createFrom(provider.getClass().getAnnotation(Consumes.class));
+            } else if (mediaTypeAnnotationType == Produces.class) {
+                mediaTypes = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
+            } else {
+                throw new UnsupportedOperationException("Invalid media type annotation type: " + mediaTypeAnnotationType);
+            }
+
+            providerMap.put(provider, modelFactory.apply(provider, mediaTypes, custom, priority));
+        }
+
+        return providerMap;
     }
 
     // MessageBodyWorkers
@@ -662,7 +750,12 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                     readers.add(model);
                 }
             }
-            Collections.sort(readers, new WorkerComparator<>(c, mediaType));
+
+            if (priorityProviderOrdering) {
+                Collections.sort(readers, new PriorityWorkerComparator<>(c, mediaType, customWorkersAdditionalPriority));
+            } else {
+                Collections.sort(readers, new WorkerComparator<>(c, mediaType));
+            }
             mbrLookupCache.put(lookupKey, readers);
         }
 
@@ -782,7 +875,12 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                     writers.add(model);
                 }
             }
-            Collections.sort(writers, new WorkerComparator<>(c, mediaType));
+
+            if (priorityProviderOrdering) {
+                Collections.sort(writers, new PriorityWorkerComparator<>(c, mediaType, customWorkersAdditionalPriority));
+            } else {
+                Collections.sort(writers, new WorkerComparator<>(c, mediaType));
+            }
             mbwLookupCache.put(lookupKey, writers);
         }
 

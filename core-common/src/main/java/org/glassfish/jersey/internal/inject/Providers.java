@@ -194,6 +194,36 @@ public final class Providers {
     }
 
     /**
+     * Get the iterable of all default {@link RankedProvider providers} registered for the given service provider
+     * contract in the underlying {@link ServiceLocator HK2 service locator} container.
+     *
+     * @param <T>      service provider contract Java type.
+     * @param locator  underlying HK2 service locator.
+     * @param contract service provider contract.
+     * @return iterable of all default ranked service providers for the contract. Return value is never null.
+     */
+    public static <T> Iterable<RankedProvider<T>> getRankedProviders(final ServiceLocator locator, final Class<T> contract) {
+        final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract);
+        return getRankedProviders(providers);
+    }
+
+    /**
+     * Get the iterable of all custom {@link RankedProvider providers} registered for the given service provider
+     * contract in the underlying {@link ServiceLocator HK2 service locator} container.
+     *
+     * @param <T>      service provider contract Java type.
+     * @param locator  underlying HK2 service locator.
+     * @param contract service provider contract.
+     * @return iterable of all custom ranked service providers for the contract. Return value is never null.
+     */
+    public static <T> Iterable<RankedProvider<T>> getCustomRankedProviders(final ServiceLocator locator,
+                                                                           final Class<T> contract) {
+
+        final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract, CustomAnnotationLiteral.INSTANCE);
+        return getRankedProviders(providers);
+    }
+
+    /**
      * Get the iterable of all {@link RankedProvider providers} (custom and default) registered for the given service provider
      * contract in the underlying {@link ServiceLocator HK2 service locator} container.
      *
@@ -205,7 +235,10 @@ public final class Providers {
     public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(final ServiceLocator locator, final Class<T> contract) {
         final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract, CustomAnnotationLiteral.INSTANCE);
         providers.addAll(getServiceHandles(locator, contract));
+        return getRankedProviders(providers);
+    }
 
+    private static <T> Iterable<RankedProvider<T>> getRankedProviders(final List<ServiceHandle<T>> providers) {
         final LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>> providerMap =
                 new LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>>();
 
