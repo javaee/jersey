@@ -56,9 +56,8 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AnnotationLiteral;
 import org.glassfish.jersey.test.JerseyTest;
-
-import org.glassfish.hk2.api.AnnotationLiteral;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
