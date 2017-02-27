@@ -169,7 +169,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * make sure to delegate the lifecycle listener calls further to all the container lifecycle listeners registered within the
  * application. Additionally, invoking the {@link ContainerLifecycleListener#onShutdown(Container)} method on this application
  * handler instance will release all the resources associated with the underlying application instance as well as close the
- * application-specific {@link org.glassfish.hk2.api.ServiceLocator HK2 ServiceLocator}.
+ * application-specific {@link InstanceManager instance manager}.
  * </p>
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)

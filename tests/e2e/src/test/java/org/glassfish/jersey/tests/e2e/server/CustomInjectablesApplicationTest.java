@@ -62,6 +62,7 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.AnnotationLiteral;
 import org.glassfish.jersey.spi.inject.Binder;
 import org.glassfish.jersey.spi.inject.ClassBeanDescriptor;
 import org.glassfish.jersey.spi.inject.Descriptors;
@@ -69,8 +70,6 @@ import org.glassfish.jersey.spi.inject.InstanceBeanDescriptor;
 import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
-
-import org.glassfish.hk2.api.AnnotationLiteral;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
