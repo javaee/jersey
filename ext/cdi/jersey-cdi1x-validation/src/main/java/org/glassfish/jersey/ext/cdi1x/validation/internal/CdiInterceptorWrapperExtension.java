@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,10 +64,8 @@ import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.interceptor.Interceptor;
 
+import org.glassfish.jersey.internal.util.collection.Cache;
 import org.glassfish.jersey.server.model.Resource;
-
-import org.glassfish.hk2.utilities.cache.Cache;
-import org.glassfish.hk2.utilities.cache.Computable;
 
 import org.hibernate.validator.internal.cdi.interceptor.ValidationInterceptor;
 
@@ -82,12 +80,8 @@ public class CdiInterceptorWrapperExtension implements Extension {
     public static final AnnotationLiteral<Default> DEFAULT_ANNOTATION_LITERAL = new AnnotationLiteral<Default>() {};
     public static final AnnotationLiteral<Any> ANY_ANNOTATION_LITERAL = new AnnotationLiteral<Any>() {};
 
-    final Cache<Class<?>, Boolean> jaxRsResourceCache = new Cache<>(new Computable<Class<?>, Boolean>() {
-        @Override
-        public Boolean compute(final Class<?> clazz) {
-            return Resource.from(clazz) != null;
-        }
-    });
+    final Cache<Class<?>, Boolean> jaxRsResourceCache = new Cache<>(clazz -> Resource.from(clazz) != null);
+
     private AnnotatedType<ValidationInterceptor> interceptorAnnotatedType;
 
     /**
