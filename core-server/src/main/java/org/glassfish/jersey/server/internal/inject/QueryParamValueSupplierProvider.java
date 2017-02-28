@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.QueryParam;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -50,7 +49,6 @@ import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Value supplier provider supporting the {@link QueryParam &#64;QueryParam} injection annotation.
@@ -65,11 +63,11 @@ final class QueryParamValueSupplierProvider extends AbstractValueSupplierProvide
      * Injection constructor.
      *
      * @param mpep            multivalued map parameter extractor provider.
-     * @param instanceManager HK2 service instanceManager.
+     * @param requestProvider request provider.
      */
-    @Inject
-    public QueryParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
-        super(mpep, instanceManager, Parameter.Source.QUERY);
+    public QueryParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+            Provider<ContainerRequest> requestProvider) {
+        super(mpep, requestProvider, Parameter.Source.QUERY);
     }
 
     @Override
@@ -89,20 +87,6 @@ final class QueryParamValueSupplierProvider extends AbstractValueSupplierProvide
         }
 
         return new QueryParamValueSupplier(e, !parameter.isEncoded(), requestProvider);
-    }
-
-    /**
-     * {@link QueryParam &#64;QueryParam} injection resolver.
-     */
-    @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<QueryParam> {
-
-        /**
-         * Create new {@link QueryParam &#64;QueryParam} injection resolver.
-         */
-        public InjectionResolver() {
-            super(QueryParamValueSupplierProvider.class);
-        }
     }
 
     private static final class QueryParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {

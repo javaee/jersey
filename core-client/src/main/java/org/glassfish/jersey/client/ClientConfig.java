@@ -113,12 +113,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
         private volatile ConnectorProvider connectorProvider;
 
 
-        private final LazyValue<ClientRuntime> runtime = Values.lazy(new Value<ClientRuntime>() {
-            @Override
-            public ClientRuntime get() {
-                return initRuntime();
-            }
-        });
+        private final LazyValue<ClientRuntime> runtime = Values.lazy((Value<ClientRuntime>) this::initRuntime);
 
         /**
          * Configuration state change strategy.

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,19 +38,18 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal.inject;
+package org.glassfish.jersey.hk2;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -58,13 +57,16 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.internal.util.collection.ImmutableCollectors;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
+import org.glassfish.jersey.spi.inject.InjectionResolver;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
-import org.glassfish.hk2.api.InjectionResolver;
-import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.MultiException;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Implementation of the {@link ClassAnalyzer} that supports selection
@@ -88,45 +90,41 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
      */
     public static final class Binder extends AbstractBinder {
 
+        private final ServiceLocator serviceLocator;
+
+        public Binder(ServiceLocator serviceLocator) {
+            this.serviceLocator = serviceLocator;
+        }
+
         @Override
         protected void configure() {
-            bind(JerseyClassAnalyzer.class)
+            ClassAnalyzer defaultAnalyzer =
+                    serviceLocator.getService(ClassAnalyzer.class, ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME);
+
+            Supplier<List<InjectionResolver>> resolvers = () -> serviceLocator.getAllServices(InjectionResolver.class);
+
+            bind(new JerseyClassAnalyzer(defaultAnalyzer, resolvers))
                     .analyzeWith(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME)
                     .named(JerseyClassAnalyzer.NAME)
-                    .to(ClassAnalyzer.class)
-                    .in(Singleton.class);
+                    .to(ClassAnalyzer.class);
         }
     }
 
     private final ClassAnalyzer defaultAnalyzer;
-    private final Set<Class<? extends Annotation>> resolverAnnotations;
-
+    private final LazyValue<Set<Class>> resolverAnnotations;
     /**
      * Injection constructor.
      *
-     * @param defaultAnalyzer default HK2 class analyzer.
-     * @param resolvers       configured injection resolvers.
+     * @param defaultAnalyzer   default HK2 class analyzer.
+     * @param supplierResolvers configured injection resolvers.
      */
-    @Inject
-    JerseyClassAnalyzer(@Named(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME) final ClassAnalyzer defaultAnalyzer,
-                        final IterableProvider<InjectionResolver<?>> resolvers) {
+    private JerseyClassAnalyzer(ClassAnalyzer defaultAnalyzer, Supplier<List<InjectionResolver>> supplierResolvers) {
         this.defaultAnalyzer = defaultAnalyzer;
-
-        final HashSet<Class<? extends Annotation>> tmp = new HashSet<Class<? extends Annotation>>();
-        for (final InjectionResolver<?> resolver : resolvers) {
-            if (resolver.isConstructorParameterIndicator()) {
-                final ReflectionHelper.DeclaringClassInterfacePair pair =
-                        ReflectionHelper.getClass(resolver.getClass(), InjectionResolver.class);
-                final Type paramType = ReflectionHelper.getParameterizedTypeArguments(pair)[0];
-                final Class<?> paramClass = ReflectionHelper.erasure(paramType);
-                if (Annotation.class.isAssignableFrom(paramClass)) {
-                    tmp.add(paramClass.asSubclass(Annotation.class));
-                }
-            }
-        }
-
-        this.resolverAnnotations = (tmp.size() > 0)
-                ? Collections.unmodifiableSet(tmp) : Collections.<Class<? extends Annotation>>emptySet();
+        Value<Set<Class>> resolvers = () -> supplierResolvers.get().stream()
+                .filter(InjectionResolver::isConstructorParameterIndicator)
+                .map(InjectionResolver::getAnnotation)
+                .collect(ImmutableCollectors.toImmutableSet());
+        this.resolverAnnotations = Values.lazy(resolvers);
     }
 
     @SuppressWarnings("unchecked")
@@ -211,7 +209,7 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
 
         final int paramSize = constructor.getParameterTypes().length;
 
-        if (paramSize != 0 && resolverAnnotations.isEmpty()) {
+        if (paramSize != 0 && resolverAnnotations.get().isEmpty()) {
             return false;
         }
 
@@ -225,7 +223,7 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
         for (final Annotation[] paramAnnotations : constructor.getParameterAnnotations()) {
             boolean found = false;
             for (final Annotation paramAnnotation : paramAnnotations) {
-                if (resolverAnnotations.contains(paramAnnotation.annotationType())) {
+                if (resolverAnnotations.get().contains(paramAnnotation.annotationType())) {
                     found = true;
                     break;
                 }

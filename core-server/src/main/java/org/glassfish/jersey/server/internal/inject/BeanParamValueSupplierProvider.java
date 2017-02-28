@@ -42,20 +42,16 @@ package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.BeanParam;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.spi.inject.Descriptors;
+import org.glassfish.jersey.spi.inject.ForeignDescriptor;
 import org.glassfish.jersey.spi.inject.InstanceManager;
 
-import org.glassfish.hk2.api.ActiveDescriptor;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
-import org.glassfish.hk2.utilities.BuilderHelper;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.hk2.utilities.cache.Cache;
 import org.glassfish.hk2.utilities.cache.Computable;
 
@@ -67,72 +63,55 @@ import org.glassfish.hk2.utilities.cache.Computable;
 @Singleton
 final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
-    @Inject
-    private ServiceLocator locator;
-
-    /**
-     * {@link InjectionResolver Injection resolver} for {@link BeanParam bean parameters}.
-     */
-    @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<BeanParam> {
-
-        /**
-         * Creates new resolver.
-         */
-        public InjectionResolver() {
-            super(BeanParamValueSupplierProvider.class);
-        }
-    }
+    private final InstanceManager instanceManager;
 
     private static final class BeanParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
         private final Parameter parameter;
-        private final ServiceLocator locator;
+        private final InstanceManager instanceManager;
 
-        private final Cache<Class<?>, ActiveDescriptor<?>> descriptorCache
-                = new Cache<>(new Computable<Class<?>, ActiveDescriptor<?>>() {
+        private final Cache<Class<?>, ForeignDescriptor> descriptorCache
+                = new Cache<>(new Computable<Class<?>, ForeignDescriptor>() {
 
                     @Override
-                    public ActiveDescriptor<?> compute(Class<?> key) {
+                    public ForeignDescriptor compute(Class<?> key) {
                         // below we make sure HK2 behaves as if injection happens into a request scoped type
                         // this is to avoid having proxies injected (see JERSEY-2386)
                         // before touching the following statement, check BeanParamMemoryLeakTest first!
-                        final AbstractActiveDescriptor<Object> descriptor =
-                                BuilderHelper.activeLink(key).to(key).in(RequestScoped.class).build();
-
-                        return ServiceLocatorUtilities.addOneDescriptor(locator, descriptor, false);
+                        return instanceManager
+                                .createForeignDescriptor(Descriptors.serviceAsContract(key).in(RequestScoped.class));
                     }
                 });
 
-        private BeanParamValueSupplier(ServiceLocator locator, Parameter parameter, Provider<ContainerRequest> requestProvider) {
+        private BeanParamValueSupplier(InstanceManager instanceManager, Parameter parameter,
+                Provider<ContainerRequest> requestProvider) {
             super(requestProvider);
 
-            this.locator = locator;
+            this.instanceManager = instanceManager;
             this.parameter = parameter;
         }
 
         @Override
         public Object get() {
-
-            final Class<?> rawType = parameter.getRawType();
-
-            final Object fromHk2 = locator.getService(rawType);
+            Class<?> rawType = parameter.getRawType();
+            Object fromHk2 = instanceManager.getInstance(rawType);
             if (fromHk2 != null) { // the bean parameter type is already bound in HK2, let's just take it from there
                 return fromHk2;
             }
-            ActiveDescriptor<?> reifiedDescriptor = descriptorCache.compute(rawType);
-            return locator.getServiceHandle(reifiedDescriptor).getService();
+            ForeignDescriptor foreignDescriptor = descriptorCache.compute(rawType);
+            return instanceManager.getInstance(foreignDescriptor);
         }
     }
 
     /**
      * Creates new instance initialized from parameters injected by HK2.
      *
-     * @param mpep Multivalued parameter extractor provider.
-     * @param instanceManager instance manager.
+     * @param mpep            multivalued parameter extractor provider.
+     * @param requestProvider request provider.
      */
-    @Inject
-    public BeanParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
-        super(mpep, instanceManager, Parameter.Source.BEAN_PARAM);
+    public BeanParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+            Provider<ContainerRequest> requestProvider, InstanceManager instanceManager) {
+        super(mpep, requestProvider, Parameter.Source.BEAN_PARAM);
+        this.instanceManager = instanceManager;
     }
 
     @Override
@@ -140,6 +119,6 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
             Parameter parameter,
             Provider<ContainerRequest> requestProvider) {
 
-        return new BeanParamValueSupplier(locator, parameter, requestProvider);
+        return new BeanParamValueSupplier(instanceManager, parameter, requestProvider);
     }
 }

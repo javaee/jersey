@@ -47,7 +47,6 @@ import java.util.List;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.PathSegment;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -55,7 +54,6 @@ import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException.PathParamException;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * {@link PathParam &#64;PathParam} injection value supplier provider.
@@ -68,12 +66,12 @@ final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider
     /**
      * Injection constructor.
      *
-     * @param mpep    multivalued map parameter extractor provider.
-     * @param locator HK2 service locator.
+     * @param mpep            multivalued map parameter extractor provider.
+     * @param requestProvider request provider.
      */
-    @Inject
-    public PathParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager locator) {
-        super(mpep, locator, Parameter.Source.PATH);
+    public PathParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+            Provider<ContainerRequest> requestProvider) {
+        super(mpep, requestProvider, Parameter.Source.PATH);
     }
 
     @Override
@@ -104,20 +102,6 @@ final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider
         }
 
         return new PathParamValueSupplier(e, !parameter.isEncoded(), requestProvider);
-    }
-
-    /**
-     * {@link PathParam &#64;PathParam} injection resolver.
-     */
-    @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<PathParam> {
-
-        /**
-         * Create new {@link PathParam &#64;PathParam} injection resolver.
-         */
-        public InjectionResolver() {
-            super(PathParamValueSupplierProvider.class);
-        }
     }
 
     private static final class PathParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {

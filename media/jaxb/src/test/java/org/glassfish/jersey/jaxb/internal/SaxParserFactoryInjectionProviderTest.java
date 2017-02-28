@@ -59,7 +59,6 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
 import org.glassfish.jersey.spi.inject.Binder;
@@ -172,7 +171,6 @@ public class SaxParserFactoryInjectionProviderTest {
                 bindAsContract(MySPFProvider.class).in(Singleton.class);
             }
         };
-        binders[1] = new ContextInjectionResolver.Binder();
         System.arraycopy(customBinders, 0, binders, 2, customBinders.length);
         return Injections.createInstanceManager(binders);
     }

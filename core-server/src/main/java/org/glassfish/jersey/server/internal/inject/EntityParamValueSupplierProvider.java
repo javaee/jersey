@@ -45,14 +45,12 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Provides injection of {@link Request} entity value or {@link Request} instance
@@ -67,11 +65,10 @@ class EntityParamValueSupplierProvider extends AbstractValueSupplierProvider {
      * Creates new instance initialized with parameters.
      *
      * @param mpep            Injected multivaluedParameterExtractor provider.
-     * @param instanceManager Instance manager.
+     * @param requestProvider Request provider.
      */
-    @Inject
-    EntityParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
-        super(mpep, instanceManager, Parameter.Source.ENTITY);
+    EntityParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, Provider<ContainerRequest> requestProvider) {
+        super(mpep, requestProvider, Parameter.Source.ENTITY);
     }
 
     @Override

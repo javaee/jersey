@@ -46,7 +46,6 @@ import javax.ws.rs.CookieParam;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MultivaluedMap;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -55,7 +54,6 @@ import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Value factory provider supporting the {@link CookieParam} injection annotation.
@@ -64,21 +62,7 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-public final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvider {
-
-    /**
-     * Injection resolver for {@link CookieParam} annotation.
-     */
-    @Singleton
-    public static final class InjectionResolver extends ParamInjectionResolver<CookieParam> {
-
-        /**
-         * Create new {@link CookieParam} annotation injection resolver.
-         */
-        public InjectionResolver() {
-            super(CookieParamValueSupplierProvider.class);
-        }
-    }
+final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     private static final class CookieParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
 
@@ -128,11 +112,11 @@ public final class CookieParamValueSupplierProvider extends AbstractValueSupplie
      * {@link CookieParam} annotation value factory provider injection constructor.
      *
      * @param mpep            multivalued parameter extractor provider.
-     * @param instanceManager instance manager.
+     * @param requestProvider request provider.
      */
-    @Inject
-    public CookieParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
-        super(mpep, instanceManager, Parameter.Source.COOKIE);
+    public CookieParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+            Provider<ContainerRequest> requestProvider) {
+        super(mpep, requestProvider, Parameter.Source.COOKIE);
     }
 
     @Override

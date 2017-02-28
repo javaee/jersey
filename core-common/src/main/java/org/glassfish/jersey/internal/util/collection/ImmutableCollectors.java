@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,54 +38,44 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.internal.inject;
+package org.glassfish.jersey.internal.util.collection;
 
-import javax.ws.rs.container.AsyncResponse;
-
-import javax.inject.Provider;
-
-import org.glassfish.jersey.internal.inject.SupplierFactory;
-import org.glassfish.jersey.server.internal.process.AsyncContext;
-import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collector;
 
 /**
- * Value factory provider supporting the {@link javax.ws.rs.container.Suspended} injection annotation.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * Set of convenient function regarding a collection immutability. Particularly useful in the conjunction with
+ * {@link java.util.stream.Stream}.
  */
-final class AsyncResponseValueSupplierProvider implements ValueSupplierProvider {
-
-    private final Provider<AsyncContext> asyncContextProvider;
+public class ImmutableCollectors {
 
     /**
-     * Initialize the provider.
+     * Creates a {@link Collector} of an immutable list for {@link java.util.stream.Stream#collect(Collector)}.
      *
-     * @param asyncContextProvider async processing context provider.
+     * @param <T> type of the immutable list.
+     * @return collector for immutable list.
      */
-    public AsyncResponseValueSupplierProvider(Provider<AsyncContext> asyncContextProvider) {
-        this.asyncContextProvider = asyncContextProvider;
+    public static <T> Collector<T, List<T>, List<T>> toImmutableList() {
+        return Collector.of(ArrayList::new, List::add, (left, right) -> {
+            left.addAll(right);
+            return left;
+        }, Collections::unmodifiableList);
     }
 
-    @Override
-    public SupplierFactory<AsyncResponse> getValueSupplier(final Parameter parameter) {
-        if (parameter.getSource() != Parameter.Source.SUSPENDED) {
-            return null;
-        }
-        if (!AsyncResponse.class.isAssignableFrom(parameter.getRawType())) {
-            return null;
-        }
-
-        return new SupplierFactory<AsyncResponse>() {
-            @Override
-            public AsyncResponse provide() {
-                return asyncContextProvider.get();
-            }
-        };
-    }
-
-    @Override
-    public PriorityType getPriority() {
-        return Priority.NORMAL;
+    /**
+     * Creates a {@link Collector} of an immutable Set for {@link java.util.stream.Stream#collect(Collector)}.
+     *
+     * @param <T> type of the immutable set.
+     * @return collector for immutable set.
+     */
+    public static <T> Collector<T, Set<T>, Set<T>> toImmutableSet() {
+        return Collector.of(HashSet::new, Set::add, (left, right) -> {
+            left.addAll(right);
+            return left;
+        }, Collections::unmodifiableSet);
     }
 }

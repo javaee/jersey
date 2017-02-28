@@ -61,7 +61,9 @@ public final class InstanceManagerFactory {
      * @return new initialized server runtime locator.
      */
     public static InstanceManager createInstanceManager() {
-        return Injections.createInstanceManager(new ServerBinder(null));
+        InstanceManager instanceManager = Injections.createInstanceManager();
+        instanceManager.register(new ServerBinder(null, instanceManager));
+        return instanceManager;
     }
 
     /**
@@ -71,6 +73,8 @@ public final class InstanceManagerFactory {
      * @return new initialized server runtime locator.
      */
     public static InstanceManager createInstanceManager(Map<String, Object> applicationProperties) {
-        return Injections.createInstanceManager(new ServerBinder(applicationProperties));
+        InstanceManager instanceManager = Injections.createInstanceManager();
+        instanceManager.register(new ServerBinder(applicationProperties, instanceManager));
+        return instanceManager;
     }
 }

@@ -51,7 +51,6 @@ import java.util.Date;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
@@ -61,7 +60,6 @@ import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.HttpDateFormat;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Container of several different {@link ParamConverterProvider param converter providers}
@@ -283,19 +281,17 @@ class ParamConverters {
 
         /**
          * Create new aggregated {@link ParamConverterProvider param converter provider}.
-         *
-         * @param instanceManager instance manager.
          */
-        public AggregatedProvider(@Context final InstanceManager instanceManager) {
+        public AggregatedProvider() {
             providers = new ParamConverterProvider[] {
                     // ordering is important (e.g. Date provider must be executed before String Constructor
                     // as Date has a deprecated String constructor
-                    instanceManager.createAndInitialize(DateProvider.class),
-                    instanceManager.createAndInitialize(TypeFromStringEnum.class),
-                    instanceManager.createAndInitialize(TypeValueOf.class),
-                    instanceManager.createAndInitialize(CharacterProvider.class),
-                    instanceManager.createAndInitialize(TypeFromString.class),
-                    instanceManager.createAndInitialize(StringConstructor.class),
+                    new DateProvider(),
+                    new TypeFromStringEnum(),
+                    new TypeValueOf(),
+                    new CharacterProvider(),
+                    new TypeFromString(),
+                    new StringConstructor()
             };
         }
 

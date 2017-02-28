@@ -49,12 +49,11 @@ import org.glassfish.jersey.spi.ServiceHolder;
 /**
  * Interface provides the communication API between Jersey and Dependency Injection provider
  * <p>
- * First, the method {@link #initialize(String, InstanceManager, String, Binder...)} should be call to initialize DI provider
+ * First, the method {@link #initialize(String, InstanceManager, Binder...)} should be call to initialize DI provider
  * (e.g. create underlying storage for registered services) and to do other stuff needed for successful start of DI provider.
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-// TODO: Exception??
 public interface InstanceManager {
 
     /**
@@ -64,12 +63,9 @@ public interface InstanceManager {
      *
      * @param name          Name of the instance manager.
      * @param parent        Parent instance manager on which new instance manager should be dependent.
-     * @param classAnalyzer -------
      * @param binders       Binders with descriptions to include them during initialization process.
      */
-    // TODO: Remove CLASS ANALYZER
-    // TODO: Are binders needed only for HK2 dependent?
-    void initialize(String name, InstanceManager parent, String classAnalyzer, Binder... binders);
+    void initialize(String name, InstanceManager parent, Binder... binders);
 
     /**
      * This will shutdown the entire instance manager and underlying DI provider along with injected executors and schedulers.
@@ -165,7 +161,7 @@ public interface InstanceManager {
      * @return An instance of the contract or impl.  May return  null if there is no provider that provides the given
      * implementation or contract.
      */
-    // TODO: Remove CLASS ANALYZER
+    // TODO: Remove CLASS ANALYZER - NEEDED ONLY IN CdiComponentProvider
     <T> T getInstance(Class<T> contractOrImpl, String classAnalyzer);
 
     /**
@@ -193,6 +189,23 @@ public interface InstanceManager {
      * implementation or contract.
      */
     <T> T getInstance(Type contractOrImpl);
+
+    /**
+     * Gets the service instance according to {@link ForeignDescriptor} which is specific to the underlying DI provider.
+     *
+     * @param foreignDescriptor DI specific descriptor.
+     * @return service instance according to foreign descriptor.
+     */
+    Object getInstance(ForeignDescriptor foreignDescriptor);
+
+    /**
+     * Creates and registers the descriptor in the underlying DI provider and returns {@link ForeignDescriptor} that is specific
+     * descriptor for the underlying DI provider.
+     *
+     * @param descriptor jersey descriptor.
+     * @return specific foreign descriptor of the underlying DI provider.
+     */
+    ForeignDescriptor createForeignDescriptor(Descriptor descriptor);
 
     /**
      * Gets all services from this instance manager that implement this contract or have this implementation.

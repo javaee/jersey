@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,7 +57,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.ExtractorException;
@@ -76,9 +76,7 @@ import org.glassfish.jersey.server.internal.inject.AbstractRequestDerivedValueSu
 import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
-import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.jvnet.mimepull.MIMEParsingException;
 
@@ -96,19 +94,6 @@ import jersey.repackaged.com.google.common.collect.Lists;
 final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
     private static final Logger LOGGER = Logger.getLogger(FormDataParamValueSupplierProvider.class.getName());
-
-    /**
-     * {@link FormDataParam} injection resolver.
-     */
-    static final class InjectionResolver extends ParamInjectionResolver<FormDataParam> {
-
-        /**
-         * Create new {@link FormDataParam} injection resolver.
-         */
-        public InjectionResolver() {
-            super(FormDataParamValueSupplierProvider.class);
-        }
-    }
 
     private abstract class ValueSupplier<T> extends AbstractRequestDerivedValueSupplier<T> {
 
@@ -401,7 +386,7 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
         newSet.add(boolean.class);
         newSet.add(Character.class);
         newSet.add(char.class);
-        return newSet;
+        return Collections.unmodifiableSet(newSet);
     }
 
     private static boolean isPrimitiveType(final Class<?> type) {
@@ -412,12 +397,11 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
      * Injection constructor.
      *
      * @param extractorProvider multi-valued map parameter extractor provider.
-     * @param instanceManager   instance manager.
+     * @param requestProvider   request provider.
      */
-    @Inject
     public FormDataParamValueSupplierProvider(
-            MultivaluedParameterExtractorProvider extractorProvider, InstanceManager instanceManager) {
-        super(extractorProvider, instanceManager, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
+            MultivaluedParameterExtractorProvider extractorProvider, Provider<ContainerRequest> requestProvider) {
+        super(extractorProvider, requestProvider, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
     }
 
     @Override

@@ -56,8 +56,6 @@ import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
-import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
@@ -116,8 +114,6 @@ class ClientBinder extends AbstractBinder {
     protected void configure() {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
                 new JerseyErrorService.Binder(),
-                new ContextInjectionResolver.Binder(),
-                new JerseyClassAnalyzer.Binder(),
                 new MessagingBinders.MessageBodyProviders(clientRuntimeProperties, RuntimeType.CLIENT),
                 new MessagingBinders.HeaderDelegateProviders(),
                 new MessageBodyFactory.Binder(),

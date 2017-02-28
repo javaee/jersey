@@ -56,7 +56,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -69,7 +68,6 @@ import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.InternalServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Value factory provider supporting the {@link FormParam} injection annotation.
@@ -84,11 +82,11 @@ final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider
      * Injection constructor.
      *
      * @param mpep            extractor provider.
-     * @param instanceManager instanceManager.
+     * @param requestProvider requestProvider.
      */
-    @Inject
-    public FormParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
-        super(mpep, instanceManager, Parameter.Source.FORM);
+    public FormParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+            Provider<ContainerRequest> requestProvider) {
+        super(mpep, requestProvider, Parameter.Source.FORM);
     }
 
     @Override
@@ -108,20 +106,6 @@ final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider
             return null;
         }
         return new FormParamValueSupplier(e, !parameter.isEncoded(), requestProvider);
-    }
-
-    /**
-     * {@link FormParam} injection resolver.
-     */
-    @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<FormParam> {
-
-        /**
-         * Create new FormParam injection resolver.
-         */
-        public InjectionResolver() {
-            super(FormParamValueSupplierProvider.class);
-        }
     }
 
     private static final class FormParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {

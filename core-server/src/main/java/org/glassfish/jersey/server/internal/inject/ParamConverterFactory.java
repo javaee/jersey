@@ -43,17 +43,14 @@ package org.glassfish.jersey.server.internal.inject;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * An aggregate {@link ParamConverterProvider param converter provider} that loads all
@@ -74,15 +71,12 @@ public class ParamConverterFactory implements ParamConverterProvider {
 
     private final List<ParamConverterProvider> converterProviders;
 
-    @Inject
-    ParamConverterFactory(InstanceManager instanceManager) {
+    public ParamConverterFactory(Set<ParamConverterProvider> providers, Set<ParamConverterProvider> customProviders) {
+        Set<ParamConverterProvider> copyProviders = new HashSet<>(providers);
         converterProviders = new ArrayList<>();
-        Set<ParamConverterProvider> customProviders = Providers.getCustomProviders(instanceManager, ParamConverterProvider.class);
         converterProviders.addAll(customProviders);
-
-        Set<ParamConverterProvider> providers = Providers.getProviders(instanceManager, ParamConverterProvider.class);
-        providers.removeAll(customProviders);
-        converterProviders.addAll(providers);
+        copyProviders.removeAll(customProviders);
+        converterProviders.addAll(copyProviders);
     }
 
     @Override

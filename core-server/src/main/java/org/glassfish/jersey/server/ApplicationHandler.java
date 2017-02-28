@@ -89,7 +89,6 @@ import org.glassfish.jersey.internal.ServiceConfigurationError;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
@@ -134,6 +133,7 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
 import org.glassfish.jersey.spi.inject.Binder;
+import org.glassfish.jersey.spi.inject.CompositeBinder;
 import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -263,10 +263,8 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
      *                              application handler.
      */
     public ApplicationHandler(final Class<? extends Application> jaxrsApplicationClass) {
-        this.instanceManager = Injections.createInstanceManager(
-                JerseyClassAnalyzer.NAME,
-                new ServerBinder(null),
-                new ApplicationBinder());
+        this.instanceManager = Injections.createInstanceManager();
+        this.instanceManager.register(CompositeBinder.wrap(new ServerBinder(null, instanceManager), new ApplicationBinder()));
 
         LazyValue<Iterable<ComponentProvider>> componentProviders = getLazyInitializedComponentProviders(instanceManager);
         this.application = createApplication(jaxrsApplicationClass, componentProviders);
@@ -310,12 +308,9 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
     public ApplicationHandler(final Application application, final Binder customBinder, final ServiceLocator parent) {
         // TODO: Remove HK2 Bridge
         InstanceManager parentManager = HK2InstanceManager.createInstanceManager(parent);
-        this.instanceManager = Injections.createInstanceManager(
-                parentManager,
-                JerseyClassAnalyzer.NAME,
-                new ServerBinder(application.getProperties()),
-                new ApplicationBinder(),
-                customBinder);
+        this.instanceManager = Injections.createInstanceManager(parentManager);
+        this.instanceManager.register(CompositeBinder.wrap(
+                new ServerBinder(application.getProperties(), instanceManager), new ApplicationBinder(), customBinder));
 
         final LazyValue<Iterable<ComponentProvider>> componentProviders = getLazyInitializedComponentProviders(instanceManager);
 

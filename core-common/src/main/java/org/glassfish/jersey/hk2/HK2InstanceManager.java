@@ -51,11 +51,16 @@ import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.ServiceHolder;
 import org.glassfish.jersey.spi.ServiceHolderImpl;
 import org.glassfish.jersey.spi.inject.Binder;
+import org.glassfish.jersey.spi.inject.ClassBeanDescriptor;
 import org.glassfish.jersey.spi.inject.CompositeBinder;
 import org.glassfish.jersey.spi.inject.Descriptor;
 import org.glassfish.jersey.spi.inject.Descriptors;
+import org.glassfish.jersey.spi.inject.ForeignDescriptor;
+import org.glassfish.jersey.spi.inject.ForeignDescriptorImpl;
+import org.glassfish.jersey.spi.inject.InstanceBeanDescriptor;
 import org.glassfish.jersey.spi.inject.InstanceManager;
 
+import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -136,16 +141,20 @@ public class HK2InstanceManager implements InstanceManager {
     }
 
     @Override
-    public void initialize(String name, InstanceManager parent, String defaultClassAnalyzer, Binder... binders) {
+    public void initialize(String name, InstanceManager parent, Binder... binders) {
         this.locator = createLocator(name, parent);
+        ServiceLocatorUtilities.bind(locator, new JerseyClassAnalyzer.Binder(locator));
 
         // First service the current BeanManager to be able to inject itself into other services.
         Hk2Helper.bind(locator, Descriptors.service(this).to(InstanceManager.class));
 
+        // Add support for Context annotation.
+        Hk2Helper.bind(locator, new ContextInjectionResolverImpl.Binder());
+
         // Compose together the initialization binders and bind them as a whole.
         Hk2Helper.bind(locator, CompositeBinder.wrap(binders));
 
-        this.locator.setDefaultClassAnalyzerName(defaultClassAnalyzer);
+        this.locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
         // clear HK2 caches
         ServiceLocatorRuntimeBean serviceLocatorRuntimeBean = locator.getService(ServiceLocatorRuntimeBean.class);
@@ -221,6 +230,32 @@ public class HK2InstanceManager implements InstanceManager {
     @Override
     public <T> T getInstance(Type clazz) {
         return locator.getService(clazz);
+    }
+
+    @Override
+    public Object getInstance(ForeignDescriptor foreignDescriptor) {
+        return locator.getServiceHandle((ActiveDescriptor<?>) foreignDescriptor.get()).getService();
+    }
+
+    @Override
+    public ForeignDescriptor createForeignDescriptor(Descriptor descriptor) {
+        ForeignDescriptor foreignDescriptor = createAndTranslateForeignDescriptor(descriptor);
+        ActiveDescriptor<Object> activeDescriptor = ServiceLocatorUtilities
+                .addOneDescriptor(locator, (org.glassfish.hk2.api.Descriptor) foreignDescriptor.get(), false);
+        return new ForeignDescriptorImpl(activeDescriptor);
+    }
+
+    private ForeignDescriptor createAndTranslateForeignDescriptor(Descriptor descriptor) {
+        ActiveDescriptor<?> activeDescriptor;
+        if (ClassBeanDescriptor.class.isAssignableFrom(descriptor.getClass())) {
+            activeDescriptor = Hk2Helper.translateToActiveDescriptor((ClassBeanDescriptor<?>) descriptor);
+        } else if (InstanceBeanDescriptor.class.isAssignableFrom(descriptor.getClass())) {
+            activeDescriptor = Hk2Helper.translateToActiveDescriptor((InstanceBeanDescriptor<?>) descriptor);
+        } else {
+            throw new RuntimeException(LocalizationMessages.UNKNOWN_DESCRIPTOR_TYPE(descriptor.getClass().getSimpleName()));
+        }
+
+        return new ForeignDescriptorImpl(activeDescriptor);
     }
 
     @Override

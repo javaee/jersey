@@ -53,8 +53,6 @@ import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
-import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
@@ -69,6 +67,7 @@ import org.glassfish.jersey.server.internal.process.ServerProcessingBinder;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Server injection binder.
@@ -80,13 +79,16 @@ class ServerBinder extends AbstractBinder {
 
     private final Map<String, Object> applicationProperties;
 
+    private final InstanceManager instanceManager;
+
     /**
      * Create new {@code ServerBinder} instance.
      *
      * @param applicationProperties map of application-specific properties.
      */
-    public ServerBinder(final Map<String, Object> applicationProperties) {
+    public ServerBinder(Map<String, Object> applicationProperties, InstanceManager instanceManager) {
         this.applicationProperties = applicationProperties;
+        this.instanceManager = instanceManager;
     }
 
     @Override
@@ -94,9 +96,7 @@ class ServerBinder extends AbstractBinder {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
                 new JerseyErrorService.Binder(),
                 new ServerProcessingBinder(),
-                new ContextInjectionResolver.Binder(),
-                new ParameterInjectionBinder(),
-                new JerseyClassAnalyzer.Binder(),
+                new ParameterInjectionBinder(instanceManager),
                 new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.SERVER),
                 new MessageBodyFactory.Binder(),
                 new ExceptionMapperFactory.Binder(),

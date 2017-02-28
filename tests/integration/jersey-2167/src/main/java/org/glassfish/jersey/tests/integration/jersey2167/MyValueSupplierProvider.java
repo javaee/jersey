@@ -48,9 +48,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.AbstractRequestDerivedValueSupplier;
 import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
-import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Custom annotation value supplier provider for JERSEY-2167 reproducer.
@@ -61,8 +59,8 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
 public class MyValueSupplierProvider extends AbstractValueSupplierProvider {
 
     @Inject
-    public MyValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
-        super(mpep, instanceManager, Parameter.Source.UNKNOWN);
+    public MyValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, Provider<ContainerRequest> requestProvider) {
+        super(mpep, requestProvider, Parameter.Source.UNKNOWN);
     }
 
     @Override
@@ -71,14 +69,6 @@ public class MyValueSupplierProvider extends AbstractValueSupplierProvider {
             Provider<ContainerRequest> requestProvider) {
 
         return new MyValueSupplier(requestProvider);
-    }
-
-    @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<MyAnnotation> {
-
-        public InjectionResolver() {
-            super(MyValueSupplierProvider.class);
-        }
     }
 
     private static final class MyValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {

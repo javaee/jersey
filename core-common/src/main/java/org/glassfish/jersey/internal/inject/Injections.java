@@ -71,30 +71,11 @@ public class Injections {
      * @param parent               The parent of this instance manager. Services can be found in
      *                             the parent (and all grand-parents). May be {@code null}.
      *                             if the returned instance manager should not be parented.
-     * @param defaultClassAnalyzer component used during analyzing the classes.
      * @param binders              custom the {@link Binder binders}.
      * @return a instance manager with all the bindings.
      */
-    public static InstanceManager createInstanceManager(String name,
-                                                        InstanceManager parent,
-                                                        String defaultClassAnalyzer,
-                                                        Binder... binders) {
-        return _instanceManager(name, parent, defaultClassAnalyzer, binders);
-    }
-
-    /**
-     * Create a {@link InstanceManager}. In case the {@code name} is not specified, the locator
-     * will be unnamed.
-     *
-     * @param parent               The parent of this instance manager. Services can be found in
-     *                             the parent (and all grand-parents). May be {@code null}.
-     *                             if the returned instance manager should not be parented.
-     * @param defaultClassAnalyzer component used during analyzing the classes.
-     * @param binders              custom the {@link Binder binders}.
-     * @return a instance manager with all the bindings.
-     */
-    public static InstanceManager createInstanceManager(InstanceManager parent, String defaultClassAnalyzer, Binder... binders) {
-        return _instanceManager(null, parent, defaultClassAnalyzer, binders);
+    public static InstanceManager createInstanceManager(String name, InstanceManager parent, Binder... binders) {
+        return _instanceManager(name, parent, binders);
     }
 
     /**
@@ -105,7 +86,7 @@ public class Injections {
      * @return a instance manager with all the bindings.
      */
     public static InstanceManager createInstanceManager(Binder... binders) {
-        return _instanceManager(null, null, null, binders);
+        return _instanceManager(null, null, binders);
     }
 
     /**
@@ -119,7 +100,7 @@ public class Injections {
      * @return a instance manager with all the bindings.
      */
     public static InstanceManager createInstanceManager(String name, Binder... binders) {
-        return _instanceManager(name, null, null, binders);
+        return _instanceManager(name, null, binders);
     }
 
     /**
@@ -133,24 +114,10 @@ public class Injections {
      * @return a instance manager with all the bindings.
      */
     public static InstanceManager createInstanceManager(InstanceManager parent, Binder... binders) {
-        return _instanceManager(null, parent, null, binders);
+        return _instanceManager(null, parent, binders);
     }
 
-    /**
-     * Create an unnamed {@link InstanceManager}.
-     *
-     * @param defaultClassAnalyzer component used during analyzing the classes.
-     * @param binders              custom the {@link Binder binders}.
-     * @return a instance manager with all the bindings.
-     */
-    public static InstanceManager createInstanceManager(String name, String defaultClassAnalyzer, Binder... binders) {
-        return _instanceManager(name, null, defaultClassAnalyzer, binders);
-    }
-
-    private static InstanceManager _instanceManager(String name,
-                                                    InstanceManager parent,
-                                                    String defaultClassAnalyzer,
-                                                    Binder... binders) {
+    private static InstanceManager _instanceManager(String name, InstanceManager parent, Binder... binders) {
         Iterator<InstanceManager> iterator = ServiceLoader.load(InstanceManager.class).iterator();
         InstanceManager instanceManager;
         if (iterator.hasNext()) {
@@ -160,7 +127,7 @@ public class Injections {
             instanceManager = new HK2InstanceManager();
         }
 
-        instanceManager.initialize(name, parent, defaultClassAnalyzer, binders);
+        instanceManager.initialize(name, parent, binders);
         return instanceManager;
     }
 
