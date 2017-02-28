@@ -45,6 +45,7 @@ import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericType;
@@ -55,6 +56,7 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.inject.ForeignRequestScopeBridge;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.internal.util.collection.Cache;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
@@ -71,8 +73,6 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.InjecteeImpl;
-import org.glassfish.hk2.utilities.cache.Cache;
-import org.glassfish.hk2.utilities.cache.Computable;
 
 /**
  * Injection resolver for {@link Context @Context} injection annotation.
@@ -102,10 +102,10 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
     private ServiceLocator serviceLocator;
 
     private final Cache<Injectee, ActiveDescriptor<?>> descriptorCache
-            = new Cache<Injectee, ActiveDescriptor<?>>(new Computable<Injectee, ActiveDescriptor<?>>() {
+            = new Cache<Injectee, ActiveDescriptor<?>>(new Function<Injectee, ActiveDescriptor<?>>() {
 
                 @Override
-                public ActiveDescriptor<?> compute(Injectee key) {
+                public ActiveDescriptor<?> apply(Injectee key) {
                     return serviceLocator.getInjecteeDescriptor(key);
                 }
             });
@@ -119,10 +119,10 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
         if (isHk2Factory) {
             newInjectee = getFactoryInjectee(injectee, ReflectionHelper.getTypeArgument(requiredType, 0));
         } else {
-            newInjectee = foreignRequestScopedInjecteeCache.compute(injectee);
+            newInjectee = foreignRequestScopedInjecteeCache.apply(injectee);
         }
 
-        ActiveDescriptor<?> ad = descriptorCache.compute(newInjectee);
+        ActiveDescriptor<?> ad = descriptorCache.apply(newInjectee);
 
         if (ad != null) {
             final ServiceHandle handle = serviceLocator.getServiceHandle(ad, newInjectee);
@@ -203,10 +203,9 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
         return Context.class;
     }
 
-    private final Cache<Injectee, Injectee> foreignRequestScopedInjecteeCache =
-            new Cache<>(new Computable<Injectee, Injectee>() {
+    private final Cache<Injectee, Injectee> foreignRequestScopedInjecteeCache = new Cache<>(new Function<Injectee, Injectee>() {
         @Override
-        public Injectee compute(Injectee injectee) {
+        public Injectee apply(Injectee injectee) {
             if (injectee.getParent() != null) {
                 if (Field.class.isAssignableFrom(injectee.getParent().getClass())) {
                     Field f = (Field) injectee.getParent();

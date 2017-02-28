@@ -57,6 +57,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -96,6 +97,7 @@ import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerStore;
 import org.glassfish.jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider;
 import org.glassfish.jersey.internal.inject.ForeignRequestScopeBridge;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.util.collection.Cache;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.spi.ComponentProvider;
@@ -109,8 +111,6 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.utilities.cache.Cache;
-import org.glassfish.hk2.utilities.cache.Computable;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -159,12 +159,12 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     private final Set<Class<?>> requestScopedComponents = new HashSet<>();
 
 
-    private final Cache<Class<?>, Boolean> jaxRsComponentCache = new Cache<>(new Computable<Class<?>, Boolean>() {
+    private final Cache<Class<?>, Boolean> jaxRsComponentCache = new Cache<>(new Function<Class<?>, Boolean>() {
         @Override
-        public Boolean compute(final Class<?> clazz) {
+        public Boolean apply(final Class<?> clazz) {
             return Application.class.isAssignableFrom(clazz)
                     || Providers.isJaxRsProvider(clazz)
-                    || jaxRsResourceCache.compute(clazz);
+                    || jaxRsResourceCache.apply(clazz);
         }
     });
 
@@ -239,10 +239,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         /**
          * Internal cache to store CDI {@link InjectionPoint} to Jersey {@link Parameter} mapping.
          */
-        final Cache<InjectionPoint, Parameter> parameterCache = new Cache<>(new Computable<InjectionPoint, Parameter>() {
+        final Cache<InjectionPoint, Parameter> parameterCache = new Cache<>(new Function<InjectionPoint, Parameter>() {
 
             @Override
-            public Parameter compute(final InjectionPoint injectionPoint) {
+            public Parameter apply(final InjectionPoint injectionPoint) {
                 final Annotated annotated = injectionPoint.getAnnotated();
                 final Class<?> clazz = injectionPoint.getMember().getDeclaringClass();
 
@@ -276,7 +276,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         @javax.enterprise.inject.Produces
         @JaxRsParamQualifier
         public String getParameterValue(final InjectionPoint injectionPoint, final BeanManager beanManager) {
-            final Parameter parameter = parameterCache.compute(injectionPoint);
+            final Parameter parameter = parameterCache.apply(injectionPoint);
 
             if (parameter != null) {
                 InstanceManager instanceManager = beanManager.getExtension(CdiComponentProvider.class).getEffectiveLocator();
@@ -316,7 +316,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             return false;
         }
 
-        final boolean isJaxRsResource = jaxRsResourceCache.compute(clazz);
+        final boolean isJaxRsResource = jaxRsResourceCache.apply(clazz);
 
         final Class<? extends Annotation> beanScopeAnnotation = CdiUtil.getBeanScope(clazz, beanManager);
         final boolean isRequestScoped = beanScopeAnnotation == RequestScoped.class
@@ -801,7 +801,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
      * @return true if the type represents a JAX-RS component type.
      */
     /* package */ boolean isJaxRsComponentType(final Class<?> clazz) {
-        return jaxRsComponentCache.compute(clazz);
+        return jaxRsComponentCache.apply(clazz);
     }
 
     private static boolean isJerseyOrDependencyType(final Class<?> clazz) {

@@ -40,20 +40,20 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
+import java.util.function.Function;
+
 import javax.ws.rs.BeanParam;
 
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.util.collection.Cache;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.spi.inject.Descriptors;
 import org.glassfish.jersey.spi.inject.ForeignDescriptor;
 import org.glassfish.jersey.spi.inject.InstanceManager;
-
-import org.glassfish.hk2.utilities.cache.Cache;
-import org.glassfish.hk2.utilities.cache.Computable;
 
 /**
  * Value factory provider for {@link BeanParam bean parameters}.
@@ -70,10 +70,9 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
         private final InstanceManager instanceManager;
 
         private final Cache<Class<?>, ForeignDescriptor> descriptorCache
-                = new Cache<>(new Computable<Class<?>, ForeignDescriptor>() {
-
+                = new Cache<>(new Function<Class<?>, ForeignDescriptor>() {
                     @Override
-                    public ForeignDescriptor compute(Class<?> key) {
+                    public ForeignDescriptor apply(Class<?> key) {
                         // below we make sure HK2 behaves as if injection happens into a request scoped type
                         // this is to avoid having proxies injected (see JERSEY-2386)
                         // before touching the following statement, check BeanParamMemoryLeakTest first!
@@ -97,7 +96,7 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
             if (fromHk2 != null) { // the bean parameter type is already bound in HK2, let's just take it from there
                 return fromHk2;
             }
-            ForeignDescriptor foreignDescriptor = descriptorCache.compute(rawType);
+            ForeignDescriptor foreignDescriptor = descriptorCache.apply(rawType);
             return instanceManager.getInstance(foreignDescriptor);
         }
     }
