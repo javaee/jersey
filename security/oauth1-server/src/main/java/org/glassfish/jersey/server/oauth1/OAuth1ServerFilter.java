@@ -53,10 +53,13 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.Priorities;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.oauth1.signature.OAuth1Parameters;
