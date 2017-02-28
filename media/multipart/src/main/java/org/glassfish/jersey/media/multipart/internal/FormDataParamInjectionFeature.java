@@ -44,14 +44,17 @@ import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
-import javax.ws.rs.core.GenericType;
 
-import javax.inject.Singleton;
+import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-
-import org.glassfish.hk2.api.InjectionResolver;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
+import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.spi.inject.Descriptors;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Feature providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
@@ -61,17 +64,17 @@ import org.glassfish.hk2.api.InjectionResolver;
 @ConstrainedTo(RuntimeType.SERVER)
 public final class FormDataParamInjectionFeature implements Feature {
 
+    @Inject
+    private InstanceManager instanceManager;
+
     @Override
     public boolean configure(final FeatureContext context) {
-        context.register(FormDataParamValueSupplierProvider.class);
-        context.register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(FormDataParamValueSupplierProvider.InjectionResolver.class)
-                        .to(new GenericType<InjectionResolver<FormDataParam>>() {})
-                        .in(Singleton.class);
-            }
-        });
+        FormDataParamValueSupplierProvider valueSupplier = new FormDataParamValueSupplierProvider(
+                instanceManager.getInstance(MultivaluedParameterExtractorProvider.class),
+                Injections.getProvider(instanceManager, ContainerRequest.class));
+
+        instanceManager.register(Descriptors.injectionResolver(new ParamInjectionResolver<>(valueSupplier, FormDataParam.class)));
+        context.register(valueSupplier, ValueSupplierProvider.class);
         return true;
     }
 }

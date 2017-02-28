@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,54 +38,32 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.internal.inject;
-
-import javax.ws.rs.container.AsyncResponse;
-
-import javax.inject.Provider;
-
-import org.glassfish.jersey.internal.inject.SupplierFactory;
-import org.glassfish.jersey.server.internal.process.AsyncContext;
-import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+package org.glassfish.jersey.spi.inject;
 
 /**
- * Value factory provider supporting the {@link javax.ws.rs.container.Suspended} injection annotation.
+ * Class which has the fields containing the instance of {@link InjectionResolver} and its a concrete type.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @param <T> type of the annotation which is served using th given injection resolver.
  */
-final class AsyncResponseValueSupplierProvider implements ValueSupplierProvider {
+public class InjectionResolverDescriptor<T extends InjectionResolver> extends Descriptor<T, InjectionResolverDescriptor<T>> {
 
-    private final Provider<AsyncContext> asyncContextProvider;
+    private final T resolver;
 
     /**
-     * Initialize the provider.
+     * Creates an injection resolver as an instance.
      *
-     * @param asyncContextProvider async processing context provider.
+     * @param resolver injection resolver instance.
      */
-    public AsyncResponseValueSupplierProvider(Provider<AsyncContext> asyncContextProvider) {
-        this.asyncContextProvider = asyncContextProvider;
+    InjectionResolverDescriptor(T resolver) {
+        this.resolver = resolver;
     }
 
-    @Override
-    public SupplierFactory<AsyncResponse> getValueSupplier(final Parameter parameter) {
-        if (parameter.getSource() != Parameter.Source.SUSPENDED) {
-            return null;
-        }
-        if (!AsyncResponse.class.isAssignableFrom(parameter.getRawType())) {
-            return null;
-        }
-
-        return new SupplierFactory<AsyncResponse>() {
-            @Override
-            public AsyncResponse provide() {
-                return asyncContextProvider.get();
-            }
-        };
-    }
-
-    @Override
-    public PriorityType getPriority() {
-        return Priority.NORMAL;
+    /**
+     * Gets the injection resolver handled by this descriptor.
+     *
+     * @return {@code InjectionResolver} instance.
+     */
+    public T getResolver() {
+        return resolver;
     }
 }

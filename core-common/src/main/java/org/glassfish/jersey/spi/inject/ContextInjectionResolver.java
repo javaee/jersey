@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,54 +38,16 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.internal.inject;
+package org.glassfish.jersey.spi.inject;
 
-import javax.ws.rs.container.AsyncResponse;
-
-import javax.inject.Provider;
-
-import org.glassfish.jersey.internal.inject.SupplierFactory;
-import org.glassfish.jersey.server.internal.process.AsyncContext;
-import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import javax.ws.rs.core.Context;
 
 /**
- * Value factory provider supporting the {@link javax.ws.rs.container.Suspended} injection annotation.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * A marker interface to {@code InjectionResolver&lt;Context&gt;}. This interface must be implemented by every Dependency
+ * Injection Provider to properly handle the injection of {@link Context} annotation.
+ * <p>
+ * Jersey cannot simply add the default implementation of this interface because the proper implementation requires a lot of
+ * caching and optimization which can be done only with very close dependency to DI provider.
  */
-final class AsyncResponseValueSupplierProvider implements ValueSupplierProvider {
-
-    private final Provider<AsyncContext> asyncContextProvider;
-
-    /**
-     * Initialize the provider.
-     *
-     * @param asyncContextProvider async processing context provider.
-     */
-    public AsyncResponseValueSupplierProvider(Provider<AsyncContext> asyncContextProvider) {
-        this.asyncContextProvider = asyncContextProvider;
-    }
-
-    @Override
-    public SupplierFactory<AsyncResponse> getValueSupplier(final Parameter parameter) {
-        if (parameter.getSource() != Parameter.Source.SUSPENDED) {
-            return null;
-        }
-        if (!AsyncResponse.class.isAssignableFrom(parameter.getRawType())) {
-            return null;
-        }
-
-        return new SupplierFactory<AsyncResponse>() {
-            @Override
-            public AsyncResponse provide() {
-                return asyncContextProvider.get();
-            }
-        };
-    }
-
-    @Override
-    public PriorityType getPriority() {
-        return Priority.NORMAL;
-    }
+public interface ContextInjectionResolver extends InjectionResolver<Context> {
 }

@@ -50,7 +50,6 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -87,9 +86,9 @@ public class JaxrsProvidersTest {
     @Test
     public void testProviders() throws Exception {
         final InstanceManager instanceManager = Injections.createInstanceManager(
-                new ContextInjectionResolver.Binder(),
-                new TestBinder(),
                 new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER), new Binder());
+
+        instanceManager.register(new TestBinder(instanceManager));
 
         TestBinder.initProviders(instanceManager);
         RequestScope scope = instanceManager.getInstance(RequestScope.class);

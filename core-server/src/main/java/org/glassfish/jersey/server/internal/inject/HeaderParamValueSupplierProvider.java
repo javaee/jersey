@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.internal.inject;
 
 import javax.ws.rs.HeaderParam;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -50,7 +49,6 @@ import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Value supplier provider supporting the {@link HeaderParam &#64;HeaderParam} injection annotation.
@@ -65,11 +63,11 @@ final class HeaderParamValueSupplierProvider extends AbstractValueSupplierProvid
      * Injection constructor.
      *
      * @param mpep            multivalued map parameter extractor provider.
-     * @param instanceManager HK2 service instanceManager.
+     * @param requestProvider request provider.
      */
-    @Inject
-    public HeaderParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, InstanceManager instanceManager) {
-        super(mpep, instanceManager, Parameter.Source.HEADER);
+    public HeaderParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+            Provider<ContainerRequest> requestProvider) {
+        super(mpep, requestProvider, Parameter.Source.HEADER);
     }
 
     @Override
@@ -89,20 +87,6 @@ final class HeaderParamValueSupplierProvider extends AbstractValueSupplierProvid
         }
 
         return new HeaderParamValueSupplier(e, requestProvider);
-    }
-
-    /**
-     * {@link HeaderParam &#64;HeaderParam} injection resolver.
-     */
-    @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<HeaderParam> {
-
-        /**
-         * Create new {@link HeaderParam &#64;HeaderParam} injection resolver.
-         */
-        public InjectionResolver() {
-            super(HeaderParamValueSupplierProvider.class);
-        }
     }
 
     private static final class HeaderParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {

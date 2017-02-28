@@ -47,11 +47,9 @@ import java.util.function.Supplier;
 
 import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * A parameter value supplier provider that provides parameter value factories
@@ -65,7 +63,6 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
 public abstract class AbstractValueSupplierProvider implements ValueSupplierProvider {
 
     private final MultivaluedParameterExtractorProvider mpep;
-    private final InstanceManager instanceManager;
     private final Set<Parameter.Source> compatibleSources;
     private final Provider<ContainerRequest> requestProvider;
 
@@ -73,16 +70,15 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
      * Initialize the provider.
      *
      * @param mpep              multivalued map parameter extractor provider.
-     * @param instanceManager   instance manager.
+     * @param requestProvider   container request provider.
      * @param compatibleSources compatible parameter sources.
      */
     protected AbstractValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
-                                            InstanceManager instanceManager,
+                                            Provider<ContainerRequest> requestProvider,
                                             Parameter.Source... compatibleSources) {
         this.mpep = mpep;
-        this.instanceManager = instanceManager;
+        this.requestProvider = requestProvider;
         this.compatibleSources = new HashSet<>(Arrays.asList(compatibleSources));
-        this.requestProvider = Injections.getProvider(instanceManager, ContainerRequest.class);
     }
 
     /**
@@ -125,24 +121,11 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
             // not compatible
             return null;
         }
-        final Supplier<?> valueSupplier = createValueSupplier(parameter, requestProvider);
-        if (valueSupplier != null) {
-            instanceManager.inject(valueSupplier);
-        }
-        return valueSupplier;
+        return createValueSupplier(parameter, requestProvider);
     }
 
     @Override
     public PriorityType getPriority() {
         return Priority.NORMAL;
-    }
-
-    /**
-     * Get the instance manager.
-     *
-     * @return instance manager.
-     */
-    protected final InstanceManager getInstanceManager() {
-        return instanceManager;
     }
 }

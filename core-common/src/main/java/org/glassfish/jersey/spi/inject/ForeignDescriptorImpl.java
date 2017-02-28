@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,54 +38,30 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.internal.inject;
-
-import javax.ws.rs.container.AsyncResponse;
-
-import javax.inject.Provider;
-
-import org.glassfish.jersey.internal.inject.SupplierFactory;
-import org.glassfish.jersey.server.internal.process.AsyncContext;
-import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+package org.glassfish.jersey.spi.inject;
 
 /**
- * Value factory provider supporting the {@link javax.ws.rs.container.Suspended} injection annotation.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * The descriptor holder for an externally provided DI providers. Using this interface DI provider is able to provider his own
+ * descriptor which can be used and returned to the DI provider in further processing.
+ * <p>
+ * This is useful in the case of caching where an algorithm is able to store and subsequently provide for an injection the already
+ * resolved descriptor of the same value.
  */
-final class AsyncResponseValueSupplierProvider implements ValueSupplierProvider {
+public class ForeignDescriptorImpl implements ForeignDescriptor {
 
-    private final Provider<AsyncContext> asyncContextProvider;
+    private Object foreignDescriptor;
 
     /**
-     * Initialize the provider.
+     * Constructor accepts a descriptor of the DI provider and to be able to provide it in further processing.
      *
-     * @param asyncContextProvider async processing context provider.
+     * @param foreignDescriptor DI provider's descriptor.
      */
-    public AsyncResponseValueSupplierProvider(Provider<AsyncContext> asyncContextProvider) {
-        this.asyncContextProvider = asyncContextProvider;
+    public ForeignDescriptorImpl(Object foreignDescriptor) {
+        this.foreignDescriptor = foreignDescriptor;
     }
 
     @Override
-    public SupplierFactory<AsyncResponse> getValueSupplier(final Parameter parameter) {
-        if (parameter.getSource() != Parameter.Source.SUSPENDED) {
-            return null;
-        }
-        if (!AsyncResponse.class.isAssignableFrom(parameter.getRawType())) {
-            return null;
-        }
-
-        return new SupplierFactory<AsyncResponse>() {
-            @Override
-            public AsyncResponse provide() {
-                return asyncContextProvider.get();
-            }
-        };
-    }
-
-    @Override
-    public PriorityType getPriority() {
-        return Priority.NORMAL;
+    public Object get() {
+        return foreignDescriptor;
     }
 }

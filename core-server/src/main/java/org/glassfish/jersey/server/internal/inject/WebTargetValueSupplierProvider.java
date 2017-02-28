@@ -57,17 +57,15 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.Context;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ClientBinding;
@@ -76,7 +74,6 @@ import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.inject.InstanceManager;
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 /**
@@ -86,7 +83,8 @@ import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
  */
 final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider {
 
-    private final Configuration serverConfig;
+    private final Function<Class<? extends Configuration>, Configuration> clientConfigProvider;
+    private final LazyValue<Configuration> serverConfig;
     private final ConcurrentMap<BindingModel, Value<ManagedClient>> managedClients;
 
     private static class ManagedClient {
@@ -233,19 +231,6 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
         }
     }
 
-    /**
-     * {@link Uri} injection resolver.
-     */
-    static final class InjectionResolver extends ParamInjectionResolver<Uri> {
-
-        /**
-         * Create new injection resolver.
-         */
-        public InjectionResolver() {
-            super(WebTargetValueSupplierProvider.class);
-        }
-    }
-
     private static final class WebTargetValueSupplier extends AbstractRequestDerivedValueSupplier<WebTarget> {
 
         private final String uri;
@@ -292,13 +277,15 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
     /**
      * Initialize the provider.
      *
-     * @param instanceManager  instance manager to be used for injecting into the values factory.
-     * @param serverConfig server-side configuration.
+     * @param requestProvider      request provider.
+     * @param serverConfig        server-side serverConfig.
+     * @param clientConfigProvider function which get or create a new client serverConfig according to provided class.
      */
-    @Inject
-    public WebTargetValueSupplierProvider(final InstanceManager instanceManager, @Context final Configuration serverConfig) {
-        super(null, instanceManager, Parameter.Source.URI);
-
+    public WebTargetValueSupplierProvider(Provider<ContainerRequest> requestProvider,
+            LazyValue<Configuration> serverConfig,
+            Function<Class<? extends Configuration>, Configuration> clientConfigProvider) {
+        super(null, requestProvider, Parameter.Source.URI);
+        this.clientConfigProvider = clientConfigProvider;
         this.serverConfig = serverConfig;
 
         this.managedClients = new ConcurrentHashMap<BindingModel, Value<ManagedClient>>();
@@ -307,11 +294,11 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
             @Override
             public ManagedClient get() {
                 final Client client;
-                if (serverConfig == null) {
+                if (serverConfig.get() == null) {
                     client = ClientBuilder.newClient();
                 } else {
                     ClientConfig clientConfig = new ClientConfig();
-                    copyProviders(serverConfig, clientConfig);
+                    copyProviders(serverConfig.get(), clientConfig);
                     client = ClientBuilder.newClient(clientConfig);
                 }
                 return new ManagedClient(client, "");
@@ -362,28 +349,28 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
                             public ManagedClient get() {
                                 final String prefix = binding.getAnnotation().annotationType().getName() + ".";
                                 final String baseUriProperty = prefix + "baseUri";
-                                final Object bu = serverConfig.getProperty(baseUriProperty);
+                                final Object bu = serverConfig.get().getProperty(baseUriProperty);
                                 final String customBaseUri = (bu != null) ? bu.toString() : binding.baseUri();
 
                                 final String configClassProperty = prefix + "configClass";
                                 final ClientConfig cfg = resolveConfig(configClassProperty, binding);
 
                                 final String inheritProvidersProperty = prefix + "inheritServerProviders";
-                                if (PropertiesHelper.isProperty(serverConfig.getProperty(inheritProvidersProperty))
+                                if (PropertiesHelper.isProperty(serverConfig.get().getProperty(inheritProvidersProperty))
                                         || binding.inheritProviders()) {
-                                    copyProviders(serverConfig, cfg);
+                                    copyProviders(serverConfig.get(), cfg);
                                 }
 
                                 final String propertyPrefix = prefix + "property.";
                                 Collection<String> clientProperties =
-                                        serverConfig.getPropertyNames()
+                                        serverConfig.get().getPropertyNames()
                                                     .stream()
                                                     .filter(property -> property.startsWith(propertyPrefix))
                                                     .collect(Collectors.toSet());
 
                                 for (String property : clientProperties) {
                                     cfg.property(property.substring(propertyPrefix.length()),
-                                            serverConfig.getProperty(property));
+                                            serverConfig.get().getProperty(property));
                                 }
 
                                 return new ManagedClient(ClientBuilder.newClient(cfg), customBaseUri);
@@ -405,7 +392,7 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
 
     private ClientConfig resolveConfig(final String configClassProperty, final BindingModel binding) {
         Class<? extends Configuration> configClass = binding.getConfigClass();
-        final Object _cc = serverConfig.getProperty(configClassProperty);
+        final Object _cc = serverConfig.get().getProperty(configClassProperty);
         if (_cc != null) {
             Class<?> cc;
             if (_cc instanceof String) {
@@ -427,8 +414,9 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
             }
         }
 
-        final Configuration cfg = Injections.getOrCreate(getInstanceManager(), configClass);
+        final Configuration cfg = clientConfigProvider.apply(configClass);
 
         return (cfg instanceof ClientConfig) ? (ClientConfig) cfg : new ClientConfig().loadFrom(cfg);
     }
+
 }

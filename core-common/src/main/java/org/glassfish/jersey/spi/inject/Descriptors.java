@@ -196,4 +196,19 @@ public final class Descriptors {
     public static <T> InstanceFactoryDescriptor<T> factory(Factory<T> factory) {
         return new InstanceFactoryDescriptor<>(factory);
     }
+
+    /**
+     * Start building a new injection resolver binding. The injection resolver is naturally
+     * considered to be a {@link javax.inject.Singleton singleton-scoped}.
+     * <p>
+     * There is no need to provide any additional information. Other method on {@link Descriptor}
+     * will be ignored.
+     *
+     * @param <T>        type of the injection resolver.
+     * @param resolver   injection resolver instance.
+     * @return initialized binding builder.
+     */
+    public static <T extends InjectionResolver> InjectionResolverDescriptor<T> injectionResolver(T resolver) {
+        return new InjectionResolverDescriptor<>(resolver);
+    }
 }

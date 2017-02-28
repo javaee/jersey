@@ -46,8 +46,6 @@ import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
@@ -61,6 +59,12 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class TestBinder extends AbstractBinder {
+
+    private final InstanceManager instanceManager;
+
+    public TestBinder(InstanceManager instanceManager) {
+        this.instanceManager = instanceManager;
+    }
 
     public static void initProviders(final InstanceManager instanceManager) {
         initProviders(instanceManager, Collections.emptySet(), Collections.emptySet());
@@ -79,8 +83,6 @@ public class TestBinder extends AbstractBinder {
         install(
                 new RequestScope.Binder(),
                 new JerseyErrorService.Binder(),
-                new ContextInjectionResolver.Binder(),
-                new JerseyClassAnalyzer.Binder(),
                 new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER),
                 new MessageBodyFactory.Binder(),
                 new ExceptionMapperFactory.Binder(),

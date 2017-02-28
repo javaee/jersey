@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,7 +38,7 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal.inject;
+package org.glassfish.jersey.hk2;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -52,12 +52,15 @@ import javax.ws.rs.core.GenericType;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.ForeignRequestScopeBridge;
+import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.spi.inject.ContextInjectionResolver;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Factory;
@@ -78,7 +81,7 @@ import org.glassfish.hk2.utilities.cache.Computable;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Singleton
-public class ContextInjectionResolver implements InjectionResolver<Context> {
+public class ContextInjectionResolverImpl implements InjectionResolver<Context>, ContextInjectionResolver {
 
     /**
      * Context injection resolver binder.
@@ -87,9 +90,11 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
 
         @Override
         protected void configure() {
-            // @Context
-            bind(ContextInjectionResolver.class).to(new GenericType<InjectionResolver<Context>>() {
-            }).in(Singleton.class);
+            bind(ContextInjectionResolverImpl.class)
+                    .to(new GenericType<InjectionResolver<Context>>() {})
+                    .to(new GenericType<org.glassfish.jersey.spi.inject.InjectionResolver<Context>>() {})
+                    .to(ContextInjectionResolver.class)
+                    .in(Singleton.class);
         }
     }
 
@@ -131,6 +136,31 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
         return null;
     }
 
+    /**
+     * Jersey Injection Resolver method that just populate HK2 injectee object and delegates the processing to HK2 Injection
+     * Resolver.
+     *
+     * @param injectee The injection point this value is being injected into
+     * @return result of the injection processing.
+     */
+    @Override
+    public Object resolve(org.glassfish.jersey.spi.inject.Injectee injectee) {
+        InjecteeImpl hk2injectee = new InjecteeImpl() {
+            @Override
+            public Class<?> getInjecteeClass() {
+                return injectee.getInjecteeClass();
+            }
+        };
+        hk2injectee.setRequiredType(injectee.getRequiredType());
+        hk2injectee.setRequiredQualifiers(injectee.getRequiredQualifiers());
+        if (injectee.getInjecteeDescriptor() != null) {
+            hk2injectee.setInjecteeDescriptor((ActiveDescriptor<?>) injectee.getInjecteeDescriptor().get());
+        }
+
+        // Delegate the call to HK2 Resolver, Service Handle is not need in the delegated processing.
+        return resolve(hk2injectee, null);
+    }
+
     private Factory asFactory(final ServiceHandle handle) {
         return new SupplierFactory() {
             @Override
@@ -145,9 +175,6 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
     }
 
     private static class RequiredTypeOverridingInjectee extends InjecteeImpl {
-
-        private static final long serialVersionUID = -3740895548611880187L;
-
         private RequiredTypeOverridingInjectee(final Injectee injectee, final Type requiredType) {
             super(injectee);
             setRequiredType(requiredType);
@@ -155,9 +182,6 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
     }
 
     private static class DescriptorOverridingInjectee extends InjecteeImpl {
-
-        private static final long serialVersionUID = -3740895548611880189L;
-
         private DescriptorOverridingInjectee(final Injectee injectee, final ActiveDescriptor descriptor) {
             super(injectee);
             setInjecteeDescriptor(descriptor);
@@ -174,9 +198,13 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
         return false;
     }
 
+    @Override
+    public Class<Context> getAnnotation() {
+        return Context.class;
+    }
 
     private final Cache<Injectee, Injectee> foreignRequestScopedInjecteeCache =
-            new Cache<Injectee, Injectee>(new Computable<Injectee, Injectee>() {
+            new Cache<>(new Computable<Injectee, Injectee>() {
         @Override
         public Injectee compute(Injectee injectee) {
             if (injectee.getParent() != null) {
@@ -200,12 +228,8 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
         }
     });
 
-    LazyValue<Set<Class<?>>> foreignRequestScopedComponents = Values.lazy(new Value<Set<Class<?>>>() {
-        @Override
-        public Set<Class<?>> get() {
-            return getForeignRequestScopedComponents();
-        }
-    });
+    private LazyValue<Set<Class<?>>> foreignRequestScopedComponents = Values.lazy(
+            (Value<Set<Class<?>>>) this::getForeignRequestScopedComponents);
 
     private Set<Class<?>> getForeignRequestScopedComponents() {
         final List<ForeignRequestScopeBridge> scopeBridges = serviceLocator.getAllServices(ForeignRequestScopeBridge.class);

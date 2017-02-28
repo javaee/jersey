@@ -66,7 +66,6 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.CustomAnnotationLiteral;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
@@ -126,7 +125,6 @@ public class ProviderBinderTest {
     private static Binder[] initBinders(Binder... binders) {
         List<Binder> binderList = Arrays.stream(binders).collect(Collectors.toList());
 
-        binderList.add(new ContextInjectionResolver.Binder());
         binderList.add(new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER));
 
         return binderList.toArray(new Binder[binderList.size()]);

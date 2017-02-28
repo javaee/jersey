@@ -45,9 +45,6 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
 
-import org.glassfish.hk2.api.InjectionResolver;
-import javax.ws.rs.core.GenericType;
-
 /**
  * Custom annotation binder for JERSEY-2167 reproducer.
  *
@@ -58,7 +55,5 @@ public class MyBinder extends AbstractBinder {
     @Override
     protected void configure() {
         bind(MyValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(MyValueSupplierProvider.InjectionResolver.class)
-                .to(new GenericType<InjectionResolver<MyAnnotation>>() {}).in(Singleton.class);
     }
 }

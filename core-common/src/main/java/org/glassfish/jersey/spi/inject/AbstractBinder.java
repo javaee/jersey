@@ -191,6 +191,23 @@ public abstract class AbstractBinder implements Binder {
     }
 
     /**
+     * Start building a new injection resolver binding. The injection resolver is naturally
+     * considered to be a {@link javax.inject.Singleton singleton-scoped}.
+     * <p>
+     * There is no need to provide any additional information. Other method on {@link Descriptor}
+     * will be ignored.
+     *
+     * @param <T>        type of the injection resolver.
+     * @param resolver   injection resolver instance.
+     * @return initialized binding builder.
+     */
+    public <T extends InjectionResolver> InjectionResolverDescriptor<T> bind(T resolver) {
+        InjectionResolverDescriptor<T> descriptor = Descriptors.injectionResolver(resolver);
+        descriptors.add(descriptor);
+        return descriptor;
+    }
+
+    /**
      * Adds all binding definitions from the binders to the binding configuration.
      *
      * @param binders binders whose binding definitions should be configured.

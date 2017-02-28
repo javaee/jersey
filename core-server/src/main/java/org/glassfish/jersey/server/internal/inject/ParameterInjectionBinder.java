@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
+import java.util.function.Function;
+
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.FormParam;
@@ -48,117 +50,155 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.Suspended;
-import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import javax.inject.Singleton;
+import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.Uri;
+import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-
-import org.glassfish.hk2.api.InjectionResolver;
+import org.glassfish.jersey.spi.inject.ContextInjectionResolver;
+import org.glassfish.jersey.spi.inject.InstanceManager;
 
 /**
  * Injection binder providing support for JAX-RS and Jersey injection annotations.
  * Namely, standard injection support for the following set of JAX-RS and Jersey
  * annotations is provided by the binder:
  * <dl>
- *
+ * <p>
  * <dt>{@link javax.ws.rs.core.Context @Context}</dt>
  * <dd>
  * Generic support for the {@code @Context}-based injection is provided so that
  * the {@code @Context} annotation can be used interchangeably with e.g. standard
  * {@code @Inject} dependency injection annotation.
  * </dd>
- *
+ * <p>
  * <dt>{@link javax.ws.rs.CookieParam @CookieParam}</dt>
  * <dd>
  * Support for cookie parameter injection as defined by the JAX-RS specification.
  * </dd>
- *
+ * <p>
  * <dt>{@link javax.ws.rs.FormParam @FormParam}</dt>
  * <dd>
  * Support for form parameter injection as defined by the JAX-RS specification.
  * </dd>
- *
+ * <p>
  * <dt>{@link javax.ws.rs.HeaderParam @HeaderParam}</dt>
  * <dd>
  * Support for request header parameter injection as defined by the JAX-RS specification.
  * </dd>
- *
+ * <p>
  * <dt>{@link javax.ws.rs.MatrixParam @MatrixParam}</dt>
  * <dd>
  * Support for request URI matrix path parameter injection as defined by the JAX-RS specification.
  * </dd>
- *
+ * <p>
  * <dt>{@link javax.ws.rs.PathParam @PathParam}</dt>
  * <dd>
  * Support for request URI path parameter injection as defined by the JAX-RS specification.
  * </dd>
- *
+ * <p>
  * <dt>{@link javax.ws.rs.QueryParam @QueryParam}</dt>
  * <dd>
  * Support for request URI query parameter injection as defined by the JAX-RS specification.
  * </dd>
- *
+ * <p>
  * <dt>{@link javax.ws.rs.container.Suspended @Suspended}</dt>
  * <dd>
  * Support for {@link javax.ws.rs.container.AsyncResponse} injection as defined by the JAX-RS specification.
  * </dd>
- *
+ * <p>
  * <dt>{@link org.glassfish.jersey.server.Uri @Uri}</dt>
  * <dd>
  * Jersey-specific support for {@link javax.ws.rs.client.WebTarget} injection.
  * </dd>
- *
+ * <p>
  * </dl>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ParameterInjectionBinder extends AbstractBinder {
 
+    private final InstanceManager instanceManager;
+
+    public ParameterInjectionBinder(InstanceManager instanceManager) {
+        this.instanceManager = instanceManager;
+    }
+
     @Override
     public void configure() {
         // Param converter providers
-        bind(ParamConverters.AggregatedProvider.class).to(ParamConverterProvider.class).in(Singleton.class);
-        bindAsContract(ParamConverterFactory.class).in(Singleton.class);
+        // TODO: Replace by non-di version
+        bind(new ParamConverters.AggregatedProvider()).to(ParamConverterProvider.class);
 
-        // Parameter injection value extractor providers
-        bind(MultivaluedParameterExtractorFactory.class).to(MultivaluedParameterExtractorProvider.class).in(Singleton.class);
+        Provider<ContainerRequest> requestProvider = Injections.getProvider(instanceManager, ContainerRequest.class);
+        Provider<AsyncContext> asyncContextProvider = Injections.getProvider(instanceManager, AsyncContext.class);
+        Function<Class<? extends Configuration>, Configuration> clientConfigProvider = clientConfigClass -> Injections
+                .getOrCreate(instanceManager, clientConfigClass);
+
+        // Param Converters must be initialized Lazy and created at the time of the call on extractor
+        LazyValue<ParamConverterFactory> lazyParamConverterFactory = Values.lazy((Value<ParamConverterFactory>)
+                () -> new ParamConverterFactory(
+                    Providers.getProviders(instanceManager, ParamConverterProvider.class),
+                    Providers.getCustomProviders(instanceManager, ParamConverterProvider.class)));
+
+        LazyValue<Configuration> lazyConfiguration = Values
+                .lazy((Value<Configuration>) () -> instanceManager.getInstance(Configuration.class));
+
+        MultivaluedParameterExtractorFactory paramExtractor = new MultivaluedParameterExtractorFactory(lazyParamConverterFactory);
+        bind(paramExtractor).to(MultivaluedParameterExtractorProvider.class);
 
         // Parameter injection value providers
-        bind(AsyncResponseValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(CookieParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(DelegatedInjectionValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(EntityParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(FormParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(HeaderParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(MatrixParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(PathParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(QueryParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(WebTargetValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
-        bind(BeanParamValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        AsyncResponseValueSupplierProvider asyncSupplier = new AsyncResponseValueSupplierProvider(asyncContextProvider);
+        bindValueSupplier(asyncSupplier);
+        CookieParamValueSupplierProvider cookieSupplier = new CookieParamValueSupplierProvider(paramExtractor, requestProvider);
+        bindValueSupplier(cookieSupplier);
+        EntityParamValueSupplierProvider entitySupplier = new EntityParamValueSupplierProvider(paramExtractor, requestProvider);
+        bindValueSupplier(entitySupplier);
+        FormParamValueSupplierProvider formSupplier = new FormParamValueSupplierProvider(paramExtractor, requestProvider);
+        bindValueSupplier(formSupplier);
+        HeaderParamValueSupplierProvider headerSupplier = new HeaderParamValueSupplierProvider(paramExtractor, requestProvider);
+        bindValueSupplier(headerSupplier);
+        MatrixParamValueSupplierProvider matrixSupplier = new MatrixParamValueSupplierProvider(paramExtractor, requestProvider);
+        bindValueSupplier(matrixSupplier);
+        PathParamValueSupplierProvider pathSupplier = new PathParamValueSupplierProvider(paramExtractor, requestProvider);
+        bindValueSupplier(pathSupplier);
+        QueryParamValueSupplierProvider querySupplier = new QueryParamValueSupplierProvider(paramExtractor, requestProvider);
+        bindValueSupplier(querySupplier);
+        WebTargetValueSupplierProvider webTargetSupplier = new WebTargetValueSupplierProvider(requestProvider, lazyConfiguration,
+                clientConfigProvider);
+        bindValueSupplier(webTargetSupplier);
+        BeanParamValueSupplierProvider beanSupplier = new BeanParamValueSupplierProvider(paramExtractor, requestProvider,
+                instanceManager);
+        bindValueSupplier(beanSupplier);
 
-        // Injection resolvers
-        bind(CookieParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<CookieParam>>() {
-        }).in(Singleton.class);
-        bind(FormParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<FormParam>>() {
-        }).in(Singleton.class);
-        bind(HeaderParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<HeaderParam>>() {
-        }).in(Singleton.class);
-        bind(MatrixParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<MatrixParam>>() {
-        }).in(Singleton.class);
-        bind(QueryParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<QueryParam>>() {
-        }).in(Singleton.class);
-        bind(PathParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<PathParam>>() {
-        }).in(Singleton.class);
-        bind(AsyncResponseValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<Suspended>>() {
-        }).in(Singleton.class);
-        bind(WebTargetValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<Uri>>() {
-        }).in(Singleton.class);
-        bind(BeanParamValueSupplierProvider.InjectionResolver.class).to(new GenericType<InjectionResolver<BeanParam>>() {
-        }).in(Singleton.class);
+        // Register InjectionResolvers with param providers
+        // TODO: RENAME INJECTION RESOLVER
+        bind(new ParamInjectionResolver<>(cookieSupplier, CookieParam.class));
+        bind(new ParamInjectionResolver<>(formSupplier, FormParam.class));
+        bind(new ParamInjectionResolver<>(headerSupplier, HeaderParam.class));
+        bind(new ParamInjectionResolver<>(matrixSupplier, MatrixParam.class));
+        bind(new ParamInjectionResolver<>(querySupplier, QueryParam.class));
+        bind(new ParamInjectionResolver<>(pathSupplier, PathParam.class));
+        bind(new ParamInjectionResolver<>(asyncSupplier, Suspended.class));
+        bind(new ParamInjectionResolver<>(webTargetSupplier, Uri.class));
+        bind(new ParamInjectionResolver<>(beanSupplier, BeanParam.class));
 
+        // Delegated value supplier for Context InjectionResolver which is implemented directly in DI provider
+        ContextInjectionResolver contextInjectionResolver = instanceManager.getInstance(ContextInjectionResolver.class);
+        bind(new DelegatedInjectionValueSupplierProvider(contextInjectionResolver,
+                instanceManager::createForeignDescriptor)).to(ValueSupplierProvider.class);
+    }
+
+    private <T extends ValueSupplierProvider> void bindValueSupplier(T supplier) {
+        bind(supplier).to(ValueSupplierProvider.class);
     }
 }
