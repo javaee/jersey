@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.linking;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -50,94 +52,41 @@ import javax.ws.rs.core.Link;
 import org.glassfish.jersey.Beta;
 
 /**
- * Specifies a link injection target in a returned representation bean. May be
- * used on fields of type String or URI. One of {@link #value()} or
- * {@link #resource()} must be specified.
+ * Use this on resource methods to contribute links to a representation.
  *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
+ * It is the inverse of {@link InjectLink} instead of annotating the target you annotate the source of the links.
+ * The added benefit is that since you annotate the method you don't need to specify the path to it.
+ *
+ * <p>
+ * <pre>
+ * &#64;ProvideLink(value = Order.class, rel = "self", bindings = @Binding(name = "orderId", value = "${instance.id}"))
+ * &#64;ProvideLink(value = PaymentConfirmation.class, rel = "order",
+ *                  bindings = @Binding(name = "orderId", value = "${instance.orderId}"))
+ * public Response get(@PathParam("orderId") String orderId) { ...
+ * </pre>
+ * </p>
+ *
+ * It can also be used as a meta annotation, see the Javadoc of {@link InheritFromAnnotation} for details.
+ *
+ * @author Leonard Brünings
  */
-@Target({ElementType.FIELD, ElementType.TYPE})
+@Target({ ElementType.METHOD, ElementType.TYPE})
+@Repeatable(ProvideLinks.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Beta
-public @interface InjectLink {
-
-    /**
-     * Styles of URI supported
-     */
-    enum Style {
-
-        /**
-         * An absolute URI. The URI template will be prefixed with the absolute
-         * base URI of the application.
-         */
-        ABSOLUTE,
-        /**
-         * An absolute path. The URI template will be prefixed with the absolute
-         * base path of the application.
-         */
-        ABSOLUTE_PATH,
-        /**
-         * A relative path. The URI template will be converted to a relative
-         * path with no prefix.
-         */
-        RELATIVE_PATH
-
-    }
+public @interface ProvideLink {
 
     /**
      * The style of URI to inject
      */
-    Style style() default Style.ABSOLUTE_PATH;
+    InjectLink.Style style() default InjectLink.Style.ABSOLUTE_PATH;
 
     /**
-     * Specifies a URI template that will be used to build the injected URI. The
-     * template may contain both URI template parameters (e.g. {id}) and EL
-     * expressions (e.g. ${instance.id}) using the same implicit beans as
-     * {@link Binding#value()}. URI template parameter values are resolved as
-     * described in {@link #resource()}. E.g. the following three alternatives
-     * are equivalent:
-     * <pre>
-     * &#64;Ref("{id}")
-     * &#64;Ref(value="{id}", bindings={
-     *   &#64;Binding(name="id" value="${instance.id}"}
-     * )
-     * &#64;Ref("${instance.id}")
-     * </pre>
+     * Provide links for representation classes listed here.
+     *
+     * May use {@link InheritFromAnnotation} for Meta-Annotations
      */
-    String value() default "";
-
-    /**
-     * Specifies a resource class whose @Path URI template will be used to build
-     * the injected URI. Embedded URI template parameter values are resolved as
-     * follows:
-     * <ol>
-     * <li>If the {@link #bindings()} property contains a binding specification
-     * for the parameter then that is used</li>
-     * <li>Otherwise an implicit binding is used that extracts the value of a
-     * bean property by the same name as the URI template from the implicit
-     * {@code instance} bean (see {@link Binding}).</li>
-     * </ol>
-     * <p>
-     * E.g. assuming a resource class {@code SomeResource} with the
-     * following {@code @Path("{id}")} annotation, the following two
-     * alternatives are therefore equivalent:</p>
-     * <pre>
-     * &#64;Ref(resource=SomeResource.class)
-     * &#64;Ref(resource=SomeResource.class, bindings={
-     *   &#64;Binding(name="id" value="${instance.id}"}
-     * )
-     * </pre>
-     */
-    Class<?> resource() default Class.class;
-
-    /**
-     * Used in conjunction with {@link #resource()} to specify a subresource
-     * locator or method. The value is the name of the method. The value of the
-     * method's @Path annotation will be appended to the value of the
-     * class-level @Path annotation separated by '/' if necessary.
-     */
-    String method() default "";
+    Class<?>[] value();
 
     /**
      * Specifies the bindings for embedded URI template parameters.
@@ -153,6 +102,7 @@ public @interface InjectLink {
      */
     String condition() default "";
 
+    //
     // Link properties
     //
 
@@ -194,26 +144,12 @@ public @interface InjectLink {
     /**
      * Specifies extension parameters as name-value pairs.
      */
-    Extension[] extensions() default {};
+    InjectLink.Extension[] extensions() default {};
 
-    @Target({ElementType.TYPE, ElementType.FIELD})
-    @Retention(RetentionPolicy.RUNTIME)
-    @interface Extension {
-
-        /**
-         * Specifies the name of the extension parameter
-         */
-        String name();
-
-        /**
-         * Specifies the value of the extension parameter
-         */
-        String value();
-    }
 
     class Util {
 
-        public static Link buildLinkFromUri(URI uri, InjectLink link) {
+        static Link buildLinkFromUri(URI uri, ProvideLink link) {
 
             javax.ws.rs.core.Link.Builder builder = javax.ws.rs.core.Link.fromUri(uri);
             if (!link.rel().isEmpty()) {
@@ -244,4 +180,33 @@ public @interface InjectLink {
         }
     }
 
+    /**
+     * Special interface to indicate that the target should be inherited from the annotated annotation.
+     * <p>
+     * <pre>
+     * &#64;ProvideLinks({
+     *   &#64;ProvideLink(value = ProvideLink.InheritFromAnnotation.class, rel = "next", bindings = {
+     *       &#64;Binding(name = "page", value = "${instance.number + 1}"),
+     *       &#64;Binding(name =&#64; "size", value = "${instance.size}"),
+     *     },
+     *     condition = "${instance.nextPageAvailable}"),
+     *   &#64;ProvideLink(value = ProvideLink.InheritFromAnnotation.class, rel = "prev", bindings = {
+     *       &#64;Binding(name = "page", value = "${instance.number - 1}"),
+     *       &#64;Binding(name = "size", value = "${instance.size}"),
+     *     },
+     *     condition = "${instance.previousPageAvailable}")
+     * })
+     * &#64;Target({ElementType.METHOD})
+     * &#64;Retention(RetentionPolicy.RUNTIME)
+     * &#64;Documented
+     * public &#64;interface PageLinks {
+     * Class<?> value();
+     * }
+     * </pre>
+     * </p>
+     * <p>
+     * In this case the value of each {@link ProvideLink} will be the same as {@code PageLinks} value.
+     * </p>
+     */
+    interface InheritFromAnnotation{}
 }

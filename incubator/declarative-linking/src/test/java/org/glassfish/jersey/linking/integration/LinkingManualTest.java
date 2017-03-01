@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,42 +37,44 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.linking;
 
-import java.io.IOException;
+package org.glassfish.jersey.linking.integration;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Link;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.linking.integration.app.LinkingManualApplication;
+import org.glassfish.jersey.linking.integration.representations.OrderRequest;
+import org.glassfish.jersey.test.JerseyTest;
+import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 
-/**
- * Filter that processes {@link Link} annotated fields in returned response
- * entities.
- * <p/>
- * When an application is deployed as a Servlet or Filter this filter can be
- * registered using the following initialization parameters:
- * <blockquote><pre>
- *     &lt;init-param&gt
- *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
- *         &lt;param-value&gt;com.sun.jersey.server.linking.ResponseLinkFilter&lt;/param-value&gt;
- *     &lt;/init-param&gt;
- * </pre></blockquote>
- * <p/>
- *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
- * @see Link
- */
-class RequestLinkFilter implements ContainerRequestFilter {
-
-    @Context
-    private ExtendedUriInfo uriInfo;
+public class LinkingManualTest extends JerseyTest {
 
     @Override
-    public void filter(ContainerRequestContext requestContext) throws IOException {
+    protected Application configure() {
+        return new LinkingManualApplication();
+    }
 
+    @Override
+    protected void configureClient(ClientConfig config) {
+
+    }
+
+    @Test
+    public void orderContainsManualLink() throws Exception {
+        OrderRequest request = new OrderRequest();
+        request.setDrink("Coffee");
+        Response response = target().path("/orders").request()
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+
+        String order = response.readEntity(String.class);
+        JSONAssert.assertEquals("{id:'123',price:'1.99',links:["
+                        + "{uri:'/',params:{rel:'root'},uriBuilder:{absolute:false},rel:'root',rels:['root']}"
+                        + "]}",
+                order, true);
     }
 }

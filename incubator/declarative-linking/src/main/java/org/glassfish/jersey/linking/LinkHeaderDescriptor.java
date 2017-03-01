@@ -59,13 +59,13 @@ class LinkHeaderDescriptor implements InjectLinkDescriptor {
 
     LinkHeaderDescriptor(InjectLink linkHeader) {
         this.linkHeader = linkHeader;
-        bindings = new HashMap<String, String>();
+        bindings = new HashMap<>();
         for (Binding binding : linkHeader.bindings()) {
             bindings.put(binding.name(), binding.value());
         }
     }
 
-    public InjectLink getLinkHeader() {
+    InjectLink getLinkHeader() {
         return linkHeader;
     }
 

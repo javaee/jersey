@@ -59,11 +59,11 @@ import javax.el.PropertyNotWritableException;
 class ResponseContextResolver extends ELResolver {
 
     private Map<String, Object> responseObjects;
-    public static final String ENTITY_OBJECT = "entity";
-    public static final String RESOURCE_OBJECT = "resource";
-    public static final String INSTANCE_OBJECT = "instance";
+    private static final String ENTITY_OBJECT = "entity";
+    private static final String RESOURCE_OBJECT = "resource";
+    static final String INSTANCE_OBJECT = "instance";
 
-    public ResponseContextResolver(Object entity, Object resource, Object instance) {
+    ResponseContextResolver(Object entity, Object resource, Object instance) {
         responseObjects = new HashMap<>();
         responseObjects.put(ENTITY_OBJECT, entity);
         responseObjects.put(RESOURCE_OBJECT, resource);

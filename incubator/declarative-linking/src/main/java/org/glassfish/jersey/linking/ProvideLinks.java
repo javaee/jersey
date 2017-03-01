@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,42 +37,29 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.linking;
 
-import java.io.IOException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Link;
-
-import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.Beta;
 
 /**
- * Filter that processes {@link Link} annotated fields in returned response
- * entities.
- * <p/>
- * When an application is deployed as a Servlet or Filter this filter can be
- * registered using the following initialization parameters:
- * <blockquote><pre>
- *     &lt;init-param&gt
- *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
- *         &lt;param-value&gt;com.sun.jersey.server.linking.ResponseLinkFilter&lt;/param-value&gt;
- *     &lt;/init-param&gt;
- * </pre></blockquote>
- * <p/>
+ * Container for repeatable annotation, see {@link ProvideLink} for details.
  *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
- * @see Link
+ * @author Leonard Brünings
  */
-class RequestLinkFilter implements ContainerRequestFilter {
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Beta
+public @interface ProvideLinks {
 
-    @Context
-    private ExtendedUriInfo uriInfo;
-
-    @Override
-    public void filter(ContainerRequestContext requestContext) throws IOException {
-
-    }
+    /**
+     * Container for a set of {@link ProvideLink} annotations
+     * @return array of {@code ProvideLink} elements
+     */
+    ProvideLink[] value() default {};
 }

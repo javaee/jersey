@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,42 +37,55 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.linking;
 
-import java.io.IOException;
+package org.glassfish.jersey.linking.integration.representations;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.Context;
+import java.util.ArrayList;
+import java.util.List;
 import javax.ws.rs.core.Link;
 
-import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.linking.InjectLinks;
 
-/**
- * Filter that processes {@link Link} annotated fields in returned response
- * entities.
- * <p/>
- * When an application is deployed as a Servlet or Filter this filter can be
- * registered using the following initialization parameters:
- * <blockquote><pre>
- *     &lt;init-param&gt
- *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
- *         &lt;param-value&gt;com.sun.jersey.server.linking.ResponseLinkFilter&lt;/param-value&gt;
- *     &lt;/init-param&gt;
- * </pre></blockquote>
- * <p/>
- *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
- * @see Link
- */
-class RequestLinkFilter implements ContainerRequestFilter {
+public class Order {
 
-    @Context
-    private ExtendedUriInfo uriInfo;
+    private String id;
 
-    @Override
-    public void filter(ContainerRequestContext requestContext) throws IOException {
+    private String drink;
 
+    private String price;
+
+    @InjectLinks
+    private List<Link> links = new ArrayList<>();
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getDrink() {
+        return drink;
+    }
+
+    public void setDrink(String drink) {
+        this.drink = drink;
+    }
+
+    public String getPrice() {
+        return price;
+    }
+
+    public void setPrice(String price) {
+        this.price = price;
+    }
+
+    public List<Link> getLinks() {
+        return links;
+    }
+
+    public void setLinks(List<Link> links) {
+        this.links = links;
     }
 }

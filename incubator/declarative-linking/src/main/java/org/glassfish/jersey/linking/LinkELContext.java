@@ -51,7 +51,6 @@ import javax.el.VariableMapper;
  * An ELContext that encapsulates the response information for use by the
  * expression evaluator.
  *
- *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */

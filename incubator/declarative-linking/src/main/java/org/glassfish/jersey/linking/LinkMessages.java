@@ -50,14 +50,13 @@ import org.glassfish.jersey.internal.l10n.Localizer;
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-
 class LinkMessages {
 
     private static final LocalizableMessageFactory messageFactory = new LocalizableMessageFactory(
             "org.glassfish.jersey.media.linking.internal");
     private static final Localizer localizer = new Localizer();
 
-    public static Localizable localizableWARNING_LINKFILTER_PROCESSING(Object arg0) {
+    private static Localizable localizableWARNING_LINKFILTER_PROCESSING(Object arg0) {
         return messageFactory.getMessage("warning.linkfilter.processing", arg0);
     }
 
@@ -65,8 +64,7 @@ class LinkMessages {
      * LinkFilter cannot process class {0}, exception occurred during processing. Class will be ignored in the LinkFilter.
      *
      */
-    public static String WARNING_LINKFILTER_PROCESSING(Object arg0) {
+    static String WARNING_LINKFILTER_PROCESSING(Object arg0) {
         return localizer.localize(localizableWARNING_LINKFILTER_PROCESSING(arg0));
     }
-
 }
