@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,7 +61,7 @@ class HeaderProcessor<T> {
 
     private EntityDescriptor instanceDescriptor;
 
-    public HeaderProcessor(Class<T> c) {
+    HeaderProcessor(Class<T> c) {
         instanceDescriptor = EntityDescriptor.getInstance(c);
     }
 
@@ -71,10 +71,10 @@ class HeaderProcessor<T> {
      * @param uriInfo the uriInfo for the request
      * @param headers the map into which the headers will be added
      */
-    public void processLinkHeaders(T entity,
-                                   UriInfo uriInfo,
-                                   ResourceMappingContext rmc,
-                                   MultivaluedMap<String, Object> headers) {
+    void processLinkHeaders(T entity,
+                            UriInfo uriInfo,
+                            ResourceMappingContext rmc,
+                            MultivaluedMap<String, Object> headers) {
         List<String> headerValues = getLinkHeaderValues(entity, uriInfo, rmc);
         for (String headerValue : headerValues) {
             headers.add("Link", headerValue);
@@ -100,8 +100,8 @@ class HeaderProcessor<T> {
         return Collections.emptyList();
     }
 
-    static String getLinkHeaderValue(LinkHeaderDescriptor desc, Object entity, Object resource, UriInfo uriInfo,
-                                     ResourceMappingContext rmc) {
+    private static String getLinkHeaderValue(LinkHeaderDescriptor desc, Object entity, Object resource, UriInfo uriInfo,
+                                             ResourceMappingContext rmc) {
         URI uri = ELLinkBuilder.buildURI(desc, entity, resource, entity, uriInfo, rmc);
         InjectLink link = desc.getLinkHeader();
         return InjectLink.Util.buildLinkFromUri(uri, link).toString();

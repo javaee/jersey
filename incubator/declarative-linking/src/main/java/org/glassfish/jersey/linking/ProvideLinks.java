@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,49 +40,26 @@
 
 package org.glassfish.jersey.linking;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.glassfish.jersey.linking.InjectLink.Style;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.Beta;
 
 /**
- * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations.
+ * Container for repeatable annotation, see {@link ProvideLink} for details.
  *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
+ * @author Leonard Brünings
  */
-class LinkHeaderDescriptor implements InjectLinkDescriptor {
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Beta
+public @interface ProvideLinks {
 
-    private InjectLink linkHeader;
-    private Map<String, String> bindings;
-
-    LinkHeaderDescriptor(InjectLink linkHeader) {
-        this.linkHeader = linkHeader;
-        bindings = new HashMap<>();
-        for (Binding binding : linkHeader.bindings()) {
-            bindings.put(binding.name(), binding.value());
-        }
-    }
-
-    InjectLink getLinkHeader() {
-        return linkHeader;
-    }
-
-    public String getLinkTemplate(ResourceMappingContext rmc) {
-        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, linkHeader);
-    }
-
-    public Style getLinkStyle() {
-        return linkHeader.style();
-    }
-
-    public String getBinding(String name) {
-        return bindings.get(name);
-    }
-
-    public String getCondition() {
-        return linkHeader.condition();
-    }
-
+    /**
+     * Container for a set of {@link ProvideLink} annotations
+     * @return array of {@code ProvideLink} elements
+     */
+    ProvideLink[] value() default {};
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,11 +59,11 @@ import javax.el.PropertyNotWritableException;
 class ResponseContextResolver extends ELResolver {
 
     private Map<String, Object> responseObjects;
-    public static final String ENTITY_OBJECT = "entity";
-    public static final String RESOURCE_OBJECT = "resource";
-    public static final String INSTANCE_OBJECT = "instance";
+    private static final String ENTITY_OBJECT = "entity";
+    private static final String RESOURCE_OBJECT = "resource";
+    static final String INSTANCE_OBJECT = "instance";
 
-    public ResponseContextResolver(Object entity, Object resource, Object instance) {
+    ResponseContextResolver(Object entity, Object resource, Object instance) {
         responseObjects = new HashMap<>();
         responseObjects.put(ENTITY_OBJECT, entity);
         responseObjects.put(RESOURCE_OBJECT, resource);

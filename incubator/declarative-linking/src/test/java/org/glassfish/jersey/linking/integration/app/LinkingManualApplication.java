@@ -38,51 +38,25 @@
  * holder.
  */
 
-package org.glassfish.jersey.linking;
+package org.glassfish.jersey.linking.integration.app;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.linking.InjectLink.Style;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+public class LinkingManualApplication extends Application {
 
-/**
- * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations.
- *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
- */
-class LinkHeaderDescriptor implements InjectLinkDescriptor {
+    private static final Set<Class<?>> classes = new HashSet<>(Arrays.asList(OrdersResource.class, PaymentResource.class));
 
-    private InjectLink linkHeader;
-    private Map<String, String> bindings;
-
-    LinkHeaderDescriptor(InjectLink linkHeader) {
-        this.linkHeader = linkHeader;
-        bindings = new HashMap<>();
-        for (Binding binding : linkHeader.bindings()) {
-            bindings.put(binding.name(), binding.value());
-        }
+    @Override
+    public Set<Class<?>> getClasses() {
+        return classes;
     }
 
-    InjectLink getLinkHeader() {
-        return linkHeader;
+    @Override
+    public Set<Object> getSingletons() {
+        return Collections.singleton(new ObjectMapperContextResolver());
     }
-
-    public String getLinkTemplate(ResourceMappingContext rmc) {
-        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, linkHeader);
-    }
-
-    public Style getLinkStyle() {
-        return linkHeader.style();
-    }
-
-    public String getBinding(String name) {
-        return bindings.get(name);
-    }
-
-    public String getCondition() {
-        return linkHeader.condition();
-    }
-
 }

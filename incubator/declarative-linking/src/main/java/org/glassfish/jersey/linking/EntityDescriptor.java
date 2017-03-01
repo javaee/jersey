@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,14 +59,12 @@ import javax.ws.rs.core.Link;
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-
 class EntityDescriptor {
 
     // Maintains an internal static cache to optimize processing
-
     private static final Map<Class<?>, EntityDescriptor> descriptors = new HashMap<>();
 
-    public static synchronized EntityDescriptor getInstance(Class<?> entityClass) {
+    static synchronized EntityDescriptor getInstance(Class<?> entityClass) {
         if (descriptors.containsKey(entityClass)) {
             return descriptors.get(entityClass);
         } else {
@@ -84,6 +82,7 @@ class EntityDescriptor {
 
     /**
      * Construct an new descriptor by inspecting the supplied class.
+     *
      * @param entityClass
      */
     private EntityDescriptor(Class<?> entityClass) {
@@ -100,21 +99,22 @@ class EntityDescriptor {
         this.linkFields = Collections.unmodifiableMap(this.linkFields);
     }
 
-    public Collection<FieldDescriptor> getLinkFields() {
+    Collection<FieldDescriptor> getLinkFields() {
         return linkFields.values();
     }
 
-    public Collection<FieldDescriptor> getNonLinkFields() {
+    Collection<FieldDescriptor> getNonLinkFields() {
         return nonLinkFields.values();
     }
 
-    public List<LinkHeaderDescriptor> getLinkHeaders() {
+    List<LinkHeaderDescriptor> getLinkHeaders() {
         return linkHeaders;
     }
 
     /**
      * Find and cache the fields of the supplied class and its superclasses and
      * interfaces.
+     *
      * @param entityClass the class
      */
     private void findFields(Class<?> entityClass) {

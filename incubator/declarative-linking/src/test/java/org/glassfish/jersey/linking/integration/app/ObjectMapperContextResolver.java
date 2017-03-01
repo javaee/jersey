@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,51 +38,30 @@
  * holder.
  */
 
-package org.glassfish.jersey.linking;
+package org.glassfish.jersey.linking.integration.app;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.ext.ContextResolver;
 
-import org.glassfish.jersey.linking.InjectLink.Style;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations.
- *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
- */
-class LinkHeaderDescriptor implements InjectLinkDescriptor {
+public class ObjectMapperContextResolver implements ContextResolver<ObjectMapper> {
+    @Context
+    private HttpHeaders headers;
 
-    private InjectLink linkHeader;
-    private Map<String, String> bindings;
+    private final ObjectMapper mapper;
 
-    LinkHeaderDescriptor(InjectLink linkHeader) {
-        this.linkHeader = linkHeader;
-        bindings = new HashMap<>();
-        for (Binding binding : linkHeader.bindings()) {
-            bindings.put(binding.name(), binding.value());
-        }
+    public ObjectMapperContextResolver() {
+        mapper = new ObjectMapper();
+
+        // serialization behaviour
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
     }
 
-    InjectLink getLinkHeader() {
-        return linkHeader;
+    @Override
+    public ObjectMapper getContext(Class<?> type) {
+        return mapper;
     }
-
-    public String getLinkTemplate(ResourceMappingContext rmc) {
-        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, linkHeader);
-    }
-
-    public Style getLinkStyle() {
-        return linkHeader.style();
-    }
-
-    public String getBinding(String name) {
-        return bindings.get(name);
-    }
-
-    public String getCondition() {
-        return linkHeader.condition();
-    }
-
 }

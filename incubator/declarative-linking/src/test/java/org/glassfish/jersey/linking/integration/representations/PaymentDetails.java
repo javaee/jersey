@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,51 +38,43 @@
  * holder.
  */
 
-package org.glassfish.jersey.linking;
+package org.glassfish.jersey.linking.integration.representations;
 
-import java.util.HashMap;
-import java.util.Map;
+public class PaymentDetails {
+    private String creditCardNumber;
+    private String cve;
+    private String name;
+    private String expiration;
 
-import org.glassfish.jersey.linking.InjectLink.Style;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
-
-/**
- * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations.
- *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
- */
-class LinkHeaderDescriptor implements InjectLinkDescriptor {
-
-    private InjectLink linkHeader;
-    private Map<String, String> bindings;
-
-    LinkHeaderDescriptor(InjectLink linkHeader) {
-        this.linkHeader = linkHeader;
-        bindings = new HashMap<>();
-        for (Binding binding : linkHeader.bindings()) {
-            bindings.put(binding.name(), binding.value());
-        }
+    public String getCreditCardNumber() {
+        return creditCardNumber;
     }
 
-    InjectLink getLinkHeader() {
-        return linkHeader;
+    public void setCreditCardNumber(String creditCardNumber) {
+        this.creditCardNumber = creditCardNumber;
     }
 
-    public String getLinkTemplate(ResourceMappingContext rmc) {
-        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, linkHeader);
+    public String getCve() {
+        return cve;
     }
 
-    public Style getLinkStyle() {
-        return linkHeader.style();
+    public void setCve(String cve) {
+        this.cve = cve;
     }
 
-    public String getBinding(String name) {
-        return bindings.get(name);
+    public String getName() {
+        return name;
     }
 
-    public String getCondition() {
-        return linkHeader.condition();
+    public void setName(String name) {
+        this.name = name;
     }
 
+    public String getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(String expiration) {
+        this.expiration = expiration;
+    }
 }

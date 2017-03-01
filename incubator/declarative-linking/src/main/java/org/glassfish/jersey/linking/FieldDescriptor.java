@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,7 +61,7 @@ class FieldDescriptor {
         this.field = f;
     }
 
-    public Object getFieldValue(Object instance) {
+    Object getFieldValue(Object instance) {
         setAccessibleField(field);
         Object value = null;
         try {
@@ -76,7 +76,7 @@ class FieldDescriptor {
         return field.getName();
     }
 
-    protected static void setAccessibleField(final Field f) {
+    static void setAccessibleField(final Field f) {
         if (Modifier.isPublic(f.getModifiers())) {
             return;
         }

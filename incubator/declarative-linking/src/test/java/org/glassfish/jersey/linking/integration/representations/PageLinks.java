@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,51 +38,28 @@
  * holder.
  */
 
-package org.glassfish.jersey.linking;
+package org.glassfish.jersey.linking.integration.representations;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.glassfish.jersey.linking.InjectLink.Style;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.ProvideLink;
 
-/**
- * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations.
- *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
- */
-class LinkHeaderDescriptor implements InjectLinkDescriptor {
-
-    private InjectLink linkHeader;
-    private Map<String, String> bindings;
-
-    LinkHeaderDescriptor(InjectLink linkHeader) {
-        this.linkHeader = linkHeader;
-        bindings = new HashMap<>();
-        for (Binding binding : linkHeader.bindings()) {
-            bindings.put(binding.name(), binding.value());
-        }
-    }
-
-    InjectLink getLinkHeader() {
-        return linkHeader;
-    }
-
-    public String getLinkTemplate(ResourceMappingContext rmc) {
-        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, linkHeader);
-    }
-
-    public Style getLinkStyle() {
-        return linkHeader.style();
-    }
-
-    public String getBinding(String name) {
-        return bindings.get(name);
-    }
-
-    public String getCondition() {
-        return linkHeader.condition();
-    }
-
+@ProvideLink(value = ProvideLink.InheritFromAnnotation.class, rel = "next", bindings = {
+        @Binding(name = "page", value = "${instance.number + 1}"),
+        @Binding(name = "size", value = "${instance.size}"),
+}, condition = "${instance.nextPageAvailable}")
+@ProvideLink(value = ProvideLink.InheritFromAnnotation.class, rel = "prev", bindings = {
+        @Binding(name = "page", value = "${instance.number - 1}"),
+        @Binding(name = "size", value = "${instance.size}"),
+}, condition = "${instance.previousPageAvailable}")
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface PageLinks {
+    Class<?> value();
 }

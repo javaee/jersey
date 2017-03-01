@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,51 +38,26 @@
  * holder.
  */
 
-package org.glassfish.jersey.linking;
+package org.glassfish.jersey.linking.contributing;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
-import org.glassfish.jersey.linking.InjectLink.Style;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.linking.ProvideLinkDescriptor;
 
 /**
- * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations.
+ * The ResourceLinkContributionContext provides access for link contributions from other sources to an entity.
  *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
+ * @author Leonard Brünings
  */
-class LinkHeaderDescriptor implements InjectLinkDescriptor {
+public interface ResourceLinkContributionContext {
 
-    private InjectLink linkHeader;
-    private Map<String, String> bindings;
-
-    LinkHeaderDescriptor(InjectLink linkHeader) {
-        this.linkHeader = linkHeader;
-        bindings = new HashMap<>();
-        for (Binding binding : linkHeader.bindings()) {
-            bindings.put(binding.name(), binding.value());
-        }
-    }
-
-    InjectLink getLinkHeader() {
-        return linkHeader;
-    }
-
-    public String getLinkTemplate(ResourceMappingContext rmc) {
-        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, linkHeader);
-    }
-
-    public Style getLinkStyle() {
-        return linkHeader.style();
-    }
-
-    public String getBinding(String name) {
-        return bindings.get(name);
-    }
-
-    public String getCondition() {
-        return linkHeader.condition();
-    }
-
+    /**
+     * Returns all link contributions for an entity class.
+     *
+     * It also includes contributions for every ancestor of entityClass.
+     *
+     * @param entityClass the entityClass
+     * @return list of link contributions to add to the class
+     */
+    List<ProvideLinkDescriptor> getContributorsFor(Class<?> entityClass);
 }

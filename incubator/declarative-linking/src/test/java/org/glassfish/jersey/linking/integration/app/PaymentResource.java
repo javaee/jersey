@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,51 +38,48 @@
  * holder.
  */
 
-package org.glassfish.jersey.linking;
+package org.glassfish.jersey.linking.integration.app;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.linking.InjectLink.Style;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.ProvideLink;
+import org.glassfish.jersey.linking.integration.representations.Order;
+import org.glassfish.jersey.linking.integration.representations.PaymentConfirmation;
+import org.glassfish.jersey.linking.integration.representations.PaymentDetails;
 
-/**
- * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations.
- *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
- */
-class LinkHeaderDescriptor implements InjectLinkDescriptor {
 
-    private InjectLink linkHeader;
-    private Map<String, String> bindings;
+@Path("/payments")
+public class PaymentResource {
 
-    LinkHeaderDescriptor(InjectLink linkHeader) {
-        this.linkHeader = linkHeader;
-        bindings = new HashMap<>();
-        for (Binding binding : linkHeader.bindings()) {
-            bindings.put(binding.name(), binding.value());
-        }
+
+    @ProvideLink(value = Order.class, rel = "pay", bindings = {
+            @Binding(name = "orderId", value = "${instance.id}")}, condition = "${instance.price != '0.0'}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @PUT
+    @Path("/order/{orderId}")
+    public Response pay(@PathParam("orderId") String orderId, PaymentDetails paymentDetails) {
+        PaymentConfirmation paymentConfirmation = new PaymentConfirmation();
+        paymentConfirmation.setOrderId(orderId);
+        paymentConfirmation.setId("p-" + orderId);
+        return Response.ok(paymentConfirmation).build();
     }
 
-    InjectLink getLinkHeader() {
-        return linkHeader;
+    @Produces(MediaType.APPLICATION_JSON)
+    @GET
+    @Path("{id}")
+    public Response getConfirmation(@PathParam("id") String id) {
+        PaymentConfirmation paymentConfirmation = new PaymentConfirmation();
+        paymentConfirmation.setId(id);
+        paymentConfirmation.setOrderId(id.substring(2));
+        return Response.ok(paymentConfirmation).build();
     }
-
-    public String getLinkTemplate(ResourceMappingContext rmc) {
-        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, linkHeader);
-    }
-
-    public Style getLinkStyle() {
-        return linkHeader.style();
-    }
-
-    public String getBinding(String name) {
-        return bindings.get(name);
-    }
-
-    public String getCondition() {
-        return linkHeader.condition();
-    }
-
 }

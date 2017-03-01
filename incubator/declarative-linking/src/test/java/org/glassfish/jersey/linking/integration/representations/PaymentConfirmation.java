@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,51 +38,48 @@
  * holder.
  */
 
-package org.glassfish.jersey.linking;
+package org.glassfish.jersey.linking.integration.representations;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import javax.ws.rs.core.Link;
 
-import org.glassfish.jersey.linking.InjectLink.Style;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLinks;
+import org.glassfish.jersey.linking.integration.app.PaymentResource;
 
-/**
- * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations.
- *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
- */
-class LinkHeaderDescriptor implements InjectLinkDescriptor {
+public class PaymentConfirmation {
 
-    private InjectLink linkHeader;
-    private Map<String, String> bindings;
+    private String id;
 
-    LinkHeaderDescriptor(InjectLink linkHeader) {
-        this.linkHeader = linkHeader;
-        bindings = new HashMap<>();
-        for (Binding binding : linkHeader.bindings()) {
-            bindings.put(binding.name(), binding.value());
-        }
+    private String orderId;
+
+    @InjectLinks(
+            @InjectLink(resource = PaymentResource.class, method = "getConfirmation", rel = "self")
+    )
+    private List<Link> links = new ArrayList<>();
+
+    public String getId() {
+        return id;
     }
 
-    InjectLink getLinkHeader() {
-        return linkHeader;
+    public void setId(String id) {
+        this.id = id;
     }
 
-    public String getLinkTemplate(ResourceMappingContext rmc) {
-        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, linkHeader);
+    public String getOrderId() {
+        return orderId;
     }
 
-    public Style getLinkStyle() {
-        return linkHeader.style();
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
-    public String getBinding(String name) {
-        return bindings.get(name);
+    public List<Link> getLinks() {
+        return links;
     }
 
-    public String getCondition() {
-        return linkHeader.condition();
+    public void setLinks(List<Link> links) {
+        this.links = links;
     }
-
 }

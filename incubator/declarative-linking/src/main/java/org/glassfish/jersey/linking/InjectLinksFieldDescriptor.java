@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,11 @@ package org.glassfish.jersey.linking;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,28 +64,40 @@ class InjectLinksFieldDescriptor extends FieldDescriptor {
     private final Class<?> type;
 
     /**
-     * TODO javadoc.
+     * C'tor
+     *
+     * @param f the field to inject
+     * @param l the InjectLinks annotation
+     * @param t the class that contains field f
      */
-    public InjectLinksFieldDescriptor(Field f, InjectLinks l, Class<?> t) {
+    InjectLinksFieldDescriptor(Field f, InjectLinks l, Class<?> t) {
         super(f);
         link = l;
         type = t;
     }
 
     /**
-     * TODO javadoc.
+     * Injects the Link list into the instance.
+     *
+     * If the field is {@code null} then it is replaced with the list.
+     * If the field already contains links, then the content is merged
+     * with this list into a new list and injected.
+     *
+     * @param instance the instance that contains the field f
+     * @param list the list of links to inject
      */
     public void setPropertyValue(Object instance, List<Link> list) {
         setAccessibleField(field);
         try {
+            List<Link> merged = mergeWithExistingField(instance, list);
 
             Object value;
-            if (List.class.equals(type)) {
-                value = list;
+            if (Objects.equals(List.class, type)) {
+                value = merged;
             } else if (type.isArray()) {
-                value = list.toArray((Object[]) Array.newInstance(type.getComponentType(), list.size()));
+                value = merged.toArray((Object[]) Array.newInstance(type.getComponentType(), merged.size()));
             } else {
-                throw new IllegalArgumentException("Field type " + type + " not one of supported List<Link> or List[]");
+                throw new IllegalArgumentException("Field type " + type + " not one of supported List<Link> or Link[]");
             }
 
             field.set(instance, value);
@@ -92,10 +108,26 @@ class InjectLinksFieldDescriptor extends FieldDescriptor {
         }
     }
 
+    private List<Link> mergeWithExistingField(Object instance, List<Link> list) throws IllegalAccessException {
+        Object existing = field.get(instance);
+        if (existing != null) {
+            if (Collection.class.isAssignableFrom(existing.getClass()) && !((Collection) existing).isEmpty()) {
+                List<Link> merged  = new ArrayList<>(list);
+                merged.addAll((Collection<Link>) existing);
+                return merged;
+            } else if (existing.getClass().isArray() && existing.getClass().isAssignableFrom(Link[].class)) {
+                List<Link> merged = new ArrayList<>(list);
+                merged.addAll(Arrays.asList((Link[]) existing));
+                return merged;
+            }
+        }
+        return list;
+    }
+
     /**
-     * TODO javadoc.
+     * Creates {@link InjectLinkFieldDescriptor} for each link to inject.
      */
-    public InjectLinkFieldDescriptor[] getLinksToInject() {
+    InjectLinkFieldDescriptor[] getLinksToInject() {
         final InjectLink[] listOfLinks = link.value();
         InjectLinkFieldDescriptor[] fields = new InjectLinkFieldDescriptor[listOfLinks.length];
         for (int i = 0; i < fields.length; i++) {
