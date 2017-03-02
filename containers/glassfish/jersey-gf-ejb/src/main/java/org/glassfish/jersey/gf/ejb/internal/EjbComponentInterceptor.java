@@ -43,7 +43,7 @@ import javax.annotation.PostConstruct;
 import javax.interceptor.InvocationContext;
 
 import org.glassfish.jersey.ext.cdi1x.internal.CdiComponentProvider;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * EJB interceptor to inject Jersey specific stuff into EJB beans.
@@ -52,22 +52,22 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
  */
 public final class EjbComponentInterceptor {
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     /**
-     * Create new EJB component instance manager.
+     * Create new EJB component injection manager.
      *
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
-    public EjbComponentInterceptor(final InstanceManager instanceManager) {
-        this.instanceManager = instanceManager;
+    public EjbComponentInterceptor(final InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
     }
 
     @PostConstruct
     private void inject(final InvocationContext context) throws Exception {
 
         final Object beanInstance = context.getTarget();
-        instanceManager.inject(beanInstance, CdiComponentProvider.CDI_CLASS_ANALYZER);
+        injectionManager.inject(beanInstance, CdiComponentProvider.CDI_CLASS_ANALYZER);
 
         // Invoke next interceptor in chain
         context.proceed();

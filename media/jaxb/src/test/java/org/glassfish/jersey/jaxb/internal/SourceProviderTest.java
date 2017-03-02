@@ -54,18 +54,18 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.glassfish.jersey.message.internal.SourceProvider;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class SourceProviderTest {
 
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
 
     @Before
     public void setUp() {
-        instanceManager = SaxParserFactoryInjectionProviderTest.createInstanceManager(new AbstractBinder() {
+        injectionManager = SaxParserFactoryInjectionProviderTest.createInjectionManager(new AbstractBinder() {
             @Override
             protected void configure() {
                 bindAsContract(SourceProvider.SaxSourceReader.class);
@@ -75,7 +75,7 @@ public class SourceProviderTest {
 
     @Test
     public void saxSourceReaderDoesNotReadExternalDtds() throws Exception {
-        SourceProvider.SaxSourceReader reader = instanceManager.getInstance(SourceProvider.SaxSourceReader.class);
+        SourceProvider.SaxSourceReader reader = injectionManager.getInstance(SourceProvider.SaxSourceReader.class);
         InputStream entityStream = new ByteArrayInputStream(
                 "<!DOCTYPE x SYSTEM 'file:///no-such-file'> <rootObject/>".getBytes("us-ascii"));
         SAXSource ss = reader.readFrom(null, null, null, null, null, entityStream);

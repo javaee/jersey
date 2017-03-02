@@ -60,7 +60,7 @@ import org.glassfish.jersey.message.filtering.spi.EntityProcessor;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessorContext;
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;
@@ -80,13 +80,13 @@ final class EntityInspectorImpl implements EntityInspector {
     private EntityGraphProvider graphProvider;
 
     /**
-     * Constructor expecting {@link InstanceManager} to be injected.
+     * Constructor expecting {@link InjectionManager} to be injected.
      *
-     * @param instanceManager instance manager to be injected.
+     * @param injectionManager injection manager to be injected.
      */
     @Inject
-    public EntityInspectorImpl(final InstanceManager instanceManager) {
-        this.entityProcessors = Lists.newArrayList(Providers.getAllProviders(instanceManager, EntityProcessor.class,
+    public EntityInspectorImpl(final InjectionManager injectionManager) {
+        this.entityProcessors = Lists.newArrayList(Providers.getAllProviders(injectionManager, EntityProcessor.class,
                 new RankedComparator<EntityProcessor>()));
     }
 

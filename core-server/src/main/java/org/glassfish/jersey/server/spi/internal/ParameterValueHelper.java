@@ -57,7 +57,7 @@ import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundExceptio
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.MultiException;
 
@@ -117,18 +117,18 @@ public final class ParameterValueHelper {
      * Create list of parameter value providers for the given {@link Parameterized
      * parameterized} resource model component.
      *
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      * @param parameterized parameterized resource model component.
      * @return list of parameter value providers for the parameterized component.
      */
-    public static List<ParamValueFactoryWithSource<?>> createValueProviders(InstanceManager instanceManager,
+    public static List<ParamValueFactoryWithSource<?>> createValueProviders(InjectionManager injectionManager,
                                                                     Parameterized parameterized) {
         if ((null == parameterized.getParameters()) || (0 == parameterized.getParameters().size())) {
             return Collections.emptyList();
         }
 
         List<ValueSupplierProvider> valueSupplierProviders = new ArrayList<ValueSupplierProvider>(
-                Providers.getProviders(instanceManager, ValueSupplierProvider.class));
+                Providers.getProviders(injectionManager, ValueSupplierProvider.class));
 
         Collections.sort(valueSupplierProviders, new Comparator<ValueSupplierProvider>() {
 

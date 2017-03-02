@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,36 +38,48 @@
  * holder.
  */
 
-package org.glassfish.jersey.ext.cdi1x.internal.spi;
+package org.glassfish.jersey.spi.inject;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import java.lang.reflect.Type;
 
 /**
- * {@link InstanceManager instance manager} designed for Jersey
- * {@link javax.enterprise.inject.spi.Extension CDI extension}. This SPI is designed to support deployments that can contain
- * more than one Jersey/InstanceManager managed CDI {@link org.glassfish.jersey.server.spi.ComponentProvider component provider}
- * (more instance manager) but only single CDI extension instance (e.g. EAR with multiple WARs). Each CDI component provider
- * instance acknowledges the manager about new instance manager and manager is supposed to return the effective instance manager
- * for the current context (based on the Servlet context, for example).
+ * Injection binding description of a bean bound directly as a specific instance.
  *
- * @author Michal Gajdos
- * @since 2.17
+ * @param <T> type of the bean described by this injection binding.
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public interface InstanceManagerStore {
+public class InstanceBinding<T> extends Binding<T, InstanceBinding<T>> {
+
+    private final T service;
 
     /**
-     * Register a new {@link InstanceManager instance manager} with this manager.
+     * Creates a service as an instance.
      *
-     * @param instanceManager instance manager to be registered.
+     * @param service service's instance.
      */
-    public void registerInstanceManager(InstanceManager instanceManager);
+    InstanceBinding(T service) {
+        this(service, null);
+    }
 
     /**
-     * Obtain the effective {@link InstanceManager instance manager}. The implementations are supposed to
-     * decide which of the registered instance managers is the currently effective locator. The decision can be based, for
-     * example, on current Servlet context (if the application is deployed on Servlet container).
+     * Creates a service as an instance.
      *
-     * @return currently effective instance manager.
+     * @param service      service's instance.
+     * @param contractType service's contractType.
      */
-    public InstanceManager getEffectiveInstanceManager();
+    InstanceBinding(T service, Type contractType) {
+        this.service = service;
+        if (contractType != null) {
+            this.to(contractType);
+        }
+    }
+
+    /**
+     * Gets service' class.
+     *
+     * @return service's class.
+     */
+    public T getService() {
+        return service;
+    }
 }

@@ -113,7 +113,7 @@ import org.glassfish.jersey.server.spi.ExternalRequestScope;
 import org.glassfish.jersey.server.spi.ResponseErrorMapper;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
@@ -132,7 +132,7 @@ public class ServerRuntime {
     private final Stage<RequestProcessingContext> requestProcessingRoot;
     private final ProcessingProviders processingProviders;
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
     private final ScheduledExecutorService backgroundScheduler;
     private final Provider<ExecutorService> managedAsyncExecutor;
 
@@ -167,7 +167,7 @@ public class ServerRuntime {
     /*package */ static final ExternalRequestScope<Object> NOOP_EXTERNAL_REQ_SCOPE = new ExternalRequestScope<Object>() {
 
         @Override
-        public ExternalRequestContext<Object> open(final InstanceManager instanceManager) {
+        public ExternalRequestContext<Object> open(final InjectionManager injectionManager) {
             return null;
         }
 
@@ -176,11 +176,11 @@ public class ServerRuntime {
         }
 
         @Override
-        public void suspend(final ExternalRequestContext<Object> o, final InstanceManager instanceManager) {
+        public void suspend(final ExternalRequestContext<Object> o, final InjectionManager injectionManager) {
         }
 
         @Override
-        public void resume(final ExternalRequestContext<Object> o, final InstanceManager instanceManager) {
+        public void resume(final ExternalRequestContext<Object> o, final InjectionManager injectionManager) {
         }
     };
 
@@ -190,7 +190,7 @@ public class ServerRuntime {
     public static class Builder {
 
         @Inject
-        private InstanceManager instanceManager;
+        private InjectionManager injectionManager;
         @Inject
         @BackgroundScheduler
         private ScheduledExecutorService backgroundScheduler;
@@ -224,8 +224,7 @@ public class ServerRuntime {
 
             return new ServerRuntime(
                     processingRoot,
-                    processingProviders,
-                    instanceManager,
+                    processingProviders, injectionManager,
                     backgroundScheduler,
                     asyncExecutorProvider,
                     requestScope,
@@ -238,7 +237,7 @@ public class ServerRuntime {
 
     private ServerRuntime(final Stage<RequestProcessingContext> requestProcessingRoot,
                           final ProcessingProviders processingProviders,
-                          final InstanceManager instanceManager,
+                          final InjectionManager injectionManager,
                           final ScheduledExecutorService backgroundScheduler,
                           final Provider<ExecutorService> managedAsyncExecutorProvider,
                           final RequestScope requestScope,
@@ -248,7 +247,7 @@ public class ServerRuntime {
                           final Configuration configuration) {
         this.requestProcessingRoot = requestProcessingRoot;
         this.processingProviders = processingProviders;
-        this.instanceManager = instanceManager;
+        this.injectionManager = injectionManager;
 
         this.backgroundScheduler = backgroundScheduler;
         this.managedAsyncExecutor = managedAsyncExecutorProvider;
@@ -298,8 +297,7 @@ public class ServerRuntime {
 
         request.setProcessingProviders(processingProviders);
 
-        final RequestProcessingContext context = new RequestProcessingContext(
-                instanceManager,
+        final RequestProcessingContext context = new RequestProcessingContext(injectionManager,
                 request,
                 routingContext,
                 monitoringEventBuilder,
@@ -312,7 +310,7 @@ public class ServerRuntime {
         // TODO: Will we need EXTERNAL_REQUEST_SCOPE after the injection task?
         final AsyncResponderHolder asyncResponderHolder =
                 new AsyncResponderHolder(responder, externalRequestScope,
-                        requestScopeInstance, externalRequestScope.open(instanceManager));
+                        requestScopeInstance, externalRequestScope.open(injectionManager));
         context.initAsyncContext(asyncResponderHolder);
 
         requestScope.runInScope(requestScopeInstance, new Runnable() {
@@ -341,7 +339,7 @@ public class ServerRuntime {
                     if (!asyncResponderHolder.isAsync()) {
                         responder.process(response);
                     } else {
-                        externalRequestScope.suspend(asyncResponderHolder.externalContext, instanceManager);
+                        externalRequestScope.suspend(asyncResponderHolder.externalContext, injectionManager);
                     }
                 } catch (final Throwable throwable) {
                     responder.process(throwable);
@@ -541,7 +539,7 @@ public class ServerRuntime {
 
             if (runtime.processResponseErrors) {
                 // Try to obtain response from response error mapper.
-                final Iterable<ResponseErrorMapper> mappers = Providers.getAllProviders(runtime.instanceManager,
+                final Iterable<ResponseErrorMapper> mappers = Providers.getAllProviders(runtime.injectionManager,
                         ResponseErrorMapper.class);
 
                 try {
@@ -902,7 +900,7 @@ public class ServerRuntime {
                         @Override
                         public void run() {
                             try {
-                                requestScopeListener.resume(foreignScopeInstance, responder.runtime.instanceManager);
+                                requestScopeListener.resume(foreignScopeInstance, responder.runtime.injectionManager);
                                 final Response response = producer.call();
                                 if (response != null) {
                                     resume(response);
@@ -936,7 +934,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
-                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.instanceManager);
+                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.injectionManager);
                         final Response jaxrsResponse =
                                 (response instanceof Response) ? (Response) response : Response.ok(response).build();
                         if (!responder.runtime.disableLocationHeaderRelativeUriResolution) {
@@ -958,7 +956,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
-                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.instanceManager);
+                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.injectionManager);
                         responder.process(new MappableException(error));
                     } catch (final Throwable error) {
                         // Ignore the exception - already resumed but may be rethrown by ContainerResponseWriter#failure.
@@ -1037,7 +1035,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
-                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.instanceManager);
+                        requestScopeListener.resume(foreignScopeInstance, responder.runtime.injectionManager);
                         final Response response = responseValue.get();
                         responder.process(new ContainerResponse(responder.processingContext.request(), response));
                     } catch (final Throwable t) {
@@ -1095,7 +1093,7 @@ public class ServerRuntime {
         public Collection<Class<?>> register(final Class<?> callback) {
             Preconditions.checkNotNull(callback, LocalizationMessages.PARAM_NULL("callback"));
 
-            return register(Injections.getOrCreate(responder.runtime.instanceManager, callback));
+            return register(Injections.getOrCreate(responder.runtime.injectionManager, callback));
         }
 
         @Override

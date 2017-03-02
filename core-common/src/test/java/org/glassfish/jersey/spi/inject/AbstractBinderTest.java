@@ -77,15 +77,15 @@ public class AbstractBinderTest {
             }
         };
 
-        List<Descriptor> descriptors = new ArrayList<>(binder.getDescriptors());
-        assertEquals(5, descriptors.size());
+        List<Binding> bindings = new ArrayList<>(binder.getBindings());
+        assertEquals(5, bindings.size());
 
         // Keep ordering.
-        assertEquals(CacheControlProvider.class, ((ClassBeanDescriptor) descriptors.get(0)).getService());
-        assertEquals(CookieProvider.class, ((ClassBeanDescriptor) descriptors.get(1)).getService());
-        assertEquals(DateProvider.class, ((ClassBeanDescriptor) descriptors.get(2)).getService());
-        assertEquals(EntityTagProvider.class, ((ClassBeanDescriptor) descriptors.get(3)).getService());
-        assertEquals(LinkProvider.class, ((ClassBeanDescriptor) descriptors.get(4)).getService());
+        assertEquals(CacheControlProvider.class, ((ClassBinding) bindings.get(0)).getService());
+        assertEquals(CookieProvider.class, ((ClassBinding) bindings.get(1)).getService());
+        assertEquals(DateProvider.class, ((ClassBinding) bindings.get(2)).getService());
+        assertEquals(EntityTagProvider.class, ((ClassBinding) bindings.get(3)).getService());
+        assertEquals(LinkProvider.class, ((ClassBinding) bindings.get(4)).getService());
     }
 
     @Test
@@ -114,19 +114,19 @@ public class AbstractBinderTest {
             }
         };
 
-        List<Descriptor> descriptors = new ArrayList<>(binder.getDescriptors());
-        assertEquals(9, descriptors.size());
+        List<Binding> bindings = new ArrayList<>(binder.getBindings());
+        assertEquals(9, bindings.size());
 
         // Keep ordering.
-        assertEquals(MediaTypeProvider.class, ((ClassBeanDescriptor) descriptors.get(0)).getService());
-        assertEquals(NewCookieProvider.class, ((ClassBeanDescriptor) descriptors.get(1)).getService());
-        assertEquals(StringHeaderProvider.class, ((ClassBeanDescriptor) descriptors.get(2)).getService());
-        assertEquals(UriProvider.class, ((ClassBeanDescriptor) descriptors.get(3)).getService());
-        assertEquals(CacheControlProvider.class, ((ClassBeanDescriptor) descriptors.get(4)).getService());
-        assertEquals(CookieProvider.class, ((ClassBeanDescriptor) descriptors.get(5)).getService());
-        assertEquals(DateProvider.class, ((ClassBeanDescriptor) descriptors.get(6)).getService());
-        assertEquals(EntityTagProvider.class, ((ClassBeanDescriptor) descriptors.get(7)).getService());
-        assertEquals(LinkProvider.class, ((ClassBeanDescriptor) descriptors.get(8)).getService());
+        assertEquals(MediaTypeProvider.class, ((ClassBinding) bindings.get(0)).getService());
+        assertEquals(NewCookieProvider.class, ((ClassBinding) bindings.get(1)).getService());
+        assertEquals(StringHeaderProvider.class, ((ClassBinding) bindings.get(2)).getService());
+        assertEquals(UriProvider.class, ((ClassBinding) bindings.get(3)).getService());
+        assertEquals(CacheControlProvider.class, ((ClassBinding) bindings.get(4)).getService());
+        assertEquals(CookieProvider.class, ((ClassBinding) bindings.get(5)).getService());
+        assertEquals(DateProvider.class, ((ClassBinding) bindings.get(6)).getService());
+        assertEquals(EntityTagProvider.class, ((ClassBinding) bindings.get(7)).getService());
+        assertEquals(LinkProvider.class, ((ClassBinding) bindings.get(8)).getService());
     }
 
 }

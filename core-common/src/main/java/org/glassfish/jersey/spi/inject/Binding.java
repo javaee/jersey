@@ -53,17 +53,16 @@ import javax.inject.Named;
 /**
  * Abstract injection binding description of a bean.
  *
- * @param <T> type of the bean described by this injection binding descriptor.
+ * @param <T> type of the bean described by this injection binding.
  * @param <D> concrete injection binding implementation type.
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
 @SuppressWarnings("unchecked")
-// TODO: rename to Binding (including subclasses and related classes - ClassBinding, FactoryClassBinding, AliasBinding, Bindings)
-public abstract class Descriptor<T, D extends Descriptor> {
+public abstract class Binding<T, D extends Binding> {
 
     private final Set<Type> contracts = new HashSet<>();
     private final Set<Annotation> qualifiers = new HashSet<>();
-    private final Set<AliasDescriptor> aliases = new HashSet<>();
+    private final Set<AliasBinding> aliases = new HashSet<>();
     private Class<? extends Annotation> scope = null;
     private String name = null;
     private Type implementationType = null;
@@ -158,7 +157,7 @@ public abstract class Descriptor<T, D extends Descriptor> {
      *
      * @return service's aliases.
      */
-    public Set<AliasDescriptor> getAliases() {
+    public Set<AliasBinding> getAliases() {
         return aliases;
     }
 
@@ -188,7 +187,6 @@ public abstract class Descriptor<T, D extends Descriptor> {
      * Adds service's contract.
      *
      * @return current instance.
-     * // TODO: rename to a more meaningful name
      */
     public D to(Class<? super T> contract) {
         this.contracts.add(contract);
@@ -199,7 +197,6 @@ public abstract class Descriptor<T, D extends Descriptor> {
      * Adds service's contract.
      *
      * @return current instance.
-     * // TODO: rename to a more meaningful name
      */
     public D to(GenericType<?> contract) {
         this.contracts.add(contract.getType());
@@ -210,7 +207,6 @@ public abstract class Descriptor<T, D extends Descriptor> {
      * Adds service's contract.
      *
      * @return current instance.
-     * // TODO: rename to a more meaningful name
      */
     public D to(Type contract) {
         this.contracts.add(contract);
@@ -256,8 +252,8 @@ public abstract class Descriptor<T, D extends Descriptor> {
      * @param contract contract of the alias.
      * @return instance of a new alias for this binding descriptor that can be further specified.
      */
-    public AliasDescriptor addAlias(String contract) {
-        AliasDescriptor alias = new AliasDescriptor(contract);
+    public AliasBinding addAlias(String contract) {
+        AliasBinding alias = new AliasBinding(contract);
         aliases.add(alias);
 
         return alias;

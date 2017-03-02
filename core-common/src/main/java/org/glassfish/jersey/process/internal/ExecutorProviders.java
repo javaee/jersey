@@ -62,9 +62,9 @@ import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.spi.ExecutorServiceProvider;
 import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
-import org.glassfish.jersey.spi.inject.Descriptors;
-import org.glassfish.jersey.spi.inject.InstanceFactoryDescriptor;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.Bindings;
+import org.glassfish.jersey.spi.inject.FactoryInstanceBinding;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Factory;
 
@@ -94,14 +94,14 @@ public final class ExecutorProviders {
      * registered provider implementation classes.
      * </p>
      *
-     * @param instanceManager application's instance manager.
+     * @param injectionManager application's injection manager.
      */
-    public static void createInjectionBindings(InstanceManager instanceManager) {
+    public static void createInjectionBindings(InjectionManager injectionManager) {
         /*
          * Add ExecutorService into DI framework.
          */
         Map<Class<? extends Annotation>, List<ExecutorServiceProvider>> executorProviderMap =
-                getQualifierToProviderMap(instanceManager, ExecutorServiceProvider.class);
+                getQualifierToProviderMap(injectionManager, ExecutorServiceProvider.class);
 
         for (Map.Entry<Class<? extends Annotation>, List<ExecutorServiceProvider>> qualifierToProviders
                 : executorProviderMap.entrySet()) {
@@ -111,8 +111,8 @@ public final class ExecutorProviders {
             ExecutorServiceProvider executorProvider = bucketProviderIterator.next();
             logExecutorServiceProvider(qualifierAnnotationClass, bucketProviderIterator, executorProvider);
 
-            InstanceFactoryDescriptor<ExecutorService> descriptor =
-                    Descriptors.factory(new ExecutorServiceFactory(executorProvider))
+            FactoryInstanceBinding<ExecutorService> descriptor =
+                    Bindings.factory(new ExecutorServiceFactory(executorProvider))
                             .in(Singleton.class)
                             .to(ExecutorService.class);
 
@@ -123,14 +123,14 @@ public final class ExecutorProviders {
                 descriptor.qualifiedBy(qualifier);
             }
 
-            instanceManager.register(descriptor);
+            injectionManager.register(descriptor);
         }
 
         /*
          * Add ScheduledExecutorService into DI framework.
          */
         Map<Class<? extends Annotation>, List<ScheduledExecutorServiceProvider>> schedulerProviderMap =
-                getQualifierToProviderMap(instanceManager, ScheduledExecutorServiceProvider.class);
+                getQualifierToProviderMap(injectionManager, ScheduledExecutorServiceProvider.class);
 
         for (Map.Entry<Class<? extends Annotation>, List<ScheduledExecutorServiceProvider>> qualifierToProviders
                 : schedulerProviderMap.entrySet()) {
@@ -140,8 +140,8 @@ public final class ExecutorProviders {
             ScheduledExecutorServiceProvider executorProvider = bucketProviderIterator.next();
             logScheduledExecutorProvider(qualifierAnnotationClass, bucketProviderIterator, executorProvider);
 
-            InstanceFactoryDescriptor<ScheduledExecutorService> descriptor =
-                    Descriptors.factory(new ScheduledExecutorServiceFactory(executorProvider))
+            FactoryInstanceBinding<ScheduledExecutorService> descriptor =
+                    Bindings.factory(new ScheduledExecutorServiceFactory(executorProvider))
                             .in(Singleton.class)
                             .to(ScheduledExecutorService.class);
 
@@ -157,7 +157,7 @@ public final class ExecutorProviders {
                 descriptor.qualifiedBy(qualifier);
             }
 
-            instanceManager.register(descriptor);
+            injectionManager.register(descriptor);
         }
     }
 
@@ -198,13 +198,13 @@ public final class ExecutorProviders {
     }
 
     private static <T extends ExecutorServiceProvider> Map<Class<? extends Annotation>, List<T>> getQualifierToProviderMap(
-            InstanceManager instanceManager, Class<T> providerClass) {
+            InjectionManager injectionManager, Class<T> providerClass) {
 
         // get all ExecutorServiceProvider registrations and create iterator with custom providers in the front
         final Set<T> customExecutorProviders =
-                Providers.getCustomProviders(instanceManager, providerClass);
+                Providers.getCustomProviders(injectionManager, providerClass);
         final Set<T> defaultExecutorProviders =
-                Providers.getProviders(instanceManager, providerClass);
+                Providers.getProviders(injectionManager, providerClass);
         defaultExecutorProviders.removeAll(customExecutorProviders);
 
         final List<T> executorProviders = new LinkedList<>(customExecutorProviders);

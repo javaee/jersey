@@ -50,7 +50,7 @@ import java.util.List;
 import javax.ws.rs.Encoded;
 
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Resource method handler model.
@@ -205,17 +205,17 @@ public abstract class MethodHandler implements ResourceModelComponent {
     /**
      * Get the injected resource method handler instance.
      *
-     * @param instanceManager instance manager that can be used to inject get the instance.
+     * @param injectionManager injection manager that can be used to inject get the instance.
      * @return injected resource method handler instance.
      */
-    public abstract Object getInstance(final InstanceManager instanceManager);
+    public abstract Object getInstance(final InjectionManager injectionManager);
 
     /**
-     * Return whether the method handler {@link InstanceManager creates instances}
+     * Return whether the method handler {@link InjectionManager creates instances}
      * based on {@link Class classes}.
      *
      * @return True is instances returned by this method handler are created from {@link Class classes} given to
-     * {@code InstanceManager}, false otherwise (for example when method handler was initialized from instance)
+     * {@code InjectionManager}, false otherwise (for example when method handler was initialized from instance)
      */
     public abstract boolean isClassBased();
 
@@ -280,8 +280,8 @@ public abstract class MethodHandler implements ResourceModelComponent {
         }
 
         @Override
-        public Object getInstance(final InstanceManager instanceManager) {
-            return Injections.getOrCreate(instanceManager, handlerClass);
+        public Object getInstance(final InjectionManager injectionManager) {
+            return Injections.getOrCreate(injectionManager, handlerClass);
         }
 
         @Override
@@ -339,7 +339,7 @@ public abstract class MethodHandler implements ResourceModelComponent {
         }
 
         @Override
-        public Object getInstance(final InstanceManager instanceManager) {
+        public Object getInstance(final InjectionManager injectionManager) {
             return handler;
         }
 

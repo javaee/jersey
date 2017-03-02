@@ -62,7 +62,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Process events of application and request processing into
@@ -89,17 +89,18 @@ final class MonitoringStatisticsProcessor {
 
     /**
      * Creates a new instance of processor.
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      * @param monitoringEventListener Monitoring event listener.
      */
-    MonitoringStatisticsProcessor(final InstanceManager instanceManager, final MonitoringEventListener monitoringEventListener) {
+    MonitoringStatisticsProcessor(
+            final InjectionManager injectionManager, final MonitoringEventListener monitoringEventListener) {
         this.monitoringEventListener = monitoringEventListener;
-        final ResourceModel resourceModel = instanceManager.getInstance(ExtendedResourceContext.class).getResourceModel();
+        final ResourceModel resourceModel = injectionManager.getInstance(ExtendedResourceContext.class).getResourceModel();
         this.statisticsBuilder = new MonitoringStatisticsImpl.Builder(resourceModel);
-        this.statisticsCallbackList = instanceManager.getAllInstances(MonitoringStatisticsListener.class);
+        this.statisticsCallbackList = injectionManager.getAllInstances(MonitoringStatisticsListener.class);
         this.scheduler =
-                instanceManager.getInstance(ScheduledExecutorService.class, BackgroundSchedulerLiteral.INSTANCE);
-        this.interval = PropertiesHelper.getValue(instanceManager.getInstance(Configuration.class).getProperties(),
+                injectionManager.getInstance(ScheduledExecutorService.class, BackgroundSchedulerLiteral.INSTANCE);
+        this.interval = PropertiesHelper.getValue(injectionManager.getInstance(Configuration.class).getProperties(),
                                                   ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL, DEFAULT_INTERVAL,
                                                   Collections.<String, String>emptyMap());
     }

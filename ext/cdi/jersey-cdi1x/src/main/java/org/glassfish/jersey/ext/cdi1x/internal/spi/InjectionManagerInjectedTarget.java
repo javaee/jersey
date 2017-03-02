@@ -42,20 +42,20 @@ package org.glassfish.jersey.ext.cdi1x.internal.spi;
 
 import javax.enterprise.inject.spi.InjectionTarget;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
- * CDI {@link javax.enterprise.inject.spi.InjectionTarget injection target} that is co-injected by instance manager.
- * The injection by InstanceManager is done via given {@link InstanceManager instance manager}.
+ * CDI {@link javax.enterprise.inject.spi.InjectionTarget injection target} that is co-injected by injection manager.
+ * The injection is done via given {@link InjectionManager injection manager}.
  *
  * @author Michal Gajdos
  */
-public interface InstanceManagerInjectedTarget extends InjectionTarget {
+public interface InjectionManagerInjectedTarget extends InjectionTarget {
 
     /**
      * Set the locator to be used to co-inject this injection target.
      *
-     * @param instanceManager effective instance manager.
+     * @param injectionManager effective injection manager.
      */
-    void setInstanceManager(InstanceManager instanceManager);
+    void setInjectionManager(InjectionManager injectionManager);
 }

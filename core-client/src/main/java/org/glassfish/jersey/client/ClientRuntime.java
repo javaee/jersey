@@ -64,7 +64,7 @@ import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Client-side request processing runtime.
@@ -88,41 +88,41 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     /**
      * Create new client request processing runtime.
      *
      * @param config    client runtime configuration.
      * @param connector client transport connector.
-     * @param instanceManager   instance manager.
+     * @param injectionManager   injection manager.
      */
-    public ClientRuntime(final ClientConfig config, final Connector connector, final InstanceManager instanceManager) {
+    public ClientRuntime(final ClientConfig config, final Connector connector, final InjectionManager injectionManager) {
         Stage.Builder<ClientRequest> requestingChainBuilder = Stages
-                .chain(instanceManager.createAndInitialize(RequestProcessingInitializationStage.class));
+                .chain(injectionManager.createAndInitialize(RequestProcessingInitializationStage.class));
 
-        ChainableStage<ClientRequest> requestFilteringStage = ClientFilteringStages.createRequestFilteringStage(instanceManager);
+        ChainableStage<ClientRequest> requestFilteringStage = ClientFilteringStages.createRequestFilteringStage(injectionManager);
         this.requestProcessingRoot = requestFilteringStage != null
                 ? requestingChainBuilder.build(requestFilteringStage) : requestingChainBuilder.build();
 
         ChainableStage<ClientResponse> responseFilteringStage = ClientFilteringStages.createResponseFilteringStage(
-                instanceManager);
+                injectionManager);
         this.responseProcessingRoot = responseFilteringStage != null ? responseFilteringStage : Stages.identity();
 
         this.config = config;
         this.connector = connector;
 
-        this.requestScope = instanceManager.getInstance(RequestScope.class);
+        this.requestScope = injectionManager.getInstance(RequestScope.class);
 
         this.asyncRequestExecutor = Values.lazy(new Value<ExecutorService>() {
             @Override
             public ExecutorService get() {
-                return instanceManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE);
+                return injectionManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE);
             }
         });
 
-        this.instanceManager = instanceManager;
-        this.lifecycleListeners = Providers.getAllProviders(instanceManager, ClientLifecycleListener.class);
+        this.injectionManager = injectionManager;
+        this.lifecycleListeners = Providers.getAllProviders(injectionManager, ClientLifecycleListener.class);
 
         for (final ClientLifecycleListener listener : lifecycleListeners) {
             try {
@@ -317,7 +317,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
                 try {
                     connector.close();
                 } finally {
-                    instanceManager.shutdown();
+                    injectionManager.shutdown();
                 }
             }
         }
@@ -328,7 +328,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
      */
     public void preInitialize() {
         // pre-initialize MessageBodyWorkers
-        instanceManager.getInstance(MessageBodyWorkers.class);
+        injectionManager.getInstance(MessageBodyWorkers.class);
     }
 
     /**
@@ -341,11 +341,11 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
     }
 
     /**
-     * Get instance manager.
+     * Get injection manager.
      *
-     * @return instance manager.
+     * @return injection manager.
      */
-    InstanceManager getInstanceManager() {
-        return instanceManager;
+    InjectionManager getInjectionManager() {
+        return injectionManager;
     }
 }

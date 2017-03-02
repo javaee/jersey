@@ -54,9 +54,9 @@ import org.glassfish.hk2.api.Factory;
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public final class Descriptors {
+public final class Bindings {
 
-    private Descriptors() {
+    private Bindings() {
         throw new AssertionError("Utility class instantiation forbidden.");
     }
 
@@ -69,8 +69,8 @@ public final class Descriptors {
      * @param serviceType service class.
      * @return initialized binding builder.
      */
-    public static <T> ClassBeanDescriptor<T> service(Class<T> serviceType) {
-        return new ClassBeanDescriptor<>(serviceType);
+    public static <T> ClassBinding<T> service(Class<T> serviceType) {
+        return new ClassBinding<>(serviceType);
     }
 
     /**
@@ -82,8 +82,8 @@ public final class Descriptors {
      * @param serviceType service class.
      * @return initialized binding builder.
      */
-    public static <T> ClassBeanDescriptor<T> serviceAsContract(Class<T> serviceType) {
-        return new ClassBeanDescriptor<>(serviceType).to(serviceType);
+    public static <T> ClassBinding<T> serviceAsContract(Class<T> serviceType) {
+        return new ClassBinding<>(serviceType).to(serviceType);
     }
 
     /**
@@ -96,8 +96,8 @@ public final class Descriptors {
      * @return initialized binding builder.
      */
     @SuppressWarnings("unchecked")
-    public static <T> ClassBeanDescriptor<T> service(GenericType<T> serviceType) {
-        return (ClassBeanDescriptor<T>) new ClassBeanDescriptor<>(serviceType.getRawType()).asType(serviceType.getType());
+    public static <T> ClassBinding<T> service(GenericType<T> serviceType) {
+        return (ClassBinding<T>) new ClassBinding<>(serviceType.getRawType()).asType(serviceType.getType());
     }
 
     /**
@@ -110,8 +110,8 @@ public final class Descriptors {
      * @return initialized binding builder.
      */
     @SuppressWarnings("unchecked")
-    public static <T> ClassBeanDescriptor<T> serviceAsContract(GenericType<T> serviceType) {
-        return (ClassBeanDescriptor<T>) new ClassBeanDescriptor<>(serviceType.getRawType())
+    public static <T> ClassBinding<T> serviceAsContract(GenericType<T> serviceType) {
+        return (ClassBinding<T>) new ClassBinding<>(serviceType.getRawType())
                 .asType(serviceType.getType())
                 .to(serviceType.getType());
     }
@@ -126,8 +126,8 @@ public final class Descriptors {
      * @return initialized binding builder.
      */
     @SuppressWarnings("unchecked")
-    public static <T> ClassBeanDescriptor<T> serviceAsContract(Type serviceType) {
-        return new ClassBeanDescriptor<>((Class<T>) ReflectionHelper.getRawClass(serviceType))
+    public static <T> ClassBinding<T> serviceAsContract(Type serviceType) {
+        return new ClassBinding<>((Class<T>) ReflectionHelper.getRawClass(serviceType))
                 .asType(serviceType)
                 .to(serviceType);
     }
@@ -142,8 +142,8 @@ public final class Descriptors {
      * @param service service instance.
      * @return initialized binding builder.
      */
-    public static <T> InstanceBeanDescriptor<T> service(T service) {
-        return new InstanceBeanDescriptor<>(service);
+    public static <T> InstanceBinding<T> service(T service) {
+        return new InstanceBinding<>(service);
     }
 
     /**
@@ -156,8 +156,8 @@ public final class Descriptors {
      * @param service service instance.
      * @return initialized binding builder.
      */
-    public static <T> InstanceBeanDescriptor<T> serviceAsContract(T service) {
-        return new InstanceBeanDescriptor<>(service, service.getClass());
+    public static <T> InstanceBinding<T> serviceAsContract(T service) {
+        return new InstanceBinding<>(service, service.getClass());
     }
 
     /**
@@ -168,9 +168,9 @@ public final class Descriptors {
      * @param factoryScope factory scope.
      * @return initialized binding builder.
      */
-    public static <T> ClassFactoryDescriptor<T> factory(
+    public static <T> FactoryClassBinding<T> factory(
             Class<? extends Factory<T>> factoryType, Class<? extends Annotation> factoryScope) {
-        return new ClassFactoryDescriptor<>(factoryType, factoryScope);
+        return new FactoryClassBinding<>(factoryType, factoryScope);
     }
 
     /**
@@ -182,8 +182,8 @@ public final class Descriptors {
      * @param factoryType service factory class.
      * @return initialized binding builder.
      */
-    public static <T> ClassFactoryDescriptor<T> factory(Class<? extends Factory<T>> factoryType) {
-        return new ClassFactoryDescriptor<>(factoryType, null);
+    public static <T> FactoryClassBinding<T> factory(Class<? extends Factory<T>> factoryType) {
+        return new FactoryClassBinding<>(factoryType, null);
     }
 
     /**
@@ -193,22 +193,22 @@ public final class Descriptors {
      * @param factory service instance.
      * @return initialized binding builder.
      */
-    public static <T> InstanceFactoryDescriptor<T> factory(Factory<T> factory) {
-        return new InstanceFactoryDescriptor<>(factory);
+    public static <T> FactoryInstanceBinding<T> factory(Factory<T> factory) {
+        return new FactoryInstanceBinding<>(factory);
     }
 
     /**
      * Start building a new injection resolver binding. The injection resolver is naturally
      * considered to be a {@link javax.inject.Singleton singleton-scoped}.
      * <p>
-     * There is no need to provide any additional information. Other method on {@link Descriptor}
+     * There is no need to provide any additional information. Other method on {@link Binding}
      * will be ignored.
      *
      * @param <T>        type of the injection resolver.
      * @param resolver   injection resolver instance.
      * @return initialized binding builder.
      */
-    public static <T extends InjectionResolver> InjectionResolverDescriptor<T> injectionResolver(T resolver) {
-        return new InjectionResolverDescriptor<>(resolver);
+    public static <T extends InjectionResolver> InjectionResolverBinding<T> injectionResolver(T resolver) {
+        return new InjectionResolverBinding<>(resolver);
     }
 }

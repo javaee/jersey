@@ -64,9 +64,9 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
+import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Represents reader interceptor chain executor for both client and server side.
@@ -78,7 +78,7 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderInterceptor>
-        implements ReaderInterceptorContext, InstanceManagerSupplier {
+        implements ReaderInterceptorContext, InjectionManagerSupplier {
 
     private static final Logger LOGGER = Logger.getLogger(ReaderInterceptorExecutor.class.getName());
 
@@ -87,7 +87,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
     private final MessageBodyWorkers workers;
     private final boolean translateNce;
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     private InputStream inputStream;
     private int processedCount;
@@ -111,7 +111,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
      * @param translateNce       if {@code true}, the {@link javax.ws.rs.core.NoContentException} thrown by a selected message
      *                           body
      *                           reader will be translated into a {@link javax.ws.rs.BadRequestException} as required by
-     * @param instanceManager    instance manager.
+     * @param injectionManager   injection manager.
      */
     ReaderInterceptorExecutor(final Class<?> rawType, final Type type,
                               final Annotation[] annotations,
@@ -122,14 +122,14 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
                               final MessageBodyWorkers workers,
                               final Iterable<ReaderInterceptor> readerInterceptors,
                               final boolean translateNce,
-                              final InstanceManager instanceManager) {
+                              final InjectionManager injectionManager) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
         this.inputStream = inputStream;
         this.workers = workers;
         this.translateNce = translateNce;
-        this.instanceManager = instanceManager;
+        this.injectionManager = injectionManager;
 
         final List<ReaderInterceptor> effectiveInterceptors = StreamSupport.stream(readerInterceptors.spliterator(), false)
                 .collect(Collectors.toList());
@@ -186,8 +186,8 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
     }
 
     @Override
-    public InstanceManager getInstanceManager() {
-        return instanceManager;
+    public InjectionManager getInjectionManager() {
+        return injectionManager;
     }
 
     /**

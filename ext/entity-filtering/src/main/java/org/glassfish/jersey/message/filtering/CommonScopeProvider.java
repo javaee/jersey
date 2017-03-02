@@ -58,7 +58,7 @@ import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.message.filtering.spi.ScopeProvider;
 import org.glassfish.jersey.message.filtering.spi.ScopeResolver;
 import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;
@@ -81,14 +81,13 @@ class CommonScopeProvider implements ScopeProvider {
 
     /**
      * Create new common scope provider with injected {@link Configuration configuration} and
-     * {@link InstanceManager instance manager}.
+     * {@link InjectionManager injection manager}.
      */
     @Inject
-    public CommonScopeProvider(final Configuration config, final InstanceManager instanceManager) {
+    public CommonScopeProvider(final Configuration config, final InjectionManager injectionManager) {
         this.config = config;
-
         this.resolvers = Lists.newArrayList(Providers.getAllProviders(
-                instanceManager, ScopeResolver.class, new RankedComparator<ScopeResolver>()));
+                injectionManager, ScopeResolver.class, new RankedComparator<ScopeResolver>()));
     }
 
     @Override

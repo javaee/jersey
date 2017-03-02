@@ -55,7 +55,7 @@ import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Factory;
 
@@ -315,11 +315,11 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
      * values for parameters of this Invocable returned by {@link #getParameters()}. Value providers are ordered in the same
      * order as parameters.
      *
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      * @return Set of value providers for this Invocable.
      */
-    public List<? extends Factory<?>> getValueProviders(InstanceManager instanceManager) {
-        return ParameterValueHelper.createValueProviders(instanceManager, this);
+    public List<? extends Factory<?>> getValueProviders(InjectionManager injectionManager) {
+        return ParameterValueHelper.createValueProviders(injectionManager, this);
     }
 
     @Override

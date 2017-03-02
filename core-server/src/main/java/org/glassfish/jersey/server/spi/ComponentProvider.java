@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.spi;
 
 import java.util.Set;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Component provider interface to allow custom management of 3rd party
@@ -62,20 +62,20 @@ public interface ComponentProvider {
 
 
     /**
-     * Initializes the component provider with a reference to a instance manager
+     * Initializes the component provider with a reference to a injection manager
      * instance, which will get used in the application to manage individual components.
-     * Providers should keep a reference to the instance manager for later use.
+     * Providers should keep a reference to the injection manager for later use.
      * This method will be invoked prior to any bind method calls.
-     * The instance manager parameter will not be fully initialized at the time of invocation
+     * The injection manager parameter will not be fully initialized at the time of invocation
      * and should be used as a reference only.
      *
-     * @param instanceManager an instance manager.
+     * @param injectionManager an injection manager.
      */
-    void initialize(final InstanceManager instanceManager);
+    void initialize(final InjectionManager injectionManager);
 
     /**
      * Jersey will invoke this method before binding of each component class internally
-     * during initialization of it's instance manager.
+     * during initialization of it's injection manager.
      *
      * If the component provider wants to bind the component class
      * itself, it must do so and return true. In that case, Jersey will not

@@ -57,7 +57,7 @@ import javax.servlet.ServletContext;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
 import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.jvnet.hk2.annotations.Optional;
 
@@ -82,15 +82,15 @@ final class MustacheTemplateProcessor extends AbstractTemplateProcessor<Mustache
      * (optional) {@link ServletContext servlet context}.
      *
      * @param config configuration to configure this processor from.
-     * @param instanceManager instance manager to initialize template object factory if needed.
+     * @param injectionManager injection manager to initialize template object factory if needed.
      * @param servletContext (optional) servlet context to obtain template resources from.
      */
     @Inject
-    public MustacheTemplateProcessor(final Configuration config, final InstanceManager instanceManager,
+    public MustacheTemplateProcessor(final Configuration config, final InjectionManager injectionManager,
                                      @Optional final ServletContext servletContext) {
         super(config, servletContext, "mustache", "mustache");
 
-        this.factory = getTemplateObjectFactory(instanceManager, MustacheFactory.class, DefaultMustacheFactory::new);
+        this.factory = getTemplateObjectFactory(injectionManager, MustacheFactory.class, DefaultMustacheFactory::new);
     }
 
     @Override

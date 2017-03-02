@@ -52,7 +52,7 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * An injectable {@link ResourceMethodInvocationHandlerProvider resource method
@@ -76,8 +76,8 @@ public final class ResourceMethodInvocationHandlerFactory implements ResourceMet
     private final Set<ResourceMethodInvocationHandlerProvider> providers;
 
     @Inject
-    ResourceMethodInvocationHandlerFactory(InstanceManager instanceManager) {
-        providers = Providers.getProviders(instanceManager, ResourceMethodInvocationHandlerProvider.class);
+    ResourceMethodInvocationHandlerFactory(InjectionManager injectionManager) {
+        providers = Providers.getProviders(injectionManager, ResourceMethodInvocationHandlerProvider.class);
     }
 
     // ResourceMethodInvocationHandlerProvider

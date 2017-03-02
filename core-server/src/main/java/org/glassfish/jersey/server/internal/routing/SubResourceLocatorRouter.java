@@ -62,7 +62,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * An methodAcceptorPair to accept sub-resource requests.
@@ -82,26 +82,26 @@ final class SubResourceLocatorRouter implements Router {
     private final RuntimeLocatorModelBuilder runtimeLocatorBuilder;
     private final JerseyResourceContext resourceContext;
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     /**
      * Create a new sub-resource locator router.
      *
-     * @param instanceManager         DI instance manager.
+     * @param injectionManager        DI injection manager.
      * @param locatorModel            resource locator method model.
      * @param resourceContext         resource context to bind sub-resource locator singleton instances.
      * @param runtimeLocatorBuilder   original runtime model builder.
      */
-    SubResourceLocatorRouter(final InstanceManager instanceManager,
+    SubResourceLocatorRouter(final InjectionManager injectionManager,
                              final ResourceMethod locatorModel,
                              final JerseyResourceContext resourceContext,
                              final RuntimeLocatorModelBuilder runtimeLocatorBuilder) {
         this.runtimeLocatorBuilder = runtimeLocatorBuilder;
         this.locatorModel = locatorModel;
         this.resourceContext = resourceContext;
-        this.instanceManager = instanceManager;
+        this.injectionManager = injectionManager;
 
-        this.valueProviders = ParameterValueHelper.createValueProviders(instanceManager, locatorModel.getInvocable());
+        this.valueProviders = ParameterValueHelper.createValueProviders(injectionManager, locatorModel.getInvocable());
     }
 
     @Override
@@ -128,7 +128,7 @@ final class SubResourceLocatorRouter implements Router {
 
                 if (!runtimeLocatorBuilder.isCached(locatorClass)) {
                     // If we can't create an instance of the class, don't proceed.
-                    subResourceInstance = Injections.getOrCreate(instanceManager, locatorClass);
+                    subResourceInstance = Injections.getOrCreate(injectionManager, locatorClass);
                 }
             }
             routingContext.pushMatchedResource(subResourceInstance);

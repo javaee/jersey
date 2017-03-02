@@ -44,9 +44,11 @@ import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.Set;
 
+import org.glassfish.jersey.spi.inject.InjectionManager;
+
 /**
  * Implementation of the instance keeper which kept the instance of the class from
- * {@link org.glassfish.jersey.spi.inject.InstanceManager} and the other information about this instance.
+ * {@link InjectionManager} and the other information about this instance.
  *
  * @param <T> type of the kept instance.
  */

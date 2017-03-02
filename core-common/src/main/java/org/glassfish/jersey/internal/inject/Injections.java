@@ -47,9 +47,9 @@ import javax.ws.rs.WebApplicationException;
 
 import javax.inject.Provider;
 
-import org.glassfish.jersey.hk2.HK2InstanceManager;
+import org.glassfish.jersey.hk2.HK2InjectionManager;
 import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.MultiException;
 
@@ -62,87 +62,87 @@ import org.glassfish.hk2.api.MultiException;
 public class Injections {
 
     /**
-     * Create a {@link InstanceManager}. In case the {@code name} is not specified, the locator
+     * Create a {@link InjectionManager}. In case the {@code name} is not specified, the locator
      * will be unnamed.
      *
-     * @param name                 The name of this instance manager. Passing a {@code null}
-     *                             name will result in a newly created instance manager with a
+     * @param name                 The name of this injection manager. Passing a {@code null}
+     *                             name will result in a newly created injection manager with a
      *                             generated name.
-     * @param parent               The parent of this instance manager. Services can be found in
+     * @param parent               The parent of this injection manager. Services can be found in
      *                             the parent (and all grand-parents). May be {@code null}.
-     *                             if the returned instance manager should not be parented.
+     *                             if the returned injection manager should not be parented.
      * @param binders              custom the {@link Binder binders}.
-     * @return a instance manager with all the bindings.
+     * @return a injection manager with all the bindings.
      */
-    public static InstanceManager createInstanceManager(String name, InstanceManager parent, Binder... binders) {
-        return _instanceManager(name, parent, binders);
+    public static InjectionManager createInjectionManager(String name, InjectionManager parent, Binder... binders) {
+        return _injectionManager(name, parent, binders);
     }
 
     /**
-     * Create a {@link InstanceManager}. In case the {@code name} is not specified, the locator
+     * Create a {@link InjectionManager}. In case the {@code name} is not specified, the locator
      * will be unnamed.
      *
      * @param binders custom the {@link Binder binders}.
-     * @return a instance manager with all the bindings.
+     * @return a injection manager with all the bindings.
      */
-    public static InstanceManager createInstanceManager(Binder... binders) {
-        return _instanceManager(null, null, binders);
+    public static InjectionManager createInjectionManager(Binder... binders) {
+        return _injectionManager(null, null, binders);
     }
 
     /**
-     * Create a {@link InstanceManager}. In case the {@code name} is not specified, the locator
+     * Create a {@link InjectionManager}. In case the {@code name} is not specified, the locator
      * will be unnamed.
      *
-     * @param name    The name of this instance manager. Passing a {@code null}
-     *                name will result in a newly created instance manager with a
+     * @param name    The name of this injection manager. Passing a {@code null}
+     *                name will result in a newly created injection manager with a
      *                generated name.
      * @param binders custom the {@link Binder binders}.
-     * @return a instance manager with all the bindings.
+     * @return a injection manager with all the bindings.
      */
-    public static InstanceManager createInstanceManager(String name, Binder... binders) {
-        return _instanceManager(name, null, binders);
+    public static InjectionManager createInjectionManager(String name, Binder... binders) {
+        return _injectionManager(name, null, binders);
     }
 
     /**
-     * Create an unnamed, parented {@link InstanceManager}. In case the {@code parent} instance manager
+     * Create an unnamed, parented {@link InjectionManager}. In case the {@code parent} injection manager
      * is not specified, the locator will not be parented.
      *
      * @param parent  The parent of this underlying DI locator. Services can be found in
      *                the parent (and all grand-parents). May be {@code null}.
      *                if the returned BeanManager should not be parented.
      * @param binders custom the {@link Binder binders}.
-     * @return a instance manager with all the bindings.
+     * @return an injection manager with all the bindings.
      */
-    public static InstanceManager createInstanceManager(InstanceManager parent, Binder... binders) {
-        return _instanceManager(null, parent, binders);
+    public static InjectionManager createInjectionManager(InjectionManager parent, Binder... binders) {
+        return _injectionManager(null, parent, binders);
     }
 
-    private static InstanceManager _instanceManager(String name, InstanceManager parent, Binder... binders) {
-        Iterator<InstanceManager> iterator = ServiceLoader.load(InstanceManager.class).iterator();
-        InstanceManager instanceManager;
+    private static InjectionManager _injectionManager(String name, InjectionManager parent, Binder... binders) {
+        Iterator<InjectionManager> iterator = ServiceLoader.load(InjectionManager.class).iterator();
+        InjectionManager injectionManager;
         if (iterator.hasNext()) {
-            instanceManager = iterator.next();
+            injectionManager = iterator.next();
         } else {
-            // TODO: Log that there is no explicitly configured InstanceManager, default is used.
-            instanceManager = new HK2InstanceManager();
+            // TODO: Log that there is no explicitly configured InjectionManager, default is used.
+            injectionManager = new HK2InjectionManager();
         }
 
-        instanceManager.initialize(name, parent, binders);
-        return instanceManager;
+        injectionManager.initialize(name, parent, binders);
+        return injectionManager;
     }
 
     /**
      * Get the class by contract or create and inject a new instance.
      *
      * @param <T>             instance type.
-     * @param instanceManager DI instance manager.
+     * @param injectionManager DI injection manager.
      * @param clazz           class of the instance to be provider.
      * @return instance of the class either provided as a service or created and injected  by HK2.
      */
-    public static <T> T getOrCreate(InstanceManager instanceManager, final Class<T> clazz) {
+    public static <T> T getOrCreate(InjectionManager injectionManager, final Class<T> clazz) {
         try {
-            final T component = instanceManager.getInstance(clazz);
-            return component == null ? instanceManager.createAndInitialize(clazz) : component;
+            final T component = injectionManager.getInstance(clazz);
+            return component == null ? injectionManager.createAndInitialize(clazz) : component;
             // TODO: not really MultiException.
         } catch (final MultiException e) {
 
@@ -165,12 +165,12 @@ public class Injections {
     /**
      * Get a provider for a contract.
      *
-     * @param <T>             instance type.
-     * @param instanceManager instance manager.
-     * @param clazz           class of the instance to be provider.
+     * @param <T>              instance type.
+     * @param injectionManager injection manager.
+     * @param clazz            class of the instance to be provider.
      * @return provider of contract class.
      */
-    public static <T> Provider<T> getProvider(final InstanceManager instanceManager, final Class<T> clazz) {
-        return () -> instanceManager.getInstance(clazz);
+    public static <T> Provider<T> getProvider(final InjectionManager injectionManager, final Class<T> clazz) {
+        return () -> injectionManager.getInstance(clazz);
     }
 }

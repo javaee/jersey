@@ -72,11 +72,11 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
-import org.glassfish.jersey.spi.inject.ClassBeanDescriptor;
-import org.glassfish.jersey.spi.inject.Descriptor;
-import org.glassfish.jersey.spi.inject.Descriptors;
-import org.glassfish.jersey.spi.inject.InstanceBeanDescriptor;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.Binding;
+import org.glassfish.jersey.spi.inject.Bindings;
+import org.glassfish.jersey.spi.inject.ClassBinding;
+import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.spi.inject.InstanceBinding;
 
 import org.glassfish.ejb.deployment.descriptor.EjbBundleDescriptorImpl;
 import org.glassfish.ejb.deployment.descriptor.EjbDescriptor;
@@ -143,16 +143,16 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
         add("javax.ejb.Singleton");
     }});
 
-    private InstanceManager instanceManager = null;
+    private InjectionManager injectionManager = null;
 
     // ComponentProvider
     @Override
-    public void initialize(final InstanceManager instanceManager) {
-        this.instanceManager = instanceManager;
+    public void initialize(final InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
 
-        InstanceBeanDescriptor<EjbComponentProvider> descriptor = Descriptors.service(EjbComponentProvider.this)
+        InstanceBinding<EjbComponentProvider> descriptor = Bindings.service(EjbComponentProvider.this)
                 .to(ResourceMethodInvocationHandlerProvider.class);
-        this.instanceManager.register(descriptor);
+        this.injectionManager.register(descriptor);
     }
 
     private ApplicationInfo getApplicationInfo(EjbContainerUtil ejbUtil) throws NamingException {
@@ -190,7 +190,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
     private void registerEjbInterceptor() {
         try {
-            final Object interceptor = new EjbComponentInterceptor(instanceManager);
+            final Object interceptor = new EjbComponentInterceptor(injectionManager);
             initialContext = getInitialContext();
             final EjbContainerUtil ejbUtil = EjbContainerUtilImpl.getInstance();
             final ApplicationInfo appInfo = getApplicationInfo(ejbUtil);
@@ -270,7 +270,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             LOGGER.fine(LocalizationMessages.EJB_CLASS_BEING_CHECKED(component));
         }
 
-        if (instanceManager == null) {
+        if (injectionManager == null) {
             throw new IllegalStateException(LocalizationMessages.EJB_COMPONENT_PROVIDER_NOT_INITIALIZED_PROPERLY());
         }
 
@@ -282,10 +282,10 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             registerEjbInterceptor();
         }
 
-        Descriptor descriptor = Descriptors.factory(new EjbFactory(component, initialContext, EjbComponentProvider.this))
+        Binding binding = Bindings.factory(new EjbFactory(component, initialContext, EjbComponentProvider.this))
                 .to(component)
                 .to(providerContracts);
-        instanceManager.register(descriptor);
+        injectionManager.register(binding);
 
         if (LOGGER.isLoggable(Level.CONFIG)) {
             LOGGER.config(LocalizationMessages.EJB_CLASS_BOUND_WITH_CDI(component));
@@ -300,11 +300,11 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
     }
 
     private void registerEjbExceptionMapper() {
-        ClassBeanDescriptor<EjbExceptionMapper> descriptor =
-                Descriptors.serviceAsContract(EjbExceptionMapper.class)
+        ClassBinding<EjbExceptionMapper> descriptor =
+                Bindings.serviceAsContract(EjbExceptionMapper.class)
                     .in(Singleton.class);
 
-        instanceManager.register(descriptor);
+        injectionManager.register(descriptor);
     }
 
     private boolean isEjbComponent(Class<?> component) {

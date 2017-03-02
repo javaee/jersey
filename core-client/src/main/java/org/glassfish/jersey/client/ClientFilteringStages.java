@@ -52,7 +52,7 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.ChainableStage;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Client filtering stage factory.
@@ -66,30 +66,30 @@ class ClientFilteringStages {
     }
 
     /**
-     * Create client request filtering stage using the instance manager. May return {@code null}.
+     * Create client request filtering stage using the injection manager. May return {@code null}.
      *
-     * @param instanceManager instance manager to be used.
+     * @param injectionManager injection manager to be used.
      * @return configured request filtering stage, or {@code null} in case there are no
-     *         {@link ClientRequestFilter client request filters} registered in the instance manager.
+     *         {@link ClientRequestFilter client request filters} registered in the injection manager.
      */
-    static ChainableStage<ClientRequest> createRequestFilteringStage(InstanceManager instanceManager) {
+    static ChainableStage<ClientRequest> createRequestFilteringStage(InjectionManager injectionManager) {
         RankedComparator<ClientRequestFilter> comparator = new RankedComparator<>(RankedComparator.Order.ASCENDING);
         Iterable<ClientRequestFilter> requestFilters =
-                Providers.getAllProviders(instanceManager, ClientRequestFilter.class, comparator);
+                Providers.getAllProviders(injectionManager, ClientRequestFilter.class, comparator);
         return requestFilters.iterator().hasNext() ? new RequestFilteringStage(requestFilters) : null;
     }
 
     /**
-     * Create client response filtering stage using the instance manager. May return {@code null}.
+     * Create client response filtering stage using the injection manager. May return {@code null}.
      *
-     * @param instanceManager instance manager to be used.
+     * @param injectionManager injection manager to be used.
      * @return configured response filtering stage, or {@code null} in case there are no
-     *         {@link ClientResponseFilter client response filters} registered in the instance manager.
+     *         {@link ClientResponseFilter client response filters} registered in the injection manager.
      */
-    static ChainableStage<ClientResponse> createResponseFilteringStage(InstanceManager instanceManager) {
+    static ChainableStage<ClientResponse> createResponseFilteringStage(InjectionManager injectionManager) {
         RankedComparator<ClientResponseFilter> comparator = new RankedComparator<>(RankedComparator.Order.DESCENDING);
         Iterable<ClientResponseFilter> responseFilters =
-                Providers.getAllProviders(instanceManager, ClientResponseFilter.class, comparator);
+                Providers.getAllProviders(injectionManager, ClientResponseFilter.class, comparator);
         return responseFilters.iterator().hasNext() ? new ResponseFilterStage(responseFilters) : null;
     }
 

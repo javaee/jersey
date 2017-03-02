@@ -80,7 +80,7 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
 import org.glassfish.jersey.spi.inject.Binder;
 import org.glassfish.jersey.spi.inject.CompositeBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Common immutable {@link javax.ws.rs.core.Configuration} implementation for
@@ -574,12 +574,12 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     /**
-     * Configure {@link AutoDiscoverable auto-discoverables} in the instance manager.
+     * Configure {@link AutoDiscoverable auto-discoverables} in the injection manager.
      *
-     * @param instanceManager locator in which the auto-discoverables should be configured.
+     * @param injectionManager locator in which the auto-discoverables should be configured.
      * @param forcedOnly defines whether all or only forced auto-discoverables should be configured.
      */
-    public void configureAutoDiscoverableProviders(final InstanceManager instanceManager, final boolean forcedOnly) {
+    public void configureAutoDiscoverableProviders(final InjectionManager injectionManager, final boolean forcedOnly) {
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
             final Set<AutoDiscoverable> providers = new TreeSet<>((o1, o2) -> {
@@ -595,13 +595,13 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
             final List<ForcedAutoDiscoverable> forcedAutoDiscroverables = new LinkedList<>();
             for (Class<ForcedAutoDiscoverable> forcedADType : ServiceFinder.find(ForcedAutoDiscoverable.class, true)
                     .toClassArray()) {
-                forcedAutoDiscroverables.add(instanceManager.createAndInitialize(forcedADType));
+                forcedAutoDiscroverables.add(injectionManager.createAndInitialize(forcedADType));
             }
             providers.addAll(forcedAutoDiscroverables);
 
             // Regular.
             if (!forcedOnly) {
-                providers.addAll(Providers.getProviders(instanceManager, AutoDiscoverable.class));
+                providers.addAll(Providers.getProviders(injectionManager, AutoDiscoverable.class));
             }
 
             for (final AutoDiscoverable autoDiscoverable : providers) {
@@ -620,21 +620,21 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     /**
-     * Configure binders in the instance manager and enable JAX-RS features.
+     * Configure binders in the injection manager and enable JAX-RS features.
      *
-     * @param instanceManager locator in which the binders and features should be configured.
+     * @param injectionManager locator in which the binders and features should be configured.
      */
-    public void configureMetaProviders(InstanceManager instanceManager) {
+    public void configureMetaProviders(InjectionManager injectionManager) {
         // First, configure existing binders
-        Set<Binder> configuredBinders = configureBinders(instanceManager, Collections.emptySet());
+        Set<Binder> configuredBinders = configureBinders(injectionManager, Collections.emptySet());
 
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
-            instanceManager.register(new ManagedObjectsFinalizerBinder());
+            injectionManager.register(new ManagedObjectsFinalizerBinder());
             // Next, configure all features
-            configureFeatures(instanceManager, new HashSet<>(), resetRegistrations());
+            configureFeatures(injectionManager, new HashSet<>(), resetRegistrations());
             // At last, configure any new binders added by features
-            configureBinders(instanceManager, configuredBinders);
+            configureBinders(injectionManager, configuredBinders);
         }
     }
 
@@ -646,13 +646,13 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         }
     }
 
-    private Set<Binder> configureBinders(InstanceManager instanceManager, Set<Binder> configured) {
+    private Set<Binder> configureBinders(InjectionManager injectionManager, Set<Binder> configured) {
         Set<Binder> allConfigured = Collections.newSetFromMap(new IdentityHashMap<>());
         allConfigured.addAll(configured);
 
         Collection<Binder> binders = getBeanDescriptors(configured);
         if (!binders.isEmpty()) {
-            instanceManager.register(CompositeBinder.wrap(binders));
+            injectionManager.register(CompositeBinder.wrap(binders));
             allConfigured.addAll(binders);
         }
 
@@ -667,10 +667,10 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
                 .collect(Collectors.toList());
     }
 
-    private void configureFeatures(InstanceManager instanceManager,
+    private void configureFeatures(InjectionManager injectionManager,
                                    Set<FeatureRegistration> processed,
                                    List<FeatureRegistration> unprocessed) {
-        ManagedObjectsFinalizer managedObjectsFinalizer = instanceManager.getInstance(ManagedObjectsFinalizer.class);
+        ManagedObjectsFinalizer managedObjectsFinalizer = injectionManager.getInstance(ManagedObjectsFinalizer.class);
 
         FeatureContextWrapper featureContextWrapper = null;
         for (final FeatureRegistration registration : unprocessed) {
@@ -681,13 +681,13 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
             Feature feature = registration.getFeature();
             if (feature == null) {
-                feature = instanceManager.createAndInitialize(registration.getFeatureClass());
+                feature = injectionManager.createAndInitialize(registration.getFeatureClass());
                 managedObjectsFinalizer.registerForPreDestroyCall(feature);
             } else {
                 // Disable injection of Feature instances on the client-side. Instances may be registered into multiple
                 // web-targets which means that injecting anything into these instances is not safe.
                 if (!RuntimeType.CLIENT.equals(type)) {
-                    instanceManager.inject(feature);
+                    injectionManager.inject(feature);
                 }
             }
 
@@ -698,13 +698,13 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
             if (featureContextWrapper == null) {
                 // init lazily
-                featureContextWrapper = new FeatureContextWrapper(this, instanceManager);
+                featureContextWrapper = new FeatureContextWrapper(this, injectionManager);
             }
             final boolean success = feature.configure(featureContextWrapper);
 
             if (success) {
                 processed.add(registration);
-                configureFeatures(instanceManager, processed, resetRegistrations());
+                configureFeatures(injectionManager, processed, resetRegistrations());
                 enabledFeatureClasses.add(registration.getFeatureClass());
                 enabledFeatures.add(feature);
             }

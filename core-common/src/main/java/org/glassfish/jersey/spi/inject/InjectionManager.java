@@ -49,66 +49,66 @@ import org.glassfish.jersey.spi.ServiceHolder;
 /**
  * Interface provides the communication API between Jersey and Dependency Injection provider
  * <p>
- * First, the method {@link #initialize(String, InstanceManager, Binder...)} should be call to initialize DI provider
+ * First, the method {@link #initialize(String, InjectionManager, Binder...)} should be call to initialize DI provider
  * (e.g. create underlying storage for registered services) and to do other stuff needed for successful start of DI provider.
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public interface InstanceManager {
+public interface InjectionManager {
 
     /**
-     * This will initialize the {@code InstanceManager} and underlying DI provider. The method may get the array of binders to
-     * register {@link Descriptor} them during initialization process. {@code name} and {@code parent} are not required parameters
+     * This will initialize the {@code InjectionManager} and underlying DI provider. The method may get the array of binders to
+     * register {@link Binding} them during initialization process. {@code name} and {@code parent} are not required parameters
      * and can be null without the initialization exception.
      *
-     * @param name          Name of the instance manager.
-     * @param parent        Parent instance manager on which new instance manager should be dependent.
+     * @param name          Name of the injection manager.
+     * @param parent        Parent injection manager on which new injection manager should be dependent.
      * @param binders       Binders with descriptions to include them during initialization process.
      */
-    void initialize(String name, InstanceManager parent, Binder... binders);
+    void initialize(String name, InjectionManager parent, Binder... binders);
 
     /**
-     * This will shutdown the entire instance manager and underlying DI provider along with injected executors and schedulers.
+     * This will shutdown the entire injection manager and underlying DI provider along with injected executors and schedulers.
      */
     void shutdown();
 
     /**
      * This will register one bean represented using fields in the provided descriptor. The final bean can be direct bean or
-     * factory object which will create the bean at the time of injection. {@code InstanceManager} is able to register a bean
+     * factory object which will create the bean at the time of injection. {@code InjectionManager} is able to register a bean
      * represented by a class or direct instance.
      *
-     * @param descriptor one descriptor.
-     * @see ClassBeanDescriptor
-     * @see InstanceBeanDescriptor
-     * @see ClassFactoryDescriptor
-     * @see InstanceFactoryDescriptor
+     * @param binding one descriptor.
+     * @see ClassBinding
+     * @see InstanceBinding
+     * @see FactoryClassBinding
+     * @see FactoryInstanceBinding
      */
-    void register(Descriptor descriptor);
+    void register(Binding binding);
 
     /**
      * This will register a collection of beans represented using fields in the provided descriptors. The final bean can be
-     * direct bean or factory object which will create the bean at the time of injection. {@code InstanceManager} is able to
+     * direct bean or factory object which will create the bean at the time of injection. {@code InjectionManager} is able to
      * register a bean represented by a class or direct instance.
      *
      * @param descriptors collection of descriptors.
-     * @see ClassBeanDescriptor
-     * @see InstanceBeanDescriptor
-     * @see ClassFactoryDescriptor
-     * @see InstanceFactoryDescriptor
+     * @see ClassBinding
+     * @see InstanceBinding
+     * @see FactoryClassBinding
+     * @see FactoryInstanceBinding
      */
-    void register(Iterable<Descriptor> descriptors);
+    void register(Iterable<Binding> descriptors);
 
     /**
      * This will register beans which are included in {@link Binder}. {@code Binder} can contains all descriptors extending
-     * {@link Descriptor} or other binders which are installed together in tree-structure. This method will get all descriptors
+     * {@link Binding} or other binders which are installed together in tree-structure. This method will get all descriptors
      * bound in the given binder and register them in the order how the binders are installed together. In the tree structure,
      * the deeper on the left side will be processed first.
      *
      * @param binder collection of descriptors.
-     * @see ClassBeanDescriptor
-     * @see InstanceBeanDescriptor
-     * @see ClassFactoryDescriptor
-     * @see InstanceFactoryDescriptor
+     * @see ClassBinding
+     * @see InstanceBinding
+     * @see FactoryClassBinding
+     * @see FactoryInstanceBinding
      */
     void register(Binder binder);
 
@@ -116,7 +116,7 @@ public interface InstanceManager {
      * This method creates, injects and post-constructs an object with the given class. This is equivalent to calling the
      * {@code create-class} method followed by the {@code inject-class} method followed by the {@code post-construct} method.
      * <p>
-     * The object created is not managed by the instance manager.
+     * The object created is not managed by the injection manager.
      *
      * @param createMe The non-null class to create this object from;
      * @return An instance of the object that has been created, injected and post constructed.
@@ -124,7 +124,7 @@ public interface InstanceManager {
     <T> T createAndInitialize(Class<T> createMe);
 
     /**
-     * Gets all services from this instance manager that implements this contract or has this implementation along with
+     * Gets all services from this injection manager that implements this contract or has this implementation along with
      * information about the service which can be kept by {@link ServiceHolder}.
      *
      * @param contractOrImpl May not be null, and is the contract or concrete implementation to get the best instance of.
@@ -136,10 +136,10 @@ public interface InstanceManager {
     <T> List<ServiceHolder<T>> getAllServiceHolders(Class<T> contractOrImpl, Annotation... qualifiers);
 
     /**
-     * Gets the best service from this instance manager that implements this contract or has this implementation.
+     * Gets the best service from this injection manager that implements this contract or has this implementation.
      * <p>
      * Use this method only if other information is not needed otherwise use, otherwise use
-     * {@link InstanceManager#getAllServiceHolders(Class, Annotation...)}.
+     * {@link InjectionManager#getAllServiceHolders(Class, Annotation...)}.
      *
      * @param contractOrImpl May not be null, and is the contract or concrete implementation to get the best instance of.
      * @param qualifiers     The set of qualifiers that must match this service definition.
@@ -150,10 +150,10 @@ public interface InstanceManager {
     <T> T getInstance(Class<T> contractOrImpl, Annotation... qualifiers);
 
     /**
-     * Gets the best service from this instance manager that implements this contract or has this implementation.
+     * Gets the best service from this injection manager that implements this contract or has this implementation.
      * <p>
      * Use this method only if other information is not needed otherwise use, otherwise use
-     * {@link InstanceManager#getAllServiceHolders(Class, Annotation...)}.
+     * {@link InjectionManager#getAllServiceHolders(Class, Annotation...)}.
      *
      * @param contractOrImpl May not be null, and is the contract or concrete implementation to get the best instance of.
      * @param classAnalyzer  -------
@@ -165,10 +165,10 @@ public interface InstanceManager {
     <T> T getInstance(Class<T> contractOrImpl, String classAnalyzer);
 
     /**
-     * Gets the best service from this instance manager that implements this contract or has this implementation.
+     * Gets the best service from this injection manager that implements this contract or has this implementation.
      * <p>
      * Use this method only if other information is not needed otherwise use, otherwise use
-     * {@link InstanceManager#getAllServiceHolders(Class, Annotation...)}.
+     * {@link InjectionManager#getAllServiceHolders(Class, Annotation...)}.
      *
      * @param contractOrImpl May not be null, and is the contract or concrete implementation to get the best instance of.
      * @param <T>            Instance type.
@@ -178,10 +178,10 @@ public interface InstanceManager {
     <T> T getInstance(Class<T> contractOrImpl);
 
     /**
-     * Gets the best service from this instance manager that implements this contract or has this implementation.
+     * Gets the best service from this injection manager that implements this contract or has this implementation.
      * <p>
      * Use this method only if other information is not needed otherwise use, otherwise use
-     * {@link InstanceManager#getAllServiceHolders(Class, Annotation...)}.
+     * {@link InjectionManager#getAllServiceHolders(Class, Annotation...)}.
      *
      * @param contractOrImpl May not be null, and is the contract or concrete implementation to get the best instance of.
      * @param <T>            Instance type.
@@ -202,16 +202,16 @@ public interface InstanceManager {
      * Creates and registers the descriptor in the underlying DI provider and returns {@link ForeignDescriptor} that is specific
      * descriptor for the underlying DI provider.
      *
-     * @param descriptor jersey descriptor.
+     * @param binding jersey descriptor.
      * @return specific foreign descriptor of the underlying DI provider.
      */
-    ForeignDescriptor createForeignDescriptor(Descriptor descriptor);
+    ForeignDescriptor createForeignDescriptor(Binding binding);
 
     /**
-     * Gets all services from this instance manager that implement this contract or have this implementation.
+     * Gets all services from this injection manager that implement this contract or have this implementation.
      * <p>
      * Use this method only if other information is not needed otherwise use, otherwise use
-     * {@link InstanceManager#getAllServiceHolders(Class, Annotation...)}.
+     * {@link InjectionManager#getAllServiceHolders(Class, Annotation...)}.
      *
      * @param contractOrImpl May not be null, and is the contract or concrete implementation to get the best instance of.
      * @param <T>            Instance type.
@@ -234,7 +234,7 @@ public interface InstanceManager {
      *
      * @param injectMe The object to be analyzed and injected into
      */
-    // TODO: Remove CLASS ANALYZER
+    // TODO: Remove CLASS ANALYZER - only in legacy CDI integration.
     void inject(Object injectMe, String classAnalyzer);
 
     /**

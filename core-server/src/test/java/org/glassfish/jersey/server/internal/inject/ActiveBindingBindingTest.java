@@ -60,7 +60,7 @@ import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.DescriptorType;
 import org.glassfish.hk2.api.DescriptorVisibility;
@@ -78,7 +78,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * Make sure i can bind an active descriptor into application instance manager
+ * Make sure i can bind an active descriptor into application injection manager
  * to get better control over types of instances that are being injected.
  * I should be able to inject different types based on scope of the injected component.
  *
@@ -86,7 +86,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class ActiveDescriptorBindingTest extends AbstractTest {
+public class ActiveBindingBindingTest extends AbstractTest {
 
     public static final String X_COUNTER_HEADER = "X-COUNTER";
 
@@ -178,7 +178,7 @@ public class ActiveDescriptorBindingTest extends AbstractTest {
             }
         });
         initiateWebApplication(myConfig);
-        activeDescriptor.instanceManager = app().getInstanceManager();
+        activeDescriptor.injectionManager = app().getInjectionManager();
         // end bootstrap
 
         String response;
@@ -240,7 +240,7 @@ public class ActiveDescriptorBindingTest extends AbstractTest {
      */
     private static class MyRequestDataDescriptor extends AbstractActiveDescriptor<MyRequestData> {
 
-        InstanceManager instanceManager;
+        InjectionManager injectionManager;
 
         static Set<Type> advertisedContracts = new HashSet<Type>() {
             {
@@ -275,7 +275,7 @@ public class ActiveDescriptorBindingTest extends AbstractTest {
             boolean direct = false;
 
             final javax.inject.Provider<Ref<RequestProcessingContext>> ctxRef =
-                    instanceManager.getInstance(new GenericType<Provider<Ref<RequestProcessingContext>>>() {
+                    injectionManager.getInstance(new GenericType<Provider<Ref<RequestProcessingContext>>>() {
                                         }.getType());
 
             if (serviceHandle instanceof ServiceHandleImpl) {

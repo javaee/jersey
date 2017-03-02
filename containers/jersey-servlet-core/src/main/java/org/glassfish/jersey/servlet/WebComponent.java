@@ -108,7 +108,7 @@ import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 import org.glassfish.jersey.servlet.spi.FilterUrlMappingsProvider;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.UriComponent;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -149,20 +149,20 @@ public class WebComponent {
     private final boolean requestResponseBindingExternalized;
 
     private static final RequestScopedInitializerProvider DEFAULT_REQUEST_SCOPE_INITIALIZER_PROVIDER =
-            context -> (RequestScopedInitializer) instanceManager -> {
-                instanceManager.<Ref<HttpServletRequest>>getInstance(REQUEST_TYPE).set(context.getHttpServletRequest());
-                instanceManager.<Ref<HttpServletResponse>>getInstance(RESPONSE_TYPE).set(context.getHttpServletResponse());
+            context -> (RequestScopedInitializer) injectionManager -> {
+                injectionManager.<Ref<HttpServletRequest>>getInstance(REQUEST_TYPE).set(context.getHttpServletRequest());
+                injectionManager.<Ref<HttpServletResponse>>getInstance(RESPONSE_TYPE).set(context.getHttpServletResponse());
             };
 
     /**
      * Return the first found {@link AsyncContextDelegateProvider}
-     * (via {@link Providers#getAllProviders(InstanceManager, Class)}) or {@code #DEFAULT_ASYNC_DELEGATE} if
+     * (via {@link Providers#getAllProviders(InjectionManager, Class)}) or {@code #DEFAULT_ASYNC_DELEGATE} if
      * other delegate cannot be found.
      *
      * @return a non-null AsyncContextDelegateProvider.
      */
     private AsyncContextDelegateProvider getAsyncExtensionDelegate() {
-        final Iterator<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getInstanceManager(),
+        final Iterator<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getInjectionManager(),
                 AsyncContextDelegateProvider.class).iterator();
         if (providers.hasNext()) {
             return providers.next();
@@ -374,7 +374,7 @@ public class WebComponent {
         this.queryParamsAsFormParams = !resourceConfig.isProperty(ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED);
         this.configSetStatusOverSendError = ServerProperties.getValue(resourceConfig.getProperties(),
                 ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, false, Boolean.class);
-        this.backgroundTaskScheduler = appHandler.getInstanceManager()
+        this.backgroundTaskScheduler = appHandler.getInjectionManager()
                 .getInstance(ScheduledExecutorService.class, BackgroundSchedulerLiteral.INSTANCE);
     }
 

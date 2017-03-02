@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,43 +38,35 @@
  * holder.
  */
 
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.ext.cdi1x.internal;
 
-import java.util.Map;
+import javax.ws.rs.WebApplicationException;
 
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
- * Utility class to create initialized server-side instance manager.
+ * Default {@link InjectionManagerStore injection manager} that assumes only one
+ * {@link InjectionManager injection manager} per application is used.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos
+ * @since 2.17
  */
-public final class InstanceManagerFactory {
-    private InstanceManagerFactory() {
-        // prevents instantiation
+final class SingleInjectionManagerStore implements InjectionManagerStore {
+
+    private volatile InjectionManager injectionManager;
+
+    @Override
+    public void registerInjectionManager(final InjectionManager injectionManager) {
+        if (this.injectionManager == null) {
+            this.injectionManager = injectionManager;
+        } else if (this.injectionManager != injectionManager) {
+            throw new WebApplicationException(LocalizationMessages.CDI_MULTIPLE_LOCATORS_INTO_SIMPLE_APP());
+        }
     }
 
-    /**
-     * Create new initialized server runtime locator.
-     *
-     * @return new initialized server runtime locator.
-     */
-    public static InstanceManager createInstanceManager() {
-        InstanceManager instanceManager = Injections.createInstanceManager();
-        instanceManager.register(new ServerBinder(null, instanceManager));
-        return instanceManager;
-    }
-
-    /**
-     * Create new initialized server runtime locator.
-     *
-     * @param applicationProperties map of application-specific properties.
-     * @return new initialized server runtime locator.
-     */
-    public static InstanceManager createInstanceManager(Map<String, Object> applicationProperties) {
-        InstanceManager instanceManager = Injections.createInstanceManager();
-        instanceManager.register(new ServerBinder(applicationProperties, instanceManager));
-        return instanceManager;
+    @Override
+    public InjectionManager getEffectiveInjectionManager() {
+        return injectionManager;
     }
 }

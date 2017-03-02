@@ -48,7 +48,7 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
 import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.PerLookup;
 
@@ -60,7 +60,7 @@ import org.glassfish.hk2.api.PerLookup;
 public class MyApplication extends Application {
 
     @Inject
-    public MyApplication(final InstanceManager instanceManager) {
+    public MyApplication(final InjectionManager injectionManager) {
         Binder binder = new AbstractBinder() {
             @Override
             protected void configure() {
@@ -70,6 +70,6 @@ public class MyApplication extends Application {
             }
         };
 
-        instanceManager.register(binder);
+        injectionManager.register(binder);
     }
 }

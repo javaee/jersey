@@ -46,13 +46,13 @@ import javax.ws.rs.RuntimeType;
 
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Simple ServiceFinder injection binder.
  *
  * Looks for all implementations of a given contract using {@link ServiceFinder}
- * and registers found instances to {@link InstanceManager}.
+ * and registers found instances to {@link InjectionManager}.
  *
  * @param <T> contract type.
  * @author Pavel Bucek (pavel.bucek at oracle.com)

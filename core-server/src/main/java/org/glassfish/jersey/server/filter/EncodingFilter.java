@@ -61,7 +61,7 @@ import javax.inject.Inject;
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.ContentEncoder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;
@@ -85,7 +85,7 @@ public final class EncodingFilter implements ContainerResponseFilter {
     private static final String IDENTITY_ENCODING = "identity";
 
     @Inject
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
     // sorted set to keep the order same for different invocations of the app
     private volatile SortedSet<String> supportedEncodings = null;
 
@@ -244,7 +244,7 @@ public final class EncodingFilter implements ContainerResponseFilter {
         // may be set twice, but it does not break anything
         if (supportedEncodings == null) {
             SortedSet<String> se = Sets.newTreeSet();
-            List<ContentEncoder> encoders = instanceManager.getAllInstances(ContentEncoder.class);
+            List<ContentEncoder> encoders = injectionManager.getAllInstances(ContentEncoder.class);
             for (ContentEncoder encoder : encoders) {
                 se.addAll(encoder.getSupportedEncodings());
             }

@@ -41,7 +41,7 @@
 package org.glassfish.jersey.oauth1.signature;
 
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.UriComponent;
 
 import org.junit.Test;
@@ -232,7 +232,7 @@ public class SignatureTest {
     }
 
     private OAuth1Signature getoAuthSignature() {
-        InstanceManager serviceLocator = Injections.createInstanceManager(new OAuth1SignatureFeature.Binder());
+        InjectionManager serviceLocator = Injections.createInjectionManager(new OAuth1SignatureFeature.Binder());
         return serviceLocator.getInstance(OAuth1Signature.class);
     }
 

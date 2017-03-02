@@ -83,7 +83,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.CommonProperties;
-import org.glassfish.jersey.hk2.HK2InstanceManager;
+import org.glassfish.jersey.hk2.HK2InjectionManager;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ServiceConfigurationError;
 import org.glassfish.jersey.internal.ServiceFinder;
@@ -134,7 +134,7 @@ import org.glassfish.jersey.server.spi.ExternalRequestScope;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
 import org.glassfish.jersey.spi.inject.Binder;
 import org.glassfish.jersey.spi.inject.CompositeBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -171,7 +171,7 @@ import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
  * make sure to delegate the lifecycle listener calls further to all the container lifecycle listeners registered within the
  * application. Additionally, invoking the {@link ContainerLifecycleListener#onShutdown(Container)} method on this application
  * handler instance will release all the resources associated with the underlying application instance as well as close the
- * application-specific {@link InstanceManager instance manager}.
+ * application-specific {@link InjectionManager injection manager}.
  * </p>
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -243,7 +243,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
     private final ServerRuntime runtime;
     private final Iterable<ContainerLifecycleListener> containerLifecycleListeners;
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     private MessageBodyWorkers msgBodyWorkers;
 
@@ -263,14 +263,14 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
      *                              application handler.
      */
     public ApplicationHandler(final Class<? extends Application> jaxrsApplicationClass) {
-        this.instanceManager = Injections.createInstanceManager();
-        this.instanceManager.register(CompositeBinder.wrap(new ServerBinder(null, instanceManager), new ApplicationBinder()));
+        this.injectionManager = Injections.createInjectionManager();
+        this.injectionManager.register(CompositeBinder.wrap(new ServerBinder(null, injectionManager), new ApplicationBinder()));
 
-        LazyValue<Iterable<ComponentProvider>> componentProviders = getLazyInitializedComponentProviders(instanceManager);
+        LazyValue<Iterable<ComponentProvider>> componentProviders = getLazyInitializedComponentProviders(injectionManager);
         this.application = createApplication(jaxrsApplicationClass, componentProviders);
         this.runtimeConfig = ResourceConfig.createRuntimeConfig(application);
         this.runtime = Errors.processWithException(() -> initialize(componentProviders.get()));
-        this.containerLifecycleListeners = Providers.getAllProviders(instanceManager, ContainerLifecycleListener.class);
+        this.containerLifecycleListeners = Providers.getAllProviders(injectionManager, ContainerLifecycleListener.class);
     }
 
     /**
@@ -307,12 +307,12 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
      */
     public ApplicationHandler(final Application application, final Binder customBinder, final ServiceLocator parent) {
         // TODO: Remove HK2 Bridge
-        InstanceManager parentManager = HK2InstanceManager.createInstanceManager(parent);
-        this.instanceManager = Injections.createInstanceManager(parentManager);
-        this.instanceManager.register(CompositeBinder.wrap(
-                new ServerBinder(application.getProperties(), instanceManager), new ApplicationBinder(), customBinder));
+        InjectionManager parentManager = HK2InjectionManager.createInjectionManager(parent);
+        this.injectionManager = Injections.createInjectionManager(parentManager);
+        this.injectionManager.register(CompositeBinder.wrap(
+                new ServerBinder(application.getProperties(), injectionManager), new ApplicationBinder(), customBinder));
 
-        final LazyValue<Iterable<ComponentProvider>> componentProviders = getLazyInitializedComponentProviders(instanceManager);
+        final LazyValue<Iterable<ComponentProvider>> componentProviders = getLazyInitializedComponentProviders(injectionManager);
 
         this.application = application;
         if (application instanceof ResourceConfig) {
@@ -323,7 +323,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         }
         this.runtimeConfig = ResourceConfig.createRuntimeConfig(application);
         this.runtime = Errors.processWithException(() -> initialize(componentProviders.get()));
-        this.containerLifecycleListeners = Providers.getAllProviders(instanceManager, ContainerLifecycleListener.class);
+        this.containerLifecycleListeners = Providers.getAllProviders(injectionManager, ContainerLifecycleListener.class);
     }
 
     private Application createApplication(final Class<? extends Application> applicationClass,
@@ -351,12 +351,12 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                             bindAsContract(applicationClass).in(Singleton.class);
                         }
                     };
-                    instanceManager.register(binder);
+                    injectionManager.register(binder);
                     appClassBound = true;
                 }
             }
             final Application app = appClassBound
-                    ? instanceManager.getInstance(applicationClass) : instanceManager.createAndInitialize(applicationClass);
+                    ? injectionManager.getInstance(applicationClass) : injectionManager.createAndInitialize(applicationClass);
             if (app instanceof ResourceConfig) {
                 final ResourceConfig _rc = (ResourceConfig) app;
                 final Class<? extends Application> innerAppClass = _rc.getApplicationClass();
@@ -369,7 +369,8 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         }
     }
 
-    private static LazyValue<Iterable<ComponentProvider>> getLazyInitializedComponentProviders(InstanceManager instanceManager) {
+    private static LazyValue<Iterable<ComponentProvider>> getLazyInitializedComponentProviders(
+            InjectionManager injectionManager) {
         return Values.lazy((Value<Iterable<ComponentProvider>>) () -> {
             // Registering Injection Bindings
             List<ComponentProvider> result = new LinkedList<>();
@@ -377,7 +378,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             // Registering Injection Bindings
             for (final RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
                 final ComponentProvider provider = rankedProvider.getProvider();
-                provider.initialize(instanceManager);
+                provider.initialize(injectionManager);
                 result.add(provider);
             }
             return result;
@@ -415,13 +416,13 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             // AutoDiscoverable.
             if (!CommonProperties.getValue(runtimeConfig.getProperties(), RuntimeType.SERVER,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
-                runtimeConfig.configureAutoDiscoverableProviders(instanceManager);
+                runtimeConfig.configureAutoDiscoverableProviders(injectionManager);
             } else {
-                runtimeConfig.configureForcedAutoDiscoverableProviders(instanceManager);
+                runtimeConfig.configureForcedAutoDiscoverableProviders(injectionManager);
             }
 
             // Configure binders and features.
-            runtimeConfig.configureMetaProviders(instanceManager);
+            runtimeConfig.configureMetaProviders(injectionManager);
 
             final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
 
@@ -482,7 +483,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             }
 
             if (!extScopeBound) {
-                instanceManager.register(new ServerRuntime.NoopExternalRequestScopeBinder());
+                injectionManager.register(new ServerRuntime.NoopExternalRequestScopeBinder());
             }
 
             bindProvidersAndResources(componentProviders, componentBag, resourceBag.classes, resourceBag.instances);
@@ -491,7 +492,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             }
 
             final Iterable<ApplicationEventListener> appEventListeners =
-                    Providers.getAllProviders(instanceManager, ApplicationEventListener.class, new RankedComparator<>());
+                    Providers.getAllProviders(injectionManager, ApplicationEventListener.class, new RankedComparator<>());
 
             if (appEventListeners.iterator().hasNext()) {
                 compositeListener = new CompositeApplicationEventListener(appEventListeners);
@@ -505,14 +506,14 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             // initialize processing provider reference
             final GenericType<Ref<ProcessingProviders>> refGenericType = new GenericType<Ref<ProcessingProviders>>() {
             };
-            final Ref<ProcessingProviders> refProcessingProvider = instanceManager.getInstance(refGenericType.getType());
+            final Ref<ProcessingProviders> refProcessingProvider = injectionManager.getInstance(refGenericType.getType());
             refProcessingProvider.set(processingProviders);
 
             resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
             resourceModel = processResourceModel(resourceModel);
 
             if (!disableValidation) {
-                final ComponentModelValidator validator = new ComponentModelValidator(instanceManager);
+                final ComponentModelValidator validator = new ComponentModelValidator(injectionManager);
                 validator.validate(resourceModel);
             }
 
@@ -531,21 +532,21 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
 
         bindEnhancingResourceClasses(resourceModel, resourceBag, componentProviders);
 
-        ExecutorProviders.createInjectionBindings(instanceManager);
+        ExecutorProviders.createInjectionBindings(injectionManager);
 
         // initiate resource model into JerseyResourceContext
-        final JerseyResourceContext jerseyResourceContext = instanceManager.getInstance(JerseyResourceContext.class);
+        final JerseyResourceContext jerseyResourceContext = injectionManager.getInstance(JerseyResourceContext.class);
         jerseyResourceContext.setResourceModel(resourceModel);
 
-        msgBodyWorkers = instanceManager.getInstance(MessageBodyWorkers.class);
+        msgBodyWorkers = injectionManager.getInstance(MessageBodyWorkers.class);
 
         // assembly request processing chain
-        final ReferencesInitializer referencesInitializer = instanceManager.createAndInitialize(ReferencesInitializer.class);
+        final ReferencesInitializer referencesInitializer = injectionManager.createAndInitialize(ReferencesInitializer.class);
         final ContainerFilteringStage preMatchRequestFilteringStage = new ContainerFilteringStage(
                 processingProviders.getPreMatchFilters(),
                 processingProviders.getGlobalResponseFilters());
         final ChainableStage<RequestProcessingContext> routingStage = Routing.forModel(resourceModel.getRuntimeResourceModel())
-                .beanManager(instanceManager)
+                .beanManager(injectionManager)
                 .resourceContext(jerseyResourceContext)
                 .configuration(runtimeConfig)
                 .entityProviders(msgBodyWorkers)
@@ -563,18 +564,18 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 .to(resourceFilteringStage)
                 .build(Routing.matchedEndpointExtractor());
 
-        final ServerRuntime serverRuntime = instanceManager.createAndInitialize(ServerRuntime.Builder.class)
+        final ServerRuntime serverRuntime = injectionManager.createAndInitialize(ServerRuntime.Builder.class)
                 .build(rootStage, compositeListener, processingProviders);
 
         // Inject instances.
         for (final Object instance : componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS)) {
-            instanceManager.inject(instance);
+            injectionManager.inject(instance);
         }
         for (final Object instance : resourceBag.instances) {
-            instanceManager.inject(instance);
+            injectionManager.inject(instance);
         }
 
-        logApplicationInitConfiguration(instanceManager, resourceBag, processingProviders);
+        logApplicationInitConfiguration(injectionManager, resourceBag, processingProviders);
 
         if (compositeListener != null) {
             final ApplicationEvent initFinishedEvent = new ApplicationEventImpl(
@@ -583,14 +584,14 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             compositeListener.onEvent(initFinishedEvent);
 
             final MonitoringContainerListener containerListener
-                    = instanceManager.getInstance(MonitoringContainerListener.class);
+                    = injectionManager.getInstance(MonitoringContainerListener.class);
             containerListener.init(compositeListener, initFinishedEvent);
         }
 
         return serverRuntime;
     }
 
-    private static void logApplicationInitConfiguration(final InstanceManager instanceManager,
+    private static void logApplicationInitConfiguration(final InjectionManager injectionManager,
                                                         final ResourceBag resourceBag,
                                                         final ProcessingProviders processingProviders) {
         if (!LOGGER.isLoggable(Level.CONFIG)) {
@@ -616,11 +617,11 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         final Set<MessageBodyWriter> messageBodyWriters;
 
         if (LOGGER.isLoggable(Level.FINE)) {
-            messageBodyReaders = Sets.newHashSet(Providers.getAllProviders(instanceManager, MessageBodyReader.class));
-            messageBodyWriters = Sets.newHashSet(Providers.getAllProviders(instanceManager, MessageBodyWriter.class));
+            messageBodyReaders = Sets.newHashSet(Providers.getAllProviders(injectionManager, MessageBodyReader.class));
+            messageBodyWriters = Sets.newHashSet(Providers.getAllProviders(injectionManager, MessageBodyWriter.class));
         } else {
-            messageBodyReaders = Providers.getCustomProviders(instanceManager, MessageBodyReader.class);
-            messageBodyWriters = Providers.getCustomProviders(instanceManager, MessageBodyWriter.class);
+            messageBodyReaders = Providers.getCustomProviders(injectionManager, MessageBodyReader.class);
+            messageBodyWriters = Providers.getCustomProviders(injectionManager, MessageBodyWriter.class);
         }
 
         printProviders(LocalizationMessages.LOGGING_PRE_MATCH_FILTERS(),
@@ -718,13 +719,13 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
 
         // find all filters, interceptors and dynamic features
         final Iterable<RankedProvider<ContainerResponseFilter>> responseFilters =
-                Providers.getAllRankedProviders(instanceManager, ContainerResponseFilter.class);
+                Providers.getAllRankedProviders(injectionManager, ContainerResponseFilter.class);
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters =
                 filterNameBound(responseFilters, null, componentBag, applicationNameBindings, nameBoundRespFiltersInverse);
 
         final Iterable<RankedProvider<ContainerRequestFilter>> requestFilters =
-                Providers.getAllRankedProviders(instanceManager, ContainerRequestFilter.class);
+                Providers.getAllRankedProviders(injectionManager, ContainerRequestFilter.class);
 
         final List<RankedProvider<ContainerRequestFilter>> preMatchFilters = Lists.newArrayList();
 
@@ -733,20 +734,20 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                         nameBoundReqFiltersInverse);
 
         final Iterable<RankedProvider<ReaderInterceptor>> readerInterceptors =
-                Providers.getAllRankedProviders(instanceManager, ReaderInterceptor.class);
+                Providers.getAllRankedProviders(injectionManager, ReaderInterceptor.class);
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors =
                 filterNameBound(readerInterceptors, null, componentBag, applicationNameBindings,
                         nameBoundReaderInterceptorsInverse);
 
         final Iterable<RankedProvider<WriterInterceptor>> writerInterceptors =
-                Providers.getAllRankedProviders(instanceManager, WriterInterceptor.class);
+                Providers.getAllRankedProviders(injectionManager, WriterInterceptor.class);
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors =
                 filterNameBound(writerInterceptors, null, componentBag, applicationNameBindings,
                         nameBoundWriterInterceptorsInverse);
 
-        final Iterable<DynamicFeature> dynamicFeatures = Providers.getAllProviders(instanceManager, DynamicFeature.class);
+        final Iterable<DynamicFeature> dynamicFeatures = Providers.getAllProviders(injectionManager, DynamicFeature.class);
 
         return new ProcessingProviders(nameBoundReqFilters,
                 nameBoundReqFiltersInverse,
@@ -765,7 +766,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
     }
 
     private ResourceModel processResourceModel(ResourceModel resourceModel) {
-        final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers.getAllRankedProviders(instanceManager,
+        final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers.getAllRankedProviders(injectionManager,
                                                                                                             ModelProcessor.class);
         final Iterable<ModelProcessor> modelProcessors = Providers.sortRankedProviders(new RankedComparator<ModelProcessor>(),
                 allRankedProviders);
@@ -875,7 +876,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             final Collection<Class<?>> resourceClasses,
             final Collection<Object> resourceInstances) {
 
-        JerseyResourceContext resourceContext = instanceManager.getInstance(JerseyResourceContext.class);
+        JerseyResourceContext resourceContext = injectionManager.getInstance(JerseyResourceContext.class);
         Set<Class<?>> registeredClasses = runtimeConfig.getRegisteredClasses();
 
         /*
@@ -924,9 +925,9 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 if (model != null && !correctlyConfiguredResource.test(componentClass, model)) {
                     model = null;
                 }
-                resourceContext.unsafeBindResource(componentClass, model, instanceManager);
+                resourceContext.unsafeBindResource(componentClass, model, injectionManager);
             } else {
-                ProviderBinder.bindProvider(componentClass, model, instanceManager);
+                ProviderBinder.bindProvider(componentClass, model, injectionManager);
             }
         }
 
@@ -943,9 +944,9 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 if (model != null && !correctlyConfiguredResource.test(component.getClass(), model)) {
                     model = null;
                 }
-                resourceContext.unsafeBindResource(component, model, instanceManager);
+                resourceContext.unsafeBindResource(component, model, injectionManager);
             } else {
-                ProviderBinder.bindProvider(component, model, instanceManager);
+                ProviderBinder.bindProvider(component, model, injectionManager);
             }
         }
     }
@@ -1089,13 +1090,13 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
     }
 
     /**
-     * Returns {@link InstanceManager} relevant to current application.
+     * Returns {@link InjectionManager} relevant to current application.
      *
-     * @return {@link InstanceManager} instance.
+     * @return {@link InjectionManager} instance.
      * @since 2.26
      */
-    public InstanceManager getInstanceManager() {
-        return instanceManager;
+    public InjectionManager getInjectionManager() {
+        return injectionManager;
     }
 
     /**
@@ -1132,11 +1133,11 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         } finally {
             try {
                 // Call @PreDestroy method on Application.
-                instanceManager.preDestroy(ResourceConfig.unwrapApplication(application));
+                injectionManager.preDestroy(ResourceConfig.unwrapApplication(application));
             } finally {
                 // Shutdown ServiceLocator.
                 // Takes care of the injected executors & schedulers shut-down too.
-                instanceManager.shutdown();
+                injectionManager.shutdown();
             }
         }
     }

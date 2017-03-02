@@ -62,7 +62,7 @@ import javax.xml.parsers.SAXParserFactory;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
 import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerThread;
@@ -78,7 +78,7 @@ import static org.junit.Assert.assertSame;
  * @author Martin Matula
  */
 public class SaxParserFactoryInjectionProviderTest {
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
     private SAXParserFactory f1;
     private SAXParserFactory f2;
     private SAXParserFactory ff1;
@@ -86,7 +86,7 @@ public class SaxParserFactoryInjectionProviderTest {
 
     @Before
     public void setUp() {
-        instanceManager = createInstanceManager();
+        injectionManager = createInjectionManager();
     }
 
     private static final Configuration EMPTY_CONFIG = new Configuration() {
@@ -147,7 +147,7 @@ public class SaxParserFactoryInjectionProviderTest {
         }
     };
 
-    public static InstanceManager createInstanceManager(Binder... customBinders) {
+    public static InjectionManager createInjectionManager(Binder... customBinders) {
         Binder[] binders = new Binder[customBinders.length + 2];
 
         binders[0] = new AbstractBinder() {
@@ -172,7 +172,7 @@ public class SaxParserFactoryInjectionProviderTest {
             }
         };
         System.arraycopy(customBinders, 0, binders, 2, customBinders.length);
-        return Injections.createInstanceManager(binders);
+        return Injections.createInjectionManager(binders);
     }
 
     @Test
@@ -240,11 +240,11 @@ public class SaxParserFactoryInjectionProviderTest {
     }
 
     private SAXParserFactory getSPF() {
-        return instanceManager.getInstance(SAXParserFactory.class);
+        return injectionManager.getInstance(SAXParserFactory.class);
     }
 
     private SAXParserFactory getSPFViaProvider() {
-        return instanceManager.<MySPFProvider>getInstance(MySPFProvider.class).getSPF();
+        return injectionManager.<MySPFProvider>getInstance(MySPFProvider.class).getSPF();
     }
 
     /**

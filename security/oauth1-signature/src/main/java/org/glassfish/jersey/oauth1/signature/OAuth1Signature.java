@@ -52,7 +52,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
@@ -91,12 +91,12 @@ public class OAuth1Signature {
 
     /**
      * Create a new instance of the OAuth signature configured with injected {@code ServiceLocator}.
-     * @param instanceManager instance manager
+     * @param injectionManager injection manager
      */
     @Inject
-    public OAuth1Signature(final InstanceManager instanceManager) {
+    public OAuth1Signature(final InjectionManager injectionManager) {
         methods = new HashMap<String, OAuth1SignatureMethod>();
-        final List<OAuth1SignatureMethod> methodList = instanceManager.getAllInstances(OAuth1SignatureMethod.class);
+        final List<OAuth1SignatureMethod> methodList = injectionManager.getAllInstances(OAuth1SignatureMethod.class);
         for (final OAuth1SignatureMethod oAuth1SignatureMethod : methodList) {
             methods.put(oAuth1SignatureMethod.name(), oAuth1SignatureMethod);
         }

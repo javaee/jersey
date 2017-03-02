@@ -58,7 +58,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -70,13 +70,13 @@ public class InboundEventReaderTest {
 
     private static final MultivaluedStringMap headers;
 
-    private static final InstanceManager INSTANCE_MANAGER;
+    private static final InjectionManager INSTANCE_MANAGER;
 
     static {
         headers = new MultivaluedStringMap();
         headers.put("Transfer-Encoding", Collections.singletonList("chunked"));
         headers.put("Content-Type", Collections.singletonList("text/event-stream"));
-        INSTANCE_MANAGER = Injections.createInstanceManager(new TestBinder());
+        INSTANCE_MANAGER = Injections.createInjectionManager(new TestBinder());
     }
 
     @Test

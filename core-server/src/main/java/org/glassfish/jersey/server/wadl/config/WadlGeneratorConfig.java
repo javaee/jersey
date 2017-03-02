@@ -50,7 +50,7 @@ import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Provides a configured {@link org.glassfish.jersey.server.wadl.WadlGenerator} with all decorations (the default
@@ -162,7 +162,7 @@ public abstract class WadlGeneratorConfig {
      *
      * @return the initialized {@link org.glassfish.jersey.server.wadl.WadlGenerator}
      */
-    public WadlGenerator createWadlGenerator(InstanceManager instanceManager) {
+    public WadlGenerator createWadlGenerator(InjectionManager injectionManager) {
         final WadlGenerator wadlGenerator;
         final List<WadlGeneratorDescription> wadlGeneratorDescriptions;
         try {
@@ -174,7 +174,7 @@ public abstract class WadlGeneratorConfig {
             desc.setConfiguratorClass(this.getClass());
         }
         try {
-            wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(instanceManager, wadlGeneratorDescriptions);
+            wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(injectionManager, wadlGeneratorDescriptions);
         } catch (final Exception e) {
             throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_LOAD(), e);
 

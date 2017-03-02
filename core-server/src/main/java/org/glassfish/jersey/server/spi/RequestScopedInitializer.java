@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.server.spi;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Custom initialization provider that is guaranteed to be run from within an active
@@ -55,8 +55,8 @@ public interface RequestScopedInitializer {
     /**
      * Perform request-scoped initialization.
      *
-     * @param instanceManager current instance manager instance configured in the
+     * @param injectionManager current injection manager instance configured in the
      *                 {@link org.glassfish.jersey.server.ApplicationHandler}.
      */
-    public void initialize(InstanceManager instanceManager);
+    public void initialize(InjectionManager injectionManager);
 }

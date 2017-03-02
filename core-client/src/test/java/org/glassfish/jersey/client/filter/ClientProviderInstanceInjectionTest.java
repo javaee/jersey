@@ -53,7 +53,7 @@ import javax.ws.rs.core.Response;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -107,11 +107,11 @@ public class ClientProviderInstanceInjectionTest {
     public static class MyFilterFeature implements Feature {
 
         @Inject
-        private InstanceManager instanceManager;
+        private InjectionManager injectionManager;
 
         @Override
         public boolean configure(final FeatureContext context) {
-            context.register(new MyFilter(instanceManager));
+            context.register(new MyFilter(injectionManager));
             return true;
         }
     }

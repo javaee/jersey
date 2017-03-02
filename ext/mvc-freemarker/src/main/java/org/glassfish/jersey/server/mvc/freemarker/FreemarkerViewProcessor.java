@@ -58,7 +58,7 @@ import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.jvnet.hk2.annotations.Optional;
 
@@ -82,16 +82,16 @@ final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> 
      * (optional) {@link javax.servlet.ServletContext servlet context}.
      *
      * @param config config to configure this processor from.
-     * @param instanceManager instance manager to initialize template object factory if needed.
+     * @param injectionManager injection manager to initialize template object factory if needed.
      * @param servletContext (optional) servlet context to obtain template resources from.
      */
     @Inject
-    public FreemarkerViewProcessor(final javax.ws.rs.core.Configuration config, final InstanceManager instanceManager,
+    public FreemarkerViewProcessor(final javax.ws.rs.core.Configuration config, final InjectionManager injectionManager,
                                    @Optional final ServletContext servletContext) {
         super(config, servletContext, "freemarker", "ftl");
 
-        this.factory = getTemplateObjectFactory(instanceManager, FreemarkerConfigurationFactory.class, () -> {
-            Configuration configuration = getTemplateObjectFactory(instanceManager, Configuration.class, Values.empty());
+        this.factory = getTemplateObjectFactory(injectionManager, FreemarkerConfigurationFactory.class, () -> {
+            Configuration configuration = getTemplateObjectFactory(injectionManager, Configuration.class, Values.empty());
             if (configuration == null) {
                 return new FreemarkerDefaultConfigurationFactory(servletContext);
             } else {

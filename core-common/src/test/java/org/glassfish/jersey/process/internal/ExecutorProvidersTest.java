@@ -60,7 +60,7 @@ import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
 import org.glassfish.jersey.spi.ScheduledThreadPoolExecutorProvider;
 import org.glassfish.jersey.spi.ThreadPoolExecutorProvider;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Unqualified;
 
@@ -235,7 +235,7 @@ public class ExecutorProvidersTest extends AbstractBinder {
 
     }
 
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
 
     @Override
     protected void configure() {
@@ -251,18 +251,18 @@ public class ExecutorProvidersTest extends AbstractBinder {
      */
     @Before
     public void setup() {
-        instanceManager = Injections.createInstanceManager(this);
-        ExecutorProviders.createInjectionBindings(instanceManager);
+        injectionManager = Injections.createInjectionManager(this);
+        ExecutorProviders.createInjectionBindings(injectionManager);
     }
 
     /**
-     * Test executor and scheduler injection as well as the proper shutdown when instance manager is closed.
+     * Test executor and scheduler injection as well as the proper shutdown when injection manager is closed.
      *
      * @throws Exception in case of a test error.
      */
     @Test
     public void testExecutorInjectionAndReleasing() throws Exception {
-        final InjectedExecutorClient executorClient = Injections.getOrCreate(instanceManager, InjectedExecutorClient.class);
+        final InjectedExecutorClient executorClient = Injections.getOrCreate(injectionManager, InjectedExecutorClient.class);
 
         // Check expected injection points state
         assertThat(executorClient.unqualifiedExecutor, Matchers.nullValue());
@@ -297,7 +297,7 @@ public class ExecutorProvidersTest extends AbstractBinder {
                 Matchers.startsWith("custom-named-scheduler-"));
 
         // Test proper executor shutdown when locator is shut down.
-        instanceManager.shutdown();
+        injectionManager.shutdown();
 
         assertThat("Waiting for pre-destroy timed out.",
                 executorClient.preDestroyNotifier.await(3, TimeUnit.SECONDS), Matchers.is(true));

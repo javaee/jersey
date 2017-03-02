@@ -54,7 +54,7 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -62,11 +62,11 @@ import com.google.common.base.Optional;
 @Singleton
 public class OptionalParamConverterProvider implements ParamConverterProvider {
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     @Inject
-    public OptionalParamConverterProvider(final InstanceManager instanceManager) {
-        this.instanceManager = instanceManager;
+    public OptionalParamConverterProvider(final InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
     }
 
     @Override
@@ -87,7 +87,7 @@ public class OptionalParamConverterProvider implements ParamConverterProvider {
             };
         }
         final Set<ParamConverterProvider> converterProviders =
-                Providers.getProviders(instanceManager, ParamConverterProvider.class);
+                Providers.getProviders(injectionManager, ParamConverterProvider.class);
         for (ParamConverterProvider provider : converterProviders) {
             @SuppressWarnings("unchecked")
             final ParamConverter<?> converter = provider.getConverter(ctp.rawClass(), ctp.type(), annotations);

@@ -51,7 +51,7 @@ public interface RequestScopedInitializerProvider {
 
     /**
      * Give me a request scope initializer that could be utilized
-     * to set the actual Servlet request data in instance manager.
+     * to set the actual Servlet request data in injection manager.
      *
      * @param context of the actual request.
      * @return initializer to be invoked at the start of request processing.

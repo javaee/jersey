@@ -45,29 +45,29 @@ import java.util.Map;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.FeatureContext;
 
-import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Wrapper of {@link javax.ws.rs.core.FeatureContext} that can supply instance of
- * {@link InstanceManager instance manager}.
+ * {@link InjectionManager injection manager}.
  *
  * @author Miroslav Fuksa
  */
-public class FeatureContextWrapper implements FeatureContext, InstanceManagerSupplier {
+public class FeatureContextWrapper implements FeatureContext, InjectionManagerSupplier {
 
     private final FeatureContext context;
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     /**
      * Create a new instance of wrapper.
      *
      * @param context     Feature context instance that should be wrapped.
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
-    public FeatureContextWrapper(FeatureContext context, InstanceManager instanceManager) {
+    public FeatureContextWrapper(FeatureContext context, InjectionManager injectionManager) {
         this.context = context;
-        this.instanceManager = instanceManager;
+        this.injectionManager = injectionManager;
     }
 
     @Override
@@ -121,7 +121,7 @@ public class FeatureContextWrapper implements FeatureContext, InstanceManagerSup
     }
 
     @Override
-    public InstanceManager getInstanceManager() {
-        return instanceManager;
+    public InjectionManager getInjectionManager() {
+        return injectionManager;
     }
 }

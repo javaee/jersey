@@ -62,7 +62,7 @@ import org.junit.Assert;
 public class TestRuntimeDelegate extends AbstractRuntimeDelegate {
 
     public TestRuntimeDelegate() {
-        super(Injections.createInstanceManager(new MessagingBinders.HeaderDelegateProviders()));
+        super(Injections.createInjectionManager(new MessagingBinders.HeaderDelegateProviders()));
     }
 
     @Override

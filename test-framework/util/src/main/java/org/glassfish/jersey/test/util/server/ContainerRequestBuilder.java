@@ -307,7 +307,7 @@ public final class ContainerRequestBuilder {
      * @return the updated builder.
      */
     public ContainerRequestBuilder entity(final Object entity, final ApplicationHandler handler) {
-        return entity(entity, handler.getInstanceManager().getInstance(MessageBodyWorkers.class));
+        return entity(entity, handler.getInjectionManager().getInstance(MessageBodyWorkers.class));
     }
 
     /**

@@ -56,7 +56,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.ContentEncoder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.collect.Sets;
 
@@ -75,7 +75,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  */
 public final class EncodingFilter implements ClientRequestFilter {
     @Inject
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
     private volatile List<Object> supportedEncodings = null;
 
     @Override
@@ -106,7 +106,7 @@ public final class EncodingFilter implements ClientRequestFilter {
         // may be set twice, but it does not break anything
         if (supportedEncodings == null) {
             SortedSet<String> se = Sets.newTreeSet();
-            List<ContentEncoder> encoders = instanceManager.getAllInstances(ContentEncoder.class);
+            List<ContentEncoder> encoders = injectionManager.getAllInstances(ContentEncoder.class);
             for (ContentEncoder encoder : encoders) {
                 se.addAll(encoder.getSupportedEncodings());
             }

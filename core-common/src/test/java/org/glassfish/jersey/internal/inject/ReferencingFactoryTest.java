@@ -52,7 +52,7 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.PerLookup;
 
@@ -143,14 +143,14 @@ public class ReferencingFactoryTest extends AbstractBinder {
      */
     @Test
     public void testReferencedBinding() {
-        InstanceManager instanceManager = Injections.createInstanceManager(this);
+        InjectionManager injectionManager = Injections.createInjectionManager(this);
 
-        ValueInjected emptyValues = instanceManager.createAndInitialize(ValueInjected.class);
+        ValueInjected emptyValues = injectionManager.createAndInitialize(ValueInjected.class);
         assertSame(expectedFoo, emptyValues.foo);
         assertSame(expectedIntegers, emptyValues.integers);
         assertSame(expectedStrings, emptyValues.strings);
 
-        RefInjected refValues = instanceManager.createAndInitialize(RefInjected.class);
+        RefInjected refValues = injectionManager.createAndInitialize(RefInjected.class);
         expectedFoo = new Foo(10);
         refValues.foo.set(expectedFoo);
         expectedIntegers = new LinkedList<Integer>();
@@ -158,7 +158,7 @@ public class ReferencingFactoryTest extends AbstractBinder {
         expectedStrings = new ArrayList<String>();
         refValues.strings.set(expectedStrings);
 
-        ValueInjected updatedValues = instanceManager.createAndInitialize(ValueInjected.class);
+        ValueInjected updatedValues = injectionManager.createAndInitialize(ValueInjected.class);
         assertSame(expectedFoo, updatedValues.foo);
         assertSame(expectedIntegers, updatedValues.integers);
         assertSame(expectedStrings, updatedValues.strings);

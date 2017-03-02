@@ -46,11 +46,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.hk2.HK2InstanceManager;
+import org.glassfish.jersey.hk2.HK2InjectionManager;
 import org.glassfish.jersey.jetty.JettyHttpContainer;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -119,11 +119,11 @@ public class JettyContainerTest extends JerseyTest {
         final Server server = JettyHttpContainerFactory.createServer(URI.create("http://localhost:9876"),
                 new ResourceConfig(Resource.class), false, locator);
         JettyHttpContainer container = (JettyHttpContainer) server.getHandler();
-        InstanceManager instanceManager = container.getApplicationHandler().getInstanceManager();
+        InjectionManager injectionManager = container.getApplicationHandler().getInjectionManager();
 
-        HK2InstanceManager hk2InstanceManager = (HK2InstanceManager) instanceManager;
-        ServiceLocator serviceLocator = hk2InstanceManager.getServiceLocator();
-        assertTrue("Application service locator was expected to have defined parent locator",
+        HK2InjectionManager hk2InjectionManager = (HK2InjectionManager) injectionManager;
+        ServiceLocator serviceLocator = hk2InjectionManager.getServiceLocator();
+        assertTrue("Application injection manager was expected to have defined parent locator",
                    serviceLocator.getParent() == locator);
     }
 }

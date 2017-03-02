@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,35 +38,36 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.ext.cdi1x.internal.spi;
 
-import org.glassfish.hk2.api.Factory;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
- * Injection binding description of a bean bound indirectly via an factory producing instances of the bound type.
+ * {@link InjectionManager injection manager} designed for Jersey
+ * {@link javax.enterprise.inject.spi.Extension CDI extension}. This SPI is designed to support deployments that can contain
+ * more than one Jersey/InjectionManager managed CDI {@link org.glassfish.jersey.server.spi.ComponentProvider component provider}
+ * (more injection manager) but only single CDI extension instance (e.g. EAR with multiple WARs). Each CDI component provider
+ * instance acknowledges the manager about new injection manager and manager is supposed to return the effective injection manager
+ * for the current context (based on the Servlet context, for example).
  *
- * @param <T> type of the bean described by this injection binding descriptor.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Michal Gajdos
+ * @since 2.17
  */
-public class InstanceFactoryDescriptor<T> extends Descriptor<T, InstanceFactoryDescriptor<T>> {
-
-    private final Factory<T> factory;
+public interface InjectionManagerStore {
 
     /**
-     * Creates a factory as an instance.
+     * Register a new {@link InjectionManager injection manager} with this manager.
      *
-     * @param factory service's instance.
+     * @param injectionManager injection manager to be registered.
      */
-    InstanceFactoryDescriptor(Factory<T> factory) {
-        this.factory = factory;
-    }
+    public void registerInjectionManager(InjectionManager injectionManager);
 
     /**
-     * Gets factory's instance.
+     * Obtain the effective {@link InjectionManager injection manager}. The implementations are supposed to
+     * decide which of the registered injection managers is the currently effective locator. The decision can be based, for
+     * example, on current Servlet context (if the application is deployed on Servlet container).
      *
-     * @return factory's instance.
+     * @return currently effective injection manager.
      */
-    public Factory<T> getFactory() {
-        return factory;
-    }
+    public InjectionManager getEffectiveInjectionManager();
 }

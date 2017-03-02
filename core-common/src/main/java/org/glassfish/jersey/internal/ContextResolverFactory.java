@@ -62,7 +62,7 @@ import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * A factory implementation for managing {@link ContextResolver} instances.
@@ -90,16 +90,16 @@ public class ContextResolverFactory implements ContextResolvers {
             new HashMap<Type, ConcurrentHashMap<MediaType, ContextResolver>>(3);
 
     /**
-     * Create new context resolver factory backed by the supplied {@link InstanceManager instance manager}.
+     * Create new context resolver factory backed by the supplied {@link InjectionManager injection manager}.
      *
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
     @Inject
-    public ContextResolverFactory(final InstanceManager instanceManager) {
+    public ContextResolverFactory(final InjectionManager injectionManager) {
         final Map<Type, Map<MediaType, List<ContextResolver>>> rs =
                 new HashMap<Type, Map<MediaType, List<ContextResolver>>>();
 
-        final Iterable<ContextResolver> providers = Providers.getAllProviders(instanceManager, ContextResolver.class);
+        final Iterable<ContextResolver> providers = Providers.getAllProviders(injectionManager, ContextResolver.class);
         for (final ContextResolver provider : providers) {
             final List<MediaType> ms = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
 

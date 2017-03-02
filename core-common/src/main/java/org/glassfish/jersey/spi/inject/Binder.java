@@ -54,6 +54,6 @@ public interface Binder {
      *
      * @return collection of descriptors.
      */
-    Collection<Descriptor> getDescriptors();
+    Collection<Binding> getBindings();
 
 }

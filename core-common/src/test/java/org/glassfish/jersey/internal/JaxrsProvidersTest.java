@@ -54,7 +54,7 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
@@ -85,19 +85,19 @@ public class JaxrsProvidersTest {
 
     @Test
     public void testProviders() throws Exception {
-        final InstanceManager instanceManager = Injections.createInstanceManager(
+        final InjectionManager injectionManager = Injections.createInjectionManager(
                 new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER), new Binder());
 
-        instanceManager.register(new TestBinder(instanceManager));
+        injectionManager.register(new TestBinder(injectionManager));
 
-        TestBinder.initProviders(instanceManager);
-        RequestScope scope = instanceManager.getInstance(RequestScope.class);
+        TestBinder.initProviders(injectionManager);
+        RequestScope scope = injectionManager.getInstance(RequestScope.class);
 
         scope.runInScope(new Callable<Object>() {
 
             @Override
             public Object call() throws Exception {
-                Providers instance = instanceManager.getInstance(Providers.class);
+                Providers instance = injectionManager.getInstance(Providers.class);
 
                 assertNotNull(instance);
                 assertSame(JaxrsProviders.class, instance.getClass());

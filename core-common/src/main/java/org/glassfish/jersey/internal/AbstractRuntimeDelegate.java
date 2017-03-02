@@ -62,7 +62,7 @@ import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.VariantListBuilder;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 /**
@@ -77,13 +77,13 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
     private final Map<Class<?>, HeaderDelegate<?>> map;
 
     /**
-     * Initialization constructor. The instance manager will be shut down.
+     * Initialization constructor. The injection manager will be shut down.
      *
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
-    protected AbstractRuntimeDelegate(final InstanceManager instanceManager) {
+    protected AbstractRuntimeDelegate(final InjectionManager injectionManager) {
         try {
-            hps = Providers.getProviders(instanceManager, HeaderDelegateProvider.class);
+            hps = Providers.getProviders(injectionManager, HeaderDelegateProvider.class);
 
             /**
              * Construct a map for quick look up of known header classes
@@ -98,7 +98,7 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
             map.put(Date.class, _createHeaderDelegate(Date.class));
             map.put(String.class, _createHeaderDelegate(String.class));
         } finally {
-            instanceManager.shutdown();
+            injectionManager.shutdown();
         }
     }
 

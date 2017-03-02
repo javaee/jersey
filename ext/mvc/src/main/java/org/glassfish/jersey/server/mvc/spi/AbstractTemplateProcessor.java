@@ -72,7 +72,7 @@ import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.internal.LocalizationMessages;
 import org.glassfish.jersey.server.mvc.internal.TemplateHelper;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Collections2;
@@ -272,13 +272,13 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
      * Retrieve a template object factory. The factory is, at first, looked for in
      * {@link javax.ws.rs.core.Configuration configuration} and if not found, given default value is used.
      *
-     * @param instanceManager instance manager to initialize factory if configured as class or class-name.
+     * @param injectionManager injection manager to initialize factory if configured as class or class-name.
      * @param type type of requested template object factory.
      * @param defaultValue default value to be used if no factory reference is present in configuration.
      * @param <F> type of requested template object factory.
      * @return non-{@code null} template object factory.
      */
-    protected <F> F getTemplateObjectFactory(final InstanceManager instanceManager, final Class<F> type,
+    protected <F> F getTemplateObjectFactory(final InjectionManager injectionManager, final Class<F> type,
                                              final Value<F> defaultValue) {
         final Object objectFactoryProperty = config.getProperty(MvcFeature.TEMPLATE_OBJECT_FACTORY + suffix);
 
@@ -296,7 +296,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
 
                 if (factoryClass != null) {
                     if (type.isAssignableFrom(factoryClass)) {
-                        return type.cast(instanceManager.createAndInitialize(factoryClass));
+                        return type.cast(injectionManager.createAndInitialize(factoryClass));
                     } else {
                         LOGGER.log(Level.CONFIG, LocalizationMessages.WRONG_TEMPLATE_OBJECT_FACTORY(factoryClass, type));
                     }

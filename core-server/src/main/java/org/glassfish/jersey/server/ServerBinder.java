@@ -67,7 +67,7 @@ import org.glassfish.jersey.server.internal.process.ServerProcessingBinder;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Server injection binder.
@@ -79,16 +79,16 @@ class ServerBinder extends AbstractBinder {
 
     private final Map<String, Object> applicationProperties;
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     /**
      * Create new {@code ServerBinder} instance.
      *
      * @param applicationProperties map of application-specific properties.
      */
-    public ServerBinder(Map<String, Object> applicationProperties, InstanceManager instanceManager) {
+    public ServerBinder(Map<String, Object> applicationProperties, InjectionManager injectionManager) {
         this.applicationProperties = applicationProperties;
-        this.instanceManager = instanceManager;
+        this.injectionManager = injectionManager;
     }
 
     @Override
@@ -96,7 +96,7 @@ class ServerBinder extends AbstractBinder {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
                 new JerseyErrorService.Binder(),
                 new ServerProcessingBinder(),
-                new ParameterInjectionBinder(instanceManager),
+                new ParameterInjectionBinder(injectionManager),
                 new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.SERVER),
                 new MessageBodyFactory.Binder(),
                 new ExceptionMapperFactory.Binder(),

@@ -44,8 +44,8 @@ import javax.annotation.Priority;
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.glassfish.jersey.ext.cdi1x.internal.spi.BeanManagerProvider;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerStore;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -122,21 +122,21 @@ public class CdiUtilTest {
         assertThat(CdiUtil.lookupService(CdiUtil.class), nullValue());
     }
 
-    public static class TestInstanceManagerStore implements InstanceManagerStore {
+    public static class TestInjectionManagerStore implements InjectionManagerStore {
 
         @Override
-        public void registerInstanceManager(final InstanceManager instanceManager) {
+        public void registerInjectionManager(final InjectionManager injectionManager) {
         }
 
         @Override
-        public InstanceManager getEffectiveInstanceManager() {
+        public InjectionManager getEffectiveInjectionManager() {
             return null;
         }
     }
 
     @Test
     public void createHk2LocatorManagerCustom() throws Exception {
-        assertThat(CdiUtil.createHk2LocatorManager(), instanceOf(TestInstanceManagerStore.class));
+        assertThat(CdiUtil.createHk2InjectionManagerStore(), instanceOf(TestInjectionManagerStore.class));
     }
 
     @Test
@@ -149,6 +149,6 @@ public class CdiUtilTest {
             }
         };
 
-        assertThat(CdiUtil.createHk2LocatorManager(), instanceOf(SingleInstanceManagerStore.class));
+        assertThat(CdiUtil.createHk2InjectionManagerStore(), instanceOf(SingleInjectionManagerStore.class));
     }
 }

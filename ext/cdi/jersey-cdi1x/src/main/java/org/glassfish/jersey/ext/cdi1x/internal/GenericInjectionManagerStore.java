@@ -43,65 +43,65 @@ package org.glassfish.jersey.ext.cdi1x.internal;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerInjectedTarget;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionTargetListener;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerInjectedTarget;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerStore;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
- * Generic {@link InstanceManagerStore instance manager store} that allows multiple
- * instance managers to run in parallel. {@link #lookupInstanceManager()}
+ * Generic {@link InjectionManagerStore injection manager store} that allows multiple
+ * injection managers to run in parallel. {@link #lookupInjectionManager()}
  * method must be implemented that shall be utilized at runtime in the case that more than a single
- * instance manager has been registered.
+ * injection manager has been registered.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @since 2.20
  */
-public abstract class GenericInstanceManagerStore implements InstanceManagerStore, InjectionTargetListener {
+public abstract class GenericInjectionManagerStore implements InjectionManagerStore, InjectionTargetListener {
 
-    private final List<InstanceManagerInjectedTarget> injectionTargets;
+    private final List<InjectionManagerInjectedTarget> injectionTargets;
 
-    private volatile InstanceManager instanceManager;
+    private volatile InjectionManager injectionManager;
 
-    private volatile boolean multipleInstanceManagers = false;
+    private volatile boolean multipleInjectionManagers = false;
 
-    public GenericInstanceManagerStore() {
+    public GenericInjectionManagerStore() {
         injectionTargets = new LinkedList<>();
     }
 
     @Override
-    public void registerInstanceManager(final InstanceManager instanceManager) {
-        if (!multipleInstanceManagers) {
-            if (this.instanceManager == null) { // first one
-                this.instanceManager = instanceManager;
+    public void registerInjectionManager(final InjectionManager injectionManager) {
+        if (!multipleInjectionManagers) {
+            if (this.injectionManager == null) { // first one
+                this.injectionManager = injectionManager;
             } else { // second one
-                this.instanceManager = null;
-                multipleInstanceManagers = true;
+                this.injectionManager = null;
+                multipleInjectionManagers = true;
             } // first and second case
         }
 
-        // pass the instance manager to registered injection targets anyway
-        for (final InstanceManagerInjectedTarget target : injectionTargets) {
-            target.setInstanceManager(instanceManager);
+        // pass the injection manager to registered injection targets anyway
+        for (final InjectionManagerInjectedTarget target : injectionTargets) {
+            target.setInjectionManager(injectionManager);
         }
     }
 
     @Override
-    public InstanceManager getEffectiveInstanceManager() {
-        return !multipleInstanceManagers ? instanceManager : lookupInstanceManager();
+    public InjectionManager getEffectiveInjectionManager() {
+        return !multipleInjectionManagers ? injectionManager : lookupInjectionManager();
     }
 
     /**
-     * CDI container specific method to obtain the actual instance manager
+     * CDI container specific method to obtain the actual injection manager
      * belonging to the Jersey application where the current HTTP requests
      * is being processed.
      *
-     * @return actual instance manager.
+     * @return actual injection manager.
      */
-    public abstract InstanceManager lookupInstanceManager();
+    public abstract InjectionManager lookupInjectionManager();
 
     @Override
-    public void notify(final InstanceManagerInjectedTarget target) {
+    public void notify(final InjectionManagerInjectedTarget target) {
 
         injectionTargets.add(target);
     }

@@ -54,7 +54,7 @@ import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.base.Function;
 
@@ -68,7 +68,7 @@ import jersey.repackaged.com.google.common.base.Function;
 // TODO replace also ContainerResponse in stages with this guy.
 public final class RequestProcessingContext implements RespondingContext {
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     private final ContainerRequest request;
     private final UriRoutingContext routingContext;
@@ -83,19 +83,19 @@ public final class RequestProcessingContext implements RespondingContext {
     /**
      * Create new request processing context.
      *
-     * @param instanceManager         instance manager / injector.
+     * @param injectionManager        injection manager / injector.
      * @param request                 container request.
      * @param routingContext          routing context.
      * @param monitoringEventBuilder  request monitoring event builder.
      * @param monitoringEventListener registered request monitoring event listener.
      */
     public RequestProcessingContext(
-            final InstanceManager instanceManager,
+            final InjectionManager injectionManager,
             final ContainerRequest request,
             final UriRoutingContext routingContext,
             final RequestEventBuilder monitoringEventBuilder,
             final RequestEventListener monitoringEventListener) {
-        this.instanceManager = instanceManager;
+        this.injectionManager = injectionManager;
 
         this.request = request;
         this.routingContext = routingContext;
@@ -196,14 +196,14 @@ public final class RequestProcessingContext implements RespondingContext {
     }
 
     /**
-     * Get instance manager.
+     * Get injection manager.
      *
      * The returned instance is application-scoped.
      *
-     * @return application-scoped instance manager.
+     * @return application-scoped injection manager.
      */
-    public InstanceManager instanceManager() {
-        return instanceManager;
+    public InjectionManager injectionManager() {
+        return injectionManager;
     }
 
     /**

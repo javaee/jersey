@@ -645,7 +645,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     private FilterUrlMappingsProvider getFilterUrlMappingsProvider() {
         FilterUrlMappingsProvider filterUrlMappingsProvider = null;
         final Iterator<FilterUrlMappingsProvider> providers = Providers.getAllProviders(
-                getApplicationHandler().getInstanceManager(), FilterUrlMappingsProvider.class).iterator();
+                getApplicationHandler().getInjectionManager(), FilterUrlMappingsProvider.class).iterator();
         if (providers.hasNext()) {
              filterUrlMappingsProvider = providers.next();
         }

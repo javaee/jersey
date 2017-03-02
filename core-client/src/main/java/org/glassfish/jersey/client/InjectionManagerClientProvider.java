@@ -43,65 +43,65 @@ package org.glassfish.jersey.client;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 
-import org.glassfish.jersey.InstanceManagerProvider;
+import org.glassfish.jersey.InjectionManagerProvider;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
- * Extension of {@link InstanceManagerProvider} which contains helper static methods
- * that extract {@link InstanceManager} from client specific JAX-RS components.
+ * Extension of {@link InjectionManagerProvider} which contains helper static methods
+ * that extract {@link InjectionManager} from client specific JAX-RS components.
  * <p>
- * See javadoc of {@link InstanceManagerProvider} for more details.
+ * See javadoc of {@link InjectionManagerProvider} for more details.
  * </p>
  *
- * @see InstanceManagerProvider
+ * @see InjectionManagerProvider
  * @author Miroslav Fuksa
  * @since 2.6
  */
-public class InstanceManagerClientProvider extends InstanceManagerProvider {
+public class InjectionManagerClientProvider extends InjectionManagerProvider {
 
     /**
-     * Extract and return instance manager from {@link javax.ws.rs.client.ClientRequestContext clientRequestContext}.
+     * Extract and return injection manager from {@link javax.ws.rs.client.ClientRequestContext clientRequestContext}.
      * The method can be used to inject custom types into a {@link javax.ws.rs.client.ClientRequestFilter}.
      *
      * @param clientRequestContext Client request context.
      *
-     * @return instance manager.
+     * @return injection manager.
      *
      * @throws java.lang.IllegalArgumentException when {@code clientRequestContext} is not a default
      * Jersey implementation provided by Jersey as argument in the
      * {@link javax.ws.rs.client.ClientRequestFilter#filter(javax.ws.rs.client.ClientRequestContext)} method.
      */
-    public static InstanceManager getInstanceManager(ClientRequestContext clientRequestContext) {
-        if (!(clientRequestContext instanceof InstanceManagerSupplier)) {
+    public static InjectionManager getInjectionManager(ClientRequestContext clientRequestContext) {
+        if (!(clientRequestContext instanceof InjectionManagerSupplier)) {
             throw new IllegalArgumentException(
                     LocalizationMessages
                             .ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_REQUEST(clientRequestContext.getClass().getName()));
         }
-        return ((InstanceManagerSupplier) clientRequestContext).getInstanceManager();
+        return ((InjectionManagerSupplier) clientRequestContext).getInjectionManager();
     }
 
     /**
-     * Extract and return instance manager from {@link javax.ws.rs.client.ClientResponseContext clientResponseContext}.
+     * Extract and return injection manager from {@link javax.ws.rs.client.ClientResponseContext clientResponseContext}.
      * The method can be used to inject custom types into a {@link javax.ws.rs.client.ClientResponseFilter}.
      *
      * @param clientResponseContext Client response context.
      *
-     * @return instance manager.
+     * @return injection manager.
      *
      * @throws java.lang.IllegalArgumentException when {@code clientResponseContext} is not a default
      * Jersey implementation provided by Jersey as argument in the
      * {@link javax.ws.rs.client.ClientResponseFilter#filter(javax.ws.rs.client.ClientRequestContext, javax.ws.rs.client.ClientResponseContext)}
      * method.
      */
-    public static InstanceManager getInstanceManager(ClientResponseContext clientResponseContext) {
-        if (!(clientResponseContext instanceof InstanceManagerSupplier)) {
+    public static InjectionManager getInjectionManager(ClientResponseContext clientResponseContext) {
+        if (!(clientResponseContext instanceof InjectionManagerSupplier)) {
             throw new IllegalArgumentException(
                     LocalizationMessages
                             .ERROR_SERVICE_LOCATOR_PROVIDER_INSTANCE_RESPONSE(clientResponseContext.getClass().getName()));
         }
-        return ((InstanceManagerSupplier) clientResponseContext).getInstanceManager();
+        return ((InjectionManagerSupplier) clientResponseContext).getInjectionManager();
     }
 
 }

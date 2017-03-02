@@ -47,10 +47,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey.hk2.HK2InstanceManager;
+import org.glassfish.jersey.hk2.HK2InjectionManager;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Descriptor;
 import org.glassfish.hk2.api.Filter;
@@ -93,13 +93,13 @@ public class BeanParamMemoryLeakTest extends AbstractTest {
     @Test
     public void testBeanParam() throws Exception {
         initiateWebApplication(BeanParamInjectionResource.class);
-        final InstanceManager instanceManager = app().getInstanceManager();
+        final InjectionManager injectionManager = app().getInjectionManager();
 
-        if (!(instanceManager instanceof HK2InstanceManager)) {
-            throw new RuntimeException("Bean Manager is not an instance manager");
+        if (!(injectionManager instanceof HK2InjectionManager)) {
+            throw new RuntimeException("Bean Manager is not an injection manager");
         }
 
-        HK2InstanceManager hk2BeanManager = (HK2InstanceManager) instanceManager;
+        HK2InjectionManager hk2BeanManager = (HK2InjectionManager) injectionManager;
         ServiceLocator serviceLocator = hk2BeanManager.getServiceLocator();
 
         // we do not expect any descriptor registered yet

@@ -52,7 +52,7 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Lists;
@@ -76,18 +76,18 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
      *
      * @param requestRefProvider client request context reference injection provider.
      * @param workersProvider message body workers injection provider.
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
     @Inject
     public RequestProcessingInitializationStage(
             Provider<Ref<ClientRequest>> requestRefProvider,
             Provider<MessageBodyWorkers> workersProvider,
-            InstanceManager instanceManager) {
+            InjectionManager injectionManager) {
         this.requestRefProvider = requestRefProvider;
         this.workersProvider = workersProvider;
-        writerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(instanceManager,
+        writerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(injectionManager,
                 WriterInterceptor.class, new RankedComparator<WriterInterceptor>())));
-        readerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(instanceManager,
+        readerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(injectionManager,
                 ReaderInterceptor.class, new RankedComparator<ReaderInterceptor>())));
     }
 

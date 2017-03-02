@@ -49,7 +49,7 @@ import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -67,7 +67,7 @@ import jersey.repackaged.com.google.common.collect.Collections2;
  */
 public class ServiceFinderBinderTest {
 
-    private static InstanceManager instanceManager;
+    private static InjectionManager injectionManager;
 
     public ServiceFinderBinderTest() {
     }
@@ -82,7 +82,7 @@ public class ServiceFinderBinderTest {
                 install(new ServiceFinderBinder<>(TestContract.class, null, RuntimeType.SERVER));
             }
         };
-        instanceManager = Injections.createInstanceManager(binder);
+        injectionManager = Injections.createInjectionManager(binder);
     }
 
     @AfterClass
@@ -91,7 +91,7 @@ public class ServiceFinderBinderTest {
 
     @Test
     public void testConfigure() {
-        final Set<TestContract> providers = Providers.getProviders(instanceManager, TestContract.class);
+        final Set<TestContract> providers = Providers.getProviders(injectionManager, TestContract.class);
         assertEquals(4, providers.size());
 
         final Collection<String> providerNames = Collections2.transform(providers, new Function<TestContract, String>() {

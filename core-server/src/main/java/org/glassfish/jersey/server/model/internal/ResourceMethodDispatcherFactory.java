@@ -53,7 +53,7 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * A resource method dispatcher provider factory.
@@ -83,8 +83,8 @@ public final class ResourceMethodDispatcherFactory implements ResourceMethodDisp
     private final Set<ResourceMethodDispatcher.Provider> providers;
 
     @Inject
-    ResourceMethodDispatcherFactory(InstanceManager instanceManager) {
-        providers = Providers.getProviders(instanceManager, ResourceMethodDispatcher.Provider.class);
+    ResourceMethodDispatcherFactory(InjectionManager injectionManager) {
+        providers = Providers.getProviders(injectionManager, ResourceMethodDispatcher.Provider.class);
     }
 
     // ResourceMethodDispatchProvider

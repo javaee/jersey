@@ -72,7 +72,7 @@ import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -136,61 +136,61 @@ public class ProviderBinderTest {
 
     @Test
     public void testServicesNotEmpty() {
-        InstanceManager instanceManager = Injections.createInstanceManager(initBinders());
-        Set<MessageBodyReader> providers = Providers.getProviders(instanceManager, MessageBodyReader.class);
+        InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
+        Set<MessageBodyReader> providers = Providers.getProviders(injectionManager, MessageBodyReader.class);
         assertTrue(providers.size() > 0);
     }
 
     @Test
     public void testServicesMbr() {
-        InstanceManager instanceManager = Injections.createInstanceManager(initBinders());
-        Set<MessageBodyReader> providers = Providers.getProviders(instanceManager, MessageBodyReader.class);
+        InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
+        Set<MessageBodyReader> providers = Providers.getProviders(injectionManager, MessageBodyReader.class);
         assertTrue(providers.size() > 0);
     }
 
     @Test
     public void testServicesMbw() {
-        InstanceManager instanceManager = Injections.createInstanceManager(initBinders());
-        Set<MessageBodyWriter> providers = Providers.getProviders(instanceManager, MessageBodyWriter.class);
+        InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
+        Set<MessageBodyWriter> providers = Providers.getProviders(injectionManager, MessageBodyWriter.class);
         assertTrue(providers.size() > 0);
     }
 
     @Test
     public void testProvidersMbr() {
-        InstanceManager instanceManager = Injections.createInstanceManager(initBinders());
-        ProviderBinder providerBinder = new ProviderBinder(instanceManager);
+        InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
+        ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindClasses(Collections.singleton(MyProvider.class));
-        Set<MessageBodyReader> providers = Providers.getCustomProviders(instanceManager, MessageBodyReader.class);
+        Set<MessageBodyReader> providers = Providers.getCustomProviders(injectionManager, MessageBodyReader.class);
         assertEquals(1, instancesOfType(MyProvider.class, providers).size());
     }
 
     @Test
     public void testProvidersMbw() {
-        InstanceManager instanceManager = Injections.createInstanceManager(initBinders());
-        ProviderBinder providerBinder = new ProviderBinder(instanceManager);
+        InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
+        ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindClasses(Collections.singleton(MyProvider.class));
 
-        Set<MessageBodyWriter> providers = Providers.getCustomProviders(instanceManager, MessageBodyWriter.class);
+        Set<MessageBodyWriter> providers = Providers.getCustomProviders(injectionManager, MessageBodyWriter.class);
         final Collection<MyProvider> myProviders = instancesOfType(MyProvider.class, providers);
         assertEquals(1, myProviders.size());
     }
 
     @Test
     public void testProvidersMbrInstance() {
-        InstanceManager instanceManager = Injections.createInstanceManager(initBinders());
-        ProviderBinder providerBinder = new ProviderBinder(instanceManager);
+        InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
+        ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindInstances(Collections.singleton(new MyProvider()));
-        Set<MessageBodyReader> providers = Providers.getCustomProviders(instanceManager, MessageBodyReader.class);
+        Set<MessageBodyReader> providers = Providers.getCustomProviders(injectionManager, MessageBodyReader.class);
         assertEquals(1, instancesOfType(MyProvider.class, providers).size());
     }
 
     @Test
     public void testProvidersMbwInstance() {
-        InstanceManager instanceManager = Injections.createInstanceManager(initBinders());
-        ProviderBinder providerBinder = new ProviderBinder(instanceManager);
+        InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
+        ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindInstances(Collections.singleton(new MyProvider()));
 
-        Set<MessageBodyWriter> providers = Providers.getCustomProviders(instanceManager, MessageBodyWriter.class);
+        Set<MessageBodyWriter> providers = Providers.getCustomProviders(injectionManager, MessageBodyWriter.class);
         assertEquals(instancesOfType(MyProvider.class, providers).size(), 1);
     }
 
@@ -205,46 +205,46 @@ public class ProviderBinderTest {
 
     @Test
     public void testCustomRegistration() {
-        InstanceManager instanceManager = Injections.createInstanceManager();
+        InjectionManager injectionManager = Injections.createInjectionManager();
 
-        ProviderBinder providerBinder = new ProviderBinder(instanceManager);
+        ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindClasses(Child.class);
         providerBinder.bindClasses(NotFilterChild.class);
 
-        ContainerRequestFilter requestFilter = getRequestFilter(instanceManager);
-        ContainerRequestFilter requestFilter2 = getRequestFilter(instanceManager);
+        ContainerRequestFilter requestFilter = getRequestFilter(injectionManager);
+        ContainerRequestFilter requestFilter2 = getRequestFilter(injectionManager);
         assertEquals(requestFilter, requestFilter2);
 
 
-        ContainerResponseFilter responseFilter = getResponseFilter(instanceManager);
-        ContainerResponseFilter responseFilter2 = getResponseFilter(instanceManager);
+        ContainerResponseFilter responseFilter = getResponseFilter(injectionManager);
+        ContainerResponseFilter responseFilter2 = getResponseFilter(injectionManager);
         assertTrue(responseFilter == responseFilter2);
 
         assertTrue(responseFilter == requestFilter);
 
         // only one filter should be registered
         Collection<ContainerResponseFilter> filters =
-                Providers.getCustomProviders(instanceManager, ContainerResponseFilter.class);
+                Providers.getCustomProviders(injectionManager, ContainerResponseFilter.class);
         assertEquals(1, filters.size());
 
-        Child child = instanceManager.getInstance(Child.class);
-        Child child2 = instanceManager.getInstance(Child.class);
+        Child child = injectionManager.getInstance(Child.class);
+        Child child2 = injectionManager.getInstance(Child.class);
 
         assertTrue(child != responseFilter);
 
         assertTrue(child == child2);
     }
 
-    private ContainerResponseFilter getResponseFilter(InstanceManager instanceManager) {
+    private ContainerResponseFilter getResponseFilter(InjectionManager injectionManager) {
         ContainerResponseFilter responseFilter =
-                instanceManager.getInstance(ContainerResponseFilter.class, CustomAnnotationLiteral.INSTANCE);
+                injectionManager.getInstance(ContainerResponseFilter.class, CustomAnnotationLiteral.INSTANCE);
         assertEquals(Child.class, responseFilter.getClass());
         return responseFilter;
     }
 
-    private ContainerRequestFilter getRequestFilter(InstanceManager instanceManager) {
+    private ContainerRequestFilter getRequestFilter(InjectionManager injectionManager) {
         ContainerRequestFilter requestFilter =
-                instanceManager.getInstance(ContainerRequestFilter.class, CustomAnnotationLiteral.INSTANCE);
+                injectionManager.getInstance(ContainerRequestFilter.class, CustomAnnotationLiteral.INSTANCE);
         assertEquals(Child.class, requestFilter.getClass());
         return requestFilter;
     }

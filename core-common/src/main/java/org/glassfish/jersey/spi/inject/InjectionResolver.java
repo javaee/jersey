@@ -51,8 +51,8 @@ import java.lang.annotation.Annotation;
  * {@link javax.ws.rs.core.Context} which must be implemented and registered directly as a part of DI integration because of
  * many optimization which cannot be implemented on Jersey side.
  * <p>
- * The {@code InjectionResolvers} are delivered to DI integration using {@link InstanceManager#register(Binder)} and DI provider
- * just filter {@link InjectionResolverDescriptor} and internally register the annotation handling using its own mechanism.
+ * The {@code InjectionResolvers} are delivered to DI integration using {@link InjectionManager#register(Binder)} and DI provider
+ * just filter {@link InjectionResolverBinding} and internally register the annotation handling using its own mechanism.
  *
  * @param <T> This must be the annotation class of the injection annotation that this resolver will handle.
  */

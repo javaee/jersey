@@ -73,7 +73,7 @@ import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.InstanceManagerFactory;
+import org.glassfish.jersey.server.InjectionManagerFactory;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -123,7 +123,7 @@ public class ValidatorTest {
         LOGGER.info("No issue should be reported if more public ctors exists with the same number of params, "
                 + "but another just one is presented with more params at a root resource:");
         Resource resource = Resource.builder(TestRootResourceNonAmbigCtors.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+        ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
         validator.validate(resource);
         assertTrue(validator.getIssueList().isEmpty());
     }
@@ -324,7 +324,7 @@ public class ValidatorTest {
                 }
 
                 ResourceModel model = new ResourceModel.Builder(resources, false).build();
-                ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+                ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
                 validator.validate(model);
                 return ModelErrors.getErrorsAsResourceModelIssues();
             }
@@ -446,7 +446,7 @@ public class ValidatorTest {
     public void testSRLReturningVoid() throws Exception {
         LOGGER.info("An issue should be reported if a sub-resource locator returns void:");
         Resource resource = Resource.builder(TestSRLReturningVoid.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+        ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -522,7 +522,7 @@ public class ValidatorTest {
         LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a resource "
                 + "method:");
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsRM.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+        ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -543,7 +543,7 @@ public class ValidatorTest {
         LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a sub-resource "
                 + "method:");
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsSRM.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+        ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -561,7 +561,7 @@ public class ValidatorTest {
     public void testEntityParamOnSRL() throws Exception {
         LOGGER.info("An issue should be reported if an entity parameter exists on a sub-resource locator:");
         Resource resource = Resource.builder(TestEntityParamOnSRL.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+        ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -640,7 +640,7 @@ public class ValidatorTest {
             @Override
             public void run() {
                 Resource resource = Resource.builder(TestAmbiguousParams.class).build();
-                ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+                ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
                 validator.validate(resource);
 
                 assertTrue(!validator.fatalIssuesFound());
@@ -664,7 +664,7 @@ public class ValidatorTest {
     public void testEmptyPathSegment() throws Exception {
         LOGGER.info("A warning should be reported if @Path with \"/\" or empty string value is seen");
         Resource resource = Resource.builder(TestEmptyPathSegment.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+        ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -707,7 +707,7 @@ public class ValidatorTest {
             @Override
             public void run() {
                 Resource resource = Resource.builder(TypeVariableResource.class).build();
-                ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+                ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
                 validator.validate(resource);
 
                 assertTrue(!validator.fatalIssuesFound());
@@ -752,7 +752,7 @@ public class ValidatorTest {
     public void testParameterizedTypeResource() throws Exception {
         LOGGER.info("");
         Resource resource = Resource.builder(ConcreteParameterizedTypeResource.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+        ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -789,7 +789,7 @@ public class ValidatorTest {
     public void testGenericArrayResource() throws Exception {
         LOGGER.info("");
         Resource resource = Resource.builder(ConcreteGenericArrayResource.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+        ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -854,7 +854,7 @@ public class ValidatorTest {
     @Test
     public void testNotAnnotatedParameters() throws Exception {
         Resource resource = Resource.builder(AmbiguousParameterResource.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(InstanceManagerFactory.createInstanceManager());
+        ComponentModelValidator validator = new ComponentModelValidator(InjectionManagerFactory.createInjectionManager());
         validator.validate(resource);
 
         final List<ResourceModelIssue> errorMessages = validator.getIssueList();

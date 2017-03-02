@@ -61,7 +61,7 @@ public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
 
     public RuntimeDelegateImpl() {
         // TODO add more binders as necessary
-        super(Injections.createInstanceManager("jersey-server-rd-locator", new MessagingBinders.HeaderDelegateProviders()));
+        super(Injections.createInjectionManager("jersey-server-rd-locator", new MessagingBinders.HeaderDelegateProviders()));
     }
 
     @Override

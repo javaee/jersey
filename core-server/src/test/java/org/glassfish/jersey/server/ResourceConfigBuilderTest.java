@@ -112,7 +112,7 @@ public class ResourceConfigBuilderTest {
         };
 
         ApplicationHandler ah = new ApplicationHandler(application);
-        assertTrue(ah.getInstanceManager().getInstance(Application.class).equals(application));
+        assertTrue(ah.getInjectionManager().getInstance(Application.class).equals(application));
     }
 
     /**

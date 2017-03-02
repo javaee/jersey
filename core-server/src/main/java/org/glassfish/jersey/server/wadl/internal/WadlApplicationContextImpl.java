@@ -63,7 +63,7 @@ import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfig;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfigLoader;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import com.sun.research.ws.wadl.Application;
 import com.sun.research.ws.wadl.Doc;
@@ -92,7 +92,7 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
             new JAXBElement<>(new QName(WADL_JERSEY_NAMESPACE, "extended", "jersey"), String.class, "true");
 
     private final ExtendedResourceContext resourceContext;
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
     private final WadlGeneratorConfig wadlGeneratorConfig;
     private final JAXBContext jaxbContext;
 
@@ -101,22 +101,22 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
     /**
      * Injection constructor.
      *
-     * @param instanceManager  instance manager.
-     * @param configuration   runtime application configuration.
-     * @param resourceContext extended resource context.
+     * @param injectionManager injection manager.
+     * @param configuration    runtime application configuration.
+     * @param resourceContext  extended resource context.
      */
     @Inject
     public WadlApplicationContextImpl(
-            final InstanceManager instanceManager,
+            final InjectionManager injectionManager,
             final Configuration configuration,
             final ExtendedResourceContext resourceContext) {
-        this.instanceManager = instanceManager;
+        this.injectionManager = injectionManager;
         this.wadlGeneratorConfig = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(configuration.getProperties());
         this.resourceContext = resourceContext;
 
         // TODO perhaps this should be done another way for the moment
         // create a temporary generator just to do this one task
-        final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(instanceManager);
+        final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(injectionManager);
 
         JAXBContext jaxbContextCandidate;
 
@@ -173,7 +173,7 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
 
         final ApplicationDescription description = getApplication(info, detailedWadl);
 
-        final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(instanceManager);
+        final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(injectionManager);
         final Application application = new WadlBuilder(wadlGenerator, detailedWadl, info).generate(description, resource);
         if (application == null) {
             return null;
@@ -205,7 +205,7 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
     }
 
     private WadlBuilder getWadlBuilder(final boolean detailedWadl, final UriInfo uriInfo) {
-        return (this.wadlGenerationEnabled ? new WadlBuilder(wadlGeneratorConfig.createWadlGenerator(instanceManager),
+        return (this.wadlGenerationEnabled ? new WadlBuilder(wadlGeneratorConfig.createWadlGenerator(injectionManager),
                 detailedWadl, uriInfo) : null);
     }
 

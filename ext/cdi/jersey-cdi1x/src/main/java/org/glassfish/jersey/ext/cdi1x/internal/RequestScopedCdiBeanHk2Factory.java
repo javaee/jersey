@@ -44,7 +44,7 @@ import javax.enterprise.inject.Vetoed;
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * HK factory implementation to provide CDI managed components
@@ -58,7 +58,7 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
 public final class RequestScopedCdiBeanHk2Factory extends AbstractCdiBeanHk2Factory {
 
     public RequestScopedCdiBeanHk2Factory(Class rawType,
-                                          InstanceManager locator,
+                                          InjectionManager locator,
                                           BeanManager beanManager,
                                           boolean cdiManaged) {
         super(rawType, locator, beanManager, cdiManaged);

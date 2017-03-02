@@ -47,12 +47,12 @@ import java.util.concurrent.ExecutionException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.InstanceManagerFactory;
+import org.glassfish.jersey.server.InjectionManagerFactory;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelComponent;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +68,7 @@ public class ResourceMethodDispatcherFactoryTest {
 
     @Before
     public void setupApplication() {
-        InstanceManager locator = InstanceManagerFactory.createInstanceManager();
+        InjectionManager locator = InjectionManagerFactory.createInjectionManager();
 
         rmdf = locator.getInstance(ResourceMethodDispatcherFactory.class);
         rmihf = locator.getInstance(ResourceMethodInvocationHandlerFactory.class);

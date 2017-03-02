@@ -70,7 +70,7 @@ import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.spi.Contract;
 import org.glassfish.jersey.spi.ServiceHolder;
 import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Utility class providing a set of utility methods for easier and more type-safe
@@ -146,58 +146,58 @@ public final class Providers {
 
     /**
      * Get the set of default providers registered for the given service provider contract
-     * in the underlying {@link InstanceManager instance manager} container.
+     * in the underlying {@link InjectionManager injection manager} container.
      *
      * @param <T>             service provider contract Java type.
-     * @param instanceManager underlying instance manager.
+     * @param injectionManager underlying injection manager.
      * @param contract        service provider contract.
      * @return set of all available default service provider instances for the contract.
      */
-    public static <T> Set<T> getProviders(InstanceManager instanceManager, Class<T> contract) {
-        Collection<ServiceHolder<T>> providers = getServiceHolders(instanceManager, contract);
+    public static <T> Set<T> getProviders(InjectionManager injectionManager, Class<T> contract) {
+        Collection<ServiceHolder<T>> providers = getServiceHolders(injectionManager, contract);
         return getProviderClasses(providers);
     }
 
     /**
      * Get the set of all custom providers registered for the given service provider contract
-     * in the underlying {@link InstanceManager instance manager} container.
+     * in the underlying {@link InjectionManager injection manager} container.
      *
      * @param <T>             service provider contract Java type.
-     * @param instanceManager underlying instance manager.
+     * @param injectionManager underlying injection manager.
      * @param contract        service provider contract.
      * @return set of all available service provider instances for the contract.
      */
-    public static <T> Set<T> getCustomProviders(InstanceManager instanceManager, Class<T> contract) {
+    public static <T> Set<T> getCustomProviders(InjectionManager injectionManager, Class<T> contract) {
         Collection<ServiceHolder<T>> hk2Providers =
-                getServiceHolders(instanceManager, contract, CustomAnnotationLiteral.INSTANCE);
+                getServiceHolders(injectionManager, contract, CustomAnnotationLiteral.INSTANCE);
         return getProviderClasses(hk2Providers);
     }
 
     /**
      * Get the iterable of all providers (custom and default) registered for the given service provider contract
-     * in the underlying {@link InstanceManager instance manager} container.
+     * in the underlying {@link InjectionManager injection manager} container.
      *
      * @param <T>             service provider contract Java type.
-     * @param instanceManager underlying instance manager.
+     * @param injectionManager underlying injection manager.
      * @param contract        service provider contract.
      * @return iterable of all available service provider instances for the contract. Return value is never null.
      */
-    public static <T> Iterable<T> getAllProviders(InstanceManager instanceManager, Class<T> contract) {
-        return getAllProviders(instanceManager, contract, (Comparator<T>) null);
+    public static <T> Iterable<T> getAllProviders(InjectionManager injectionManager, Class<T> contract) {
+        return getAllProviders(injectionManager, contract, (Comparator<T>) null);
     }
 
     /**
      * Get the iterable of all {@link RankedProvider providers} (custom and default) registered for the given service provider
-     * contract in the underlying {@link InstanceManager instance manager} container.
+     * contract in the underlying {@link InjectionManager injection manager} container.
      *
      * @param <T>             service provider contract Java type.
-     * @param instanceManager underlying instance manager.
+     * @param injectionManager underlying injection manager.
      * @param contract        service provider contract.
      * @return iterable of all available ranked service providers for the contract. Return value is never null.
      */
-    public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(InstanceManager instanceManager, Class<T> contract) {
-        List<ServiceHolder<T>> providers = getServiceHolders(instanceManager, contract, CustomAnnotationLiteral.INSTANCE);
-        providers.addAll(getServiceHolders(instanceManager, contract));
+    public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(InjectionManager injectionManager, Class<T> contract) {
+        List<ServiceHolder<T>> providers = getServiceHolders(injectionManager, contract, CustomAnnotationLiteral.INSTANCE);
+        providers.addAll(getServiceHolders(injectionManager, contract));
 
         LinkedHashMap<ServiceHolder<T>, RankedProvider<T>> providerMap = new LinkedHashMap<>();
 
@@ -261,32 +261,32 @@ public final class Providers {
 
     /**
      * Get the sorted iterable of all {@link RankedProvider providers} (custom and default) registered for the given service
-     * provider contract in the underlying {@link InstanceManager instance manager} container.
+     * provider contract in the underlying {@link InjectionManager injection manager} container.
      *
      * @param <T>             service provider contract Java type.
-     * @param instanceManager underlying instance manager.
+     * @param injectionManager underlying injection manager.
      * @param contract        service provider contract.
      * @param comparator      comparator to sort the providers with.
      * @return set of all available ranked service providers for the contract. Return value is never null.
      */
     public static <T> Iterable<T> getAllProviders(
-            InstanceManager instanceManager, Class<T> contract, RankedComparator<T> comparator) {
+            InjectionManager injectionManager, Class<T> contract, RankedComparator<T> comparator) {
         //noinspection unchecked
-        return sortRankedProviders(comparator, getAllRankedProviders(instanceManager, contract));
+        return sortRankedProviders(comparator, getAllRankedProviders(injectionManager, contract));
     }
 
     /**
      * Get collection of all {@link ServiceHolder}s bound for providers (custom and default) registered for the given service
-     * provider contract in the underlying {@link InstanceManager instance manager} container.
+     * provider contract in the underlying {@link InjectionManager injection manager} container.
      *
      * @param <T>             service provider contract Java type.
-     * @param instanceManager underlying instance manager.
+     * @param injectionManager underlying injection manager.
      * @param contract        service provider contract.
      * @return set of all available service provider instances for the contract
      */
-    public static <T> Collection<ServiceHolder<T>> getAllServiceHolders(InstanceManager instanceManager, Class<T> contract) {
-        List<ServiceHolder<T>> providers = getServiceHolders(instanceManager, contract, CustomAnnotationLiteral.INSTANCE);
-        providers.addAll(getServiceHolders(instanceManager, contract));
+    public static <T> Collection<ServiceHolder<T>> getAllServiceHolders(InjectionManager injectionManager, Class<T> contract) {
+        List<ServiceHolder<T>> providers = getServiceHolders(injectionManager, contract, CustomAnnotationLiteral.INSTANCE);
+        providers.addAll(getServiceHolders(injectionManager, contract));
 
         LinkedHashSet<ServiceHolder<T>> providersSet = new LinkedHashSet<>();
         for (ServiceHolder<T> provider : providers) {
@@ -298,7 +298,8 @@ public final class Providers {
         return providersSet;
     }
 
-    private static <T> List<ServiceHolder<T>> getServiceHolders(InstanceManager bm, Class<T> contract, Annotation... qualifiers) {
+    private static <T> List<ServiceHolder<T>> getServiceHolders(
+            InjectionManager bm, Class<T> contract, Annotation... qualifiers) {
         return bm.getAllServiceHolders(contract, qualifiers);
     }
 
@@ -319,17 +320,18 @@ public final class Providers {
 
     /**
      * Get the iterable of all providers (custom and default) registered for the given service provider contract
-     * in the underlying {@link InstanceManager instance manager} container ordered based on the given {@code comparator}.
+     * in the underlying {@link InjectionManager injection manager} container ordered based on the given {@code comparator}.
      *
-     * @param <T>             service provider contract Java type.
-     * @param instanceManager underlying instance manager.
-     * @param contract        service provider contract.
-     * @param comparator      comparator to be used for sorting the returned providers.
+     * @param <T>              service provider contract Java type.
+     * @param injectionManager underlying injection manager.
+     * @param contract         service provider contract.
+     * @param comparator       comparator to be used for sorting the returned providers.
      * @return set of all available service provider instances for the contract ordered using the given
      * {@link Comparator comparator}.
      */
-    public static <T> Iterable<T> getAllProviders(InstanceManager instanceManager, Class<T> contract, Comparator<T> comparator) {
-        List<T> providerList = new ArrayList<>(getProviderClasses(getAllServiceHolders(instanceManager, contract)));
+    public static <T> Iterable<T> getAllProviders(
+            InjectionManager injectionManager, Class<T> contract, Comparator<T> comparator) {
+        List<T> providerList = new ArrayList<>(getProviderClasses(getAllServiceHolders(injectionManager, contract)));
         if (comparator != null) {
             providerList.sort(comparator);
         }

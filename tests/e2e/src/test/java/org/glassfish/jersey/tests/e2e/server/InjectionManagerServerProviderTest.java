@@ -61,21 +61,21 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
-import org.glassfish.jersey.InstanceManagerProvider;
+import org.glassfish.jersey.InjectionManagerProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests {@link InstanceManagerProvider}.
+ * Tests {@link InjectionManagerProvider}.
  *
  * @author Miroslav Fuksa
  */
-public class InstanceManagerServerProviderTest extends JerseyTest {
+public class InjectionManagerServerProviderTest extends JerseyTest {
 
     @Path("resource")
     public static class TestResource {
@@ -154,7 +154,7 @@ public class InstanceManagerServerProviderTest extends JerseyTest {
 
         @Override
         public boolean configure(FeatureContext context) {
-            final InstanceManager serviceLocator = InstanceManagerProvider.getInstanceManager(context);
+            final InjectionManager serviceLocator = InjectionManagerProvider.getInjectionManager(context);
             final MyInjectedService service = serviceLocator.getInstance(MyInjectedService.class);
             context.register(new MyFeatureInterceptor(service.getName()));
             return true;
@@ -190,7 +190,7 @@ public class InstanceManagerServerProviderTest extends JerseyTest {
 
         @Override
         public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
-            final InstanceManager serviceLocator = InstanceManagerProvider.getInstanceManager(context);
+            final InjectionManager serviceLocator = InjectionManagerProvider.getInjectionManager(context);
             final MyInjectedService service = serviceLocator.getInstance(MyInjectedService.class);
             context.setEntity(((String) context.getEntity()) + "-writer-interceptor-" + service.getName());
             context.proceed();
@@ -217,7 +217,7 @@ public class InstanceManagerServerProviderTest extends JerseyTest {
                 return entity;
             }
             final String stringEntity = (String) entity;
-            final InstanceManager serviceLocator = InstanceManagerProvider.getInstanceManager(context);
+            final InjectionManager serviceLocator = InjectionManagerProvider.getInjectionManager(context);
             final MyInjectedService service = serviceLocator.getInstance(MyInjectedService.class);
             return stringEntity + "-reader-interceptor-" + service.getName();
         }
