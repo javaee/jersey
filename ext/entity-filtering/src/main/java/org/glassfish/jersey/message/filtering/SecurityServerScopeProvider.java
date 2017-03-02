@@ -53,7 +53,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * @author Michal Gajdos
@@ -66,8 +66,8 @@ final class SecurityServerScopeProvider extends ServerScopeProvider {
     private SecurityContext securityContext;
 
     @Inject
-    public SecurityServerScopeProvider(final Configuration config, final InstanceManager instanceManager) {
-        super(config, instanceManager);
+    public SecurityServerScopeProvider(final Configuration config, final InjectionManager injectionManager) {
+        super(config, injectionManager);
     }
 
     @Override

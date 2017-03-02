@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -61,7 +62,7 @@ import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.message.filtering.spi.ScopeProvider;
 import org.glassfish.jersey.message.filtering.spi.ScopeResolver;
 import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Default implementation of {@link ScopeProvider scope provider}. This class can be used on client to retrieve
@@ -81,15 +82,14 @@ class CommonScopeProvider implements ScopeProvider {
 
     /**
      * Create new common scope provider with injected {@link Configuration configuration} and
-     * {@link InstanceManager instance manager}.
+     * {@link InjectionManager injection manager}.
      */
     @Inject
-    public CommonScopeProvider(final Configuration config, final InstanceManager instanceManager) {
+    public CommonScopeProvider(final Configuration config, final InjectionManager injectionManager) {
         this.config = config;
-
-        this.resolvers = StreamSupport.stream(Providers.getAllProviders(instanceManager, ScopeResolver.class,
-                                                                        new RankedComparator<>()).spliterator(), false)
-                                      .collect(Collectors.toList());
+        Spliterator<ScopeResolver> resolverSpliterator =
+                Providers.getAllProviders(injectionManager, ScopeResolver.class, new RankedComparator<>()).spliterator();
+        this.resolvers = StreamSupport.stream(resolverSpliterator, false).collect(Collectors.toList());
     }
 
     @Override

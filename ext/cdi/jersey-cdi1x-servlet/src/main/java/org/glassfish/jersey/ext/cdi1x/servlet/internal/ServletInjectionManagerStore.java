@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,32 +38,24 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.ext.cdi1x.servlet.internal;
+
+import org.glassfish.jersey.ext.cdi1x.internal.GenericInjectionManagerStore;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
- * Class which has the fields containing the instance of {@link InjectionResolver} and its a concrete type.
+ * {@link InjectionManagerStore injection manager} for servlet based containers. The provider
+ * enables WAR and EAR to be deployed on a servlet container and be properly injected.
  *
- * @param <T> type of the annotation which is served using th given injection resolver.
+ * @author Michal Gajdos
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @since 2.17
  */
-public class InjectionResolverDescriptor<T extends InjectionResolver> extends Descriptor<T, InjectionResolverDescriptor<T>> {
+public class ServletInjectionManagerStore extends GenericInjectionManagerStore {
 
-    private final T resolver;
-
-    /**
-     * Creates an injection resolver as an instance.
-     *
-     * @param resolver injection resolver instance.
-     */
-    InjectionResolverDescriptor(T resolver) {
-        this.resolver = resolver;
-    }
-
-    /**
-     * Gets the injection resolver handled by this descriptor.
-     *
-     * @return {@code InjectionResolver} instance.
-     */
-    public T getResolver() {
-        return resolver;
+    @Override
+    public InjectionManager lookupInjectionManager() {
+        return CdiExternalRequestScope.actualInjectionManager.get();
     }
 }

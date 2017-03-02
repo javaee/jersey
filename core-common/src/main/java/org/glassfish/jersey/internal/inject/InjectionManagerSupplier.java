@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,48 +38,20 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
-import java.lang.reflect.Type;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
- * Injection binding description of a bean bound directly as a specific instance.
- *
- * @param <T> type of the bean described by this injection binding descriptor.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * Implementation of this interface is capable of returning {@link InjectionManager}.
  */
-public class InstanceBeanDescriptor<T> extends Descriptor<T, InstanceBeanDescriptor<T>> {
-
-    private final T service;
+public interface InjectionManagerSupplier {
 
     /**
-     * Creates a service as an instance.
+     * Get injection manager.
      *
-     * @param service service's instance.
+     * @return injection manager.
      */
-    InstanceBeanDescriptor(T service) {
-        this(service, null);
-    }
+    InjectionManager getInjectionManager();
 
-    /**
-     * Creates a service as an instance.
-     *
-     * @param service      service's instance.
-     * @param contractType service's contractType.
-     */
-    InstanceBeanDescriptor(T service, Type contractType) {
-        this.service = service;
-        if (contractType != null) {
-            this.to(contractType);
-        }
-    }
-
-    /**
-     * Gets service' class.
-     *
-     * @return service's class.
-     */
-    public T getService() {
-        return service;
-    }
 }

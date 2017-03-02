@@ -55,7 +55,7 @@ import javax.servlet.ServletConfig;
 
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
@@ -79,9 +79,9 @@ public class PersistenceUnitBinder extends AbstractBinder {
         private final Map<String, String> persistenceUnits = new HashMap<>();
 
         @Inject
-        private PersistenceUnitInjectionResolver(final InstanceManager instanceManager) {
+        private PersistenceUnitInjectionResolver(final InjectionManager injectionManager) {
             // Look for persistence units.
-            final ServletConfig servletConfig = instanceManager.getInstance(ServletConfig.class);
+            final ServletConfig servletConfig = injectionManager.getInstance(ServletConfig.class);
 
             for (final Enumeration parameterNames = servletConfig.getInitParameterNames(); parameterNames.hasMoreElements(); ) {
                 final String key = (String) parameterNames.nextElement();

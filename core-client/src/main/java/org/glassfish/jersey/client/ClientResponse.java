@@ -62,18 +62,18 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
+import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.Statuses;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Jersey client response context.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ClientResponse extends InboundMessageContext implements ClientResponseContext, InstanceManagerSupplier {
+public class ClientResponse extends InboundMessageContext implements ClientResponseContext, InjectionManagerSupplier {
 
     private Response.StatusType status;
     private final ClientRequest requestContext;
@@ -450,8 +450,8 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
     }
 
     @Override
-    public InstanceManager getInstanceManager() {
-        return getRequestContext().getInstanceManager();
+    public InjectionManager getInjectionManager() {
+        return getRequestContext().getInjectionManager();
     }
 
     @Override

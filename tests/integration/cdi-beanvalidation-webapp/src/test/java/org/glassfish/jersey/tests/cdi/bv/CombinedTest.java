@@ -66,7 +66,7 @@ import org.junit.Test;
 
 /**
  * Test both Jersey apps running simultaneously within a single Grizzly HTTP server
- * to make sure instance managers do not interfere. The test is not executed
+ * to make sure injection managers do not interfere. The test is not executed
  * if other than the default (Grizzly) test container has been set.
  * For Servlet based container testing, the other two tests, {@link RawCdiTest} and {@link RawHk2Test},
  * do the same job, because the WAR application contains both Jersey apps already.

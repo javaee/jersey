@@ -55,7 +55,7 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Function that can be put to an acceptor chain to properly initialize
@@ -76,24 +76,24 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
      *
      * @param requestRefProvider client request context reference injection provider.
      * @param workersProvider message body workers injection provider.
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
     @Inject
     public RequestProcessingInitializationStage(
             Provider<Ref<ClientRequest>> requestRefProvider,
             Provider<MessageBodyWorkers> workersProvider,
-            InstanceManager instanceManager) {
+            InjectionManager injectionManager) {
         this.requestRefProvider = requestRefProvider;
         this.workersProvider = workersProvider;
         writerInterceptors = Collections.unmodifiableList(
                 StreamSupport.stream(
-                        Providers.getAllProviders(instanceManager, WriterInterceptor.class,
+                        Providers.getAllProviders(injectionManager, WriterInterceptor.class,
                                 new RankedComparator<>()).spliterator(), false)
                              .collect(Collectors.toList())
         );
         readerInterceptors = Collections.unmodifiableList(
                 StreamSupport.stream(
-                        Providers.getAllProviders(instanceManager, ReaderInterceptor.class,
+                        Providers.getAllProviders(injectionManager, ReaderInterceptor.class,
                                 new RankedComparator<>()).spliterator(), false)
                              .collect(Collectors.toList())
         );

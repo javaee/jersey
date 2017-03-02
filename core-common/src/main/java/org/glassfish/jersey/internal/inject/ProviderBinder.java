@@ -60,24 +60,24 @@ import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
 import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.ClassBeanDescriptor;
+import org.glassfish.jersey.spi.inject.ClassBinding;
 import org.glassfish.jersey.spi.inject.CompositeBinder;
-import org.glassfish.jersey.spi.inject.InstanceBeanDescriptor;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.spi.inject.InstanceBinding;
 
 import org.glassfish.hk2.api.PerLookup;
 
 /**
- * Class used for registration of the custom providers into instance manager.
+ * Class used for registration of the custom providers into injection manager.
  * <p>
  * Custom providers are classes that implements specific JAX-RS or Jersey
  * SPI interfaces (e.g. {@link javax.ws.rs.ext.MessageBodyReader}) and are
- * supplied by the user. These providers will be bound into the instance manager
+ * supplied by the user. These providers will be bound into the injection manager
  * annotated by a {@link Custom &#64;Custom} qualifier annotation.
  * </p>
  * <p>
  * Use the {@code &#64;Custom} qualifier annotation to retrieve these providers
- * from instance manager. You may also use a one of the provider accessor utility
+ * from injection manager. You may also use a one of the provider accessor utility
  * method defined in {@link Providers} class.
  * </p>
  *
@@ -87,25 +87,25 @@ import org.glassfish.hk2.api.PerLookup;
  */
 public class ProviderBinder {
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     /**
      * Create new provider binder instance.
      *
-     * @param instanceManager the binder will use to bind the providers into.
+     * @param injectionManager the binder will use to bind the providers into.
      */
-    public ProviderBinder(final InstanceManager instanceManager) {
-        this.instanceManager = instanceManager;
+    public ProviderBinder(final InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
     }
 
     /**
-     * Bind contract provider model to a provider class using the supplied instance manager.
+     * Bind contract provider model to a provider class using the supplied injection manager.
      *
      * @param providerClass provider class.
      * @param model         contract provider model.
      */
-    public static void bindProvider(Class<?> providerClass, ContractProvider model, InstanceManager instanceManager) {
-        instanceManager.register(CompositeBinder.wrap(createProviderBinders(providerClass, model)));
+    public static void bindProvider(Class<?> providerClass, ContractProvider model, InjectionManager injectionManager) {
+        injectionManager.register(CompositeBinder.wrap(createProviderBinders(providerClass, model)));
     }
 
     private static Collection<Binder> createProviderBinders(Class<?> providerClass, ContractProvider model) {
@@ -114,7 +114,7 @@ public class ProviderBinder {
             @Override
             @SuppressWarnings("unchecked")
             protected void configure() {
-                ClassBeanDescriptor builder = bind(providerClass)
+                ClassBinding builder = bind(providerClass)
                         .in(model.getScope())
                         .qualifiedBy(CustomAnnotationLiteral.INSTANCE)
                         .to(contract);
@@ -133,7 +133,7 @@ public class ProviderBinder {
     }
 
     /**
-     * Bind contract provider model to a provider instance using the supplied instance manager.
+     * Bind contract provider model to a provider instance using the supplied injection manager.
      * <p>
      * Scope value specified in the {@link ContractProvider contract provider model}
      * is ignored as instances can only be bound as "singletons".
@@ -141,8 +141,8 @@ public class ProviderBinder {
      * @param providerInstance provider instance.
      * @param model            contract provider model.
      */
-    public static void bindProvider(Object providerInstance, ContractProvider model, InstanceManager instanceManager) {
-        instanceManager.register(CompositeBinder.wrap(createProviderBinders(providerInstance, model)));
+    public static void bindProvider(Object providerInstance, ContractProvider model, InjectionManager injectionManager) {
+        injectionManager.register(CompositeBinder.wrap(createProviderBinders(providerInstance, model)));
     }
 
     private static Collection<Binder> createProviderBinders(Object providerInstance, ContractProvider model) {
@@ -151,7 +151,7 @@ public class ProviderBinder {
             @Override
             @SuppressWarnings("unchecked")
             protected void configure() {
-                InstanceBeanDescriptor builder = bind(providerInstance)
+                InstanceBinding builder = bind(providerInstance)
                         .qualifiedBy(CustomAnnotationLiteral.INSTANCE)
                         .to(contract);
 
@@ -169,29 +169,29 @@ public class ProviderBinder {
     }
 
     /**
-     * Bind all providers contained in {@code providerBag} (classes and instances) using instance manager. Configuration is
+     * Bind all providers contained in {@code providerBag} (classes and instances) using injection manager. Configuration is
      * also committed.
      *
      * @param componentBag    bag of provider classes and instances.
-     * @param instanceManager instance manager the binder will use to bind the providers into.
+     * @param injectionManager injection manager the binder will use to bind the providers into.
      */
-    public static void bindProviders(final ComponentBag componentBag, final InstanceManager instanceManager) {
-        bindProviders(componentBag, null, Collections.emptySet(), instanceManager);
+    public static void bindProviders(final ComponentBag componentBag, final InjectionManager injectionManager) {
+        bindProviders(componentBag, null, Collections.emptySet(), injectionManager);
     }
 
     /**
-     * Bind all providers contained in {@code p roviderBag} (classes and instances) using instance manager. Configuration is
+     * Bind all providers contained in {@code p roviderBag} (classes and instances) using injection manager. Configuration is
      * also committed.
      *
      * @param componentBag      bag of provider classes and instances.
      * @param constrainedTo     current runtime (client or server).
      * @param registeredClasses classes which are manually registered by the user (not found by the classpath scanning).
-     * @param instanceManager   instance manager the binder will use to bind the providers into.
+     * @param injectionManager  injection manager the binder will use to bind the providers into.
      */
     public static void bindProviders(ComponentBag componentBag,
                                      RuntimeType constrainedTo,
                                      Set<Class<?>> registeredClasses,
-                                     InstanceManager instanceManager) {
+                                     InjectionManager injectionManager) {
         Predicate<ContractProvider> filter =
                 input -> ComponentBag.EXCLUDE_EMPTY.test(input) && ComponentBag.EXCLUDE_META_PROVIDERS.test(input);
 
@@ -236,7 +236,7 @@ public class ProviderBinder {
             binderToRegister.addAll(createProviderBinders(provider, model));
         }
 
-        instanceManager.register(CompositeBinder.wrap(binderToRegister));
+        injectionManager.register(CompositeBinder.wrap(binderToRegister));
     }
 
     @SuppressWarnings("unchecked")
@@ -278,7 +278,7 @@ public class ProviderBinder {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
 
-        instanceManager.register(CompositeBinder.wrap(binders));
+        injectionManager.register(CompositeBinder.wrap(binders));
     }
 
     /**
@@ -332,7 +332,7 @@ public class ProviderBinder {
                 .map(clazz -> createClassBinders(clazz, bindResources))
                 .collect(Collectors.toList());
 
-        instanceManager.register(CompositeBinder.wrap(binders));
+        injectionManager.register(CompositeBinder.wrap(binders));
     }
 
     @SuppressWarnings("unchecked")
@@ -343,7 +343,7 @@ public class ProviderBinder {
             return new AbstractBinder() {
                 @Override
                 protected void configure() {
-                    ClassBeanDescriptor<T> descriptor = bindAsContract(clazz).in(scope);
+                    ClassBinding<T> descriptor = bindAsContract(clazz).in(scope);
 
                     for (Class contract : Providers.getProviderContracts(clazz)) {
                         descriptor.addAlias(contract.getName())
@@ -356,7 +356,7 @@ public class ProviderBinder {
             return new AbstractBinder() {
                 @Override
                 protected void configure() {
-                    ClassBeanDescriptor<T> builder = bind(clazz).in(scope).qualifiedBy(CustomAnnotationLiteral.INSTANCE);
+                    ClassBinding<T> builder = bind(clazz).in(scope).qualifiedBy(CustomAnnotationLiteral.INSTANCE);
                     Providers.getProviderContracts(clazz).forEach(contract -> builder.to((Class<? super T>) contract));
                 }
             };

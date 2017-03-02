@@ -182,9 +182,9 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
                 requestContext.headers(headerName, headerValue == null ? "" : headerValue);
             }
             requestContext.setWriter(responseWriter);
-            requestContext.setRequestScopedInitializer(instanceManager -> {
-                instanceManager.<Ref<Request>>getInstance(REQUEST_TYPE).set(request);
-                instanceManager.<Ref<Response>>getInstance(RESPONSE_TYPE).set(response);
+            requestContext.setRequestScopedInitializer(injectionManager -> {
+                injectionManager.<Ref<Request>>getInstance(REQUEST_TYPE).set(request);
+                injectionManager.<Ref<Response>>getInstance(RESPONSE_TYPE).set(response);
             });
 
             // Mark the request as handled before generating the body of the response
@@ -456,7 +456,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
      * Create a new Jetty HTTP container.
      *
      * @param application JAX-RS / Jersey application to be deployed on Jetty HTTP container.
-     * @param parentLocator parent instance manager.
+     * @param parentLocator parent injection manager.
      */
     JettyHttpContainer(final Application application, final ServiceLocator parentLocator) {
         this.appHandler = new ApplicationHandler(application, new JettyBinder(), parentLocator);

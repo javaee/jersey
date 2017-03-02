@@ -79,10 +79,10 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
 
     @Override
     public RequestScopedInitializerProvider getRequestScopedInitializerProvider() {
-        return context -> (RequestScopedInitializer) instanceManager -> {
-            instanceManager.<Ref<HttpServletRequest>>getInstance(HTTP_SERVLET_REQUEST_TYPE)
+        return context -> (RequestScopedInitializer) injectionManager -> {
+            injectionManager.<Ref<HttpServletRequest>>getInstance(HTTP_SERVLET_REQUEST_TYPE)
                     .set(wrapped(context.getHttpServletRequest()));
-            instanceManager.<Ref<HttpServletResponse>>getInstance(HTTP_SERVLET_RESPONSE_TYPE)
+            injectionManager.<Ref<HttpServletResponse>>getInstance(HTTP_SERVLET_RESPONSE_TYPE)
                     .set(wrapped(context.getHttpServletResponse()));
         };
     }

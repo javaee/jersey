@@ -51,14 +51,14 @@ import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.ServiceHolder;
 import org.glassfish.jersey.spi.ServiceHolderImpl;
 import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.ClassBeanDescriptor;
+import org.glassfish.jersey.spi.inject.Binding;
+import org.glassfish.jersey.spi.inject.Bindings;
+import org.glassfish.jersey.spi.inject.ClassBinding;
 import org.glassfish.jersey.spi.inject.CompositeBinder;
-import org.glassfish.jersey.spi.inject.Descriptor;
-import org.glassfish.jersey.spi.inject.Descriptors;
 import org.glassfish.jersey.spi.inject.ForeignDescriptor;
 import org.glassfish.jersey.spi.inject.ForeignDescriptorImpl;
-import org.glassfish.jersey.spi.inject.InstanceBeanDescriptor;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.spi.inject.InstanceBinding;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -68,29 +68,29 @@ import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.external.runtime.ServiceLocatorRuntimeBean;
 
 /**
- * Implementation of {@link InstanceManager} for HK Dependency Injection Framework.
+ * Implementation of {@link InjectionManager} for HK Dependency Injection Framework.
  */
-public class HK2InstanceManager implements InstanceManager {
+public class HK2InjectionManager implements InjectionManager {
 
-    private static final Logger LOGGER = Logger.getLogger(HK2InstanceManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(HK2InjectionManager.class.getName());
 
     private static final ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
 
     private ServiceLocator locator;
 
     /**
-     * Default constructor to be able to find a {@link HK2InstanceManager} using {@link java.util.ServiceLoader}.
+     * Default constructor to be able to find a {@link HK2InjectionManager} using {@link java.util.ServiceLoader}.
      */
-    public HK2InstanceManager() {
+    public HK2InjectionManager() {
     }
 
     /**
      * Creates a new instance using the underlying {@link ServiceLocator}. More information about how to use this c'tor can found
-     * here {@link #createInstanceManager(ServiceLocator)}.
+     * here {@link #createInjectionManager(ServiceLocator)}.
      *
-     * @param locator underlying HK2 instance manager
+     * @param locator underlying HK2 injection manager
      */
-    private HK2InstanceManager(ServiceLocator locator) {
+    private HK2InjectionManager(ServiceLocator locator) {
         this.locator = locator;
     }
 
@@ -98,16 +98,16 @@ public class HK2InstanceManager implements InstanceManager {
      * Creates a new {@link ServiceLocator} instance from static {@link ServiceLocatorFactory} and adds the provided parent
      * locator if the instance is not null.
      *
-     * @param name   name of the instance manager.
-     * @param parent parent of the new instance manager.
-     * @return new instance of instance manager.
+     * @param name   name of the injection manager.
+     * @param parent parent of the new injection manager.
+     * @return new instance of injection manager.
      */
-    private static ServiceLocator createLocator(String name, InstanceManager parent) {
+    private static ServiceLocator createLocator(String name, InjectionManager parent) {
         assertParentLocatorType(parent);
 
         ServiceLocator parentLocator = null;
         if (parent != null) {
-            parentLocator = ((HK2InstanceManager) parent).locator;
+            parentLocator = ((HK2InjectionManager) parent).locator;
         }
 
         ServiceLocator result = factory.create(name, parentLocator, null, ServiceLocatorFactory.CreatePolicy.DESTROY);
@@ -117,22 +117,22 @@ public class HK2InstanceManager implements InstanceManager {
     }
 
     /**
-     * Creates a new instance of {@link HK2InstanceManager} and automatically add the provided instance of {@code  ServiceLocator}
-     * as a underlying instance manager.
+     * Creates a new instance of {@link HK2InjectionManager} and automatically add the provided instance of {@code  ServiceLocator}
+     * as a underlying injection manager.
      * <p>
      * Commonly used in this scenarios:
-     * - create {@code InstanceManager} with externally provided {@code ServiceLocator}.
-     * - create {@code InstanceManager} which is immediately put into the different {@code InstanceManager} as a parent.
+     * - create {@code InjectionManager} with externally provided {@code ServiceLocator}.
+     * - create {@code InjectionManager} which is immediately put into the different {@code InjectionManager} as a parent.
      *
      * @param locator HK2 ServiceLocator
-     * @return new instance of {@link HK2InstanceManager} with underlying {@link ServiceLocator}.
+     * @return new instance of {@link HK2InjectionManager} with underlying {@link ServiceLocator}.
      */
-    public static InstanceManager createInstanceManager(ServiceLocator locator) {
-        return new HK2InstanceManager(locator);
+    public static InjectionManager createInjectionManager(ServiceLocator locator) {
+        return new HK2InjectionManager(locator);
     }
 
     /**
-     * Returns {@link ServiceLocator} dedicated to this instance of {@link HK2InstanceManager}.
+     * Returns {@link ServiceLocator} dedicated to this instance of {@link HK2InjectionManager}.
      *
      * @return underlying instance of {@code ServiceLocator}.
      */
@@ -141,12 +141,12 @@ public class HK2InstanceManager implements InstanceManager {
     }
 
     @Override
-    public void initialize(String name, InstanceManager parent, Binder... binders) {
+    public void initialize(String name, InjectionManager parent, Binder... binders) {
         this.locator = createLocator(name, parent);
         ServiceLocatorUtilities.bind(locator, new JerseyClassAnalyzer.Binder(locator));
 
         // First service the current BeanManager to be able to inject itself into other services.
-        Hk2Helper.bind(locator, Descriptors.service(this).to(InstanceManager.class));
+        Hk2Helper.bind(locator, Bindings.service(this).to(InjectionManager.class));
 
         // Add support for Context annotation.
         Hk2Helper.bind(locator, new ContextInjectionResolverImpl.Binder());
@@ -170,12 +170,12 @@ public class HK2InstanceManager implements InstanceManager {
     }
 
     /**
-     * Checks if the parent is null then must be an instance of {@link HK2InstanceManager}.
+     * Checks if the parent is null then must be an instance of {@link HK2InjectionManager}.
      *
-     * @param parent paren {@code InstanceManager}.
+     * @param parent parent {@code InjectionManager}.
      */
-    private static void assertParentLocatorType(InstanceManager parent) {
-        if (parent != null && !(parent instanceof HK2InstanceManager)) {
+    private static void assertParentLocatorType(InjectionManager parent) {
+        if (parent != null && !(parent instanceof HK2InjectionManager)) {
             throw new RuntimeException(LocalizationMessages.HK_2_UNKNOWN_PARENT_INSTANCE_MANAGER(
                     parent.getClass().getSimpleName()));
         }
@@ -191,12 +191,12 @@ public class HK2InstanceManager implements InstanceManager {
     }
 
     @Override
-    public void register(Descriptor descriptor) {
-        Hk2Helper.bind(locator, descriptor);
+    public void register(Binding binding) {
+        Hk2Helper.bind(locator, binding);
     }
 
     @Override
-    public void register(Iterable<Descriptor> descriptors) {
+    public void register(Iterable<Binding> descriptors) {
         Hk2Helper.bind(locator, descriptors);
     }
 
@@ -238,21 +238,21 @@ public class HK2InstanceManager implements InstanceManager {
     }
 
     @Override
-    public ForeignDescriptor createForeignDescriptor(Descriptor descriptor) {
-        ForeignDescriptor foreignDescriptor = createAndTranslateForeignDescriptor(descriptor);
+    public ForeignDescriptor createForeignDescriptor(Binding binding) {
+        ForeignDescriptor foreignDescriptor = createAndTranslateForeignDescriptor(binding);
         ActiveDescriptor<Object> activeDescriptor = ServiceLocatorUtilities
                 .addOneDescriptor(locator, (org.glassfish.hk2.api.Descriptor) foreignDescriptor.get(), false);
         return new ForeignDescriptorImpl(activeDescriptor);
     }
 
-    private ForeignDescriptor createAndTranslateForeignDescriptor(Descriptor descriptor) {
+    private ForeignDescriptor createAndTranslateForeignDescriptor(Binding binding) {
         ActiveDescriptor<?> activeDescriptor;
-        if (ClassBeanDescriptor.class.isAssignableFrom(descriptor.getClass())) {
-            activeDescriptor = Hk2Helper.translateToActiveDescriptor((ClassBeanDescriptor<?>) descriptor);
-        } else if (InstanceBeanDescriptor.class.isAssignableFrom(descriptor.getClass())) {
-            activeDescriptor = Hk2Helper.translateToActiveDescriptor((InstanceBeanDescriptor<?>) descriptor);
+        if (ClassBinding.class.isAssignableFrom(binding.getClass())) {
+            activeDescriptor = Hk2Helper.translateToActiveDescriptor((ClassBinding<?>) binding);
+        } else if (InstanceBinding.class.isAssignableFrom(binding.getClass())) {
+            activeDescriptor = Hk2Helper.translateToActiveDescriptor((InstanceBinding<?>) binding);
         } else {
-            throw new RuntimeException(LocalizationMessages.UNKNOWN_DESCRIPTOR_TYPE(descriptor.getClass().getSimpleName()));
+            throw new RuntimeException(LocalizationMessages.UNKNOWN_DESCRIPTOR_TYPE(binding.getClass().getSimpleName()));
         }
 
         return new ForeignDescriptorImpl(activeDescriptor);

@@ -41,10 +41,10 @@
 package org.glassfish.jersey.ext.cdi1x.internal.spi;
 
 /**
- * An extension interface for implementations of {@link InstanceManagerStore}. HK2 locator
+ * An extension interface for implementations of {@link InjectionManagerStore}. HK2 locator
  * managers implementing this interface are notified when an {@link javax.enterprise.inject.spi.InjectionTarget injection target}
  * is processed by {@link org.glassfish.jersey.ext.cdi1x.internal.CdiComponentProvider}. Locator managers can then set the
- * effective instance manager to the processed {@link InstanceManagerInjectedTarget target}.
+ * effective injection manager to the processed {@link InjectionManagerInjectedTarget target}.
  *
  * @author Michal Gajdos
  */
@@ -55,5 +55,5 @@ public interface InjectionTargetListener {
      *
      * @param target processed injection target.
      */
-    public void notify(final InstanceManagerInjectedTarget target);
+    public void notify(final InjectionManagerInjectedTarget target);
 }

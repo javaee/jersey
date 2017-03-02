@@ -77,7 +77,7 @@ import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.validation.ValidationConfig;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.PerLookup;
 
@@ -180,7 +180,7 @@ public final class ValidationBinder extends AbstractBinder {
     private static class ConfiguredValidatorProvider extends SupplierFactory<ConfiguredValidator> {
 
         @Inject
-        private InstanceManager instanceManager;
+        private InjectionManager injectionManager;
 
         @Inject
         private Configuration validationConfig;
@@ -251,7 +251,7 @@ public final class ValidationBinder extends AbstractBinder {
         private Iterable<ValidationInterceptor> getValidationInterceptors() {
             final Iterable<RankedProvider<ValidationInterceptor>> validationInterceptorIterable =
                     org.glassfish.jersey.internal.inject.Providers
-                            .getAllRankedProviders(instanceManager, ValidationInterceptor.class);
+                            .getAllRankedProviders(injectionManager, ValidationInterceptor.class);
             return org.glassfish.jersey.internal.inject.Providers.sortRankedProviders(
                     new RankedComparator<ValidationInterceptor>(), validationInterceptorIterable);
         }

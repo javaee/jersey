@@ -48,12 +48,12 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.server.InstanceManagerFactory;
+import org.glassfish.jersey.server.InjectionManagerFactory;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -86,7 +86,7 @@ public class WadlGeneratorConfigTest {
                 .generator(generator2)
                 .build();
 
-        final InstanceManager locator = InstanceManagerFactory.createInstanceManager();
+        final InjectionManager locator = InjectionManagerFactory.createInjectionManager();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
 
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
@@ -95,7 +95,7 @@ public class WadlGeneratorConfigTest {
 
     @Test
     public void testBuildWadlGeneratorFromDescriptions() {
-        final InstanceManager locator = InstanceManagerFactory.createInstanceManager();
+        final InjectionManager locator = InjectionManagerFactory.createInjectionManager();
         final String propValue = "bar";
         WadlGeneratorConfig config = WadlGeneratorConfig.generator(MyWadlGenerator.class)
                 .prop("foo", propValue)
@@ -134,7 +134,7 @@ public class WadlGeneratorConfigTest {
             }
         }
 
-        final InstanceManager locator = InstanceManagerFactory.createInstanceManager();
+        final InjectionManager locator = InjectionManagerFactory.createInjectionManager();
 
         WadlGeneratorConfig config = new MyWadlGeneratorConfig();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
@@ -293,7 +293,7 @@ public class WadlGeneratorConfigTest {
                 .generator(MyWadlGenerator3.class)
                 .prop("foo", "string")
                 .prop("bar", new Bar()).build();
-        final InstanceManager locator = InstanceManagerFactory.createInstanceManager();
+        final InjectionManager locator = InjectionManagerFactory.createInjectionManager();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
 
         Assert.assertEquals(MyWadlGenerator3.class, wadlGenerator.getClass());

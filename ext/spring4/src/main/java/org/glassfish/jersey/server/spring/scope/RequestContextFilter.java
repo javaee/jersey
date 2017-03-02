@@ -51,7 +51,7 @@ import javax.ws.rs.ext.Provider;
 
 import javax.inject.Inject;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
@@ -94,11 +94,11 @@ public final class RequestContextFilter implements ContainerRequestFilter, Conta
     /**
      * Create a new request context filter instance.
      *
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
     @Inject
-    public RequestContextFilter(final InstanceManager instanceManager) {
-        final ApplicationContext appCtx = instanceManager.getInstance(ApplicationContext.class);
+    public RequestContextFilter(final InjectionManager injectionManager) {
+        final ApplicationContext appCtx = injectionManager.getInstance(ApplicationContext.class);
         final boolean isWebApp = appCtx instanceof WebApplicationContext;
 
         attributeController = appCtx != null ? new SpringAttributeController() {
@@ -107,7 +107,7 @@ public final class RequestContextFilter implements ContainerRequestFilter, Conta
             public void setAttributes(final ContainerRequestContext requestContext) {
                 final RequestAttributes attributes;
                 if (isWebApp) {
-                    final HttpServletRequest httpRequest = instanceManager.getInstance(HttpServletRequest.class);
+                    final HttpServletRequest httpRequest = injectionManager.getInstance(HttpServletRequest.class);
                     attributes = new JaxrsServletRequestAttributes(httpRequest, requestContext);
                 } else {
                     attributes = new JaxrsRequestAttributes(requestContext);

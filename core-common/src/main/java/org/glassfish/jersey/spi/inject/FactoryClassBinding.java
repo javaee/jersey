@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,20 +38,49 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal.inject;
+package org.glassfish.jersey.spi.inject;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import java.lang.annotation.Annotation;
+
+import org.glassfish.hk2.api.Factory;
 
 /**
- * Implementation of this interface is capable of returning {@link InstanceManager}.
+ * Injection binding description of a bean bound indirectly via an factory class producing instances of the bound type.
+ *
+ * @param <T> type of the bean described by this injection binding descriptor.
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public interface InstanceManagerSupplier {
+public class FactoryClassBinding<T> extends Binding<T, FactoryClassBinding<T>> {
+
+    private final Class<? extends Factory<T>> factoryClass;
+    private final Class<? extends Annotation> factoryScope;
 
     /**
-     * Get instance manager.
+     * Creates a service as a class.
      *
-     * @return instance manager.
+     * @param factoryClass factory's class.
+     * @param scope        factory's scope.
      */
-    InstanceManager getInstanceManager();
+    FactoryClassBinding(Class<? extends Factory<T>> factoryClass, Class<? extends Annotation> scope) {
+        this.factoryClass = factoryClass;
+        this.factoryScope = scope;
+    }
 
+    /**
+     * Gets factory's class.
+     *
+     * @return factory's class.
+     */
+    public Class<? extends Factory<T>> getFactoryClass() {
+        return factoryClass;
+    }
+
+    /**
+     * Gets factory's scope.
+     *
+     * @return factory's scope.
+     */
+    public Class<? extends Annotation> getFactoryScope() {
+        return factoryScope;
+    }
 }

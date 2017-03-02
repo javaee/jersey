@@ -47,7 +47,7 @@ import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Request/response scoped injection support initialization stage.
@@ -56,20 +56,20 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
  */
 public final class ReferencesInitializer implements Function<RequestProcessingContext, RequestProcessingContext> {
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
     private final Provider<Ref<RequestProcessingContext>> processingContextRefProvider;
 
     /**
      * Injection constructor.
      *
-     * @param instanceManager application instance manager.
+     * @param injectionManager application injection manager.
      * @param processingContextRefProvider container request reference provider (request-scoped).
      */
     @Inject
     ReferencesInitializer(
-            final InstanceManager instanceManager,
+            final InjectionManager injectionManager,
             final Provider<Ref<RequestProcessingContext>> processingContextRefProvider) {
-        this.instanceManager = instanceManager;
+        this.injectionManager = injectionManager;
         this.processingContextRefProvider = processingContextRefProvider;
     }
 
@@ -85,7 +85,7 @@ public final class ReferencesInitializer implements Function<RequestProcessingCo
 
         final RequestScopedInitializer requestScopedInitializer = context.request().getRequestScopedInitializer();
         if (requestScopedInitializer != null) {
-            requestScopedInitializer.initialize(instanceManager);
+            requestScopedInitializer.initialize(injectionManager);
         }
 
         return context;

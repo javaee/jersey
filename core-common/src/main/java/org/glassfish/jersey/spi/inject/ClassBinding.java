@@ -40,47 +40,31 @@
 
 package org.glassfish.jersey.spi.inject;
 
-import java.lang.annotation.Annotation;
-
-import org.glassfish.hk2.api.Factory;
-
 /**
- * Injection binding description of a bean bound indirectly via an factory class producing instances of the bound type.
+ * Injection binding description of a bean bound via its a Java class.
  *
- * @param <T> type of the bean described by this injection binding descriptor.
+ * @param <T> type of the bean described by this injection binding.
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class ClassFactoryDescriptor<T> extends Descriptor<T, ClassFactoryDescriptor<T>> {
+public class ClassBinding<T> extends Binding<T, ClassBinding<T>> {
 
-    private final Class<? extends Factory<T>> factoryClass;
-    private final Class<? extends Annotation> factoryScope;
+    private final Class<T> service;
 
     /**
      * Creates a service as a class.
      *
-     * @param factoryClass factory's class.
-     * @param scope        factory's scope.
+     * @param service service's class.
      */
-    ClassFactoryDescriptor(Class<? extends Factory<T>> factoryClass, Class<? extends Annotation> scope) {
-        this.factoryClass = factoryClass;
-        this.factoryScope = scope;
+    ClassBinding(Class<T> service) {
+        this.service = service;
     }
 
     /**
-     * Gets factory's class.
+     * Gets service' class.
      *
-     * @return factory's class.
+     * @return service's class.
      */
-    public Class<? extends Factory<T>> getFactoryClass() {
-        return factoryClass;
-    }
-
-    /**
-     * Gets factory's scope.
-     *
-     * @return factory's scope.
-     */
-    public Class<? extends Annotation> getFactoryScope() {
-        return factoryScope;
+    public Class<T> getService() {
+        return service;
     }
 }

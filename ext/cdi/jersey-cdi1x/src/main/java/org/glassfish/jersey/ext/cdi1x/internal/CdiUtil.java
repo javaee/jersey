@@ -53,7 +53,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Qualifier;
 
 import org.glassfish.jersey.ext.cdi1x.internal.spi.BeanManagerProvider;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerStore;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
@@ -107,14 +107,14 @@ public final class CdiUtil {
     }
 
     /**
-     * Create new instance of {@link InstanceManagerStore}. Method first tries to lookup
+     * Create new instance of {@link InjectionManagerStore}. Method first tries to lookup
      * available manager via {@code META-INF/services} and if not found a new instance of default one is returned.
      *
-     * @return an instance of locator manager.
+     * @return an instance of injection manager store.
      */
-    static InstanceManagerStore createHk2LocatorManager() {
-        final InstanceManagerStore manager = lookupService(InstanceManagerStore.class);
-        return manager != null ? manager : new SingleInstanceManagerStore();
+    static InjectionManagerStore createHk2InjectionManagerStore() {
+        final InjectionManagerStore manager = lookupService(InjectionManagerStore.class);
+        return manager != null ? manager : new SingleInjectionManagerStore();
     }
 
     /**

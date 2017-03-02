@@ -340,9 +340,9 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
                 requestContext.headers(headerName, request.getValue(headerName));
             }
             requestContext.setWriter(responseWriter);
-            requestContext.setRequestScopedInitializer(instanceManager -> {
-                instanceManager.<Ref<Request>>getInstance(RequestTYPE).set(request);
-                instanceManager.<Ref<Response>>getInstance(ResponseTYPE).set(response);
+            requestContext.setRequestScopedInitializer(injectionManager -> {
+                injectionManager.<Ref<Request>>getInstance(RequestTYPE).set(request);
+                injectionManager.<Ref<Response>>getInstance(ResponseTYPE).set(response);
             });
 
             appHandler.handle(requestContext);
@@ -475,7 +475,7 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
      *
      * @param application   JAX-RS / Jersey application to be deployed on Simple framework HTTP
      *                      container.
-     * @param parentLocator parent HK2 instance manager.
+     * @param parentLocator parent HK2 injection manager.
      */
     SimpleContainer(final Application application, final ServiceLocator parentLocator) {
         this.appHandler = new ApplicationHandler(application, new SimpleBinder(), parentLocator);

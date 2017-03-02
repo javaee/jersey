@@ -50,7 +50,7 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Jersey routing entry point.
@@ -93,7 +93,7 @@ public final class Routing {
 
         private final RuntimeResourceModel resourceModel;
 
-        private InstanceManager instanceManager;
+        private InjectionManager injectionManager;
         private JerseyResourceContext resourceContext;
         private Configuration config;
         private MessageBodyWorkers entityProviders;
@@ -108,13 +108,13 @@ public final class Routing {
         }
 
         /**
-         * Set runtime DI locator.
+         * Set runtime DI injection manager.
          *
-         * @param instanceManager DI locator.
+         * @param injectionManager DI injection manager.
          * @return updated routing builder.
          */
-        public Builder beanManager(InstanceManager instanceManager) {
-            this.instanceManager = instanceManager;
+        public Builder beanManager(InjectionManager injectionManager) {
+            this.injectionManager = injectionManager;
             return this;
         }
 
@@ -169,8 +169,8 @@ public final class Routing {
          */
         public ChainableStage<RequestProcessingContext> buildStage() {
             // No L10N - internally used class
-            if (instanceManager == null) {
-                throw new NullPointerException("DI locator is not set.");
+            if (injectionManager == null) {
+                throw new NullPointerException("DI injection manager is not set.");
             }
             if (resourceContext == null) {
                 throw new NullPointerException("Resource context is not set.");
@@ -185,13 +185,12 @@ public final class Routing {
                 throw new NullPointerException("Processing providers are not set.");
             }
 
-            final RuntimeModelBuilder runtimeModelBuilder = new RuntimeModelBuilder(
-                    instanceManager,
+            final RuntimeModelBuilder runtimeModelBuilder = new RuntimeModelBuilder(injectionManager,
                     resourceContext,
                     config,
                     entityProviders,
                     processingProviders,
-                    instanceManager.getInstance(ResourceMethodInvoker.Builder.class));
+                    injectionManager.getInstance(ResourceMethodInvoker.Builder.class));
 
             return new RoutingStage(runtimeModelBuilder.buildModel(resourceModel, false));
         }

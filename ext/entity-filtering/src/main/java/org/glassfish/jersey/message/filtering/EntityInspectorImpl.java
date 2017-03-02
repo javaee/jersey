@@ -48,6 +48,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -63,7 +64,7 @@ import org.glassfish.jersey.message.filtering.spi.EntityProcessor;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessorContext;
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Class responsible for inspecting entity classes. This class invokes all available {@link EntityProcessor entity processors} in
@@ -80,15 +81,15 @@ final class EntityInspectorImpl implements EntityInspector {
     private EntityGraphProvider graphProvider;
 
     /**
-     * Constructor expecting {@link InstanceManager} to be injected.
+     * Constructor expecting {@link InjectionManager} to be injected.
      *
-     * @param instanceManager instance manager to be injected.
+     * @param injectionManager injection manager to be injected.
      */
     @Inject
-    public EntityInspectorImpl(final InstanceManager instanceManager) {
-        this.entityProcessors = StreamSupport.stream(Providers.getAllProviders(instanceManager, EntityProcessor.class,
-                                                                               new RankedComparator<>()).spliterator(), false)
-                                             .collect(Collectors.toList());
+    public EntityInspectorImpl(final InjectionManager injectionManager) {
+        Spliterator<EntityProcessor> entities =
+                Providers.getAllProviders(injectionManager, EntityProcessor.class, new RankedComparator<>()).spliterator();
+        this.entityProcessors = StreamSupport.stream(entities, false).collect(Collectors.toList());
     }
 
     @Override

@@ -51,7 +51,7 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -130,7 +130,7 @@ public class ContextResolverFactoryTest {
 
     @Before
     public void setUp() {
-        final InstanceManager locator = Injections.createInstanceManager(new ContextResolverFactory.Binder(), new Binder());
+        final InjectionManager locator = Injections.createInjectionManager(new ContextResolverFactory.Binder(), new Binder());
         final ProviderBinder providerBinder = new ProviderBinder(locator);
         providerBinder.bindClasses(Collections.singleton(CustomIntegerResolverC.class));
 

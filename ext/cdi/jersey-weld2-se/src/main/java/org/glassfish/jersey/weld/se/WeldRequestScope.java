@@ -49,7 +49,7 @@ import javax.inject.Inject;
 import org.glassfish.jersey.ext.cdi1x.internal.JerseyVetoed;
 import org.glassfish.jersey.server.spi.ExternalRequestContext;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.jboss.weld.context.bound.BoundRequestContext;
 
@@ -67,29 +67,29 @@ public class WeldRequestScope implements ExternalRequestScope<Map<String, Object
 
     private final ThreadLocal<Map<String, Object>> actualMap = new ThreadLocal<>();
 
-    public static final ThreadLocal<InstanceManager> actualInstanceManager = new ThreadLocal<>();
+    public static final ThreadLocal<InjectionManager> actualInjectorManager = new ThreadLocal<>();
 
     @Override
-    public ExternalRequestContext<Map<String, Object>> open(InstanceManager instanceManager) {
+    public ExternalRequestContext<Map<String, Object>> open(InjectionManager injectionManager) {
         final Map<String, Object> newMap = new ConcurrentHashMap<>();
         actualMap.set(newMap);
         context.associate(newMap);
         context.activate();
-        actualInstanceManager.set(instanceManager);
+        actualInjectorManager.set(injectionManager);
         return new ExternalRequestContext<>(newMap);
     }
 
     @Override
-    public void resume(final ExternalRequestContext<Map<String, Object>> ctx, InstanceManager instanceManager) {
+    public void resume(final ExternalRequestContext<Map<String, Object>> ctx, InjectionManager injectionManager) {
         final Map<String, Object> newMap = ctx.getContext();
-        actualInstanceManager.set(instanceManager);
+        actualInjectorManager.set(injectionManager);
         actualMap.set(newMap);
         context.associate(newMap);
         context.activate();
     }
 
     @Override
-    public void suspend(final ExternalRequestContext<Map<String, Object>> ctx, InstanceManager instanceManager) {
+    public void suspend(final ExternalRequestContext<Map<String, Object>> ctx, InjectionManager injectionManager) {
         try {
             final Map<String, Object> contextMap = actualMap.get();
             if (contextMap != null) {
@@ -98,7 +98,7 @@ public class WeldRequestScope implements ExternalRequestScope<Map<String, Object
             }
         } finally {
             actualMap.remove();
-            actualInstanceManager.remove();
+            actualInjectorManager.remove();
         }
     }
 
@@ -115,7 +115,7 @@ public class WeldRequestScope implements ExternalRequestScope<Map<String, Object
             }
         } finally {
             actualMap.remove();
-            actualInstanceManager.remove();
+            actualInjectorManager.remove();
         }
     }
 }

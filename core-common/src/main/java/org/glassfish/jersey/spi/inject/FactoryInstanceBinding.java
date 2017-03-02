@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,35 +38,35 @@
  * holder.
  */
 
-package org.glassfish.jersey.ext.cdi1x.internal;
+package org.glassfish.jersey.spi.inject;
 
-import javax.ws.rs.WebApplicationException;
-
-import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerStore;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.hk2.api.Factory;
 
 /**
- * Default {@link InstanceManagerStore instance manager} that assumes only one
- * {@link InstanceManager instance manager} per application is used.
+ * Injection binding description of a bean bound indirectly via an factory producing instances of the bound type.
  *
- * @author Michal Gajdos
- * @since 2.17
+ * @param <T> type of the bean described by this injection binding descriptor.
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-final class SingleInstanceManagerStore implements InstanceManagerStore {
+public class FactoryInstanceBinding<T> extends Binding<T, FactoryInstanceBinding<T>> {
 
-    private volatile InstanceManager instanceManager;
+    private final Factory<T> factory;
 
-    @Override
-    public void registerInstanceManager(final InstanceManager instanceManager) {
-        if (this.instanceManager == null) {
-            this.instanceManager = instanceManager;
-        } else if (this.instanceManager != instanceManager) {
-            throw new WebApplicationException(LocalizationMessages.CDI_MULTIPLE_LOCATORS_INTO_SIMPLE_APP());
-        }
+    /**
+     * Creates a factory as an instance.
+     *
+     * @param factory service's instance.
+     */
+    FactoryInstanceBinding(Factory<T> factory) {
+        this.factory = factory;
     }
 
-    @Override
-    public InstanceManager getEffectiveInstanceManager() {
-        return instanceManager;
+    /**
+     * Gets factory's instance.
+     *
+     * @return factory's instance.
+     */
+    public Factory<T> getFactory() {
+        return factory;
     }
 }

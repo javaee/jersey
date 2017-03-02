@@ -63,10 +63,10 @@ import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.ClassBeanDescriptor;
-import org.glassfish.jersey.spi.inject.Descriptor;
-import org.glassfish.jersey.spi.inject.Descriptors;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.Binding;
+import org.glassfish.jersey.spi.inject.Bindings;
+import org.glassfish.jersey.spi.inject.ClassBinding;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Jersey implementation of JAX-RS {@link ResourceContext resource context}.
@@ -75,7 +75,7 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
  */
 public class JerseyResourceContext implements ExtendedResourceContext {
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     private final Set<Class<?>> bindingCache;
     private final Object bindingCacheLock;
@@ -85,11 +85,11 @@ public class JerseyResourceContext implements ExtendedResourceContext {
     /**
      * Create new JerseyResourceContext.
      *
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
     @Inject
-    JerseyResourceContext(InstanceManager instanceManager) {
-        this.instanceManager = instanceManager;
+    JerseyResourceContext(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
 
         this.bindingCache = Collections.newSetFromMap(new IdentityHashMap<>());
         this.bindingCacheLock = new Object();
@@ -98,7 +98,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
     @Override
     public <T> T getResource(Class<T> resourceClass) {
         try {
-            return Injections.getOrCreate(instanceManager, resourceClass);
+            return Injections.getOrCreate(injectionManager, resourceClass);
         } catch (Exception ex) {
             Logger.getLogger(JerseyResourceContext.class.getName()).log(Level.WARNING,
                     LocalizationMessages.RESOURCE_LOOKUP_FAILED(resourceClass), ex);
@@ -108,7 +108,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
 
     @Override
     public <T> T initResource(T resource) {
-        instanceManager.inject(resource);
+        injectionManager.inject(resource);
         return resource;
     }
 
@@ -132,7 +132,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
             if (bindingCache.contains(resourceClass)) {
                 return;
             }
-            unsafeBindResource(resourceClass, null, instanceManager);
+            unsafeBindResource(resourceClass, null, injectionManager);
         }
     }
 
@@ -165,7 +165,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
                     }
                 };
 
-                instanceManager.register(binder);
+                injectionManager.register(binder);
             }
 
             bindingCache.add(resourceClass);
@@ -186,22 +186,22 @@ public class JerseyResourceContext implements ExtendedResourceContext {
      * @param providerModel provider model for the resource class. If not {@code null}, the class
      *                      wil be bound as a contract provider too.
      */
-    public void unsafeBindResource(Object resource, ContractProvider providerModel, InstanceManager instanceManager) {
-        Descriptor descriptor;
+    public void unsafeBindResource(Object resource, ContractProvider providerModel, InjectionManager injectionManager) {
+        Binding binding;
         Class<?> resourceClass = resource.getClass();
         if (providerModel != null) {
             Class<? extends Annotation> scope = providerModel.getScope();
-            descriptor = Descriptors.service(resource).to(resourceClass);
+            binding = Bindings.service(resource).to(resourceClass);
 
             for (Class contract : Providers.getProviderContracts(resourceClass)) {
-                descriptor.addAlias(contract.getName())
+                binding.addAlias(contract.getName())
                         .in(scope.getName())
                         .qualifiedBy(CustomAnnotationLiteral.INSTANCE);
             }
         } else {
-            descriptor = Descriptors.serviceAsContract(resourceClass);
+            binding = Bindings.serviceAsContract(resourceClass);
         }
-        instanceManager.register(descriptor);
+        injectionManager.register(binding);
         bindingCache.add(resourceClass);
     }
 
@@ -227,11 +227,12 @@ public class JerseyResourceContext implements ExtendedResourceContext {
      * @param providerModel provider model for the class. If not {@code null}, the class
      *                      wil be bound as a contract provider too.
      */
-    public <T> void unsafeBindResource(Class<T> resourceClass, ContractProvider providerModel, InstanceManager instanceManager) {
-        ClassBeanDescriptor<T> descriptor;
+    public <T> void unsafeBindResource(
+            Class<T> resourceClass, ContractProvider providerModel, InjectionManager injectionManager) {
+        ClassBinding<T> descriptor;
         if (providerModel != null) {
             Class<? extends Annotation> scope = providerModel.getScope();
-            descriptor = Descriptors.serviceAsContract(resourceClass).in(scope);
+            descriptor = Bindings.serviceAsContract(resourceClass).in(scope);
 
             for (Class contract : providerModel.getContracts()) {
                 descriptor.addAlias(contract.getName())
@@ -240,9 +241,9 @@ public class JerseyResourceContext implements ExtendedResourceContext {
                         .qualifiedBy(CustomAnnotationLiteral.INSTANCE);
             }
         } else {
-            descriptor = Descriptors.serviceAsContract(resourceClass).in(getScope(resourceClass));
+            descriptor = Bindings.serviceAsContract(resourceClass).in(getScope(resourceClass));
         }
-        instanceManager.register(descriptor);
+        injectionManager.register(descriptor);
         bindingCache.add(resourceClass);
     }
 

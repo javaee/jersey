@@ -48,7 +48,7 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -102,8 +102,8 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindMappingExtendedExceptions() throws Exception {
-        final InstanceManager instanceManager = Injections.createInstanceManager(new ExtendedExceptionMappers());
-        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(instanceManager);
+        final InjectionManager injectionManager = Injections.createInjectionManager(new ExtendedExceptionMappers());
+        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(injectionManager);
 
         final ExceptionMapper mapper = mapperFactory.findMapping(new IllegalArgumentException());
 
@@ -132,8 +132,8 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindMapping() throws Exception {
-        final InstanceManager instanceManager = Injections.createInstanceManager(new AllMappers());
-        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(instanceManager);
+        final InjectionManager injectionManager = Injections.createInjectionManager(new AllMappers());
+        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(injectionManager);
 
         final ExceptionMapper<RuntimeException> mapper = mapperFactory.findMapping(new RuntimeException());
 
@@ -162,8 +162,8 @@ public class ExceptionMapperFactoryTest {
      */
     @Test
     public void testFindExtendedExceptions() throws Exception {
-        final InstanceManager instanceManager = Injections.createInstanceManager(new ExtendedExceptionMappers());
-        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(instanceManager);
+        final InjectionManager injectionManager = Injections.createInjectionManager(new ExtendedExceptionMappers());
+        final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(injectionManager);
 
         final ExceptionMapper mapper = mapperFactory.find(IllegalArgumentException.class);
 

@@ -65,7 +65,7 @@ import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 import org.glassfish.jersey.spi.ServiceHolder;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates
@@ -163,15 +163,15 @@ public class ExceptionMapperFactory implements ExceptionMappers {
     }
 
     /**
-     * Create new exception mapper factory initialized with {@link InstanceManager instance manager}
+     * Create new exception mapper factory initialized with {@link InjectionManager injection manager}
      * instance that will be used to look up all providers implementing {@link ExceptionMapper} interface.
      *
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
     @Inject
-    public ExceptionMapperFactory(InstanceManager instanceManager) {
+    public ExceptionMapperFactory(InjectionManager injectionManager) {
         Collection<ServiceHolder<ExceptionMapper>> mapperHandles =
-                Providers.getAllServiceHolders(instanceManager, ExceptionMapper.class);
+                Providers.getAllServiceHolders(injectionManager, ExceptionMapper.class);
 
         for (ServiceHolder<ExceptionMapper> mapperHandle: mapperHandles) {
             ExceptionMapper mapper = mapperHandle.getInstance();

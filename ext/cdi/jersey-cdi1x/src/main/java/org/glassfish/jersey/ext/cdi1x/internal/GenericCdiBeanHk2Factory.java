@@ -43,6 +43,8 @@ package org.glassfish.jersey.ext.cdi1x.internal;
 import javax.enterprise.inject.Vetoed;
 import javax.enterprise.inject.spi.BeanManager;
 
+import org.glassfish.jersey.spi.inject.InjectionManager;
+
 /**
  * HK2 factory to provide CDI managed components where
  * there is no clear mapping between the CDI and HK2 scopes.
@@ -53,10 +55,10 @@ import javax.enterprise.inject.spi.BeanManager;
 public final class GenericCdiBeanHk2Factory extends AbstractCdiBeanHk2Factory {
 
     public GenericCdiBeanHk2Factory(Class rawType,
-                                    org.glassfish.jersey.spi.inject.InstanceManager instanceManager,
+                                    InjectionManager injectionManager,
                                     BeanManager beanManager,
                                     boolean cdiManaged) {
-        super(rawType, instanceManager, beanManager, cdiManaged);
+        super(rawType, injectionManager, beanManager, cdiManaged);
     }
 
     @Override

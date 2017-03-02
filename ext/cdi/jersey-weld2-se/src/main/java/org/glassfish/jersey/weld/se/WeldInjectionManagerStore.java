@@ -38,24 +38,23 @@
  * holder.
  */
 
-package org.glassfish.jersey.ext.cdi1x.servlet.internal;
+package org.glassfish.jersey.weld.se;
 
-import org.glassfish.jersey.ext.cdi1x.internal.GenericInstanceManagerStore;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerStore;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.ext.cdi1x.internal.GenericInjectionManagerStore;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
- * {@link InstanceManagerStore instance manager} for servlet based containers. The provider
- * enables WAR and EAR to be deployed on a servlet container and be properly injected.
+ * {@link InjectionManagerStore Injection manager} for Weld SE container. The provider
+ * enables multiple Jersey applications to be deployed within a single HTTP container.
  *
- * @author Michal Gajdos
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @since 2.17
+ * @since 2.20
  */
-public class ServletInstanceManagerStore extends GenericInstanceManagerStore {
+public class WeldInjectionManagerStore extends GenericInjectionManagerStore {
 
     @Override
-    public InstanceManager lookupInstanceManager() {
-        return CdiExternalRequestScope.actualInstanceManager.get();
+    public InjectionManager lookupInjectionManager() {
+        return WeldRequestScope.actualInjectorManager.get();
     }
 }

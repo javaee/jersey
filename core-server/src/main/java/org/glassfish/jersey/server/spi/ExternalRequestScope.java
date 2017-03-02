@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.server.spi;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * This is to allow integration with other DI providers that
@@ -64,30 +64,30 @@ public interface ExternalRequestScope<T> extends AutoCloseable {
      * Returned context data will be retained
      * by Jersey runtime for the whole request life-span.
      *
-     * @param instanceManager DI instance manager
+     * @param injectionManager DI injection manager
      * @return external request context data
      */
-    ExternalRequestContext<T> open(InstanceManager instanceManager);
+    ExternalRequestContext<T> open(InjectionManager injectionManager);
 
     /**
      * Suspend request associated with provided context.
      * This will be called within the very same thread as previous open or resume call
      * corresponding to the actual context.
      *
-     * @param c       external request context
-     * @param instanceManager DI instance manager
+     * @param c                external request context
+     * @param injectionManager DI injection manager
      */
-    void suspend(ExternalRequestContext<T> c, InstanceManager instanceManager);
+    void suspend(ExternalRequestContext<T> c, InjectionManager injectionManager);
 
     /**
      * Resume request associated with provided context.
      * The external request context instance should have been
      * previously suspended.
      *
-     * @param c       external request context
-     * @param instanceManager DI instance manager
+     * @param c                external request context
+     * @param injectionManager DI injection manager
      */
-    void resume(ExternalRequestContext<T> c, InstanceManager instanceManager);
+    void resume(ExternalRequestContext<T> c, InjectionManager injectionManager);
 
     /**
      * Finish the actual request. This method will be called

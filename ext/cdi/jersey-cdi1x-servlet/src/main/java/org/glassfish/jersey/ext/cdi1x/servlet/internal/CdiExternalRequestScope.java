@@ -45,7 +45,7 @@ import javax.enterprise.context.ApplicationScoped;
 import org.glassfish.jersey.ext.cdi1x.internal.JerseyVetoed;
 import org.glassfish.jersey.server.spi.ExternalRequestContext;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Weld specific request scope to align CDI request context with Jersey.
@@ -56,26 +56,26 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
 @JerseyVetoed
 public class CdiExternalRequestScope implements ExternalRequestScope<Object> {
 
-    public static final ThreadLocal<InstanceManager> actualInstanceManager = new ThreadLocal<>();
+    public static final ThreadLocal<InjectionManager> actualInjectionManager = new ThreadLocal<>();
 
     @Override
-    public ExternalRequestContext<Object> open(InstanceManager instanceManager) {
-        actualInstanceManager.set(instanceManager);
+    public ExternalRequestContext<Object> open(InjectionManager injectionManager) {
+        actualInjectionManager.set(injectionManager);
         return new ExternalRequestContext<>(null);
     }
 
     @Override
-    public void resume(final ExternalRequestContext<Object> ctx, InstanceManager instanceManager) {
-        actualInstanceManager.set(instanceManager);
+    public void resume(final ExternalRequestContext<Object> ctx, InjectionManager injectionManager) {
+        actualInjectionManager.set(injectionManager);
     }
 
     @Override
-    public void suspend(final ExternalRequestContext<Object> ctx, InstanceManager instanceManager) {
-        actualInstanceManager.remove();
+    public void suspend(final ExternalRequestContext<Object> ctx, InjectionManager injectionManager) {
+        actualInjectionManager.remove();
     }
 
     @Override
     public void close() {
-        actualInstanceManager.remove();
+        actualInjectionManager.remove();
     }
 }

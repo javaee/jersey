@@ -61,7 +61,7 @@ import org.glassfish.jersey.internal.util.collection.DataStructures;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.ResourceMethod;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Server-side implementation of {@link org.glassfish.jersey.message.filtering.spi.ScopeProvider scope provider}. In addition to
@@ -83,11 +83,11 @@ class ServerScopeProvider extends CommonScopeProvider {
 
     /**
      * Create new server scope provider with injected {@link Configuration configuration} and
-     * {@link InstanceManager jersey instance manager}.
+     * {@link InjectionManager jersey injection manager}.
      */
     @Inject
-    public ServerScopeProvider(final Configuration config, final InstanceManager instanceManager) {
-        super(config, instanceManager);
+    public ServerScopeProvider(final Configuration config, final InjectionManager injectionManager) {
+        super(config, injectionManager);
         this.uriToContexts = DataStructures.createConcurrentMap();
     }
 

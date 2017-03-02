@@ -72,7 +72,7 @@ final class PushMethodHandlerRouter implements Router {
 
         final Object storedResource = routingContext.peekMatchedResource();
         if (storedResource == null || !storedResource.getClass().equals(methodHandler.getHandlerClass())) {
-            Object handlerInstance = methodHandler.getInstance(context.instanceManager());
+            Object handlerInstance = methodHandler.getInstance(context.injectionManager());
             routingContext.pushMatchedResource(handlerInstance);
         }
         return Continuation.of(context, next);

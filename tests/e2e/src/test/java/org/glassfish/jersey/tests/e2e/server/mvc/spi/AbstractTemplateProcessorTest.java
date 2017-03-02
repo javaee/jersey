@@ -61,7 +61,7 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.spi.TestContainerException;
 
@@ -119,11 +119,11 @@ public class AbstractTemplateProcessorTest {
         private final TestFactory factory;
 
         @Inject
-        public FactoryTemplateProcessor(final Configuration config, final InstanceManager instanceManager,
+        public FactoryTemplateProcessor(final Configuration config, final InjectionManager injectionManager,
                                         @Optional final ServletContext servletContext) {
             super(config, servletContext, "factory", "fct");
 
-            this.factory = getTemplateObjectFactory(instanceManager, TestFactory.class, Values.lazy(new Value<TestFactory>() {
+            this.factory = getTemplateObjectFactory(injectionManager, TestFactory.class, Values.lazy(new Value<TestFactory>() {
                 @Override
                 public TestFactory get() {
                     return new TestFactory("Default Test Factory");

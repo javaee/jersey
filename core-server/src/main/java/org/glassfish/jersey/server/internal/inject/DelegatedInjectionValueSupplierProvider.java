@@ -51,9 +51,9 @@ import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.spi.inject.Binding;
+import org.glassfish.jersey.spi.inject.Bindings;
 import org.glassfish.jersey.spi.inject.ContextInjectionResolver;
-import org.glassfish.jersey.spi.inject.Descriptor;
-import org.glassfish.jersey.spi.inject.Descriptors;
 import org.glassfish.jersey.spi.inject.ForeignDescriptor;
 import org.glassfish.jersey.spi.inject.Injectee;
 import org.glassfish.jersey.spi.inject.InjecteeImpl;
@@ -69,7 +69,7 @@ class DelegatedInjectionValueSupplierProvider implements ValueSupplierProvider {
 
     private final ContextInjectionResolver resolver;
 
-    private final Function<Descriptor, ForeignDescriptor> foreignDescriptorFactory;
+    private final Function<Binding, ForeignDescriptor> foreignDescriptorFactory;
 
     /**
      * Injection constructor.
@@ -78,7 +78,7 @@ class DelegatedInjectionValueSupplierProvider implements ValueSupplierProvider {
      * @param foreignDescriptorFactory function that is able to create a new foreign descriptor.
      */
     public DelegatedInjectionValueSupplierProvider(ContextInjectionResolver resolver,
-            Function<Descriptor, ForeignDescriptor> foreignDescriptorFactory) {
+            Function<Binding, ForeignDescriptor> foreignDescriptorFactory) {
         this.resolver = resolver;
         this.foreignDescriptorFactory = foreignDescriptorFactory;
     }
@@ -131,13 +131,13 @@ class DelegatedInjectionValueSupplierProvider implements ValueSupplierProvider {
             });
 
     /**
-     * Method is able to create form incoming class and {@link Descriptor jersey descriptor} a {@link ForeignDescriptor} which is
+     * Method is able to create form incoming class and {@link Binding jersey descriptor} a {@link ForeignDescriptor} which is
      * provided by underlying DI provider.
      *
      * @param clazz class from which jersey-like descriptor is created.
      * @return foreign descriptor of the underlying DI provider.
      */
     private ForeignDescriptor createDescriptor(Class<?> clazz) {
-        return foreignDescriptorFactory.apply(Descriptors.serviceAsContract(clazz).in(RequestScoped.class));
+        return foreignDescriptorFactory.apply(Bindings.serviceAsContract(clazz).in(RequestScoped.class));
     }
 }

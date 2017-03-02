@@ -60,7 +60,7 @@ import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.DestroyListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**
@@ -86,7 +86,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
     private static final int EVENT_QUEUE_SIZE = 500_000;
 
     @Inject
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
 
     private final Queue<RequestStats> requestQueuedItems = new ArrayBlockingQueue<>(EVENT_QUEUE_SIZE);
     private final Queue<Integer> responseStatuses = new ArrayBlockingQueue<>(EVENT_QUEUE_SIZE);
@@ -208,7 +208,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
                 break;
             case RELOAD_FINISHED:
             case INITIALIZATION_FINISHED:
-                this.monitoringStatisticsProcessor = new MonitoringStatisticsProcessor(instanceManager, this);
+                this.monitoringStatisticsProcessor = new MonitoringStatisticsProcessor(injectionManager, this);
                 this.monitoringStatisticsProcessor.startMonitoringWorker();
                 break;
             case DESTROY_FINISHED:
@@ -223,7 +223,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
 
                 // onDestroy
                 final List<DestroyListener> listeners =
-                        instanceManager.getAllInstances(DestroyListener.class);
+                        injectionManager.getAllInstances(DestroyListener.class);
 
                 for (final DestroyListener listener : listeners) {
                     try {

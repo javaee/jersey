@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Immediate;
 
@@ -69,7 +69,7 @@ public class InjectionsTest {
      * Because Immediate services are instantiated in a separate thread, we use
      * a {@link CountDownLatch} to wait for the service to be created.
      *
-     * After the {@link InstanceManager} is created, we specifically do not call
+     * After the {@link InjectionManager} is created, we specifically do not call
      * any more methods on it: the locator must instantiate the Immediate
      * service without any further prompting to the locator.
      *
@@ -82,7 +82,7 @@ public class InjectionsTest {
         final CountDownLatch latch = new CountDownLatch(1);
 
         @SuppressWarnings("unused") // It is unused by design
-                InstanceManager sl = Injections.createInstanceManager(new AbstractBinder() {
+                InjectionManager sl = Injections.createInjectionManager(new AbstractBinder() {
             @Override
             protected void configure() {
                 bind(latch).to(CountDownLatch.class);

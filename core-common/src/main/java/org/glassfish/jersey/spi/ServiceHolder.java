@@ -43,9 +43,11 @@ package org.glassfish.jersey.spi;
 import java.lang.reflect.Type;
 import java.util.Set;
 
+import org.glassfish.jersey.spi.inject.InjectionManager;
+
 /**
  * Implementation of this class is used as a holder for service instance from
- * {@link org.glassfish.jersey.spi.inject.InstanceManager} along with other information about the provided service.
+ * {@link InjectionManager} along with other information about the provided service.
  *
  * @see ServiceHolderImpl
  * @param <T>
@@ -53,7 +55,7 @@ import java.util.Set;
 public interface ServiceHolder<T> {
 
     /**
-     * An instance of the service got from {@link org.glassfish.jersey.spi.inject.InstanceManager}.
+     * An instance of the service got from {@link InjectionManager}.
      *
      * @return service instance.
      */

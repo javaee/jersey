@@ -58,7 +58,7 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGrammarGenerator;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Loads {@link WadlGenerator}s from a provided list of {@link WadlGeneratorDescription}s.<br/>
@@ -104,14 +104,14 @@ class WadlGeneratorLoader {
         return wadlGenerator;
     }
 
-    static WadlGenerator loadWadlGeneratorDescriptions(InstanceManager instanceManager,
+    static WadlGenerator loadWadlGeneratorDescriptions(InjectionManager injectionManager,
                                                        WadlGeneratorDescription... wadlGeneratorDescriptions) throws Exception {
         final List<WadlGeneratorDescription> list = wadlGeneratorDescriptions != null
                 ? Arrays.asList(wadlGeneratorDescriptions) : null;
-        return loadWadlGeneratorDescriptions(instanceManager, list);
+        return loadWadlGeneratorDescriptions(injectionManager, list);
     }
 
-    static WadlGenerator loadWadlGeneratorDescriptions(InstanceManager instanceManager,
+    static WadlGenerator loadWadlGeneratorDescriptions(InjectionManager injectionManager,
                                                        List<WadlGeneratorDescription> wadlGeneratorDescriptions)
             throws Exception {
         WadlGenerator wadlGenerator = new WadlGeneratorJAXBGrammarGenerator();
@@ -120,7 +120,7 @@ class WadlGeneratorLoader {
         try {
             if (wadlGeneratorDescriptions != null && !wadlGeneratorDescriptions.isEmpty()) {
                 for (WadlGeneratorDescription wadlGeneratorDescription : wadlGeneratorDescriptions) {
-                    final WadlGeneratorControl control = loadWadlGenerator(instanceManager, wadlGeneratorDescription,
+                    final WadlGeneratorControl control = loadWadlGenerator(injectionManager, wadlGeneratorDescription,
                                                                            wadlGenerator);
                     wadlGenerator = control.wadlGenerator;
                     callbacks.add(control.callback);
@@ -135,11 +135,11 @@ class WadlGeneratorLoader {
 
     }
 
-    private static WadlGeneratorControl loadWadlGenerator(InstanceManager instanceManager,
+    private static WadlGeneratorControl loadWadlGenerator(InjectionManager injectionManager,
                                                           WadlGeneratorDescription wadlGeneratorDescription,
                                                           WadlGenerator wadlGeneratorDelegate) throws Exception {
         LOGGER.info("Loading wadlGenerator " + wadlGeneratorDescription.getGeneratorClass().getName());
-        final WadlGenerator generator = Injections.getOrCreate(instanceManager, wadlGeneratorDescription.getGeneratorClass());
+        final WadlGenerator generator = Injections.getOrCreate(injectionManager, wadlGeneratorDescription.getGeneratorClass());
         generator.setWadlGeneratorDelegate(wadlGeneratorDelegate);
         CallbackList callbacks = null;
         if (wadlGeneratorDescription.getProperties() != null

@@ -66,7 +66,7 @@ import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
 import org.glassfish.jersey.spi.inject.ContextInjectionResolver;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Injection binder providing support for JAX-RS and Jersey injection annotations.
@@ -127,10 +127,10 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
  */
 public class ParameterInjectionBinder extends AbstractBinder {
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
-    public ParameterInjectionBinder(InstanceManager instanceManager) {
-        this.instanceManager = instanceManager;
+    public ParameterInjectionBinder(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
     }
 
     @Override
@@ -139,19 +139,19 @@ public class ParameterInjectionBinder extends AbstractBinder {
         // TODO: Replace by non-di version
         bind(new ParamConverters.AggregatedProvider()).to(ParamConverterProvider.class);
 
-        Provider<ContainerRequest> requestProvider = Injections.getProvider(instanceManager, ContainerRequest.class);
-        Provider<AsyncContext> asyncContextProvider = Injections.getProvider(instanceManager, AsyncContext.class);
+        Provider<ContainerRequest> requestProvider = Injections.getProvider(injectionManager, ContainerRequest.class);
+        Provider<AsyncContext> asyncContextProvider = Injections.getProvider(injectionManager, AsyncContext.class);
         Function<Class<? extends Configuration>, Configuration> clientConfigProvider = clientConfigClass -> Injections
-                .getOrCreate(instanceManager, clientConfigClass);
+                .getOrCreate(injectionManager, clientConfigClass);
 
         // Param Converters must be initialized Lazy and created at the time of the call on extractor
         LazyValue<ParamConverterFactory> lazyParamConverterFactory = Values.lazy((Value<ParamConverterFactory>)
                 () -> new ParamConverterFactory(
-                    Providers.getProviders(instanceManager, ParamConverterProvider.class),
-                    Providers.getCustomProviders(instanceManager, ParamConverterProvider.class)));
+                    Providers.getProviders(injectionManager, ParamConverterProvider.class),
+                    Providers.getCustomProviders(injectionManager, ParamConverterProvider.class)));
 
         LazyValue<Configuration> lazyConfiguration = Values
-                .lazy((Value<Configuration>) () -> instanceManager.getInstance(Configuration.class));
+                .lazy((Value<Configuration>) () -> injectionManager.getInstance(Configuration.class));
 
         MultivaluedParameterExtractorFactory paramExtractor = new MultivaluedParameterExtractorFactory(lazyParamConverterFactory);
         bind(paramExtractor).to(MultivaluedParameterExtractorProvider.class);
@@ -177,7 +177,7 @@ public class ParameterInjectionBinder extends AbstractBinder {
                 clientConfigProvider);
         bindValueSupplier(webTargetSupplier);
         BeanParamValueSupplierProvider beanSupplier = new BeanParamValueSupplierProvider(paramExtractor, requestProvider,
-                instanceManager);
+                injectionManager);
         bindValueSupplier(beanSupplier);
 
         // Register InjectionResolvers with param providers
@@ -193,9 +193,9 @@ public class ParameterInjectionBinder extends AbstractBinder {
         bind(new ParamInjectionResolver<>(beanSupplier, BeanParam.class));
 
         // Delegated value supplier for Context InjectionResolver which is implemented directly in DI provider
-        ContextInjectionResolver contextInjectionResolver = instanceManager.getInstance(ContextInjectionResolver.class);
+        ContextInjectionResolver contextInjectionResolver = injectionManager.getInstance(ContextInjectionResolver.class);
         bind(new DelegatedInjectionValueSupplierProvider(contextInjectionResolver,
-                instanceManager::createForeignDescriptor)).to(ValueSupplierProvider.class);
+                injectionManager::createForeignDescriptor)).to(ValueSupplierProvider.class);
     }
 
     private <T extends ValueSupplierProvider> void bindValueSupplier(T supplier) {

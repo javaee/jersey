@@ -49,9 +49,9 @@ import javax.inject.Inject;
 import org.glassfish.jersey.ext.cdi1x.internal.CdiUtil;
 import org.glassfish.jersey.ext.cdi1x.internal.GenericCdiBeanHk2Factory;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.spi.inject.Descriptor;
-import org.glassfish.jersey.spi.inject.Descriptors;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.Binding;
+import org.glassfish.jersey.spi.inject.Bindings;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Utility that binds HK2 factory to provide CDI managed validation result bean.
@@ -63,11 +63,11 @@ public class CdiValidationResultBinder implements Extension, ComponentProvider {
     @Inject
     BeanManager beanManager;
 
-    InstanceManager instanceManager;
+    InjectionManager injectionManager;
 
     @Override
-    public void initialize(InstanceManager instanceManager) {
-        this.instanceManager = instanceManager;
+    public void initialize(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
         this.beanManager = CdiUtil.getBeanManager();
     }
 
@@ -80,13 +80,13 @@ public class CdiValidationResultBinder implements Extension, ComponentProvider {
     @SuppressWarnings("unchecked")
     public void done() {
         if (beanManager != null) { // in CDI environment
-            Descriptor descriptor = Descriptors
+            Binding binding = Bindings
                     .factory(new GenericCdiBeanHk2Factory(
-                            CdiValidationResult.class, instanceManager, beanManager, true))
+                            CdiValidationResult.class, injectionManager, beanManager, true))
                     .to(CdiValidationResult.class)
                     .to(ValidationResult.class);
 
-            instanceManager.register(descriptor);
+            injectionManager.register(binding);
         }
     }
 }

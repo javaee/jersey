@@ -342,7 +342,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      * Create a new Grizzly HTTP container.
      *
      * @param application   JAX-RS / Jersey application to be deployed on Grizzly HTTP container.
-     * @param parentLocator parent instance manager.
+     * @param parentLocator parent injection manager.
      */
     /* package */ GrizzlyHttpContainer(final Application application, final ServiceLocator parentLocator) {
         this.appHandler = new ApplicationHandler(application, new GrizzlyBinder(), parentLocator);
@@ -372,9 +372,9 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
             }
             requestContext.setWriter(responseWriter);
 
-            requestContext.setRequestScopedInitializer(instanceManager -> {
-                instanceManager.<Ref<Request>>getInstance(RequestTYPE).set(request);
-                instanceManager.<Ref<Response>>getInstance(ResponseTYPE).set(response);
+            requestContext.setRequestScopedInitializer(injectionManager -> {
+                injectionManager.<Ref<Request>>getInstance(RequestTYPE).set(request);
+                injectionManager.<Ref<Response>>getInstance(ResponseTYPE).set(response);
             });
             appHandler.handle(requestContext);
         } finally {

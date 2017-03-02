@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,33 +38,43 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.server;
+
+import java.util.Map;
+
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
- * Injection binding description of a bean bound via its a Java class.
+ * Utility class to create initialized server-side injection manager.
  *
- * @param <T> type of the bean described by this injection binding descriptor.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ClassBeanDescriptor<T> extends Descriptor<T, ClassBeanDescriptor<T>> {
-
-    private final Class<T> service;
-
-    /**
-     * Creates a service as a class.
-     *
-     * @param service service's class.
-     */
-    ClassBeanDescriptor(Class<T> service) {
-        this.service = service;
+public final class InjectionManagerFactory {
+    private InjectionManagerFactory() {
+        // prevents instantiation
     }
 
     /**
-     * Gets service' class.
+     * Create new initialized server injection manager.
      *
-     * @return service's class.
+     * @return new initialized server injection manager.
      */
-    public Class<T> getService() {
-        return service;
+    public static InjectionManager createInjectionManager() {
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        injectionManager.register(new ServerBinder(null, injectionManager));
+        return injectionManager;
+    }
+
+    /**
+     * Create new initialized server injection manager.
+     *
+     * @param applicationProperties map of application-specific properties.
+     * @return new initialized server injection manager.
+     */
+    public static InjectionManager createInjectionManager(Map<String, Object> applicationProperties) {
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        injectionManager.register(new ServerBinder(applicationProperties, injectionManager));
+        return injectionManager;
     }
 }

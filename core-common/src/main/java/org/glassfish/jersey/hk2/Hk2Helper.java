@@ -45,14 +45,14 @@ import java.lang.reflect.Type;
 import java.util.Set;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.inject.AliasDescriptor;
-import org.glassfish.jersey.spi.inject.ClassBeanDescriptor;
-import org.glassfish.jersey.spi.inject.ClassFactoryDescriptor;
-import org.glassfish.jersey.spi.inject.Descriptor;
-import org.glassfish.jersey.spi.inject.Descriptors;
-import org.glassfish.jersey.spi.inject.InjectionResolverDescriptor;
-import org.glassfish.jersey.spi.inject.InstanceBeanDescriptor;
-import org.glassfish.jersey.spi.inject.InstanceFactoryDescriptor;
+import org.glassfish.jersey.spi.inject.AliasBinding;
+import org.glassfish.jersey.spi.inject.Binding;
+import org.glassfish.jersey.spi.inject.Bindings;
+import org.glassfish.jersey.spi.inject.ClassBinding;
+import org.glassfish.jersey.spi.inject.FactoryClassBinding;
+import org.glassfish.jersey.spi.inject.FactoryInstanceBinding;
+import org.glassfish.jersey.spi.inject.InjectionResolverBinding;
+import org.glassfish.jersey.spi.inject.InstanceBinding;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -76,17 +76,17 @@ class Hk2Helper {
      * @param jerseyBinder Jersey-like binder.
      */
     static void bind(ServiceLocator locator, org.glassfish.jersey.spi.inject.Binder jerseyBinder) {
-        bind(locator, jerseyBinder.getDescriptors());
+        bind(locator, jerseyBinder.getBindings());
     }
 
     /**
      * Bind descriptors to Hk2-like {@link Binder}.
      *
      * @param locator    HK2 locator.
-     * @param descriptor single descriptor.
+     * @param binding single descriptor.
      */
-    static void bind(ServiceLocator locator, Descriptor descriptor) {
-        bindDescriptor(locator, descriptor);
+    static void bind(ServiceLocator locator, Binding binding) {
+        bindDescriptor(locator, binding);
     }
 
     /**
@@ -95,10 +95,10 @@ class Hk2Helper {
      * @param locator     HK2 locator.
      * @param descriptors collection of descriptors.
      */
-    static void bind(ServiceLocator locator, Iterable<Descriptor> descriptors) {
+    static void bind(ServiceLocator locator, Iterable<Binding> descriptors) {
         DynamicConfiguration dc = getDynamicConfiguration(locator);
-        for (Descriptor descriptor : descriptors) {
-            bindDescriptor(locator, dc, descriptor);
+        for (Binding binding : descriptors) {
+            bindDescriptor(locator, dc, binding);
         }
         dc.commit();
     }
@@ -118,62 +118,62 @@ class Hk2Helper {
     /**
      * Binds the single descriptor using a single {@link DynamicConfiguration}.
      *
-     * @param locator    HK2 instance manager.
-     * @param descriptor Jersey descriptor as a holder of information about an injection point.
+     * @param locator HK2 injection manager.
+     * @param binding Jersey descriptor as a holder of information about an injection point.
      */
-    private static void bindDescriptor(ServiceLocator locator, Descriptor<?, ?> descriptor) {
+    private static void bindDescriptor(ServiceLocator locator, Binding<?, ?> binding) {
         DynamicConfiguration dc = getDynamicConfiguration(locator);
-        bindDescriptor(locator, dc, descriptor);
+        bindDescriptor(locator, dc, binding);
         dc.commit();
     }
 
     /**
      * Binds the single descriptor using an external {@link DynamicConfiguration}.
      *
-     * @param locator    HK2 instance manager.
+     * @param locator    HK2 injection manager.
      * @param dc         HK2 Dynamic configuration to bind the object.
-     * @param descriptor Jersey descriptor as a holder of information about an injection point.
+     * @param binding Jersey descriptor as a holder of information about an injection point.
      */
-    private static void bindDescriptor(ServiceLocator locator, DynamicConfiguration dc, Descriptor<?, ?> descriptor) {
-        if (ClassBeanDescriptor.class.isAssignableFrom(descriptor.getClass())) {
-            ActiveDescriptor<?> activeDescriptor = translateToActiveDescriptor((ClassBeanDescriptor<?>) descriptor);
-            bindDescriptor(locator, dc, activeDescriptor, descriptor.getAliases());
+    private static void bindDescriptor(ServiceLocator locator, DynamicConfiguration dc, Binding<?, ?> binding) {
+        if (ClassBinding.class.isAssignableFrom(binding.getClass())) {
+            ActiveDescriptor<?> activeDescriptor = translateToActiveDescriptor((ClassBinding<?>) binding);
+            bindDescriptor(locator, dc, activeDescriptor, binding.getAliases());
 
-        } else if (InstanceBeanDescriptor.class.isAssignableFrom(descriptor.getClass())) {
-            ActiveDescriptor<?> activeDescriptor = translateToActiveDescriptor((InstanceBeanDescriptor<?>) descriptor);
-            bindDescriptor(locator, dc, activeDescriptor, descriptor.getAliases());
+        } else if (InstanceBinding.class.isAssignableFrom(binding.getClass())) {
+            ActiveDescriptor<?> activeDescriptor = translateToActiveDescriptor((InstanceBinding<?>) binding);
+            bindDescriptor(locator, dc, activeDescriptor, binding.getAliases());
 
-        } else if (InjectionResolverDescriptor.class.isAssignableFrom(descriptor.getClass())) {
-            InjectionResolverDescriptor resolverDescriptor = (InjectionResolverDescriptor) descriptor;
-            bindDescriptor(locator, dc, wrapInjectionResolver(resolverDescriptor), descriptor.getAliases());
-            bindDescriptor(locator, dc, translateToActiveDescriptor(resolverDescriptor), descriptor.getAliases());
+        } else if (InjectionResolverBinding.class.isAssignableFrom(binding.getClass())) {
+            InjectionResolverBinding resolverDescriptor = (InjectionResolverBinding) binding;
+            bindDescriptor(locator, dc, wrapInjectionResolver(resolverDescriptor), binding.getAliases());
+            bindDescriptor(locator, dc, translateToActiveDescriptor(resolverDescriptor), binding.getAliases());
 
-        } else if (ClassFactoryDescriptor.class.isAssignableFrom(descriptor.getClass())) {
-            bindClassFactoryDescriptor(dc, (ClassFactoryDescriptor<?>) descriptor);
+        } else if (FactoryClassBinding.class.isAssignableFrom(binding.getClass())) {
+            bindClassFactoryDescriptor(dc, (FactoryClassBinding<?>) binding);
 
-        } else if (InstanceFactoryDescriptor.class.isAssignableFrom(descriptor.getClass())) {
-            bindInstanceFactoryDescriptor(dc, (InstanceFactoryDescriptor<?>) descriptor);
+        } else if (FactoryInstanceBinding.class.isAssignableFrom(binding.getClass())) {
+            bindInstanceFactoryDescriptor(dc, (FactoryInstanceBinding<?>) binding);
 
         } else {
-            throw new RuntimeException(LocalizationMessages.UNKNOWN_DESCRIPTOR_TYPE(descriptor.getClass().getSimpleName()));
+            throw new RuntimeException(LocalizationMessages.UNKNOWN_DESCRIPTOR_TYPE(binding.getClass().getSimpleName()));
         }
     }
 
     @SuppressWarnings("unchecked")
-    private static ActiveDescriptor<?> wrapInjectionResolver(InjectionResolverDescriptor resolverDescriptor) {
+    private static ActiveDescriptor<?> wrapInjectionResolver(InjectionResolverBinding resolverDescriptor) {
         InjectionResolverWrapper<?> wrappedResolver = new InjectionResolverWrapper<>(resolverDescriptor.getResolver());
-        return translateToActiveDescriptor(Descriptors.service(wrappedResolver),
+        return translateToActiveDescriptor(Bindings.service(wrappedResolver),
                 new ParameterizedTypeImpl(InjectionResolver.class, resolverDescriptor.getResolver().getAnnotation()));
     }
 
     /**
      * Binds a new instance {@link org.glassfish.hk2.api.FactoryDescriptors} using the information from the Jersey descriptor
-     * {@link InstanceFactoryDescriptor}.
+     * {@link FactoryInstanceBinding}.
      *
      * @param dc   HK2 Dynamic configuration to bind the object.
      * @param desc Jersey descriptor as a holder of information about an injection point.
      */
-    private static void bindInstanceFactoryDescriptor(DynamicConfiguration dc, InstanceFactoryDescriptor<?> desc) {
+    private static void bindInstanceFactoryDescriptor(DynamicConfiguration dc, FactoryInstanceBinding<?> desc) {
         AbstractActiveDescriptor<?> factoryContractDescriptor = BuilderHelper.createConstantDescriptor(desc.getFactory());
         factoryContractDescriptor.addContractType(desc.getFactory().getClass());
 
@@ -212,12 +212,12 @@ class Hk2Helper {
 
     /**
      * Binds a new instance {@link org.glassfish.hk2.api.FactoryDescriptors} using the information from the Jersey descriptor
-     * {@link ClassFactoryDescriptor}.
+     * {@link FactoryClassBinding}.
      *
      * @param dc   HK2 Dynamic configuration to bind the object.
      * @param desc Jersey descriptor as a holder of information about an injection point.
      */
-    private static void bindClassFactoryDescriptor(DynamicConfiguration dc, ClassFactoryDescriptor<?> desc) {
+    private static void bindClassFactoryDescriptor(DynamicConfiguration dc, FactoryClassBinding<?> desc) {
         AbstractActiveDescriptor<?> factoryContractDescriptor = BuilderHelper.createConstantDescriptor(desc.getFactoryClass());
         factoryContractDescriptor.addContractType(desc.getFactoryClass().getClass());
 
@@ -262,7 +262,7 @@ class Hk2Helper {
         dc.bind(new FactoryDescriptorsImpl(factoryDescriptorBuilder.build(), descriptorBuilder.buildProvideMethod()));
     }
 
-    static ActiveDescriptor<?> translateToActiveDescriptor(ClassBeanDescriptor<?> desc) {
+    static ActiveDescriptor<?> translateToActiveDescriptor(ClassBinding<?> desc) {
         ActiveDescriptorBuilder binding = BuilderHelper.activeLink(desc.getService())
                 .named(desc.getName())
                 .analyzeWith(desc.getAnalyzer());
@@ -299,24 +299,24 @@ class Hk2Helper {
     }
 
     /**
-     * Binds a new instance {@link Descriptor} using the information from the Jersey descriptor {@link InstanceBeanDescriptor}.
+     * Binds a new instance {@link Binding} using the information from the Jersey descriptor {@link InstanceBinding}.
      * <p>
      * Along with a new instance, the method is able to register aliases belonging to the new service.
      *
-     * @param locator          HK2 instance manager.
+     * @param locator          HK2 injection manager.
      * @param dc               HK2 Dynamic configuration to bind the object.
      * @param activeDescriptor HK2 active descriptor.
      * @param aliases          aliases belonging to the given descriptor.
      */
     private static void bindDescriptor(ServiceLocator locator, DynamicConfiguration dc, ActiveDescriptor<?> activeDescriptor,
-            Set<AliasDescriptor> aliases) {
+            Set<AliasBinding> aliases) {
         ActiveDescriptor<Object> boundDescriptor = dc.bind(activeDescriptor);
-        for (AliasDescriptor alias : aliases) {
+        for (AliasBinding alias : aliases) {
             dc.bind(createAlias(locator, boundDescriptor, alias));
         }
     }
 
-    static ActiveDescriptor<?> translateToActiveDescriptor(InstanceBeanDescriptor<?> desc, Type... contracts) {
+    static ActiveDescriptor<?> translateToActiveDescriptor(InstanceBinding<?> desc, Type... contracts) {
         AbstractActiveDescriptor<?> binding;
         if (contracts.length == 0) {
             binding = BuilderHelper.createConstantDescriptor(desc.getService());
@@ -354,7 +354,7 @@ class Hk2Helper {
         return binding;
     }
 
-    private static ActiveDescriptor<?> translateToActiveDescriptor(InjectionResolverDescriptor<?> desc) {
+    private static ActiveDescriptor<?> translateToActiveDescriptor(InjectionResolverBinding<?> desc) {
         ParameterizedTypeImpl parameterizedType = new ParameterizedTypeImpl(
                 org.glassfish.jersey.spi.inject.InjectionResolver.class, desc.getResolver().getAnnotation());
 
@@ -370,7 +370,7 @@ class Hk2Helper {
      * @return populated alias object, ready to bindBinder using {@link DynamicConfiguration}.
      */
     private static org.glassfish.hk2.utilities.AliasDescriptor<?> createAlias(
-            ServiceLocator locator, ActiveDescriptor<?> descriptor, AliasDescriptor alias) {
+            ServiceLocator locator, ActiveDescriptor<?> descriptor, AliasBinding alias) {
         org.glassfish.hk2.utilities.AliasDescriptor<?> hk2Alias =
                 new org.glassfish.hk2.utilities.AliasDescriptor<>(locator, descriptor, alias.getContract(), null);
         alias.getQualifiers().forEach(hk2Alias::addQualifierAnnotation);

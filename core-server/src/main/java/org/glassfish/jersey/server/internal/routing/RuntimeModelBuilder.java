@@ -57,7 +57,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.PathPattern;
 import org.glassfish.jersey.uri.UriTemplate;
 
@@ -80,7 +80,7 @@ final class RuntimeModelBuilder {
     /**
      * Create a new instance of the runtime model builder.
      *
-     * @param instanceManager              DI instance manager.
+     * @param injectionManager             DI injection manager.
      * @param resourceContext              Jersey resource context.
      * @param config                       configuration of the application.
      * @param workers                      message body workers.
@@ -88,7 +88,7 @@ final class RuntimeModelBuilder {
      * @param resourceMethodInvokerBuilder method invoker builder.
      */
     public RuntimeModelBuilder(
-            final InstanceManager instanceManager,
+            final InjectionManager injectionManager,
             final JerseyResourceContext resourceContext,
             final Configuration config,
             final MessageBodyWorkers workers,
@@ -102,7 +102,7 @@ final class RuntimeModelBuilder {
         this.locatorBuilder = Values.lazy(new Value<RuntimeLocatorModelBuilder>() {
             @Override
             public RuntimeLocatorModelBuilder get() {
-                return new RuntimeLocatorModelBuilder(instanceManager, config, resourceContext, RuntimeModelBuilder.this);
+                return new RuntimeLocatorModelBuilder(injectionManager, config, resourceContext, RuntimeModelBuilder.this);
             }
         });
     }

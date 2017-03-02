@@ -61,9 +61,9 @@ import javax.transaction.TransactionalException;
 import org.glassfish.jersey.ext.cdi1x.internal.CdiUtil;
 import org.glassfish.jersey.ext.cdi1x.internal.GenericCdiBeanHk2Factory;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.spi.inject.Descriptor;
-import org.glassfish.jersey.spi.inject.Descriptors;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.Binding;
+import org.glassfish.jersey.spi.inject.Bindings;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -83,7 +83,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Priority(value = Interceptor.Priority.PLATFORM_BEFORE + 199)
 public class TransactionalExceptionInterceptorProvider implements ComponentProvider, Extension {
 
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
     private BeanManager beanManager;
 
     @Qualifier
@@ -93,8 +93,8 @@ public class TransactionalExceptionInterceptorProvider implements ComponentProvi
     }
 
     @Override
-    public void initialize(final InstanceManager locator) {
-        this.instanceManager = locator;
+    public void initialize(final InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
         this.beanManager = CdiUtil.getBeanManager();
     }
 
@@ -111,11 +111,11 @@ public class TransactionalExceptionInterceptorProvider implements ComponentProvi
     }
 
     private void bindWaeRestoringExceptionMapper() {
-        Descriptor descriptor = Descriptors
-                .factory(new GenericCdiBeanHk2Factory(TransactionalExceptionMapper.class, instanceManager, beanManager, true))
+        Binding binding = Bindings
+                .factory(new GenericCdiBeanHk2Factory(TransactionalExceptionMapper.class, injectionManager, beanManager, true))
                 .to(ExceptionMapper.class);
 
-        instanceManager.register(descriptor);
+        injectionManager.register(binding);
     }
 
     @SuppressWarnings("unused")

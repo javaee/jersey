@@ -47,18 +47,18 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
- * Invokes {@link PreDestroy} methods on all registered objects, when the instance manager is shut down.
+ * Invokes {@link PreDestroy} methods on all registered objects, when the injection manager is shut down.
  * <p/>
- * Some objects managed by Jersey are created using {@link InstanceManager#createAndInitialize}. This means
+ * Some objects managed by Jersey are created using {@link InjectionManager#createAndInitialize}. This means
  * that such objects are created, dependencies injected and methods annotated with {@link javax.annotation.PostConstruct}
  * invoked. Therefore methods annotated with {@link PreDestroy} should be invoked on such objects too, when they are destroyed.
  * <p/>
- * This service invokes {@link PreDestroy} on all registered objects when {@link InstanceManager#shutdown()} is invoked
- * on the instance manager where this service is registered. Therefore only classes with their lifecycle linked
- * to the instance manager that created them should be registered here.
+ * This service invokes {@link PreDestroy} on all registered objects when {@link InjectionManager#shutdown()} is invoked
+ * on the injection manager where this service is registered. Therefore only classes with their lifecycle linked
+ * to the injection manager that created them should be registered here.
  *
  * @author Petr Janouch (petr.janouch at oracle.com)
  */
@@ -66,13 +66,13 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
 public class ManagedObjectsFinalizer {
 
     @Inject
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
 
     private final Set<Object> managedObjects = new HashSet<>();
 
     /**
      * Register an object for invocation of its {@link PreDestroy} method.
-     * It will be invoked when the instance manager is shut down.
+     * It will be invoked when the injection manager is shut down.
      *
      * @param object an object to be registered.
      */
@@ -84,7 +84,7 @@ public class ManagedObjectsFinalizer {
     public void preDestroy() {
         try {
             for (Object o : managedObjects) {
-                instanceManager.preDestroy(o);
+                injectionManager.preDestroy(o);
             }
 
         } finally {

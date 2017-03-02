@@ -62,9 +62,9 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
+import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Represents writer interceptor chain executor for both client and server side.
@@ -75,8 +75,8 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
  * @author Miroslav Fuksa
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor>
-        implements WriterInterceptorContext, InstanceManagerSupplier {
+public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor>
+        implements WriterInterceptorContext, InjectionManagerSupplier {
 
     private static final Logger LOGGER = Logger.getLogger(WriterInterceptorExecutor.class.getName());
 
@@ -87,7 +87,7 @@ final class WriterInterceptorExecutor extends InterceptorExecutor<WriterIntercep
     private final Iterator<WriterInterceptor> iterator;
     private int processedCount;
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
 
     /**
@@ -109,7 +109,7 @@ final class WriterInterceptorExecutor extends InterceptorExecutor<WriterIntercep
      *            closed after reading the entity.
      * @param workers {@link org.glassfish.jersey.message.MessageBodyWorkers Message body workers}.
      * @param writerInterceptors Writer interceptors that are to be used to intercept writing of an entity.
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
     public WriterInterceptorExecutor(final Object entity, final Class<?> rawType,
                                      final Type type,
@@ -120,13 +120,13 @@ final class WriterInterceptorExecutor extends InterceptorExecutor<WriterIntercep
                                      final OutputStream entityStream,
                                      final MessageBodyWorkers workers,
                                      final Iterable<WriterInterceptor> writerInterceptors,
-                                     final InstanceManager instanceManager) {
+                                     final InjectionManager injectionManager) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.entity = entity;
         this.headers = headers;
         this.outputStream = entityStream;
-        this.instanceManager = instanceManager;
+        this.injectionManager = injectionManager;
 
         final List<WriterInterceptor> effectiveInterceptors = StreamSupport.stream(writerInterceptors.spliterator(), false)
                                                                            .collect(Collectors.toList());
@@ -203,8 +203,8 @@ final class WriterInterceptorExecutor extends InterceptorExecutor<WriterIntercep
     }
 
     @Override
-    public InstanceManager getInstanceManager() {
-        return instanceManager;
+    public InjectionManager getInjectionManager() {
+        return injectionManager;
     }
 
     /**

@@ -69,19 +69,19 @@ import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.guava.Preconditions;
-import org.glassfish.jersey.internal.inject.InstanceManagerSupplier;
+import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 import org.glassfish.jersey.internal.util.ExceptionUtils;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Jersey client request context.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ClientRequest extends OutboundMessageContext implements ClientRequestContext, InstanceManagerSupplier {
+public class ClientRequest extends OutboundMessageContext implements ClientRequestContext, InjectionManagerSupplier {
 
     // Request-scoped configuration instance
     private final ClientConfig clientConfig;
@@ -618,8 +618,8 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     }
 
     @Override
-    public InstanceManager getInstanceManager() {
-        return getClientRuntime().getInstanceManager();
+    public InjectionManager getInjectionManager() {
+        return getClientRuntime().getInjectionManager();
     }
 
     /**

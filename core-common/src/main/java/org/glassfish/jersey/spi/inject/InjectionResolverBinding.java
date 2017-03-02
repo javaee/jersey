@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,23 +38,32 @@
  * holder.
  */
 
-package org.glassfish.jersey.weld.se;
-
-import org.glassfish.jersey.ext.cdi1x.internal.GenericInstanceManagerStore;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.InstanceManagerStore;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+package org.glassfish.jersey.spi.inject;
 
 /**
- * {@link InstanceManagerStore Instance Manager} for Weld SE container. The provider
- * enables multiple Jersey applications to be deployed within a single HTTP container.
+ * Class which has the fields containing the instance of {@link InjectionResolver} and its a concrete type.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @since 2.20
+ * @param <T> type of the annotation which is served using th given injection resolver.
  */
-public class WeldInstanceManagerStore extends GenericInstanceManagerStore {
+public class InjectionResolverBinding<T extends InjectionResolver> extends Binding<T, InjectionResolverBinding<T>> {
 
-    @Override
-    public InstanceManager lookupInstanceManager() {
-        return WeldRequestScope.actualInstanceManager.get();
+    private final T resolver;
+
+    /**
+     * Creates an injection resolver as an instance.
+     *
+     * @param resolver injection resolver instance.
+     */
+    InjectionResolverBinding(T resolver) {
+        this.resolver = resolver;
+    }
+
+    /**
+     * Gets the injection resolver handled by this descriptor.
+     *
+     * @return {@code InjectionResolver} instance.
+     */
+    public T getResolver() {
+        return resolver;
     }
 }

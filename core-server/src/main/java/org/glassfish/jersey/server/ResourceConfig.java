@@ -76,7 +76,7 @@ import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * The resource configuration for configuring a web application.
@@ -289,12 +289,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         @Override
-        public void configureAutoDiscoverableProviders(final InstanceManager instanceManager, final boolean forcedOnly) {
+        public void configureAutoDiscoverableProviders(final InjectionManager injectionManager, final boolean forcedOnly) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public void configureMetaProviders(final InstanceManager instanceManager) {
+        public void configureMetaProviders(final InjectionManager injectionManager) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
     }
@@ -474,7 +474,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * in the {@code ResourceConfig}.
      * <p>
      * Note that registered JAX-RS features are used to initialize and configure
-     * the Jersey runtime {@link InstanceManager} instance during application deployment, but are
+     * the Jersey runtime {@link InjectionManager} instance during application deployment, but are
      * otherwise ignored by server-side runtime, unless they implement also another contract
      * recognized by Jersey runtime.
      * </p>
@@ -502,7 +502,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * in the {@code ResourceConfig}.
      * <p>
      * Note that registered JAX-RS features are used to initialize and configure
-     * the Jersey runtime {@link InstanceManager} instance during application deployment, but are
+     * the Jersey runtime {@link InjectionManager} instance during application deployment, but are
      * otherwise ignored by server-side runtime, unless they implement also another contract
      * recognized by Jersey runtime.
      * </p>
@@ -527,7 +527,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * {@link Binder Jersey Binder} instances (singletons) in the {@code ResourceConfig}.
      * <p>
      * Note that registered binders and JAX-RS features are used to initialize and configure
-     * the Jersey runtime {@link InstanceManager} instance during application deployment, but are
+     * the Jersey runtime {@link InjectionManager} instance during application deployment, but are
      * otherwise ignored by server-side runtime, unless they implement also another contract
      * recognized by Jersey runtime.
      * </p>
@@ -551,7 +551,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * {@link Binder Jersey Binder} instances (singletons) in the {@code ResourceConfig}.
      * <p>
      * Note that registered binders and JAX-RS features are used to initialize and configure
-     * the Jersey runtime {@link InstanceManager} instance during application deployment, but are
+     * the Jersey runtime {@link InjectionManager} instance during application deployment, but are
      * otherwise ignored by server-side runtime, unless they implement also another contract
      * recognized by Jersey runtime.
      * </p>
@@ -799,23 +799,23 @@ public class ResourceConfig extends Application implements Configurable<Resource
     /**
      * Configure auto-discoverables.
      *
-     * @param instanceManager instance manager to obtain auto-discoverables from.
+     * @param injectionManager injection manager to obtain auto-discoverables from.
      */
-    final void configureAutoDiscoverableProviders(final InstanceManager instanceManager) {
-        state.configureAutoDiscoverableProviders(instanceManager, false);
+    final void configureAutoDiscoverableProviders(final InjectionManager injectionManager) {
+        state.configureAutoDiscoverableProviders(injectionManager, false);
     }
 
     /**
      * Configure forced auto-discoverables.
      *
-     * @param instanceManager instance manager to obtain auto-discoverables from.
+     * @param injectionManager injection manager to obtain auto-discoverables from.
      */
-    final void configureForcedAutoDiscoverableProviders(final InstanceManager instanceManager) {
-        state.configureAutoDiscoverableProviders(instanceManager, true);
+    final void configureForcedAutoDiscoverableProviders(final InjectionManager injectionManager) {
+        state.configureAutoDiscoverableProviders(injectionManager, true);
     }
 
-    final void configureMetaProviders(InstanceManager InstanceManager) {
-        state.configureMetaProviders(InstanceManager);
+    final void configureMetaProviders(InjectionManager InjectionManager) {
+        state.configureMetaProviders(InjectionManager);
     }
 
     @Override

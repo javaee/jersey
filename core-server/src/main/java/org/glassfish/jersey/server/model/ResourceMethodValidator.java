@@ -62,7 +62,7 @@ import javax.ws.rs.QueryParam;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Factory;
 
@@ -74,15 +74,15 @@ import org.glassfish.hk2.api.Factory;
  */
 class ResourceMethodValidator extends AbstractResourceModelVisitor {
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     /**
      * Create new resource method validator.
      *
-     * @param instanceManager instance manager.
+     * @param injectionManager injection manager.
      */
-    public ResourceMethodValidator(InstanceManager instanceManager) {
-        this.instanceManager = instanceManager;
+    public ResourceMethodValidator(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
     }
 
     @Override
@@ -162,7 +162,7 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
     }
 
     private void checkValueProviders(ResourceMethod method) {
-        final List<? extends Factory<?>> valueProviders = method.getInvocable().getValueProviders(instanceManager);
+        final List<? extends Factory<?>> valueProviders = method.getInvocable().getValueProviders(injectionManager);
         if (valueProviders.contains(null)) {
             int index = valueProviders.indexOf(null);
             Errors.fatal(method, LocalizationMessages.ERROR_PARAMETER_MISSING_VALUE_PROVIDER(index, method.getInvocable()

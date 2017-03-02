@@ -51,7 +51,7 @@ import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Binder for testing purposes.
@@ -60,20 +60,20 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
  */
 public class TestBinder extends AbstractBinder {
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
-    public TestBinder(InstanceManager instanceManager) {
-        this.instanceManager = instanceManager;
+    public TestBinder(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
     }
 
-    public static void initProviders(final InstanceManager instanceManager) {
-        initProviders(instanceManager, Collections.emptySet(), Collections.emptySet());
+    public static void initProviders(final InjectionManager injectionManager) {
+        initProviders(injectionManager, Collections.emptySet(), Collections.emptySet());
     }
 
-    public static void initProviders(final InstanceManager instanceManager,
+    public static void initProviders(final InjectionManager injectionManager,
                                      final Iterable<Class<?>> providerClasses,
                                      final Iterable<Object> providerInstances) {
-        final ProviderBinder providerBinder = new ProviderBinder(instanceManager);
+        final ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindClasses(providerClasses);
         providerBinder.bindInstances(providerInstances);
     }

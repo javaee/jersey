@@ -98,7 +98,7 @@ import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.message.ReaderModel;
 import org.glassfish.jersey.message.WriterModel;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.jvnet.hk2.annotations.Optional;
 
@@ -175,7 +175,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             };
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     private final Boolean legacyProviderOrdering;
 
@@ -207,19 +207,19 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     /**
      * Create new message body workers factory.
      *
-     * @param instanceManager   instance manager.
+     * @param injectionManager   injection manager.
      * @param configuration configuration. Optional - can be null.
      */
     @Inject
-    public MessageBodyFactory(final InstanceManager instanceManager, @Optional final Configuration configuration) {
-        this.instanceManager = instanceManager;
+    public MessageBodyFactory(final InjectionManager injectionManager, @Optional final Configuration configuration) {
+        this.injectionManager = injectionManager;
         this.legacyProviderOrdering = configuration != null
                 && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
 
         // Initialize readers
         this.readers = new ArrayList<>();
-        final Set<MessageBodyReader> customMbrs = Providers.getCustomProviders(instanceManager, MessageBodyReader.class);
-        final Set<MessageBodyReader> mbrs = Providers.getProviders(instanceManager, MessageBodyReader.class);
+        final Set<MessageBodyReader> customMbrs = Providers.getCustomProviders(injectionManager, MessageBodyReader.class);
+        final Set<MessageBodyReader> mbrs = Providers.getProviders(injectionManager, MessageBodyReader.class);
 
         addReaders(readers, customMbrs, true);
         mbrs.removeAll(customMbrs);
@@ -244,8 +244,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         // Initialize writers
         this.writers = new ArrayList<>();
 
-        final Set<MessageBodyWriter> customMbws = Providers.getCustomProviders(instanceManager, MessageBodyWriter.class);
-        final Set<MessageBodyWriter> mbws = Providers.getProviders(instanceManager, MessageBodyWriter.class);
+        final Set<MessageBodyWriter> customMbws = Providers.getCustomProviders(injectionManager, MessageBodyWriter.class);
+        final Set<MessageBodyWriter> mbws = Providers.getProviders(injectionManager, MessageBodyWriter.class);
 
         addWriters(writers, customMbws, true);
         mbws.removeAll(customMbws);
@@ -1058,8 +1058,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 entityStream,
                 this,
                 readerInterceptors,
-                translateNce,
-                instanceManager);
+                translateNce, injectionManager);
 
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
         final long timestamp = tracingLogger.timestamp(MsgTraceEvent.RI_SUMMARY);
@@ -1103,8 +1102,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 propertiesDelegate,
                 entityStream,
                 this,
-                writerInterceptors,
-                instanceManager);
+                writerInterceptors, injectionManager);
 
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
         final long timestamp = tracingLogger.timestamp(MsgTraceEvent.WI_SUMMARY);

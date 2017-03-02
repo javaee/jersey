@@ -92,7 +92,7 @@ import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Server-side request-response {@link Inflector inflector} for invoking methods
@@ -128,7 +128,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         @Inject
         private ResourceMethodInvocationHandlerFactory invocationHandlerProviderFactory;
         @Inject
-        private InstanceManager instanceManager;
+        private InjectionManager injectionManager;
         @Inject
         private Configuration globalConfig;
         @Inject
@@ -149,8 +149,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     dispatcherProviderFactory,
                     invocationHandlerProviderFactory,
                     method,
-                    processingProviders,
-                    instanceManager,
+                    processingProviders, injectionManager,
                     globalConfig,
                     validatorProvider.get());
         }
@@ -161,7 +160,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             final ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
             final ResourceMethod method,
             final ProcessingProviders processingProviders,
-            InstanceManager instanceManager,
+            InjectionManager injectionManager,
             final Configuration globalConfig,
             final ConfiguredValidator validator) {
 
@@ -186,7 +185,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         // Get instances of providers.
         final Set<Class<?>> providerClasses = componentBag.getClasses(ComponentBag.EXCLUDE_META_PROVIDERS);
         if (!providerClasses.isEmpty()) {
-            instanceManager = Injections.createInstanceManager(instanceManager, new AbstractBinder() {
+            injectionManager = Injections.createInjectionManager(injectionManager, new AbstractBinder() {
                 @Override
                 protected void configure() {
                     bind(config).to(Configuration.class);
@@ -194,7 +193,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             });
 
             for (final Class<?> providerClass : providerClasses) {
-                providers.add(instanceManager.createAndInitialize(providerClass));
+                providers.add(injectionManager.createAndInitialize(providerClass));
             }
         }
 

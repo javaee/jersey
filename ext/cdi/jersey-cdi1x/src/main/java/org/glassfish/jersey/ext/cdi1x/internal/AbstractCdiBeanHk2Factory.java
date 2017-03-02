@@ -51,6 +51,8 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.InjectionTargetFactory;
 
+import org.glassfish.jersey.spi.inject.InjectionManager;
+
 import org.glassfish.hk2.api.Factory;
 
 /**
@@ -70,13 +72,13 @@ public abstract class AbstractCdiBeanHk2Factory<T> implements Factory<T> {
     /**
      * Create new factory instance for given type and bean manager.
      *
-     * @param rawType         type of the components to provide.
-     * @param instanceManager actual instance manager instance.
-     * @param beanManager     current bean manager to get references from.
-     * @param cdiManaged      set to {@code true} if the component should be managed by CDI.
+     * @param rawType          type of the components to provide.
+     * @param injectionManager actual injection manager instance.
+     * @param beanManager      current bean manager to get references from.
+     * @param cdiManaged       set to {@code true} if the component should be managed by CDI.
      */
     public AbstractCdiBeanHk2Factory(final Class<T> rawType,
-                                     final org.glassfish.jersey.spi.inject.InstanceManager instanceManager,
+                                     final InjectionManager injectionManager,
                                      final BeanManager beanManager,
                                      final boolean cdiManaged) {
 
@@ -107,8 +109,8 @@ public abstract class AbstractCdiBeanHk2Factory<T> implements Factory<T> {
                 final CreationalContext<T> creationalContext = beanManager.createCreationalContext(null);
                 final T instance = injectionTarget.produce(creationalContext);
                 injectionTarget.inject(instance, creationalContext);
-                if (instanceManager != null) {
-                    instanceManager.inject(instance, CdiComponentProvider.CDI_CLASS_ANALYZER);
+                if (injectionManager != null) {
+                    injectionManager.inject(instance, CdiComponentProvider.CDI_CLASS_ANALYZER);
                 }
                 injectionTarget.postConstruct(instance);
                 return instance;

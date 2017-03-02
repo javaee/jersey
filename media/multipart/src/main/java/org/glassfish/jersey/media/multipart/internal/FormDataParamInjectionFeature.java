@@ -53,8 +53,8 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-import org.glassfish.jersey.spi.inject.Descriptors;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.Bindings;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Feature providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
@@ -65,15 +65,15 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
 public final class FormDataParamInjectionFeature implements Feature {
 
     @Inject
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
 
     @Override
     public boolean configure(final FeatureContext context) {
         FormDataParamValueSupplierProvider valueSupplier = new FormDataParamValueSupplierProvider(
-                instanceManager.getInstance(MultivaluedParameterExtractorProvider.class),
-                Injections.getProvider(instanceManager, ContainerRequest.class));
+                injectionManager.getInstance(MultivaluedParameterExtractorProvider.class),
+                Injections.getProvider(injectionManager, ContainerRequest.class));
 
-        instanceManager.register(Descriptors.injectionResolver(new ParamInjectionResolver<>(valueSupplier, FormDataParam.class)));
+        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(valueSupplier, FormDataParam.class)));
         context.register(valueSupplier, ValueSupplierProvider.class);
         return true;
     }

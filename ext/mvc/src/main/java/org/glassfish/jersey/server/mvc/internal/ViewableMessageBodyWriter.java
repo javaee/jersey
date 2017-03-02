@@ -73,7 +73,7 @@ import org.glassfish.jersey.server.mvc.spi.ResolvedViewable;
 import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
 import org.glassfish.jersey.server.mvc.spi.ViewableContext;
 import org.glassfish.jersey.server.mvc.spi.ViewableContextException;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * {@link javax.ws.rs.ext.MessageBodyWriter Message body writer} for {@link org.glassfish.jersey.server.mvc.Viewable viewable}
@@ -87,7 +87,7 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
 final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
 
     @Inject
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
 
     @Context
     private javax.inject.Provider<ExtendedUriInfo> extendedUriInfoProvider;
@@ -209,8 +209,8 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
     private Set<TemplateProcessor> getTemplateProcessors() {
         final Set<TemplateProcessor> templateProcessors = new LinkedHashSet<>();
 
-        templateProcessors.addAll(Providers.getCustomProviders(instanceManager, TemplateProcessor.class));
-        templateProcessors.addAll(Providers.getProviders(instanceManager, TemplateProcessor.class));
+        templateProcessors.addAll(Providers.getCustomProviders(injectionManager, TemplateProcessor.class));
+        templateProcessors.addAll(Providers.getProviders(injectionManager, TemplateProcessor.class));
 
         return templateProcessors;
     }
@@ -222,10 +222,10 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
      * @return {@code non-null} viewable context.
      */
     private ViewableContext getViewableContext() {
-        final Set<ViewableContext> customProviders = Providers.getCustomProviders(instanceManager, ViewableContext.class);
+        final Set<ViewableContext> customProviders = Providers.getCustomProviders(injectionManager, ViewableContext.class);
         if (!customProviders.isEmpty()) {
             return customProviders.iterator().next();
         }
-        return Providers.getProviders(instanceManager, ViewableContext.class).iterator().next();
+        return Providers.getProviders(injectionManager, ViewableContext.class).iterator().next();
     }
 }

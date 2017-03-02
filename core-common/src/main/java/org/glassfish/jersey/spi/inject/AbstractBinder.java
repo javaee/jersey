@@ -63,7 +63,7 @@ import org.glassfish.hk2.api.Factory;
  */
 public abstract class AbstractBinder implements Binder {
 
-    private List<Descriptor> descriptors = new ArrayList<>();
+    private List<Binding> bindings = new ArrayList<>();
 
     private List<AbstractBinder> installed = new ArrayList<>();
 
@@ -81,9 +81,9 @@ public abstract class AbstractBinder implements Binder {
      * @param serviceType service class.
      * @return initialized binding builder.
      */
-    public <T> ClassBeanDescriptor<T> bind(Class<T> serviceType) {
-        ClassBeanDescriptor<T> descriptor = Descriptors.service(serviceType);
-        descriptors.add(descriptor);
+    public <T> ClassBinding<T> bind(Class<T> serviceType) {
+        ClassBinding<T> descriptor = Bindings.service(serviceType);
+        bindings.add(descriptor);
         return descriptor;
     }
 
@@ -96,9 +96,9 @@ public abstract class AbstractBinder implements Binder {
      * @param serviceType service class.
      * @return initialized binding builder.
      */
-    public <T> ClassBeanDescriptor<T> bindAsContract(Class<T> serviceType) {
-        ClassBeanDescriptor<T> descriptor = Descriptors.serviceAsContract(serviceType);
-        descriptors.add(descriptor);
+    public <T> ClassBinding<T> bindAsContract(Class<T> serviceType) {
+        ClassBinding<T> descriptor = Bindings.serviceAsContract(serviceType);
+        bindings.add(descriptor);
         return descriptor;
     }
 
@@ -111,9 +111,9 @@ public abstract class AbstractBinder implements Binder {
      * @param serviceType generic service type information.
      * @return initialized binding builder.
      */
-    public <T> ClassBeanDescriptor<T> bindAsContract(GenericType<T> serviceType) {
-        ClassBeanDescriptor<T> descriptor = Descriptors.service(serviceType);
-        descriptors.add(descriptor);
+    public <T> ClassBinding<T> bindAsContract(GenericType<T> serviceType) {
+        ClassBinding<T> descriptor = Bindings.service(serviceType);
+        bindings.add(descriptor);
         return descriptor;
     }
 
@@ -125,9 +125,9 @@ public abstract class AbstractBinder implements Binder {
      * @param serviceType generic service type information.
      * @return initialized binding builder.
      */
-    public ClassBeanDescriptor<Object> bindAsContract(Type serviceType) {
-        ClassBeanDescriptor<Object> descriptor = Descriptors.serviceAsContract(serviceType);
-        descriptors.add(descriptor);
+    public ClassBinding<Object> bindAsContract(Type serviceType) {
+        ClassBinding<Object> descriptor = Bindings.serviceAsContract(serviceType);
+        bindings.add(descriptor);
         return descriptor;
     }
 
@@ -141,9 +141,9 @@ public abstract class AbstractBinder implements Binder {
      * @param service service instance.
      * @return initialized binding builder.
      */
-    public <T> InstanceBeanDescriptor<T> bind(T service) {
-        InstanceBeanDescriptor<T> descriptor = Descriptors.service(service);
-        descriptors.add(descriptor);
+    public <T> InstanceBinding<T> bind(T service) {
+        InstanceBinding<T> descriptor = Bindings.service(service);
+        bindings.add(descriptor);
         return descriptor;
     }
 
@@ -155,10 +155,10 @@ public abstract class AbstractBinder implements Binder {
      * @param factoryScope factory scope.
      * @return initialized binding builder.
      */
-    public <T> ClassFactoryDescriptor<T> bindFactory(
+    public <T> FactoryClassBinding<T> bindFactory(
             Class<? extends Factory<T>> factoryType, Class<? extends Annotation> factoryScope) {
-        ClassFactoryDescriptor<T> descriptor = Descriptors.factory(factoryType, factoryScope);
-        descriptors.add(descriptor);
+        FactoryClassBinding<T> descriptor = Bindings.factory(factoryType, factoryScope);
+        bindings.add(descriptor);
         return descriptor;
     }
 
@@ -171,9 +171,9 @@ public abstract class AbstractBinder implements Binder {
      * @param factoryType service factory class.
      * @return initialized binding builder.
      */
-    public <T> ClassFactoryDescriptor<T> bindFactory(Class<? extends Factory<T>> factoryType) {
-        ClassFactoryDescriptor<T> descriptor = Descriptors.factory(factoryType);
-        descriptors.add(descriptor);
+    public <T> FactoryClassBinding<T> bindFactory(Class<? extends Factory<T>> factoryType) {
+        FactoryClassBinding<T> descriptor = Bindings.factory(factoryType);
+        bindings.add(descriptor);
         return descriptor;
     }
 
@@ -184,9 +184,9 @@ public abstract class AbstractBinder implements Binder {
      * @param factory service instance.
      * @return initialized binding builder.
      */
-    public <T> InstanceFactoryDescriptor<T> bindFactory(Factory<T> factory) {
-        InstanceFactoryDescriptor<T> descriptor = Descriptors.factory(factory);
-        descriptors.add(descriptor);
+    public <T> FactoryInstanceBinding<T> bindFactory(Factory<T> factory) {
+        FactoryInstanceBinding<T> descriptor = Bindings.factory(factory);
+        bindings.add(descriptor);
         return descriptor;
     }
 
@@ -194,16 +194,16 @@ public abstract class AbstractBinder implements Binder {
      * Start building a new injection resolver binding. The injection resolver is naturally
      * considered to be a {@link javax.inject.Singleton singleton-scoped}.
      * <p>
-     * There is no need to provide any additional information. Other method on {@link Descriptor}
+     * There is no need to provide any additional information. Other method on {@link Binding}
      * will be ignored.
      *
      * @param <T>        type of the injection resolver.
      * @param resolver   injection resolver instance.
      * @return initialized binding builder.
      */
-    public <T extends InjectionResolver> InjectionResolverDescriptor<T> bind(T resolver) {
-        InjectionResolverDescriptor<T> descriptor = Descriptors.injectionResolver(resolver);
-        descriptors.add(descriptor);
+    public <T extends InjectionResolver> InjectionResolverBinding<T> bind(T resolver) {
+        InjectionResolverBinding<T> descriptor = Bindings.injectionResolver(resolver);
+        bindings.add(descriptor);
         return descriptor;
     }
 
@@ -223,9 +223,9 @@ public abstract class AbstractBinder implements Binder {
      *
      * @return collection of descriptors.
      */
-    public Collection<Descriptor> getDescriptors() {
+    public Collection<Binding> getBindings() {
         return flatten(this).stream()
-                .flatMap(binder -> binder.descriptors.stream())
+                .flatMap(binder -> binder.bindings.stream())
                 .collect(Collectors.toList());
     }
 

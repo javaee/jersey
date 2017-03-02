@@ -56,7 +56,7 @@ import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * An implementation of {@link ResourceMethodDispatcher.Provider} that
@@ -68,14 +68,14 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
 class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.Provider {
 
     @Inject
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
 
     @Override
     public ResourceMethodDispatcher create(final Invocable resourceMethod,
             final InvocationHandler invocationHandler,
             final ConfiguredValidator validator) {
         final List<ParamValueFactoryWithSource<?>> valueProviders =
-                ParameterValueHelper.createValueProviders(instanceManager, resourceMethod);
+                ParameterValueHelper.createValueProviders(injectionManager, resourceMethod);
         final Class<?> returnType = resourceMethod.getHandlingMethod().getReturnType();
 
         ResourceMethodDispatcher resourceMethodDispatcher;
@@ -96,18 +96,18 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         }
 
         // Inject validator.
-        instanceManager.inject(resourceMethodDispatcher);
+        injectionManager.inject(resourceMethodDispatcher);
 
         return resourceMethodDispatcher;
     }
 
     /**
-     * Get the application-configured instance manager.
+     * Get the application-configured injection manager.
      *
-     * @return application-configured instance manager.
+     * @return application-configured injection manager.
      */
-    final InstanceManager getInstanceManager() {
-        return instanceManager;
+    final InjectionManager getInjectionManager() {
+        return injectionManager;
     }
 
     private abstract static class AbstractMethodParamInvoker extends AbstractJavaResourceMethodDispatcher {

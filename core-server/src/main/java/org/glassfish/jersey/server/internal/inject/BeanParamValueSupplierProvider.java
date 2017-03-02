@@ -51,9 +51,9 @@ import org.glassfish.jersey.internal.util.collection.Cache;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.spi.inject.Descriptors;
+import org.glassfish.jersey.spi.inject.Bindings;
 import org.glassfish.jersey.spi.inject.ForeignDescriptor;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Value factory provider for {@link BeanParam bean parameters}.
@@ -63,11 +63,11 @@ import org.glassfish.jersey.spi.inject.InstanceManager;
 @Singleton
 final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider {
 
-    private final InstanceManager instanceManager;
+    private final InjectionManager injectionManager;
 
     private static final class BeanParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
         private final Parameter parameter;
-        private final InstanceManager instanceManager;
+        private final InjectionManager injectionManager;
 
         private final Cache<Class<?>, ForeignDescriptor> descriptorCache
                 = new Cache<>(new Function<Class<?>, ForeignDescriptor>() {
@@ -76,28 +76,28 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
                         // below we make sure HK2 behaves as if injection happens into a request scoped type
                         // this is to avoid having proxies injected (see JERSEY-2386)
                         // before touching the following statement, check BeanParamMemoryLeakTest first!
-                        return instanceManager
-                                .createForeignDescriptor(Descriptors.serviceAsContract(key).in(RequestScoped.class));
+                        return injectionManager
+                                .createForeignDescriptor(Bindings.serviceAsContract(key).in(RequestScoped.class));
                     }
                 });
 
-        private BeanParamValueSupplier(InstanceManager instanceManager, Parameter parameter,
+        private BeanParamValueSupplier(InjectionManager injectionManager, Parameter parameter,
                 Provider<ContainerRequest> requestProvider) {
             super(requestProvider);
 
-            this.instanceManager = instanceManager;
+            this.injectionManager = injectionManager;
             this.parameter = parameter;
         }
 
         @Override
         public Object get() {
             Class<?> rawType = parameter.getRawType();
-            Object fromHk2 = instanceManager.getInstance(rawType);
+            Object fromHk2 = injectionManager.getInstance(rawType);
             if (fromHk2 != null) { // the bean parameter type is already bound in HK2, let's just take it from there
                 return fromHk2;
             }
             ForeignDescriptor foreignDescriptor = descriptorCache.apply(rawType);
-            return instanceManager.getInstance(foreignDescriptor);
+            return injectionManager.getInstance(foreignDescriptor);
         }
     }
 
@@ -108,9 +108,9 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
      * @param requestProvider request provider.
      */
     public BeanParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
-            Provider<ContainerRequest> requestProvider, InstanceManager instanceManager) {
+            Provider<ContainerRequest> requestProvider, InjectionManager injectionManager) {
         super(mpep, requestProvider, Parameter.Source.BEAN_PARAM);
-        this.instanceManager = instanceManager;
+        this.injectionManager = injectionManager;
     }
 
     @Override
@@ -118,6 +118,6 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
             Parameter parameter,
             Provider<ContainerRequest> requestProvider) {
 
-        return new BeanParamValueSupplier(instanceManager, parameter, requestProvider);
+        return new BeanParamValueSupplier(injectionManager, parameter, requestProvider);
     }
 }

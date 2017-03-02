@@ -95,7 +95,7 @@ class NettyHttpContainer implements Container {
      * @return Executor service associated with this container.
      */
     ExecutorService getExecutorService() {
-        return appHandler.getInstanceManager().getInstance(ExecutorServiceProvider.class).getExecutorService();
+        return appHandler.getInjectionManager().getInstance(ExecutorServiceProvider.class).getExecutorService();
     }
 
     /**
@@ -104,6 +104,6 @@ class NettyHttpContainer implements Container {
      * @return Scheduled executor service associated with this container.
      */
     ScheduledExecutorService getScheduledExecutorService() {
-        return appHandler.getInstanceManager().getInstance(ScheduledExecutorServiceProvider.class).getExecutorService();
+        return appHandler.getInjectionManager().getInstance(ScheduledExecutorServiceProvider.class).getExecutorService();
     }
 }

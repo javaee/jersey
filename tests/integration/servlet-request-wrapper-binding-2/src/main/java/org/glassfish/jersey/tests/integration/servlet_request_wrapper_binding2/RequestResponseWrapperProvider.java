@@ -75,7 +75,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
-import org.glassfish.jersey.hk2.HK2InstanceManager;
+import org.glassfish.jersey.hk2.HK2InjectionManager;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -87,7 +87,7 @@ import org.glassfish.jersey.servlet.internal.spi.NoOpServletContainerProvider;
 import org.glassfish.jersey.servlet.internal.spi.RequestContextProvider;
 import org.glassfish.jersey.servlet.internal.spi.RequestScopedInitializerProvider;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.DescriptorType;
 import org.glassfish.hk2.api.DescriptorVisibility;
@@ -117,8 +117,8 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
     public static class DescriptorProvider implements ComponentProvider {
 
         @Override
-        public void initialize(InstanceManager instanceManager) {
-            ServiceLocator locator = ((HK2InstanceManager) instanceManager).getServiceLocator();
+        public void initialize(InjectionManager injectionManager) {
+            ServiceLocator locator = ((HK2InjectionManager) injectionManager).getServiceLocator();
             ServiceLocatorUtilities.addOneDescriptor(locator, new HttpServletRequestDescriptor(locator));
         }
 
@@ -168,8 +168,8 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
             public RequestScopedInitializer get(final RequestContextProvider context) {
                 return new RequestScopedInitializer() {
                     @Override
-                    public void initialize(InstanceManager instanceManager) {
-                        ServiceLocator locator = ((HK2InstanceManager) instanceManager).getServiceLocator();
+                    public void initialize(InjectionManager injectionManager) {
+                        ServiceLocator locator = ((HK2InjectionManager) injectionManager).getServiceLocator();
                         locator.<Ref<HttpServletRequest>>getService(REQUEST_TYPE)
                                 .set(finalWrap(context.getHttpServletRequest()));
                         locator.<Ref<HttpServletResponse>>getService(RESPONSE_TYPE)

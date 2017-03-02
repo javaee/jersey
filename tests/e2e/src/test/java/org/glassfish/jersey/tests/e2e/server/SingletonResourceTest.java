@@ -55,7 +55,7 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.glassfish.hk2.api.PerLookup;
@@ -244,11 +244,11 @@ public class SingletonResourceTest extends JerseyTest {
     public static class TestResource {
 
         @Inject
-        InstanceManager instanceManager;
+        InjectionManager injectionManager;
 
         private String compareInstances(Class<?> clazz) {
-            final Object res1 = Injections.getOrCreate(instanceManager, clazz);
-            final Object res2 = Injections.getOrCreate(instanceManager, clazz);
+            final Object res1 = Injections.getOrCreate(injectionManager, clazz);
+            final Object res2 = Injections.getOrCreate(injectionManager, clazz);
             return (res1 == res2) ? "same-instances" : "different-instances";
         }
 

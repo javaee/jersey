@@ -65,7 +65,7 @@ import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.process.internal.ExecutorProviders;
 import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Jersey externalized implementation of client-side JAX-RS {@link javax.ws.rs.core.Configurable
@@ -352,16 +352,16 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             return commonConfig.getConfiguration().getInstances();
         }
 
-        public void configureAutoDiscoverableProviders(InstanceManager instanceManager) {
-            commonConfig.configureAutoDiscoverableProviders(instanceManager, false);
+        public void configureAutoDiscoverableProviders(InjectionManager injectionManager) {
+            commonConfig.configureAutoDiscoverableProviders(injectionManager, false);
         }
 
-        public void configureForcedAutoDiscoverableProviders(InstanceManager instanceManager) {
-            commonConfig.configureAutoDiscoverableProviders(instanceManager, true);
+        public void configureForcedAutoDiscoverableProviders(InjectionManager injectionManager) {
+            commonConfig.configureAutoDiscoverableProviders(injectionManager, true);
         }
 
-        public void configureMetaProviders(InstanceManager instanceManager) {
-            commonConfig.configureMetaProviders(instanceManager);
+        public void configureMetaProviders(InjectionManager injectionManager) {
+            commonConfig.configureMetaProviders(injectionManager);
         }
 
         public ComponentBag getComponentBag() {
@@ -382,19 +382,19 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             final State runtimeCfgState = this.copy();
             runtimeCfgState.markAsShared();
 
-            final InstanceManager instanceManager =
-                    Injections.createInstanceManager(new ClientBinder(runtimeCfgState.getProperties()));
+            final InjectionManager injectionManager =
+                    Injections.createInjectionManager(new ClientBinder(runtimeCfgState.getProperties()));
 
             // AutoDiscoverable.
             if (!CommonProperties.getValue(runtimeCfgState.getProperties(), RuntimeType.CLIENT,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
-                runtimeCfgState.configureAutoDiscoverableProviders(instanceManager);
+                runtimeCfgState.configureAutoDiscoverableProviders(injectionManager);
             } else {
-                runtimeCfgState.configureForcedAutoDiscoverableProviders(instanceManager);
+                runtimeCfgState.configureForcedAutoDiscoverableProviders(injectionManager);
             }
 
             // Configure binders and features.
-            runtimeCfgState.configureMetaProviders(instanceManager);
+            runtimeCfgState.configureMetaProviders(injectionManager);
 
             // Bind configuration.
             final AbstractBinder configBinder = new AbstractBinder() {
@@ -403,17 +403,17 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
                     bind(runtimeCfgState).to(Configuration.class);
                 }
             };
-            instanceManager.register(configBinder);
+            injectionManager.register(configBinder);
 
             // Bind providers.
-            ProviderBinder.bindProviders(runtimeCfgState.getComponentBag(), RuntimeType.CLIENT, null, instanceManager);
+            ProviderBinder.bindProviders(runtimeCfgState.getComponentBag(), RuntimeType.CLIENT, null, injectionManager);
 
             // Bind executors.
-            ExecutorProviders.createInjectionBindings(instanceManager);
+            ExecutorProviders.createInjectionBindings(injectionManager);
 
             final ClientConfig configuration = new ClientConfig(runtimeCfgState);
             final Connector connector = connectorProvider.getConnector(client, configuration);
-            final ClientRuntime crt = new ClientRuntime(configuration, connector, instanceManager);
+            final ClientRuntime crt = new ClientRuntime(configuration, connector, injectionManager);
 
             client.registerShutdownHook(crt);
 

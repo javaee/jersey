@@ -52,22 +52,22 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class AbstractJaxbProviderTest {
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
 
     @Before
     public void setUp() {
-        instanceManager = SaxParserFactoryInjectionProviderTest.createInstanceManager();
+        injectionManager = SaxParserFactoryInjectionProviderTest.createInjectionManager();
     }
 
     @Test
     public void abstractJaxbProviderDoesNotReadExternalDtds() throws Exception {
-        SAXParserFactory spf = instanceManager.getInstance(SAXParserFactory.class);
+        SAXParserFactory spf = injectionManager.getInstance(SAXParserFactory.class);
 
         String url = "file:///no-such-file";
         String s = "<!DOCTYPE x SYSTEM '" + url + "'><x/>";

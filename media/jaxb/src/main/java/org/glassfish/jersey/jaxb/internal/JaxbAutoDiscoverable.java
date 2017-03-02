@@ -46,25 +46,25 @@ import javax.ws.rs.core.FeatureContext;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * JAXB {@link ForcedAutoDiscoverable} that registers all necessary JAXB features
- * into the instance manager directly.
+ * into the injection manager directly.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class JaxbAutoDiscoverable implements ForcedAutoDiscoverable {
 
     @Inject
-    private InstanceManager instanceManager;
+    private InjectionManager injectionManager;
 
     @Override
     public void configure(final FeatureContext context) {
-        instanceManager.register(new JaxbMessagingBinder());
+        injectionManager.register(new JaxbMessagingBinder());
 
         if (RuntimeType.SERVER == context.getConfiguration().getRuntimeType()) {
-            instanceManager.register(new JaxbParamConverterBinder());
+            injectionManager.register(new JaxbParamConverterBinder());
         }
     }
 }

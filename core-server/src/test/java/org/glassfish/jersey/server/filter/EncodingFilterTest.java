@@ -87,7 +87,7 @@ public class EncodingFilterTest {
     @Test
     public void testNoInterceptor() {
         ResourceConfig rc = new ResourceConfig(EncodingFilter.class);
-        ContainerResponseFilter filter = new ApplicationHandler(rc).getInstanceManager()
+        ContainerResponseFilter filter = new ApplicationHandler(rc).getInjectionManager()
                 .getInstance(ContainerResponseFilter.class);
         assertNotNull(filter);
         assertTrue(filter instanceof EncodingFilter);
@@ -161,7 +161,7 @@ public class EncodingFilterTest {
     private EncodingFilter initializeAndGetFilter() {
         ResourceConfig rc = new ResourceConfig();
         EncodingFilter.enableFor(rc, FooEncoding.class, GZipEncoder.class);
-        return (EncodingFilter) new ApplicationHandler(rc).getInstanceManager().getInstance(ContainerResponseFilter.class);
+        return (EncodingFilter) new ApplicationHandler(rc).getInjectionManager().getInstance(ContainerResponseFilter.class);
     }
 
     private void testEncoding(String expected, String... accepted) throws IOException {

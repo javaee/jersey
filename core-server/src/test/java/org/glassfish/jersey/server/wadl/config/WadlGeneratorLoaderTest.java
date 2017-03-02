@@ -55,12 +55,12 @@ import java.util.Properties;
 
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.server.InstanceManagerFactory;
+import org.glassfish.jersey.server.InjectionManagerFactory;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
-import org.glassfish.jersey.spi.inject.InstanceManager;
+import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -84,12 +84,12 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadFileFromClasspathRelative() throws Exception {
-        final InstanceManager instanceManager = InstanceManagerFactory.createInstanceManager();
+        final InjectionManager injectionManager = InjectionManagerFactory.createInjectionManager();
         final Properties props = new Properties();
         props.put("testFile", "classpath:testfile.xml");
         final WadlGeneratorDescription description = new WadlGeneratorDescription(MyWadlGenerator2.class, props);
 
-        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(instanceManager, description);
+        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(injectionManager, description);
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
 
         final URL resource = getClass().getResource("testfile.xml");
@@ -100,13 +100,13 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadFileFromClasspathAbsolute() throws Exception {
-        final InstanceManager instanceManager = InstanceManagerFactory.createInstanceManager();
+        final InjectionManager injectionManager = InjectionManagerFactory.createInjectionManager();
         final Properties props = new Properties();
         final String path = "classpath:/" + getClass().getPackage().getName().replaceAll("\\.", "/") + "/testfile.xml";
         props.put("testFile", path);
         final WadlGeneratorDescription description = new WadlGeneratorDescription(MyWadlGenerator2.class, props);
 
-        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(instanceManager, description);
+        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(injectionManager, description);
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
 
         final URL resource = getClass().getResource("testfile.xml");
@@ -117,7 +117,7 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadFileFromAbsolutePath() throws Exception {
-        final InstanceManager instanceManager = InstanceManagerFactory.createInstanceManager();
+        final InjectionManager injectionManager = InjectionManagerFactory.createInjectionManager();
         final URL resource = getClass().getResource("testfile.xml");
 
         final Properties props = new Properties();
@@ -125,7 +125,7 @@ public class WadlGeneratorLoaderTest {
         props.put("testFile", path);
         final WadlGeneratorDescription description = new WadlGeneratorDescription(MyWadlGenerator2.class, props);
 
-        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(instanceManager, description);
+        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(injectionManager, description);
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
 
         Assert.assertEquals(new File(resource.toURI()).getAbsolutePath(), ((MyWadlGenerator2) wadlGenerator).getTestFile()
@@ -134,13 +134,13 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadStream() throws Exception {
-        final InstanceManager instanceManager = InstanceManagerFactory.createInstanceManager();
+        final InjectionManager injectionManager = InjectionManagerFactory.createInjectionManager();
         final Properties props = new Properties();
         final String path = getClass().getPackage().getName().replaceAll("\\.", "/") + "/testfile.xml";
         props.put("testStream", path);
         final WadlGeneratorDescription description = new WadlGeneratorDescription(MyWadlGenerator2.class, props);
 
-        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(instanceManager, description);
+        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(injectionManager, description);
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
 
         final URL resource = getClass().getResource("testfile.xml");

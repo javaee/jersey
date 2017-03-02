@@ -47,11 +47,11 @@ import java.util.OptionalInt;
 import java.util.Set;
 
 /**
- * Injection binding description used to describe the aliases to main {@link Descriptor}.
+ * Injection binding description used to describe the aliases to main {@link Binding}.
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class AliasDescriptor {
+public class AliasBinding {
 
     private final String contract;
     private final Set<Annotation> qualifiers = new LinkedHashSet<>();
@@ -65,77 +65,77 @@ public class AliasDescriptor {
      *
      * @param contract contract of the alias.
      */
-     /* package */ AliasDescriptor(String contract) {
+     /* package */ AliasBinding(String contract) {
         this.contract = contract;
     }
 
     /**
-     * Gets descriptor's contract.
+     * Gets binding's contract.
      *
-     * @return descriptor's contract.
+     * @return binding's contract.
      */
     public String getContract() {
         return contract;
     }
 
     /**
-     * Gets descriptor's optional scope.
+     * Gets binding's optional scope.
      *
-     * @return descriptor's scope, if set explicitly.
+     * @return binding's scope, if set explicitly.
      */
     public Optional<String> getScope() {
         return scope;
     }
 
     /**
-     * Sets the descriptor's scope.
+     * Sets the binding's scope.
      *
-     * @param scope descriptor's scope.
+     * @param scope binding's scope.
      * @return current instance.
      */
-    public AliasDescriptor in(String scope) {
+    public AliasBinding in(String scope) {
         this.scope = Optional.of(scope);
 
         return this;
     }
 
     /**
-     * Gets descriptor's optional rank.
+     * Gets binding's optional rank.
      *
-     * @return descriptor's rank, if set explicitly.
+     * @return binding's rank, if set explicitly.
      */
     public OptionalInt getRank() {
         return rank;
     }
 
     /**
-     * Sets the descriptor's rank.
+     * Sets the binding's rank.
      *
-     * @param rank descriptor's rank.
+     * @param rank binding's rank.
      * @return current instance.
      */
-    public AliasDescriptor ranked(int rank) {
+    public AliasBinding ranked(int rank) {
         this.rank = OptionalInt.of(rank);
 
         return this;
     }
 
     /**
-     * Gets descriptor's qualifiers.
+     * Gets binding's qualifiers.
      *
-     * @return descriptor's qualifiers
+     * @return binding's qualifiers
      */
     public Set<Annotation> getQualifiers() {
         return qualifiers;
     }
 
     /**
-     * Adds a new descriptor's qualifier.
+     * Adds a new binding's qualifier.
      *
-     * @param annotation descriptor's qualifier.
+     * @param annotation binding's qualifier.
      * @return current instance.
      */
-    public AliasDescriptor qualifiedBy(Annotation annotation) {
+    public AliasBinding qualifiedBy(Annotation annotation) {
         if (annotation != null) {
             qualifiers.add(annotation);
         }
