@@ -48,8 +48,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.hk2.HK2InjectionManager;
-import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.MultiException;
 

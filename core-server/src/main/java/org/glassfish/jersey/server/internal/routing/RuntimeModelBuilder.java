@@ -46,6 +46,7 @@ import java.util.List;
 
 import javax.ws.rs.core.Configuration;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -57,7 +58,6 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.PathPattern;
 import org.glassfish.jersey.uri.UriTemplate;
 

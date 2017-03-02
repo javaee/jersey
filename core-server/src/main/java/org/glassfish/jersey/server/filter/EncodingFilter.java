@@ -60,10 +60,10 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.ContentEncoder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Container filter that supports encoding-based content negotiation. The filter examines what

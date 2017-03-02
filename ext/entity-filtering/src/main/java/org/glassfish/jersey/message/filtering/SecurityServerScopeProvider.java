@@ -53,7 +53,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * @author Michal Gajdos

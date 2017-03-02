@@ -42,11 +42,11 @@ package org.glassfish.jersey.server.internal.monitoring;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Container listener that listens to container events and trigger the {@link ApplicationEvent application events}

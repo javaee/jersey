@@ -47,7 +47,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * Invokes {@link PreDestroy} methods on all registered objects, when the injection manager is shut down.

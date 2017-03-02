@@ -48,11 +48,11 @@ import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * An injectable {@link ResourceMethodInvocationHandlerProvider resource method

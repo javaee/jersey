@@ -78,6 +78,8 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.guava.Preconditions;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.Closure;
@@ -113,8 +115,6 @@ import org.glassfish.jersey.server.spi.ExternalRequestContext;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
 import org.glassfish.jersey.server.spi.ResponseErrorMapper;
 import org.glassfish.jersey.spi.ExceptionMappers;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;

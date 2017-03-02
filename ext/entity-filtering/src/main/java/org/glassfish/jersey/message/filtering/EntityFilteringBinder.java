@@ -44,12 +44,12 @@ import javax.ws.rs.core.GenericType;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.message.filtering.spi.EntityGraphProvider;
 import org.glassfish.jersey.message.filtering.spi.EntityInspector;
 import org.glassfish.jersey.message.filtering.spi.ObjectGraph;
 import org.glassfish.jersey.message.filtering.spi.ObjectGraphTransformer;
 import org.glassfish.jersey.message.filtering.spi.ObjectProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Binder for Entity Data Filtering feature.

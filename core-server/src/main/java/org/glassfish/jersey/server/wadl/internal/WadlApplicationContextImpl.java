@@ -56,6 +56,7 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -63,7 +64,6 @@ import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfig;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfigLoader;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import com.sun.research.ws.wadl.Application;
 import com.sun.research.ws.wadl.Doc;

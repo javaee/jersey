@@ -42,7 +42,7 @@ package org.glassfish.jersey.ext.cdi1x.servlet.internal;
 
 import org.glassfish.jersey.ext.cdi1x.internal.GenericInjectionManagerStore;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * {@link InjectionManagerStore injection manager} for servlet based containers. The provider

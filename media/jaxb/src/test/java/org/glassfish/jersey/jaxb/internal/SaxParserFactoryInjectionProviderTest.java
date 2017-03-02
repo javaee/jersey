@@ -59,10 +59,10 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerThread;

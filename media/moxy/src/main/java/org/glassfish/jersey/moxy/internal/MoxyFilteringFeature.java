@@ -47,9 +47,9 @@ import javax.ws.rs.core.GenericType;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.message.filtering.spi.ObjectGraphTransformer;
 import org.glassfish.jersey.message.filtering.spi.ObjectProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.eclipse.persistence.jaxb.ObjectGraph;
 

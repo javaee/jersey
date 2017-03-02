@@ -70,6 +70,8 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.Producer;
@@ -91,8 +93,6 @@ import org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandle
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Server-side request-response {@link Inflector inflector} for invoking methods

@@ -38,33 +38,32 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
 /**
- * Injection binding description of a bean bound via its a Java class.
+ * Class which has the fields containing the instance of {@link InjectionResolver} and its a concrete type.
  *
- * @param <T> type of the bean described by this injection binding.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @param <T> type of the annotation which is served using th given injection resolver.
  */
-public class ClassBinding<T> extends Binding<T, ClassBinding<T>> {
+public class InjectionResolverBinding<T extends InjectionResolver> extends Binding<T, InjectionResolverBinding<T>> {
 
-    private final Class<T> service;
+    private final T resolver;
 
     /**
-     * Creates a service as a class.
+     * Creates an injection resolver as an instance.
      *
-     * @param service service's class.
+     * @param resolver injection resolver instance.
      */
-    ClassBinding(Class<T> service) {
-        this.service = service;
+    InjectionResolverBinding(T resolver) {
+        this.resolver = resolver;
     }
 
     /**
-     * Gets service' class.
+     * Gets the injection resolver handled by this descriptor.
      *
-     * @return service's class.
+     * @return {@code InjectionResolver} instance.
      */
-    public Class<T> getService() {
-        return service;
+    public T getResolver() {
+        return resolver;
     }
 }

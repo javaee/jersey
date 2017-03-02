@@ -38,30 +38,57 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
- * The descriptor holder for an externally provided DI providers. Using this interface DI provider is able to provider his own
- * descriptor which can be used and returned to the DI provider in further processing.
+ * Utility class which is able to install several binders and register them as a whole.
  * <p>
- * This is useful in the case of caching where an algorithm is able to store and subsequently provide for an injection the already
- * resolved descriptor of the same value.
+ * {@code Binder} is able to recursively register all injection binding descriptions in all installed binders.
+ *
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class ForeignDescriptorImpl implements ForeignDescriptor {
+public class CompositeBinder extends AbstractBinder {
 
-    private Object foreignDescriptor;
+    private Collection<Binder> installed = new ArrayList<>();
 
     /**
-     * Constructor accepts a descriptor of the DI provider and to be able to provide it in further processing.
+     * Creates a new {@code CompositeBinder} and adds the collection of binders as candidates to install.
      *
-     * @param foreignDescriptor DI provider's descriptor.
+     * @param installed all binder ready to install.
      */
-    public ForeignDescriptorImpl(Object foreignDescriptor) {
-        this.foreignDescriptor = foreignDescriptor;
+    private CompositeBinder(Collection<Binder> installed) {
+        this.installed = installed;
     }
 
+    /**
+     * Creates {@code CompositeBinder} with provided binders.
+     *
+     * @param binders provided binder to install as a collection.
+     * @return composite binder.
+     */
+    public static Binder wrap(Collection<Binder> binders) {
+        return new CompositeBinder(binders);
+    }
+
+    /**
+     * Creates {@code CompositeBinder} with provided binders.
+     *
+     * @param binders provided binder to install as an array.
+     * @return composite binder.
+     */
+    public static Binder wrap(Binder... binders) {
+        return new CompositeBinder(Arrays.asList(binders));
+    }
+
+    /**
+     * Automatically installed all provided binders.
+     */
     @Override
-    public Object get() {
-        return foreignDescriptor;
+    public void configure() {
+        install(installed.toArray(new AbstractBinder[] {}));
     }
 }

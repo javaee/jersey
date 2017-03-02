@@ -46,6 +46,7 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.MappableException;
@@ -76,7 +77,7 @@ public interface ResourceMethodDispatcher {
      * </p>
      * <p>
      * Resource method dispatcher provider implementations can be registered in Jersey application
-     * by supplying a custom HK2 {@link org.glassfish.jersey.spi.inject.Binder} that binds the
+     * by supplying a custom HK2 {@link Binder} that binds the
      * custom service implementation(s) to the {@code ResourceMethodDispatcher.Provider} contract.
      * </p>
      *

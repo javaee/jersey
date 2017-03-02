@@ -45,8 +45,8 @@ import javax.ws.rs.client.ClientResponseContext;
 
 import org.glassfish.jersey.InjectionManagerProvider;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Extension of {@link InjectionManagerProvider} which contains helper static methods

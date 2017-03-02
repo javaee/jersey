@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.server.spi;
 
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * This is to allow integration with other DI providers that

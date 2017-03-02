@@ -56,8 +56,8 @@ import javax.inject.Inject;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.spi.ContentEncoder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Client filter adding support for {@link org.glassfish.jersey.spi.ContentEncoder content encoding}. The filter adds

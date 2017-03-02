@@ -51,6 +51,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ServerProperties;
@@ -59,7 +60,6 @@ import org.glassfish.jersey.server.internal.monitoring.jmx.MBeanExposer;
 import org.glassfish.jersey.server.monitoring.ApplicationInfo;
 import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.PerLookup;
 

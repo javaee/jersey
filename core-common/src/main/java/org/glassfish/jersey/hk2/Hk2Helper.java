@@ -45,14 +45,14 @@ import java.lang.reflect.Type;
 import java.util.Set;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.inject.AliasBinding;
-import org.glassfish.jersey.spi.inject.Binding;
-import org.glassfish.jersey.spi.inject.Bindings;
-import org.glassfish.jersey.spi.inject.ClassBinding;
-import org.glassfish.jersey.spi.inject.FactoryClassBinding;
-import org.glassfish.jersey.spi.inject.FactoryInstanceBinding;
-import org.glassfish.jersey.spi.inject.InjectionResolverBinding;
-import org.glassfish.jersey.spi.inject.InstanceBinding;
+import org.glassfish.jersey.internal.inject.AliasBinding;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.ClassBinding;
+import org.glassfish.jersey.internal.inject.FactoryClassBinding;
+import org.glassfish.jersey.internal.inject.FactoryInstanceBinding;
+import org.glassfish.jersey.internal.inject.InjectionResolverBinding;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -70,12 +70,12 @@ import org.glassfish.hk2.utilities.reflection.ParameterizedTypeImpl;
 class Hk2Helper {
 
     /**
-     * Bind a translated Jersey-like {@link org.glassfish.jersey.spi.inject.Binder} to HK2-like {@link Binder}.
+     * Bind a translated Jersey-like {@link org.glassfish.jersey.internal.inject.Binder} to HK2-like {@link Binder}.
      *
      * @param locator      HK2 locator.
      * @param jerseyBinder Jersey-like binder.
      */
-    static void bind(ServiceLocator locator, org.glassfish.jersey.spi.inject.Binder jerseyBinder) {
+    static void bind(ServiceLocator locator, org.glassfish.jersey.internal.inject.Binder jerseyBinder) {
         bind(locator, jerseyBinder.getBindings());
     }
 
@@ -356,7 +356,7 @@ class Hk2Helper {
 
     private static ActiveDescriptor<?> translateToActiveDescriptor(InjectionResolverBinding<?> desc) {
         ParameterizedTypeImpl parameterizedType = new ParameterizedTypeImpl(
-                org.glassfish.jersey.spi.inject.InjectionResolver.class, desc.getResolver().getAnnotation());
+                org.glassfish.jersey.internal.inject.InjectionResolver.class, desc.getResolver().getAnnotation());
 
         return BuilderHelper.createConstantDescriptor(desc.getResolver(), null, parameterizedType);
     }

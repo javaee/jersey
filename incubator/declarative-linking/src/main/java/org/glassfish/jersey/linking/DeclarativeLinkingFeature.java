@@ -47,9 +47,9 @@ import javax.ws.rs.core.FeatureContext;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.Beta;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.linking.mapping.NaiveResourceMappingContext;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * A feature to enable the declarative linking functionality.

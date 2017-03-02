@@ -40,11 +40,11 @@
 
 package org.glassfish.jersey.server.model.internal;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Configures injection bindings for resource modeling API.

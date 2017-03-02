@@ -57,9 +57,9 @@ import java.util.List;
 
 import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * A resource model validator that checks the given resource model.

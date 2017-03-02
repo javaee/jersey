@@ -61,7 +61,7 @@ import org.glassfish.jersey.examples.feedcombiner.service.CrudService;
 import org.glassfish.jersey.examples.feedcombiner.store.DataStoreObserver;
 import org.glassfish.jersey.examples.feedcombiner.store.InMemoryDataStore;
 import org.glassfish.jersey.examples.feedcombiner.store.ObservableDataStore;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

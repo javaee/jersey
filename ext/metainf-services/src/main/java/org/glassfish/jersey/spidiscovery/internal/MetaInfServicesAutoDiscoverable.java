@@ -51,9 +51,9 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.annotation.Priority;
 
 import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * @author Michal Gajdos

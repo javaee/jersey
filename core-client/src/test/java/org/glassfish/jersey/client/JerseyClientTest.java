@@ -64,7 +64,7 @@ import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.internal.Version;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 import org.junit.After;
 import org.junit.Before;

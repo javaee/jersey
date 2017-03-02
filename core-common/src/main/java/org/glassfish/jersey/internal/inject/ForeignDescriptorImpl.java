@@ -38,48 +38,30 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
-
-import java.lang.reflect.Type;
+package org.glassfish.jersey.internal.inject;
 
 /**
- * Injection binding description of a bean bound directly as a specific instance.
- *
- * @param <T> type of the bean described by this injection binding.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * The descriptor holder for an externally provided DI providers. Using this interface DI provider is able to provider his own
+ * descriptor which can be used and returned to the DI provider in further processing.
+ * <p>
+ * This is useful in the case of caching where an algorithm is able to store and subsequently provide for an injection the already
+ * resolved descriptor of the same value.
  */
-public class InstanceBinding<T> extends Binding<T, InstanceBinding<T>> {
+public class ForeignDescriptorImpl implements ForeignDescriptor {
 
-    private final T service;
+    private Object foreignDescriptor;
 
     /**
-     * Creates a service as an instance.
+     * Constructor accepts a descriptor of the DI provider and to be able to provide it in further processing.
      *
-     * @param service service's instance.
+     * @param foreignDescriptor DI provider's descriptor.
      */
-    InstanceBinding(T service) {
-        this(service, null);
+    public ForeignDescriptorImpl(Object foreignDescriptor) {
+        this.foreignDescriptor = foreignDescriptor;
     }
 
-    /**
-     * Creates a service as an instance.
-     *
-     * @param service      service's instance.
-     * @param contractType service's contractType.
-     */
-    InstanceBinding(T service, Type contractType) {
-        this.service = service;
-        if (contractType != null) {
-            this.to(contractType);
-        }
-    }
-
-    /**
-     * Gets service' class.
-     *
-     * @return service's class.
-     */
-    public T getService() {
-        return service;
+    @Override
+    public Object get() {
+        return foreignDescriptor;
     }
 }

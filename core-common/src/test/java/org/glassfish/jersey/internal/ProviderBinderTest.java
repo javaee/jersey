@@ -66,13 +66,13 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.CustomAnnotationLiteral;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;

@@ -47,7 +47,7 @@ import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
-import org.glassfish.jersey.spi.inject.AnnotationLiteral;
+import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 
 /**
  * Convenience utility methods for creating instances of security annotations.

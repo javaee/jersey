@@ -58,14 +58,14 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 import org.glassfish.jersey.spi.ServiceHolder;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates

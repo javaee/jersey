@@ -38,57 +38,22 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * Utility class which is able to install several binders and register them as a whole.
- * <p>
- * {@code Binder} is able to recursively register all injection binding descriptions in all installed binders.
+ * Interface dedicated to keep some level of code compatibility between previous HK2 implementation and new DI SPI.
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class CompositeBinder extends AbstractBinder {
-
-    private Collection<Binder> installed = new ArrayList<>();
+public interface Binder {
 
     /**
-     * Creates a new {@code CompositeBinder} and adds the collection of binders as candidates to install.
+     * Gets a collection of descriptors registered in this jersey binder.
      *
-     * @param installed all binder ready to install.
+     * @return collection of descriptors.
      */
-    private CompositeBinder(Collection<Binder> installed) {
-        this.installed = installed;
-    }
+    Collection<Binding> getBindings();
 
-    /**
-     * Creates {@code CompositeBinder} with provided binders.
-     *
-     * @param binders provided binder to install as a collection.
-     * @return composite binder.
-     */
-    public static Binder wrap(Collection<Binder> binders) {
-        return new CompositeBinder(binders);
-    }
-
-    /**
-     * Creates {@code CompositeBinder} with provided binders.
-     *
-     * @param binders provided binder to install as an array.
-     * @return composite binder.
-     */
-    public static Binder wrap(Binder... binders) {
-        return new CompositeBinder(Arrays.asList(binders));
-    }
-
-    /**
-     * Automatically installed all provided binders.
-     */
-    @Override
-    public void configure() {
-        install(installed.toArray(new AbstractBinder[] {}));
-    }
 }

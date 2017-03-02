@@ -46,7 +46,7 @@ import java.util.List;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerInjectedTarget;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionTargetListener;
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * Generic {@link InjectionManagerStore injection manager store} that allows multiple

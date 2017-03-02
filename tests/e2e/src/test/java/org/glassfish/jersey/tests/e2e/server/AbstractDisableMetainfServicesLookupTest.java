@@ -68,9 +68,9 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Assert;

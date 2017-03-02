@@ -45,9 +45,9 @@ import java.util.function.Function;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Request/response scoped injection support initialization stage.

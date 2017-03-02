@@ -45,8 +45,8 @@ import java.util.Map;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.FeatureContext;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Wrapper of {@link javax.ws.rs.core.FeatureContext} that can supply instance of

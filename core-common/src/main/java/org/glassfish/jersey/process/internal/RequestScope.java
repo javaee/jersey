@@ -52,10 +52,10 @@ import java.util.logging.Logger;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.LazyUid;
 import org.glassfish.jersey.internal.util.Producer;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Context;

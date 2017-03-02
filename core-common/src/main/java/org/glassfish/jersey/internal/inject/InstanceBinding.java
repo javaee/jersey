@@ -38,16 +38,48 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
-import javax.ws.rs.core.Context;
+import java.lang.reflect.Type;
 
 /**
- * A marker interface to {@code InjectionResolver&lt;Context&gt;}. This interface must be implemented by every Dependency
- * Injection Provider to properly handle the injection of {@link Context} annotation.
- * <p>
- * Jersey cannot simply add the default implementation of this interface because the proper implementation requires a lot of
- * caching and optimization which can be done only with very close dependency to DI provider.
+ * Injection binding description of a bean bound directly as a specific instance.
+ *
+ * @param <T> type of the bean described by this injection binding.
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public interface ContextInjectionResolver extends InjectionResolver<Context> {
+public class InstanceBinding<T> extends Binding<T, InstanceBinding<T>> {
+
+    private final T service;
+
+    /**
+     * Creates a service as an instance.
+     *
+     * @param service service's instance.
+     */
+    InstanceBinding(T service) {
+        this(service, null);
+    }
+
+    /**
+     * Creates a service as an instance.
+     *
+     * @param service      service's instance.
+     * @param contractType service's contractType.
+     */
+    InstanceBinding(T service, Type contractType) {
+        this.service = service;
+        if (contractType != null) {
+            this.to(contractType);
+        }
+    }
+
+    /**
+     * Gets service' class.
+     *
+     * @return service's class.
+     */
+    public T getService() {
+        return service;
+    }
 }

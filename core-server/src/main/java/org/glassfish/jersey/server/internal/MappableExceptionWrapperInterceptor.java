@@ -52,9 +52,9 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 import javax.annotation.Priority;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 import org.glassfish.jersey.server.internal.process.MappableException;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Interceptor that wraps specific exceptions types thrown by wrapped interceptors and by message

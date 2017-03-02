@@ -45,7 +45,7 @@ import java.io.StringWriter;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.ErrorInformation;
 import org.glassfish.hk2.api.ErrorService;

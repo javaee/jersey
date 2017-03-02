@@ -38,49 +38,16 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
-import java.lang.annotation.Annotation;
-
-import org.glassfish.hk2.api.Factory;
+import javax.ws.rs.core.Context;
 
 /**
- * Injection binding description of a bean bound indirectly via an factory class producing instances of the bound type.
- *
- * @param <T> type of the bean described by this injection binding descriptor.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * A marker interface to {@code InjectionResolver&lt;Context&gt;}. This interface must be implemented by every Dependency
+ * Injection Provider to properly handle the injection of {@link Context} annotation.
+ * <p>
+ * Jersey cannot simply add the default implementation of this interface because the proper implementation requires a lot of
+ * caching and optimization which can be done only with very close dependency to DI provider.
  */
-public class FactoryClassBinding<T> extends Binding<T, FactoryClassBinding<T>> {
-
-    private final Class<? extends Factory<T>> factoryClass;
-    private final Class<? extends Annotation> factoryScope;
-
-    /**
-     * Creates a service as a class.
-     *
-     * @param factoryClass factory's class.
-     * @param scope        factory's scope.
-     */
-    FactoryClassBinding(Class<? extends Factory<T>> factoryClass, Class<? extends Annotation> scope) {
-        this.factoryClass = factoryClass;
-        this.factoryScope = scope;
-    }
-
-    /**
-     * Gets factory's class.
-     *
-     * @return factory's class.
-     */
-    public Class<? extends Factory<T>> getFactoryClass() {
-        return factoryClass;
-    }
-
-    /**
-     * Gets factory's scope.
-     *
-     * @return factory's scope.
-     */
-    public Class<? extends Annotation> getFactoryScope() {
-        return factoryScope;
-    }
+public interface ContextInjectionResolver extends InjectionResolver<Context> {
 }

@@ -45,9 +45,9 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.mvc.spi.ViewableContext;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Provides MVC functionality.

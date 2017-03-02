@@ -55,6 +55,9 @@ import javax.ws.rs.ext.ParamConverterProvider;
 
 import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
@@ -64,9 +67,6 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.ContextInjectionResolver;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Injection binder providing support for JAX-RS and Jersey injection annotations.

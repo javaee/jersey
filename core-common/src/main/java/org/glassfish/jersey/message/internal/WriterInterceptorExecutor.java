@@ -62,9 +62,9 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Represents writer interceptor chain executor for both client and server side.

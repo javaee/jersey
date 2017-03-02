@@ -56,13 +56,13 @@ import javax.ws.rs.core.Configuration;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.filtering.internal.LocalizationMessages;
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.message.filtering.spi.ScopeProvider;
 import org.glassfish.jersey.message.filtering.spi.ScopeResolver;
 import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Default implementation of {@link ScopeProvider scope provider}. This class can be used on client to retrieve

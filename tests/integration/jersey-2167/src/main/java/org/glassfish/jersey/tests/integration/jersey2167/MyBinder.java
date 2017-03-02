@@ -42,8 +42,8 @@ package org.glassfish.jersey.tests.integration.jersey2167;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Custom annotation binder for JERSEY-2167 reproducer.

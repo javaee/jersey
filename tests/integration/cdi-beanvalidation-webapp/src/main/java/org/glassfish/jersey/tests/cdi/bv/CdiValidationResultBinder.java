@@ -48,10 +48,10 @@ import javax.inject.Inject;
 
 import org.glassfish.jersey.ext.cdi1x.internal.CdiUtil;
 import org.glassfish.jersey.ext.cdi1x.internal.GenericCdiBeanHk2Factory;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.spi.inject.Binding;
-import org.glassfish.jersey.spi.inject.Bindings;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Utility that binds HK2 factory to provide CDI managed validation result bean.

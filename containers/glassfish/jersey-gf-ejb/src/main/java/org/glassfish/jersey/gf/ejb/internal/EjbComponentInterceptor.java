@@ -43,7 +43,7 @@ import javax.annotation.PostConstruct;
 import javax.interceptor.InvocationContext;
 
 import org.glassfish.jersey.ext.cdi1x.internal.CdiComponentProvider;
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * EJB interceptor to inject Jersey specific stuff into EJB beans.

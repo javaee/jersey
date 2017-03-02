@@ -53,6 +53,7 @@ import javax.ws.rs.ProcessingException;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
@@ -60,7 +61,6 @@ import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.DestroyListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**

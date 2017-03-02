@@ -54,6 +54,8 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfacePair;
@@ -61,8 +63,6 @@ import org.glassfish.jersey.internal.util.collection.KeyComparatorHashMap;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.spi.ContextResolvers;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * A factory implementation for managing {@link ContextResolver} instances.

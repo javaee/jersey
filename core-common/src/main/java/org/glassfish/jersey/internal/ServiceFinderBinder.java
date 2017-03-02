@@ -45,8 +45,8 @@ import java.util.Map;
 import javax.ws.rs.RuntimeType;
 
 import org.glassfish.jersey.CommonProperties;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * Simple ServiceFinder injection binder.

@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.ext.cdi1x.internal.spi;
 
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * {@link InjectionManager injection manager} designed for Jersey

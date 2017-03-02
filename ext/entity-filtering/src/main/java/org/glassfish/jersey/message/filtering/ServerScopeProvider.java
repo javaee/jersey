@@ -57,11 +57,11 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.DataStructures;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.ResourceMethod;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Server-side implementation of {@link org.glassfish.jersey.message.filtering.spi.ScopeProvider scope provider}. In addition to

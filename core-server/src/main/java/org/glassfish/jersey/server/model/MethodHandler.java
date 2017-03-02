@@ -49,8 +49,8 @@ import java.util.List;
 
 import javax.ws.rs.Encoded;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Resource method handler model.

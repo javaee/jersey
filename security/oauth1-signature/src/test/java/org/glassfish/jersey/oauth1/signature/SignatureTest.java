@@ -40,8 +40,8 @@
 
 package org.glassfish.jersey.oauth1.signature;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.UriComponent;
 
 import org.junit.Test;

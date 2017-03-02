@@ -66,6 +66,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.servlet.ServletContext;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.DataStructures;
@@ -73,7 +74,6 @@ import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.internal.LocalizationMessages;
 import org.glassfish.jersey.server.mvc.internal.TemplateHelper;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Default implementation of {@link org.glassfish.jersey.server.mvc.spi.TemplateProcessor template processor} that can be used to

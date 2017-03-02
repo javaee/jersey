@@ -54,10 +54,10 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.ServletContext;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
 import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.jvnet.hk2.annotations.Optional;
 

@@ -43,7 +43,7 @@ package org.glassfish.jersey.ext.cdi1x.internal;
 import javax.ws.rs.WebApplicationException;
 
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * Default {@link InjectionManagerStore injection manager} that assumes only one

@@ -38,53 +38,39 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.core.GenericType;
+
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 import org.glassfish.hk2.api.Factory;
 
 /**
- * Implementation of {@link Binder} interface dedicated to keep some level of code compatibility between previous HK2
- * implementation and new DI SPI.
- * <p>
- * Currently, there are supported only bind method and more complicated method where HK2 interfaces are required were omitted.
+ * Utility class to create a new injection binding descriptions for arbitrary Java beans.
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public abstract class AbstractBinder implements Binder {
+public final class Bindings {
 
-    private List<Binding> bindings = new ArrayList<>();
-
-    private List<AbstractBinder> installed = new ArrayList<>();
-
-    /**
-     * Implement to provide binding definitions using the exposed binding methods.
-     */
-    protected abstract void configure();
+    private Bindings() {
+        throw new AssertionError("Utility class instantiation forbidden.");
+    }
 
     /**
      * Start building a new class-based service binding.
      * <p>
-     * Does NOT bind the service type itself as a contract type.
+     * Does NOT service the service type itself as a contract type.
      *
      * @param <T>         service type.
      * @param serviceType service class.
      * @return initialized binding builder.
      */
-    public <T> ClassBinding<T> bind(Class<T> serviceType) {
-        ClassBinding<T> descriptor = Bindings.service(serviceType);
-        bindings.add(descriptor);
-        return descriptor;
+    public static <T> ClassBinding<T> service(Class<T> serviceType) {
+        return new ClassBinding<>(serviceType);
     }
 
     /**
@@ -96,10 +82,8 @@ public abstract class AbstractBinder implements Binder {
      * @param serviceType service class.
      * @return initialized binding builder.
      */
-    public <T> ClassBinding<T> bindAsContract(Class<T> serviceType) {
-        ClassBinding<T> descriptor = Bindings.serviceAsContract(serviceType);
-        bindings.add(descriptor);
-        return descriptor;
+    public static <T> ClassBinding<T> serviceAsContract(Class<T> serviceType) {
+        return new ClassBinding<>(serviceType).to(serviceType);
     }
 
     /**
@@ -111,10 +95,9 @@ public abstract class AbstractBinder implements Binder {
      * @param serviceType generic service type information.
      * @return initialized binding builder.
      */
-    public <T> ClassBinding<T> bindAsContract(GenericType<T> serviceType) {
-        ClassBinding<T> descriptor = Bindings.service(serviceType);
-        bindings.add(descriptor);
-        return descriptor;
+    @SuppressWarnings("unchecked")
+    public static <T> ClassBinding<T> service(GenericType<T> serviceType) {
+        return (ClassBinding<T>) new ClassBinding<>(serviceType.getRawType()).asType(serviceType.getType());
     }
 
     /**
@@ -122,29 +105,59 @@ public abstract class AbstractBinder implements Binder {
      * <p>
      * Binds the generic service type itself as a contract type.
      *
+     * @param <T>         service type.
      * @param serviceType generic service type information.
      * @return initialized binding builder.
      */
-    public ClassBinding<Object> bindAsContract(Type serviceType) {
-        ClassBinding<Object> descriptor = Bindings.serviceAsContract(serviceType);
-        bindings.add(descriptor);
-        return descriptor;
+    @SuppressWarnings("unchecked")
+    public static <T> ClassBinding<T> serviceAsContract(GenericType<T> serviceType) {
+        return (ClassBinding<T>) new ClassBinding<>(serviceType.getRawType())
+                .asType(serviceType.getType())
+                .to(serviceType.getType());
+    }
+
+    /**
+     * Start building a new generic type-based service binding.
+     * <p>
+     * Binds the generic service type itself as a contract type.
+     *
+     * @param <T>         service type.
+     * @param serviceType generic service type information.
+     * @return initialized binding builder.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> ClassBinding<T> serviceAsContract(Type serviceType) {
+        return new ClassBinding<>((Class<T>) ReflectionHelper.getRawClass(serviceType))
+                .asType(serviceType)
+                .to(serviceType);
     }
 
     /**
      * Start building a new instance-based service binding. The binding is naturally
      * considered to be a {@link javax.inject.Singleton singleton-scoped}.
      * <p>
-     * Does NOT bind the service type itself as a contract type.
+     * Does NOT service the service type itself as a contract type.
      *
      * @param <T>     service type.
      * @param service service instance.
      * @return initialized binding builder.
      */
-    public <T> InstanceBinding<T> bind(T service) {
-        InstanceBinding<T> descriptor = Bindings.service(service);
-        bindings.add(descriptor);
-        return descriptor;
+    public static <T> InstanceBinding<T> service(T service) {
+        return new InstanceBinding<>(service);
+    }
+
+    /**
+     * Start building a new instance-based service binding. The binding is naturally
+     * considered to be a {@link javax.inject.Singleton singleton-scoped}.
+     * <p>
+     * Binds the generic service type itself as a contract type.
+     *
+     * @param <T>     service type.
+     * @param service service instance.
+     * @return initialized binding builder.
+     */
+    public static <T> InstanceBinding<T> serviceAsContract(T service) {
+        return new InstanceBinding<>(service, service.getClass());
     }
 
     /**
@@ -155,11 +168,9 @@ public abstract class AbstractBinder implements Binder {
      * @param factoryScope factory scope.
      * @return initialized binding builder.
      */
-    public <T> FactoryClassBinding<T> bindFactory(
+    public static <T> FactoryClassBinding<T> factory(
             Class<? extends Factory<T>> factoryType, Class<? extends Annotation> factoryScope) {
-        FactoryClassBinding<T> descriptor = Bindings.factory(factoryType, factoryScope);
-        bindings.add(descriptor);
-        return descriptor;
+        return new FactoryClassBinding<>(factoryType, factoryScope);
     }
 
     /**
@@ -171,10 +182,8 @@ public abstract class AbstractBinder implements Binder {
      * @param factoryType service factory class.
      * @return initialized binding builder.
      */
-    public <T> FactoryClassBinding<T> bindFactory(Class<? extends Factory<T>> factoryType) {
-        FactoryClassBinding<T> descriptor = Bindings.factory(factoryType);
-        bindings.add(descriptor);
-        return descriptor;
+    public static <T> FactoryClassBinding<T> factory(Class<? extends Factory<T>> factoryType) {
+        return new FactoryClassBinding<>(factoryType, null);
     }
 
     /**
@@ -184,10 +193,8 @@ public abstract class AbstractBinder implements Binder {
      * @param factory service instance.
      * @return initialized binding builder.
      */
-    public <T> FactoryInstanceBinding<T> bindFactory(Factory<T> factory) {
-        FactoryInstanceBinding<T> descriptor = Bindings.factory(factory);
-        bindings.add(descriptor);
-        return descriptor;
+    public static <T> FactoryInstanceBinding<T> factory(Factory<T> factory) {
+        return new FactoryInstanceBinding<>(factory);
     }
 
     /**
@@ -201,48 +208,7 @@ public abstract class AbstractBinder implements Binder {
      * @param resolver   injection resolver instance.
      * @return initialized binding builder.
      */
-    public <T extends InjectionResolver> InjectionResolverBinding<T> bind(T resolver) {
-        InjectionResolverBinding<T> descriptor = Bindings.injectionResolver(resolver);
-        bindings.add(descriptor);
-        return descriptor;
-    }
-
-    /**
-     * Adds all binding definitions from the binders to the binding configuration.
-     *
-     * @param binders binders whose binding definitions should be configured.
-     */
-    public final void install(AbstractBinder... binders) {
-        Arrays.stream(binders)
-                .filter(Objects::nonNull)
-                .forEach(installed::add);
-    }
-
-    /**
-     * Gets a collection of descriptors registered in this jersey binder.
-     *
-     * @return collection of descriptors.
-     */
-    public Collection<Binding> getBindings() {
-        return flatten(this).stream()
-                .flatMap(binder -> binder.bindings.stream())
-                .collect(Collectors.toList());
-    }
-
-
-    private static List<AbstractBinder> flatten(AbstractBinder binder) {
-        List<AbstractBinder> binders = new ArrayList<>();
-        flatten(binder, binders);
-        return binders;
-    }
-
-    private static void flatten(AbstractBinder binder, List<AbstractBinder> binders) {
-        binder.configure();
-
-        if (binder.installed.size() > 0) {
-            binder.installed.forEach(b -> flatten(b, binders));
-        }
-
-        binders.add(binder);
+    public static <T extends InjectionResolver> InjectionResolverBinding<T> injectionResolver(T resolver) {
+        return new InjectionResolverBinding<>(resolver);
     }
 }

@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.server;
 
-import org.glassfish.jersey.spi.inject.AnnotationLiteral;
+import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 
 /**
  * {@link BackgroundScheduler} annotation literal.

@@ -54,6 +54,7 @@ import javax.ws.rs.core.Response;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -61,7 +62,6 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.spi.TestContainerException;
 

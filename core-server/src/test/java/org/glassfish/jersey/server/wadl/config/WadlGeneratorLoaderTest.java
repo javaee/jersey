@@ -55,12 +55,12 @@ import java.util.Properties;
 
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.InjectionManagerFactory;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Assert;
 import org.junit.Test;

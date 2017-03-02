@@ -63,9 +63,9 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.InjectionManagerProvider;
 import org.glassfish.jersey.client.InjectionManagerClientProvider;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
