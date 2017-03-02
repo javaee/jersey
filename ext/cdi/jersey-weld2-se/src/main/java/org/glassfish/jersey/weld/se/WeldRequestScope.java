@@ -47,9 +47,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.ext.cdi1x.internal.JerseyVetoed;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.ExternalRequestContext;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.jboss.weld.context.bound.BoundRequestContext;
 

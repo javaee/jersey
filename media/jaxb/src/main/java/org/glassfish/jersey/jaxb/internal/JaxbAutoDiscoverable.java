@@ -45,8 +45,8 @@ import javax.ws.rs.core.FeatureContext;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * JAXB {@link ForcedAutoDiscoverable} that registers all necessary JAXB features

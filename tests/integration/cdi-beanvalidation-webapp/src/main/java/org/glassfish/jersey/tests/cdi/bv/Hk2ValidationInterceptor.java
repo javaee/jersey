@@ -53,10 +53,10 @@ import javax.inject.Singleton;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.spi.ValidationInterceptorContext;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.PerLookup;
 

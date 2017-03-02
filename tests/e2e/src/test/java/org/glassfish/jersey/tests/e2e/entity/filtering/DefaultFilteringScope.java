@@ -40,8 +40,8 @@
 
 package org.glassfish.jersey.tests.e2e.entity.filtering;
 
+import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 import org.glassfish.jersey.message.filtering.EntityFiltering;
-import org.glassfish.jersey.spi.inject.AnnotationLiteral;
 
 /**
  * @author Michal Gajdos

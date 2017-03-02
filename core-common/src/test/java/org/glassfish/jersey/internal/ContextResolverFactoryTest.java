@@ -48,10 +48,10 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Before;
 import org.junit.Test;

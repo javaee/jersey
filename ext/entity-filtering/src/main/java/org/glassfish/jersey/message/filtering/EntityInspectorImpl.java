@@ -51,6 +51,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.filtering.spi.EntityGraph;
@@ -60,7 +61,6 @@ import org.glassfish.jersey.message.filtering.spi.EntityProcessor;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessorContext;
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;

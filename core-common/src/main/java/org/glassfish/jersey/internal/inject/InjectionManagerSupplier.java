@@ -40,8 +40,6 @@
 
 package org.glassfish.jersey.internal.inject;
 
-import org.glassfish.jersey.spi.inject.InjectionManager;
-
 /**
  * Implementation of this interface is capable of returning {@link InjectionManager}.
  */

@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.process;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.internal.util.collection.Value;
@@ -54,7 +55,6 @@ import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.base.Function;
 

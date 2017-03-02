@@ -53,6 +53,8 @@ import javax.ws.rs.core.GenericType;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ForeignRequestScopeBridge;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -61,8 +63,6 @@ import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.ContextInjectionResolver;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Factory;
@@ -92,7 +92,7 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
         protected void configure() {
             bind(ContextInjectionResolverImpl.class)
                     .to(new GenericType<InjectionResolver<Context>>() {})
-                    .to(new GenericType<org.glassfish.jersey.spi.inject.InjectionResolver<Context>>() {})
+                    .to(new GenericType<org.glassfish.jersey.internal.inject.InjectionResolver<Context>>() {})
                     .to(ContextInjectionResolver.class)
                     .in(Singleton.class);
         }
@@ -144,7 +144,7 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
      * @return result of the injection processing.
      */
     @Override
-    public Object resolve(org.glassfish.jersey.spi.inject.Injectee injectee) {
+    public Object resolve(org.glassfish.jersey.internal.inject.Injectee injectee) {
         InjecteeImpl hk2injectee = new InjecteeImpl() {
             @Override
             public Class<?> getInjecteeClass() {

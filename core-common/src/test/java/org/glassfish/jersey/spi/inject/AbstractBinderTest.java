@@ -45,6 +45,9 @@ import java.util.List;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.message.internal.CacheControlProvider;
 import org.glassfish.jersey.message.internal.CookieProvider;
 import org.glassfish.jersey.message.internal.DateProvider;

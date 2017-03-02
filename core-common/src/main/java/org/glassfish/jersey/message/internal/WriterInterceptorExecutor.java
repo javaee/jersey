@@ -60,9 +60,9 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 

@@ -43,6 +43,7 @@ package org.glassfish.jersey.message.filtering.spi;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.spi.Contract;
 
 /**
@@ -66,7 +67,7 @@ import org.glassfish.jersey.spi.Contract;
  * </p>
  * <p>
  * Implementations should be registered into client/server runtime via
- * {@link org.glassfish.jersey.spi.inject.AbstractBinder jersey binder} (for more information and common implementation see
+ * {@link AbstractBinder jersey binder} (for more information and common implementation see
  * {@link AbstractObjectProvider}):
  * <pre>
  * bindAsContract(MyObjectProvider.class)

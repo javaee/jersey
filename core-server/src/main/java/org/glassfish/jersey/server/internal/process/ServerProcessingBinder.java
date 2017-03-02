@@ -53,6 +53,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferenceTransformingFactory;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -68,7 +69,6 @@ import org.glassfish.jersey.spi.ExecutorServiceProvider;
 import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
 import org.glassfish.jersey.spi.ScheduledThreadPoolExecutorProvider;
 import org.glassfish.jersey.spi.ThreadPoolExecutorProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Defines server-side request processing injection bindings.

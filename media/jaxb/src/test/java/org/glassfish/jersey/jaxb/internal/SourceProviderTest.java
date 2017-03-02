@@ -52,9 +52,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.message.internal.SourceProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -56,6 +56,8 @@ import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
@@ -64,8 +66,6 @@ import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.process.internal.ExecutorProviders;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Jersey externalized implementation of client-side JAX-RS {@link javax.ws.rs.core.Configurable

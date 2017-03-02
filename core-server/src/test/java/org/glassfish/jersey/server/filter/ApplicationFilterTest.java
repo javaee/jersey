@@ -54,13 +54,13 @@ import javax.ws.rs.core.Response;
 
 import javax.annotation.Priority;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.junit.Assert;
 import org.junit.Test;

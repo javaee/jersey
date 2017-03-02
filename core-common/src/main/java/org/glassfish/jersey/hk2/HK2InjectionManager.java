@@ -48,17 +48,17 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.ClassBinding;
+import org.glassfish.jersey.internal.inject.CompositeBinder;
+import org.glassfish.jersey.internal.inject.ForeignDescriptor;
+import org.glassfish.jersey.internal.inject.ForeignDescriptorImpl;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.spi.ServiceHolder;
 import org.glassfish.jersey.spi.ServiceHolderImpl;
-import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.Binding;
-import org.glassfish.jersey.spi.inject.Bindings;
-import org.glassfish.jersey.spi.inject.ClassBinding;
-import org.glassfish.jersey.spi.inject.CompositeBinder;
-import org.glassfish.jersey.spi.inject.ForeignDescriptor;
-import org.glassfish.jersey.spi.inject.ForeignDescriptorImpl;
-import org.glassfish.jersey.spi.inject.InjectionManager;
-import org.glassfish.jersey.spi.inject.InstanceBinding;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -201,7 +201,7 @@ public class HK2InjectionManager implements InjectionManager {
     }
 
     @Override
-    public void register(org.glassfish.jersey.spi.inject.Binder binder) {
+    public void register(Binder binder) {
         Hk2Helper.bind(locator, binder);
     }
 

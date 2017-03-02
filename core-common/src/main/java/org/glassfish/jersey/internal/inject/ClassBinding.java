@@ -38,22 +38,33 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
 /**
- * The descriptor holder for an externally provided DI providers. Using this interface DI provider is able to provider his own
- * descriptor which can be used and returned to the DI provider in further processing.
- * <p>
- * This is useful in the case of caching where an algorithm is able to store and subsequently provide for an injection the already
- * resolved descriptor of the same value.
+ * Injection binding description of a bean bound via its a Java class.
+ *
+ * @param <T> type of the bean described by this injection binding.
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public interface ForeignDescriptor {
+public class ClassBinding<T> extends Binding<T, ClassBinding<T>> {
+
+    private final Class<T> service;
 
     /**
-     * Returns an object that can be cast on the side of DI provider to his descriptor.
+     * Creates a service as a class.
      *
-     * @return DI provider's descriptor.
+     * @param service service's class.
      */
-    Object get();
+    ClassBinding(Class<T> service) {
+        this.service = service;
+    }
 
+    /**
+     * Gets service' class.
+     *
+     * @return service's class.
+     */
+    public Class<T> getService() {
+        return service;
+    }
 }

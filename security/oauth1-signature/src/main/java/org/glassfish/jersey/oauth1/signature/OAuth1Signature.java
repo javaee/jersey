@@ -52,7 +52,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**

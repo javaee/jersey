@@ -49,8 +49,8 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Binding definitions for the default set of message related providers (readers,

@@ -51,7 +51,7 @@ import javax.ws.rs.ext.Provider;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.WebApplicationContext;

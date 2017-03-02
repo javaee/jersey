@@ -46,17 +46,17 @@ import java.util.function.Supplier;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
+import org.glassfish.jersey.internal.inject.ForeignDescriptor;
+import org.glassfish.jersey.internal.inject.Injectee;
+import org.glassfish.jersey.internal.inject.InjecteeImpl;
 import org.glassfish.jersey.internal.util.collection.Cache;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-import org.glassfish.jersey.spi.inject.Binding;
-import org.glassfish.jersey.spi.inject.Bindings;
-import org.glassfish.jersey.spi.inject.ContextInjectionResolver;
-import org.glassfish.jersey.spi.inject.ForeignDescriptor;
-import org.glassfish.jersey.spi.inject.Injectee;
-import org.glassfish.jersey.spi.inject.InjecteeImpl;
 
 /**
  * Value factory provider that delegates the injection target lookup to the underlying injection provider.

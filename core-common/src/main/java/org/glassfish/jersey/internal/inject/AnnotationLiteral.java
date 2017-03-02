@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;

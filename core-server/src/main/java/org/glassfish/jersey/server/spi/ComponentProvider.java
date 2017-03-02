@@ -42,7 +42,7 @@ package org.glassfish.jersey.server.spi;
 
 import java.util.Set;
 
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * Component provider interface to allow custom management of 3rd party

@@ -45,10 +45,10 @@ import javax.ws.rs.core.Application;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.PerLookup;
 

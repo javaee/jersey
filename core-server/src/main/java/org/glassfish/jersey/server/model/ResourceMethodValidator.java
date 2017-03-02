@@ -61,8 +61,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Factory;
 

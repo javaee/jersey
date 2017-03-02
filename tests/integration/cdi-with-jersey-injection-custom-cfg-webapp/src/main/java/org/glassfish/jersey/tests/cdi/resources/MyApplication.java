@@ -42,9 +42,9 @@ package org.glassfish.jersey.tests.cdi.resources;
 
 import javax.ws.rs.ApplicationPath;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * JAX-RS application to configure resources.

@@ -43,8 +43,8 @@ package org.glassfish.jersey.ext.cdi1x.internal;
 import javax.enterprise.inject.Vetoed;
 import javax.enterprise.inject.spi.BeanManager;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * HK factory implementation to provide CDI managed components

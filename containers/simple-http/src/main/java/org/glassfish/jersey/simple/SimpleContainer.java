@@ -64,6 +64,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -77,7 +78,6 @@ import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.ServiceLocator;
 

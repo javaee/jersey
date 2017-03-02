@@ -45,7 +45,7 @@ import javax.enterprise.inject.spi.BeanManager;
 
 import org.glassfish.jersey.ext.cdi1x.internal.spi.BeanManagerProvider;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.instanceOf;

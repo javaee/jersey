@@ -45,8 +45,8 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Utility class with static methods that extract {@link InjectionManager injection manager}

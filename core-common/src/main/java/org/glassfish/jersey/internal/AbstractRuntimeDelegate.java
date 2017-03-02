@@ -56,13 +56,13 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.JerseyLink;
 import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.VariantListBuilder;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 /**

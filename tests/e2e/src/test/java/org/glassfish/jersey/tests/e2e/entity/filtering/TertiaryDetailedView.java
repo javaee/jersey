@@ -46,8 +46,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 import org.glassfish.jersey.message.filtering.EntityFiltering;
-import org.glassfish.jersey.spi.inject.AnnotationLiteral;
 
 /**
  * @author Michal Gajdos

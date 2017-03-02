@@ -59,6 +59,8 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
@@ -72,8 +74,6 @@ import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.base.Predicate;
 import jersey.repackaged.com.google.common.collect.Sets;

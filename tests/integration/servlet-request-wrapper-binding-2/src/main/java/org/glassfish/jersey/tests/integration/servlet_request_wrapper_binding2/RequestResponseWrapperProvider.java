@@ -76,6 +76,8 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
 import org.glassfish.jersey.hk2.HK2InjectionManager;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -86,8 +88,6 @@ import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.spi.NoOpServletContainerProvider;
 import org.glassfish.jersey.servlet.internal.spi.RequestContextProvider;
 import org.glassfish.jersey.servlet.internal.spi.RequestScopedInitializerProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.DescriptorType;
 import org.glassfish.hk2.api.DescriptorVisibility;

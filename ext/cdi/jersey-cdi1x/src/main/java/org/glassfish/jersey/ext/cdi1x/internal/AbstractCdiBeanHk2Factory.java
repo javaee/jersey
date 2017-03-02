@@ -51,7 +51,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.InjectionTargetFactory;
 
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Factory;
 

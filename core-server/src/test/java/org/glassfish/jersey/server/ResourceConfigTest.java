@@ -51,13 +51,13 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.server.config.innerstatic.InnerStaticClass;
 import org.glassfish.jersey.server.config.toplevel.PublicRootResourceClass;
 import org.glassfish.jersey.server.config.toplevelinnerstatic.PublicRootResourceInnerStaticClass;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.junit.Test;
 import static org.glassfish.jersey.server.JarUtils.createJarFile;

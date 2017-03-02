@@ -48,11 +48,11 @@ import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.ChainableStage;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Client filtering stage factory.

@@ -88,6 +88,10 @@ import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ServiceConfigurationError;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.Version;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.CompositeBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -131,10 +135,6 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.CompositeBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.ServiceLocator;
 

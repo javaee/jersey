@@ -51,6 +51,7 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.SecurityContext;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.SubjectSecurityContext;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
@@ -62,7 +63,6 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * An methodAcceptorPair to accept sub-resource requests.

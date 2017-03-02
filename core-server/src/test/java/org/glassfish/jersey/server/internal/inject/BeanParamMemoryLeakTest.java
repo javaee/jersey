@@ -48,9 +48,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.hk2.HK2InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.Descriptor;
 import org.glassfish.hk2.api.Filter;

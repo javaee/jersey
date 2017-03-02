@@ -52,7 +52,12 @@ import javax.inject.Inject;
 import javax.inject.Scope;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.internal.inject.CustomAnnotationLiteral;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -60,11 +65,6 @@ import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.model.ResourceModel;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.Binding;
-import org.glassfish.jersey.spi.inject.Bindings;
-import org.glassfish.jersey.spi.inject.ClassBinding;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.collect.Sets;
 
@@ -157,7 +157,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
                 return;
             }
             if (getScope(resourceClass) == Singleton.class) {
-                org.glassfish.jersey.spi.inject.Binder binder = new AbstractBinder() {
+                org.glassfish.jersey.internal.inject.Binder binder = new AbstractBinder() {
                     @Override
                     @SuppressWarnings("unchecked")
                     protected void configure() {

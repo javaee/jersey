@@ -53,6 +53,8 @@ import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
@@ -66,8 +68,6 @@ import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListen
 import org.glassfish.jersey.server.internal.process.ServerProcessingBinder;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Server injection binder.

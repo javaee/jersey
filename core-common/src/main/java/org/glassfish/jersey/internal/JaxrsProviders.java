@@ -52,10 +52,10 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.PerLookup;
 

@@ -67,16 +67,16 @@ import javax.inject.Singleton;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.ClassBinding;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
-import org.glassfish.jersey.spi.inject.Binding;
-import org.glassfish.jersey.spi.inject.Bindings;
-import org.glassfish.jersey.spi.inject.ClassBinding;
-import org.glassfish.jersey.spi.inject.InjectionManager;
-import org.glassfish.jersey.spi.inject.InstanceBinding;
 
 import org.glassfish.ejb.deployment.descriptor.EjbBundleDescriptorImpl;
 import org.glassfish.ejb.deployment.descriptor.EjbDescriptor;

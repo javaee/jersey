@@ -60,10 +60,10 @@ import javax.transaction.TransactionalException;
 
 import org.glassfish.jersey.ext.cdi1x.internal.CdiUtil;
 import org.glassfish.jersey.ext.cdi1x.internal.GenericCdiBeanHk2Factory;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.spi.inject.Binding;
-import org.glassfish.jersey.spi.inject.Bindings;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;

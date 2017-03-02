@@ -39,7 +39,7 @@
  */
 package org.glassfish.jersey.client;
 
-import org.glassfish.jersey.spi.inject.AnnotationLiteral;
+import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 
 /**
  * {@link org.glassfish.jersey.client.ClientAsyncExecutor} annotation literal.

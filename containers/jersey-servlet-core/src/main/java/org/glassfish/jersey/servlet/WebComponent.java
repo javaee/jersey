@@ -78,6 +78,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
@@ -107,8 +109,6 @@ import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 import org.glassfish.jersey.servlet.spi.FilterUrlMappingsProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.uri.UriComponent;
 
 import org.glassfish.hk2.api.ServiceLocator;

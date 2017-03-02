@@ -55,12 +55,12 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.PerLookup;
 

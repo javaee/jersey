@@ -59,10 +59,10 @@ import javax.inject.Scope;
 import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.spi.inject.Binder;
 
 /**
  * An internal Jersey container for custom component classes and instances.

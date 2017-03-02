@@ -48,11 +48,11 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Lists;

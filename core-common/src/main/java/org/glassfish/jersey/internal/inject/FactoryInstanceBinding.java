@@ -38,22 +38,35 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
-import java.util.Collection;
+import org.glassfish.hk2.api.Factory;
 
 /**
- * Interface dedicated to keep some level of code compatibility between previous HK2 implementation and new DI SPI.
+ * Injection binding description of a bean bound indirectly via an factory producing instances of the bound type.
  *
+ * @param <T> type of the bean described by this injection binding descriptor.
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public interface Binder {
+public class FactoryInstanceBinding<T> extends Binding<T, FactoryInstanceBinding<T>> {
+
+    private final Factory<T> factory;
 
     /**
-     * Gets a collection of descriptors registered in this jersey binder.
+     * Creates a factory as an instance.
      *
-     * @return collection of descriptors.
+     * @param factory service's instance.
      */
-    Collection<Binding> getBindings();
+    FactoryInstanceBinding(Factory<T> factory) {
+        this.factory = factory;
+    }
 
+    /**
+     * Gets factory's instance.
+     *
+     * @return factory's instance.
+     */
+    public Factory<T> getFactory() {
+        return factory;
+    }
 }

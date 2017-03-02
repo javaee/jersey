@@ -54,11 +54,11 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGrammarGenerator;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Loads {@link WadlGenerator}s from a provided list of {@link WadlGeneratorDescription}s.<br/>

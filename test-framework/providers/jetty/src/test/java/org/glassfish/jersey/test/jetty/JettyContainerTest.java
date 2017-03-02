@@ -47,10 +47,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.hk2.HK2InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.jetty.JettyHttpContainer;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.glassfish.hk2.api.ServiceLocator;

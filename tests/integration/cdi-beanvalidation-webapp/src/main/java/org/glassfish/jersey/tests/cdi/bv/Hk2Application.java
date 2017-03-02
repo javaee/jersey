@@ -44,9 +44,9 @@ import javax.ws.rs.ApplicationPath;
 
 import javax.enterprise.inject.Vetoed;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * JAX-RS application to configure resources.

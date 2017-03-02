@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.internal.inject;
 
-import org.glassfish.jersey.spi.inject.AnnotationLiteral;
-
 /**
  * {@link Custom} annotation literal.
  * <p>

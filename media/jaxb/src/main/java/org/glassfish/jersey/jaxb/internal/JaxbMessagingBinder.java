@@ -49,7 +49,7 @@ import javax.xml.parsers.SAXParserFactory;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.transform.TransformerFactory;
 
-import org.glassfish.jersey.spi.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.PerThread;
 

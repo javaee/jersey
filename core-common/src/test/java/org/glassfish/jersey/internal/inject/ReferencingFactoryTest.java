@@ -51,8 +51,6 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.PerLookup;
 

@@ -49,6 +49,7 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
@@ -63,7 +64,6 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.ResourceModelComponent;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.cache.CacheBuilder;
 import jersey.repackaged.com.google.common.cache.CacheLoader;

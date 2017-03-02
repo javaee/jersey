@@ -48,9 +48,9 @@ import java.util.Properties;
 
 import javax.ws.rs.ProcessingException;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Provides a configured {@link org.glassfish.jersey.server.wadl.WadlGenerator} with all decorations (the default

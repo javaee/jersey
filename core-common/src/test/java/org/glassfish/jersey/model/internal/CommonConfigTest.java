@@ -63,12 +63,12 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.ContractProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.junit.Before;
 import org.junit.Ignore;

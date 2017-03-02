@@ -38,32 +38,22 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
 /**
- * Class which has the fields containing the instance of {@link InjectionResolver} and its a concrete type.
- *
- * @param <T> type of the annotation which is served using th given injection resolver.
+ * The descriptor holder for an externally provided DI providers. Using this interface DI provider is able to provider his own
+ * descriptor which can be used and returned to the DI provider in further processing.
+ * <p>
+ * This is useful in the case of caching where an algorithm is able to store and subsequently provide for an injection the already
+ * resolved descriptor of the same value.
  */
-public class InjectionResolverBinding<T extends InjectionResolver> extends Binding<T, InjectionResolverBinding<T>> {
-
-    private final T resolver;
+public interface ForeignDescriptor {
 
     /**
-     * Creates an injection resolver as an instance.
+     * Returns an object that can be cast on the side of DI provider to his descriptor.
      *
-     * @param resolver injection resolver instance.
+     * @return DI provider's descriptor.
      */
-    InjectionResolverBinding(T resolver) {
-        this.resolver = resolver;
-    }
+    Object get();
 
-    /**
-     * Gets the injection resolver handled by this descriptor.
-     *
-     * @return {@code InjectionResolver} instance.
-     */
-    public T getResolver() {
-        return resolver;
-    }
 }

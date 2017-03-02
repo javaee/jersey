@@ -53,8 +53,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 import org.glassfish.jersey.message.filtering.EntityFiltering;
-import org.glassfish.jersey.spi.inject.AnnotationLiteral;
 
 /**
  * Test resource.

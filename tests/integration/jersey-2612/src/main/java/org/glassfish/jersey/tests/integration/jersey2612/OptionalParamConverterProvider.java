@@ -51,10 +51,10 @@ import javax.ws.rs.ext.ParamConverterProvider;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;

@@ -42,8 +42,8 @@ package org.glassfish.jersey.server;
 
 import java.util.Map;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Utility class to create initialized server-side injection manager.

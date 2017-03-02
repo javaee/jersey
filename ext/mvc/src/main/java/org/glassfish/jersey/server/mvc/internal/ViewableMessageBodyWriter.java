@@ -64,6 +64,7 @@ import javax.ws.rs.ext.Provider;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ExtendedUriInfo;
@@ -72,7 +73,6 @@ import org.glassfish.jersey.server.mvc.spi.ResolvedViewable;
 import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
 import org.glassfish.jersey.server.mvc.spi.ViewableContext;
 import org.glassfish.jersey.server.mvc.spi.ViewableContextException;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.collect.Sets;
 

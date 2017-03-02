@@ -56,6 +56,7 @@ import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
@@ -65,7 +66,6 @@ import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.ExecutorServiceProvider;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
 
 /**
  * Registers all binders necessary for {@link Client} runtime.

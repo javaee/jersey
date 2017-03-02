@@ -43,9 +43,9 @@ package org.glassfish.jersey.server.internal.process;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.base.Function;
 

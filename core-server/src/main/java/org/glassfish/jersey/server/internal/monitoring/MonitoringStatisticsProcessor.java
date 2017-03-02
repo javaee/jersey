@@ -53,6 +53,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.BackgroundSchedulerLiteral;
 import org.glassfish.jersey.server.ExtendedResourceContext;
@@ -62,7 +63,6 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Process events of application and request processing into

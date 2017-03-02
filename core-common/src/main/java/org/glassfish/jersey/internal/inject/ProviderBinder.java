@@ -58,12 +58,6 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.Binder;
-import org.glassfish.jersey.spi.inject.ClassBinding;
-import org.glassfish.jersey.spi.inject.CompositeBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
-import org.glassfish.jersey.spi.inject.InstanceBinding;
 
 import org.glassfish.hk2.api.PerLookup;
 

@@ -57,11 +57,11 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.InjectionResolver;
 import org.glassfish.jersey.internal.util.collection.ImmutableCollectors;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
-import org.glassfish.jersey.spi.inject.InjectionResolver;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.MultiException;

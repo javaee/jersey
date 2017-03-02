@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.internal.routing;
 
 import javax.ws.rs.core.Configuration;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.Stage;
@@ -50,7 +51,6 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 /**
  * Jersey routing entry point.

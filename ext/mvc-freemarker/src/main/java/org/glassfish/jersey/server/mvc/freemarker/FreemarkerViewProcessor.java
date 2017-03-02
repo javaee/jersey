@@ -54,11 +54,11 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.jvnet.hk2.annotations.Optional;
 

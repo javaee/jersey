@@ -52,8 +52,8 @@ import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
 
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;

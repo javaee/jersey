@@ -68,12 +68,12 @@ import javax.ws.rs.ext.WriterInterceptor;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 import org.glassfish.jersey.internal.util.ExceptionUtils;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import jersey.repackaged.com.google.common.base.Preconditions;
 

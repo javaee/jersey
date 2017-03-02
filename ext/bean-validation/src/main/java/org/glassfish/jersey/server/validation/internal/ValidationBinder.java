@@ -67,6 +67,8 @@ import javax.validation.ValidatorFactory;
 import javax.validation.spi.ValidationProvider;
 
 import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -76,8 +78,6 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.validation.ValidationConfig;
-import org.glassfish.jersey.spi.inject.AbstractBinder;
-import org.glassfish.jersey.spi.inject.InjectionManager;
 
 import org.glassfish.hk2.api.PerLookup;
 

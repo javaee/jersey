@@ -44,10 +44,10 @@ import java.lang.annotation.Annotation;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.ForeignDescriptorImpl;
+import org.glassfish.jersey.internal.inject.InjecteeImpl;
 import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.spi.inject.ForeignDescriptorImpl;
-import org.glassfish.jersey.spi.inject.InjecteeImpl;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.Injectee;
@@ -55,21 +55,21 @@ import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
 
 /**
- * This class wraps the jersey class {@link org.glassfish.jersey.spi.inject.InjectionResolver} to make HK2 version of this
+ * This class wraps the jersey class {@link org.glassfish.jersey.internal.inject.InjectionResolver} to make HK2 version of this
  * provided functionality. HK2 {@link InjectionResolver} can be then register in {@link org.glassfish.hk2.api.ServiceLocator} and
  * HK2 can handle the annotation which is register along with the interface.
  */
 @Singleton
 public class InjectionResolverWrapper<T extends Annotation> implements InjectionResolver<T> {
 
-    private final org.glassfish.jersey.spi.inject.InjectionResolver jerseyResolver;
+    private final org.glassfish.jersey.internal.inject.InjectionResolver jerseyResolver;
 
     /**
      * C'tor accepts jersey-like {@code InjectionResolver} on which the the processing is delegated.
      *
      * @param jerseyResolver jersey injection resolver.
      */
-    InjectionResolverWrapper(org.glassfish.jersey.spi.inject.InjectionResolver<T> jerseyResolver) {
+    InjectionResolverWrapper(org.glassfish.jersey.internal.inject.InjectionResolver<T> jerseyResolver) {
         this.jerseyResolver = jerseyResolver;
     }
 
