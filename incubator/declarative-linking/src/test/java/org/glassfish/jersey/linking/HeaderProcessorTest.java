@@ -51,6 +51,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.linking.InjectLink.Extension;
+import org.glassfish.jersey.linking.InjectLink.LinkQueryParam;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Resource;
@@ -123,11 +124,15 @@ public class HeaderProcessorTest {
         }
 
         public MultivaluedMap<String, String> getQueryParameters() {
-            return new MultivaluedStringMap();
+          MultivaluedStringMap map = new MultivaluedStringMap();
+          map.add("q", "somevalue");
+          return map;
         }
 
         public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
-            return new MultivaluedStringMap();
+          MultivaluedStringMap map = new MultivaluedStringMap();
+          map.add("q", "somevalue");
+          return map;
         }
 
         public List<String> getMatchedURIs() {
@@ -361,7 +366,6 @@ public class HeaderProcessorTest {
 
     @Test
     public void testConditional() {
-        System.out.println("EL");
         HeaderProcessor<EntityF> instance = new HeaderProcessor(EntityF.class);
         EntityF testClass = new EntityF();
         List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
@@ -370,4 +374,72 @@ public class HeaderProcessorTest {
         assertEquals("</application/resources/1>", headerValue);
     }
 
+    @InjectLinks({
+      @InjectLink(
+          value = "${entity.id1}",
+          queryParams = { @LinkQueryParam (name = "page", value = "${instance.page}"),
+              @LinkQueryParam (name = "page", value = "${instance.page2}"),
+              }
+          )
+    })
+    public static class EntityQ {
+
+      public String getId1() {
+        return "1";
+      }
+
+      public String getPage() {
+        return "42";
+      }
+
+      public String getPage2() {
+        return "43";
+      }
+    }
+
+    @Test
+    public void testQueryParam() {
+      HeaderProcessor<EntityQ> instance = new HeaderProcessor(EntityQ.class);
+      EntityQ testClass = new EntityQ();
+      List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
+      assertEquals(1, headerValues.size());
+      String headerValue = headerValues.get(0);
+      assertEquals("</application/resources/1?page=42&page=43>", headerValue);
+    }
+
+
+    @InjectLinks({
+      @InjectLink(
+          value = "${entity.id1}",
+          copyRequestQueryParams = true,
+          excludeFromRequestQueryParams = {"page"},
+          queryParams = {
+              @LinkQueryParam (name = "page", value = "${instance.page}"),
+              }
+          )
+    })
+    public static class EntityR {
+
+      public String getId1() {
+        return "1";
+      }
+
+      public String getPage() {
+        return "42";
+      }
+
+      public String getPage2() {
+        return "43";
+      }
+    }
+
+    @Test
+    public void testRequestQueryParam() {
+      HeaderProcessor<EntityR> instance = new HeaderProcessor(EntityR.class);
+      EntityR testClass = new EntityR();
+      List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
+      assertEquals(1, headerValues.size());
+      String headerValue = headerValues.get(0);
+      assertEquals("</application/resources/1?page=42&q=somevalue>", headerValue);
+    }
 }

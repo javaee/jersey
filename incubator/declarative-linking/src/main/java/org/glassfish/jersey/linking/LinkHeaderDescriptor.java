@@ -40,11 +40,19 @@
 
 package org.glassfish.jersey.linking;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import org.glassfish.jersey.linking.InjectLink.LinkQueryParam;
 import org.glassfish.jersey.linking.InjectLink.Style;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * Utility class for working with {@link org.glassfish.jersey.linking.InjectLink} annotations.
@@ -56,12 +64,26 @@ class LinkHeaderDescriptor implements InjectLinkDescriptor {
 
     private InjectLink linkHeader;
     private Map<String, String> bindings;
+    private MultivaluedMap<String, String> queryParams;
+    private boolean copyFromRequestQueryParams = false;
+    private Set<String> excludeFromRequestQueryParams = null;
+
 
     LinkHeaderDescriptor(InjectLink linkHeader) {
         this.linkHeader = linkHeader;
         bindings = new HashMap<>();
         for (Binding binding : linkHeader.bindings()) {
             bindings.put(binding.name(), binding.value());
+        }
+        queryParams = new MultivaluedHashMap<>();
+        for (LinkQueryParam param : linkHeader.queryParams()) {
+          queryParams.add(param.name(), param.value());
+        }
+        copyFromRequestQueryParams = linkHeader.copyRequestQueryParams();
+        if (copyFromRequestQueryParams) {
+          excludeFromRequestQueryParams =
+              Collections.unmodifiableSet(
+                  new HashSet<>(Arrays.asList(linkHeader.excludeFromRequestQueryParams())));
         }
     }
 
@@ -83,6 +105,24 @@ class LinkHeaderDescriptor implements InjectLinkDescriptor {
 
     public String getCondition() {
         return linkHeader.condition();
+    }
+
+    @Override
+    public MultivaluedMap<String, String> getQueryParams() {
+      return queryParams;
+    }
+
+    @Override
+    public boolean copyFromRequestParams() {
+      return copyFromRequestQueryParams;
+    }
+
+    @Override
+    public Set<String> excludeFromRequestParams() {
+      if (!copyFromRequestQueryParams) {
+        return null;
+      }
+      return excludeFromRequestQueryParams;
     }
 
 }

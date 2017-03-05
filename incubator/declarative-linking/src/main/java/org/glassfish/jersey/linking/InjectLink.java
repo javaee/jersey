@@ -211,6 +211,37 @@ public @interface InjectLink {
         String value();
     }
 
+    /**
+     * Specifies name-value pairs for Link's query part.
+     */
+    LinkQueryParam[] queryParams() default {};
+
+    @Target({ElementType.TYPE, ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface LinkQueryParam {
+
+        /**
+         * Specifies the name of the link query parameter.
+         */
+        String name();
+
+        /**
+         * Specifies the value of the link query parameter.
+         */
+        String value();
+    }
+
+    /**
+     * Specifies that request query params must be include in Link.
+     */
+    boolean copyRequestQueryParams() default false;
+
+    /**
+     * If request query params are copied to Link, then exclude query parameters from this list.
+     */
+    String[] excludeFromRequestQueryParams() default {};
+
+
     class Util {
 
         public static Link buildLinkFromUri(URI uri, InjectLink link) {
