@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.spi;
 
+import javax.annotation.Priority;
 import javax.ws.rs.ext.ExceptionMapper;
 
 /**
@@ -52,7 +53,9 @@ public interface ExceptionMappers {
     /**
      * Get an exception mapping provider for a particular class of exception.
      * Returns the provider whose generic type is the nearest superclass of
-     * {@code type}.
+     * {@code type}. If several providers are defined for the same {@code type}
+     * the order can be specified by annotating the exception mapper with {@link Priority},
+     * otherwise an arbitrary provider is selected.
      *
      * @param <T> type of the exception handled by the exception mapping provider.
      * @param type the class of exception.
@@ -73,8 +76,8 @@ public interface ExceptionMappers {
      * {@code true} from the {@code isMappable(Throwable)} method or until a first provider
      * is found which best supports the exception type and does not implement {@code ExtendedExceptionMapper}
      * API (i.e. it is a standard JAX-RS {@link ExceptionMapper}). The order in which the providers are
-     * checked is determined by the distance of the declared exception mapper type and the actual exception
-     * type.
+     * checked is determined by the distance of the declared exception mapper type, the actual exception
+     * type and potential configured {@link Priority}s.
      * </p>
      * <p>
      * Note that if an exception mapping provider does not implement {@link ExtendedExceptionMapper}
