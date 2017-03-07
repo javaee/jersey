@@ -65,7 +65,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
-import org.glassfish.jersey.spi.ServiceHolder;
+import org.glassfish.jersey.internal.inject.ServiceHolder;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates

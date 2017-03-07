@@ -38,12 +38,10 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi;
+package org.glassfish.jersey.internal.inject;
 
 import java.lang.reflect.Type;
 import java.util.Set;
-
-import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * Implementation of this class is used as a holder for service instance from
