@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -88,6 +88,7 @@ import org.apache.http.client.AuthCache;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -139,6 +140,7 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
  * <li>{@link ClientProperties#PROXY_PASSWORD}</li>
  * <li>{@link ClientProperties#REQUEST_ENTITY_PROCESSING} - default value is {@link RequestEntityProcessing#CHUNKED}</li>
  * <li>{@link ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>
+ * <li>{@link ApacheClientProperties#RETRY_HANDLER}</li>
  * </ul>
  * <p>
  * This connector uses {@link RequestEntityProcessing#CHUNKED chunked encoding} as a default setting. This can
@@ -246,6 +248,11 @@ class ApacheConnector implements Connector {
         final Object credentialsProvider = config.getProperty(ApacheClientProperties.CREDENTIALS_PROVIDER);
         if (credentialsProvider != null && (credentialsProvider instanceof CredentialsProvider)) {
             clientBuilder.setDefaultCredentialsProvider((CredentialsProvider) credentialsProvider);
+        }
+
+        final Object retryHandler = config.getProperties().get(ApacheClientProperties.RETRY_HANDLER);
+        if (retryHandler != null && (retryHandler instanceof HttpRequestRetryHandler)) {
+            clientBuilder.setRetryHandler((HttpRequestRetryHandler) retryHandler);
         }
 
         final Object proxyUri;
