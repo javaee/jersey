@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -144,6 +144,18 @@ public final class ApacheClientProperties {
      * @since 2.5
      */
     public static final String REQUEST_CONFIG = "jersey.config.apache.client.requestConfig";
+
+    /**
+     * HttpRequestRetryHandler which will be used to create {@link org.apache.http.client.HttpClient}.
+     * <p/>
+     * The value MUST be an instance of {@link org.apache.http.client.HttpRequestRetryHandler}.
+     * <p/>
+     * If the property is absent a default retry handler will be used
+     * ({@link org.apache.http.impl.client.DefaultHttpRequestRetryHandler}).
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    public static final String RETRY_HANDLER = "jersey.config.apache.client.retryHandler";
 
     /**
      * Get the value of the specified property.
