@@ -40,6 +40,9 @@
 
 package org.glassfish.jersey.tests.e2e.common;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
@@ -86,7 +89,7 @@ public class RequestScopeTest extends JerseyTest {
 
     public static class CloseMeFactory implements Factory<CloseMe> {
 
-        public static volatile boolean closed = false;
+        private static final CountDownLatch CLOSED_LATCH = new CountDownLatch(1);
 
         @Override
         public CloseMe provide() {
@@ -98,7 +101,7 @@ public class RequestScopeTest extends JerseyTest {
 
                 @Override
                 public void close() {
-                    closed = true;
+                    CLOSED_LATCH.countDown();
                 }
             };
         }
@@ -135,6 +138,6 @@ public class RequestScopeTest extends JerseyTest {
         assertThat(response.getStatus(), is(200));
         assertThat(response.readEntity(String.class), is("foo"));
 
-        assertTrue(CloseMeFactory.closed);
+        assertTrue(CloseMeFactory.CLOSED_LATCH.await(3, TimeUnit.SECONDS));
     }
 }
