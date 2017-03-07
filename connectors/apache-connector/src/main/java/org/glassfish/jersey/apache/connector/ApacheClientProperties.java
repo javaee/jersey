@@ -146,6 +146,18 @@ public final class ApacheClientProperties {
     public static final String REQUEST_CONFIG = "jersey.config.apache.client.requestConfig";
 
     /**
+     * HttpRequestRetryHandler which will be used to create {@link org.apache.http.client.HttpClient}.
+     * <p/>
+     * The value MUST be an instance of {@link org.apache.http.client.HttpRequestRetryHandler}.
+     * <p/>
+     * If the property is absent a default retry handler will be used
+     * ({@link org.apache.http.impl.client.DefaultHttpRequestRetryHandler}).
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    public static final String RETRY_HANDLER = "jersey.config.apache.client.retryHandler";
+
+    /**
      * Get the value of the specified property.
      *
      * If the property is not set or the actual property value type is not compatible with the specified type, the method will
