@@ -44,8 +44,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import org.glassfish.jersey.spi.ServiceHolder;
-
 /**
  * Interface provides the communication API between Jersey and Dependency Injection provider
  * <p>

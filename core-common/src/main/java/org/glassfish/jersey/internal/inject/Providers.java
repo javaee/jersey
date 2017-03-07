@@ -68,7 +68,6 @@ import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.spi.Contract;
-import org.glassfish.jersey.spi.ServiceHolder;
 
 /**
  * Utility class providing a set of utility methods for easier and more type-safe

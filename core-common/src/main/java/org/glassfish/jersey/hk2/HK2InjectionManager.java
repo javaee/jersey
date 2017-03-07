@@ -57,8 +57,8 @@ import org.glassfish.jersey.internal.inject.ForeignDescriptor;
 import org.glassfish.jersey.internal.inject.ForeignDescriptorImpl;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
-import org.glassfish.jersey.spi.ServiceHolder;
-import org.glassfish.jersey.spi.ServiceHolderImpl;
+import org.glassfish.jersey.internal.inject.ServiceHolder;
+import org.glassfish.jersey.internal.inject.ServiceHolderImpl;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.ServiceLocator;
