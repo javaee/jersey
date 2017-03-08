@@ -40,24 +40,6 @@
 
 package org.glassfish.jersey.internal;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.ext.ExceptionMapper;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -66,6 +48,25 @@ import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 import org.glassfish.jersey.spi.ServiceHolder;
+
+import javax.annotation.Priority;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.ws.rs.Priorities;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.ext.ExceptionMapper;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates
@@ -96,10 +97,12 @@ public class ExceptionMapperFactory implements ExceptionMappers {
 
         ServiceHolder<ExceptionMapper> mapper;
         Class<? extends Throwable> exceptionType;
+        int priority;
 
-        public ExceptionMapperType(final ServiceHolder<ExceptionMapper> mapper, final Class<? extends Throwable> exceptionType) {
+        public ExceptionMapperType(final ServiceHolder<ExceptionMapper> mapper, final Class<? extends Throwable> exceptionType, final int priority) {
             this.mapper = mapper;
             this.exceptionType = exceptionType;
+            this.priority = priority;
         }
     }
 
@@ -118,48 +121,23 @@ public class ExceptionMapperFactory implements ExceptionMappers {
 
     @SuppressWarnings("unchecked")
     private <T extends Throwable> ExceptionMapper<T> find(final Class<T> type, final T exceptionInstance) {
-        ExceptionMapper<T> mapper = null;
-        int minDistance = Integer.MAX_VALUE;
+        final Comparator<ExceptionMapperType> comparator = Comparator
+                .comparing((ExceptionMapperType t) -> distance(type, t.exceptionType))
+                .thenComparing(t -> t.priority);
 
-        for (final ExceptionMapperType mapperType : exceptionMapperTypes) {
-            final int d = distance(type, mapperType.exceptionType);
-            if (d >= 0 && d <= minDistance) {
-                final ExceptionMapper<T> candidate = mapperType.mapper.getInstance();
-
-                if (isPreferredCandidate(exceptionInstance, candidate, d == minDistance)) {
-                    mapper = candidate;
-                    minDistance = d;
-                    if (d == 0) {
-                        // slight optimization: if the distance is 0, it is already the best case, so we can exit
-                        return mapper;
-                    }
-                }
-            }
-        }
-        return mapper;
+        return exceptionMapperTypes.stream()
+                .filter(t -> distance(type, t.exceptionType) >= 0)
+                .sorted(comparator)
+                .filter(t -> filterExtendedMappers(exceptionInstance, t))
+                .map(t -> t.mapper.getInstance())
+                .findFirst().orElse(null);
     }
 
-    /**
-     * Determines whether the currently considered candidate should be preferred over the previous one.
-     *
-     * @param exceptionInstance exception to be mapped.
-     * @param candidate         mapper able to map given exception type.
-     * @param sameDistance      flag indicating whether this and the previously considered candidate are in the same distance.
-     * @param <T>               exception type.
-     * @return {@code true} if the given candidate is preferred over the previous one with the same or lower distance,
-     * {@code false} otherwise.
-     */
-    private <T extends Throwable> boolean isPreferredCandidate(final T exceptionInstance, final ExceptionMapper<T> candidate,
-                                                               final boolean sameDistance) {
-        if (exceptionInstance == null) {
-            return true;
-        }
-        if (candidate instanceof ExtendedExceptionMapper) {
-            return !sameDistance
-                    && ((ExtendedExceptionMapper<T>) candidate).isMappable(exceptionInstance);
-        } else {
-            return !sameDistance;
-        }
+    private <T extends Throwable> boolean filterExtendedMappers(T exceptionInstance, ExceptionMapperType type) {
+        final ExceptionMapper mapper = type.mapper.getInstance();
+        if (mapper instanceof ExtendedExceptionMapper)
+            return ((ExtendedExceptionMapper<T>) mapper).isMappable(exceptionInstance);
+        return true;
     }
 
     /**
@@ -173,7 +151,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         Collection<ServiceHolder<ExceptionMapper>> mapperHandles =
                 Providers.getAllServiceHolders(injectionManager, ExceptionMapper.class);
 
-        for (ServiceHolder<ExceptionMapper> mapperHandle: mapperHandles) {
+        for (ServiceHolder<ExceptionMapper> mapperHandle : mapperHandles) {
             ExceptionMapper mapper = mapperHandle.getInstance();
 
             if (Proxy.isProxyClass(mapper.getClass())) {
@@ -192,13 +170,13 @@ public class ExceptionMapperFactory implements ExceptionMappers {
                 if (!mapperTypes.isEmpty()) {
                     final Class<? extends Throwable> c = getExceptionType(mapperTypes.first());
                     if (c != null) {
-                        exceptionMapperTypes.add(new ExceptionMapperType(mapperHandle, c));
+                        exceptionMapperTypes.add(new ExceptionMapperType(mapperHandle, c, getPriority(mapper)));
                     }
                 }
             } else {
                 final Class<? extends Throwable> c = getExceptionType(mapper.getClass());
                 if (c != null) {
-                    exceptionMapperTypes.add(new ExceptionMapperType(mapperHandle, c));
+                    exceptionMapperTypes.add(new ExceptionMapperType(mapperHandle, c, getPriority(mapper)));
                 }
             }
         }
@@ -298,4 +276,18 @@ public class ExceptionMapperFactory implements ExceptionMappers {
             return null;
         }
     }
+
+    /**
+     * Returns the configured priority for the ExceptionMapper or {@link Priorities#USER} if not specified.
+     *
+     * @param mapper The exception mapper
+     * @return The specified priority
+     */
+    private int getPriority(ExceptionMapper mapper) {
+        final Priority annotation = mapper.getClass().getAnnotation(Priority.class);
+        if (annotation == null)
+            return Priorities.USER;
+        return annotation.value();
+    }
+
 }
