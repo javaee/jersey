@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,8 +55,6 @@ import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpHandler;
@@ -118,17 +116,15 @@ public final class JdkHttpServerFactory {
      *
      * @param uri           the {@link URI uri} on which the Jersey application will be deployed.
      * @param configuration the Jersey server-side application configuration.
-     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
-     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param parentContext DI provider specific context with application's registered bindings.
      * @return Newly created {@link HttpServer}.
      * @throws ProcessingException thrown when problems during server creation occurs.
      * @see org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer
-     * @see org.glassfish.hk2.api.ServiceLocator
      * @since 2.12
      */
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration,
-                                              final ServiceLocator parentLocator) {
-        return createHttpServer(uri, new JdkHttpHandlerContainer(configuration, parentLocator), true);
+                                              final Object parentContext) {
+        return createHttpServer(uri, new JdkHttpHandlerContainer(configuration, parentContext), true);
     }
 
     /**
@@ -181,21 +177,20 @@ public final class JdkHttpServerFactory {
      * The {@code start} flag controls whether or not the returned {@link HttpServer JDK HttpServer} is started.
      * </p>
      *
-     * @param uri               the {@link URI uri} on which the Jersey application will be deployed.
-     * @param configuration     the Jersey server-side application configuration.
-     * @param parentLocator     {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
-     *                          {@link org.glassfish.jersey.server.ApplicationHandler}
-     * @param sslContext        custom {@link SSLContext} to be passed to the server
-     * @param start             if set to {@code false}, the created server will not be automatically started.
+     * @param uri           the {@link URI uri} on which the Jersey application will be deployed.
+     * @param configuration the Jersey server-side application configuration.
+     * @param parentContext DI provider specific context with application's registered bindings.
+     * @param sslContext    custom {@link SSLContext} to be passed to the server
+     * @param start         if set to {@code false}, the created server will not be automatically started.
      * @return Newly created {@link HttpServer}.
      * @throws ProcessingException thrown when problems during server creation occurs.
      * @since 2.18
      */
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration,
-                                              final ServiceLocator parentLocator,
+                                              final Object parentContext,
                                               final SSLContext sslContext, final boolean start) {
         return createHttpServer(uri,
-                new JdkHttpHandlerContainer(configuration, parentLocator),
+                new JdkHttpHandlerContainer(configuration, parentContext),
                 sslContext,
                 start
         );

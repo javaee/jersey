@@ -84,7 +84,6 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.CommonProperties;
-import org.glassfish.jersey.hk2.HK2InjectionManager;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ServiceConfigurationError;
 import org.glassfish.jersey.internal.ServiceFinder;
@@ -135,8 +134,6 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Collections2;
@@ -298,16 +295,14 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
 
     /**
      * Create a new Jersey server-side application handler configured by an instance
-     * of a {@link ResourceConfig}, custom {@link Binder} and a parent {@link org.glassfish.hk2.api.ServiceLocator}.
+     * of a {@link ResourceConfig}, custom {@link Binder} and a parent used by {@link InjectionManager}.
      *
-     * @param application  an instance of a JAX-RS {@code Application} (sub-)class that
-     *                     will be used to configure the new Jersey application handler.
-     * @param customBinder additional custom bindings used during {@link ServiceLocator} creation.
-     * @param parent       parent {@link ServiceLocator} instance.
+     * @param application   an instance of a JAX-RS {@code Application} (sub-)class that
+     *                      will be used to configure the new Jersey application handler.
+     * @param customBinder  additional custom bindings used during {@link InjectionManager} creation.
+     * @param parentManager parent used in {@link InjectionManager} for a specific DI provider.
      */
-    public ApplicationHandler(final Application application, final Binder customBinder, final ServiceLocator parent) {
-        // TODO: Remove HK2 Bridge
-        InjectionManager parentManager = HK2InjectionManager.createInjectionManager(parent);
+    public ApplicationHandler(final Application application, final Binder customBinder, final Object parentManager) {
         this.injectionManager = Injections.createInjectionManager(parentManager);
         this.injectionManager.register(CompositeBinder.wrap(
                 new ServerBinder(application.getProperties(), injectionManager), new ApplicationBinder(), customBinder));

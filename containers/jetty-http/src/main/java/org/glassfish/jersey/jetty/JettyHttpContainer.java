@@ -80,8 +80,6 @@ import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationListener;
 import org.eclipse.jetty.continuation.ContinuationSupport;
@@ -455,11 +453,11 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     /**
      * Create a new Jetty HTTP container.
      *
-     * @param application JAX-RS / Jersey application to be deployed on Jetty HTTP container.
-     * @param parentLocator parent injection manager.
+     * @param application   JAX-RS / Jersey application to be deployed on Jetty HTTP container.
+     * @param parentContext DI provider specific context with application's registered bindings.
      */
-    JettyHttpContainer(final Application application, final ServiceLocator parentLocator) {
-        this.appHandler = new ApplicationHandler(application, new JettyBinder(), parentLocator);
+    JettyHttpContainer(final Application application, final Object parentContext) {
+        this.appHandler = new ApplicationHandler(application, new JettyBinder(), parentContext);
     }
 
     /**

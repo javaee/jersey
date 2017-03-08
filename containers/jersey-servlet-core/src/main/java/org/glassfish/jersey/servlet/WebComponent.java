@@ -110,8 +110,6 @@ import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 import org.glassfish.jersey.servlet.spi.FilterUrlMappingsProvider;
 import org.glassfish.jersey.uri.UriComponent;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
 import jersey.repackaged.com.google.common.base.Predicate;
 import jersey.repackaged.com.google.common.collect.Collections2;
 
@@ -333,7 +331,7 @@ public class WebComponent {
         final AbstractBinder webComponentBinder = new WebComponentBinder(resourceConfig.getProperties());
         resourceConfig.register(webComponentBinder);
 
-        final ServiceLocator locator = (ServiceLocator) webConfig.getServletContext()
+        final Object locator = webConfig.getServletContext()
                 .getAttribute(ServletProperties.SERVICE_LOCATOR);
 
         this.appHandler = new ApplicationHandler(resourceConfig, webComponentBinder, locator);

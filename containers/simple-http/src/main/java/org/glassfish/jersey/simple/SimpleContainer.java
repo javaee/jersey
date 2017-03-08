@@ -79,8 +79,6 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
 import org.simpleframework.common.thread.DaemonFactory;
 import org.simpleframework.http.Address;
 import org.simpleframework.http.Request;
@@ -473,12 +471,11 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     /**
      * Create a new Simple framework HTTP container.
      *
-     * @param application   JAX-RS / Jersey application to be deployed on Simple framework HTTP
-     *                      container.
-     * @param parentLocator parent HK2 injection manager.
+     * @param application   JAX-RS / Jersey application to be deployed on Simple framework HTTP container.
+     * @param parentContext DI provider specific context with application's registered bindings.
      */
-    SimpleContainer(final Application application, final ServiceLocator parentLocator) {
-        this.appHandler = new ApplicationHandler(application, new SimpleBinder(), parentLocator);
+    SimpleContainer(final Application application, final Object parentContext) {
+        this.appHandler = new ApplicationHandler(application, new SimpleBinder(), parentContext);
         this.scheduler = new ScheduledThreadPoolExecutor(2, new DaemonFactory(TimeoutDispatcher.class));
     }
 

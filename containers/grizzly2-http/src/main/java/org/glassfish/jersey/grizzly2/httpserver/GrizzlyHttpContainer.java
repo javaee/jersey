@@ -76,8 +76,6 @@ import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
 import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.Request;
@@ -342,10 +340,10 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      * Create a new Grizzly HTTP container.
      *
      * @param application   JAX-RS / Jersey application to be deployed on Grizzly HTTP container.
-     * @param parentLocator parent injection manager.
+     * @param parentContext DI provider specific context with application's registered bindings.
      */
-    /* package */ GrizzlyHttpContainer(final Application application, final ServiceLocator parentLocator) {
-        this.appHandler = new ApplicationHandler(application, new GrizzlyBinder(), parentLocator);
+    /* package */ GrizzlyHttpContainer(final Application application, final Object parentContext) {
+        this.appHandler = new ApplicationHandler(application, new GrizzlyBinder(), parentContext);
         cacheConfigSetStatusOverSendError();
         cacheConfigEnableLeadingContextPathSlashes();
     }
