@@ -53,13 +53,13 @@ import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.ForeignDescriptor;
-import org.glassfish.jersey.internal.inject.ForeignDescriptorImpl;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.ServiceHolder;
 import org.glassfish.jersey.internal.inject.ServiceHolderImpl;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
+import org.glassfish.hk2.api.Descriptor;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -233,12 +233,13 @@ public class HK2InjectionManager implements InjectionManager {
     public ForeignDescriptor createForeignDescriptor(Binding binding) {
         ForeignDescriptor foreignDescriptor = createAndTranslateForeignDescriptor(binding);
         ActiveDescriptor<Object> activeDescriptor = ServiceLocatorUtilities
-                .addOneDescriptor(locator, (org.glassfish.hk2.api.Descriptor) foreignDescriptor.get(), false);
-        return new ForeignDescriptorImpl(activeDescriptor);
+                .addOneDescriptor(locator, (Descriptor) foreignDescriptor.get(), false);
+        return ForeignDescriptor.wrap(activeDescriptor, activeDescriptor::dispose);
     }
 
+    @SuppressWarnings("unchecked")
     private ForeignDescriptor createAndTranslateForeignDescriptor(Binding binding) {
-        ActiveDescriptor<?> activeDescriptor;
+        ActiveDescriptor activeDescriptor;
         if (ClassBinding.class.isAssignableFrom(binding.getClass())) {
             activeDescriptor = Hk2Helper.translateToActiveDescriptor((ClassBinding<?>) binding);
         } else if (InstanceBinding.class.isAssignableFrom(binding.getClass())) {
@@ -247,7 +248,7 @@ public class HK2InjectionManager implements InjectionManager {
             throw new RuntimeException(LocalizationMessages.UNKNOWN_DESCRIPTOR_TYPE(binding.getClass().getSimpleName()));
         }
 
-        return new ForeignDescriptorImpl(activeDescriptor);
+        return ForeignDescriptor.wrap(activeDescriptor, activeDescriptor::dispose);
     }
 
     @Override

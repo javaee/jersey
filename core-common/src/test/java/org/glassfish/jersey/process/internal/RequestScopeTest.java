@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ package org.glassfish.jersey.process.internal;
 import java.lang.reflect.Type;
 import java.util.concurrent.Callable;
 
+import org.glassfish.jersey.internal.inject.ForeignDescriptor;
 import org.glassfish.jersey.process.internal.RequestScope.Instance;
 
 import org.glassfish.hk2.api.ServiceHandle;
@@ -65,7 +66,7 @@ public class RequestScopeTest {
         final RequestScope requestScope = new RequestScope();
         assertNull(requestScope.suspendCurrent());
         final Instance instance = requestScope.createInstance();
-        final TestProvider inhab = new TestProvider("a");
+        ForeignDescriptor inhab = ForeignDescriptor.wrap(new TestProvider("a"));
         instance.put(inhab, "1");
         requestScope.runInScope(instance, new Runnable() {
 
@@ -84,7 +85,7 @@ public class RequestScopeTest {
         final RequestScope requestScope = new RequestScope();
         assertNull(requestScope.suspendCurrent());
         final Instance instance = requestScope.createInstance();
-        final TestProvider inhab = new TestProvider("a");
+        ForeignDescriptor inhab = ForeignDescriptor.wrap(new TestProvider("a"));
         instance.put(inhab, "1");
         requestScope.runInScope(instance, new Runnable() {
 
@@ -106,7 +107,7 @@ public class RequestScopeTest {
     public void testScopeWithImplicitInstance() throws Exception {
         final RequestScope requestScope = new RequestScope();
         assertNull(requestScope.suspendCurrent());
-        final TestProvider inhab = new TestProvider("a");
+        ForeignDescriptor inhab = ForeignDescriptor.wrap(new TestProvider("a"));
         final Instance instance = requestScope.runInScope(new Callable<Instance>() {
 
             @Override
@@ -127,7 +128,7 @@ public class RequestScopeTest {
     public void testScopeWithTwoInternalTasks() throws Exception {
         final RequestScope requestScope = new RequestScope();
         assertNull(requestScope.suspendCurrent());
-        final TestProvider inhab = new TestProvider("a");
+        ForeignDescriptor inhab = ForeignDescriptor.wrap(new TestProvider("a"));
         final Instance instance = requestScope.runInScope(new Callable<Instance>() {
 
             @Override
@@ -160,7 +161,7 @@ public class RequestScopeTest {
     public void testMultipleGetInstanceCalls() throws Exception {
         final RequestScope requestScope = new RequestScope();
         assertNull(requestScope.suspendCurrent());
-        final TestProvider inhab = new TestProvider("a");
+        ForeignDescriptor inhab = ForeignDescriptor.wrap(new TestProvider("a"));
         final Instance instance = requestScope.runInScope(new Callable<Instance>() {
 
             @Override
