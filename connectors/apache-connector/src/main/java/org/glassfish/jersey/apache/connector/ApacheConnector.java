@@ -95,6 +95,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.ConnectionConfig;
+import org.apache.http.config.Lookup;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
@@ -105,6 +106,7 @@ import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.cookie.CookieSpecProvider;
 import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.ContentLengthStrategy;
@@ -134,6 +136,8 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
  * <li>{@link ApacheClientProperties#REQUEST_CONFIG}</li>
  * <li>{@link ApacheClientProperties#CREDENTIALS_PROVIDER}</li>
  * <li>{@link ApacheClientProperties#DISABLE_COOKIES}</li>
+ * <li>{@link ApacheClientProperties#COOKIE_SPEC_REGISTRY}</li>
+ * <li>{@link ApacheClientProperties#COOKIE_STORE}</li>
  * <li>{@link ClientProperties#PROXY_URI}</li>
  * <li>{@link ClientProperties#PROXY_USERNAME}</li>
  * <li>{@link ClientProperties#PROXY_PASSWORD}</li>
@@ -198,6 +202,7 @@ class ApacheConnector implements Connector {
     private final CookieStore cookieStore;
     private final boolean preemptiveBasicAuth;
     private final RequestConfig requestConfig;
+    private final Lookup<CookieSpecProvider> cookieSpecRegistry;
 
     /**
      * Create the new Apache HTTP Client connector.
@@ -230,6 +235,24 @@ class ApacheConnector implements Connector {
                                 RequestConfig.class.getName())
                 );
                 reqConfig = null;
+            }
+        }
+
+        Object cookieSpecRegistryObj = config.getProperties().get(ApacheClientProperties.COOKIE_SPEC_REGISTRY);
+        if (cookieSpecRegistryObj == null) {
+            cookieSpecRegistry = null;
+        } else {
+            if (cookieSpecRegistryObj instanceof Lookup) {
+                cookieSpecRegistry = (Lookup<CookieSpecProvider>) cookieSpecRegistryObj;
+            } else {
+                LOGGER.log(
+                        Level.WARNING,
+                        LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                                HttpClientContext.COOKIESPEC_REGISTRY,
+                                cookieSpecRegistryObj.getClass().getName(),
+                                Registry.class.getName())
+                );
+                cookieSpecRegistry = null;
             }
         }
 
@@ -290,8 +313,25 @@ class ApacheConnector implements Connector {
             requestConfig = requestConfigBuilder.build();
         }
 
+
         if (requestConfig.getCookieSpec() == null || !requestConfig.getCookieSpec().equals(CookieSpecs.IGNORE_COOKIES)) {
-            this.cookieStore = new BasicCookieStore();
+            Object cookieStoreObj = config.getProperties().get(ApacheClientProperties.COOKIE_STORE);
+            if (cookieStoreObj == null) {
+                this.cookieStore = new BasicCookieStore();
+            } else {
+                if (cookieStoreObj instanceof CookieStore) {
+                    cookieStore = (CookieStore) cookieStoreObj;
+                } else {
+                    LOGGER.log(
+                            Level.WARNING,
+                            LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                                    HttpClientContext.COOKIE_STORE,
+                                    cookieStoreObj.getClass().getName(),
+                                    Registry.class.getName())
+                    );
+                    this.cookieStore = new BasicCookieStore();
+                }
+            }
             clientBuilder.setDefaultCookieStore(cookieStore);
         } else {
             this.cookieStore = null;
@@ -432,6 +472,11 @@ class ApacheConnector implements Connector {
                 authCache.put(getHost(request), basicScheme);
                 context.setAuthCache(authCache);
             }
+
+            if (cookieSpecRegistry != null) {
+                context.setCookieSpecRegistry(cookieSpecRegistry);
+            }
+
             response = client.execute(getHost(request), request, context);
             HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, clientRequest.getHeaders(), this.getClass().getName());
 
