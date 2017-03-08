@@ -57,6 +57,8 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionResolver;
 import org.glassfish.jersey.internal.util.collection.ImmutableCollectors;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
@@ -65,8 +67,6 @@ import org.glassfish.jersey.internal.util.collection.Values;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.MultiException;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Implementation of the {@link ClassAnalyzer} that supports selection
@@ -90,18 +90,23 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
      */
     public static final class Binder extends AbstractBinder {
 
-        private final ServiceLocator serviceLocator;
+        private final InjectionManager injectionManager;
 
-        public Binder(ServiceLocator serviceLocator) {
-            this.serviceLocator = serviceLocator;
+        /**
+         * Constructor for {@code JerseyClassAnalyzer}.
+         *
+         * @param injectionManager current injection manager.
+         */
+        public Binder(InjectionManager injectionManager) {
+            this.injectionManager = injectionManager;
         }
 
         @Override
         protected void configure() {
             ClassAnalyzer defaultAnalyzer =
-                    serviceLocator.getService(ClassAnalyzer.class, ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME);
+                    injectionManager.getInstance(ClassAnalyzer.class, ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME);
 
-            Supplier<List<InjectionResolver>> resolvers = () -> serviceLocator.getAllServices(InjectionResolver.class);
+            Supplier<List<InjectionResolver>> resolvers = () -> injectionManager.getAllInstances(InjectionResolver.class);
 
             bind(new JerseyClassAnalyzer(defaultAnalyzer, resolvers))
                     .analyzeWith(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME)

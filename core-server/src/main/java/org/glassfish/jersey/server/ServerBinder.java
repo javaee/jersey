@@ -51,7 +51,6 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
-import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -94,7 +93,6 @@ class ServerBinder extends AbstractBinder {
     @Override
     protected void configure() {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
-                new JerseyErrorService.Binder(),
                 new ServerProcessingBinder(),
                 new ParameterInjectionBinder(injectionManager),
                 new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.SERVER),

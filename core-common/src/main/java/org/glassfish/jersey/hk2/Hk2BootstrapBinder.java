@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,65 +38,67 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal;
-
-import java.util.Collections;
-
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
+package org.glassfish.jersey.hk2;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.ProviderBinder;
-import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.process.internal.RequestScope;
 
 /**
- * Binder for testing purposes.
+ * {@link AbstractBinder} that registers all components needed for a proper bootstrap of Jersey based on HK2 framework.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class TestBinder extends AbstractBinder {
+public class Hk2BootstrapBinder extends AbstractBinder {
+
+    private final AbstractBinder externalBinder;
 
     private final InjectionManager injectionManager;
 
-    public TestBinder(InjectionManager injectionManager) {
+    /**
+     * Create a bootstrap which is specific for HK2 module and automatically install {@code externalBinder}.
+     *
+     * @param injectionManager HK2 service locator.
+     * @param externalBinder   externally provided binder (particularly Jersey specific services).
+     */
+    public Hk2BootstrapBinder(InjectionManager injectionManager, AbstractBinder externalBinder) {
         this.injectionManager = injectionManager;
-    }
-
-    public static void initProviders(final InjectionManager injectionManager) {
-        initProviders(injectionManager, Collections.emptySet(), Collections.emptySet());
-    }
-
-    public static void initProviders(final InjectionManager injectionManager,
-                                     final Iterable<Class<?>> providerClasses,
-                                     final Iterable<Object> providerInstances) {
-        final ProviderBinder providerBinder = new ProviderBinder(injectionManager);
-        providerBinder.bindClasses(providerClasses);
-        providerBinder.bindInstances(providerInstances);
+        this.externalBinder = externalBinder;
     }
 
     @Override
     protected void configure() {
         install(
-                new RequestScope.Binder(),
-                new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER),
-                new MessageBodyFactory.Binder(),
-                new ExceptionMapperFactory.Binder(),
-                new ContextResolverFactory.Binder(),
-                new JaxrsProviders.Binder());
+                // First service the current injection manager to be able to inject itself into other services.
+                new HK2InjectionManagerBinder(injectionManager),
+                // Jersey-like class analyzer that is able to choose the right services' construtor.
+                new JerseyClassAnalyzer.Binder(injectionManager),
+                // Add support for Context annotation.
+                new ContextInjectionResolverImpl.Binder(),
+                // Compose together the initialization binders and bind them as a whole.
+                externalBinder,
+                // Improved HK2 Error reporting.
+                new JerseyErrorService.Binder());
+    }
 
-        bind(new ExceptionMapper<Throwable>() {
-            @Override
-            public Response toResponse(Throwable exception) {
-                if (exception instanceof NumberFormatException) {
-                    return Response.ok(-1).build();
-                }
+    /**
+     * Binder that registers a provided injection manager.
+     */
+    private static class HK2InjectionManagerBinder extends AbstractBinder {
 
-                throw new RuntimeException(exception);
-            }
-        }).to(ExceptionMapper.class);
+        private final InjectionManager injectionManager;
+
+        /**
+         * Constructor for a creation injection manager binder.
+         *
+         * @param injectionManager current injection manager.
+         */
+        private HK2InjectionManagerBinder(InjectionManager injectionManager) {
+            this.injectionManager = injectionManager;
+        }
+
+        @Override
+        protected void configure() {
+            bind(injectionManager).to(InjectionManager.class);
+        }
     }
 }
