@@ -84,10 +84,10 @@ public class HK2InjectionManager implements InjectionManager {
     }
 
     /**
-     * Creates a new instance using the underlying {@link ServiceLocator}. More information about how to use this c'tor can found
-     * here {@link #createInjectionManager(ServiceLocator)}.
+     * Creates a new instance using the passed {@link ServiceLocator}. More information about how to use this constructor can
+     * be found here {@link #createInjectionManager(ServiceLocator)}.
      *
-     * @param locator underlying HK2 injection manager
+     * @param locator service locator used in this injection manager.
      */
     private HK2InjectionManager(ServiceLocator locator) {
         this.locator = locator;
@@ -97,18 +97,11 @@ public class HK2InjectionManager implements InjectionManager {
      * Creates a new {@link ServiceLocator} instance from static {@link ServiceLocatorFactory} and adds the provided parent
      * locator if the instance is not null.
      *
-     * @param name   name of the injection manager.
-     * @param parent parent of the new injection manager.
+     * @param name          name of the injection manager.
+     * @param parentLocator parent locator, can be {@code null}.
      * @return new instance of injection manager.
      */
-    private static ServiceLocator createLocator(String name, InjectionManager parent) {
-        assertParentLocatorType(parent);
-
-        ServiceLocator parentLocator = null;
-        if (parent != null) {
-            parentLocator = ((HK2InjectionManager) parent).locator;
-        }
-
+    private static ServiceLocator createLocator(String name, ServiceLocator parentLocator) {
         ServiceLocator result = factory.create(name, parentLocator, null, ServiceLocatorFactory.CreatePolicy.DESTROY);
         result.setNeutralContextClassLoader(false);
         ServiceLocatorUtilities.enablePerThreadScope(result);
@@ -140,8 +133,9 @@ public class HK2InjectionManager implements InjectionManager {
     }
 
     @Override
-    public void initialize(String name, InjectionManager parent, Binder... binders) {
-        this.locator = createLocator(name, parent);
+    public void initialize(String name, Object parent, Binder... binders) {
+        ServiceLocator parentLocator = resolveServiceLocatorParent(parent);
+        this.locator = createLocator(name, parentLocator);
 
         // Register all components needed for proper HK2 locator bootstrap
         Hk2Helper.bind(locator, new Hk2BootstrapBinder(this, CompositeBinder.wrap(binders)));
@@ -162,12 +156,12 @@ public class HK2InjectionManager implements InjectionManager {
     }
 
     /**
-     * Checks if the parent is null then must be an instance of {@link HK2InjectionManager}.
+     * Checks if the parent is null then must be an instance of {@link ServiceLocator} or {@link HK2InjectionManager}.
      *
-     * @param parent parent {@code InjectionManager}.
+     * @param parent object represented by {@code ServiceLocator} or {@code HK2InjectionManager}.
      */
-    private static void assertParentLocatorType(InjectionManager parent) {
-        if (parent != null && !(parent instanceof HK2InjectionManager)) {
+    private static void assertParentLocatorType(Object parent) {
+        if (parent != null && !(parent instanceof ServiceLocator || parent instanceof HK2InjectionManager)) {
             throw new RuntimeException(LocalizationMessages.HK_2_UNKNOWN_PARENT_INSTANCE_MANAGER(
                     parent.getClass().getSimpleName()));
         }
@@ -249,6 +243,20 @@ public class HK2InjectionManager implements InjectionManager {
         }
 
         return ForeignDescriptor.wrap(activeDescriptor, activeDescriptor::dispose);
+    }
+
+    private static ServiceLocator resolveServiceLocatorParent(Object parent) {
+        assertParentLocatorType(parent);
+
+        ServiceLocator parentLocator = null;
+        if (parent != null) {
+            if (parent instanceof ServiceLocator) {
+                parentLocator = (ServiceLocator) parent;
+            } else if (parent instanceof HK2InjectionManager) {
+                parentLocator = ((HK2InjectionManager) parent).getServiceLocator();
+            }
+        }
+        return parentLocator;
     }
 
     @Override

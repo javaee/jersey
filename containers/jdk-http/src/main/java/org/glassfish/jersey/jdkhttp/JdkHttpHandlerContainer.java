@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,8 +69,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -101,11 +99,11 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
     /**
      * Create new lightweight Java SE HTTP server container.
      *
-     * @param application JAX-RS / Jersey application to be deployed on the container.
-     * @param parentLocator parent HK2 service locator.
+     * @param application   JAX-RS / Jersey application to be deployed on the container.
+     * @param parentContext DI provider specific context with application's registered bindings.
      */
-    JdkHttpHandlerContainer(final Application application, final ServiceLocator parentLocator) {
-        this.appHandler = new ApplicationHandler(application, null, parentLocator);
+    JdkHttpHandlerContainer(final Application application, final Object parentContext) {
+        this.appHandler = new ApplicationHandler(application, null, parentContext);
     }
 
     @Override

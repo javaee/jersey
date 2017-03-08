@@ -111,8 +111,6 @@ import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 import org.glassfish.jersey.servlet.spi.FilterUrlMappingsProvider;
 import org.glassfish.jersey.uri.UriComponent;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
 /**
  * An common Jersey web component that may be extended by a Servlet and/or
  * Filter implementation, or encapsulated by a Servlet or Filter implementation.
@@ -331,7 +329,7 @@ public class WebComponent {
         final AbstractBinder webComponentBinder = new WebComponentBinder(resourceConfig.getProperties());
         resourceConfig.register(webComponentBinder);
 
-        final ServiceLocator locator = (ServiceLocator) webConfig.getServletContext()
+        final Object locator = webConfig.getServletContext()
                 .getAttribute(ServletProperties.SERVICE_LOCATOR);
 
         this.appHandler = new ApplicationHandler(resourceConfig, webComponentBinder, locator);

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,8 +53,6 @@ import javax.net.ssl.SSLContext;
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.simple.internal.LocalizationMessages;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import org.simpleframework.http.core.Container;
 import org.simpleframework.http.core.ContainerSocketProcessor;
@@ -188,20 +186,18 @@ public final class SimpleContainerFactory {
      *                      The URI path, query and fragment components are ignored.
      * @param context       this is the SSL context used for SSL connections.
      * @param config        the resource configuration.
-     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the
-     *                      locator used by {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param parentContext DI provider specific context with application's registered bindings.
      * @param count         this is the number of threads to be used.
      * @param select        this is the number of selector threads to use.
      * @return the closeable connection, with the endpoint started.
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
-     * @see org.glassfish.hk2.api.ServiceLocator
      * @since 2.12
      */
     public static SimpleServer create(final URI address, final SSLContext context,
-                                      final ResourceConfig config, final ServiceLocator parentLocator, final int count,
+                                      final ResourceConfig config, final Object parentContext, final int count,
                                       final int select) {
-        return create(address, context, new SimpleContainer(config, parentLocator), count, select);
+        return create(address, context, new SimpleContainer(config, parentContext), count, select);
     }
 
     /**

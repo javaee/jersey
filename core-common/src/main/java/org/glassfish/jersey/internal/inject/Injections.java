@@ -58,19 +58,16 @@ import org.glassfish.jersey.hk2.HK2InjectionManager;
 public class Injections {
 
     /**
-     * Create a {@link InjectionManager}. In case the {@code name} is not specified, the locator
-     * will be unnamed.
+     * Create a {@link InjectionManager}. In case the {@code name} is not specified, the locator will be unnamed.
      *
-     * @param name                 The name of this injection manager. Passing a {@code null}
-     *                             name will result in a newly created injection manager with a
-     *                             generated name.
-     * @param parent               The parent of this injection manager. Services can be found in
-     *                             the parent (and all grand-parents). May be {@code null}.
-     *                             if the returned injection manager should not be parented.
-     * @param binders              custom the {@link Binder binders}.
+     * @param name    The name of this injection manager. Passing a {@code null} name will result in a newly created injection
+     *                manager with a generated name.
+     * @param parent  The parent of this injection manager. Services can be found in the parent (and all grand-parents). May be
+     *                {@code null}. An underlying DI provider checks whether the parent is in a proper type.
+     * @param binders custom the {@link Binder binders}.
      * @return a injection manager with all the bindings.
      */
-    public static InjectionManager createInjectionManager(String name, InjectionManager parent, Binder... binders) {
+    public static InjectionManager createInjectionManager(String name, Object parent, Binder... binders) {
         return _injectionManager(name, parent, binders);
     }
 
@@ -100,20 +97,19 @@ public class Injections {
     }
 
     /**
-     * Create an unnamed, parented {@link InjectionManager}. In case the {@code parent} injection manager
-     * is not specified, the locator will not be parented.
+     * Create an unnamed, parented {@link InjectionManager}. In case the {@code parent} injection manager is not specified, the
+     * locator will not be parented.
      *
-     * @param parent  The parent of this underlying DI locator. Services can be found in
-     *                the parent (and all grand-parents). May be {@code null}.
-     *                if the returned BeanManager should not be parented.
+     * @param parent  The parent of this injection manager. Services can be found in the parent (and all grand-parents). May be
+     *                {@code null}. An underlying DI provider checks whether the parent is in a proper type.
      * @param binders custom the {@link Binder binders}.
      * @return an injection manager with all the bindings.
      */
-    public static InjectionManager createInjectionManager(InjectionManager parent, Binder... binders) {
+    public static InjectionManager createInjectionManager(Object parent, Binder... binders) {
         return _injectionManager(null, parent, binders);
     }
 
-    private static InjectionManager _injectionManager(String name, InjectionManager parent, Binder... binders) {
+    private static InjectionManager _injectionManager(String name, Object parent, Binder... binders) {
         Iterator<InjectionManager> iterator = ServiceLoader.load(InjectionManager.class).iterator();
         InjectionManager injectionManager;
         if (iterator.hasNext()) {

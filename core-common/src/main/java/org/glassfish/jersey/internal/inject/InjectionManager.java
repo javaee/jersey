@@ -47,7 +47,7 @@ import java.util.List;
 /**
  * Interface provides the communication API between Jersey and Dependency Injection provider
  * <p>
- * First, the method {@link #initialize(String, InjectionManager, Binder...)} should be call to initialize DI provider
+ * First, the method {@link #initialize(String, Object, Binder...)} should be call to initialize DI provider
  * (e.g. create underlying storage for registered services) and to do other stuff needed for successful start of DI provider.
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
@@ -59,11 +59,13 @@ public interface InjectionManager {
      * register {@link Binding} them during initialization process. {@code name} and {@code parent} are not required parameters
      * and can be null without the initialization exception.
      *
-     * @param name          Name of the injection manager.
-     * @param parent        Parent injection manager on which new injection manager should be dependent.
-     * @param binders       Binders with descriptions to include them during initialization process.
+     * @param name    Name of the injection manager.
+     * @param parent  Parent object of the underlying DI provider on which new injection manager should be dependent. A specific
+     *                DI provider checks whether the parent object is in the proper type of underlying service storage or
+     *                a proper implementation of {@link InjectionManager}.
+     * @param binders Binders with descriptions to include them during initialization process.
      */
-    void initialize(String name, InjectionManager parent, Binder... binders);
+    void initialize(String name, Object parent, Binder... binders);
 
     /**
      * This will shutdown the entire injection manager and underlying DI provider along with injected executors and schedulers.
