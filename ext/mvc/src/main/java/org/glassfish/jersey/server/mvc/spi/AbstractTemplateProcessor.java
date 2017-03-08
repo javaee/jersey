@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -66,7 +67,6 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.servlet.ServletContext;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.DataStructures;
@@ -262,14 +262,13 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
      * Retrieve a template object factory. The factory is, at first, looked for in
      * {@link javax.ws.rs.core.Configuration configuration} and if not found, given default value is used.
      *
-     * @param injectionManager injection manager to initialize factory if configured as class or class-name.
-     * @param type type of requested template object factory.
-     * @param defaultValue default value to be used if no factory reference is present in configuration.
+     * @param createInstance function that delegates a creation and an initialization to injection manager.
+     * @param type           type of requested template object factory.
+     * @param defaultValue   default value to be used if no factory reference is present in configuration.
      * @param <F> type of requested template object factory.
      * @return non-{@code null} template object factory.
      */
-    protected <F> F getTemplateObjectFactory(final InjectionManager injectionManager, final Class<F> type,
-                                             final Value<F> defaultValue) {
+    protected <F> F getTemplateObjectFactory(Function<Class<?>, ?> createInstance, Class<F> type, Value<F> defaultValue) {
         final Object objectFactoryProperty = config.getProperty(MvcFeature.TEMPLATE_OBJECT_FACTORY + suffix);
 
         if (objectFactoryProperty != null) {
@@ -286,7 +285,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
 
                 if (factoryClass != null) {
                     if (type.isAssignableFrom(factoryClass)) {
-                        return type.cast(injectionManager.createAndInitialize(factoryClass));
+                        return type.cast(createInstance.apply(factoryClass));
                     } else {
                         LOGGER.log(Level.CONFIG, LocalizationMessages.WRONG_TEMPLATE_OBJECT_FACTORY(factoryClass, type));
                     }

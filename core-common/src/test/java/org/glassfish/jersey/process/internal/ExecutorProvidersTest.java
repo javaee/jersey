@@ -62,10 +62,6 @@ import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
 import org.glassfish.jersey.spi.ScheduledThreadPoolExecutorProvider;
 import org.glassfish.jersey.spi.ThreadPoolExecutorProvider;
 
-import org.glassfish.hk2.api.Unqualified;
-
-import org.jvnet.hk2.annotations.Optional;
-
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -190,32 +186,12 @@ public class ExecutorProvidersTest extends AbstractBinder {
         private PreDestroyNotifier preDestroyNotifier;
 
         @Inject
-        @Unqualified // this will prevent HK2 from injecting using qualified injection bindings
-        @Optional // This will prevent HK2 to fail due to an unsatisfied injection binding
-        private ExecutorService unqualifiedExecutor;
-
-        @Inject
-        @Unqualified // this will prevent HK2 from injecting using qualified injection bindings
-        @Optional // This will prevent HK2 to fail due to an unsatisfied injection binding
-        private ScheduledExecutorService unqualifiedScheduler;
-
-        @Inject
         @CustomExecutor
         private ExecutorService customExecutor;
 
         @Inject
         @Named("custom-executor")
         private ExecutorService customNamedExecutor;
-
-        @Inject
-        @Optional
-        @CustomExecutor
-        private ScheduledExecutorService customExecutorAsScheduler;
-
-        @Inject
-        @Named("custom-executor")
-        @Optional
-        private ScheduledExecutorService customNamedExecutorAsScheduler;
 
         @Inject
         @CustomScheduler
@@ -264,14 +240,8 @@ public class ExecutorProvidersTest extends AbstractBinder {
     public void testExecutorInjectionAndReleasing() throws Exception {
         final InjectedExecutorClient executorClient = Injections.getOrCreate(injectionManager, InjectedExecutorClient.class);
 
-        // Check expected injection points state
-        assertThat(executorClient.unqualifiedExecutor, Matchers.nullValue());
-        assertThat(executorClient.unqualifiedScheduler, Matchers.nullValue());
-
         assertThat(executorClient.customExecutor, Matchers.notNullValue());
         assertThat(executorClient.customNamedExecutor, Matchers.notNullValue());
-        assertThat(executorClient.customExecutorAsScheduler, Matchers.nullValue());
-        assertThat(executorClient.customNamedExecutorAsScheduler, Matchers.nullValue());
 
         assertThat(executorClient.customScheduler, Matchers.notNullValue());
         assertThat(executorClient.customNamedScheduler, Matchers.notNullValue());

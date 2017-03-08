@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,10 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
+import javax.inject.Inject;
+import javax.servlet.ServletContext;
+
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 
 /**
@@ -60,6 +64,9 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 public class MustacheMvcFeature implements Feature {
 
     private static final String SUFFIX = ".mustache";
+
+    @Inject
+    private InjectionManager injectionManager;
 
     /**
      * {@link String} property defining the base path to Mustache templates. If set, the value of the property is added in front
@@ -123,7 +130,9 @@ public class MustacheMvcFeature implements Feature {
 
         if (!config.isRegistered(MustacheTemplateProcessor.class)) {
             // Template Processor.
-            context.register(MustacheTemplateProcessor.class);
+            Configuration configuration = injectionManager.getInstance(Configuration.class);
+            ServletContext servletContext = injectionManager.getInstance(ServletContext.class);
+            context.register(new MustacheTemplateProcessor(configuration, servletContext, injectionManager::createAndInitialize));
 
             // MvcFeature.
             if (!config.isRegistered(MvcFeature.class)) {
