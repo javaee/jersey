@@ -55,8 +55,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
@@ -65,7 +67,6 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.servlet.ServletContext;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.DataStructures;
@@ -73,10 +74,6 @@ import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.internal.LocalizationMessages;
 import org.glassfish.jersey.server.mvc.internal.TemplateHelper;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Default implementation of {@link org.glassfish.jersey.server.mvc.spi.TemplateProcessor template processor} that can be used to
@@ -120,15 +117,11 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
         this.suffix = '.' + propertySuffix;
 
         this.servletContext = servletContext;
-        this.supportedExtensions = Sets.newHashSet(Collections2.transform(
-                Arrays.asList(supportedExtensions), new Function<String, String>() {
-
-                    @Override
-                    public String apply(String input) {
-                        input = input.toLowerCase();
-                        return input.startsWith(".") ? input : "." + input;
-                    }
-                }));
+        this.supportedExtensions = Arrays.stream(supportedExtensions)
+                .map(extension -> {
+                    String ext = extension.toLowerCase();
+                    return ext.startsWith(".") ? ext : "." + ext;
+                }).collect(Collectors.toSet());
 
         // Resolve property values.
         final Map<String, Object> properties = config.getProperties();
@@ -260,26 +253,22 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
             }
         }
 
-        return Collections2.transform(supportedExtensions, new Function<String, String>() {
-            @Override
-            public String apply(final String input) {
-                return templatePath + input;
-            }
-        });
+        return supportedExtensions.stream()
+                .map(extensiont -> templatePath + extensiont)
+                .collect(Collectors.toSet());
     }
 
     /**
      * Retrieve a template object factory. The factory is, at first, looked for in
      * {@link javax.ws.rs.core.Configuration configuration} and if not found, given default value is used.
      *
-     * @param injectionManager injection manager to initialize factory if configured as class or class-name.
-     * @param type type of requested template object factory.
-     * @param defaultValue default value to be used if no factory reference is present in configuration.
+     * @param createInstance function that delegates a creation and an initialization to injection manager.
+     * @param type           type of requested template object factory.
+     * @param defaultValue   default value to be used if no factory reference is present in configuration.
      * @param <F> type of requested template object factory.
      * @return non-{@code null} template object factory.
      */
-    protected <F> F getTemplateObjectFactory(final InjectionManager injectionManager, final Class<F> type,
-                                             final Value<F> defaultValue) {
+    protected <F> F getTemplateObjectFactory(Function<Class<?>, ?> createInstance, Class<F> type, Value<F> defaultValue) {
         final Object objectFactoryProperty = config.getProperty(MvcFeature.TEMPLATE_OBJECT_FACTORY + suffix);
 
         if (objectFactoryProperty != null) {
@@ -296,7 +285,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
 
                 if (factoryClass != null) {
                     if (type.isAssignableFrom(factoryClass)) {
-                        return type.cast(injectionManager.createAndInitialize(factoryClass));
+                        return type.cast(createInstance.apply(factoryClass));
                     } else {
                         LOGGER.log(Level.CONFIG, LocalizationMessages.WRONG_TEMPLATE_OBJECT_FACTORY(factoryClass, type));
                     }

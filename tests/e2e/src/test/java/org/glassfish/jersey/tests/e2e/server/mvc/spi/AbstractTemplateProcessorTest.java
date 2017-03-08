@@ -65,8 +65,6 @@ import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.spi.TestContainerException;
 
-import org.jvnet.hk2.annotations.Optional;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -119,16 +117,11 @@ public class AbstractTemplateProcessorTest {
         private final TestFactory factory;
 
         @Inject
-        public FactoryTemplateProcessor(final Configuration config, final InjectionManager injectionManager,
-                                        @Optional final ServletContext servletContext) {
-            super(config, servletContext, "factory", "fct");
+        public FactoryTemplateProcessor(Configuration config, InjectionManager injectionManager) {
+            super(config, injectionManager.getInstance(ServletContext.class), "factory", "fct");
 
-            this.factory = getTemplateObjectFactory(injectionManager, TestFactory.class, Values.lazy(new Value<TestFactory>() {
-                @Override
-                public TestFactory get() {
-                    return new TestFactory("Default Test Factory");
-                }
-            }));
+            this.factory = getTemplateObjectFactory(injectionManager::createAndInitialize, TestFactory.class, Values.lazy(
+                    (Value<TestFactory>) () -> new TestFactory("Default Test Factory")));
         }
 
         @Override
@@ -213,8 +206,8 @@ public class AbstractTemplateProcessorTest {
         private int i = 0;
 
         @Inject
-        public CacheTemplateProcessor(final Configuration config, @Optional final ServletContext servletContext) {
-            super(config, servletContext, "factory", "fct");
+        public CacheTemplateProcessor(Configuration config, InjectionManager injectionManager) {
+            super(config, injectionManager.getInstance(ServletContext.class), "factory", "fct");
         }
 
         @Override

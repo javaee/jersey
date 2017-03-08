@@ -54,8 +54,6 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 
 import org.glassfish.hk2.api.PerLookup;
 
-import org.jvnet.hk2.annotations.Optional;
-
 import org.junit.Test;
 import static org.junit.Assert.assertSame;
 
@@ -77,10 +75,8 @@ public class ReferencingFactoryTest extends AbstractBinder {
     private static class ValueInjected {
 
         @Inject
-        @Optional
         Foo foo;
         @Inject
-        @Optional
         List<Integer> integers;
         @Inject
         List<String> strings;
@@ -142,11 +138,6 @@ public class ReferencingFactoryTest extends AbstractBinder {
     @Test
     public void testReferencedBinding() {
         InjectionManager injectionManager = Injections.createInjectionManager(this);
-
-        ValueInjected emptyValues = injectionManager.createAndInitialize(ValueInjected.class);
-        assertSame(expectedFoo, emptyValues.foo);
-        assertSame(expectedIntegers, emptyValues.integers);
-        assertSame(expectedStrings, emptyValues.strings);
 
         RefInjected refValues = injectionManager.createAndInitialize(RefInjected.class);
         expectedFoo = new Foo(10);
