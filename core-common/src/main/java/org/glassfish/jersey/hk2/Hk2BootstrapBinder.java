@@ -72,6 +72,8 @@ public class Hk2BootstrapBinder extends AbstractBinder {
                 new HK2InjectionManagerBinder(injectionManager),
                 // Jersey-like class analyzer that is able to choose the right services' construtor.
                 new JerseyClassAnalyzer.Binder(injectionManager),
+                // Activate possibility to start Request Scope.
+                new RequestContext.Binder(),
                 // Add support for Context annotation.
                 new ContextInjectionResolverImpl.Binder(),
                 // Compose together the initialization binders and bind them as a whole.

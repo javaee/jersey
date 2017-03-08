@@ -40,7 +40,6 @@
 
 package org.glassfish.jersey.process.internal;
 
-import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -50,15 +49,16 @@ import java.util.logging.Logger;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.hk2.RequestContext;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.ForeignDescriptor;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.LazyUid;
 import org.glassfish.jersey.internal.util.Producer;
 
-import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Context;
-import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.api.TypeLiteral;
 
 import jersey.repackaged.com.google.common.base.MoreObjects;
 import jersey.repackaged.com.google.common.collect.Sets;
@@ -137,57 +137,20 @@ import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
  * @author Miroslav Fuksa
  */
 @Singleton
-public class RequestScope implements Context<RequestScoped> {
+public class RequestScope {
 
     private static final ExtendedLogger logger = new ExtendedLogger(Logger.getLogger(RequestScope.class.getName()), Level.FINEST);
 
     /**
      * A thread local copy of the current scope instance.
      */
-    private final ThreadLocal<Instance> currentScopeInstance = new ThreadLocal<Instance>();
+    private final ThreadLocal<Instance> currentScopeInstance = new ThreadLocal<>();
     private volatile boolean isActive = true;
 
-    @Override
-    public Class<? extends Annotation> getScope() {
-        return RequestScoped.class;
-    }
-
-    @Override
-    public <U> U findOrCreate(ActiveDescriptor<U> activeDescriptor, ServiceHandle<?> root) {
-
-        final Instance instance = current();
-
-        U retVal = instance.get(activeDescriptor);
-        if (retVal == null) {
-            retVal = activeDescriptor.create(root);
-            instance.put(activeDescriptor, retVal);
-        }
-        return retVal;
-    }
-
-    @Override
-    public boolean containsKey(ActiveDescriptor<?> descriptor) {
-        final Instance instance = current();
-        return instance.contains(descriptor);
-    }
-
-    @Override
-    public boolean supportsNullCreation() {
-        return true;
-    }
-
-    @Override
     public boolean isActive() {
         return isActive;
     }
 
-    @Override
-    public void destroyOne(ActiveDescriptor<?> descriptor) {
-        final Instance instance = current();
-        instance.remove(descriptor);
-    }
-
-    @Override
     public void shutdown() {
         isActive = false;
     }
@@ -226,7 +189,7 @@ public class RequestScope implements Context<RequestScoped> {
         return current().getReference();
     }
 
-    private Instance current() {
+    public Instance current() {
         checkState(isActive, "Request scope has been already shut down.");
 
         final Instance scopeInstance = currentScopeInstance.get();
@@ -463,14 +426,14 @@ public class RequestScope implements Context<RequestScoped> {
         /**
          * A map of injectable instances in this scope.
          */
-        private final Map<ActiveDescriptor<?>, Object> store;
+        private final Map<ForeignDescriptor, Object> store;
         /**
          * Holds the number of snapshots of this scope.
          */
         private final AtomicInteger referenceCounter;
 
         private Instance() {
-            this.store = new HashMap<ActiveDescriptor<?>, Object>();
+            this.store = new HashMap<>();
             this.referenceCounter = new AtomicInteger(1);
         }
 
@@ -496,7 +459,7 @@ public class RequestScope implements Context<RequestScoped> {
          * @return matched inhabitant stored in the scope instance or {@code null} if not matched.
          */
         @SuppressWarnings("unchecked")
-        <T> T get(ActiveDescriptor<T> descriptor) {
+        public <T> T get(ForeignDescriptor descriptor) {
             return (T) store.get(descriptor);
         }
 
@@ -510,7 +473,7 @@ public class RequestScope implements Context<RequestScoped> {
          *         {@code null} if none stored.
          */
         @SuppressWarnings("unchecked")
-        <T> T put(ActiveDescriptor<T> descriptor, T value) {
+        public <T> T put(ForeignDescriptor descriptor, T value) {
             checkState(!store.containsKey(descriptor),
                     "An instance for the descriptor %s was already seeded in this scope. Old instance: %s New instance: %s",
                     descriptor,
@@ -526,14 +489,14 @@ public class RequestScope implements Context<RequestScoped> {
          * @param descriptor key for the value to be removed.
          */
         @SuppressWarnings("unchecked")
-        <T> void remove(ActiveDescriptor<T> descriptor) {
+        public <T> void remove(ForeignDescriptor descriptor) {
             final T removed = (T) store.remove(descriptor);
             if (removed != null) {
                 descriptor.dispose(removed);
             }
         }
 
-        private <T> boolean contains(ActiveDescriptor<T> provider) {
+        public boolean contains(ForeignDescriptor provider) {
             return store.containsKey(provider);
         }
 
@@ -545,7 +508,7 @@ public class RequestScope implements Context<RequestScoped> {
         public void release() {
             if (referenceCounter.decrementAndGet() < 1) {
                 try {
-                    for (final ActiveDescriptor<?> descriptor : Sets.newHashSet(store.keySet())) {
+                    for (ForeignDescriptor descriptor : Sets.newHashSet(store.keySet())) {
                         remove(descriptor);
                     }
                 } finally {

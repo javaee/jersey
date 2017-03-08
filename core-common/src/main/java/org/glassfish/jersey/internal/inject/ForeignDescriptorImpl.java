@@ -40,6 +40,9 @@
 
 package org.glassfish.jersey.internal.inject;
 
+import java.util.Objects;
+import java.util.function.Consumer;
+
 /**
  * The descriptor holder for an externally provided DI providers. Using this interface DI provider is able to provider his own
  * descriptor which can be used and returned to the DI provider in further processing.
@@ -49,7 +52,10 @@ package org.glassfish.jersey.internal.inject;
  */
 public class ForeignDescriptorImpl implements ForeignDescriptor {
 
-    private Object foreignDescriptor;
+    private static final Consumer<Object> NOOP_DISPOSE_INSTANCE = instance -> {};
+
+    private final Object foreignDescriptor;
+    private final Consumer<Object> disposeInstance;
 
     /**
      * Constructor accepts a descriptor of the DI provider and to be able to provide it in further processing.
@@ -57,11 +63,44 @@ public class ForeignDescriptorImpl implements ForeignDescriptor {
      * @param foreignDescriptor DI provider's descriptor.
      */
     public ForeignDescriptorImpl(Object foreignDescriptor) {
+        this(foreignDescriptor, NOOP_DISPOSE_INSTANCE);
+    }
+
+    /**
+     * Constructor accepts a descriptor of the DI provider and to be able to provide it in further processing along with
+     * dispose mechanism to destroy the objects corresponding the given {@code foreign key}.
+     *
+     * @param foreignDescriptor DI provider's descriptor.
+     */
+    public ForeignDescriptorImpl(Object foreignDescriptor, Consumer<Object> disposeInstance) {
         this.foreignDescriptor = foreignDescriptor;
+        this.disposeInstance = disposeInstance;
     }
 
     @Override
     public Object get() {
         return foreignDescriptor;
+    }
+
+    @Override
+    public void dispose(Object instance) {
+        disposeInstance.accept(instance);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ForeignDescriptorImpl)) {
+            return false;
+        }
+        final ForeignDescriptorImpl that = (ForeignDescriptorImpl) o;
+        return foreignDescriptor.equals(that.foreignDescriptor);
+    }
+
+    @Override
+    public int hashCode() {
+        return foreignDescriptor.hashCode();
     }
 }
