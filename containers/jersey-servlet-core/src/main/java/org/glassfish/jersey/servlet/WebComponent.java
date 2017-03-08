@@ -250,7 +250,7 @@ public class WebComponent {
                     final String initParamName = (String) initParams.nextElement();
 
                     if (initParamName.startsWith(PersistenceUnitBinder.PERSISTENCE_UNIT_PREFIX)) {
-                        install(new PersistenceUnitBinder());
+                        install(new PersistenceUnitBinder(servletConfig));
                         break;
                     }
                 }
