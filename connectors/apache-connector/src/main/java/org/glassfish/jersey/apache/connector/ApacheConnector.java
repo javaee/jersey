@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -97,6 +97,7 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.DnsResolver;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.ManagedHttpClientConnection;
 import org.apache.http.conn.routing.HttpRoute;
@@ -366,7 +367,7 @@ class ApacheConnector implements Connector {
                 ClientProperties.CHUNKED_ENCODING_SIZE, ClientProperties.DEFAULT_CHUNK_SIZE, Integer.class);
 
         final PoolingHttpClientConnectionManager connectionManager =
-                new PoolingHttpClientConnectionManager(registry, new ConnectionFactory(chunkSize));
+                new PoolingHttpClientConnectionManager(registry, new ConnectionFactory(chunkSize), getDnsResolver(config));
 
         if (useSystemProperties) {
             String s = System.getProperty("http.keepAlive", "true");
@@ -379,6 +380,29 @@ class ApacheConnector implements Connector {
         }
 
         return connectionManager;
+    }
+
+    private DnsResolver getDnsResolver(Configuration config){
+        final Object drObject =
+                config.getProperties().get(ApacheClientProperties.DNS_RESOLVER);
+
+        // Dns Resolver from configuration.
+        if (drObject != null){
+            if (drObject instanceof DnsResolver){
+                return (DnsResolver) drObject;
+            } else {
+                LOGGER.log(
+                        Level.WARNING,
+                        LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                                ApacheClientProperties.DNS_RESOLVER,
+                                drObject.getClass().getName(),
+                                HttpClientConnectionManager.class.getName())
+                );
+            }
+        }
+
+        // null will cause ConnectionManager to follow default behavior.
+        return null;
     }
 
     private static String[] split(final String s) {

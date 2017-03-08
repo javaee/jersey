@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -144,6 +144,19 @@ public final class ApacheClientProperties {
      * @since 2.5
      */
     public static final String REQUEST_CONFIG = "jersey.config.apache.client.requestConfig";
+
+    /**
+     * Connection Manager which will be used when creating {@link org.apache.http.conn.HttpClientConnectionManager}.
+     * <p/>
+     * The value MUST be an instance of {@link org.apache.http.conn.DnsResolver}.
+     * <p/>
+     * If the property is absent, the default resolver of {@link org.apache.http.impl.conn.BasicHttpClientConnectionManager}
+     * will be used instead.  This property only applies in situations where
+     * {@link org.glassfish.jersey.apache.connector.ApacheClientProperties#CONNECTION_MANAGER} is not used.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    public static final String DNS_RESOLVER = "jersey.config.apache.client.dnsResolver";
 
     /**
      * Get the value of the specified property.

@@ -42,6 +42,7 @@ package org.glassfish.jersey.apache.connector;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -53,6 +54,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.GET;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -64,6 +66,7 @@ import javax.ws.rs.core.Response;
 
 import javax.net.ssl.SSLSession;
 
+import org.apache.http.conn.DnsResolver;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -88,7 +91,11 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HttpContext;
 import org.junit.Assert;
 import org.junit.Test;
+
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -280,6 +287,31 @@ public class HelloWorldTest extends JerseyTest {
         assertTrue(content.contains("GET"));
         assertTrue(content.contains("HEAD"));
         assertTrue(content.contains("OPTIONS"));
+    }
+
+    @Test
+    public void testDnsResolver() {
+        ClientConfig cc = new ClientConfig();
+
+        cc.property(ApacheClientProperties.DNS_RESOLVER, new FailingDnsResolver());
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
+        WebTarget target = client.target(getBaseUri());
+
+        try {
+            target.request().get();
+            fail("Expected Exception.");
+        } catch (ProcessingException ex) {
+            assertThat(ex.getCause(), instanceOf(UnknownHostException.class));
+            assertThat(ex.getCause().getMessage(), is("localhost"));
+        }
+    }
+
+    private class FailingDnsResolver implements DnsResolver{
+        @Override
+        public InetAddress[] resolve(String host) throws UnknownHostException {
+            throw new UnknownHostException(host);
+        }
     }
 
     @Test
