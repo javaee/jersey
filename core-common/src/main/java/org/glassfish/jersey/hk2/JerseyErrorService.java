@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,13 +38,15 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal;
+package org.glassfish.jersey.hk2;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.ErrorInformation;

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,9 +49,8 @@ import java.util.logging.Logger;
 
 import javax.inject.Singleton;
 
-import org.glassfish.hk2.api.Injectee;
-import org.glassfish.hk2.api.InjectionResolver;
-import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.jersey.internal.inject.Injectee;
+import org.glassfish.jersey.internal.inject.InjectionResolver;
 
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,7 +82,7 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
     }
 
     @Override
-    public Object resolve(Injectee injectee, ServiceHandle<?> root) {
+    public Object resolve(Injectee injectee) {
         AnnotatedElement parent = injectee.getParent();
         String beanName = null;
         if (parent != null) {
@@ -134,5 +133,10 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
     @Override
     public boolean isMethodParameterIndicator() {
         return false;
+    }
+
+    @Override
+    public Class<Autowired> getAnnotation() {
+        return Autowired.class;
     }
 }

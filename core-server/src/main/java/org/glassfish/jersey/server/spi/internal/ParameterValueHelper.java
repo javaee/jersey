@@ -59,8 +59,6 @@ import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
 
-import org.glassfish.hk2.api.MultiException;
-
 /**
  * Utility methods for retrieving values or value providers for the
  * {@link Parameterized parameterized} resource model components.
@@ -102,13 +100,11 @@ public final class ParameterValueHelper {
             throw new NotSupportedException(e);
         } catch (ProcessingException e) {
             throw e;
-        } catch (MultiException e) {
+        } catch (RuntimeException e) {
             if (e.getCause() instanceof WebApplicationException) {
                 throw (WebApplicationException) e.getCause();
             }
 
-            throw new MappableException("Exception obtaining parameters", e);
-        } catch (RuntimeException e) {
             throw new MappableException("Exception obtaining parameters", e);
         }
     }
