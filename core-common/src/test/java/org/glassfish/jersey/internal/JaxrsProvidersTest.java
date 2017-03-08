@@ -44,6 +44,7 @@ import java.lang.annotation.Annotation;
 import java.util.concurrent.Callable;
 
 import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
@@ -54,6 +55,8 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.message.internal.MessagingBinders;
+import org.glassfish.jersey.model.internal.CommonConfig;
+import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.process.internal.RequestScope;
 
 import org.junit.Test;
@@ -76,6 +79,8 @@ public class JaxrsProvidersTest {
                 }
             }).to(new GenericType<ContextResolver<String>>() {
             });
+
+            bind(new CommonConfig(RuntimeType.SERVER, ComponentBag.EXCLUDE_EMPTY)).to(Configuration.class);
         }
     }
 

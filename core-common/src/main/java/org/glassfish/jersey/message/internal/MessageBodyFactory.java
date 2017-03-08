@@ -100,8 +100,6 @@ import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.message.ReaderModel;
 import org.glassfish.jersey.message.WriterModel;
 
-import org.jvnet.hk2.annotations.Optional;
-
 /**
  * A factory for managing {@link MessageBodyReader}, {@link MessageBodyWriter} instances.
  *
@@ -211,7 +209,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
      * @param configuration configuration. Optional - can be null.
      */
     @Inject
-    public MessageBodyFactory(final InjectionManager injectionManager, @Optional final Configuration configuration) {
+    public MessageBodyFactory(final InjectionManager injectionManager, final Configuration configuration) {
         this.injectionManager = injectionManager;
         this.legacyProviderOrdering = configuration != null
                 && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));

@@ -48,6 +48,7 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 
 import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 
 import javax.inject.Singleton;
@@ -59,6 +60,8 @@ import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
+import org.glassfish.jersey.model.internal.CommonConfig;
+import org.glassfish.jersey.model.internal.ComponentBag;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -151,6 +154,7 @@ public class InboundEventReaderTest {
             install(new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER));
             bindAsContract(MessageBodyFactory.class).to(MessageBodyWorkers.class).in(Singleton.class);
             bind(InboundEventReader.class).to(InboundEventReader.class);
+            bind(new CommonConfig(RuntimeType.SERVER, ComponentBag.EXCLUDE_EMPTY)).to(Configuration.class);
         }
     }
 }
