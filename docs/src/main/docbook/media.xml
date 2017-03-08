@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -1255,7 +1255,7 @@ public void setPlanet(Planet planet) {
                 After valid request is made, service will print out string representation of <literal>Planet</literal>, which can
                 look like <literal>Planet{id=2, name='Mars', radius=1.51}</literal>. With JAX-RS client you can do:
                 <programlisting language="java" linenumbering="unnumbered">
-                    webTarget.path("planet").post(planet);
+                    webTarget.path("planet").request().post(Entity.xml(planet));
                 </programlisting>
             </para>
 
