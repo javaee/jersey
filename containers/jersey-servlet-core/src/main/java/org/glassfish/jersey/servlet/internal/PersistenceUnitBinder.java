@@ -47,19 +47,15 @@ import java.util.Map;
 
 import javax.ws.rs.core.GenericType;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import javax.servlet.ServletConfig;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.Injectee;
+import org.glassfish.jersey.internal.inject.InjectionResolver;
 import org.glassfish.jersey.server.ContainerException;
-
-import org.glassfish.hk2.api.Injectee;
-import org.glassfish.hk2.api.InjectionResolver;
-import org.glassfish.hk2.api.ServiceHandle;
 
 /**
  * {@link PersistenceUnit Persistence unit} injection binder.
@@ -68,21 +64,28 @@ import org.glassfish.hk2.api.ServiceHandle;
  */
 public class PersistenceUnitBinder extends AbstractBinder {
 
+    private final ServletConfig servletConfig;
+
     /**
      * Prefix of the persistence unit init param.
      */
     public static final String PERSISTENCE_UNIT_PREFIX = "unit:";
+
+    /**
+     * Creates a new binder for {@link PersistenceUnitInjectionResolver}.
+     *
+     * @param servletConfig servlet config to find persistence units.
+     */
+    public PersistenceUnitBinder(ServletConfig servletConfig) {
+        this.servletConfig = servletConfig;
+    }
 
     @Singleton
     private static class PersistenceUnitInjectionResolver implements InjectionResolver<PersistenceUnit> {
 
         private final Map<String, String> persistenceUnits = new HashMap<>();
 
-        @Inject
-        private PersistenceUnitInjectionResolver(final InjectionManager injectionManager) {
-            // Look for persistence units.
-            final ServletConfig servletConfig = injectionManager.getInstance(ServletConfig.class);
-
+        private PersistenceUnitInjectionResolver(ServletConfig servletConfig) {
             for (final Enumeration parameterNames = servletConfig.getInitParameterNames(); parameterNames.hasMoreElements(); ) {
                 final String key = (String) parameterNames.nextElement();
 
@@ -94,7 +97,7 @@ public class PersistenceUnitBinder extends AbstractBinder {
         }
 
         @Override
-        public Object resolve(final Injectee injectee, final ServiceHandle<?> root) {
+        public Object resolve(Injectee injectee) {
             if (!injectee.getRequiredType().equals(EntityManagerFactory.class)) {
                 return null;
             }
@@ -121,12 +124,16 @@ public class PersistenceUnitBinder extends AbstractBinder {
         public boolean isMethodParameterIndicator() {
             return false;
         }
+
+        @Override
+        public Class<PersistenceUnit> getAnnotation() {
+            return PersistenceUnit.class;
+        }
     }
 
     @Override
     protected void configure() {
-        bind(PersistenceUnitInjectionResolver.class)
-                .to(new GenericType<InjectionResolver<PersistenceUnit>>() {})
-                .in(Singleton.class);
+        bind(new PersistenceUnitInjectionResolver(servletConfig))
+                .to(new GenericType<InjectionResolver<PersistenceUnit>>() {});
     }
 }
