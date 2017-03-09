@@ -47,7 +47,7 @@ import javax.enterprise.inject.spi.Extension;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.ext.cdi1x.internal.CdiUtil;
-import org.glassfish.jersey.ext.cdi1x.internal.GenericCdiBeanHk2Factory;
+import org.glassfish.jersey.ext.cdi1x.internal.GenericCdiBeanSupplier;
 import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -81,7 +81,7 @@ public class CdiValidationResultBinder implements Extension, ComponentProvider {
     public void done() {
         if (beanManager != null) { // in CDI environment
             Binding binding = Bindings
-                    .factory(new GenericCdiBeanHk2Factory(
+                    .supplier(new GenericCdiBeanSupplier(
                             CdiValidationResult.class, injectionManager, beanManager, true))
                     .to(CdiValidationResult.class)
                     .to(ValidationResult.class);

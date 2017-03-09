@@ -83,7 +83,6 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Value;
@@ -166,13 +165,7 @@ public class WebComponent {
             return providers.next();
         }
 
-        return new AsyncContextDelegateProvider() {
-
-            @Override
-            public AsyncContextDelegate createDelegate(final HttpServletRequest request, final HttpServletResponse response) {
-                return DEFAULT_ASYNC_DELEGATE;
-            }
-        };
+        return (request, response) -> DEFAULT_ASYNC_DELEGATE;
     }
 
     @SuppressWarnings("JavaDoc")
@@ -217,32 +210,21 @@ public class WebComponent {
                 bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class)
                         .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
 
-                bindFactory(ReferencingFactory.<HttpServletRequest>referenceFactory())
+                bindFactory(ReferencingFactory.referenceFactory())
                         .to(new GenericType<Ref<HttpServletRequest>>() {}).in(RequestScoped.class);
 
                 // response
                 bindFactory(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class)
                         .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-                bindFactory(ReferencingFactory.<HttpServletResponse>referenceFactory())
+                bindFactory(ReferencingFactory.referenceFactory())
                         .to(new GenericType<Ref<HttpServletResponse>>() {}).in(RequestScoped.class);
             }
 
-            bindFactory(new SupplierFactory<ServletContext>() {
-                @Override
-                public ServletContext provide() {
-                    return webConfig.getServletContext();
-                }
-            }).to(ServletContext.class).in(Singleton.class);
+            bindFactory(webConfig::getServletContext).to(ServletContext.class).in(Singleton.class);
 
             final ServletConfig servletConfig = webConfig.getServletConfig();
             if (webConfig.getConfigType() == WebConfig.ConfigType.ServletConfig) {
-                bindFactory(new SupplierFactory<ServletConfig>() {
-                    @Override
-                    public ServletConfig provide() {
-                        return servletConfig;
-                    }
-
-                }).to(ServletConfig.class).in(Singleton.class);
+                bindFactory(() -> servletConfig).to(ServletConfig.class).in(Singleton.class);
 
                 // @PersistenceUnit
                 final Enumeration initParams = servletConfig.getInitParameterNames();
@@ -255,22 +237,10 @@ public class WebComponent {
                     }
                 }
             } else {
-                bindFactory(new SupplierFactory<FilterConfig>() {
-                    @Override
-                    public FilterConfig provide() {
-                        return webConfig.getFilterConfig();
-                    }
-
-                }).to(FilterConfig.class).in(Singleton.class);
+                bindFactory(webConfig::getFilterConfig).to(FilterConfig.class).in(Singleton.class);
             }
 
-            bindFactory(new SupplierFactory<WebConfig>() {
-                @Override
-                public WebConfig provide() {
-                    return webConfig;
-                }
-
-            }).to(WebConfig.class).in(Singleton.class);
+            bindFactory(() -> webConfig).to(WebConfig.class).in(Singleton.class);
 
             install(new ServiceFinderBinder<>(AsyncContextDelegateProvider.class, applicationProperties, RuntimeType.SERVER));
             install(new ServiceFinderBinder<>(FilterUrlMappingsProvider.class, applicationProperties, RuntimeType.SERVER));

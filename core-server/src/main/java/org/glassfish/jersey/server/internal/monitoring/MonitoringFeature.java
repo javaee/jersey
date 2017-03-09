@@ -206,8 +206,8 @@ public final class MonitoringFeature implements Feature {
         }
 
         @Override
-        public MonitoringStatistics provide() {
-            return super.provide();
+        public MonitoringStatistics get() {
+            return super.get();
         }
     }
 

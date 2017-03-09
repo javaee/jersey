@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -72,7 +73,6 @@ import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.ComponentProvider;
@@ -110,7 +110,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
     /**
      * HK2 factory to provide EJB components obtained via JNDI lookup.
      */
-    private static class EjbFactory<T> extends SupplierFactory<T> {
+    private static class EjbFactory<T> implements Supplier<T> {
 
         final InitialContext ctx;
         final Class<T> clazz;
@@ -118,7 +118,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
         @SuppressWarnings("unchecked")
         @Override
-        public T provide() {
+        public T get() {
             try {
                 return (T) lookup(ctx, clazz, clazz.getSimpleName(), ejbProvider);
             } catch (NamingException ex) {
@@ -282,7 +282,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             registerEjbInterceptor();
         }
 
-        Binding binding = Bindings.factory(new EjbFactory(component, initialContext, EjbComponentProvider.this))
+        Binding binding = Bindings.supplier(new EjbFactory(component, initialContext, EjbComponentProvider.this))
                 .to(component)
                 .to(providerContracts);
         injectionManager.register(binding);

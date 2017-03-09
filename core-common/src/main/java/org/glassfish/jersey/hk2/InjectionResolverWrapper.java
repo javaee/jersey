@@ -46,7 +46,6 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.ForeignDescriptorImpl;
 import org.glassfish.jersey.internal.inject.InjecteeImpl;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 import org.glassfish.hk2.api.Factory;
@@ -93,10 +92,14 @@ public class InjectionResolverWrapper<T extends Annotation> implements Injection
     }
 
     private Factory asFactory(Object instance) {
-        return new SupplierFactory() {
+        return new Factory() {
             @Override
             public Object provide() {
                 return instance;
+            }
+
+            @Override
+            public void dispose(final Object instance) {
             }
         };
     }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,46 +37,23 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jaxb.internal;
 
-import javax.ws.rs.core.Configuration;
-
-import javax.inject.Inject;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.glassfish.hk2.api.PerThread;
+package org.glassfish.jersey.hk2;
 
 /**
- * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
- *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory<SAXParserFactory> {
+public class EnglishGreeting implements Greeting, Printable {
 
-    /**
-     * Create new SAX parser factory provider.
-     *
-     * @param config Jersey configuration properties.
-     */
-    // TODO This provider should be registered and configured via a feature.
-    @Inject
-    public SaxParserFactoryInjectionProvider(final Configuration config) {
-        super(config);
+    static final String GREETING = "Hello";
+
+    @Override
+    public String getGreeting() {
+        return GREETING;
     }
 
     @Override
-    @PerThread
-    public SAXParserFactory get() {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-
-        factory.setNamespaceAware(true);
-
-        if (!isXmlSecurityDisabled()) {
-            factory = new SecureSaxParserFactory(factory);
-        }
-
-        return factory;
+    public void print() {
+        System.out.println(GREETING);
     }
 }

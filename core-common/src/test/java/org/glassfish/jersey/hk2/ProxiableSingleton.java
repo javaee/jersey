@@ -38,35 +38,26 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal.inject;
+package org.glassfish.jersey.hk2;
 
-import org.glassfish.hk2.api.Factory;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import javax.inject.Scope;
+
+import org.glassfish.hk2.api.Proxiable;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Injection binding description of a bean bound indirectly via an factory producing instances of the bound type.
- *
- * @param <T> type of the bean described by this injection binding descriptor.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * This will be a scope for proxiable singletons. One of those singletons will be a factory.
  */
-public class FactoryInstanceBinding<T> extends Binding<T, FactoryInstanceBinding<T>> {
+@Scope
+@Proxiable
+@Retention(RUNTIME)
+@Target({ TYPE, METHOD })
+public @interface ProxiableSingleton {
 
-    private final Factory<T> factory;
-
-    /**
-     * Creates a factory as an instance.
-     *
-     * @param factory service's instance.
-     */
-    FactoryInstanceBinding(Factory<T> factory) {
-        this.factory = factory;
-    }
-
-    /**
-     * Gets factory's instance.
-     *
-     * @return factory's instance.
-     */
-    public Factory<T> getFactory() {
-        return factory;
-    }
 }

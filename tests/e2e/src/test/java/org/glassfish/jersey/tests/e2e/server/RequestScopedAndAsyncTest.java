@@ -58,11 +58,10 @@ import javax.ws.rs.core.Response;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.DisposableSupplier;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-
-import org.glassfish.hk2.api.Factory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -87,12 +86,12 @@ public class RequestScopedAndAsyncTest extends JerseyTest {
         }
     }
 
-    public static class InjectableFactory implements Factory<Injectable> {
+    public static class InjectableFactory implements DisposableSupplier<Injectable> {
         private static AtomicInteger provided = new AtomicInteger(0);
         private static AtomicInteger balance = new AtomicInteger(0);
 
         @Override
-        public Injectable provide() {
+        public Injectable get() {
             LOGGER.fine("Factory provide() called.");
             provided.incrementAndGet();
             balance.incrementAndGet();

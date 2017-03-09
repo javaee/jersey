@@ -71,7 +71,7 @@ public class TransformerFactoryInjectionProvider extends AbstractXmlFactory<Tran
     }
 
     @Override
-    public TransformerFactory provide() {
+    public TransformerFactory get() {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
         if (!isXmlSecurityDisabled()) {

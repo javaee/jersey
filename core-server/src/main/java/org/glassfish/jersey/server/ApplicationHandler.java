@@ -61,6 +61,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -100,7 +101,6 @@ import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -213,18 +213,18 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
 
     private class ApplicationBinder extends AbstractBinder {
 
-        private class JaxrsApplicationProvider extends SupplierFactory<Application> {
+        private class JaxrsApplicationProvider implements Supplier<Application> {
 
             @Override
-            public Application provide() {
+            public Application get() {
                 return ApplicationHandler.this.application;
             }
         }
 
-        private class RuntimeConfigProvider extends SupplierFactory<ServerConfig> {
+        private class RuntimeConfigProvider implements Supplier<ServerConfig> {
 
             @Override
-            public ServerConfig provide() {
+            public ServerConfig get() {
                 return ApplicationHandler.this.runtimeConfig;
             }
         }

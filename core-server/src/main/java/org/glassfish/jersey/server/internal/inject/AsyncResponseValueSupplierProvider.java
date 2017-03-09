@@ -40,11 +40,12 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
+import java.util.function.Supplier;
+
 import javax.ws.rs.container.AsyncResponse;
 
 import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
@@ -68,7 +69,7 @@ final class AsyncResponseValueSupplierProvider implements ValueSupplierProvider 
     }
 
     @Override
-    public SupplierFactory<AsyncResponse> getValueSupplier(final Parameter parameter) {
+    public Supplier<AsyncResponse> getValueSupplier(final Parameter parameter) {
         if (parameter.getSource() != Parameter.Source.SUSPENDED) {
             return null;
         }
@@ -76,12 +77,7 @@ final class AsyncResponseValueSupplierProvider implements ValueSupplierProvider 
             return null;
         }
 
-        return new SupplierFactory<AsyncResponse>() {
-            @Override
-            public AsyncResponse provide() {
-                return asyncContextProvider.get();
-            }
-        };
+        return asyncContextProvider::get;
     }
 
     @Override

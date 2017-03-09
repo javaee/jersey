@@ -43,6 +43,7 @@ package org.glassfish.jersey.server.validation.internal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,7 +70,6 @@ import javax.validation.spi.ValidationProvider;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.model.internal.RankedComparator;
@@ -107,7 +107,7 @@ public final class ValidationBinder extends AbstractBinder {
     /**
      * Factory providing default {@link javax.validation.Configuration} instance.
      */
-    private static class DefaultConfigurationProvider extends SupplierFactory<Configuration> {
+    private static class DefaultConfigurationProvider implements Supplier<Configuration> {
 
         private final boolean inOsgi;
 
@@ -116,7 +116,7 @@ public final class ValidationBinder extends AbstractBinder {
         }
 
         @Override
-        public Configuration provide() {
+        public Configuration get() {
             try {
                 if (!inOsgi) {
                     return Validation.byDefaultProvider().configure();
@@ -149,13 +149,13 @@ public final class ValidationBinder extends AbstractBinder {
     /**
      * Factory providing default (un-configured) {@link ValidatorFactory} instance.
      */
-    private static class DefaultValidatorFactoryProvider extends SupplierFactory<ValidatorFactory> {
+    private static class DefaultValidatorFactoryProvider implements Supplier<ValidatorFactory> {
 
         @Inject
         private Configuration config;
 
         @Override
-        public ValidatorFactory provide() {
+        public ValidatorFactory get() {
             return config.buildValidatorFactory();
         }
     }
@@ -163,13 +163,13 @@ public final class ValidationBinder extends AbstractBinder {
     /**
      * Factory providing default (un-configured) {@link Validator} instance.
      */
-    private static class DefaultValidatorProvider extends SupplierFactory<Validator> {
+    private static class DefaultValidatorProvider implements Supplier<Validator> {
 
         @Inject
         private ValidatorFactory factory;
 
         @Override
-        public Validator provide() {
+        public Validator get() {
             return factory.getValidator();
         }
     }
@@ -177,7 +177,7 @@ public final class ValidationBinder extends AbstractBinder {
     /**
      * Factory providing configured {@link Validator} instance.
      */
-    private static class ConfiguredValidatorProvider extends SupplierFactory<ConfiguredValidator> {
+    private static class ConfiguredValidatorProvider implements Supplier<ConfiguredValidator> {
 
         @Inject
         private InjectionManager injectionManager;
@@ -200,7 +200,7 @@ public final class ValidationBinder extends AbstractBinder {
                 new WeakHashMap<>();
 
         @Override
-        public ConfiguredValidator provide() {
+        public ConfiguredValidator get() {
 
             // Custom Configuration.
             final ContextResolver<ValidationConfig> contextResolver =

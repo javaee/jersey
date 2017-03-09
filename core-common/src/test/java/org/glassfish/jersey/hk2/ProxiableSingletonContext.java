@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,31 +38,69 @@
  * holder.
  */
 
-package org.glassfish.jersey.ext.cdi1x.internal;
+package org.glassfish.jersey.hk2;
 
-import javax.enterprise.inject.Vetoed;
-import javax.enterprise.inject.spi.BeanManager;
+import java.lang.annotation.Annotation;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
+import javax.inject.Singleton;
+
+import org.glassfish.hk2.api.ActiveDescriptor;
+import org.glassfish.hk2.api.Context;
+import org.glassfish.hk2.api.ServiceHandle;
 
 /**
- * HK2 factory to provide CDI managed components where
- * there is no clear mapping between the CDI and HK2 scopes.
- *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * The context keeping the objects created in {@link ProxiableSingleton} scope.
  */
-@Vetoed
-public final class GenericCdiBeanHk2Factory extends AbstractCdiBeanHk2Factory {
+@Singleton
+public class ProxiableSingletonContext implements Context<ProxiableSingleton> {
 
-    public GenericCdiBeanHk2Factory(Class rawType,
-                                    InjectionManager injectionManager,
-                                    BeanManager beanManager,
-                                    boolean cdiManaged) {
-        super(rawType, injectionManager, beanManager, cdiManaged);
+    @Override
+    public Class<? extends Annotation> getScope() {
+        return ProxiableSingleton.class;
     }
 
     @Override
-    public Object provide() {
-        return _provide();
+    public <U> U findOrCreate(ActiveDescriptor<U> activeDescriptor, ServiceHandle<?> root) {
+        U cached = activeDescriptor.getCache();
+        if (cached != null) {
+            return cached;
+        }
+
+        cached = activeDescriptor.create(root);
+        activeDescriptor.setCache(cached);
+        return cached;
+    }
+
+    @Override
+    public boolean containsKey(ActiveDescriptor<?> descriptor) {
+        return descriptor.isCacheSet();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void destroyOne(ActiveDescriptor<?> descriptor) {
+        if (!descriptor.isCacheSet()) {
+            return;
+        }
+
+        Object value = descriptor.getCache();
+        descriptor.releaseCache();
+
+        ((ActiveDescriptor<Object>) descriptor).dispose(value);
+
+    }
+
+    @Override
+    public boolean supportsNullCreation() {
+        return false;
+    }
+
+    @Override
+    public boolean isActive() {
+        return true;
+    }
+
+    @Override
+    public void shutdown() {
     }
 }

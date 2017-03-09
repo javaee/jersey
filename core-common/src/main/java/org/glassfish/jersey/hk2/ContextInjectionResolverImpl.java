@@ -56,7 +56,6 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ForeignRequestScopeBridge;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Cache;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
@@ -162,10 +161,14 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
     }
 
     private Factory asFactory(final ServiceHandle handle) {
-        return new SupplierFactory() {
+        return new Factory() {
             @Override
             public Object provide() {
                 return handle.getService();
+            }
+
+            @Override
+            public void dispose(final Object instance) {
             }
         };
     }

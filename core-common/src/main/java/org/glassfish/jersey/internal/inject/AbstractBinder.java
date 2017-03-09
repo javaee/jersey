@@ -47,11 +47,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.GenericType;
-
-import org.glassfish.hk2.api.Factory;
 
 /**
  * Implementation of {@link Binder} interface dedicated to keep some level of code compatibility between previous HK2
@@ -148,46 +147,46 @@ public abstract class AbstractBinder implements Binder {
     }
 
     /**
-     * Start building a new factory class-based service binding.
+     * Start building a new supplier class-based service binding.
+     *
+     * @param <T>           service type.
+     * @param supplierType  service supplier class.
+     * @param supplierScope factory scope.
+     * @return initialized binding builder.
+     */
+    public <T> SupplierClassBinding<T> bindFactory(
+            Class<? extends Supplier<T>> supplierType, Class<? extends Annotation> supplierScope) {
+        SupplierClassBinding<T> binding = Bindings.supplier(supplierType, supplierScope);
+        bindings.add(binding);
+        return binding;
+    }
+
+    /**
+     * Start building a new supplier class-based service binding.
+     * <p>
+     * The supplier itself is bound in a per-lookup scope.
      *
      * @param <T>          service type.
-     * @param factoryType  service factory class.
-     * @param factoryScope factory scope.
+     * @param supplierType service supplier class.
      * @return initialized binding builder.
      */
-    public <T> FactoryClassBinding<T> bindFactory(
-            Class<? extends Factory<T>> factoryType, Class<? extends Annotation> factoryScope) {
-        FactoryClassBinding<T> descriptor = Bindings.factory(factoryType, factoryScope);
-        bindings.add(descriptor);
-        return descriptor;
+    public <T> SupplierClassBinding<T> bindFactory(Class<? extends Supplier<T>> supplierType) {
+        SupplierClassBinding<T> binding = Bindings.supplier(supplierType);
+        bindings.add(binding);
+        return binding;
     }
 
     /**
-     * Start building a new factory class-based service binding.
-     * <p>
-     * The factory itself is bound in a per-lookup scope.
-     *
-     * @param <T>         service type.
-     * @param factoryType service factory class.
-     * @return initialized binding builder.
-     */
-    public <T> FactoryClassBinding<T> bindFactory(Class<? extends Factory<T>> factoryType) {
-        FactoryClassBinding<T> descriptor = Bindings.factory(factoryType);
-        bindings.add(descriptor);
-        return descriptor;
-    }
-
-    /**
-     * Start building a new factory instance-based service binding.
+     * Start building a new supplier instance-based service binding.
      *
      * @param <T>     service type.
      * @param factory service instance.
      * @return initialized binding builder.
      */
-    public <T> FactoryInstanceBinding<T> bindFactory(Factory<T> factory) {
-        FactoryInstanceBinding<T> descriptor = Bindings.factory(factory);
-        bindings.add(descriptor);
-        return descriptor;
+    public <T> SupplierInstanceBinding<T> bindFactory(Supplier<T> factory) {
+        SupplierInstanceBinding<T> binding = Bindings.supplier(factory);
+        bindings.add(binding);
+        return binding;
     }
 
     /**

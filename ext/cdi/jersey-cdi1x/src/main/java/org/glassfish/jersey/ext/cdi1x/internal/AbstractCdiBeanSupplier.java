@@ -51,20 +51,19 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.InjectionTargetFactory;
 
+import org.glassfish.jersey.internal.inject.DisposableSupplier;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 
-import org.glassfish.hk2.api.Factory;
-
 /**
- * Abstract HK2 factory to provide CDI components obtained from CDI bean manager.
+ * Abstract supplier to provide CDI components obtained from CDI bean manager.
  * The factory handles CDI managed components as well as non-contextual managed beans.
- * To specify HK2 scope of provided CDI beans, an extension of this factory
- * should implement properly annotated {@link Factory#provide()} method that
+ * To specify scope of provided CDI beans, an extension of this supplier
+ * should implement properly annotated {@link java.util.function.Supplier#get()} method that
  * could just delegate to the existing {@link #_provide()} method.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public abstract class AbstractCdiBeanHk2Factory<T> implements Factory<T> {
+public abstract class AbstractCdiBeanSupplier<T> implements DisposableSupplier<T> {
 
     final Class<T> clazz;
     final InstanceManager<T> referenceProvider;
@@ -77,7 +76,7 @@ public abstract class AbstractCdiBeanHk2Factory<T> implements Factory<T> {
      * @param beanManager      current bean manager to get references from.
      * @param cdiManaged       set to {@code true} if the component should be managed by CDI.
      */
-    public AbstractCdiBeanHk2Factory(final Class<T> rawType,
+    public AbstractCdiBeanSupplier(final Class<T> rawType,
                                      final InjectionManager injectionManager,
                                      final BeanManager beanManager,
                                      final boolean cdiManaged) {

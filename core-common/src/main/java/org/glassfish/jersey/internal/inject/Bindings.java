@@ -42,12 +42,11 @@ package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.function.Supplier;
 
 import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-
-import org.glassfish.hk2.api.Factory;
 
 /**
  * Utility class to create a new injection binding descriptions for arbitrary Java beans.
@@ -161,40 +160,40 @@ public final class Bindings {
     }
 
     /**
-     * Start building a new factory class-based service binding.
+     * Start building a new supplier class-based service binding.
+     *
+     * @param <T>           service type.
+     * @param supplierType  service supplier class.
+     * @param supplierScope factory scope.
+     * @return initialized binding builder.
+     */
+    public static <T> SupplierClassBinding<T> supplier(
+            Class<? extends Supplier<T>> supplierType, Class<? extends Annotation> supplierScope) {
+        return new SupplierClassBinding<>(supplierType, supplierScope);
+    }
+
+    /**
+     * Start building a new supplier class-based service binding.
+     * <p>
+     * The supplier itself is bound in a per-lookup scope.
      *
      * @param <T>          service type.
-     * @param factoryType  service factory class.
-     * @param factoryScope factory scope.
+     * @param supplierType service supplier class.
      * @return initialized binding builder.
      */
-    public static <T> FactoryClassBinding<T> factory(
-            Class<? extends Factory<T>> factoryType, Class<? extends Annotation> factoryScope) {
-        return new FactoryClassBinding<>(factoryType, factoryScope);
+    public static <T> SupplierClassBinding<T> supplier(Class<? extends Supplier<T>> supplierType) {
+        return new SupplierClassBinding<>(supplierType, null);
     }
 
     /**
-     * Start building a new factory class-based service binding.
-     * <p>
-     * The factory itself is bound in a per-lookup scope.
+     * Start building a new supplier instance-based service binding.
      *
-     * @param <T>         service type.
-     * @param factoryType service factory class.
+     * @param <T>      service type.
+     * @param supplier service instance.
      * @return initialized binding builder.
      */
-    public static <T> FactoryClassBinding<T> factory(Class<? extends Factory<T>> factoryType) {
-        return new FactoryClassBinding<>(factoryType, null);
-    }
-
-    /**
-     * Start building a new factory instance-based service binding.
-     *
-     * @param <T>     service type.
-     * @param factory service instance.
-     * @return initialized binding builder.
-     */
-    public static <T> FactoryInstanceBinding<T> factory(Factory<T> factory) {
-        return new FactoryInstanceBinding<>(factory);
+    public static <T> SupplierInstanceBinding<T> supplier(Supplier<T> supplier) {
+        return new SupplierInstanceBinding<>(supplier);
     }
 
     /**

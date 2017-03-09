@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,46 +37,36 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jaxb.internal;
 
-import javax.ws.rs.core.Configuration;
+package org.glassfish.jersey.ext.cdi1x.internal;
 
-import javax.inject.Inject;
-import javax.xml.parsers.SAXParserFactory;
+import javax.enterprise.inject.Vetoed;
+import javax.enterprise.inject.spi.BeanManager;
 
-import org.glassfish.hk2.api.PerThread;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.process.internal.RequestScoped;
 
 /**
- * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
+ * Supplier to provide CDI managed components
+ * that should be mapped into Jersey request scope.
+ * For these components, Jersey will avoid
+ * injecting dynamic proxies for JAX-RS request scoped injectees.
  *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory<SAXParserFactory> {
+@Vetoed
+public final class RequestScopedCdiBeanSupplier extends AbstractCdiBeanSupplier {
 
-    /**
-     * Create new SAX parser factory provider.
-     *
-     * @param config Jersey configuration properties.
-     */
-    // TODO This provider should be registered and configured via a feature.
-    @Inject
-    public SaxParserFactoryInjectionProvider(final Configuration config) {
-        super(config);
+    public RequestScopedCdiBeanSupplier(Class rawType,
+                                          InjectionManager locator,
+                                          BeanManager beanManager,
+                                          boolean cdiManaged) {
+        super(rawType, locator, beanManager, cdiManaged);
     }
 
     @Override
-    @PerThread
-    public SAXParserFactory get() {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-
-        factory.setNamespaceAware(true);
-
-        if (!isXmlSecurityDisabled()) {
-            factory = new SecureSaxParserFactory(factory);
-        }
-
-        return factory;
+    @RequestScoped
+    public Object get() {
+        return _provide();
     }
 }

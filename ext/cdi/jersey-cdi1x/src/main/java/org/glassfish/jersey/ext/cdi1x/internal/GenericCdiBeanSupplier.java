@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,49 +38,31 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal.inject;
+package org.glassfish.jersey.ext.cdi1x.internal;
 
-import java.lang.annotation.Annotation;
+import javax.enterprise.inject.Vetoed;
+import javax.enterprise.inject.spi.BeanManager;
 
-import org.glassfish.hk2.api.Factory;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
- * Injection binding description of a bean bound indirectly via an factory class producing instances of the bound type.
+ * Supplier to provide CDI managed components where
+ * there is no clear mapping between the CDI and scopes.
  *
- * @param <T> type of the bean described by this injection binding descriptor.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class FactoryClassBinding<T> extends Binding<T, FactoryClassBinding<T>> {
+@Vetoed
+public final class GenericCdiBeanSupplier extends AbstractCdiBeanSupplier {
 
-    private final Class<? extends Factory<T>> factoryClass;
-    private final Class<? extends Annotation> factoryScope;
-
-    /**
-     * Creates a service as a class.
-     *
-     * @param factoryClass factory's class.
-     * @param scope        factory's scope.
-     */
-    FactoryClassBinding(Class<? extends Factory<T>> factoryClass, Class<? extends Annotation> scope) {
-        this.factoryClass = factoryClass;
-        this.factoryScope = scope;
+    public GenericCdiBeanSupplier(Class rawType,
+                                    InjectionManager injectionManager,
+                                    BeanManager beanManager,
+                                    boolean cdiManaged) {
+        super(rawType, injectionManager, beanManager, cdiManaged);
     }
 
-    /**
-     * Gets factory's class.
-     *
-     * @return factory's class.
-     */
-    public Class<? extends Factory<T>> getFactoryClass() {
-        return factoryClass;
-    }
-
-    /**
-     * Gets factory's scope.
-     *
-     * @return factory's scope.
-     */
-    public Class<? extends Annotation> getFactoryScope() {
-        return factoryScope;
+    @Override
+    public Object get() {
+        return _provide();
     }
 }

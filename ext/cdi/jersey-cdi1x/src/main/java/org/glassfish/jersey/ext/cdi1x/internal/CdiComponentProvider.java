@@ -98,11 +98,11 @@ import org.glassfish.jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.Bindings;
-import org.glassfish.jersey.internal.inject.FactoryInstanceBinding;
 import org.glassfish.jersey.internal.inject.ForeignRequestScopeBridge;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.SupplierInstanceBinding;
 import org.glassfish.jersey.internal.util.collection.Cache;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Resource;
@@ -110,7 +110,6 @@ import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
-import org.glassfish.hk2.api.Factory;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -239,30 +238,26 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         /**
          * Internal cache to store CDI {@link InjectionPoint} to Jersey {@link Parameter} mapping.
          */
-        final Cache<InjectionPoint, Parameter> parameterCache = new Cache<>(new Function<InjectionPoint, Parameter>() {
+        final Cache<InjectionPoint, Parameter> parameterCache = new Cache<>(injectionPoint -> {
+            final Annotated annotated = injectionPoint.getAnnotated();
+            final Class<?> clazz = injectionPoint.getMember().getDeclaringClass();
 
-            @Override
-            public Parameter apply(final InjectionPoint injectionPoint) {
-                final Annotated annotated = injectionPoint.getAnnotated();
-                final Class<?> clazz = injectionPoint.getMember().getDeclaringClass();
+            if (annotated instanceof AnnotatedParameter) {
 
-                if (annotated instanceof AnnotatedParameter) {
+                final AnnotatedParameter annotatedParameter = (AnnotatedParameter) annotated;
+                final AnnotatedCallable callable = annotatedParameter.getDeclaringCallable();
 
-                    final AnnotatedParameter annotatedParameter = (AnnotatedParameter) annotated;
-                    final AnnotatedCallable callable = annotatedParameter.getDeclaringCallable();
+                if (callable instanceof AnnotatedConstructor) {
 
-                    if (callable instanceof AnnotatedConstructor) {
+                    final AnnotatedConstructor ac = (AnnotatedConstructor) callable;
+                    final int position = annotatedParameter.getPosition();
+                    final List<Parameter> parameters = Parameter.create(clazz, clazz, ac.getJavaMember(), false);
 
-                        final AnnotatedConstructor ac = (AnnotatedConstructor) callable;
-                        final int position = annotatedParameter.getPosition();
-                        final List<Parameter> parameters = Parameter.create(clazz, clazz, ac.getJavaMember(), false);
-
-                        return parameters.get(position);
-                    }
+                    return parameters.get(position);
                 }
-
-                return null;
             }
+
+            return null;
         });
 
         /**
@@ -323,11 +318,11 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         final boolean isRequestScoped = beanScopeAnnotation == RequestScoped.class
                                         || (beanScopeAnnotation == Dependent.class && isJaxRsResource);
 
-        Factory<AbstractCdiBeanHk2Factory> beanFactory = isRequestScoped
-                ? new RequestScopedCdiBeanHk2Factory(clazz, injectionManager, beanManager, isCdiManaged)
-                : new GenericCdiBeanHk2Factory(clazz, injectionManager, beanManager, isCdiManaged);
+        Supplier<AbstractCdiBeanSupplier> beanFactory = isRequestScoped
+                ? new RequestScopedCdiBeanSupplier(clazz, injectionManager, beanManager, isCdiManaged)
+                : new GenericCdiBeanSupplier(clazz, injectionManager, beanManager, isCdiManaged);
 
-        FactoryInstanceBinding<AbstractCdiBeanHk2Factory> builder = Bindings.factory(beanFactory).to(clazz);
+        SupplierInstanceBinding<AbstractCdiBeanSupplier> builder = Bindings.supplier(beanFactory).to(clazz);
         for (final Class contract : providerContracts) {
             builder.to(contract);
         }

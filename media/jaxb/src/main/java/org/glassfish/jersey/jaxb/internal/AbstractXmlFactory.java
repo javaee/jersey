@@ -39,18 +39,19 @@
  */
 package org.glassfish.jersey.jaxb.internal;
 
+import java.util.function.Supplier;
+
 import javax.ws.rs.core.Configuration;
 
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageProperties;
 
 /**
- * Gathers common functionality for {@link SupplierFactory} instances handling XML data.
+ * Gathers common functionality for {@link Supplier} instances handling XML data.
  *
  * @author Michal Gajdos
  */
-abstract class AbstractXmlFactory<T> extends SupplierFactory<T> {
+abstract class AbstractXmlFactory<T> implements Supplier<T> {
 
     private final Configuration config;
 
