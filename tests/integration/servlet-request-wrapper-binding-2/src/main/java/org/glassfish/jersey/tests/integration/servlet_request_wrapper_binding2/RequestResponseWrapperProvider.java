@@ -53,6 +53,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.ws.rs.core.GenericType;
 
@@ -79,7 +80,6 @@ import org.glassfish.jersey.hk2.HK2InjectionManager;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -192,6 +192,8 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
                     .to(new GenericType<Ref<HttpServletRequestWrapper>>() {
                     }).in(RequestScoped.class);
 
+            bindFactory(HttpServletResponseFactory.class).to(HttpServletResponse.class);
+
             bindFactory(HttpServletResponseReferencingFactory.class)
                     .to(HttpServletResponseWrapper.class).in(RequestScoped.class);
 
@@ -199,7 +201,6 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
                     .to(new GenericType<Ref<HttpServletResponseWrapper>>() {
                     }).in(RequestScoped.class);
 
-            bindFactory(HttpServletResponseFactory.class).to(HttpServletResponse.class);
         }
     }
 
@@ -274,7 +275,7 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
         }
     }
 
-    private static class HttpServletResponseFactory extends SupplierFactory<HttpServletResponse> {
+    private static class HttpServletResponseFactory implements Supplier<HttpServletResponse> {
         private final javax.inject.Provider<Ref<HttpServletResponseWrapper>> response;
 
         @Inject
@@ -284,7 +285,7 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
 
         @Override
         @PerLookup
-        public HttpServletResponse provide() {
+        public HttpServletResponse get() {
             return new HttpServletResponseWrapper(new HttpServletResponse() {
 
                 private HttpServletResponse getHttpServletResponse() {

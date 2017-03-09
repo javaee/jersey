@@ -38,29 +38,27 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal.inject;
+package org.glassfish.jersey.hk2;
 
 import java.util.function.Supplier;
 
-import org.glassfish.hk2.api.Factory;
+import javax.inject.Inject;
 
 /**
- * Abstract HK2 Factory that also implements Java 8 supplier interface.
- *
- * Concrete implementations of this class are also specific in a way that their supplied values do not require explicit disposal.
- * IOW, the {@link Factory#dispose(Object) dispose} method implementation is empty.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public abstract class SupplierFactory<T> implements Supplier<T>, Factory<T> {
+class PrintableConversation {
 
-    @Override
-    public final T get() {
-        return provide();
-    }
+    @Inject
+    Greeting greeting;
 
-    @Override
-    public final void dispose(final T instance) {
-        // NO OP
-    }
+    @Inject
+    Supplier<Greeting> greetingSupplier;
+
+    @Inject
+    Printable printable;
+
+    @Inject
+    Supplier<Printable> printableSupplier;
+
 }

@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.spring;
 
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,7 +53,6 @@ import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 
@@ -149,7 +149,7 @@ public class SpringComponentProvider implements ComponentProvider {
             }
             String beanName = beanNames[0];
 
-            Binding binding = Bindings.factory(new SpringManagedBeanFactory(ctx, injectionManager, beanName))
+            Binding binding = Bindings.supplier(new SpringManagedBeanFactory(ctx, injectionManager, beanName))
                     .to(component)
                     .to(providerContracts);
             injectionManager.register(binding);
@@ -183,7 +183,7 @@ public class SpringComponentProvider implements ComponentProvider {
         return ctx = new ClassPathXmlApplicationContext(contextConfigLocation, "jersey-spring-applicationContext.xml");
     }
 
-    private static class SpringManagedBeanFactory extends SupplierFactory {
+    private static class SpringManagedBeanFactory implements Supplier {
 
         private final ApplicationContext ctx;
         private final InjectionManager injectionManager;
@@ -196,7 +196,7 @@ public class SpringComponentProvider implements ComponentProvider {
         }
 
         @Override
-        public Object provide() {
+        public Object get() {
             Object bean = ctx.getBean(beanName);
             if (bean instanceof Advised) {
                 try {

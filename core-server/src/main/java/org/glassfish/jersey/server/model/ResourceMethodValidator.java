@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.CookieParam;
@@ -63,8 +64,6 @@ import javax.ws.rs.QueryParam;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-
-import org.glassfish.hk2.api.Factory;
 
 /**
  * Validator checking resource methods and sub resource locators. The validator mainly checks the parameters of resource
@@ -162,7 +161,7 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
     }
 
     private void checkValueProviders(ResourceMethod method) {
-        final List<? extends Factory<?>> valueProviders = method.getInvocable().getValueProviders(injectionManager);
+        final List<? extends Supplier<?>> valueProviders = method.getInvocable().getValueProviders(injectionManager);
         if (valueProviders.contains(null)) {
             int index = valueProviders.indexOf(null);
             Errors.fatal(method, LocalizationMessages.ERROR_PARAMETER_MISSING_VALUE_PROVIDER(index, method.getInvocable()

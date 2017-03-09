@@ -68,7 +68,7 @@ public class DocumentBuilderFactoryInjectionProvider extends AbstractXmlFactory<
 
     @Override
     @PerThread
-    public DocumentBuilderFactory provide() {
+    public DocumentBuilderFactory get() {
         DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 
         f.setNamespaceAware(true);

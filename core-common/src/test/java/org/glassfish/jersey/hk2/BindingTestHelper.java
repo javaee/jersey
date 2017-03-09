@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,35 +38,45 @@
  * holder.
  */
 
-package org.glassfish.jersey.ext.cdi1x.internal;
+package org.glassfish.jersey.hk2;
 
-import javax.enterprise.inject.Vetoed;
-import javax.enterprise.inject.spi.BeanManager;
+import java.util.function.Consumer;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.process.internal.RequestScoped;
 
 /**
- * HK factory implementation to provide CDI managed components
- * that should be mapped into Jersey/HK2 request scope.
- * For these components, Jersey will avoid
- * injecting dynamic proxies for JAX-RS request scoped injectees.
+ * Helper class to minimize the code in tested classes.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Petr Bouda (petr.bouda at oracle.com).
  */
-@Vetoed
-public final class RequestScopedCdiBeanHk2Factory extends AbstractCdiBeanHk2Factory {
+class BindingTestHelper {
 
-    public RequestScopedCdiBeanHk2Factory(Class rawType,
-                                          InjectionManager locator,
-                                          BeanManager beanManager,
-                                          boolean cdiManaged) {
-        super(rawType, locator, beanManager, cdiManaged);
+    /**
+     * Accepts the provided consumer to created and register the binder.
+     *
+     * @param injectionManager injection manager which accepts the consumer.
+     * @param bindConsumer     consumer to populate a binder.
+     */
+    static void bind(InjectionManager injectionManager, Consumer<AbstractBinder> bindConsumer) {
+        AbstractBinder binder = new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bindConsumer.accept(this);
+            }
+        };
+
+        injectionManager.register(binder);
     }
 
-    @Override
-    @RequestScoped
-    public Object provide() {
-        return _provide();
+    /**
+     * Creates a new {@link InjectionManager}.
+     *
+     * @return newly created {@code InjectionManager}.
+     */
+    static InjectionManager createInjectionManager() {
+        HK2InjectionManager injectionManager = new HK2InjectionManager();
+        injectionManager.initialize(null, null);
+        return injectionManager;
     }
 }

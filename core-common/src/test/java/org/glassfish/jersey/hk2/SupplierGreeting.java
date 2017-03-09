@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,46 +37,40 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jaxb.internal;
 
-import javax.ws.rs.core.Configuration;
+package org.glassfish.jersey.hk2;
 
-import javax.inject.Inject;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.glassfish.hk2.api.PerThread;
+import java.util.function.Supplier;
 
 /**
- * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
- *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory<SAXParserFactory> {
+public class SupplierGreeting implements Supplier<Greeting> {
+
+    private final String greetingType;
 
     /**
-     * Create new SAX parser factory provider.
-     *
-     * @param config Jersey configuration properties.
+     * Default constructor.
      */
-    // TODO This provider should be registered and configured via a feature.
-    @Inject
-    public SaxParserFactoryInjectionProvider(final Configuration config) {
-        super(config);
+    public SupplierGreeting() {
+        this(CzechGreeting.GREETING);
+    }
+
+    /**
+     * Supplier's constructor.
+     *
+     * @param greetingType greetingType in a specific language.
+     */
+    public SupplierGreeting(String greetingType) {
+        this.greetingType = greetingType;
     }
 
     @Override
-    @PerThread
-    public SAXParserFactory get() {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-
-        factory.setNamespaceAware(true);
-
-        if (!isXmlSecurityDisabled()) {
-            factory = new SecureSaxParserFactory(factory);
+    public Greeting get() {
+        if (CzechGreeting.GREETING.equals(greetingType)) {
+            return new CzechGreeting();
+        } else {
+            return new EnglishGreeting();
         }
-
-        return factory;
     }
 }

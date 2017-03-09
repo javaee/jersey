@@ -80,7 +80,7 @@ public class ServerProcessingBinder extends AbstractBinder {
     @Override
     protected void configure() {
         // Bind non-proxiable Ref<RequestProcessingContext> injection point
-        bindFactory(ReferencingFactory.<RequestProcessingContext>referenceFactory())
+        bindFactory(ReferencingFactory.referenceFactory())
                 .to(new GenericType<Ref<RequestProcessingContext>>() { })
                 .proxy(false)
                 .in(RequestScoped.class);
@@ -152,8 +152,8 @@ public class ServerProcessingBinder extends AbstractBinder {
 
         @Override
         @RequestScoped
-        public ContainerRequest provide() {
-            return super.provide();
+        public ContainerRequest get() {
+            return super.get();
         }
     }
 
@@ -167,8 +167,8 @@ public class ServerProcessingBinder extends AbstractBinder {
 
         @Override
         @RequestScoped
-        public UriRoutingContext provide() {
-            return super.provide();
+        public UriRoutingContext get() {
+            return super.get();
         }
     }
 
@@ -182,8 +182,8 @@ public class ServerProcessingBinder extends AbstractBinder {
 
         @Override
         @RequestScoped
-        public CloseableService provide() {
-            return super.provide();
+        public CloseableService get() {
+            return super.get();
         }
     }
 
@@ -197,8 +197,8 @@ public class ServerProcessingBinder extends AbstractBinder {
 
         @Override
         @RequestScoped
-        public AsyncContext provide() {
-            return super.provide();
+        public AsyncContext get() {
+            return super.get();
         }
     }
 

@@ -67,7 +67,7 @@ public class XmlInputFactoryInjectionProvider extends AbstractXmlFactory<XMLInpu
 
     @Override
     @PerThread
-    public XMLInputFactory provide() {
+    public XMLInputFactory get() {
         XMLInputFactory factory = XMLInputFactory.newInstance();
 
         if (!isXmlSecurityDisabled()) {

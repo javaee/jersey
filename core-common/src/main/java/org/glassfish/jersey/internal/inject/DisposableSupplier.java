@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,46 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jaxb.internal;
 
-import javax.ws.rs.core.Configuration;
+package org.glassfish.jersey.internal.inject;
 
-import javax.inject.Inject;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.glassfish.hk2.api.PerThread;
+import java.util.function.Supplier;
 
 /**
- * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
+ * Supplier extension which is able to call {@link #get()} method to create a new object and also call {@link #dispose(Object)}
+ * to make some cleaning code regarding the instance and the specific {@link Supplier} instance.
  *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula
+ * @param <T> type which is created by {@link DisposableSupplier}.
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory<SAXParserFactory> {
+public interface DisposableSupplier<T> extends Supplier<T> {
 
     /**
-     * Create new SAX parser factory provider.
+     * This method will dispose the provided object created by this {@code Supplier}.
      *
-     * @param config Jersey configuration properties.
+     * @param instance the instance to be disposed.
      */
-    // TODO This provider should be registered and configured via a feature.
-    @Inject
-    public SaxParserFactoryInjectionProvider(final Configuration config) {
-        super(config);
-    }
+    void dispose(T instance);
 
-    @Override
-    @PerThread
-    public SAXParserFactory get() {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-
-        factory.setNamespaceAware(true);
-
-        if (!isXmlSecurityDisabled()) {
-            factory = new SecureSaxParserFactory(factory);
-        }
-
-        return factory;
-    }
 }

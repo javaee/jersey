@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,46 +37,51 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jaxb.internal;
 
-import javax.ws.rs.core.Configuration;
+package org.glassfish.jersey.hk2;
 
-import javax.inject.Inject;
-import javax.xml.parsers.SAXParserFactory;
+import java.util.function.Supplier;
 
-import org.glassfish.hk2.api.PerThread;
+import org.glassfish.jersey.internal.inject.DisposableSupplier;
+
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
+ * This class is used as a bridge between {@link Factory HK2 Factory} and JDK {@link Supplier}. Using this class {@link Supplier}
+ * is able to behave as a factory in service locator. The bridge just delegates all invocations to provided {@link ServiceLocator}
+ * and therefore all operation should be in proper scope and context.
+ * <p>
+ * This bridge is dedicated to instance binding therefore underlying {@code supplier} is always only single instance.
  *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula
+ * @param <T> type which could be handled by {@code Supplier} and this bridge.
  */
-public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory<SAXParserFactory> {
+public class InstanceSupplierFactoryBridge<T> implements Factory<T> {
+
+    private Supplier<T> supplier;
+    private boolean disposable;
 
     /**
-     * Create new SAX parser factory provider.
+     * Constructor for a new bridge.
      *
-     * @param config Jersey configuration properties.
+     * @param supplier   type which will be looked for in locator.
+     * @param disposable flag whether the bridge is set up for disposing the created object.
      */
-    // TODO This provider should be registered and configured via a feature.
-    @Inject
-    public SaxParserFactoryInjectionProvider(final Configuration config) {
-        super(config);
+    InstanceSupplierFactoryBridge(Supplier<T> supplier, boolean disposable) {
+        this.supplier = supplier;
+        this.disposable = disposable;
     }
 
     @Override
-    @PerThread
-    public SAXParserFactory get() {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
+    @SuppressWarnings("unchecked")
+    public T provide() {
+        return supplier.get();
+    }
 
-        factory.setNamespaceAware(true);
-
-        if (!isXmlSecurityDisabled()) {
-            factory = new SecureSaxParserFactory(factory);
+    @Override
+    public void dispose(T instance) {
+        if (disposable) {
+            ((DisposableSupplier<T>) supplier).dispose(instance);
         }
-
-        return factory;
     }
 }

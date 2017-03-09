@@ -43,6 +43,7 @@ package org.glassfish.jersey.tests.cdi.bv;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.function.Supplier;
 
 import javax.ws.rs.core.Context;
 
@@ -54,7 +55,6 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.spi.ValidationInterceptorContext;
 
@@ -83,14 +83,13 @@ public class Hk2ValidationInterceptor implements ValidationInterceptor {
 
     }
 
-    private static class ValidationInterceptorFactory extends SupplierFactory<ValidationInterceptor> {
+    private static class ValidationInterceptorFactory implements Supplier<ValidationInterceptor> {
 
         @Inject
         Provider<Hk2ValidationResult> validationResultProvider;
 
         @Override
-        public ValidationInterceptor provide() {
-
+        public ValidationInterceptor get() {
             return new Hk2ValidationInterceptor(validationResultProvider);
         }
     }

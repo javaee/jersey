@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,46 +37,49 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jaxb.internal;
 
-import javax.ws.rs.core.Configuration;
+package org.glassfish.jersey.internal.inject;
 
-import javax.inject.Inject;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.glassfish.hk2.api.PerThread;
+import java.lang.annotation.Annotation;
+import java.util.function.Supplier;
 
 /**
- * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
+ * Injection binding description of a bean bound indirectly via a supplier class producing instances of the bound type.
  *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula
+ * @param <T> type of the bean described by this injection binding descriptor.
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory<SAXParserFactory> {
+public class SupplierClassBinding<T> extends Binding<T, SupplierClassBinding<T>> {
+
+    private final Class<? extends Supplier<T>> supplierClass;
+    private final Class<? extends Annotation> supplierScope;
 
     /**
-     * Create new SAX parser factory provider.
+     * Creates a service as a class.
      *
-     * @param config Jersey configuration properties.
+     * @param supplierClass factory's class.
+     * @param scope        factory's scope.
      */
-    // TODO This provider should be registered and configured via a feature.
-    @Inject
-    public SaxParserFactoryInjectionProvider(final Configuration config) {
-        super(config);
+    SupplierClassBinding(Class<? extends Supplier<T>> supplierClass, Class<? extends Annotation> scope) {
+        this.supplierClass = supplierClass;
+        this.supplierScope = scope;
     }
 
-    @Override
-    @PerThread
-    public SAXParserFactory get() {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
+    /**
+     * Gets supplier's class.
+     *
+     * @return supplier's class.
+     */
+    public Class<? extends Supplier<T>> getSupplierClass() {
+        return supplierClass;
+    }
 
-        factory.setNamespaceAware(true);
-
-        if (!isXmlSecurityDisabled()) {
-            factory = new SecureSaxParserFactory(factory);
-        }
-
-        return factory;
+    /**
+     * Gets supplier's scope.
+     *
+     * @return supplier's scope.
+     */
+    public Class<? extends Annotation> getSupplierScope() {
+        return supplierScope;
     }
 }

@@ -64,7 +64,6 @@ import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerThread;
 
 import org.junit.Before;
@@ -153,18 +152,7 @@ public class SaxParserFactoryInjectionProviderTest {
         binders[0] = new AbstractBinder() {
             @Override
             protected void configure() {
-                bindFactory(new Factory<Configuration>() {
-                    @Override
-                    public Configuration provide() {
-                        return EMPTY_CONFIG;
-                    }
-
-                    @Override
-                    public void dispose(Configuration instance) {
-                        //not used
-                    }
-                }).to(Configuration.class);
-
+                bindFactory(() -> EMPTY_CONFIG).to(Configuration.class);
                 bindFactory(SaxParserFactoryInjectionProvider.class, Singleton.class)
                         .to(SAXParserFactory.class)
                         .in(PerThread.class);

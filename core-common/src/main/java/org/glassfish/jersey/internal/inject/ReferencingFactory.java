@@ -39,12 +39,12 @@
  */
 package org.glassfish.jersey.internal.inject;
 
+import java.util.function.Supplier;
+
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Refs;
-
-import org.glassfish.hk2.api.Factory;
 
 /**
  * Factory that provides injection of the referenced instance.
@@ -52,17 +52,17 @@ import org.glassfish.hk2.api.Factory;
  * @param <T>
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class ReferencingFactory<T> extends SupplierFactory<T> {
+public abstract class ReferencingFactory<T> implements Supplier<T> {
 
-    private static class EmptyReferenceFactory<T> extends SupplierFactory<Ref<T>> {
+    private static class EmptyReferenceFactory<T> implements Supplier<Ref<T>> {
 
         @Override
-        public Ref<T> provide() {
+        public Ref<T> get() {
             return Refs.emptyRef();
         }
     }
 
-    private static class InitializedReferenceFactory<T> extends SupplierFactory<Ref<T>> {
+    private static class InitializedReferenceFactory<T> implements Supplier<Ref<T>> {
 
         private final T initialValue;
 
@@ -71,7 +71,7 @@ public abstract class ReferencingFactory<T> extends SupplierFactory<T> {
         }
 
         @Override
-        public Ref<T> provide() {
+        public Ref<T> get() {
             return Refs.of(initialValue);
         }
     }
@@ -88,7 +88,7 @@ public abstract class ReferencingFactory<T> extends SupplierFactory<T> {
     }
 
     @Override
-    public T provide() {
+    public T get() {
         return referenceFactory.get().get();
     }
 
@@ -98,8 +98,8 @@ public abstract class ReferencingFactory<T> extends SupplierFactory<T> {
      * @param <T> reference type.
      * @return reference factory providing an empty reference.
      */
-    public static <T> Factory<Ref<T>> referenceFactory() {
-        return new EmptyReferenceFactory<T>();
+    public static <T> Supplier<Ref<T>> referenceFactory() {
+        return new EmptyReferenceFactory<>();
     }
 
     /**
@@ -111,11 +111,11 @@ public abstract class ReferencingFactory<T> extends SupplierFactory<T> {
      * @return reference factory providing a reference initialized with an
      *         {@code initialValue}.
      */
-    public static <T> Factory<Ref<T>> referenceFactory(T initialValue) {
+    public static <T> Supplier<Ref<T>> referenceFactory(T initialValue) {
         if (initialValue == null) {
-            return new EmptyReferenceFactory<T>();
+            return new EmptyReferenceFactory<>();
         }
 
-        return new InitializedReferenceFactory<T>(initialValue);
+        return new InitializedReferenceFactory<>(initialValue);
     }
 }

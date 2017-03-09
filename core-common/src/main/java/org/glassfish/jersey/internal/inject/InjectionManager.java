@@ -78,8 +78,8 @@ public interface InjectionManager {
      * @param binding one descriptor.
      * @see ClassBinding
      * @see InstanceBinding
-     * @see FactoryClassBinding
-     * @see FactoryInstanceBinding
+     * @see SupplierClassBinding
+     * @see SupplierInstanceBinding
      */
     void register(Binding binding);
 
@@ -91,8 +91,8 @@ public interface InjectionManager {
      * @param descriptors collection of descriptors.
      * @see ClassBinding
      * @see InstanceBinding
-     * @see FactoryClassBinding
-     * @see FactoryInstanceBinding
+     * @see SupplierClassBinding
+     * @see SupplierInstanceBinding
      */
     void register(Iterable<Binding> descriptors);
 
@@ -105,8 +105,8 @@ public interface InjectionManager {
      * @param binder collection of descriptors.
      * @see ClassBinding
      * @see InstanceBinding
-     * @see FactoryClassBinding
-     * @see FactoryInstanceBinding
+     * @see SupplierClassBinding
+     * @see SupplierInstanceBinding
      */
     void register(Binder binder);
 

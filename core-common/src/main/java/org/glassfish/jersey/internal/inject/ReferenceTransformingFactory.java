@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.internal.inject;
 
+import java.util.function.Supplier;
+
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -53,7 +55,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
  * @param <S> the type of the injected source type {@link Ref reference}.
  * @param <T> the type of provided entity.
  */
-public abstract class ReferenceTransformingFactory<S, T> extends SupplierFactory<T> {
+public abstract class ReferenceTransformingFactory<S, T> implements Supplier<T> {
     /**
      * Transforming function responsible for transforming an instance of source type {@code S} into an instance of
      * target type {@code T}.
@@ -61,7 +63,7 @@ public abstract class ReferenceTransformingFactory<S, T> extends SupplierFactory
      * @param <S> source type.
      * @param <T> target type.
      */
-    public static interface Transformer<S, T> {
+    public interface Transformer<S, T> {
         /**
          * Transform an instance of source type into an instance of target type.
          *
@@ -86,7 +88,7 @@ public abstract class ReferenceTransformingFactory<S, T> extends SupplierFactory
     }
 
     @Override
-    public T provide() {
+    public T get() {
         return transformer.transform(refProvider.get().get());
     }
 }

@@ -41,6 +41,7 @@
 package org.glassfish.jersey.client;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.Client;
@@ -58,7 +59,6 @@ import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
@@ -86,7 +86,7 @@ class ClientBinder extends AbstractBinder {
         }
     }
 
-    private static class PropertiesDelegateFactory extends SupplierFactory<PropertiesDelegate> {
+    private static class PropertiesDelegateFactory implements Supplier<PropertiesDelegate> {
 
         private final Provider<ClientRequest> requestProvider;
 
@@ -96,7 +96,7 @@ class ClientBinder extends AbstractBinder {
         }
 
         @Override
-        public PropertiesDelegate provide() {
+        public PropertiesDelegate get() {
             return requestProvider.get().getPropertiesDelegate();
         }
     }
@@ -119,7 +119,7 @@ class ClientBinder extends AbstractBinder {
                 new MessageBodyFactory.Binder(),
                 new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, clientRuntimeProperties, RuntimeType.CLIENT));
+                new ServiceFinderBinder<>(AutoDiscoverable.class, clientRuntimeProperties, RuntimeType.CLIENT));
 
         bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new GenericType<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);

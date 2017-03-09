@@ -58,15 +58,14 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Bindings;
-import org.glassfish.jersey.internal.inject.FactoryInstanceBinding;
+import org.glassfish.jersey.internal.inject.DisposableSupplier;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.SupplierInstanceBinding;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.spi.ExecutorServiceProvider;
 import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
-
-import org.glassfish.hk2.api.Factory;
 
 /**
  * A utility class with a methods for handling executor injection registration and proper disposal.
@@ -111,8 +110,8 @@ public final class ExecutorProviders {
             ExecutorServiceProvider executorProvider = bucketProviderIterator.next();
             logExecutorServiceProvider(qualifierAnnotationClass, bucketProviderIterator, executorProvider);
 
-            FactoryInstanceBinding<ExecutorService> descriptor =
-                    Bindings.factory(new ExecutorServiceFactory(executorProvider))
+            SupplierInstanceBinding<ExecutorService> descriptor =
+                    Bindings.supplier(new ExecutorServiceSupplier(executorProvider))
                             .in(Singleton.class)
                             .to(ExecutorService.class);
 
@@ -140,8 +139,8 @@ public final class ExecutorProviders {
             ScheduledExecutorServiceProvider executorProvider = bucketProviderIterator.next();
             logScheduledExecutorProvider(qualifierAnnotationClass, bucketProviderIterator, executorProvider);
 
-            FactoryInstanceBinding<ScheduledExecutorService> descriptor =
-                    Bindings.factory(new ScheduledExecutorServiceFactory(executorProvider))
+            SupplierInstanceBinding<ScheduledExecutorService> descriptor =
+                    Bindings.supplier(new ScheduledExecutorServiceSupplier(executorProvider))
                             .in(Singleton.class)
                             .to(ScheduledExecutorService.class);
 
@@ -237,16 +236,16 @@ public final class ExecutorProviders {
 
     }
 
-    private static class ExecutorServiceFactory implements Factory<ExecutorService> {
+    private static class ExecutorServiceSupplier implements DisposableSupplier<ExecutorService> {
 
         private final ExecutorServiceProvider executorProvider;
 
-        private ExecutorServiceFactory(ExecutorServiceProvider executorServiceProvider) {
+        private ExecutorServiceSupplier(ExecutorServiceProvider executorServiceProvider) {
             executorProvider = executorServiceProvider;
         }
 
         @Override
-        public ExecutorService provide() {
+        public ExecutorService get() {
             return executorProvider.getExecutorService();
         }
 
@@ -256,16 +255,16 @@ public final class ExecutorProviders {
         }
     }
 
-    private static class ScheduledExecutorServiceFactory implements Factory<ScheduledExecutorService> {
+    private static class ScheduledExecutorServiceSupplier implements DisposableSupplier<ScheduledExecutorService> {
 
         private final ScheduledExecutorServiceProvider executorProvider;
 
-        private ScheduledExecutorServiceFactory(ScheduledExecutorServiceProvider executorServiceProvider) {
+        private ScheduledExecutorServiceSupplier(ScheduledExecutorServiceProvider executorServiceProvider) {
             executorProvider = executorServiceProvider;
         }
 
         @Override
-        public ScheduledExecutorService provide() {
+        public ScheduledExecutorService get() {
             return executorProvider.getExecutorService();
         }
 

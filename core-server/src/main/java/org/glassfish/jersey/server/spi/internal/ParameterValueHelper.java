@@ -43,10 +43,10 @@ package org.glassfish.jersey.server.spi.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.ProcessingException;
@@ -88,11 +88,11 @@ public final class ParameterValueHelper {
                     continue;
                 }
 
-                params[index++] = paramValProvider.provide();
+                params[index++] = paramValProvider.get();
             }
 
             if (entityProviderIndex != -1) {
-                params[entityProviderIndex] = valueProviders.get(entityProviderIndex).provide();
+                params[entityProviderIndex] = valueProviders.get(entityProviderIndex).get();
             }
 
             return params;
@@ -127,21 +127,13 @@ public final class ParameterValueHelper {
             return Collections.emptyList();
         }
 
-        List<ValueSupplierProvider> valueSupplierProviders = new ArrayList<ValueSupplierProvider>(
-                Providers.getProviders(injectionManager, ValueSupplierProvider.class));
-
-        Collections.sort(valueSupplierProviders, new Comparator<ValueSupplierProvider>() {
-
-            @Override
-            public int compare(ValueSupplierProvider o1, ValueSupplierProvider o2) {
-                return o2.getPriority().getWeight() - o1.getPriority().getWeight();
-            }
-
-        });
+        List<ValueSupplierProvider> valueSupplierProviders =
+                Providers.getProviders(injectionManager, ValueSupplierProvider.class).stream()
+                    .sorted((o1, o2) -> o2.getPriority().getWeight() - o1.getPriority().getWeight())
+                    .collect(Collectors.toList());
 
         boolean entityParamFound = false;
-        final List<ParamValueFactoryWithSource<?>> providers =
-                new ArrayList<ParamValueFactoryWithSource<?>>(parameterized.getParameters().size());
+        final List<ParamValueFactoryWithSource<?>> providers = new ArrayList<>(parameterized.getParameters().size());
         for (final Parameter parameter : parameterized.getParameters()) {
             final Parameter.Source parameterSource = parameter.getSource();
             entityParamFound = entityParamFound || Parameter.Source.ENTITY == parameterSource;
@@ -174,7 +166,7 @@ public final class ParameterValueHelper {
     }
 
     private static <T> ParamValueFactoryWithSource<T> wrapParamValueSupplier(Supplier<T> factory, Parameter.Source paramSource) {
-        return new ParamValueFactoryWithSource<T>(factory, paramSource);
+        return new ParamValueFactoryWithSource<>(factory, paramSource);
     }
 
     private static Supplier<?> getParamValueSupplier(

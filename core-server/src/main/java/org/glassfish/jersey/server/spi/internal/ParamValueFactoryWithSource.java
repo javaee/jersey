@@ -41,17 +41,16 @@ package org.glassfish.jersey.server.spi.internal;
 
 import java.util.function.Supplier;
 
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.server.model.Parameter;
 
 /**
- * Extends {@link SupplierFactory} interface with
+ * Extends {@link Supplier} interface with
  * {@link org.glassfish.jersey.server.model.Parameter.Source} information.
  *
  * @param <T> This must be the type of entity for which this is a factory.
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public final class ParamValueFactoryWithSource<T> extends SupplierFactory<T> {
+public final class ParamValueFactoryWithSource<T> implements Supplier<T> {
 
     private final Supplier<T> parameterSupplier;
     private final Parameter.Source parameterSource;
@@ -68,7 +67,7 @@ public final class ParamValueFactoryWithSource<T> extends SupplierFactory<T> {
     }
 
     @Override
-    public T provide() {
+    public T get() {
         return parameterSupplier.get();
     }
 

@@ -50,12 +50,9 @@ import javax.ws.rs.Encoded;
 
 import org.glassfish.jersey.internal.inject.Injectee;
 import org.glassfish.jersey.internal.inject.InjectionResolver;
-import org.glassfish.jersey.internal.inject.SupplierFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-
-import org.glassfish.hk2.api.Factory;
 
 /**
  * Abstract base class for resolving JAX-RS {@code &#64;XxxParam} injection.
@@ -82,7 +79,6 @@ public class ParamInjectionResolver<A extends Annotation> implements InjectionRe
     @Override
     @SuppressWarnings("unchecked")
     public Object resolve(Injectee injectee) {
-
         AnnotatedElement annotated = injectee.getParent();
         Annotation[] annotations;
         if (annotated.getClass().equals(Constructor.class)) {
@@ -93,10 +89,9 @@ public class ParamInjectionResolver<A extends Annotation> implements InjectionRe
 
         Class componentClass = injectee.getInjecteeClass();
         Type genericType = injectee.getRequiredType();
-        boolean isHk2Factory = ReflectionHelper.isSubClassOf(genericType, Factory.class);
 
         final Type targetGenericType;
-        if (isHk2Factory) {
+        if (injectee.isFactory()) {
             targetGenericType = ReflectionHelper.getTypeArgument(genericType, 0);
         } else {
             targetGenericType = genericType;
@@ -113,13 +108,8 @@ public class ParamInjectionResolver<A extends Annotation> implements InjectionRe
 
         final Supplier<?> paramValueSupplier = valueSupplierProvider.getValueSupplier(parameter);
         if (paramValueSupplier != null) {
-            if (isHk2Factory) {
-                return new SupplierFactory() {
-                    @Override
-                    public Object provide() {
-                        return paramValueSupplier.get();
-                    }
-                };
+            if (injectee.isFactory()) {
+                return paramValueSupplier;
             } else {
                 return paramValueSupplier.get();
             }

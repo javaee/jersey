@@ -43,30 +43,39 @@ package org.glassfish.jersey.hk2;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.AliasBinding;
 import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.ClassBinding;
-import org.glassfish.jersey.internal.inject.FactoryClassBinding;
-import org.glassfish.jersey.internal.inject.FactoryInstanceBinding;
+import org.glassfish.jersey.internal.inject.DisposableSupplier;
 import org.glassfish.jersey.internal.inject.InjectionResolverBinding;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
+import org.glassfish.jersey.internal.inject.SupplierClassBinding;
+import org.glassfish.jersey.internal.inject.SupplierInstanceBinding;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.ActiveDescriptorBuilder;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.BuilderHelper;
-import org.glassfish.hk2.utilities.FactoryDescriptorsImpl;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 import org.glassfish.hk2.utilities.reflection.ParameterizedTypeImpl;
 
+/**
+ * This class contains the convenient methods for translation from jersey classes to HK2 and visa versa, then contains methods
+ * for binding structures such as {@link org.glassfish.jersey.internal.inject.Binder} or {@link Binding} to a provided service
+ * locator.
+ */
 class Hk2Helper {
 
     /**
@@ -82,11 +91,11 @@ class Hk2Helper {
     /**
      * Bind descriptors to Hk2-like {@link Binder}.
      *
-     * @param locator    HK2 locator.
+     * @param locator HK2 locator.
      * @param binding single descriptor.
      */
     static void bind(ServiceLocator locator, Binding binding) {
-        bindDescriptor(locator, binding);
+        bindBinding(locator, binding);
     }
 
     /**
@@ -98,7 +107,7 @@ class Hk2Helper {
     static void bind(ServiceLocator locator, Iterable<Binding> descriptors) {
         DynamicConfiguration dc = getDynamicConfiguration(locator);
         for (Binding binding : descriptors) {
-            bindDescriptor(locator, dc, binding);
+            bindBinding(locator, dc, binding);
         }
         dc.commit();
     }
@@ -121,38 +130,38 @@ class Hk2Helper {
      * @param locator HK2 injection manager.
      * @param binding Jersey descriptor as a holder of information about an injection point.
      */
-    private static void bindDescriptor(ServiceLocator locator, Binding<?, ?> binding) {
+    private static void bindBinding(ServiceLocator locator, Binding<?, ?> binding) {
         DynamicConfiguration dc = getDynamicConfiguration(locator);
-        bindDescriptor(locator, dc, binding);
+        bindBinding(locator, dc, binding);
         dc.commit();
     }
 
     /**
      * Binds the single descriptor using an external {@link DynamicConfiguration}.
      *
-     * @param locator    HK2 injection manager.
-     * @param dc         HK2 Dynamic configuration to bind the object.
+     * @param locator HK2 injection manager.
+     * @param dc      HK2 Dynamic configuration to bind the object.
      * @param binding Jersey descriptor as a holder of information about an injection point.
      */
-    private static void bindDescriptor(ServiceLocator locator, DynamicConfiguration dc, Binding<?, ?> binding) {
+    private static void bindBinding(ServiceLocator locator, DynamicConfiguration dc, Binding<?, ?> binding) {
         if (ClassBinding.class.isAssignableFrom(binding.getClass())) {
             ActiveDescriptor<?> activeDescriptor = translateToActiveDescriptor((ClassBinding<?>) binding);
-            bindDescriptor(locator, dc, activeDescriptor, binding.getAliases());
+            bindBinding(locator, dc, activeDescriptor, binding.getAliases());
 
         } else if (InstanceBinding.class.isAssignableFrom(binding.getClass())) {
             ActiveDescriptor<?> activeDescriptor = translateToActiveDescriptor((InstanceBinding<?>) binding);
-            bindDescriptor(locator, dc, activeDescriptor, binding.getAliases());
+            bindBinding(locator, dc, activeDescriptor, binding.getAliases());
 
         } else if (InjectionResolverBinding.class.isAssignableFrom(binding.getClass())) {
             InjectionResolverBinding resolverDescriptor = (InjectionResolverBinding) binding;
-            bindDescriptor(locator, dc, wrapInjectionResolver(resolverDescriptor), binding.getAliases());
-            bindDescriptor(locator, dc, translateToActiveDescriptor(resolverDescriptor), binding.getAliases());
+            bindBinding(locator, dc, wrapInjectionResolver(resolverDescriptor), binding.getAliases());
+            bindBinding(locator, dc, translateToActiveDescriptor(resolverDescriptor), binding.getAliases());
 
-        } else if (FactoryClassBinding.class.isAssignableFrom(binding.getClass())) {
-            bindClassFactoryDescriptor(dc, (FactoryClassBinding<?>) binding);
+        } else if (SupplierClassBinding.class.isAssignableFrom(binding.getClass())) {
+            bindSupplierClassBinding(locator, (SupplierClassBinding<?>) binding);
 
-        } else if (FactoryInstanceBinding.class.isAssignableFrom(binding.getClass())) {
-            bindInstanceFactoryDescriptor(dc, (FactoryInstanceBinding<?>) binding);
+        } else if (SupplierInstanceBinding.class.isAssignableFrom(binding.getClass())) {
+            bindSupplierInstanceBinding(locator, (SupplierInstanceBinding<?>) binding);
 
         } else {
             throw new RuntimeException(LocalizationMessages.UNKNOWN_DESCRIPTOR_TYPE(binding.getClass().getSimpleName()));
@@ -167,104 +176,104 @@ class Hk2Helper {
     }
 
     /**
-     * Binds a new instance {@link org.glassfish.hk2.api.FactoryDescriptors} using the information from the Jersey descriptor
-     * {@link FactoryInstanceBinding}.
+     * Registers a new instance {@link Binder} using the information from the Jersey binding {@link SupplierInstanceBinding}.
      *
-     * @param dc   HK2 Dynamic configuration to bind the object.
-     * @param desc Jersey descriptor as a holder of information about an injection point.
+     * @param locator HK2 instance manager.
+     * @param binding Jersey descriptor as a holder of information about an injection point.
      */
-    private static void bindInstanceFactoryDescriptor(DynamicConfiguration dc, FactoryInstanceBinding<?> desc) {
-        AbstractActiveDescriptor<?> factoryContractDescriptor = BuilderHelper.createConstantDescriptor(desc.getFactory());
-        factoryContractDescriptor.addContractType(desc.getFactory().getClass());
+    private static void bindSupplierInstanceBinding(ServiceLocator locator, SupplierInstanceBinding<?> binding) {
+        Consumer<AbstractBinder> bindConsumer = binder -> {
+            Supplier<?> supplier = binding.getSupplier();
+            boolean disposable = DisposableSupplier.class.isAssignableFrom(supplier.getClass());
+            // Bind the Supplier itself to be able to inject - Supplier<T> or DisposableSupplier<T>;
+            // The contract of the supplier is not registered that means that the instance of the supplier can be retrieved
+            // only using Supplier interface and not using implementation class itself. Supplier can be registered only once with
+            // all provided contracts.
+            AbstractActiveDescriptor<? extends Supplier<?>> supplierBuilder = BuilderHelper.createConstantDescriptor(supplier);
+            binding.getContracts().forEach(contract -> {
+                supplierBuilder.addContractType(new ParameterizedTypeImpl(Supplier.class, contract));
+                if (disposable) {
+                    supplierBuilder.addContractType(new ParameterizedTypeImpl(DisposableSupplier.class, contract));
+                }
+            });
+            // Always call SupplierFactoryBridge.
+            binding.getQualifiers().forEach(supplierBuilder::addQualifierAnnotation);
+            binder.bind(supplierBuilder);
 
-        ActiveDescriptorBuilder binding = BuilderHelper.activeLink(desc.getFactory().getClass())
-                .named(desc.getName())
-                .analyzeWith(desc.getAnalyzer());
+            // Register wrapper for factory functionality, wrapper automatically call service locator which is able to retrieve
+            // the service in the proper context and scope. Bridge is registered for all contracts but is able to lookup from
+            // service locator only using the first contract.
+            ServiceBindingBuilder<?> builder = binder.bindFactory(new InstanceSupplierFactoryBridge<>(supplier, disposable));
+            setupSupplierFactoryBridge(binding, builder);
+        };
 
-        if (desc.getScope() != null) {
-            binding.in(desc.getScope());
-        }
-
-        if (desc.getRank() != null) {
-            binding.ofRank(desc.getRank());
-        }
-
-        for (Annotation qualifier : desc.getQualifiers()) {
-            factoryContractDescriptor.addQualifierAnnotation(qualifier);
-            binding.qualifiedBy(qualifier);
-        }
-
-        for (Type contract : desc.getContracts()) {
-            factoryContractDescriptor.addContractType(new ParameterizedTypeImpl(Factory.class, contract));
-            binding.to(contract);
-        }
-
-        if (desc.isProxiable() != null) {
-            binding.proxy(desc.isProxiable());
-        }
-
-        if (desc.isProxiedForSameScope() != null) {
-            binding.proxyForSameScope(desc.isProxiedForSameScope());
-        }
-
-        dc.bind(new FactoryDescriptorsImpl(factoryContractDescriptor, binding.buildProvideMethod()));
+        ServiceLocatorUtilities.bind(locator, createBinder(bindConsumer));
     }
 
     /**
-     * Binds a new instance {@link org.glassfish.hk2.api.FactoryDescriptors} using the information from the Jersey descriptor
-     * {@link FactoryClassBinding}.
+     * Registers a new instance {@link Binder} using the information from the Jersey binding {@link SupplierClassBinding}.
      *
-     * @param dc   HK2 Dynamic configuration to bind the object.
-     * @param desc Jersey descriptor as a holder of information about an injection point.
+     * @param locator HK2 instance manager.
+     * @param binding Jersey descriptor as a holder of information about an injection point.
      */
-    private static void bindClassFactoryDescriptor(DynamicConfiguration dc, FactoryClassBinding<?> desc) {
-        AbstractActiveDescriptor<?> factoryContractDescriptor = BuilderHelper.createConstantDescriptor(desc.getFactoryClass());
-        factoryContractDescriptor.addContractType(desc.getFactoryClass().getClass());
+    private static void bindSupplierClassBinding(ServiceLocator locator, SupplierClassBinding<?> binding) {
+        Consumer<AbstractBinder> bindConsumer = binder -> {
+            boolean disposable = DisposableSupplier.class.isAssignableFrom(binding.getSupplierClass());
 
-        ActiveDescriptorBuilder factoryDescriptorBuilder = BuilderHelper.activeLink(desc.getFactoryClass())
-                .named(desc.getName())
-                .analyzeWith(desc.getAnalyzer());
+            // Bind the Supplier itself to be able to inject - Supplier<T> supplier;
+            // The contract of the supplier is not registered that means that the instance of the supplier can be retrieved
+            // only using Supplier interface and not using implementation class itself. Supplier can be registered only once with
+            // all provided contracts.
+            ServiceBindingBuilder<?> supplierBuilder = binder.bind(binding.getSupplierClass());
+            binding.getContracts().forEach(contract -> {
+                supplierBuilder.to(new ParameterizedTypeImpl(Supplier.class, contract));
+                if (disposable) {
+                    supplierBuilder.to(new ParameterizedTypeImpl(DisposableSupplier.class, contract));
+                }
+            });
+            binding.getQualifiers().forEach(supplierBuilder::qualifiedBy);
+            supplierBuilder.in(binding.getSupplierScope());
+            binder.bind(supplierBuilder);
 
-        if (desc.getFactoryScope() != null) {
-            factoryDescriptorBuilder.in(desc.getFactoryScope());
+            // Register wrapper for factory functionality, wrapper automatically call service locator which is able to retrieve
+            // the service in the proper context and scope. Bridge is registered for all contracts but is able to lookup from
+            // service locator only using the first contract.
+            Type contract = null;
+            if (binding.getContracts().iterator().hasNext()) {
+                contract = binding.getContracts().iterator().next();
+            }
+
+            ServiceBindingBuilder<?> builder = binder.bindFactory(new SupplierFactoryBridge<>(locator, contract, disposable));
+            setupSupplierFactoryBridge(binding, builder);
+            if (binding.getImplementationType() != null) {
+                builder.asType(binding.getImplementationType());
+            }
+        };
+
+        ServiceLocatorUtilities.bind(locator, createBinder(bindConsumer));
+    }
+
+    private static void setupSupplierFactoryBridge(Binding<?, ?> binding, ServiceBindingBuilder<?> builder) {
+        builder.named(binding.getName());
+        binding.getContracts().forEach(builder::to);
+        binding.getQualifiers().forEach(builder::qualifiedBy);
+        builder.in(binding.getScope());
+
+        if (binding.getRank() != null) {
+            builder.ranked(binding.getRank());
         }
 
-        ActiveDescriptorBuilder descriptorBuilder = BuilderHelper.activeLink(desc.getFactoryClass())
-                .named(desc.getName())
-                .analyzeWith(desc.getAnalyzer());
-
-        if (desc.getScope() != null) {
-            descriptorBuilder.in(desc.getScope());
+        if (binding.isProxiable() != null) {
+            builder.proxy(binding.isProxiable());
         }
 
-        if (desc.getRank() != null) {
-            descriptorBuilder.ofRank(desc.getRank());
+        if (binding.isProxiedForSameScope() != null) {
+            builder.proxyForSameScope(binding.isProxiedForSameScope());
         }
-
-        for (Annotation qualifier : desc.getQualifiers()) {
-            factoryDescriptorBuilder.qualifiedBy(qualifier);
-            descriptorBuilder.qualifiedBy(qualifier);
-        }
-
-        for (Type contract : desc.getContracts()) {
-            factoryDescriptorBuilder.to(new ParameterizedTypeImpl(Factory.class, contract));
-            descriptorBuilder.to(contract);
-        }
-
-        if (desc.isProxiable() != null) {
-            descriptorBuilder.proxy(desc.isProxiable());
-        }
-
-        if (desc.isProxiedForSameScope() != null) {
-            descriptorBuilder.proxyForSameScope(desc.isProxiedForSameScope());
-        }
-
-        dc.bind(new FactoryDescriptorsImpl(factoryDescriptorBuilder.build(), descriptorBuilder.buildProvideMethod()));
     }
 
     static ActiveDescriptor<?> translateToActiveDescriptor(ClassBinding<?> desc) {
-        ActiveDescriptorBuilder binding = BuilderHelper.activeLink(desc.getService())
-                .named(desc.getName())
+        ActiveDescriptorBuilder binding = BuilderHelper.activeLink(desc.getService()).named(desc.getName())
                 .analyzeWith(desc.getAnalyzer());
 
         if (desc.getScope() != null) {
@@ -308,7 +317,7 @@ class Hk2Helper {
      * @param activeDescriptor HK2 active descriptor.
      * @param aliases          aliases belonging to the given descriptor.
      */
-    private static void bindDescriptor(ServiceLocator locator, DynamicConfiguration dc, ActiveDescriptor<?> activeDescriptor,
+    private static void bindBinding(ServiceLocator locator, DynamicConfiguration dc, ActiveDescriptor<?> activeDescriptor,
             Set<AliasBinding> aliases) {
         ActiveDescriptor<Object> boundDescriptor = dc.bind(activeDescriptor);
         for (AliasBinding alias : aliases) {
@@ -369,13 +378,28 @@ class Hk2Helper {
      * @param alias      source of the alias information.
      * @return populated alias object, ready to bindBinder using {@link DynamicConfiguration}.
      */
-    private static org.glassfish.hk2.utilities.AliasDescriptor<?> createAlias(
-            ServiceLocator locator, ActiveDescriptor<?> descriptor, AliasBinding alias) {
-        org.glassfish.hk2.utilities.AliasDescriptor<?> hk2Alias =
-                new org.glassfish.hk2.utilities.AliasDescriptor<>(locator, descriptor, alias.getContract(), null);
+    private static org.glassfish.hk2.utilities.AliasDescriptor<?> createAlias(ServiceLocator locator,
+            ActiveDescriptor<?> descriptor, AliasBinding alias) {
+        org.glassfish.hk2.utilities.AliasDescriptor<?> hk2Alias = new org.glassfish.hk2.utilities.AliasDescriptor<>(locator,
+                descriptor, alias.getContract(), null);
         alias.getQualifiers().forEach(hk2Alias::addQualifierAnnotation);
         alias.getScope().ifPresent(hk2Alias::setScope);
         alias.getRank().ifPresent(hk2Alias::setRanking);
         return hk2Alias;
+    }
+
+    /**
+     * Creates a new binder and automatically use it to bind the the descriptors in {@code bindConsumer}.
+     *
+     * @param bindConsumer consumer used to process the defined operation with a binder.
+     * @return populated binder.
+     */
+    private static Binder createBinder(Consumer<AbstractBinder> bindConsumer) {
+        return new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bindConsumer.accept(this);
+            }
+        };
     }
 }
