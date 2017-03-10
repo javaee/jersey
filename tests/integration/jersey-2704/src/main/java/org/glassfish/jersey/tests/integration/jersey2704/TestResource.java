@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,39 +39,39 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2704;
 
-import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * This resource is used to test if specific service class instance is available in the
- * {@link ServiceLocator} that comes from Jersey context.
+ * {@link InjectionManager} that comes from Jersey context.
  *
  * @author Bartosz Firyn (bartoszfiryn at gmail.com)
  */
 @Path("test")
 public class TestResource {
 
-    ServiceLocator locator;
+    InjectionManager injectionManager;
 
     /**
-     * Inject {@link ServiceLocator} from Jersey context.
+     * Inject {@link InjectionManager} from Jersey context.
      *
-     * @param locator the {@link ServiceLocator}
+     * @param injectionManager the {@link InjectionManager}
      */
     @Inject
-    public TestResource(ServiceLocator locator) {
-        this.locator = locator;
+    public TestResource(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
     }
 
     /**
-     * This method will test given class by checking if it is available in {@link ServiceLocator}
+     * This method will test given class by checking if it is available in {@link InjectionManager}
      * that has been injected from the Jersey context.
      *
      * @param clazz the service class name to check
@@ -83,7 +83,7 @@ public class TestResource {
     @Produces("text/plain")
     public Response test(@PathParam("clazz") String clazz) throws Exception {
         return Response
-            .status(locator.getService(Class.forName(clazz)) != null ? 200 : 600)
+            .status(injectionManager.getInstance(Class.forName(clazz)) != null ? 200 : 600)
             .build();
     }
 }

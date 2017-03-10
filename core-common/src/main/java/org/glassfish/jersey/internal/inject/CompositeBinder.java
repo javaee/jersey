@@ -70,7 +70,7 @@ public class CompositeBinder extends AbstractBinder {
      * @param binders provided binder to install as a collection.
      * @return composite binder.
      */
-    public static Binder wrap(Collection<Binder> binders) {
+    public static AbstractBinder wrap(Collection<Binder> binders) {
         return new CompositeBinder(binders);
     }
 
@@ -80,7 +80,7 @@ public class CompositeBinder extends AbstractBinder {
      * @param binders provided binder to install as an array.
      * @return composite binder.
      */
-    public static Binder wrap(Binder... binders) {
+    public static AbstractBinder wrap(Binder... binders) {
         return new CompositeBinder(Arrays.asList(binders));
     }
 

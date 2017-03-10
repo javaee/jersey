@@ -57,7 +57,6 @@ import javax.inject.Inject;
 import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 import org.glassfish.jersey.internal.inject.Binder;
@@ -202,7 +201,7 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
     @Test
     public void plainHK2Test() throws Exception {
         final InjectionManager locator = Injections.createInjectionManager(
-                new RequestScope.Binder(), new JerseyErrorService.Binder(),
+                new RequestScope.Binder(),
                 new AbstractBinder() {
                     @Override
                     protected void configure() {

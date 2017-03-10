@@ -50,7 +50,6 @@ import java.util.stream.Collectors;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.Binding;
-import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.ForeignDescriptor;
@@ -143,16 +142,9 @@ public class HK2InjectionManager implements InjectionManager {
     @Override
     public void initialize(String name, InjectionManager parent, Binder... binders) {
         this.locator = createLocator(name, parent);
-        ServiceLocatorUtilities.bind(locator, new JerseyClassAnalyzer.Binder(locator));
 
-        // First service the current BeanManager to be able to inject itself into other services.
-        Hk2Helper.bind(locator, Bindings.service(this).to(InjectionManager.class));
-
-        // Add support for Context annotation.
-        Hk2Helper.bind(locator, new ContextInjectionResolverImpl.Binder());
-
-        // Compose together the initialization binders and bind them as a whole.
-        Hk2Helper.bind(locator, CompositeBinder.wrap(binders));
+        // Register all components needed for proper HK2 locator bootstrap
+        Hk2Helper.bind(locator, new Hk2BootstrapBinder(this, CompositeBinder.wrap(binders)));
 
         this.locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 

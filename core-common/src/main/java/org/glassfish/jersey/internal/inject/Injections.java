@@ -49,8 +49,6 @@ import javax.inject.Provider;
 
 import org.glassfish.jersey.hk2.HK2InjectionManager;
 
-import org.glassfish.hk2.api.MultiException;
-
 /**
  * Injection binding utility methods.
  *
@@ -132,28 +130,25 @@ public class Injections {
     /**
      * Get the class by contract or create and inject a new instance.
      *
-     * @param <T>             instance type.
+     * @param <T>              instance type.
      * @param injectionManager DI injection manager.
-     * @param clazz           class of the instance to be provider.
+     * @param clazz            class of the instance to be provider.
      * @return instance of the class either provided as a service or created and injected  by HK2.
      */
     public static <T> T getOrCreate(InjectionManager injectionManager, final Class<T> clazz) {
         try {
             final T component = injectionManager.getInstance(clazz);
             return component == null ? injectionManager.createAndInitialize(clazz) : component;
-            // TODO: not really MultiException.
-        } catch (final MultiException e) {
-
+        } catch (final RuntimeException e) {
             // Look for WebApplicationException and return it if found. MultiException is thrown when *Param field is
             // annotated and value cannot be provided (for example fromString(String) method can throw unchecked
             // exception.
             //
             // see InvalidParamTest
             // see JERSEY-1117
-            for (final Throwable t : e.getErrors()) {
-                if (WebApplicationException.class.isAssignableFrom(t.getClass())) {
-                    throw (WebApplicationException) t;
-                }
+            Throwable throwable = e.getCause();
+            if (throwable != null && WebApplicationException.class.isAssignableFrom(throwable.getClass())) {
+                throw (WebApplicationException) throwable;
             }
 
             throw e;
