@@ -156,7 +156,7 @@ public class RequestScope implements Context<RequestScoped> {
         final Instance instance = current();
 
         U retVal = instance.get(activeDescriptor);
-        if (retVal == null) {
+        if (retVal == null && !instance.hasDescriptor(activeDescriptor)) {
             retVal = activeDescriptor.create(root);
             instance.put(activeDescriptor, retVal);
         }
@@ -496,6 +496,17 @@ public class RequestScope implements Context<RequestScoped> {
         @SuppressWarnings("unchecked")
         <T> T get(ActiveDescriptor<T> descriptor) {
             return (T) store.get(descriptor);
+        }
+
+        /**
+         * Checks whether an inhabitant is currently stored that matches the given descriptor.
+         *
+         * @param descriptor inhabitant descriptor.
+         * @return true if the instance contains an inhabitant matching this descriptor, false
+         *         otherwise.
+         */
+        boolean hasDescriptor(ActiveDescriptor<?> descriptor) {
+            return store.containsKey(descriptor);
         }
 
         /**

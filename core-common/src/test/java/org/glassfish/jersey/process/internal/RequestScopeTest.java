@@ -187,16 +187,36 @@ public class RequestScopeTest {
         assertNull(instance.get(inhab));
     }
 
+    @Test
+    public void testGetNullTwice() {
+        final RequestScope requestScope = new RequestScope();
+        assertNull(requestScope.suspendCurrent());
+        final Instance instance = requestScope.createInstance();
+        final TestProvider inhab = new TestProvider("a", null);
+        requestScope.runInScope(instance, new Runnable() {
+            @Override
+            public void run() {
+                assertNull(requestScope.findOrCreate(inhab, null));
+                // This should not crash:
+                assertNull(requestScope.findOrCreate(inhab, null));
+            }
+        });
+    }
+
     /**
      * Test request scope inhabitant.
      */
     public static class TestProvider extends AbstractActiveDescriptor<String> {
 
-        private final String id;
+        private final String id, value;
 
-        public TestProvider(final String id) {
-            super();
+        public TestProvider(String id) {
+            this(id, id);
+        }
+
+        public TestProvider(final String id, final String value) {
             this.id = id;
+            this.value = value;
         }
 
         @Override
@@ -211,7 +231,7 @@ public class RequestScopeTest {
 
         @Override
         public String create(final ServiceHandle<?> root) {
-            return id;
+            return value;
         }
     }
 }
