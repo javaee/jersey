@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.internal.inject;
 
+import java.util.function.Consumer;
+
 /**
  * The descriptor holder for an externally provided DI providers. Using this interface DI provider is able to provider his own
  * descriptor which can be used and returned to the DI provider in further processing.
@@ -56,4 +58,33 @@ public interface ForeignDescriptor {
      */
     Object get();
 
+    /**
+     * Disposes this instance. All the PerLookup objects that were created for this instance will be destroyed after this
+     * object has been destroyed.
+     *
+     * @param instance The instance to destroy.
+     */
+    void dispose(Object instance);
+
+    /**
+     * Wraps incoming descriptor instance and provides a default implementation of {@link ForeignDescriptor}.
+     *
+     * @param descriptor incoming foreign descriptor.
+     * @return wrapped foreign descriptor.
+     */
+     static ForeignDescriptor wrap(Object descriptor) {
+        return new ForeignDescriptorImpl(descriptor);
+    }
+
+    /**
+     * Wraps incoming descriptor instance and provides a default implementation of {@link ForeignDescriptor} along with a
+     * {@link Consumer} for a disposing an instance created using a given descriptor.
+     *
+     * @param descriptor      incoming foreign descriptor.
+     * @param disposeInstance consumer which is able to dispose an instance created with the given descriptor.
+     * @return wrapped foreign descriptor.
+     */
+    static ForeignDescriptor wrap(Object descriptor, Consumer<Object> disposeInstance) {
+        return new ForeignDescriptorImpl(descriptor, disposeInstance);
+    }
 }
