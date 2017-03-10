@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,41 +37,59 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.media.sse.internal;
 
-import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.sse.Sse;
 
-import javax.annotation.Priority;
+import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
-import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.media.sse.SseFeature;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.inject.AbstractRequestDerivedValueSupplier;
+import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
+import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
+import org.glassfish.jersey.server.model.Parameter;
 
 /**
- * Jersey {@link org.glassfish.jersey.internal.spi.AutoDiscoverable} responsible for registering {@link SseFeature}.
+ * {@link org.glassfish.jersey.server.spi.internal.ValueSupplierProvider} for binding {@link Sse} to its implementation.
  *
- * If this feature is not already registered and the property
- * {@link org.glassfish.jersey.media.sse.SseFeature#DISABLE_SSE} is not set to {@code true}, the {@code SseFeature}
- * will be automatically registered.
- *
- * @author Libor Kramolis (libor.kramolis at oracle.com)
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
-public final class SseAutoDiscoverable implements ForcedAutoDiscoverable {
+public class SseValueSupplierProvider extends AbstractValueSupplierProvider {
+
+    /**
+     * Constructor.
+     *
+     * @param mpep            multivalued map parameter extractor provider.
+     * @param requestProvider request provider.
+     */
+    public SseValueSupplierProvider(final MultivaluedParameterExtractorProvider mpep,
+                                    final Provider<ContainerRequest> requestProvider) {
+        super(mpep, requestProvider, Parameter.Source.CONTEXT);
+    }
+
     @Override
-    public void configure(final FeatureContext context) {
-        final Configuration config = context.getConfiguration();
-        if (context.getConfiguration().isRegistered(SseFeature.class)) {
-            return;
+    protected AbstractRequestDerivedValueSupplier<Sse> createValueSupplier(final Parameter parameter,
+                                                                           final Provider<ContainerRequest> requestProvider) {
+        if (parameter == null) {
+            return null;
         }
 
-        if (!PropertiesHelper.getValue(
-                config.getProperties(), config.getRuntimeType(), SseFeature.DISABLE_SSE, Boolean.FALSE, Boolean.class, null)) {
-            context.register(SseFeature.class);
+        final Class<?> rawParameterType = parameter.getRawType();
+        if (rawParameterType == Sse.class) {
+            return new SseValueSupplier(requestProvider);
+        }
+        return null;
+    }
+
+    private static final class SseValueSupplier extends AbstractRequestDerivedValueSupplier<Sse> {
+
+        SseValueSupplier(final Provider<ContainerRequest> requestProvider) {
+            super(requestProvider);
+        }
+
+        @Override
+        public Sse get() {
+            return JerseySse.getInstance();
         }
     }
 }

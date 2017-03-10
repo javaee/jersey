@@ -60,6 +60,7 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.sse.SseEventSink;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -108,8 +109,18 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
         checkParameters(method);
 
         if ("GET".equals(method.getHttpMethod())) {
+            final long eventSinkCount = invocable.getParameters()
+                    .stream()
+                    .filter(parameter -> SseEventSink.class.equals(parameter.getRawType()))
+                    .count();
+
+            final boolean isSse = eventSinkCount > 0;
+
+            if (eventSinkCount > 1) {
+                Errors.warning(method, LocalizationMessages.MULTIPLE_EVENT_SINK_INJECTION(invocable.getHandlingMethod()));
+            }
             // ensure GET returns non-void value if not suspendable
-            if (void.class == invocable.getHandlingMethod().getReturnType() && !method.isSuspendDeclared()) {
+            if (void.class == invocable.getHandlingMethod().getReturnType() && !method.isSuspendDeclared() && !isSse) {
                 Errors.hint(method, LocalizationMessages.GET_RETURNS_VOID(invocable.getHandlingMethod()));
             }
 
@@ -123,6 +134,10 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
                     Errors.fatal(method, LocalizationMessages.GET_CONSUMES_FORM_PARAM(invocable.getHandlingMethod()));
                     break;
                 }
+            }
+
+            if (isSse && void.class != invocable.getHandlingMethod().getReturnType()) {
+                Errors.fatal(method, LocalizationMessages.EVENT_SINK_RETURNS_TYPE(invocable.getHandlingMethod()));
             }
         }
 
@@ -198,6 +213,10 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
                 }
             }
         }
+    }
+
+    private boolean isSseInjected(final Invocable invocable) {
+        return invocable.getParameters().stream().anyMatch(parameter -> SseEventSink.class.equals(parameter.getRawType()));
     }
 
     private static final Set<Class> PARAM_ANNOTATION_SET = createParamAnnotationSet();

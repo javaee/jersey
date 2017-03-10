@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ import java.lang.reflect.Type;
 
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.sse.OutboundSseEvent;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
@@ -52,7 +53,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public final class OutboundEvent {
+public final class OutboundEvent implements OutboundSseEvent {
 
     private final String name;
     private final String comment;
@@ -65,7 +66,7 @@ public final class OutboundEvent {
     /**
      * Used for creating {@link OutboundEvent} instances.
      */
-    public static class Builder {
+    public static class Builder implements OutboundSseEvent.Builder {
 
         private String name;
         private String comment;

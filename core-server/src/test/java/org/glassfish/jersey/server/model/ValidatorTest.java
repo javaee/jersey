@@ -67,6 +67,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.sse.SseEventSink;
 
 import javax.inject.Singleton;
 
@@ -219,6 +221,22 @@ public class ValidatorTest {
         }
     }
 
+    @Singleton
+    @Path("sseEventSinkWithReturnType")
+    public static class TestSseEventSinkValidations {
+        @Path("notVoid")
+        @GET
+        public SseEventSink nonVoidReturnType(@Context SseEventSink eventSink) {
+            return eventSink;
+        }
+
+        @Path("multiple")
+        @GET
+        public void multipleInjection(@Context SseEventSink firstSink, @Context SseEventSink secondSink) {
+            // do nothing
+        }
+    }
+
     @Path("rootRelaxedParser")
     @Produces(" a/b, c/d ")
     @Consumes({"e/f,g/h", " i/j"})
@@ -245,6 +263,14 @@ public class ValidatorTest {
         List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectFieldsForSingleton.class);
         assertTrue(!issues.isEmpty());
         assertEquals(6, issues.size());
+    }
+
+    @Test
+    public void testCantReturnFromEventSinkInjectedMethod() {
+        LOGGER.info("An issue should be reported if method with injected SseEventSink parameter does not return void.");
+        final List<ResourceModelIssue> issues = testResourceValidation(TestSseEventSinkValidations.class);
+        assertTrue(!issues.isEmpty());
+        assertEquals(2, issues.size());
     }
 
 
