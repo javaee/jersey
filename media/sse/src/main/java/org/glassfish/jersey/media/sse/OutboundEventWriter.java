@@ -132,6 +132,9 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
                     outboundEvent.getMediaType() == null ? MediaType.TEXT_PLAIN_TYPE : outboundEvent.getMediaType();
             final MessageBodyWriter messageBodyWriter = workersProvider.get().getMessageBodyWriter(outboundEvent.getType(),
                     outboundEvent.getGenericType(), annotations, eventMediaType);
+            if (outboundEvent.getHeaders() != null && !outboundEvent.getHeaders().isEmpty()) {
+                httpHeaders.putAll(outboundEvent.getHeaders());
+            }
             messageBodyWriter.writeTo(
                     outboundEvent.getData(),
                     outboundEvent.getType(),

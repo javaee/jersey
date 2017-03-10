@@ -40,10 +40,14 @@
 package org.glassfish.jersey.media.sse;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
@@ -150,5 +154,16 @@ public class OutboundEventTest {
         assertEquals(ArrayList.class, ReflectionHelper.erasure(event.getGenericType()));
         assertEquals(new GenericEntity<ArrayList<String>>(new ArrayList<String>()) {
         }.getType(), event.getGenericType());
+    }
+
+    @Test
+    public void testHeaders() throws Exception {
+        OutboundEvent event;
+
+        MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>(1);
+        headers.put("Access-Control-Allow-Origin", Collections.singletonList("*"));
+        event = new OutboundEvent.Builder().headers(headers).build();
+
+        assertEquals(headers, event.getHeaders());
     }
 }

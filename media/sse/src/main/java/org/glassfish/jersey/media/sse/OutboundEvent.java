@@ -43,6 +43,7 @@ import java.lang.reflect.Type;
 
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
@@ -61,6 +62,7 @@ public final class OutboundEvent {
     private final MediaType mediaType;
     private final Object data;
     private final long reconnectDelay;
+    private final MultivaluedMap<String, Object> eventHeaders;
 
     /**
      * Used for creating {@link OutboundEvent} instances.
@@ -74,6 +76,7 @@ public final class OutboundEvent {
         private GenericType type;
         private Object data;
         private MediaType mediaType = MediaType.TEXT_PLAIN_TYPE;
+        private MultivaluedMap<String, Object> eventHeaders;
 
         /**
          * Set event name.
@@ -241,6 +244,22 @@ public final class OutboundEvent {
         }
 
         /**
+         * Set any additional headers to be attached to the event.
+         *
+         * @param eventHeaders HTTP headers to add
+         * @return updated builder instance.
+         * @throws NullPointerException in case the {@code eventHeaders} parameter is {@code null}.
+         */
+        public Builder headers(MultivaluedMap<String, Object> eventHeaders) {
+            if (eventHeaders == null) {
+                throw new NullPointerException(LocalizationMessages.OUT_EVENT_DATA_NULL());
+            }
+
+            this.eventHeaders = eventHeaders;
+            return this;
+        }
+
+        /**
          * Build {@link OutboundEvent}.
          * <p>
          * There are two valid configurations:
@@ -261,7 +280,7 @@ public final class OutboundEvent {
                 throw new IllegalStateException(LocalizationMessages.OUT_EVENT_NOT_BUILDABLE());
             }
 
-            return new OutboundEvent(name, id, reconnectDelay, type, mediaType, data, comment);
+            return new OutboundEvent(name, id, reconnectDelay, type, mediaType, data, comment, eventHeaders);
         }
     }
 
@@ -282,7 +301,8 @@ public final class OutboundEvent {
                   final GenericType type,
                   final MediaType mediaType,
                   final Object data,
-                  final String comment) {
+                  final String comment,
+                  final MultivaluedMap<String, Object> eventHeaders) {
         this.name = name;
         this.comment = comment;
         this.id = id;
@@ -290,6 +310,7 @@ public final class OutboundEvent {
         this.type = type;
         this.mediaType = mediaType;
         this.data = data;
+        this.eventHeaders = eventHeaders;
     }
 
     /**
@@ -408,5 +429,9 @@ public final class OutboundEvent {
      */
     public Object getData() {
         return data;
+    }
+
+    public MultivaluedMap<String, Object> getHeaders() {
+        return eventHeaders;
     }
 }
