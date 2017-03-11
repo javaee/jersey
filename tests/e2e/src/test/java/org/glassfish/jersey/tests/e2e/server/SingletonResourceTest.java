@@ -53,12 +53,11 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.PerLookup;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.test.JerseyTest;
-
-import org.glassfish.hk2.api.PerLookup;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;

@@ -52,8 +52,6 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
 
-import org.glassfish.hk2.api.PerLookup;
-
 import org.junit.Test;
 import static org.junit.Assert.assertSame;
 
@@ -120,14 +118,14 @@ public class ReferencingFactoryTest extends AbstractBinder {
 
     @Override
     protected void configure() {
-        bindFactory(FooReferencingFactory.class).to(Foo.class).in(PerLookup.class);
-        bindFactory(ReferencingFactory.<Foo>referenceFactory()).to(new GenericType<Ref<Foo>>() {}).in(Singleton.class);
+        bindFactory(FooReferencingFactory.class).to(Foo.class);
+        bindFactory(ReferencingFactory.referenceFactory()).to(new GenericType<Ref<Foo>>() {}).in(Singleton.class);
 
-        bindFactory(ListOfIntegerReferencingFactory.class).to(new GenericType<List<Integer>>() {}).in(PerLookup.class);
-        bindFactory(ReferencingFactory.<List<Integer>>referenceFactory()).to(new GenericType<Ref<List<Integer>>>() {
+        bindFactory(ListOfIntegerReferencingFactory.class).to(new GenericType<List<Integer>>() {});
+        bindFactory(ReferencingFactory.referenceFactory()).to(new GenericType<Ref<List<Integer>>>() {
         }).in(Singleton.class);
 
-        bindFactory(ListOfStringReferencingFactory.class).to(new GenericType<List<String>>() {}).in(PerLookup.class);
+        bindFactory(ListOfStringReferencingFactory.class).to(new GenericType<List<String>>() {});
         bindFactory(ReferencingFactory.referenceFactory(expectedStrings)).to(new GenericType<Ref<List<String>>>() {
         }).in(Singleton.class);
     }

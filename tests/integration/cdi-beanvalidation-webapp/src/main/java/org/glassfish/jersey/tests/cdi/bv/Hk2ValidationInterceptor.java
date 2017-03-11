@@ -58,8 +58,6 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.spi.ValidationInterceptorContext;
 
-import org.glassfish.hk2.api.PerLookup;
-
 /**
  * HK2 managed validation interceptor.
  */
@@ -78,7 +76,7 @@ public class Hk2ValidationInterceptor implements ValidationInterceptor {
         @Override
         protected void configure() {
             bindFactory(ValidationInterceptorFactory.class, Singleton.class)
-                    .to(ValidationInterceptor.class).in(PerLookup.class);
+                    .to(ValidationInterceptor.class);
         }
 
     }

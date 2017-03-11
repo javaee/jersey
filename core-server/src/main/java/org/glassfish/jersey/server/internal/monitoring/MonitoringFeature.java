@@ -61,8 +61,6 @@ import org.glassfish.jersey.server.monitoring.ApplicationInfo;
 import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
 
-import org.glassfish.hk2.api.PerLookup;
-
 /**
  * Feature that enables calculating of {@link MonitoringStatistics monitoring statistics} and
  * optionally also enables exposure of monitoring MBeans.
@@ -138,7 +136,7 @@ public final class MonitoringFeature implements Feature {
                             .in(Singleton.class);
 
                     bindFactory(ApplicationInfoInjectionFactory.class)
-                            .to(ApplicationInfo.class).in(PerLookup.class);
+                            .to(ApplicationInfo.class);
                 }
             });
         }
@@ -152,7 +150,7 @@ public final class MonitoringFeature implements Feature {
                             .to(new GenericType<Ref<MonitoringStatistics>>() { })
                             .in(Singleton.class);
 
-                    bindFactory(StatisticsInjectionFactory.class).to(MonitoringStatistics.class).in(PerLookup.class);
+                    bindFactory(StatisticsInjectionFactory.class).to(MonitoringStatistics.class);
 
                     bind(StatisticsListener.class).to(MonitoringStatisticsListener.class).in(Singleton.class);
                 }

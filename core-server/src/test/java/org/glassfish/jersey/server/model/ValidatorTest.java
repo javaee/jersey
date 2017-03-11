@@ -75,6 +75,7 @@ import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.PerLookup;
 import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
@@ -86,8 +87,6 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-
-import org.glassfish.hk2.api.PerLookup;
 
 import org.junit.Ignore;
 import org.junit.Test;

@@ -59,8 +59,6 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
 
-import org.glassfish.hk2.api.PerLookup;
-
 /**
  * Class used for registration of the custom providers into injection manager.
  * <p>
