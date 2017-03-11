@@ -53,11 +53,10 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.PerLookup;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
-
-import org.glassfish.hk2.api.PerLookup;
 
 /**
  * Jersey implementation of JAX-RS {@link javax.ws.rs.ext.Providers} contract.

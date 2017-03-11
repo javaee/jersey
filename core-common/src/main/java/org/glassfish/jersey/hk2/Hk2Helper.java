@@ -54,6 +54,7 @@ import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.internal.inject.DisposableSupplier;
 import org.glassfish.jersey.internal.inject.InjectionResolverBinding;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
+import org.glassfish.jersey.internal.inject.PerLookup;
 import org.glassfish.jersey.internal.inject.SupplierClassBinding;
 import org.glassfish.jersey.internal.inject.SupplierInstanceBinding;
 
@@ -232,7 +233,7 @@ class Hk2Helper {
                 }
             });
             binding.getQualifiers().forEach(supplierBuilder::qualifiedBy);
-            supplierBuilder.in(binding.getSupplierScope());
+            supplierBuilder.in(replaceScope(binding.getSupplierScope()));
             binder.bind(supplierBuilder);
 
             // Register wrapper for factory functionality, wrapper automatically call service locator which is able to retrieve
@@ -257,7 +258,7 @@ class Hk2Helper {
         builder.named(binding.getName());
         binding.getContracts().forEach(builder::to);
         binding.getQualifiers().forEach(builder::qualifiedBy);
-        builder.in(binding.getScope());
+        builder.in(replaceScope(binding.getScope()));
 
         if (binding.getRank() != null) {
             builder.ranked(binding.getRank());
@@ -277,7 +278,7 @@ class Hk2Helper {
                 .analyzeWith(desc.getAnalyzer());
 
         if (desc.getScope() != null) {
-            binding.in(desc.getScope());
+            binding.in(replaceScope(desc.getScope()));
         }
 
         if (desc.getRank() != null) {
@@ -401,5 +402,12 @@ class Hk2Helper {
                 bindConsumer.accept(this);
             }
         };
+    }
+
+    private static Class<? extends Annotation> replaceScope(Class<? extends Annotation> scope) {
+        if (scope == PerLookup.class) {
+            return org.glassfish.hk2.api.PerLookup.class;
+        }
+        return scope;
     }
 }

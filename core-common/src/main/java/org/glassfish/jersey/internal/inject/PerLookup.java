@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,39 +37,28 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spring.test;
 
-import javax.inject.Singleton;
+package org.glassfish.jersey.internal.inject;
 
-import org.glassfish.jersey.internal.inject.PerLookup;
-import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.server.ResourceConfig;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-import org.glassfish.hk2.utilities.BuilderHelper;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import javax.inject.Scope;
 
-class TestUtil {
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-    public static ResourceConfig registerHK2Services(final ResourceConfig rc) {
-        rc
-                .register(new AbstractBinder() {
-                    @Override
-                    protected void configure() {
-                        bind(BuilderHelper.link(HK2ServiceSingleton.class).in(Singleton.class).build());
-                    }
-                })
-                .register(new AbstractBinder() {
-                    @Override
-                    protected void configure() {
-                        bind(BuilderHelper.link(HK2ServiceRequestScoped.class).in(RequestScoped.class).build());
-                    }
-                })
-                .register(new AbstractBinder() {
-                    @Override
-                    protected void configure() {
-                        bind(BuilderHelper.link(HK2ServicePerLookup.class).in(PerLookup.class).build());
-                    }
-                });
-        return rc;
-    }
+/**
+ * PerLookup is the scope for objects that are created every time they are looked up. PerLookup objects
+ * will be destroyed whenever a service containing them is destroyed.
+ *
+ * @author John Wells (john.wells at oracle.com)
+ */
+@Documented
+@Retention(RUNTIME)
+@Scope
+@Target({ TYPE, METHOD })
+public @interface PerLookup {
 }

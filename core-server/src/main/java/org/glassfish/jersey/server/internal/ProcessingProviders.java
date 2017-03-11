@@ -62,8 +62,6 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 
-import org.glassfish.hk2.api.PerLookup;
-
 /**
  * Injectable encapsulating class containing processing providers like filters, interceptors,
  * name bound providers, dynamic features.
@@ -337,7 +335,7 @@ public class ProcessingProviders {
         @Override
         protected void configure() {
 
-            bindFactory(ProcessingProvidersReferencingFactory.class).to(ProcessingProviders.class).in(PerLookup.class);
+            bindFactory(ProcessingProvidersReferencingFactory.class).to(ProcessingProviders.class);
             bindFactory(ReferencingFactory.<ProcessingProviders>referenceFactory())
                     .to(new GenericType<Ref<ProcessingProviders>>() {
                     }).in(Singleton.class);

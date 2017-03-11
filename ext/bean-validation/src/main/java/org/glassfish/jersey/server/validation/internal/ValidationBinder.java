@@ -79,8 +79,6 @@ import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.validation.ValidationConfig;
 
-import org.glassfish.hk2.api.PerLookup;
-
 /**
  * Bean Validation provider injection binder.
  *
@@ -97,7 +95,7 @@ public final class ValidationBinder extends AbstractBinder {
         bindFactory(DefaultValidatorFactoryProvider.class, Singleton.class).to(ValidatorFactory.class).in(Singleton.class);
         bindFactory(DefaultValidatorProvider.class, Singleton.class).to(Validator.class).in(Singleton.class);
 
-        bindFactory(ConfiguredValidatorProvider.class, Singleton.class).to(ConfiguredValidator.class).in(PerLookup.class);
+        bindFactory(ConfiguredValidatorProvider.class, Singleton.class).to(ConfiguredValidator.class);
 
         // Custom Exception Mapper and Writer - registering in binder to make possible for users register their own providers.
         bind(ValidationExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class);

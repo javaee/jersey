@@ -48,9 +48,8 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.PerLookup;
 import org.glassfish.jersey.process.internal.RequestScoped;
-
-import org.glassfish.hk2.api.PerLookup;
 
 /**
  * JAX-RS application class for configuring injectable services in HK2 registry for testing purposes.
