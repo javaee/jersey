@@ -55,6 +55,7 @@ import org.glassfish.jersey.internal.inject.DisposableSupplier;
 import org.glassfish.jersey.internal.inject.InjectionResolverBinding;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.PerLookup;
+import org.glassfish.jersey.internal.inject.PerThread;
 import org.glassfish.jersey.internal.inject.SupplierClassBinding;
 import org.glassfish.jersey.internal.inject.SupplierInstanceBinding;
 
@@ -233,7 +234,7 @@ class Hk2Helper {
                 }
             });
             binding.getQualifiers().forEach(supplierBuilder::qualifiedBy);
-            supplierBuilder.in(replaceScope(binding.getSupplierScope()));
+            supplierBuilder.in(transformScope(binding.getSupplierScope()));
             binder.bind(supplierBuilder);
 
             // Register wrapper for factory functionality, wrapper automatically call service locator which is able to retrieve
@@ -258,7 +259,7 @@ class Hk2Helper {
         builder.named(binding.getName());
         binding.getContracts().forEach(builder::to);
         binding.getQualifiers().forEach(builder::qualifiedBy);
-        builder.in(replaceScope(binding.getScope()));
+        builder.in(transformScope(binding.getScope()));
 
         if (binding.getRank() != null) {
             builder.ranked(binding.getRank());
@@ -278,7 +279,7 @@ class Hk2Helper {
                 .analyzeWith(desc.getAnalyzer());
 
         if (desc.getScope() != null) {
-            binding.in(replaceScope(desc.getScope()));
+            binding.in(transformScope(desc.getScope()));
         }
 
         if (desc.getRank() != null) {
@@ -404,9 +405,17 @@ class Hk2Helper {
         };
     }
 
-    private static Class<? extends Annotation> replaceScope(Class<? extends Annotation> scope) {
+    /**
+     * Transforms Jersey scopes/annotations to HK2 equivalents.
+     *
+     * @param scope Jersey scope/annotation.
+     * @return HK2 equivalent scope/annotation.
+     */
+    private static Class<? extends Annotation> transformScope(Class<? extends Annotation> scope) {
         if (scope == PerLookup.class) {
             return org.glassfish.hk2.api.PerLookup.class;
+        } else if (scope == PerThread.class) {
+            return org.glassfish.hk2.api.PerThread.class;
         }
         return scope;
     }

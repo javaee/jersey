@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,43 +37,29 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jaxb.internal;
 
-import javax.ws.rs.core.Configuration;
+package org.glassfish.jersey.internal.inject;
 
-import javax.inject.Inject;
-import javax.xml.parsers.SAXParserFactory;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import javax.inject.Scope;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
+ * PerThread is a scope that operates like {@link javax.inject.Singleton} scope, except on a per-thread basis. The lifecycle of
+ * the service is determined by the thread it is on. On a single thread only one of the service will be created, but a new
+ * service will be created for each thread.
  *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula
+ * @author John Wells (john.wells at oracle.com)
  */
-public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory<SAXParserFactory> {
-
-    /**
-     * Create new SAX parser factory provider.
-     *
-     * @param config Jersey configuration properties.
-     */
-    // TODO This provider should be registered and configured via a feature.
-    @Inject
-    public SaxParserFactoryInjectionProvider(final Configuration config) {
-        super(config);
-    }
-
-    @Override
-    public SAXParserFactory get() {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-
-        factory.setNamespaceAware(true);
-
-        if (!isXmlSecurityDisabled()) {
-            factory = new SecureSaxParserFactory(factory);
-        }
-
-        return factory;
-    }
+@Documented
+@Retention(RUNTIME)
+@Scope
+@Target({ TYPE, METHOD })
+public @interface PerThread {
 }

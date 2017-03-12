@@ -44,8 +44,6 @@ import javax.ws.rs.core.Configuration;
 import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.glassfish.hk2.api.PerThread;
-
 /**
  * Thread-scoped injection provider of {@link DocumentBuilderFactory document
  * builder factories}.
@@ -67,7 +65,6 @@ public class DocumentBuilderFactoryInjectionProvider extends AbstractXmlFactory<
     }
 
     @Override
-    @PerThread
     public DocumentBuilderFactory get() {
         DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 
