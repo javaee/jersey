@@ -63,8 +63,7 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
-
-import org.glassfish.hk2.api.PerThread;
+import org.glassfish.jersey.internal.inject.PerThread;
 
 import org.junit.Before;
 import org.junit.Test;

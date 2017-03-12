@@ -50,8 +50,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.transform.TransformerFactory;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-
-import org.glassfish.hk2.api.PerThread;
+import org.glassfish.jersey.internal.inject.PerThread;
 
 /**
  * Binder for JAX-B message body workers.
