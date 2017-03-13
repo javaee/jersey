@@ -55,9 +55,9 @@ import java.util.List;
 public interface InjectionManager {
 
     /**
-     * This will initialize the {@code InjectionManager} and underlying DI provider. The method may get the array of binders to
+     * Initializes {@code InjectionManager} and underlying DI provider. The method may get the array of binders to
      * register {@link Binding} them during initialization process. {@code name} and {@code parent} are not required parameters
-     * and can be null without the initialization exception.
+     * and can be {@code null} without the initialization exception.
      *
      * @param name    Name of the injection manager.
      * @param parent  Parent object of the underlying DI provider on which new injection manager should be dependent. A specific
@@ -68,12 +68,36 @@ public interface InjectionManager {
     void initialize(String name, Object parent, Binder... binders);
 
     /**
-     * This will shutdown the entire injection manager and underlying DI provider along with injected executors and schedulers.
+     * Initializes {@code InjectionManager} and underlying DI provider. The method may get the array of binders to
+     * register {@link Binding} them during initialization process. {@code parent} is not required parameters and can be
+     * {@code null} without the initialization exception.
+     *
+     * @param parent  Parent object of the underlying DI provider on which new injection manager should be dependent. A specific
+     *                DI provider checks whether the parent object is in the proper type of underlying service storage or
+     *                a proper implementation of {@link InjectionManager}.
+     * @param binders Binders with descriptions to include them during initialization process.
+     */
+    default void initialize(Object parent, Binder... binders) {
+        initialize(null, parent, binders);
+    }
+
+    /**
+     * Initializes {@code InjectionManager} and underlying DI provider. The method may get the array of binders to
+     * register {@link Binding} them during initialization process.
+
+     * @param binders Binders with descriptions to include them during initialization process.
+     */
+    default void initialize(Binder... binders) {
+        initialize(null, null, binders);
+    }
+
+    /**
+     * Shuts down the entire {@link InjectionManager}and underlying DI provider along with injected executors and schedulers.
      */
     void shutdown();
 
     /**
-     * This will register one bean represented using fields in the provided descriptor. The final bean can be direct bean or
+     * Registers one bean represented using fields in the provided descriptor. The final bean can be direct bean or
      * factory object which will create the bean at the time of injection. {@code InjectionManager} is able to register a bean
      * represented by a class or direct instance.
      *
@@ -86,7 +110,7 @@ public interface InjectionManager {
     void register(Binding binding);
 
     /**
-     * This will register a collection of beans represented using fields in the provided descriptors. The final bean can be
+     * Registers a collection of beans represented using fields in the provided descriptors. The final bean can be
      * direct bean or factory object which will create the bean at the time of injection. {@code InjectionManager} is able to
      * register a bean represented by a class or direct instance.
      *
@@ -99,7 +123,7 @@ public interface InjectionManager {
     void register(Iterable<Binding> descriptors);
 
     /**
-     * This will register beans which are included in {@link Binder}. {@code Binder} can contains all descriptors extending
+     * Registers beans which are included in {@link Binder}. {@code Binder} can contains all descriptors extending
      * {@link Binding} or other binders which are installed together in tree-structure. This method will get all descriptors
      * bound in the given binder and register them in the order how the binders are installed together. In the tree structure,
      * the deeper on the left side will be processed first.
@@ -113,20 +137,26 @@ public interface InjectionManager {
     void register(Binder binder);
 
     /**
-     * Register a HK2 Binder.
+     * Registers a provider. An implementation of the {@link InjectionManager} should test whether the type of the object can be
+     * registered using the method {@link #isRegistrable(Class)}. Then a caller has an certainty that the instance of the tested
+     * class can be registered in {@code InjectionManager}. If {@code InjectionManager} is not able to register the provider
+     * then {@link IllegalArgumentException} is thrown.
      *
-     * For compatibility reasons only, to be removed.
-     *
-     * @param binder collection of descriptors.
-     * @see ClassBinding
-     * @see InstanceBinding
-     * @see SupplierClassBinding
-     * @see SupplierInstanceBinding
+     * @param provider object that can be registered in {@code InjectionManager}.
+     * @throws IllegalArgumentException provider cannot be registered.
      */
-    void register(org.glassfish.hk2.utilities.Binder... binder);
+    void register(Object provider);
 
     /**
-     * This method creates, injects and post-constructs an object with the given class. This is equivalent to calling the
+     * Tests whether the provided {@code clazz} can be registered by the implementation of the {@link InjectionManager}.
+     *
+     * @param clazz type that is tested whether is registrable by the implementation of {@code InjectionManager}.
+     * @return {@code true} if the {@code InjectionManager} is able to register this type.
+     */
+    boolean isRegistrable(Class<?> clazz);
+
+    /**
+     * Creates, injects and post-constructs an object with the given class. This is equivalent to calling the
      * {@code create-class} method followed by the {@code inject-class} method followed by the {@code post-construct} method.
      * <p>
      * The object created is not managed by the injection manager.
@@ -234,7 +264,7 @@ public interface InjectionManager {
     <T> List<T> getAllInstances(Type contractOrImpl);
 
     /**
-     * This will analyze the given object and inject into its fields and methods.
+     * Analyzes the given object and inject into its fields and methods.
      * The object injected in this way will not be managed by HK2
      *
      * @param injectMe The object to be analyzed and injected into
@@ -251,7 +281,7 @@ public interface InjectionManager {
     void inject(Object injectMe, String classAnalyzer);
 
     /**
-     * This will analyze the given object and call the preDestroy method. The object given will not be managed by bean manager.
+     * Analyzes the given object and call the preDestroy method. The object given will not be managed by bean manager.
      *
      * @param preDestroyMe The object to preDestroy
      */

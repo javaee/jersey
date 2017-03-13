@@ -123,7 +123,6 @@ public final class Providers {
         interfaces.putAll(JAX_RS_PROVIDER_INTERFACE_WHITELIST);
         interfaces.put(javax.ws.rs.core.Feature.class, ProviderRuntime.BOTH);
         interfaces.put(Binder.class, ProviderRuntime.BOTH);
-        interfaces.put(org.glassfish.hk2.utilities.Binder.class, ProviderRuntime.BOTH);
         return interfaces;
     }
 
