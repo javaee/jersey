@@ -192,6 +192,11 @@ public class HK2InjectionManager implements InjectionManager {
     }
 
     @Override
+    public void register(org.glassfish.hk2.utilities.Binder... binder) {
+        ServiceLocatorUtilities.bind(locator, binder);
+    }
+
+    @Override
     public <U> U createAndInitialize(Class<U> clazz) {
         return locator.createAndInitialize(clazz);
     }

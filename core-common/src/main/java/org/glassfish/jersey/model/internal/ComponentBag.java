@@ -118,6 +118,16 @@ public class ComponentBag {
     public static final Predicate<ContractProvider> BINDERS_ONLY = model -> model.getContracts().contains(Binder.class);
 
     /**
+     * A filtering strategy that includes only models that contain HK2 Binder provider contract.
+     * <p>
+     * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
+     * that represent a provider registered to provide {@link Binder} contract.
+     * </p>
+     */
+    public static final Predicate<ContractProvider> HK2_BINDERS_ONLY =
+            model -> model.getContracts().contains(org.glassfish.hk2.utilities.Binder.class);
+
+    /**
      * A filtering strategy that excludes models with no recognized contracts.
      * <p>
      * This filter predicate returns {@code false} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}

@@ -113,6 +113,19 @@ public interface InjectionManager {
     void register(Binder binder);
 
     /**
+     * Register a HK2 Binder.
+     *
+     * For compatibility reasons only, to be removed.
+     *
+     * @param binder collection of descriptors.
+     * @see ClassBinding
+     * @see InstanceBinding
+     * @see SupplierClassBinding
+     * @see SupplierInstanceBinding
+     */
+    void register(org.glassfish.hk2.utilities.Binder... binder);
+
+    /**
      * This method creates, injects and post-constructs an object with the given class. This is equivalent to calling the
      * {@code create-class} method followed by the {@code inject-class} method followed by the {@code post-construct} method.
      * <p>
