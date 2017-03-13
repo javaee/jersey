@@ -76,6 +76,7 @@
         <module>freemarker-webapp</module>
         <module>flight-mgmt-webapp</module>
         <module>groovy</module>
+        <module>guice-integration</module>
         <module>helloworld</module>
         <module>helloworld-benchmark</module>
         <module>helloworld-netty</module>
