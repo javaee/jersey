@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -219,6 +219,10 @@
 
     <!-- remove jetty-maven-plugin -->
     <xsl:template match="pom:plugin[pom:artifactId='jetty-maven-plugin']">
+    </xsl:template>
+
+    <!-- remove failsafe plugin (integration testing not possible without jetty/other container) -->
+    <xsl:template match="pom:plugin[pom:artifactId='maven-failsafe-plugin']">
     </xsl:template>
 
     <xsl:template match="comment()">
