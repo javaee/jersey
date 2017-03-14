@@ -61,6 +61,8 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ext.ExceptionMapper;
+
 import javax.annotation.Priority;
 import javax.ejb.Local;
 import javax.ejb.Remote;
@@ -68,9 +70,9 @@ import javax.inject.Singleton;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.Bindings;
-import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -300,11 +302,12 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
     }
 
     private void registerEjbExceptionMapper() {
-        ClassBinding<EjbExceptionMapper> descriptor =
-                Bindings.serviceAsContract(EjbExceptionMapper.class)
-                    .in(Singleton.class);
-
-        injectionManager.register(descriptor);
+        injectionManager.register(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(EjbExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class);
+            }
+        });
     }
 
     private boolean isEjbComponent(Class<?> component) {
