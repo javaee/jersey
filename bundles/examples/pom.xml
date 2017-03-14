@@ -511,21 +511,6 @@
             <classifier>project-src</classifier>
             <type>zip</type>
         </dependency>
-        <!--Uncomment as soon as we build Jersey with Java8 by default-->
-        <!--<dependency>-->
-            <!--<groupId>org.glassfish.jersey.examples</groupId>-->
-            <!--<artifactId>rx-client-java8-webapp</artifactId>-->
-            <!--<version>${project.version}</version>-->
-            <!--<classifier>project-src</classifier>-->
-            <!--<type>zip</type>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>org.glassfish.jersey.examples</groupId>-->
-            <!--<artifactId>rx-client-java8-webapp</artifactId>-->
-            <!--<version>${project.version}</version>-->
-            <!--<classifier>gf-project-src</classifier>-->
-            <!--<type>zip</type>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>rx-client-webapp</artifactId>
