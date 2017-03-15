@@ -40,10 +40,7 @@
 
 package org.glassfish.jersey.media.sse.internal;
 
-import java.util.function.Supplier;
-
 import javax.ws.rs.sse.Sse;
-
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -56,16 +53,8 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 public class SseBinder extends AbstractBinder {
     @Override
     protected void configure() {
-        bindFactory(SseFactory.class)
+        bind(JerseySse.class)
                 .to(Sse.class)
                 .in(Singleton.class);
-
-    }
-
-    private static class SseFactory implements Supplier<Sse> {
-        @Override
-        public Sse get() {
-            return JerseySse.getInstance();
-        }
     }
 }

@@ -723,6 +723,10 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
         return state.runtime.get();
     }
 
+    public ClientExecutor getClientExecutor() {
+        return state.runtime.get();
+    }
+
     /**
      * Get the parent Jersey client this configuration is bound to.
      *

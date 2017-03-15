@@ -41,6 +41,7 @@
 package org.glassfish.jersey.media.sse.internal;
 
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -77,6 +78,20 @@ class JerseySseBroadcaster extends JerseyPublisher<OutboundSseEvent> implements 
      * The broadcaster instance should be obtained by calling {@link Sse#newBroadcaster()}, not directly.
      */
     JerseySseBroadcaster() {
+        onExceptionListeners = new CopyOnWriteArrayList<>();
+        onCloseListeners = new CopyOnWriteArrayList<>();
+    }
+
+    /**
+     * Package-private constructor.
+     * <p>
+     * The broadcaster instance should be obtained by calling {@link Sse#newBroadcaster()}, not directly.
+     *
+     * @param executorService {@code ExecutorService} the executor to use for async delivery,
+     *                        supporting creation of at least one independent thread
+     */
+    JerseySseBroadcaster(final ExecutorService executorService) {
+        super(executorService);
         onExceptionListeners = new CopyOnWriteArrayList<>();
         onCloseListeners = new CopyOnWriteArrayList<>();
     }

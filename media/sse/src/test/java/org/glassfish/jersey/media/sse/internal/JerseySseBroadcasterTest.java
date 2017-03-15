@@ -191,7 +191,7 @@ public class JerseySseBroadcasterTest {
                 }
             });
 
-            broadcaster.broadcast(JerseySse.getInstance().newEvent("ping"));
+            broadcaster.broadcast(new JerseySse().newEvent("ping"));
             Assert.assertTrue(latch.await(2000, TimeUnit.MILLISECONDS));
         }
     }

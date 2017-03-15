@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,15 +40,20 @@
 package org.glassfish.jersey.tests.e2e.client;
 
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.sse.SseEventSource;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -56,17 +61,30 @@ import static org.junit.Assert.assertTrue;
  * @author Petr Janouch (petr.janouch at oracle.com)
  */
 public class ClientExecutorCloseTest extends JerseyTest {
+    private static CountDownLatch cdl = new CountDownLatch(2);
+    private static boolean schedulerFound = false;
 
     /**
      * Tests that closing a client shuts down a corresponding client async executor service.
      */
     @Test
-    public void testCloseAsyncExecutor() {
+    public void testCloseAsyncExecutor() throws InterruptedException {
         assertFalse(clientExecutorThreadPresent());
         target("resource").request().async().get();
-        assertTrue(clientExecutorThreadPresent());
+        final SseEventSource eventSource = SseEventSource
+                .target(target("resource/fail"))
+                .reconnectingEvery(11, TimeUnit.MILLISECONDS)
+                .build();
+        eventSource.subscribe(System.out::println);
+        eventSource.open();
+        assertTrue("Waiting for eventSource to open time-outed", cdl.await(5000, TimeUnit.MILLISECONDS));
+        assertTrue("Client async executor thread not found.", clientExecutorThreadPresent());
+        assertTrue("Scheduler thread not found.", schedulerFound);
         client().close();
-        assertFalse(clientExecutorThreadPresent());
+        assertFalse("Client async executor thread should have been already removed.",
+                clientExecutorThreadPresent());
+        assertFalse("Client background scheduler thread should have been already removed.",
+                clientSchedulerThreadPresent());
     }
 
     private boolean clientExecutorThreadPresent() {
@@ -76,7 +94,16 @@ public class ClientExecutorCloseTest extends JerseyTest {
                 return true;
             }
         }
+        return false;
+    }
 
+    private static boolean clientSchedulerThreadPresent() {
+        Set<Thread> threads = Thread.getAllStackTraces().keySet();
+        for (Thread thread : threads) {
+            if (thread.getName().contains("jersey-client-background-scheduler")) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -91,6 +118,16 @@ public class ClientExecutorCloseTest extends JerseyTest {
         @GET
         public String getHello() {
             return "Hello";
+        }
+
+        @GET
+        @Path("fail")
+        public Response fail() {
+            // should return false on first (regular) connect and true on reconnect
+            schedulerFound = clientSchedulerThreadPresent();
+            cdl.countDown();
+            // simulate unsuccessful connect attempt -> force reconnect (eventSource will submit a task into scheduler)
+            return Response.status(503).build();
         }
     }
 }

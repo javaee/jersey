@@ -75,6 +75,7 @@ public class BroadcasterTest extends JerseyTest {
 
     static final CountDownLatch closeLatch = new CountDownLatch(4);
     static final CountDownLatch txLatch = new CountDownLatch(4);
+    private static boolean isSingleton = false;
 
     @Path("sse")
     @Singleton
@@ -91,6 +92,7 @@ public class BroadcasterTest extends JerseyTest {
         @Produces(MediaType.SERVER_SENT_EVENTS)
         @Path("events")
         public void getServerSentEvents(@Context final SseEventSink eventSink, @Context final Sse sse) {
+            isSingleton = this.sse == sse;
             eventSink.onNext(sse.newEventBuilder().data("Event1").build());
             eventSink.onNext(sse.newEventBuilder().data("Event2").build());
             eventSink.onNext(sse.newEventBuilder().data("Event3").build());
@@ -207,5 +209,7 @@ public class BroadcasterTest extends JerseyTest {
                         && resultsB2.get(3).equals("secondBroadcast"));
         target().path("sse/close").request().get();
         Assert.assertTrue(closeLatch.await(3000, TimeUnit.MILLISECONDS));
+        Assert.assertTrue("Sse instances injected into resource and constructor differ. Sse should have been injected"
+                + "as a singleton", isSingleton);
     }
 }

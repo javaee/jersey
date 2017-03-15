@@ -499,7 +499,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
          * Create {@link RxInvoker} from provided {@code RxInvoker} subclass.
          * <p>
          * The method does a lookup for {@link RxInvokerProvider}, which provides given {@code RxInvoker} subclass
-         * and if found, calls {@link RxInvokerProvider#getRxInvoker(Invocation.Builder, ExecutorService)}.
+         * and if found, calls {@link RxInvokerProvider#getRxInvoker(javax.ws.rs.client.SyncInvoker, ExecutorService)}.
          *
          * @param clazz           {@code RxInvoker} subclass to be created.
          * @param executorService to be passed to the factory method invocation.
@@ -810,8 +810,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public Future<Response> submit() {
         final SettableFuture<Response> responseFuture = SettableFuture.create();
-        request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
-
+        final ClientRuntime runtime = request().getClientRuntime();
+        runtime.submit(runtime.createRunnableForAsyncProcessing(requestForCall(requestContext), new ResponseCallback() {
             @Override
             public void completed(final ClientResponse response, final RequestScope scope) {
                 if (!responseFuture.isCancelled()) {
@@ -827,7 +827,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     responseFuture.setException(error);
                 }
             }
-        });
+        }));
 
         return responseFuture;
     }
@@ -839,7 +839,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
         final SettableFuture<T> responseFuture = SettableFuture.create();
         //noinspection Duplicates
-        request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
+        final ClientRuntime runtime = request().getClientRuntime();
+        runtime.submit(runtime.createRunnableForAsyncProcessing(requestForCall(requestContext), new ResponseCallback() {
 
             @Override
             public void completed(final ClientResponse response, final RequestScope scope) {
@@ -865,7 +866,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     responseFuture.setException(error);
                 }
             }
-        });
+        }));
 
         return responseFuture;
     }
@@ -902,7 +903,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
         final SettableFuture<T> responseFuture = SettableFuture.create();
         //noinspection Duplicates
-        request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
+        final ClientRuntime runtime = request().getClientRuntime();
+        runtime.submit(runtime.createRunnableForAsyncProcessing(requestForCall(requestContext), new ResponseCallback() {
 
             @Override
             public void completed(final ClientResponse response, final RequestScope scope) {
@@ -929,7 +931,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     responseFuture.setException(error);
                 }
             }
-        });
+        }));
 
         return responseFuture;
     }
@@ -1041,7 +1043,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     }
                 }
             };
-            request().getClientRuntime().submit(requestForCall(requestContext), responseCallback);
+            final ClientRuntime runtime = request().getClientRuntime();
+            runtime.submit(runtime.createRunnableForAsyncProcessing(requestForCall(requestContext), responseCallback));
         } catch (final Throwable error) {
             final ProcessingException ce;
             //noinspection ChainOfInstanceofChecks

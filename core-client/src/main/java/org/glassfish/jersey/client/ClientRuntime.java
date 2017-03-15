@@ -41,8 +41,12 @@
 package org.glassfish.jersey.client;
 
 import java.util.Arrays;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,7 +75,7 @@ import org.glassfish.jersey.process.internal.Stages;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ClientRuntime implements JerseyClient.ShutdownHook {
+class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
 
     private static final Logger LOG = Logger.getLogger(ClientRuntime.class.getName());
 
@@ -83,6 +87,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
 
     private final RequestScope requestScope;
     private final LazyValue<ExecutorService> asyncRequestExecutor;
+    private final LazyValue<ScheduledExecutorService> backgroundScheduler;
 
     private final Iterable<ClientLifecycleListener> lifecycleListeners;
 
@@ -114,12 +119,11 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
 
         this.requestScope = injectionManager.getInstance(RequestScope.class);
 
-        this.asyncRequestExecutor = Values.lazy(new Value<ExecutorService>() {
-            @Override
-            public ExecutorService get() {
-                return injectionManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE);
-            }
-        });
+        this.asyncRequestExecutor = Values.lazy((Value<ExecutorService>) ()
+                -> injectionManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE));
+
+        this.backgroundScheduler = Values.lazy((Value<ScheduledExecutorService>) ()
+                -> injectionManager.getInstance(ScheduledExecutorService.class, ClientBackgroundSchedulerLiteral.INSTANCE));
 
         this.injectionManager = injectionManager;
         this.lifecycleListeners = Providers.getAllProviders(injectionManager, ClientLifecycleListener.class);
@@ -134,20 +138,16 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
     }
 
     /**
-     * Submit a {@link ClientRequest client request} for asynchronous processing.
+     * Prepare a {@code Runnable} to be used to submit a {@link ClientRequest client request} for asynchronous processing.
      * <p>
-     * Both, the request processing as well as response callback invocation will be executed
-     * in a context of an active {@link RequestScope.Instance request scope instance}.
-     * </p>
      *
      * @param request  client request to be sent.
      * @param callback asynchronous response callback.
+     * @return {@code Runnable} to be submitted for async processing using {@link #submit(Runnable)}.
      */
-    public void submit(final ClientRequest request, final ResponseCallback callback) {
-        submit(asyncRequestExecutor.get(), new Runnable() {
-
-            @Override
-            public void run() {
+    Runnable createRunnableForAsyncProcessing(ClientRequest request, final ResponseCallback callback) {
+        return () -> {
+            requestScope.runInScope(() -> {
                 try {
                     ClientRequest processedRequest;
                     try {
@@ -182,8 +182,33 @@ class ClientRuntime implements JerseyClient.ShutdownHook {
                 } catch (final Throwable throwable) {
                     processFailure(throwable, callback);
                 }
-            }
-        });
+            });
+        };
+    }
+
+    @Override
+    public <T> Future<T> submit(Callable<T> task) {
+        return asyncRequestExecutor.get().submit(task);
+    }
+
+    @Override
+    public Future<?> submit(Runnable task) {
+        return asyncRequestExecutor.get().submit(task);
+    }
+
+    @Override
+    public <T> Future<T> submit(Runnable task, T result) {
+        return asyncRequestExecutor.get().submit(task, result);
+    }
+
+    @Override
+    public <T> ScheduledFuture<T> schedule(Callable<T> callable, long delay, TimeUnit unit) {
+        return backgroundScheduler.get().schedule(callable, delay, unit);
+    }
+
+    @Override
+    public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+        return backgroundScheduler.get().schedule(command, delay, unit);
     }
 
     private void processResponse(final ClientResponse response, final ResponseCallback callback) {
