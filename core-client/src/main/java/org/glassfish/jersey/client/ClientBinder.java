@@ -65,6 +65,7 @@ import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.ExecutorServiceProvider;
+import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
 
 /**
  * Registers all binders necessary for {@link Client} runtime.
@@ -141,5 +142,7 @@ class ClientBinder extends AbstractBinder {
         bind(asyncThreadPoolSize).named("ClientAsyncThreadPoolSize");
         // DefaultClientAsyncExecutorProvider must be singleton scoped, so that @PreDestroy, which closes the executor, is called
         bind(DefaultClientAsyncExecutorProvider.class).to(ExecutorServiceProvider.class).in(Singleton.class);
+
+        bind(DefaultClientBackgroundSchedulerProvider.class).to(ScheduledExecutorServiceProvider.class).in(Singleton.class);
     }
 }

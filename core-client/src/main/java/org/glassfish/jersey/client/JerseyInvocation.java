@@ -801,7 +801,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     @Override
     public Future<Response> submit() {
         final CompletableFuture<Response> responseFuture = new CompletableFuture<>();
-        request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
+        final ClientRuntime runtime = request().getClientRuntime();
+        runtime.submit(runtime.createRunnableForAsyncProcessing(requestForCall(requestContext), new ResponseCallback() {
 
             @Override
             public void completed(final ClientResponse response, final RequestScope scope) {
@@ -818,7 +819,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     responseFuture.completeExceptionally(error);
                 }
             }
-        });
+        }));
 
         return responseFuture;
     }
@@ -830,7 +831,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
         final CompletableFuture<T> responseFuture = new CompletableFuture<>();
         //noinspection Duplicates
-        request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
+        final ClientRuntime runtime = request().getClientRuntime();
+        runtime.submit(runtime.createRunnableForAsyncProcessing(requestForCall(requestContext), new ResponseCallback() {
 
             @Override
             public void completed(final ClientResponse response, final RequestScope scope) {
@@ -856,7 +858,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     responseFuture.completeExceptionally(error);
                 }
             }
-        });
+        }));
 
         return responseFuture;
     }
@@ -893,7 +895,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
         final CompletableFuture<T> responseFuture = new CompletableFuture<>();
         //noinspection Duplicates
-        request().getClientRuntime().submit(requestForCall(requestContext), new ResponseCallback() {
+        final ClientRuntime runtime = request().getClientRuntime();
+        runtime.submit(runtime.createRunnableForAsyncProcessing(requestForCall(requestContext), new ResponseCallback() {
 
             @Override
             public void completed(final ClientResponse response, final RequestScope scope) {
@@ -920,7 +923,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     responseFuture.completeExceptionally(error);
                 }
             }
-        });
+        }));
 
         return responseFuture;
     }
@@ -1032,7 +1035,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     }
                 }
             };
-            request().getClientRuntime().submit(requestForCall(requestContext), responseCallback);
+            final ClientRuntime runtime = request().getClientRuntime();
+            runtime.submit(runtime.createRunnableForAsyncProcessing(requestForCall(requestContext), responseCallback));
         } catch (final Throwable error) {
             final ProcessingException ce;
             //noinspection ChainOfInstanceofChecks

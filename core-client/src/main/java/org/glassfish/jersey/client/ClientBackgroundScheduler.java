@@ -37,36 +37,35 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.client;
 
-package org.glassfish.jersey.media.sse.internal;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.util.concurrent.ExecutorService;
-
-
-import javax.ws.rs.core.Context;
-import javax.ws.rs.sse.OutboundSseEvent;
-import javax.ws.rs.sse.Sse;
-import javax.ws.rs.sse.SseBroadcaster;
-
-import org.glassfish.jersey.media.sse.OutboundEvent;
+import javax.inject.Qualifier;
 
 /**
- * Implementation of server-side injectable Server-Sent Event "context".
+ * Injection qualifier that can be used to inject an {@link java.util.concurrent.ScheduledExecutorService}
+ * instance used by Jersey client runtime to schedule background tasks.
+ * <p>
+ * The scheduled executor service instance injected using this injection qualifier can be customized
+ * by registering a custom {@link org.glassfish.jersey.spi.ScheduledExecutorServiceProvider} implementation that is itself
+ * annotated with the {@code &#64;ClientAsyncExecutor} annotation.
+ * </p>
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
+ * @see ClientBackgroundSchedulerLiteral
+ * @since 2.26
  */
-class JerseySse implements Sse {
+@Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@Qualifier
+public @interface ClientBackgroundScheduler {
 
-    @Context
-    private ExecutorService executorService;
-
-    @Override
-    public OutboundSseEvent.Builder newEventBuilder() {
-        return new OutboundEvent.Builder();
-    }
-
-    @Override
-    public SseBroadcaster newBroadcaster() {
-        return new JerseySseBroadcaster(executorService);
-    }
 }

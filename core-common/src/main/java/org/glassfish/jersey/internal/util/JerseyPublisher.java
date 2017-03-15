@@ -41,7 +41,7 @@
 package org.glassfish.jersey.internal.util;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 
@@ -71,6 +71,19 @@ public class JerseyPublisher<T> implements javax.ws.rs.Flow.Publisher<T> {
     }
 
     /**
+     * Creates a new JerseyPublisher using the given {@link Executor} for async delivery to subscribers, with the default
+     * maximum buffer size of {@value DEFAULT_BUFFER_CAPACITY}.
+     *
+     * @param executor {@code Executor} the executor to use for async delivery,
+     *                 supporting creation of at least one independent thread
+     * @throws NullPointerException     if executor is null
+     * @throws IllegalArgumentException if maxBufferCapacity not positive
+     */
+    public JerseyPublisher(final Executor executor) {
+        submissionPublisher = new SubmissionPublisher<>(executor, DEFAULT_BUFFER_CAPACITY);
+    }
+
+    /**
      * Creates a new JerseyPublisher using the {@link ForkJoinPool#commonPool()} for async delivery to subscribers
      * (unless it does not support a parallelism level of at least two, in which case, a new Thread is created to run
      * each task), with specified maximum buffer capacity.
@@ -86,22 +99,21 @@ public class JerseyPublisher<T> implements javax.ws.rs.Flow.Publisher<T> {
     }
 
     /**
-     * Creates a new JerseyPublisher using the given Executor for async delivery to subscribers, with the given
+     * Creates a new JerseyPublisher using the given {@link Executor} for async delivery to subscribers, with the given
      * maximum buffer size for each subscriber.
      *
-     * @param executorService   {@code ExecutorService} the executor to use for async delivery,
+     * @param executor          {@code Executor} the executor to use for async delivery,
      *                          supporting creation of at least one independent thread
      * @param maxBufferCapacity the maximum capacity for each
      *                          subscriber's buffer (the enforced capacity may be rounded up to
      *                          the nearest power of two and/or bounded by the largest value
      *                          supported by this implementation; method {@link #getMaxBufferCapacity}
      *                          returns the actual value)
-     *
-     * @throws NullPointerException if executor is null
+     * @throws NullPointerException     if executor is null
      * @throws IllegalArgumentException if maxBufferCapacity not positive
      */
-    public JerseyPublisher(final ExecutorService executorService, final int maxBufferCapacity) {
-        submissionPublisher = new SubmissionPublisher<>(executorService::execute, maxBufferCapacity);
+    public JerseyPublisher(final Executor executor, final int maxBufferCapacity) {
+        submissionPublisher = new SubmissionPublisher<>(executor, maxBufferCapacity);
     }
 
     @Override

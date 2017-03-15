@@ -51,7 +51,6 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.Property;
 import org.glassfish.jersey.media.sse.internal.SseBinder;
 import org.glassfish.jersey.media.sse.internal.SseEventSinkValueSupplierProvider;
-import org.glassfish.jersey.media.sse.internal.SseValueSupplierProvider;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
@@ -155,15 +154,10 @@ public class SseFeature implements Feature {
                 context.register(OutboundEventWriter.class);
                 context.register(new SseBinder());
 
-                final SseValueSupplierProvider sseSupplier = new SseValueSupplierProvider(
-                        injectionManager.getInstance(MultivaluedParameterExtractorProvider.class),
-                        Injections.getProvider(injectionManager, ContainerRequest.class));
-
                 final SseEventSinkValueSupplierProvider eventSinkSupplier = new SseEventSinkValueSupplierProvider(
                         injectionManager.getInstance(MultivaluedParameterExtractorProvider.class),
                         Injections.getProvider(injectionManager, ContainerRequest.class));
 
-                context.register(sseSupplier, ValueSupplierProvider.class);
                 context.register(eventSinkSupplier, ValueSupplierProvider.class);
                 break;
         }

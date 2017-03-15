@@ -56,6 +56,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.Sse;
 import javax.ws.rs.sse.SseEventSink;
+import javax.ws.rs.sse.SseEventSource;
 
 import javax.inject.Singleton;
 
@@ -63,6 +64,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -74,7 +76,8 @@ import static org.junit.Assert.assertTrue;
 public class SseEventSinkCloseTest extends JerseyTest {
 
     private static Logger LOGGER = Logger.getLogger(SseEventSinkCloseTest.class.getName());
-    private static SseEventSink output = null;
+    private static volatile SseEventSink output = null;
+    private static CountDownLatch openLatch = new CountDownLatch(1);
 
     @Singleton
     @Path("sse")
@@ -94,6 +97,7 @@ public class SseEventSinkCloseTest extends JerseyTest {
         @Produces(SseFeature.SERVER_SENT_EVENTS)
         public void get(@Context SseEventSink output, @Context Sse sse) {
             SseEventSinkCloseTest.output = output;
+            openLatch.countDown();
         }
     }
 
@@ -108,9 +112,10 @@ public class SseEventSinkCloseTest extends JerseyTest {
         WebTarget sseTarget = target("sse");
 
         final CountDownLatch eventLatch = new CountDownLatch(3);
-        javax.ws.rs.sse.SseEventSource eventSource = javax.ws.rs.sse.SseEventSource.target(sseTarget).build();
+        SseEventSource eventSource = SseEventSource.target(sseTarget).build();
         eventSource.subscribe((event) -> eventLatch.countDown());
         eventSource.open();
+        openLatch.await();
 
         // Tell server to send us 3 events
         for (int i = 0; i < 3; i++) {
@@ -119,9 +124,8 @@ public class SseEventSinkCloseTest extends JerseyTest {
         }
 
         // ... and wait for the events to be processed by the client side, then close the eventSource
-        assertTrue(eventLatch.await(5, TimeUnit.SECONDS));
+        assertTrue("EventLatch timed out.", eventLatch.await(5, TimeUnit.SECONDS));
         eventSource.close();
-
         assertEquals("SseEventSource should have been already closed", false, eventSource.isOpen());
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
@@ -130,9 +134,8 @@ public class SseEventSinkCloseTest extends JerseyTest {
         executor.scheduleAtFixedRate(() -> {
             if (output.isClosed()) {
                 // countdown to zero
-                for (int i = 0; i < closeLatch.getCount(); i++) {
+                while (closeLatch.getCount() > 0) {
                     closeLatch.countDown();
-                    return;
                 }
             }
             final Response response = target("sse/send").request().get();

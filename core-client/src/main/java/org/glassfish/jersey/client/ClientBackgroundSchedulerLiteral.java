@@ -37,36 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.client;
 
-package org.glassfish.jersey.media.sse.internal;
-
-import java.util.concurrent.ExecutorService;
-
-
-import javax.ws.rs.core.Context;
-import javax.ws.rs.sse.OutboundSseEvent;
-import javax.ws.rs.sse.Sse;
-import javax.ws.rs.sse.SseBroadcaster;
-
-import org.glassfish.jersey.media.sse.OutboundEvent;
+import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 
 /**
- * Implementation of server-side injectable Server-Sent Event "context".
+ * {@link ClientBackgroundScheduler} annotation literal.
+ * <p>
+ * This class provides a {@link #INSTANCE constant instance} of the {@code @ClientBackgroundScheduler} annotation to be used
+ * in method calls that require use of annotation instances.
+ * </p>
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
+ * @since 2.26
  */
-class JerseySse implements Sse {
+@SuppressWarnings("ClassExplicitlyAnnotation")
+public final class ClientBackgroundSchedulerLiteral extends AnnotationLiteral<ClientBackgroundScheduler>
+        implements ClientBackgroundScheduler {
 
-    @Context
-    private ExecutorService executorService;
+    /**
+     * An {@link ClientBackgroundScheduler} annotation instance.
+     */
+    public static final ClientBackgroundScheduler INSTANCE = new ClientBackgroundSchedulerLiteral();
 
-    @Override
-    public OutboundSseEvent.Builder newEventBuilder() {
-        return new OutboundEvent.Builder();
-    }
-
-    @Override
-    public SseBroadcaster newBroadcaster() {
-        return new JerseySseBroadcaster(executorService);
+    private ClientBackgroundSchedulerLiteral() {
+        // prevents instantiation from the outside.
     }
 }

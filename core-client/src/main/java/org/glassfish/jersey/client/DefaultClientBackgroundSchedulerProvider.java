@@ -37,59 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.media.sse.internal;
 
-import javax.ws.rs.sse.Sse;
+package org.glassfish.jersey.client;
 
-import javax.inject.Provider;
+import javax.inject.Inject;
 
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.internal.inject.AbstractRequestDerivedValueSupplier;
-import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
-import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
-import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.spi.ScheduledThreadPoolExecutorProvider;
 
 /**
- * {@link org.glassfish.jersey.server.spi.internal.ValueSupplierProvider} for binding {@link Sse} to its implementation.
+ * Default {@link org.glassfish.jersey.spi.ScheduledExecutorServiceProvider} used on the client side for providing the scheduled
+ * executor service that runs background tasks.
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
+ * @since 2.26
  */
-public class SseValueSupplierProvider extends AbstractValueSupplierProvider {
+@ClientBackgroundScheduler
+class DefaultClientBackgroundSchedulerProvider extends ScheduledThreadPoolExecutorProvider {
 
     /**
-     * Constructor.
-     *
-     * @param mpep            multivalued map parameter extractor provider.
-     * @param requestProvider request provider.
+     * Creates a new instance.
      */
-    public SseValueSupplierProvider(final MultivaluedParameterExtractorProvider mpep,
-                                    final Provider<ContainerRequest> requestProvider) {
-        super(mpep, requestProvider, Parameter.Source.CONTEXT);
+    @Inject
+    public DefaultClientBackgroundSchedulerProvider() {
+        super("jersey-client-background-scheduler");
     }
 
     @Override
-    protected AbstractRequestDerivedValueSupplier<Sse> createValueSupplier(final Parameter parameter,
-                                                                           final Provider<ContainerRequest> requestProvider) {
-        if (parameter == null) {
-            return null;
-        }
-
-        final Class<?> rawParameterType = parameter.getRawType();
-        if (rawParameterType == Sse.class) {
-            return new SseValueSupplier(requestProvider);
-        }
-        return null;
-    }
-
-    private static final class SseValueSupplier extends AbstractRequestDerivedValueSupplier<Sse> {
-
-        SseValueSupplier(final Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-        }
-
-        @Override
-        public Sse get() {
-            return JerseySse.getInstance();
-        }
+    protected int getCorePoolSize() {
+        return 1;
     }
 }
