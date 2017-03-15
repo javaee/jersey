@@ -563,7 +563,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 .build(rootStage, compositeListener, processingProviders);
 
         // Inject instances.
-        for (final Object instance : componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS)) {
+        for (final Object instance : componentBag.getInstances(ComponentBag.excludeMetaProviders(injectionManager))) {
             injectionManager.inject(instance);
         }
         for (final Object instance : resourceBag.instances) {
@@ -895,7 +895,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                         !registeredClasses.contains(resourceClass),
                         true);
 
-        Set<Class<?>> componentClassses = componentBag.getClasses(ComponentBag.EXCLUDE_META_PROVIDERS).stream()
+        Set<Class<?>> componentClassses = componentBag.getClasses(ComponentBag.excludeMetaProviders(injectionManager)).stream()
                 .filter(correctlyConfigured)
                 .collect(Collectors.toSet());
 
@@ -927,7 +927,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         }
 
         // Merge programmatic resource instances with other component instances.
-        Set<Object> instances = componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS).stream()
+        Set<Object> instances = componentBag.getInstances(ComponentBag.excludeMetaProviders(injectionManager)).stream()
                 .filter(instance -> correctlyConfigured.test(instance.getClass()))
                 .collect(Collectors.toSet());
         instances.addAll(resourceInstances);

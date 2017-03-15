@@ -38,45 +38,77 @@
  * holder.
  */
 
-package org.glassfish.jersey.hk2;
+package org.glassfish.jersey.tests.e2e.common;
 
-import java.util.function.Consumer;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.InjectionManager;
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
- * Helper class to minimize the code in tested classes.
+ * Tests that HK2Binder and Jersey Binder work together.
  *
- * @author Petr Bouda (petr.bouda at oracle.com).
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-class BindingTestHelper {
+public class Hk2BinderSupportTest extends JerseyTest {
 
-    /**
-     * Accepts the provided consumer to created and register the binder.
-     *
-     * @param injectionManager injection manager which accepts the consumer.
-     * @param bindConsumer     consumer to populate a binder.
-     */
-    static void bind(InjectionManager injectionManager, Consumer<AbstractBinder> bindConsumer) {
-        AbstractBinder binder = new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bindConsumer.accept(this);
-            }
-        };
-
-        injectionManager.register(binder);
+    @Override
+    protected Application configure() {
+        ResourceConfig config = new ResourceConfig();
+        config.register(HelloWorldResource.class);
+        config.register(new Hk2Binder());
+        config.register(new JerseyBinder());
+        return config;
     }
 
-    /**
-     * Creates a new {@link InjectionManager}.
-     *
-     * @return newly created {@code InjectionManager}.
-     */
-    static InjectionManager createInjectionManager() {
-        HK2InjectionManager injectionManager = new HK2InjectionManager();
-        injectionManager.initialize();
-        return injectionManager;
+    @Test
+    public void testResponse() {
+        String s = target().path("helloworld").request().get(String.class);
+        assertEquals(Hk2Binder.HK2_HELLO_MESSAGE + "/" + JerseyBinder.JERSEY_HELLO_MESSAGE, s);
+    }
+
+    private static class Hk2Binder extends AbstractBinder {
+        private static final String HK2_HELLO_MESSAGE = "Hello HK2!";
+
+        @Override
+        protected void configure() {
+            bind(HK2_HELLO_MESSAGE).to(String.class).named("hk2");
+        }
+    }
+
+    private static class JerseyBinder extends org.glassfish.jersey.internal.inject.AbstractBinder {
+        private static final String JERSEY_HELLO_MESSAGE = "Hello Jersey!";
+
+        @Override
+        protected void configure() {
+            bind(JERSEY_HELLO_MESSAGE).to(String.class).named("jersey");
+        }
+    }
+
+    @Path("helloworld")
+    public static class HelloWorldResource {
+
+        @Inject
+        @Named("hk2")
+        private String hk2Hello;
+
+        @Inject
+        @Named("jersey")
+        private String jerseyHello;
+
+        @GET
+        public String getHello() {
+            return hk2Hello + "/" + jerseyHello;
+        }
     }
 }

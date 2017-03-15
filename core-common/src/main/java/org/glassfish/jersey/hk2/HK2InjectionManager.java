@@ -47,7 +47,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.ClassBinding;
@@ -146,7 +145,7 @@ public class HK2InjectionManager implements InjectionManager {
         ServiceLocatorRuntimeBean serviceLocatorRuntimeBean = locator.getService(ServiceLocatorRuntimeBean.class);
         if (serviceLocatorRuntimeBean != null) {
             if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine(LocalizationMessages.CLEARING_HK_2_CACHE(
+                LOGGER.fine(LocalizationMessages.HK_2_CLEARING_CACHE(
                         serviceLocatorRuntimeBean.getServiceCacheSize(),
                         serviceLocatorRuntimeBean.getReflectionCacheSize()));
             }
@@ -162,7 +161,7 @@ public class HK2InjectionManager implements InjectionManager {
      */
     private static void assertParentLocatorType(Object parent) {
         if (parent != null && !(parent instanceof ServiceLocator || parent instanceof HK2InjectionManager)) {
-            throw new RuntimeException(LocalizationMessages.HK_2_UNKNOWN_PARENT_INSTANCE_MANAGER(
+            throw new IllegalArgumentException(LocalizationMessages.HK_2_UNKNOWN_PARENT_INJECTION_MANAGER(
                     parent.getClass().getSimpleName()));
         }
     }
@@ -192,8 +191,17 @@ public class HK2InjectionManager implements InjectionManager {
     }
 
     @Override
-    public void register(org.glassfish.hk2.utilities.Binder... binder) {
-        ServiceLocatorUtilities.bind(locator, binder);
+    public void register(Object provider) {
+        if (isRegistrable(provider.getClass())) {
+            ServiceLocatorUtilities.bind(locator, (org.glassfish.hk2.utilities.Binder) provider);
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    @Override
+    public boolean isRegistrable(Class<?> clazz) {
+        return org.glassfish.hk2.utilities.Binder.class.isAssignableFrom(clazz);
     }
 
     @Override
@@ -244,7 +252,8 @@ public class HK2InjectionManager implements InjectionManager {
         } else if (InstanceBinding.class.isAssignableFrom(binding.getClass())) {
             activeDescriptor = Hk2Helper.translateToActiveDescriptor((InstanceBinding<?>) binding);
         } else {
-            throw new RuntimeException(LocalizationMessages.UNKNOWN_DESCRIPTOR_TYPE(binding.getClass().getSimpleName()));
+            throw new RuntimeException(org.glassfish.jersey.internal.LocalizationMessages.UNKNOWN_DESCRIPTOR_TYPE(
+                    binding.getClass().getSimpleName()));
         }
 
         return ForeignDescriptor.wrap(activeDescriptor, activeDescriptor::dispose);

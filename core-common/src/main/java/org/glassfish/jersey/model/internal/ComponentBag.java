@@ -47,6 +47,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -60,6 +61,7 @@ import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
@@ -86,13 +88,14 @@ import org.glassfish.jersey.process.Inflector;
 public class ComponentBag {
     /**
      * A filtering strategy that excludes all pure meta-provider models (i.e. models that only contain
-     * recognized meta-provider contracts - {@link javax.ws.rs.core.Feature} and/or {@link org.glassfish.hk2.utilities.Binder}).
+     * recognized meta-provider contracts - {@link javax.ws.rs.core.Feature} and/or {@link Binder} and/or external meta-provider
+     * from {@link org.glassfish.jersey.internal.inject.InjectionManager#isRegistrable(Class)}).
      * <p>
      * This filter predicate returns {@code false} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
      * that represent a model containing only recognized meta-provider contracts.
      * </p>
      */
-    public static final Predicate<ContractProvider> EXCLUDE_META_PROVIDERS = model -> {
+    private static final Predicate<ContractProvider> EXCLUDE_META_PROVIDERS = model -> {
         final Set<Class<?>> contracts = model.getContracts();
         if (contracts.isEmpty()) {
             return true;
@@ -109,6 +112,29 @@ public class ComponentBag {
     };
 
     /**
+     * A method creates the {@link Predicate} which is able to filter all Jersey meta-providers along with the components which
+     * is able to register the current used {@link InjectionManager}.
+     *
+     * @param injectionManager current injection manager.
+     * @return {@code Predicate} excluding Jersey meta-providers and the specific ones for a current {@code InjectionManager}.
+     */
+    public static Predicate<ContractProvider> excludeMetaProviders(InjectionManager injectionManager) {
+        return EXCLUDE_META_PROVIDERS.and(model -> !injectionManager.isRegistrable(model.getImplementationClass()));
+    }
+
+    /**
+     * A filtering strategy that includes only models that contain contract registrable by
+     * {@link org.glassfish.jersey.internal.inject.InjectionManager}.
+     * <p>
+     * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
+     * that represent an object which can be registered using specific {@link org.glassfish.jersey.internal.inject.InjectionManager}
+     * contract.
+     * </p>
+     */
+    public static final BiPredicate<ContractProvider, InjectionManager> EXTERNAL_ONLY = (model, injectionManager) ->
+            model.getImplementationClass() != null && injectionManager.isRegistrable(model.getImplementationClass());
+
+    /**
      * A filtering strategy that includes only models that contain Binder provider contract.
      * <p>
      * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
@@ -116,16 +142,6 @@ public class ComponentBag {
      * </p>
      */
     public static final Predicate<ContractProvider> BINDERS_ONLY = model -> model.getContracts().contains(Binder.class);
-
-    /**
-     * A filtering strategy that includes only models that contain HK2 Binder provider contract.
-     * <p>
-     * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
-     * that represent a provider registered to provide {@link Binder} contract.
-     * </p>
-     */
-    public static final Predicate<ContractProvider> HK2_BINDERS_ONLY =
-            model -> model.getContracts().contains(org.glassfish.hk2.utilities.Binder.class);
 
     /**
      * A filtering strategy that excludes models with no recognized contracts.
@@ -458,7 +474,7 @@ public class ComponentBag {
                 }
             }
         }
-        final ContractProvider.Builder builder = ContractProvider.builder()
+        final ContractProvider.Builder builder = ContractProvider.builder(componentClass)
                 .addContracts(contracts)
                 .defaultPriority(defaultPriority);
 
