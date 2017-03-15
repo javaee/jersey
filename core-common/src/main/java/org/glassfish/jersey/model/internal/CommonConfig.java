@@ -93,8 +93,6 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
     private static final Logger LOGGER = Logger.getLogger(CommonConfig.class.getName());
     private static final Function<Object, Binder> CAST_TO_BINDER = Binder.class::cast;
-    private static final Function<Object, org.glassfish.hk2.utilities.Binder> CAST_TO_HK2_BINDER =
-            org.glassfish.hk2.utilities.Binder.class::cast;
 
     /**
      * Configuration runtime type.
@@ -627,41 +625,22 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
      * @param injectionManager locator in which the binders and features should be configured.
      */
     public void configureMetaProviders(InjectionManager injectionManager) {
-        // configure existing binders
+        // First, configure existing binders
         Set<Binder> configuredBinders = configureBinders(injectionManager, Collections.emptySet());
 
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
             injectionManager.register(new ManagedObjectsFinalizerBinder());
+            // Register external meta objects
+            configureExternalObjects(injectionManager);
             // Next, configure all features
             configureFeatures(injectionManager, new HashSet<>(), resetRegistrations());
             // At last, configure any new binders added by features
             configureBinders(injectionManager, configuredBinders);
         }
-
-        // Configure hk2 binders
-        Set<org.glassfish.hk2.utilities.Binder> configuredHk2Binders =
-                configureHk2Binders(injectionManager, Collections.emptySet());
-
-        // Check whether meta providers have been initialized for a config this config has been loaded from.
-        if (!disableMetaProviderConfiguration) {
-            injectionManager.register(new ManagedObjectsFinalizerHk2Binder());
-            // Next, configure all features
-            configureFeatures(injectionManager, new HashSet<>(), resetRegistrations());
-            // At last, configure any new binders added by features
-            configureHk2Binders(injectionManager, configuredHk2Binders);
-        }
     }
 
     public static class ManagedObjectsFinalizerBinder extends AbstractBinder {
-        @Override
-        protected void configure() {
-            bindAsContract(ManagedObjectsFinalizer.class)
-                    .in(Singleton.class);
-        }
-    }
-
-    public static class ManagedObjectsFinalizerHk2Binder extends org.glassfish.hk2.utilities.binding.AbstractBinder {
         @Override
         protected void configure() {
             bindAsContract(ManagedObjectsFinalizer.class)
@@ -682,22 +661,6 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         return allConfigured;
     }
 
-    private Set<org.glassfish.hk2.utilities.Binder> configureHk2Binders(
-            InjectionManager injectionManager,
-            Set<org.glassfish.hk2.utilities.Binder> configured) {
-
-        Set<org.glassfish.hk2.utilities.Binder> allConfigured = Collections.newSetFromMap(new IdentityHashMap<>());
-        allConfigured.addAll(configured);
-
-        Collection<org.glassfish.hk2.utilities.Binder> binders = getHk2BeanDescriptors(configured);
-        if (!binders.isEmpty()) {
-            injectionManager.register(binders.toArray(new org.glassfish.hk2.utilities.Binder[]{}));
-            allConfigured.addAll(binders);
-        }
-
-        return allConfigured;
-    }
-
     private Collection<Binder> getBeanDescriptors(Set<Binder> configured) {
         return componentBag.getInstances(ComponentBag.BINDERS_ONLY)
                 .stream()
@@ -706,13 +669,11 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
                 .collect(Collectors.toList());
     }
 
-    private Collection<org.glassfish.hk2.utilities.Binder> getHk2BeanDescriptors(
-            Set<org.glassfish.hk2.utilities.Binder> configured) {
-        return componentBag.getInstances(ComponentBag.HK2_BINDERS_ONLY)
-                .stream()
-                .map(CAST_TO_HK2_BINDER)
-                .filter(descriptor -> !configured.contains(descriptor))
-                .collect(Collectors.toList());
+    private void configureExternalObjects(InjectionManager injectionManager) {
+          componentBag.getInstances(model -> ComponentBag.EXTERNAL_ONLY.test(model, injectionManager))
+                  .forEach(injectionManager::register);
+          componentBag.getClasses(model -> ComponentBag.EXTERNAL_ONLY.test(model, injectionManager))
+                  .forEach(injectionManager::register);
     }
 
     private void configureFeatures(InjectionManager injectionManager,

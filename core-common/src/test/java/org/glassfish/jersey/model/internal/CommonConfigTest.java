@@ -846,7 +846,8 @@ public class CommonConfigTest {
         final InstanceFeatureA f2 = new InstanceFeatureA(true);
         config.register(f2);
 
-        config.configureMetaProviders(Injections.createInjectionManager());
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        config.configureMetaProviders(injectionManager);
 
         assertTrue(config.getConfiguration().isEnabled(f1));
         assertFalse(config.getConfiguration().isEnabled(f2));
@@ -854,7 +855,8 @@ public class CommonConfigTest {
         final Set<Object> providerInstances = config.getInstances();
         assertEquals(2, providerInstances.size());
 
-        final Set<Object> pureProviderInstances = config.getComponentBag().getInstances(ComponentBag.EXCLUDE_META_PROVIDERS);
+        final Set<Object> pureProviderInstances =
+                config.getComponentBag().getInstances(ComponentBag.excludeMetaProviders(injectionManager));
         assertEquals(1, pureProviderInstances.size());
 
         int a = 0;
@@ -873,10 +875,12 @@ public class CommonConfigTest {
     @Test
     public void testConfigureFeatureInstanceRecursive() throws Exception {
         config.register(new RecursiveInstanceFeature());
-        config.configureMetaProviders(Injections.createInjectionManager());
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        config.configureMetaProviders(injectionManager);
         assertEquals(0, config.getClasses().size());
         assertEquals(2, config.getInstances().size());
-        final Set<Object> pureProviders = config.getComponentBag().getInstances(ComponentBag.EXCLUDE_META_PROVIDERS);
+        final Set<Object> pureProviders =
+                config.getComponentBag().getInstances(ComponentBag.excludeMetaProviders(injectionManager));
         assertEquals(1, pureProviders.size());
         assertSame(CustomReaderA.class, pureProviders.iterator().next().getClass());
     }

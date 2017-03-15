@@ -184,8 +184,7 @@ public class ProviderBinder {
                                      RuntimeType constrainedTo,
                                      Set<Class<?>> registeredClasses,
                                      InjectionManager injectionManager) {
-        Predicate<ContractProvider> filter =
-                input -> ComponentBag.EXCLUDE_EMPTY.test(input) && ComponentBag.EXCLUDE_META_PROVIDERS.test(input);
+        Predicate<ContractProvider> filter = ComponentBag.EXCLUDE_EMPTY.and(ComponentBag.excludeMetaProviders(injectionManager));
 
         /*
          * Check the {@code component} whether it is correctly configured for client or server {@link RuntimeType runtime}.

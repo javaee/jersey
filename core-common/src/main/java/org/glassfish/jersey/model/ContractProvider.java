@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,10 +66,11 @@ public final class ContractProvider implements Scoped, NameBound {
     /**
      * Create new contract provider model builder.
      *
+     * @param implementationClass class which the contracts belong to.
      * @return new contract provider builder.
      */
-    public static Builder builder() {
-        return new Builder();
+    public static Builder builder(Class<?> implementationClass) {
+        return new Builder(implementationClass);
     }
 
     /**
@@ -87,21 +88,21 @@ public final class ContractProvider implements Scoped, NameBound {
      */
     public static final class Builder {
 
-        private static final ContractProvider EMPTY_MODEL = new ContractProvider(
-                Singleton.class,
-                Collections.emptyMap(),
-                NO_PRIORITY,
-                Collections.emptySet());
+        private static final ContractProvider EMPTY_MODEL =
+                new ContractProvider(null, Singleton.class, Collections.emptyMap(), NO_PRIORITY, Collections.emptySet());
 
+        private Class<?> implementationClass = null;
         private Class<? extends Annotation> scope = null;
         private Map<Class<?>, Integer> contracts = new HashMap<>();
         private int defaultPriority = NO_PRIORITY;
         private Set<Class<? extends Annotation>> nameBindings = Collections.newSetFromMap(new IdentityHashMap<>());
 
-        private Builder() {
+        private Builder(Class<?> implementationClass) {
+            this.implementationClass = implementationClass;
         }
 
         private Builder(final ContractProvider original) {
+            this.implementationClass = original.implementationClass;
             this.scope = original.scope;
             this.contracts.putAll(original.contracts);
             this.defaultPriority = original.defaultPriority;
@@ -248,25 +249,29 @@ public final class ContractProvider implements Scoped, NameBound {
             final Set<Class<? extends Annotation>> bindings = (nameBindings.isEmpty())
                     ? Collections.emptySet() : Collections.unmodifiableSet(nameBindings);
 
-            if (scope == Singleton.class && _contracts.isEmpty() && defaultPriority == NO_PRIORITY && bindings.isEmpty()) {
+            if (implementationClass == null && scope == Singleton.class && _contracts.isEmpty() && defaultPriority == NO_PRIORITY
+                    && bindings.isEmpty()) {
                 return EMPTY_MODEL;
             }
 
-            return new ContractProvider(scope, _contracts, defaultPriority, bindings);
+            return new ContractProvider(implementationClass, scope, _contracts, defaultPriority, bindings);
         }
     }
 
+    private final Class<?> implementationClass;
     private final Map<Class<?>, Integer> contracts;
     private final int defaultPriority;
     private final Set<Class<? extends Annotation>> nameBindings;
     private final Class<? extends Annotation> scope;
 
     private ContractProvider(
+            final Class<?> implementationClass,
             final Class<? extends Annotation> scope,
             final Map<Class<?>, Integer> contracts,
             final int defaultPriority,
             final Set<Class<? extends Annotation>> nameBindings) {
 
+        this.implementationClass = implementationClass;
         this.scope = scope;
         this.contracts = contracts;
         this.defaultPriority = defaultPriority;
@@ -276,6 +281,15 @@ public final class ContractProvider implements Scoped, NameBound {
     @Override
     public Class<? extends Annotation> getScope() {
         return scope;
+    }
+
+    /**
+     * Get the implementation class which the contracts belong to.
+     *
+     * @return implementation class.
+     */
+    public Class<?> getImplementationClass() {
+        return implementationClass;
     }
 
     /**

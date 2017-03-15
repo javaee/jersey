@@ -180,10 +180,11 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         }
 
         final ComponentBag componentBag = config.getComponentBag();
-        final List<Object> providers = new ArrayList<>(componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS));
+        final List<Object> providers = new ArrayList<>(
+                componentBag.getInstances(ComponentBag.excludeMetaProviders(injectionManager)));
 
         // Get instances of providers.
-        final Set<Class<?>> providerClasses = componentBag.getClasses(ComponentBag.EXCLUDE_META_PROVIDERS);
+        final Set<Class<?>> providerClasses = componentBag.getClasses(ComponentBag.excludeMetaProviders(injectionManager));
         if (!providerClasses.isEmpty()) {
             injectionManager = Injections.createInjectionManager(injectionManager, new AbstractBinder() {
                 @Override
