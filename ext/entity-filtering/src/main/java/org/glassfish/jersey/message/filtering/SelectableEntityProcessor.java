@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.filtering;
 
 import java.lang.annotation.Annotation;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.annotation.Priority;
@@ -49,8 +51,6 @@ import org.glassfish.jersey.message.filtering.spi.AbstractEntityProcessor;
 import org.glassfish.jersey.message.filtering.spi.EntityGraph;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessor;
 
-import jersey.repackaged.com.google.common.collect.Sets;
-
 @Singleton
 @Priority(Integer.MAX_VALUE - 5000)
 public class SelectableEntityProcessor extends AbstractEntityProcessor {
@@ -59,7 +59,7 @@ public class SelectableEntityProcessor extends AbstractEntityProcessor {
                              final Annotation[] annotations, final EntityGraph graph) {
 
         if (fieldName != null) {
-            final Set<String> scopes = Sets.newHashSet();
+            final Set<String> scopes = new HashSet<>();
 
             // add default selectable scope in case of none requested
             scopes.add(SelectableScopeResolver.DEFAULT_SCOPE);

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,18 +40,19 @@
 
 package org.glassfish.jersey.message.filtering;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.glassfish.jersey.internal.guava.HashBasedTable;
+import org.glassfish.jersey.internal.guava.HashMultimap;
+import org.glassfish.jersey.internal.guava.Table;
 import org.glassfish.jersey.message.filtering.spi.EntityGraph;
 import org.glassfish.jersey.message.filtering.spi.ScopeProvider;
-
-import jersey.repackaged.com.google.common.collect.HashBasedTable;
-import jersey.repackaged.com.google.common.collect.HashMultimap;
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
-import jersey.repackaged.com.google.common.collect.Table;
 
 /**
  * Default implementation of {@link EntityGraph}.
@@ -81,8 +82,8 @@ final class EntityGraphImpl implements EntityGraph {
         this.fields = HashMultimap.create();
         this.subgraphs = HashBasedTable.create();
 
-        this.globalScopes = Sets.newHashSet();
-        this.localScopes = Sets.newHashSet();
+        this.globalScopes = new HashSet<>();
+        this.localScopes = new HashSet<>();
     }
 
     @Override
@@ -92,7 +93,7 @@ final class EntityGraphImpl implements EntityGraph {
 
     @Override
     public EntityGraphImpl addField(final String fieldName, final String... filteringScopes) {
-        return addField(fieldName, Sets.newHashSet(filteringScopes));
+        return addField(fieldName, Arrays.stream(filteringScopes).collect(Collectors.toSet()));
     }
 
     @Override
@@ -118,7 +119,7 @@ final class EntityGraphImpl implements EntityGraph {
 
     @Override
     public EntityGraphImpl addSubgraph(final String fieldName, final Class<?> fieldClass, final String... filteringScopes) {
-        return addSubgraph(fieldName, fieldClass, Sets.newHashSet(filteringScopes));
+        return addSubgraph(fieldName, fieldClass, Arrays.stream(filteringScopes).collect(Collectors.toSet()));
     }
 
     @Override
@@ -145,12 +146,14 @@ final class EntityGraphImpl implements EntityGraph {
     @Override
     public Set<String> getFields(final String... filteringScopes) {
         return filteringScopes.length == 0 ? Collections.<String>emptySet()
-                : (filteringScopes.length == 1 ? getFields(filteringScopes[0]) : getFields(Sets.newHashSet(filteringScopes)));
+                : (filteringScopes.length == 1
+                ? getFields(filteringScopes[0])
+                : getFields(Arrays.stream(filteringScopes).collect(Collectors.toSet())));
     }
 
     @Override
     public Set<String> getFields(final Set<String> filteringScopes) {
-        final Set<String> matched = Sets.newHashSet();
+        final Set<String> matched = new HashSet<>();
 
         for (final String filteringContext : filteringScopes) {
             matched.addAll(fields.get(filteringContext));
@@ -161,7 +164,9 @@ final class EntityGraphImpl implements EntityGraph {
 
     @Override
     public Set<String> getFilteringScopes() {
-        return Collections.unmodifiableSet(Sets.union(globalScopes, localScopes));
+        HashSet<String> strings = new HashSet<>(globalScopes);
+        strings.addAll(localScopes);
+        return Collections.unmodifiableSet(strings);
     }
 
     @Override
@@ -181,12 +186,12 @@ final class EntityGraphImpl implements EntityGraph {
                 ? Collections.<String, Class<?>>emptyMap()
                 : (filteringScopes.length == 1
                            ? getSubgraphs(filteringScopes[0])
-                           : getSubgraphs(Sets.newHashSet(filteringScopes)));
+                           : getSubgraphs(Arrays.stream(filteringScopes).collect(Collectors.toSet())));
     }
 
     @Override
     public Map<String, Class<?>> getSubgraphs(final Set<String> filteringScopes) {
-        final Map<String, Class<?>> matched = Maps.newHashMap();
+        final Map<String, Class<?>> matched = new HashMap<>();
 
         for (final String filteringContext : filteringScopes) {
             matched.putAll(subgraphs.row(filteringContext));

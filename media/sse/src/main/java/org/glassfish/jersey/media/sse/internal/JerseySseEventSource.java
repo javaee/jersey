@@ -41,8 +41,6 @@ package org.glassfish.jersey.media.sse.internal;
 
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -55,8 +53,11 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.sse.InboundSseEvent;
+import javax.ws.rs.sse.SseEventSource;
 import javax.ws.rs.sse.SseSubscription;
 
+import org.glassfish.jersey.client.ClientExecutor;
+import org.glassfish.jersey.client.JerseyWebTarget;
 import org.glassfish.jersey.internal.util.JerseyPublisher;
 import org.glassfish.jersey.media.sse.EventInput;
 import org.glassfish.jersey.media.sse.EventListener;
@@ -64,12 +65,11 @@ import org.glassfish.jersey.media.sse.EventSource;
 import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.LocalizationMessages;
 
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * {@code SseEventSource} implementation.
  */
-public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, EventListener {
+public class JerseySseEventSource implements SseEventSource, EventListener {
 
     private static final Level CONNECTION_ERROR_LEVEL = Level.FINE;
     private static final Logger LOGGER = Logger.getLogger(JerseySseEventSource.class.getName());
@@ -87,14 +87,9 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
      * {@code Last-Event-ID} header name constant.
      */
     private static final String LAST_EVENT_ID_HEADER = "Last-Event-ID";
-    /**
-     * Reactive streams Publisher implementation instance.
-     */
-    private final JerseyPublisher<InboundSseEvent> publisher = new JerseyPublisher<>();
-    /**
-     * Incoming SSE event processing task executor.
-     */
-    private final ScheduledExecutorService executor;
+
+    private JerseyPublisher<InboundSseEvent> publisher;
+
     /**
      * SseEventSource internal state.
      */
@@ -102,7 +97,7 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
     /**
      * SSE streaming resource target.
      */
-    private final WebTarget endpoint;
+    private final JerseyWebTarget endpoint;
     /**
      * Reconnect delay value.
      */
@@ -111,6 +106,8 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
      * Reconnect delay time unit.
      */
     private final TimeUnit reconnectTimeUnit;
+
+    private final ClientExecutor clientExecutor;
 
     /**
      * Possible internal {@code SseEventSource} states.
@@ -121,44 +118,30 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
 
     /**
      * Private constructor.
-     * @param endpoint SSE resource {@link WebTarget}
-     * @param name {@code SseEventSource} name - used for thread naming
-     * @param reconnectDelay amount of time units before next reconnect attempt
+     *
+     * @param endpoint          SSE resource {@link WebTarget}
+     * @param reconnectDelay    amount of time units before next reconnect attempt
      * @param reconnectTimeUnit time units to measure the reconnect attempts in
      */
-    private JerseySseEventSource(final WebTarget endpoint,
-                                 final String name,
+    private JerseySseEventSource(final JerseyWebTarget endpoint,
                                  final long reconnectDelay,
                                  final TimeUnit reconnectTimeUnit) {
 
         this.endpoint = endpoint;
         this.reconnectDelay = reconnectDelay;
         this.reconnectTimeUnit = reconnectTimeUnit;
-
-        final String threadName = (name == null ? createDefaultName(endpoint) : null);
-        this.executor = Executors.newSingleThreadScheduledExecutor(
-                new ThreadFactoryBuilder().setNameFormat(threadName + "-%d").setDaemon(true).build()
-        );
-    }
-
-    /**
-     * Creates default name to be used for thread naming (in case no explicit name provided).
-     * @param endpoint SSE resource endpoint
-     * @return default name based on {@code WebTarget}
-     */
-    private static String createDefaultName(final WebTarget endpoint) {
-        return String.format("jersey-sse-event-source-[%s]", endpoint.getUri().toASCIIString());
+        this.clientExecutor = endpoint.getConfiguration().getClientExecutor();
+        this.publisher = new JerseyPublisher<>(clientExecutor::submit, JerseyPublisher.PublisherStrategy.BLOCKING);
     }
 
     @Override
     public void onEvent(final InboundEvent inboundEvent) {
-        publisher.submit(inboundEvent);
+        publisher.publish(inboundEvent);
     }
 
     public static class Builder extends javax.ws.rs.sse.SseEventSource.Builder {
 
         private WebTarget endpoint;
-        private String name;
         private long reconnectDelay;
         private TimeUnit reconnectTimeUnit;
 
@@ -170,7 +153,7 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
 
         @Override
         public Builder named(final String name) {
-            this.name = name;
+            // NO-OP - not supported now
             return this;
         }
 
@@ -183,7 +166,11 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
 
         @Override
         public JerseySseEventSource build() {
-            return new JerseySseEventSource(endpoint, name, reconnectDelay, reconnectTimeUnit);
+            if (endpoint instanceof JerseyWebTarget) {
+                return new JerseySseEventSource((JerseyWebTarget) endpoint, reconnectDelay, reconnectTimeUnit);
+            } else {
+                throw new IllegalArgumentException(LocalizationMessages.UNSUPPORTED_WEBTARGET_TYPE(endpoint));
+            }
         }
     }
 
@@ -209,7 +196,7 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
                           final Consumer<InboundSseEvent> onEvent,
                           final Consumer<Throwable> onError,
                           final Runnable onComplete) {
-        if (onSubscribe == null || onEvent == null || onError  == null || onComplete == null) {
+        if (onSubscribe == null || onEvent == null || onError == null || onComplete == null) {
             throw new IllegalStateException(LocalizationMessages.PARAMS_NULL());
         }
 
@@ -258,7 +245,7 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
         }
 
         final EventProcessor processor = new EventProcessor(reconnectDelay, reconnectTimeUnit, null);
-        executor.submit(processor);
+        clientExecutor.submit(processor);
 
         // return only after the first request to the SSE endpoint has been made
         processor.awaitFirstContact();
@@ -271,29 +258,10 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
 
     @Override
     public boolean close(final long timeout, final TimeUnit unit) {
-        publisher.close();
-        shutdown();
-
-        try {
-            if (!executor.awaitTermination(timeout, unit)) {
-                LOGGER.log(CONNECTION_ERROR_LEVEL,
-                        LocalizationMessages.EVENT_SOURCE_SHUTDOWN_TIMEOUT(endpoint.getUri().toString()));
-                return false;
-            }
-        } catch (final InterruptedException e) {
-            LOGGER.log(CONNECTION_ERROR_LEVEL,
-                    LocalizationMessages.EVENT_SOURCE_SHUTDOWN_INTERRUPTED(endpoint.getUri().toString()));
-            Thread.currentThread().interrupt();
-            return false;
+        if (state.getAndSet(State.CLOSED) != State.CLOSED) {
+            publisher.close();
         }
         return true;
-    }
-
-    private void shutdown() {
-        if (state.getAndSet(State.CLOSED) != State.CLOSED) {
-            // shut down only if has not been shut down before
-            executor.shutdownNow();
-        }
     }
 
     /**
@@ -384,7 +352,7 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
                             endpoint.getUri().toASCIIString()), ex);
                 }
                 // if we're here, an unrecoverable error has occurred - just turn off the lights...
-                JerseySseEventSource.this.shutdown();
+                close();
             } finally {
                 if (eventInput != null && !eventInput.isClosed()) {
                     eventInput.close();
@@ -416,9 +384,9 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
 
             final EventProcessor processor = new EventProcessor(this);
             if (reconnectDelay > 0) {
-                executor.schedule(processor, reconnectDelay, reconnectTimeUnit);
+                clientExecutor.schedule(processor, reconnectDelay, reconnectTimeUnit);
             } else {
-                executor.submit(processor);
+                clientExecutor.submit(processor);
             }
         }
 
@@ -445,7 +413,6 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
             if (inboundEvent == null) {
                 return;
             }
-
             LOGGER.fine("New event received: " + inboundEvent);
 
             if (inboundEvent.getId() != null) {
@@ -454,8 +421,7 @@ public class JerseySseEventSource implements javax.ws.rs.sse.SseEventSource, Eve
             if (inboundEvent.isReconnectDelaySet()) {
                 reconnectDelay = inboundEvent.getReconnectDelay();
             }
-
-            publisher.submit(inboundEvent);
+            publisher.publish(inboundEvent);
         }
 
         void awaitFirstContact() {

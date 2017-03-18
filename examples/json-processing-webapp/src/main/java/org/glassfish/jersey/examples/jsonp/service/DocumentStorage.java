@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,12 +41,11 @@
 package org.glassfish.jersey.examples.jsonp.service;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.json.JsonObject;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Storage of documents.
@@ -55,7 +54,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
  */
 public final class DocumentStorage {
 
-    private static final Map<Integer, JsonObject> storage = Maps.newLinkedHashMap();
+    private static final Map<Integer, JsonObject> storage = new LinkedHashMap<>();
     private static final AtomicInteger counter = new AtomicInteger(0);
 
     public static int store(final JsonObject document) {

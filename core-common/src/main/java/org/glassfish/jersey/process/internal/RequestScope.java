@@ -41,6 +41,7 @@
 package org.glassfish.jersey.process.internal;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,21 +50,17 @@ import java.util.logging.Logger;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.hk2.RequestContext;
+import org.glassfish.jersey.internal.BootstrapBag;
+import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.ForeignDescriptor;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.LazyUid;
 import org.glassfish.jersey.internal.util.Producer;
 
-import org.glassfish.hk2.api.Context;
-import org.glassfish.hk2.api.TypeLiteral;
-
-import jersey.repackaged.com.google.common.base.MoreObjects;
-import jersey.repackaged.com.google.common.collect.Sets;
-
-import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
+import static org.glassfish.jersey.internal.guava.Preconditions.checkState;
 
 /**
  * Scopes a single request/response processing execution on a single thread.
@@ -156,13 +153,17 @@ public class RequestScope {
     }
 
     /**
-     * Request scope injection binder.
+     * Configurator which initializes and register {@link RequestScope} instance int {@link InjectionManager} and
+     * {@link BootstrapBag}.
+     *
+     * @author Petr Bouda (petr.bouda at oracle.com)
      */
-    public static class Binder extends AbstractBinder {
+    public static class RequestScopeConfigurator implements BootstrapConfigurator {
 
         @Override
-        protected void configure() {
-            bind(new RequestScope()).to(RequestScope.class);
+        public void init(InjectionManager injectionManagerFactory, BootstrapBag bootstrapBag) {
+            bootstrapBag.setRequestScope(new RequestScope());
+            injectionManagerFactory.register(Bindings.service(bootstrapBag.getRequestScope()).to(RequestScope.class));
         }
     }
 
@@ -508,9 +509,7 @@ public class RequestScope {
         public void release() {
             if (referenceCounter.decrementAndGet() < 1) {
                 try {
-                    for (ForeignDescriptor descriptor : Sets.newHashSet(store.keySet())) {
-                        remove(descriptor);
-                    }
+                    new HashSet<>(store.keySet()).forEach(this::remove);
                 } finally {
                     logger.debugLog("Released scope instance {0}", this);
                 }
@@ -519,8 +518,11 @@ public class RequestScope {
 
         @Override
         public String toString() {
-            return MoreObjects.toStringHelper(this).add("id", id.value()).add("referenceCounter", referenceCounter.get())
-                    .add("store size", store.size()).toString();
+            return "Instance{"
+                   + "id=" + id
+                   + ", referenceCounter=" + referenceCounter
+                   + ", store size=" + store.size()
+                   + '}';
         }
     }
 }

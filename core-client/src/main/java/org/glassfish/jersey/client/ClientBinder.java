@@ -52,7 +52,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
@@ -60,11 +59,10 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.spi.ExecutorServiceProvider;
+import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
 
 /**
  * Registers all binders necessary for {@link Client} runtime.
@@ -111,22 +109,19 @@ class ClientBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
-                new MessagingBinders.MessageBodyProviders(clientRuntimeProperties, RuntimeType.CLIENT),
+        install(new MessagingBinders.MessageBodyProviders(clientRuntimeProperties, RuntimeType.CLIENT),
                 new MessagingBinders.HeaderDelegateProviders(),
-                new MessageBodyFactory.Binder(),
-                new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
                 new ServiceFinderBinder<>(AutoDiscoverable.class, clientRuntimeProperties, RuntimeType.CLIENT));
 
-        bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new GenericType<Ref<ClientConfig>>() {
+        bindFactory(ReferencingFactory.referenceFactory()).to(new GenericType<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);
 
         bindFactory(RequestContextInjectionFactory.class)
                 .to(ClientRequest.class)
                 .in(RequestScoped.class);
 
-        bindFactory(ReferencingFactory.<ClientRequest>referenceFactory()).to(new GenericType<Ref<ClientRequest>>() {
+        bindFactory(ReferencingFactory.referenceFactory()).to(new GenericType<Ref<ClientRequest>>() {
         }).in(RequestScoped.class);
 
         bindFactory(PropertiesDelegateFactory.class, Singleton.class).to(PropertiesDelegate.class).in(RequestScoped.class);
@@ -141,5 +136,7 @@ class ClientBinder extends AbstractBinder {
         bind(asyncThreadPoolSize).named("ClientAsyncThreadPoolSize");
         // DefaultClientAsyncExecutorProvider must be singleton scoped, so that @PreDestroy, which closes the executor, is called
         bind(DefaultClientAsyncExecutorProvider.class).to(ExecutorServiceProvider.class).in(Singleton.class);
+
+        bind(DefaultClientBackgroundSchedulerProvider.class).to(ScheduledExecutorServiceProvider.class).in(Singleton.class);
     }
 }

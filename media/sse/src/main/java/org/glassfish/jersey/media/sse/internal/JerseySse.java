@@ -40,6 +40,10 @@
 
 package org.glassfish.jersey.media.sse.internal;
 
+import java.util.concurrent.ExecutorService;
+
+
+import javax.ws.rs.core.Context;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.Sse;
 import javax.ws.rs.sse.SseBroadcaster;
@@ -53,13 +57,8 @@ import org.glassfish.jersey.media.sse.OutboundEvent;
  */
 class JerseySse implements Sse {
 
-    private static class JerseySseHolder {
-        private static final JerseySse INSTANCE = new JerseySse();
-    }
-
-    private JerseySse() {
-        // prevent instantiation;
-    }
+    @Context
+    private ExecutorService executorService;
 
     @Override
     public OutboundSseEvent.Builder newEventBuilder() {
@@ -68,17 +67,6 @@ class JerseySse implements Sse {
 
     @Override
     public SseBroadcaster newBroadcaster() {
-        return new JerseySseBroadcaster();
-    }
-
-    /**
-     * Get the single {@code JerseySse} instance.
-     * <p>
-     * The instance should only be obtained via injection into the resource.
-     *
-     * @return {@code JerseySse}, the {link Sse} implementation.
-     */
-    static JerseySse getInstance() {
-        return JerseySseHolder.INSTANCE;
+        return new JerseySseBroadcaster(executorService);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -51,8 +52,6 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ExecutionStatistics;
 import org.glassfish.jersey.server.monitoring.ResourceMethodStatistics;
 import org.glassfish.jersey.server.monitoring.ResourceStatistics;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Immutable resource statistics implementation.
@@ -112,7 +111,7 @@ final class ResourceStatisticsImpl implements ResourceStatistics {
                 return cachedReference;
             }
 
-            final Map<ResourceMethod, ResourceMethodStatistics> resourceMethods = Maps.newHashMap();
+            final Map<ResourceMethod, ResourceMethodStatistics> resourceMethods = new HashMap<>();
             for (final ResourceMethodStatisticsImpl.Builder builder : methodsBuilders.keySet()) {
                 final ResourceMethodStatisticsImpl stats = builder.build();
                 resourceMethods.put(stats.getResourceMethod(), stats);

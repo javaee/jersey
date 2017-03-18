@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,17 +40,16 @@
 
 package org.glassfish.jersey.server.model;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
-
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
-
 
 /**
  * Resource model of the deployed application which contains set of root resources. As it implements {@link
@@ -101,7 +100,7 @@ public class ResourceModel implements ResourceModelComponent {
          *                         {@code false} if it is a application root resource model.
          */
         public Builder(boolean subResourceModel) {
-            this.resources = Lists.newArrayList();
+            this.resources = new ArrayList<>();
             this.subResourceModel = subResourceModel;
         }
 
@@ -123,8 +122,9 @@ public class ResourceModel implements ResourceModelComponent {
          * @return Resource model.
          */
         public ResourceModel build() {
-            Map<String, Resource> resourceMap = Maps.newLinkedHashMap();
-            final Set<Resource> separateResources = Sets.newIdentityHashSet(); // resource with no path that should not be merged
+            Map<String, Resource> resourceMap = new LinkedHashMap<>();
+            // resource with no path that should not be merged
+            final Set<Resource> separateResources = Collections.newSetFromMap(new IdentityHashMap<>());
 
             for (Resource resource : resources) {
                 final String path = resource.getPath();
@@ -139,8 +139,8 @@ public class ResourceModel implements ResourceModelComponent {
                     }
                 }
             }
-            List<Resource> rootResources = Lists.newArrayList();
-            List<Resource> allResources = Lists.newArrayList();
+            List<Resource> rootResources = new ArrayList<>();
+            List<Resource> allResources = new ArrayList<>();
 
             for (Map.Entry<String, Resource> entry : resourceMap.entrySet()) {
                 if (entry.getKey() != null) {
@@ -203,7 +203,7 @@ public class ResourceModel implements ResourceModelComponent {
 
     @Override
     public List<? extends ResourceModelComponent> getComponents() {
-        List<ResourceModelComponent> components = Lists.newArrayList();
+        List<ResourceModelComponent> components = new ArrayList<>();
 
         components.addAll(resources);
         components.addAll(getRuntimeResourceModel().getRuntimeResources());

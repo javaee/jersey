@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.monitoring.jmx;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.management.Attribute;
@@ -56,8 +57,6 @@ import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.monitoring.ExecutionStatistics;
 import org.glassfish.jersey.server.monitoring.TimeWindowStatistics;
 
-import jersey.repackaged.com.google.common.collect.Maps;
-
 /**
  * Dynamic MBean that exposes information about execution statistics. The exposed information contains
  * execution statistics for various time window sizes.
@@ -67,7 +66,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
 public class ExecutionStatisticsDynamicBean implements DynamicMBean {
 
     private volatile ExecutionStatistics executionStatistics;
-    private final Map<String, Value<Object>> attributeValues = Maps.newHashMap();
+    private final Map<String, Value<Object>> attributeValues = new HashMap<>();
 
     private final MBeanInfo mBeanInfo;
 

@@ -44,10 +44,12 @@ import java.lang.annotation.Annotation;
 import java.security.AccessController;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
@@ -73,10 +75,6 @@ import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
-
-import jersey.repackaged.com.google.common.base.Predicate;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Value supplier provider supporting the {@link Uri} injection annotation.
@@ -134,12 +132,10 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
          */
         public static BindingModel create(final Collection<Annotation> bindingCandidates) {
             final Collection<Annotation> filtered =
-                    Collections2.filter(bindingCandidates, new Predicate<Annotation>() {
-                        @Override
-                        public boolean apply(Annotation input) {
-                            return input != null && input.annotationType().getAnnotation(ClientBinding.class) != null;
-                        }
-                    });
+                    bindingCandidates.stream()
+                                     .filter(input -> input != null
+                                                      && input.annotationType().getAnnotation(ClientBinding.class) != null)
+                                     .collect(Collectors.toList());
 
             if (filtered.isEmpty()) {
                 return EMPTY;
@@ -254,7 +250,15 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
             final ExtendedUriInfo uriInfo = getRequest().getUriInfo();
 
             final Map<String, Object> pathParamValues =
-                    Maps.transformValues(uriInfo.getPathParameters(), input -> input.isEmpty() ? null : input.get(0));
+                    uriInfo.getPathParameters().entrySet()
+                           .stream()
+                           .collect(Collectors.toMap(
+                                   Map.Entry::getKey,
+                                   (Function<Map.Entry<String, List<String>>, Object>) stringObjectEntry -> {
+                                       List<String> input = stringObjectEntry.getValue();
+                                       return input.isEmpty() ? null : input.get(0);
+                                   }));
+
             JerseyUriBuilder uriBuilder = new JerseyUriBuilder().uri(this.uri).resolveTemplates(pathParamValues);
 
             final ManagedClient managedClient = client.get();
@@ -359,12 +363,10 @@ final class WebTargetValueSupplierProvider extends AbstractValueSupplierProvider
 
                                 final String propertyPrefix = prefix + "property.";
                                 Collection<String> clientProperties =
-                                        Collections2.filter(serverConfig.get().getPropertyNames(), new Predicate<String>() {
-                                            @Override
-                                            public boolean apply(String property) {
-                                                return property.startsWith(propertyPrefix);
-                                            }
-                                        });
+                                        serverConfig.get().getPropertyNames()
+                                                    .stream()
+                                                    .filter(property -> property.startsWith(propertyPrefix))
+                                                    .collect(Collectors.toSet());
 
                                 for (String property : clientProperties) {
                                     cfg.property(property.substring(propertyPrefix.length()),

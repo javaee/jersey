@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -85,8 +86,6 @@ import com.ning.http.client.RequestBuilder;
 import com.ning.http.client.providers.grizzly.FeedableBodyGenerator;
 import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
 import com.ning.http.util.ProxyUtils;
-
-import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
 
 /**
  * The transport using the AsyncHttpClient.
@@ -204,7 +203,7 @@ class GrizzlyConnector implements Connector {
         final Request connectorRequest = translate(request);
         final Map<String, String> clientHeadersSnapshot = writeOutBoundHeaders(request.getHeaders(), connectorRequest);
 
-        final SettableFuture<ClientResponse> responseFuture = SettableFuture.create();
+        final CompletableFuture<ClientResponse> responseFuture = new CompletableFuture<>();
         final ByteBufferInputStream entityStream = new ByteBufferInputStream();
         final AtomicBoolean futureSet = new AtomicBoolean(false);
 
@@ -225,9 +224,9 @@ class GrizzlyConnector implements Connector {
                     }
 
                     HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, request.getHeaders(),
-                            GrizzlyConnector.this.getClass().getName());
+                                                   GrizzlyConnector.this.getClass().getName());
 
-                    responseFuture.set(translate(request, this.status, headers, entityStream));
+                    responseFuture.complete(translate(request, this.status, headers, entityStream));
                     return STATE.CONTINUE;
                 }
 
@@ -249,7 +248,7 @@ class GrizzlyConnector implements Connector {
 
                     if (futureSet.compareAndSet(false, true)) {
                         t = t instanceof IOException ? new ProcessingException(t.getMessage(), t) : t;
-                        responseFuture.setException(t);
+                        responseFuture.completeExceptionally(t);
                     }
                 }
             });
@@ -282,13 +281,13 @@ class GrizzlyConnector implements Connector {
                 }
 
                 @Override
-                public STATE onHeadersReceived(final HttpResponseHeaders headers) throws Exception {
+                public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
                     if (!callbackInvoked.compareAndSet(false, true)) {
                         return STATE.ABORT;
                     }
 
                     HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, request.getHeaders(),
-                            GrizzlyConnector.this.getClass().getName());
+                                                   GrizzlyConnector.this.getClass().getName());
                     // hand-off to grizzly's application thread pool for response processing
                     processResponse(new Runnable() {
                         @Override
@@ -328,9 +327,9 @@ class GrizzlyConnector implements Connector {
         if (callbackInvoked.compareAndSet(false, true)) {
             callback.failure(failure);
         }
-        final SettableFuture<Object> errorFuture = SettableFuture.create();
-        errorFuture.setException(failure);
-        return errorFuture;
+        CompletableFuture<Object> future = new CompletableFuture<>();
+        future.completeExceptionally(failure);
+        return future;
     }
 
     @Override

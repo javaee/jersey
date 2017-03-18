@@ -41,11 +41,13 @@
 package org.glassfish.jersey.client;
 
 import java.util.Collections;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -53,9 +55,6 @@ import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.model.internal.RankedComparator;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Function that can be put to an acceptor chain to properly initialize
@@ -66,7 +65,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 public class RequestProcessingInitializationStage implements Function<ClientRequest, ClientRequest> {
     private final Provider<Ref<ClientRequest>> requestRefProvider;
-    private final Provider<MessageBodyWorkers> workersProvider;
+    private final MessageBodyWorkers workersProvider;
     private final Iterable<WriterInterceptor> writerInterceptors;
     private final Iterable<ReaderInterceptor> readerInterceptors;
 
@@ -78,23 +77,30 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
      * @param workersProvider message body workers injection provider.
      * @param injectionManager injection manager.
      */
-    @Inject
     public RequestProcessingInitializationStage(
             Provider<Ref<ClientRequest>> requestRefProvider,
-            Provider<MessageBodyWorkers> workersProvider,
+            MessageBodyWorkers workersProvider,
             InjectionManager injectionManager) {
         this.requestRefProvider = requestRefProvider;
         this.workersProvider = workersProvider;
-        writerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(injectionManager,
-                WriterInterceptor.class, new RankedComparator<WriterInterceptor>())));
-        readerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(injectionManager,
-                ReaderInterceptor.class, new RankedComparator<ReaderInterceptor>())));
+        writerInterceptors = Collections.unmodifiableList(
+                StreamSupport.stream(
+                        Providers.getAllProviders(injectionManager, WriterInterceptor.class,
+                                                  new RankedComparator<>()).spliterator(), false)
+                             .collect(Collectors.toList())
+        );
+        readerInterceptors = Collections.unmodifiableList(
+                StreamSupport.stream(
+                        Providers.getAllProviders(injectionManager, ReaderInterceptor.class,
+                                                  new RankedComparator<>()).spliterator(), false)
+                             .collect(Collectors.toList())
+        );
     }
 
     @Override
     public ClientRequest apply(ClientRequest requestContext) {
         requestRefProvider.get().set(requestContext);
-        requestContext.setWorkers(workersProvider.get());
+        requestContext.setWorkers(workersProvider);
         requestContext.setWriterInterceptors(writerInterceptors);
         requestContext.setReaderInterceptors(readerInterceptors);
 

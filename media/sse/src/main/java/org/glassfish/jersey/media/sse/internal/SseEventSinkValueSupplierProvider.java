@@ -63,8 +63,8 @@ public class SseEventSinkValueSupplierProvider extends AbstractValueSupplierProv
      * @param mpep    multivalued map parameter extractor provider.
      * @param requestProvider request provider.
      */
-    public SseEventSinkValueSupplierProvider(final MultivaluedParameterExtractorProvider mpep,
-                                             final Provider<ContainerRequest> requestProvider) {
+    public SseEventSinkValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
+                                             Provider<ContainerRequest> requestProvider) {
         super(mpep, requestProvider, Parameter.Source.CONTEXT);
     }
 

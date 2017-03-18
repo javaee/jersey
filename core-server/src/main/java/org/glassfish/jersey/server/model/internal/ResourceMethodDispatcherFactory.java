@@ -41,15 +41,12 @@
 package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.InvocationHandler;
-import java.util.Set;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
@@ -80,11 +77,10 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 public final class ResourceMethodDispatcherFactory implements ResourceMethodDispatcher.Provider {
 
     private static final Logger LOGGER = Logger.getLogger(ResourceMethodDispatcherFactory.class.getName());
-    private final Set<ResourceMethodDispatcher.Provider> providers;
+    private final Collection<ResourceMethodDispatcher.Provider> providers;
 
-    @Inject
-    ResourceMethodDispatcherFactory(InjectionManager injectionManager) {
-        providers = Providers.getProviders(injectionManager, ResourceMethodDispatcher.Provider.class);
+    ResourceMethodDispatcherFactory(Collection<ResourceMethodDispatcher.Provider> providers) {
+        this.providers = providers;
     }
 
     // ResourceMethodDispatchProvider

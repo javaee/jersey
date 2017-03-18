@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.message.filtering;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.security.DenyAll;
@@ -47,8 +48,6 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
 import org.glassfish.jersey.internal.inject.AnnotationLiteral;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Convenience utility methods for creating instances of security annotations.
@@ -64,7 +63,7 @@ public final class SecurityAnnotations {
      * @return annotation implementation.
      */
     public static RolesAllowed rolesAllowed(final String... roles) {
-        final List<String> list = Lists.newArrayListWithCapacity(roles.length);
+        final List<String> list = new ArrayList<>(roles.length);
         for (final String role : roles) {
             if (role != null) {
                 list.add(role);

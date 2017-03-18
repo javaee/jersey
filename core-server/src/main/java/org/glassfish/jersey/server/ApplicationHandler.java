@@ -42,79 +42,77 @@ package org.glassfish.jersey.server;
 
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.ws.rs.HttpMethod;
-import javax.ws.rs.NameBinding;
 import javax.ws.rs.RuntimeType;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.container.DynamicFeature;
-import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
-
-import javax.inject.Singleton;
 
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.BootstrapBag;
+import org.glassfish.jersey.internal.BootstrapConfigurator;
+import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.ServiceConfigurationError;
-import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.internal.ExceptionMapperFactory;
+import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.internal.util.collection.Value;
-import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.internal.MessageBodyFactory;
+import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.message.internal.NullOutputStream;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.model.internal.RankedComparator.Order;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.ExecutorProviders;
+import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.JerseyRequestTimeoutHandler;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
+import org.glassfish.jersey.server.internal.inject.ParamConverterConfigurator;
+import org.glassfish.jersey.server.internal.inject.ParamExtractorConfigurator;
+import org.glassfish.jersey.server.internal.inject.ValueSupplierProviderConfigurator;
 import org.glassfish.jersey.server.internal.monitoring.ApplicationEventImpl;
 import org.glassfish.jersey.server.internal.monitoring.CompositeApplicationEventListener;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
@@ -127,19 +125,15 @@ import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
+import org.glassfish.jersey.server.model.internal.ResourceMethodInvokerConfigurator;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.ExternalRequestScope;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
-import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 /**
  * Jersey server-side application handler.
@@ -209,39 +203,40 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         }
     };
 
-    private class ApplicationBinder extends AbstractBinder {
-
-        private class JaxrsApplicationProvider implements Supplier<Application> {
-
-            @Override
-            public Application get() {
-                return ApplicationHandler.this.application;
-            }
-        }
-
-        private class RuntimeConfigProvider implements Supplier<ServerConfig> {
-
-            @Override
-            public ServerConfig get() {
-                return ApplicationHandler.this.runtimeConfig;
-            }
-        }
+    /**
+     * Configurator which initializes and register {@link ApplicationHandler} and {@link Configuration} instances into
+     * {@link InjectionManager} and {@link BootstrapBag}.
+     *
+     * @author Petr Bouda (petr.bouda at oracle.com)
+     */
+    private class RuntimeConfigConfigurator implements BootstrapConfigurator {
 
         @Override
-        protected void configure() {
-            bindFactory(new RuntimeConfigProvider()).to(ServerConfig.class).to(Configuration.class).in(Singleton.class);
-            bindFactory(new JaxrsApplicationProvider()).to(Application.class).in(Singleton.class);
-            bind(ApplicationHandler.this).to(ApplicationHandler.class);
+        public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            ServerBootstrapBag serverBag = (ServerBootstrapBag) bootstrapBag;
+            serverBag.setApplicationHandler(ApplicationHandler.this);
+            serverBag.setConfiguration(ResourceConfig.createRuntimeConfig(serverBag.getApplication()));
+
+            // TODO: Do we really need these three bindings in DI provider? What JAX-RS specification says?
+            InstanceBinding<ApplicationHandler> handlerBinding =
+                    Bindings.service(ApplicationHandler.this)
+                            .to(ApplicationHandler.class);
+
+            InstanceBinding<ResourceConfig> configBinding =
+                    Bindings.service(serverBag.getRuntimeConfig())
+                            .to(Configuration.class)
+                            .to(ServerConfig.class);
+
+            injectionManager.register(handlerBinding);
+            injectionManager.register(configBinding);
         }
     }
 
-    private final Application application;
-    private final ResourceConfig runtimeConfig;
-    private final ServerRuntime runtime;
-    private final Iterable<ContainerLifecycleListener> containerLifecycleListeners;
-
-    private final InjectionManager injectionManager;
-
+    private Application application;
+    private ResourceConfig runtimeConfig;
+    private ServerRuntime runtime;
+    private Iterable<ContainerLifecycleListener> containerLifecycleListeners;
+    private InjectionManager injectionManager;
     private MessageBodyWorkers msgBodyWorkers;
 
     /**
@@ -260,14 +255,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
      *                              application handler.
      */
     public ApplicationHandler(final Class<? extends Application> jaxrsApplicationClass) {
-        this.injectionManager = Injections.createInjectionManager();
-        this.injectionManager.register(CompositeBinder.wrap(new ServerBinder(null, injectionManager), new ApplicationBinder()));
-
-        LazyValue<Iterable<ComponentProvider>> componentProviders = getLazyInitializedComponentProviders(injectionManager);
-        this.application = createApplication(jaxrsApplicationClass, componentProviders);
-        this.runtimeConfig = ResourceConfig.createRuntimeConfig(application);
-        this.runtime = Errors.processWithException(() -> initialize(componentProviders.get()));
-        this.containerLifecycleListeners = Providers.getAllProviders(injectionManager, ContainerLifecycleListener.class);
+        initialize(new ApplicationConfigurator(jaxrsApplicationClass), Injections.createInjectionManager(), null);
     }
 
     /**
@@ -303,87 +291,52 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
      * @param parentManager parent used in {@link InjectionManager} for a specific DI provider.
      */
     public ApplicationHandler(final Application application, final Binder customBinder, final Object parentManager) {
-        this.injectionManager = Injections.createInjectionManager(parentManager);
-        this.injectionManager.register(CompositeBinder.wrap(
-                new ServerBinder(application.getProperties(), injectionManager), new ApplicationBinder(), customBinder));
+        initialize(new ApplicationConfigurator(application), Injections.createInjectionManager(parentManager), customBinder);
+    }
 
-        final LazyValue<Iterable<ComponentProvider>> componentProviders = getLazyInitializedComponentProviders(injectionManager);
+    private void initialize(ApplicationConfigurator applicationConfigurator, InjectionManager injectionManager,
+            Binder customBinder) {
+        this.injectionManager = injectionManager;
+        this.injectionManager.register(CompositeBinder.wrap(new ServerBinder(), customBinder));
 
-        this.application = application;
-        if (application instanceof ResourceConfig) {
-            final ResourceConfig rc = (ResourceConfig) application;
-            if (rc.getApplicationClass() != null) {
-                rc.setApplication(createApplication(rc.getApplicationClass(), componentProviders));
-            }
-        }
-        this.runtimeConfig = ResourceConfig.createRuntimeConfig(application);
-        this.runtime = Errors.processWithException(() -> initialize(componentProviders.get()));
+        ServerBootstrapBag bootstrapBag = new ServerBootstrapBag();
+        List<BootstrapConfigurator> bootstrapConfigurators = Arrays.asList(
+                new RequestScope.RequestScopeConfigurator(),
+                new ParamConverterConfigurator(),
+                new ParamExtractorConfigurator(),
+                new ValueSupplierProviderConfigurator(),
+                new JerseyResourceContextConfigurator(),
+                new ComponentProviderConfigurator(),
+                applicationConfigurator,
+                new RuntimeConfigConfigurator(),
+                new ContextResolverFactory.ContextResolversConfigurator(),
+                new MessageBodyFactory.MessageBodyWorkersConfigurator(),
+                new ExceptionMapperFactory.ExceptionMappersConfigurator(),
+                new ResourceMethodInvokerConfigurator(),
+                new ProcessingProvidersConfigurator());
+
+        bootstrapConfigurators.forEach(configurator -> configurator.init(injectionManager, bootstrapBag));
+
+        this.application = bootstrapBag.getApplication();
+        this.runtimeConfig = bootstrapBag.getRuntimeConfig();
+
+        AbstractBinder dependentBinders =
+                CompositeBinder.wrap(new MessagingBinders.MessageBodyProviders(application.getProperties(), RuntimeType.SERVER),
+                        new ServiceFinderBinder<>(ContainerProvider.class, application.getProperties(), RuntimeType.SERVER),
+                        new ServiceFinderBinder<>(AutoDiscoverable.class, application.getProperties(), RuntimeType.SERVER));
+        injectionManager.register(dependentBinders);
+
+        this.runtime = Errors.processWithException(
+                () -> initialize(injectionManager, bootstrapConfigurators, bootstrapBag));
         this.containerLifecycleListeners = Providers.getAllProviders(injectionManager, ContainerLifecycleListener.class);
-    }
-
-    private Application createApplication(final Class<? extends Application> applicationClass,
-                                          final Value<Iterable<ComponentProvider>> componentProvidersValue) {
-        // need to handle ResourceConfig and Application separately as invoking forContract() on these
-        // will trigger the factories which we don't want at this point
-        if (applicationClass == ResourceConfig.class) {
-            return new ResourceConfig();
-        } else if (applicationClass == Application.class) {
-            return new Application();
-        } else {
-            Iterable<ComponentProvider> componentProviders = componentProvidersValue.get();
-            boolean appClassBound = false;
-            for (ComponentProvider cp : componentProviders) {
-                if (cp.bind(applicationClass, Collections.emptySet())) {
-                    appClassBound = true;
-                    break;
-                }
-            }
-            if (!appClassBound) {
-                if (applicationClass.isAnnotationPresent(Singleton.class)) {
-                    Binder binder = new AbstractBinder() {
-                        @Override
-                        protected void configure() {
-                            bindAsContract(applicationClass).in(Singleton.class);
-                        }
-                    };
-                    injectionManager.register(binder);
-                    appClassBound = true;
-                }
-            }
-            final Application app = appClassBound
-                    ? injectionManager.getInstance(applicationClass) : injectionManager.createAndInitialize(applicationClass);
-            if (app instanceof ResourceConfig) {
-                final ResourceConfig _rc = (ResourceConfig) app;
-                final Class<? extends Application> innerAppClass = _rc.getApplicationClass();
-                if (innerAppClass != null) {
-                    final Application innerApp = createApplication(innerAppClass, componentProvidersValue);
-                    _rc.setApplication(innerApp);
-                }
-            }
-            return app;
-        }
-    }
-
-    private static LazyValue<Iterable<ComponentProvider>> getLazyInitializedComponentProviders(
-            InjectionManager injectionManager) {
-        return Values.lazy((Value<Iterable<ComponentProvider>>) () -> {
-            // Registering Injection Bindings
-            List<ComponentProvider> result = new LinkedList<>();
-
-            // Registering Injection Bindings
-            for (final RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
-                final ComponentProvider provider = rankedProvider.getProvider();
-                provider.initialize(injectionManager);
-                result.add(provider);
-            }
-            return result;
-        });
     }
 
     /**
      * Assumes the configuration field is initialized with a valid ResourceConfig.
      */
-    private ServerRuntime initialize(Iterable<ComponentProvider> componentProviders) {
+    private ServerRuntime initialize(InjectionManager injectionManager,
+            List<BootstrapConfigurator> bootstrapConfigurators, ServerBootstrapBag bootstrapBag) {
+        this.injectionManager = injectionManager;
         LOGGER.config(LocalizationMessages.INIT_MSG(Version.getBuildId()));
 
         // Lock original ResourceConfig.
@@ -400,9 +353,17 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 Boolean.FALSE,
                 Boolean.class);
 
+        // Temporary way to eliminate injection manager in deeper bootstrap processing.
+        final java.util.function.Function<Class<?>, ?> createServiceFunction =
+                serviceType -> Injections.getOrCreate(injectionManager, serviceType);
+
+        final Collection<ValueSupplierProvider> valueSupplierProviders;
         final ResourceBag resourceBag;
         final ProcessingProviders processingProviders;
+        final JerseyResourceContext jerseyResourceContext = bootstrapBag.getResourceContext();
+        final Collection<ComponentProvider> componentProviders = bootstrapBag.getComponentProviders().get();
         final ComponentBag componentBag;
+
         ResourceModel resourceModel;
         CompositeApplicationEventListener compositeListener = null;
 
@@ -419,74 +380,38 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             // Configure binders and features.
             runtimeConfig.configureMetaProviders(injectionManager);
 
-            final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
-
-            // Adding programmatic resource models
-            for (final Resource programmaticResource : runtimeConfig.getResources()) {
-                resourceBagBuilder.registerProgrammaticResource(programmaticResource);
-            }
-
-            // Introspecting classes & instances
-            for (final Class<?> c : runtimeConfig.getClasses()) {
-                try {
-                    final Resource resource = Resource.from(c, disableValidation);
-                    if (resource != null) {
-                        resourceBagBuilder.registerResource(c, resource);
-                    }
-                } catch (final IllegalArgumentException ex) {
-                    LOGGER.warning(ex.getMessage());
-                }
-            }
-
-            for (final Object o : runtimeConfig.getSingletons()) {
-                try {
-                    final Resource resource = Resource.from(o.getClass(), disableValidation);
-                    if (resource != null) {
-                        resourceBagBuilder.registerResource(o, resource);
-                    }
-                } catch (final IllegalArgumentException ex) {
-                    LOGGER.warning(ex.getMessage());
-                }
-            }
-
-            resourceBag = resourceBagBuilder.build();
+            ResourceBagConfigurator resourceBagConfigurator = new ResourceBagConfigurator();
+            resourceBagConfigurator.init(injectionManager, bootstrapBag);
+            resourceBag = bootstrapBag.getResourceBag();
 
             runtimeConfig.lock();
 
             componentBag = runtimeConfig.getComponentBag();
-            final Class<ExternalRequestScope>[] extScopes = ServiceFinder.find(ExternalRequestScope.class, true).toClassArray();
 
-            boolean extScopeBound = false;
+            ExternalRequestScopeConfigurator externalRequestScopeConfigurator = new ExternalRequestScopeConfigurator();
+            externalRequestScopeConfigurator.init(injectionManager, bootstrapBag);
 
-            if (extScopes.length == 1) {
-                for (final ComponentProvider p : componentProviders) {
-                    if (p.bind(extScopes[0], new HashSet<Class<?>>() {{
-                        add(ExternalRequestScope.class);
-                    }})) {
-                        extScopeBound = true;
-                        break;
-                    }
-                }
-            } else if (extScopes.length > 1) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    final StringBuilder scopeList = new StringBuilder("\n");
-                    for (final Class<ExternalRequestScope> ers : extScopes) {
-                        scopeList.append("   ").append(ers.getTypeParameters()[0]).append('\n');
-                    }
-                    LOGGER.warning(LocalizationMessages.WARNING_TOO_MANY_EXTERNAL_REQ_SCOPES(scopeList.toString()));
-                }
-            }
+            // Adds all providers from resource config to InjectionManager -> BootstrapConfigurators are able to work with these
+            // services and get them.
+            bindProvidersAndResources(injectionManager, bootstrapBag, componentBag, resourceBag.classes,
+                    resourceBag.instances);
 
-            if (!extScopeBound) {
-                injectionManager.register(new ServerRuntime.NoopExternalRequestScopeBinder());
-            }
+            resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
+            resourceModel = processResourceModel(resourceModel);
+            bindEnhancingResourceClasses(injectionManager, bootstrapBag, resourceModel, resourceBag);
 
-            bindProvidersAndResources(componentProviders, componentBag, resourceBag.classes, resourceBag.instances);
-            for (final ComponentProvider componentProvider : componentProviders) {
-                componentProvider.done();
-            }
+            // All service are registered in InjectionManager
+            injectionManager.completeRegistration();
 
-            final Iterable<ApplicationEventListener> appEventListeners =
+            bootstrapConfigurators.forEach(configurator -> configurator.postInit(injectionManager, bootstrapBag));
+
+            componentProviders.forEach(ComponentProvider::done);
+
+            msgBodyWorkers = bootstrapBag.getMessageBodyWorkers();
+            processingProviders = bootstrapBag.getProcessingProviders();
+            valueSupplierProviders = bootstrapBag.getValueSupplierProviders();
+
+            Iterable<ApplicationEventListener> appEventListeners =
                     Providers.getAllProviders(injectionManager, ApplicationEventListener.class, new RankedComparator<>());
 
             if (appEventListeners.iterator().hasNext()) {
@@ -496,19 +421,8 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                         null));
             }
 
-            processingProviders = getProcessingProviders(componentBag);
-
-            // initialize processing provider reference
-            final GenericType<Ref<ProcessingProviders>> refGenericType = new GenericType<Ref<ProcessingProviders>>() {
-            };
-            final Ref<ProcessingProviders> refProcessingProvider = injectionManager.getInstance(refGenericType.getType());
-            refProcessingProvider.set(processingProviders);
-
-            resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
-            resourceModel = processResourceModel(resourceModel);
-
             if (!disableValidation) {
-                final ComponentModelValidator validator = new ComponentModelValidator(injectionManager);
+                final ComponentModelValidator validator = new ComponentModelValidator(valueSupplierProviders, msgBodyWorkers);
                 validator.validate(resourceModel);
             }
 
@@ -525,31 +439,38 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             }
         }
 
-        bindEnhancingResourceClasses(resourceModel, resourceBag, componentProviders);
-
+        // TODO: replace by ExecutorProviderConfigurator
         ExecutorProviders.createInjectionBindings(injectionManager);
 
         // initiate resource model into JerseyResourceContext
-        final JerseyResourceContext jerseyResourceContext = injectionManager.getInstance(JerseyResourceContext.class);
         jerseyResourceContext.setResourceModel(resourceModel);
 
-        msgBodyWorkers = injectionManager.getInstance(MessageBodyWorkers.class);
-
         // assembly request processing chain
-        final ReferencesInitializer referencesInitializer = injectionManager.createAndInitialize(ReferencesInitializer.class);
+        GenericType<Ref<RequestProcessingContext>> requestProcessingType = new GenericType<Ref<RequestProcessingContext>>() {};
+        ReferencesInitializer referencesInitializer = new ReferencesInitializer(injectionManager,
+                () -> injectionManager.getInstance(requestProcessingType.getType()));
+
+        Iterable<RankedProvider<ModelProcessor>> allRankedProviders =
+                 Providers.getAllRankedProviders(injectionManager, ModelProcessor.class);
+        Iterable<ModelProcessor> modelProcessors =
+                Providers.sortRankedProviders(new RankedComparator<>(), allRankedProviders);
+
         final ContainerFilteringStage preMatchRequestFilteringStage = new ContainerFilteringStage(
                 processingProviders.getPreMatchFilters(),
                 processingProviders.getGlobalResponseFilters());
         final ChainableStage<RequestProcessingContext> routingStage = Routing.forModel(resourceModel.getRuntimeResourceModel())
-                .beanManager(injectionManager)
                 .resourceContext(jerseyResourceContext)
                 .configuration(runtimeConfig)
                 .entityProviders(msgBodyWorkers)
+                .valueSupplierProviders(valueSupplierProviders)
+                .modelProcessors(modelProcessors)
+                .createService(createServiceFunction)
                 .processingProviders(processingProviders)
+                .resourceMethodInvokerBuilder(bootstrapBag.getResourceMethodInvokerBuilder())
                 .buildStage();
         final ContainerFilteringStage resourceFilteringStage =
                 new ContainerFilteringStage(processingProviders.getGlobalRequestFilters(), null);
-        /**
+        /*
          *  Root linear request acceptor. This is the main entry point for the whole request processing.
          */
         final Stage<RequestProcessingContext> rootStage = Stages
@@ -559,8 +480,8 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 .to(resourceFilteringStage)
                 .build(Routing.matchedEndpointExtractor());
 
-        final ServerRuntime serverRuntime = injectionManager.createAndInitialize(ServerRuntime.Builder.class)
-                .build(rootStage, compositeListener, processingProviders);
+        ServerRuntime serverRuntime = ServerRuntime.createServerRuntime(
+                injectionManager, bootstrapBag, rootStage, compositeListener, processingProviders);
 
         // Inject instances.
         for (final Object instance : componentBag.getInstances(ComponentBag.excludeMetaProviders(injectionManager))) {
@@ -612,8 +533,13 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         final Set<MessageBodyWriter> messageBodyWriters;
 
         if (LOGGER.isLoggable(Level.FINE)) {
-            messageBodyReaders = Sets.newHashSet(Providers.getAllProviders(injectionManager, MessageBodyReader.class));
-            messageBodyWriters = Sets.newHashSet(Providers.getAllProviders(injectionManager, MessageBodyWriter.class));
+            Spliterator<MessageBodyReader> mbrSpliterator =
+                    Providers.getAllProviders(injectionManager, MessageBodyReader.class).spliterator();
+            messageBodyReaders = StreamSupport.stream(mbrSpliterator, false).collect(Collectors.toSet());
+
+            Spliterator<MessageBodyWriter> mbwSpliterator =
+                    Providers.getAllProviders(injectionManager, MessageBodyWriter.class).spliterator();
+            messageBodyWriters = StreamSupport.stream(mbwSpliterator, false).collect(Collectors.toSet());
         } else {
             messageBodyReaders = Providers.getCustomProviders(injectionManager, MessageBodyReader.class);
             messageBodyWriters = Providers.getCustomProviders(injectionManager, MessageBodyWriter.class);
@@ -640,9 +566,9 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         printProviders(LocalizationMessages.LOGGING_DYNAMIC_FEATURES(),
                 processingProviders.getDynamicFeatures(), sb);
         printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_READERS(),
-                Collections2.transform(messageBodyReaders, new WorkersToStringTransform<MessageBodyReader>()), sb);
+                       messageBodyReaders.stream().map(new WorkersToStringTransform<>()).collect(Collectors.toList()), sb);
         printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_WRITERS(),
-                Collections2.transform(messageBodyWriters, new WorkersToStringTransform<MessageBodyWriter>()), sb);
+                       messageBodyWriters.stream().map(new WorkersToStringTransform<>()).collect(Collectors.toList()), sb);
 
         LOGGER.log(Level.CONFIG, sb.toString());
     }
@@ -687,84 +613,11 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         }
     }
 
-    private static Iterable<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
-        final List<RankedProvider<ComponentProvider>> result = new LinkedList<>();
-
-        for (final ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
-            result.add(new RankedProvider<>(provider));
-        }
-        Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
-        return result;
-    }
-
-    private ProcessingProviders getProcessingProviders(final ComponentBag componentBag) {
-
-        // scan for NameBinding annotations attached to the application class
-        final Collection<Class<? extends Annotation>> applicationNameBindings = ReflectionHelper.getAnnotationTypes(
-                ResourceConfig.unwrapApplication(runtimeConfig).getClass(), NameBinding.class);
-
-        final MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>> nameBoundRespFiltersInverse =
-                new MultivaluedHashMap<>();
-        final MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>> nameBoundReqFiltersInverse =
-                new MultivaluedHashMap<>();
-        final MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>> nameBoundReaderInterceptorsInverse =
-                new MultivaluedHashMap<>();
-        final MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>> nameBoundWriterInterceptorsInverse =
-                new MultivaluedHashMap<>();
-
-        // find all filters, interceptors and dynamic features
-        final Iterable<RankedProvider<ContainerResponseFilter>> responseFilters =
-                Providers.getAllRankedProviders(injectionManager, ContainerResponseFilter.class);
-
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters =
-                filterNameBound(responseFilters, null, componentBag, applicationNameBindings, nameBoundRespFiltersInverse);
-
-        final Iterable<RankedProvider<ContainerRequestFilter>> requestFilters =
-                Providers.getAllRankedProviders(injectionManager, ContainerRequestFilter.class);
-
-        final List<RankedProvider<ContainerRequestFilter>> preMatchFilters = Lists.newArrayList();
-
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundReqFilters =
-                filterNameBound(requestFilters, preMatchFilters, componentBag, applicationNameBindings,
-                        nameBoundReqFiltersInverse);
-
-        final Iterable<RankedProvider<ReaderInterceptor>> readerInterceptors =
-                Providers.getAllRankedProviders(injectionManager, ReaderInterceptor.class);
-
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ReaderInterceptor>> nameBoundReaderInterceptors =
-                filterNameBound(readerInterceptors, null, componentBag, applicationNameBindings,
-                        nameBoundReaderInterceptorsInverse);
-
-        final Iterable<RankedProvider<WriterInterceptor>> writerInterceptors =
-                Providers.getAllRankedProviders(injectionManager, WriterInterceptor.class);
-
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<WriterInterceptor>> nameBoundWriterInterceptors =
-                filterNameBound(writerInterceptors, null, componentBag, applicationNameBindings,
-                        nameBoundWriterInterceptorsInverse);
-
-        final Iterable<DynamicFeature> dynamicFeatures = Providers.getAllProviders(injectionManager, DynamicFeature.class);
-
-        return new ProcessingProviders(nameBoundReqFilters,
-                nameBoundReqFiltersInverse,
-                nameBoundResponseFilters,
-                nameBoundRespFiltersInverse,
-                nameBoundReaderInterceptors,
-                nameBoundReaderInterceptorsInverse,
-                nameBoundWriterInterceptors,
-                nameBoundWriterInterceptorsInverse,
-                requestFilters,
-                preMatchFilters,
-                responseFilters,
-                readerInterceptors,
-                writerInterceptors,
-                dynamicFeatures);
-    }
-
     private ResourceModel processResourceModel(ResourceModel resourceModel) {
-        final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers.getAllRankedProviders(injectionManager,
-                                                                                                            ModelProcessor.class);
-        final Iterable<ModelProcessor> modelProcessors = Providers.sortRankedProviders(new RankedComparator<ModelProcessor>(),
-                allRankedProviders);
+        Iterable<RankedProvider<ModelProcessor>> allRankedProviders =
+                Providers.getAllRankedProviders(injectionManager, ModelProcessor.class);
+        Iterable<ModelProcessor> modelProcessors =
+                Providers.sortRankedProviders(new RankedComparator<>(), allRankedProviders);
 
         for (final ModelProcessor modelProcessor : modelProcessors) {
             resourceModel = modelProcessor.processResourceModel(resourceModel, getConfiguration());
@@ -773,12 +626,12 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
     }
 
     private void bindEnhancingResourceClasses(
-            final ResourceModel resourceModel,
-            final ResourceBag resourceBag,
-            final Iterable<ComponentProvider> componentProviders) {
-
-        final Set<Class<?>> newClasses = Sets.newHashSet();
-        final Set<Object> newInstances = Sets.newHashSet();
+            InjectionManager injectionManager,
+            ServerBootstrapBag bootstrapBag,
+            ResourceModel resourceModel,
+            ResourceBag resourceBag) {
+        final Set<Class<?>> newClasses = new HashSet<>();
+        final Set<Object> newInstances = new HashSet<>();
         for (final Resource res : resourceModel.getRootResources()) {
             newClasses.addAll(res.getHandlerClasses());
             newInstances.addAll(res.getHandlerInstances());
@@ -787,91 +640,19 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         newInstances.removeAll(resourceBag.instances);
 
         final ComponentBag emptyComponentBag = ComponentBag.newInstance(input -> false);
-        bindProvidersAndResources(componentProviders, emptyComponentBag, newClasses, newInstances);
-    }
-
-    /**
-     * Takes collection of all filters/interceptors (either request/reader or response/writer)
-     * and separates out all name-bound filters/interceptors, returns them as a separate MultivaluedMap,
-     * mapping the name-bound annotation to the list of name-bound filters/interceptors. The same key values
-     * are also added into the inverse map passed in {@code inverseNameBoundMap}.
-     * <p/>
-     * Note, the name-bound filters/interceptors are removed from the original filters/interceptors collection.
-     * If non-null collection is passed in the postMatching parameter (applicable for filters only),
-     * this method also removes all the global
-     * postMatching filters from the original collection and adds them to the collection passed in the postMatching
-     * parameter.
-     *
-     * @param all                     Collection of all filters to be processed.
-     * @param preMatchingFilters      Collection into which pre-matching filters should be added.
-     * @param componentBag            Component bag
-     * @param applicationNameBindings Collection of name binding annotations attached to the JAX-RS application.
-     * @param inverseNameBoundMap     Inverse name bound map into which the name bound providers should be inserted. The keys
-     *                                are providers (filters, interceptor)
-     * @return {@link MultivaluedMap} of all name-bound filters.
-     */
-    private static <T> MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> filterNameBound(
-            final Iterable<RankedProvider<T>> all,
-            final Collection<RankedProvider<ContainerRequestFilter>> preMatchingFilters,
-            final ComponentBag componentBag,
-            final Collection<Class<? extends Annotation>> applicationNameBindings,
-            final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> inverseNameBoundMap) {
-
-        final MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> result
-                = new MultivaluedHashMap<>();
-
-        for (final Iterator<RankedProvider<T>> it = all.iterator(); it.hasNext(); ) {
-            final RankedProvider<T> provider = it.next();
-            Class<?> providerClass = provider.getProvider().getClass();
-            final Set<Type> contractTypes = provider.getContractTypes();
-            if (contractTypes != null && !contractTypes.contains(providerClass)) {
-                providerClass = ReflectionHelper.theMostSpecificTypeOf(contractTypes);
-            }
-
-            ContractProvider model = componentBag.getModel(providerClass);
-            if (model == null) {
-                // the provider was (most likely) bound in HK2 externally
-                model = ComponentBag.modelFor(providerClass);
-            }
-
-            final boolean preMatching = providerClass.getAnnotation(PreMatching.class) != null;
-            if (preMatching && preMatchingFilters != null) {
-                it.remove();
-                preMatchingFilters.add(new RankedProvider<>((ContainerRequestFilter) provider.getProvider(),
-                        model.getPriority(ContainerRequestFilter.class)));
-            }
-
-            boolean nameBound = model.isNameBound();
-            if (nameBound
-                    && !applicationNameBindings.isEmpty()
-                    && applicationNameBindings.containsAll(model.getNameBindings())) {
-                // override the name-bound flag
-                nameBound = false;
-            }
-
-            if (nameBound) { // not application-bound
-                if (!preMatching) {
-                    it.remove();
-                    for (final Class<? extends Annotation> binding : model.getNameBindings()) {
-                        result.add(binding, provider);
-                        inverseNameBoundMap.add(provider, binding);
-                    }
-                } else {
-                    LOGGER.warning(LocalizationMessages.PREMATCHING_ALSO_NAME_BOUND(providerClass));
-                }
-            }
-        }
-
-        return result;
+        bindProvidersAndResources(injectionManager, bootstrapBag, emptyComponentBag, newClasses, newInstances);
     }
 
     private void bindProvidersAndResources(
-            final Iterable<ComponentProvider> componentProviders,
-            final ComponentBag componentBag,
-            final Collection<Class<?>> resourceClasses,
-            final Collection<Object> resourceInstances) {
+            InjectionManager injectionManager,
+            ServerBootstrapBag bootstrapBag,
+            ComponentBag componentBag,
+            Collection<Class<?>> resourceClasses,
+            Collection<Object> resourceInstances) {
 
-        JerseyResourceContext resourceContext = injectionManager.getInstance(JerseyResourceContext.class);
+        Collection<ComponentProvider> componentProviders = bootstrapBag.getComponentProviders().get();
+        JerseyResourceContext resourceContext = bootstrapBag.getResourceContext();
+
         Set<Class<?>> registeredClasses = runtimeConfig.getRegisteredClasses();
 
         /*
@@ -895,13 +676,14 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                         !registeredClasses.contains(resourceClass),
                         true);
 
-        Set<Class<?>> componentClassses = componentBag.getClasses(ComponentBag.excludeMetaProviders(injectionManager)).stream()
+        Set<Class<?>> componentClasses =
+                componentBag.getClasses(ComponentBag.excludeMetaProviders(injectionManager)).stream()
                 .filter(correctlyConfigured)
                 .collect(Collectors.toSet());
 
         // Merge programmatic resource classes with component classes.
         Set<Class<?>> classes = Collections.newSetFromMap(new IdentityHashMap<>());
-        classes.addAll(componentClassses);
+        classes.addAll(componentClasses);
         classes.addAll(resourceClasses);
 
         // Bind classes.
@@ -920,14 +702,15 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 if (model != null && !correctlyConfiguredResource.test(componentClass, model)) {
                     model = null;
                 }
-                resourceContext.unsafeBindResource(componentClass, model, injectionManager);
+                resourceContext.unsafeBindResource(componentClass, model);
             } else {
                 ProviderBinder.bindProvider(componentClass, model, injectionManager);
             }
         }
 
         // Merge programmatic resource instances with other component instances.
-        Set<Object> instances = componentBag.getInstances(ComponentBag.excludeMetaProviders(injectionManager)).stream()
+        Set<Object> instances =
+                componentBag.getInstances(ComponentBag.excludeMetaProviders(injectionManager)).stream()
                 .filter(instance -> correctlyConfigured.test(instance.getClass()))
                 .collect(Collectors.toSet());
         instances.addAll(resourceInstances);
@@ -939,7 +722,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 if (model != null && !correctlyConfiguredResource.test(component.getClass(), model)) {
                     model = null;
                 }
-                resourceContext.unsafeBindResource(component, model, injectionManager);
+                resourceContext.unsafeBindResource(component, model);
             } else {
                 ProviderBinder.bindProvider(component, model, injectionManager);
             }
@@ -951,7 +734,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             final ContractProvider providerModel,
             final Iterable<ComponentProvider> componentProviders) {
 
-        final Set<Class<?>> contracts = providerModel == null ? Collections.<Class<?>>emptySet() : providerModel.getContracts();
+        final Set<Class<?>> contracts = providerModel == null ? Collections.emptySet() : providerModel.getContracts();
         for (final ComponentProvider provider : componentProviders) {
             if (provider.bind(component, contracts)) {
                 return true;
@@ -992,7 +775,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         return responseFuture;
     }
 
-    private static class FutureResponseWriter extends AbstractFuture<ContainerResponse> implements ContainerResponseWriter {
+    private static class FutureResponseWriter extends CompletableFuture<ContainerResponse> implements ContainerResponseWriter {
 
         private ContainerResponse response = null;
 
@@ -1040,26 +823,20 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                     current.setEntity(null);
                 }
                 requestTimeoutHandler.close();
-                super.set(current);
+                super.complete(current);
             }
         }
 
         @Override
         public void failure(final Throwable error) {
             requestTimeoutHandler.close();
-            super.setException(error);
+            super.completeExceptionally(error);
         }
 
         @Override
         public boolean enableResponseBuffering() {
             return true;
         }
-
-        @Override
-        protected void interruptTask() {
-            // TODO implement cancellation logic.
-        }
-
     }
 
     /**

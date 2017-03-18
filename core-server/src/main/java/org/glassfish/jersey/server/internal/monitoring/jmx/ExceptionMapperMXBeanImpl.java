@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,12 +40,11 @@
 
 package org.glassfish.jersey.server.internal.monitoring.jmx;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.glassfish.jersey.server.monitoring.ExceptionMapperMXBean;
 import org.glassfish.jersey.server.monitoring.ExceptionMapperStatistics;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * MXBean implementing a {@link org.glassfish.jersey.server.monitoring.ExceptionMapperMXBean} mxbean interface.
@@ -54,7 +53,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
  */
 public class ExceptionMapperMXBeanImpl implements ExceptionMapperMXBean {
     private volatile ExceptionMapperStatistics mapperStatistics;
-    private volatile Map<String, Long> mapperExcecutions = Maps.newHashMap();
+    private volatile Map<String, Long> mapperExcecutions = new HashMap<>();
 
     /**
      * Create a new MXBean and register it into mbean server using {@code mBeanExposer}.

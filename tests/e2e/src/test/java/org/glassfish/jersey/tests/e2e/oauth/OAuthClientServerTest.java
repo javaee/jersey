@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,9 @@ package org.glassfish.jersey.tests.e2e.oauth;
 
 import java.net.URI;
 import java.security.Principal;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
@@ -77,8 +80,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.sun.security.auth.UserPrincipal;
 
-import jersey.repackaged.com.google.common.collect.Sets;
-
 /**
  * Tests client and server OAuth 1 functionality.
  *
@@ -107,8 +108,9 @@ public class OAuthClientServerTest extends JerseyTest {
         };
 
         oAuthProvider.addAccessToken(PROMETHEUS_TOKEN, PROMETHEUS_SECRET, CONSUMER_KEY,
-                "http://callback.url", prometheusPrincipal, Sets.newHashSet("admin", "user"),
-                new MultivaluedHashMap<String, String>());
+                                     "http://callback.url", prometheusPrincipal,
+                                     new HashSet<>(Arrays.asList("admin", "user")),
+                                     new MultivaluedHashMap<String, String>());
         final OAuth1ServerFeature oAuth1ServerFeature = new OAuth1ServerFeature(oAuthProvider,
                 "requestTokenSpecialUri", "accessTokenSpecialUri");
         final ResourceConfig resourceConfig = new ResourceConfig();
@@ -155,7 +157,7 @@ public class OAuthClientServerTest extends JerseyTest {
             return defProvider.authorizeToken(
                     defProvider.getRequestToken(token),
                     new UserPrincipal("homer"),
-                    Sets.newHashSet("user"));
+                    Collections.singleton("user"));
         }
     }
 

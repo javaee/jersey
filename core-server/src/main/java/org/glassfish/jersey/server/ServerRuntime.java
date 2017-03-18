@@ -74,10 +74,9 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.guava.Preconditions;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -120,8 +119,6 @@ import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RE
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
 
-import jersey.repackaged.com.google.common.base.Preconditions;
-
 /**
  * Server-side request processing runtime.
  *
@@ -153,86 +150,30 @@ public class ServerRuntime {
     /** Resolve relative URIs according to RFC7231 (not JAX-RS 2.0 compliant */
     private final boolean rfc7231LocationHeaderRelativeUriResolution;
 
-    /**
-     * Binds no-operation external request scope if there are no configured using service locator.
-     */
-    public static class NoopExternalRequestScopeBinder extends AbstractBinder {
+    static ServerRuntime createServerRuntime(
+            InjectionManager injectionManager,
+            ServerBootstrapBag bootstrapBag,
+            Stage<RequestProcessingContext> processingRoot,
+            ApplicationEventListener eventListener,
+            ProcessingProviders processingProviders) {
 
-        @Override
-        protected void configure() {
-            bind(NOOP_EXTERNAL_REQ_SCOPE).to(ExternalRequestScope.class);
-        }
-    }
+        ScheduledExecutorService scheduledExecutorServiceSupplier =
+                injectionManager.getInstance(ScheduledExecutorService.class, BackgroundSchedulerLiteral.INSTANCE);
 
-    /*package */ static final ExternalRequestScope<Object> NOOP_EXTERNAL_REQ_SCOPE = new ExternalRequestScope<Object>() {
+        Provider<ExecutorService> asyncExecutorServiceSupplier =
+                () -> injectionManager.getInstance(ExecutorService.class, ManagedAsyncExecutorLiteral.INSTANCE);
 
-        @Override
-        public ExternalRequestContext<Object> open(final InjectionManager injectionManager) {
-            return null;
-        }
-
-        @Override
-        public void close() {
-        }
-
-        @Override
-        public void suspend(final ExternalRequestContext<Object> o, final InjectionManager injectionManager) {
-        }
-
-        @Override
-        public void resume(final ExternalRequestContext<Object> o, final InjectionManager injectionManager) {
-        }
-    };
-
-    /**
-     * Server-side request processing runtime builder.
-     */
-    public static class Builder {
-
-        @Inject
-        private InjectionManager injectionManager;
-        @Inject
-        @BackgroundScheduler
-        private ScheduledExecutorService backgroundScheduler;
-        @Inject
-        @ManagedAsyncExecutor
-        private Provider<ExecutorService> asyncExecutorProvider;
-        @Inject
-        private RequestScope requestScope;
-        @Inject
-        private ExceptionMappers exceptionMappers;
-        @Inject
-        private Configuration configuration;
-        @Inject
-        private ExternalRequestScope externalRequestScope;
-
-        /**
-         * Create new server-side request processing runtime.
-         *
-         * @param processingRoot      application request processing root stage.
-         * @param eventListener       application event listener registered for this runtime.
-         * @param processingProviders application processing providers.
-         * @return new server-side request processing runtime.
-         */
-        public ServerRuntime build(
-                final Stage<RequestProcessingContext> processingRoot,
-                final ApplicationEventListener eventListener,
-                final ProcessingProviders processingProviders) {
-
-            final ExternalRequestScope externalScope =
-                    externalRequestScope != null ? externalRequestScope : NOOP_EXTERNAL_REQ_SCOPE;
-
-            return new ServerRuntime(
-                    processingRoot,
-                    processingProviders, injectionManager,
-                    backgroundScheduler,
-                    asyncExecutorProvider,
-                    requestScope,
-                    exceptionMappers,
-                    eventListener,
-                    externalScope,
-                    configuration);
-        }
+        return new ServerRuntime(
+                processingRoot,
+                processingProviders,
+                injectionManager,
+                scheduledExecutorServiceSupplier,
+                asyncExecutorServiceSupplier,
+                bootstrapBag.getRequestScope(),
+                bootstrapBag.getExceptionMappers(),
+                eventListener,
+                injectionManager.getInstance(ExternalRequestScope.class),
+                bootstrapBag.getConfiguration());
     }
 
     private ServerRuntime(final Stage<RequestProcessingContext> requestProcessingRoot,
@@ -307,7 +248,6 @@ public class ServerRuntime {
         final Responder responder = new Responder(context, ServerRuntime.this);
         final RequestScope.Instance requestScopeInstance = requestScope.createInstance();
 
-        // TODO: Will we need EXTERNAL_REQUEST_SCOPE after the injection task?
         final AsyncResponderHolder asyncResponderHolder =
                 new AsyncResponderHolder(responder, externalRequestScope,
                         requestScopeInstance, externalRequestScope.open(injectionManager));

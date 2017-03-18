@@ -62,7 +62,7 @@ import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
  */
 public abstract class AbstractValueSupplierProvider implements ValueSupplierProvider {
 
-    private final MultivaluedParameterExtractorProvider mpep;
+    private final Provider<MultivaluedParameterExtractorProvider> mpep;
     private final Set<Parameter.Source> compatibleSources;
     private final Provider<ContainerRequest> requestProvider;
 
@@ -73,7 +73,7 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
      * @param requestProvider   container request provider.
      * @param compatibleSources compatible parameter sources.
      */
-    protected AbstractValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+    protected AbstractValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
                                             Provider<ContainerRequest> requestProvider,
                                             Parameter.Source... compatibleSources) {
         this.mpep = mpep;
@@ -92,7 +92,7 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
      * any default values set on the parameter.
      */
     protected final MultivaluedParameterExtractor<?> get(Parameter parameter) {
-        return mpep.get(parameter);
+        return mpep.get().get(parameter);
     }
 
     /**

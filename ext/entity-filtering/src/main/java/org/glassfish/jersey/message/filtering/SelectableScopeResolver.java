@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.filtering;
 
 import java.lang.annotation.Annotation;
@@ -53,8 +54,6 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.message.filtering.spi.ScopeResolver;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 @Singleton
 public class SelectableScopeResolver implements ScopeResolver {
@@ -102,7 +101,7 @@ public class SelectableScopeResolver implements ScopeResolver {
     }
 
     private Set<String> getScopesForField(final String fieldName) {
-        final Set<String> scopes = Sets.newHashSet();
+        final Set<String> scopes = new HashSet<>();
 
         // add specific scope in case of specific request
         final String[] fields = Tokenizer.tokenize(fieldName, ",");

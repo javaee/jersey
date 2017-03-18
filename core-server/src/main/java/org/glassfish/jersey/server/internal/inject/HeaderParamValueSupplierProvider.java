@@ -65,7 +65,7 @@ final class HeaderParamValueSupplierProvider extends AbstractValueSupplierProvid
      * @param mpep            multivalued map parameter extractor provider.
      * @param requestProvider request provider.
      */
-    public HeaderParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+    public HeaderParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
             Provider<ContainerRequest> requestProvider) {
         super(mpep, requestProvider, Parameter.Source.HEADER);
     }

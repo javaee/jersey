@@ -41,6 +41,7 @@
 package org.glassfish.jersey.message.filtering;
 
 import java.lang.annotation.Annotation;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.ConstrainedTo;
@@ -53,8 +54,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * @author Michal Gajdos
@@ -76,7 +75,7 @@ final class SecurityServerScopeProvider extends ServerScopeProvider {
         Set<String> filteringScope = super.getFilteringScopes(entityAnnotations, false);
 
         if (filteringScope.isEmpty()) {
-            filteringScope = Sets.newHashSet();
+            filteringScope = new HashSet<>();
 
             // Get all roles collected from entities and check with current security context.
             for (final String role : SecurityHelper.getProcessedRoles()) {

@@ -43,13 +43,14 @@ package org.glassfish.jersey.model;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
-
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Jersey contract provider model.
@@ -92,9 +93,9 @@ public final class ContractProvider implements Scoped, NameBound {
 
         private Class<?> implementationClass = null;
         private Class<? extends Annotation> scope = null;
-        private Map<Class<?>, Integer> contracts = Maps.newHashMap();
+        private Map<Class<?>, Integer> contracts = new HashMap<>();
         private int defaultPriority = NO_PRIORITY;
-        private Set<Class<? extends Annotation>> nameBindings = Sets.newIdentityHashSet();
+        private Set<Class<? extends Annotation>> nameBindings = Collections.newSetFromMap(new IdentityHashMap<>());
 
         private Builder(Class<?> implementationClass) {
             this.implementationClass = implementationClass;
@@ -236,12 +237,13 @@ public final class ContractProvider implements Scoped, NameBound {
 
             final Map<Class<?>, Integer> _contracts = (contracts.isEmpty())
                     ? Collections.<Class<?>, Integer>emptyMap()
-                    : Maps.transformEntries(contracts, new Maps.EntryTransformer<Class<?>, Integer, Integer>() {
-                        @Override
-                        public Integer transformEntry(final Class<?> contract, final Integer priority) {
-                            return (priority != NO_PRIORITY) ? priority : defaultPriority;
-                        }
-                    });
+                    : contracts.entrySet()
+                               .stream()
+                               .collect(Collectors.toMap((Function<Map.Entry<Class<?>, Integer>, Class<?>>) Map.Entry::getKey,
+                                                         classIntegerEntry -> {
+                                                             Integer priority = classIntegerEntry.getValue();
+                                                             return (priority != NO_PRIORITY) ? priority : defaultPriority;
+                                                         }));
 
             final Set<Class<? extends Annotation>> bindings = (nameBindings.isEmpty())
                     ? Collections.<Class<? extends Annotation>>emptySet() : Collections.unmodifiableSet(nameBindings);

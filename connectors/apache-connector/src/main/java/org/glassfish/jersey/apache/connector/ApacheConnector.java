@@ -51,6 +51,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -122,8 +123,6 @@ import org.apache.http.impl.io.ChunkedOutputStream;
 import org.apache.http.io.SessionOutputBuffer;
 import org.apache.http.util.TextUtils;
 import org.apache.http.util.VersionInfo;
-
-import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * A {@link Connector} that utilizes the Apache HTTP Client to send and receive
@@ -478,7 +477,7 @@ class ApacheConnector implements Connector {
             }
 
             try {
-                responseContext.setEntityStream(new HttpClientResponseInputStream(getInputStream(response)));
+                responseContext.setEntityStream(getInputStream(response));
             } catch (final IOException e) {
                 LOGGER.log(Level.SEVERE, null, e);
             }
@@ -491,16 +490,16 @@ class ApacheConnector implements Connector {
 
     @Override
     public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
-        return MoreExecutors.sameThreadExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    callback.response(apply(request));
-                } catch (final Throwable t) {
-                    callback.failure(t);
-                }
-            }
-        });
+        try {
+            ClientResponse response = apply(request);
+            callback.response(response);
+            return CompletableFuture.completedFuture(response);
+        } catch (Throwable t) {
+            callback.failure(t);
+            CompletableFuture<Object> future = new CompletableFuture<>();
+            future.completeExceptionally(t);
+            return future;
+        }
     }
 
     @Override
@@ -617,18 +616,6 @@ class ApacheConnector implements Connector {
         return stringHeaders;
     }
 
-    private static final class HttpClientResponseInputStream extends FilterInputStream {
-
-        HttpClientResponseInputStream(final InputStream inputStream) throws IOException {
-            super(inputStream);
-        }
-
-        @Override
-        public void close() throws IOException {
-            super.close();
-        }
-    }
-
     private static InputStream getInputStream(final CloseableHttpResponse response) throws IOException {
 
         final InputStream inputStream;
@@ -648,7 +635,6 @@ class ApacheConnector implements Connector {
             @Override
             public void close() throws IOException {
                 response.close();
-                super.close();
             }
         };
     }

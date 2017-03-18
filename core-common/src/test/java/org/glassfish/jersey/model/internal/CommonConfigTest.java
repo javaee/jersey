@@ -42,6 +42,7 @@ package org.glassfish.jersey.model.internal;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -83,8 +84,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import jersey.repackaged.com.google.common.collect.Maps;
-
 /**
  * Test cases for {@link javax.ws.rs.core.Configuration}.
  *
@@ -114,7 +113,7 @@ public class CommonConfigTest {
         config = config.property("foo", "bar");
         assertEquals("bar", config.getConfiguration().getProperty("foo"));
 
-        final Map<String, String> properties = Maps.newHashMap();
+        final Map<String, String> properties = new HashMap<>();
         properties.put("hello", "world");
         config = config.setProperties(properties);
 
@@ -125,7 +124,7 @@ public class CommonConfigTest {
         assertEquals(1, config.getConfiguration().getProperties().size());
         assertNull(config.getConfiguration().getProperty("one"));
 
-        config = config.setProperties(Maps.<String, String>newHashMap());
+        config = config.setProperties(new HashMap<String, String>());
         assertTrue(config.getConfiguration().getProperties().isEmpty());
     }
 
@@ -594,13 +593,15 @@ public class CommonConfigTest {
 
     @Test
     public void testProviderOrderManual() throws Exception {
-        final InjectionManager injectionManager = Injections.createInjectionManager();
+        InjectionManager injectionManager = Injections.createInjectionManager();
 
         config.register(MidPriorityProvider.class, 500);
         config.register(LowPriorityProvider.class, 20);
         config.register(HighPriorityProvider.class, 150);
 
         ProviderBinder.bindProviders(config.getComponentBag(), injectionManager);
+
+        injectionManager.completeRegistration();
         final Iterable<WriterInterceptor> allProviders =
                 Providers.getAllProviders(injectionManager, WriterInterceptor.class, new RankedComparator<>());
 
@@ -614,13 +615,14 @@ public class CommonConfigTest {
 
     @Test
     public void testProviderOrderSemiAutomatic() throws Exception {
-        final InjectionManager injectionManager = Injections.createInjectionManager();
+        InjectionManager injectionManager = Injections.createInjectionManager();
 
         config.register(MidPriorityProvider.class, 50);
         config.register(LowPriorityProvider.class, 2000);
         config.register(HighPriorityProvider.class);
 
         ProviderBinder.bindProviders(config.getComponentBag(), injectionManager);
+        injectionManager.completeRegistration();
         final Iterable<WriterInterceptor> allProviders =
                 Providers.getAllProviders(injectionManager, WriterInterceptor.class, new RankedComparator<>());
 
@@ -634,15 +636,16 @@ public class CommonConfigTest {
 
     @Test
     public void testProviderOrderAutomatic() throws Exception {
-        final InjectionManager injectionManager = Injections.createInjectionManager();
-
+        InjectionManager injectionManager = Injections.createInjectionManager();
         config.register(MidPriorityProvider.class);
         config.register(LowPriorityProvider.class);
         config.register(HighPriorityProvider.class);
 
         ProviderBinder.bindProviders(config.getComponentBag(), injectionManager);
+        injectionManager.completeRegistration();
+
         final Iterable<WriterInterceptor> allProviders =
-                Providers.getAllProviders(injectionManager, WriterInterceptor.class, new RankedComparator<WriterInterceptor>());
+                Providers.getAllProviders(injectionManager, WriterInterceptor.class, new RankedComparator<>());
 
         final Iterator<WriterInterceptor> iterator = allProviders.iterator();
 
@@ -655,7 +658,7 @@ public class CommonConfigTest {
     @Test
     @SuppressWarnings("unchecked")
     public void testProviderOrderDifForContracts() throws Exception {
-        final Map<Class<?>, Integer> contracts = new IdentityHashMap<Class<?>, Integer>();
+        final Map<Class<?>, Integer> contracts = new IdentityHashMap<>();
 
         contracts.put(WriterInterceptor.class, ContractProvider.NO_PRIORITY);
         contracts.put(ReaderInterceptor.class, 2000);
@@ -672,10 +675,12 @@ public class CommonConfigTest {
         config.register(HighPriorityProvider.class, contracts);
         contracts.clear();
 
-        final InjectionManager injectionManager = Injections.createInjectionManager();
+        InjectionManager injectionManager = Injections.createInjectionManager();
         ProviderBinder.bindProviders(config.getComponentBag(), injectionManager);
+
+        injectionManager.completeRegistration();
         final Iterable<WriterInterceptor> writerInterceptors =
-                Providers.getAllProviders(injectionManager, WriterInterceptor.class, new RankedComparator<WriterInterceptor>());
+                Providers.getAllProviders(injectionManager, WriterInterceptor.class, new RankedComparator<>());
 
         final Iterator<WriterInterceptor> writerIterator = writerInterceptors.iterator();
 
@@ -685,7 +690,7 @@ public class CommonConfigTest {
         assertFalse(writerIterator.hasNext());
 
         final Iterable<ReaderInterceptor> readerInterceptors =
-                Providers.getAllProviders(injectionManager, ReaderInterceptor.class, new RankedComparator<ReaderInterceptor>());
+                Providers.getAllProviders(injectionManager, ReaderInterceptor.class, new RankedComparator<>());
 
         final Iterator<ReaderInterceptor> readerIterator = readerInterceptors.iterator();
 
@@ -806,7 +811,8 @@ public class CommonConfigTest {
     public void testConfigureFeatureHierarchy() throws Exception {
         config.register(ComplexFeature.class);
 
-        config.configureMetaProviders(Injections.createInjectionManager());
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        config.configureMetaProviders(injectionManager);
 
         assertTrue(config.getConfiguration().isEnabled(ComplexFeature.class));
 
@@ -817,7 +823,8 @@ public class CommonConfigTest {
     @Test
     public void testConfigureFeatureRecursive() throws Exception {
         config.register(RecursiveFeature.class);
-        config.configureMetaProviders(Injections.createInjectionManager());
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        config.configureMetaProviders(injectionManager);
 
         assertTrue(config.getConfiguration().isEnabled(RecursiveFeature.class));
         assertEquals(1, config.getInstances().size());
@@ -831,7 +838,8 @@ public class CommonConfigTest {
         final SimpleFeatureA f2 = new SimpleFeatureA(true);
         config.register(f2);
 
-        config.configureMetaProviders(Injections.createInjectionManager());
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        config.configureMetaProviders(injectionManager);
 
         assertTrue(config.getConfiguration().isEnabled(f1));
         assertFalse(config.getConfiguration().isEnabled(f2));
@@ -912,8 +920,9 @@ public class CommonConfigTest {
     @Test
     public void testBinderConfiguringFeature() throws Exception {
         config.register(ContractBinderFeature.class);
-        final InjectionManager injectionManager = Injections.createInjectionManager();
+        InjectionManager injectionManager = Injections.createInjectionManager();
         config.configureMetaProviders(injectionManager);
+        injectionManager.completeRegistration();
 
         assertTrue(config.isEnabled(ContractBinderFeature.class));
         assertEquals(1, config.getInstances().size());
@@ -975,7 +984,7 @@ public class CommonConfigTest {
                     }
                 });
 
-        final InjectionManager injectionManager = Injections.createInjectionManager();
+        InjectionManager injectionManager = Injections.createInjectionManager();
         config.configureMetaProviders(injectionManager);
 
         assertThat("Feature instance not injected", config.getProperty("instance-injected").toString(), is("true"));
@@ -989,7 +998,7 @@ public class CommonConfigTest {
         config.register(InjectIntoFeatureClass.class);
         config.register(new InjectIntoFeatureInstance());
 
-        final InjectionManager injectionManager = Injections.createInjectionManager();
+        InjectionManager injectionManager = Injections.createInjectionManager();
         config.configureMetaProviders(injectionManager);
 
         assertThat("Feature instance not injected", config.getProperty("instance-injected").toString(), is("true"));

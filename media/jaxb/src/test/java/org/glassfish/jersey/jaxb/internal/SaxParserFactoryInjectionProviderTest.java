@@ -61,6 +61,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.PerThread;
@@ -159,7 +160,7 @@ public class SaxParserFactoryInjectionProviderTest {
             }
         };
         System.arraycopy(customBinders, 0, binders, 2, customBinders.length);
-        return Injections.createInjectionManager(binders);
+        return Injections.createInjectionManager(CompositeBinder.wrap(binders));
     }
 
     @Test

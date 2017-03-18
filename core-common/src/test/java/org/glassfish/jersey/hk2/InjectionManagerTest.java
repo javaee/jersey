@@ -70,33 +70,31 @@ public class InjectionManagerTest {
         };
         ServiceLocator parentLocator = ServiceLocatorUtilities.bind(binder);
 
-        InjectionManager injectionManager = new HK2InjectionManager();
-        injectionManager.initialize(parentLocator);
+        InjectionManager injectionManager = new ImmediateHk2InjectionManager(parentLocator);
+        injectionManager.completeRegistration();
         assertNotNull(injectionManager.getInstance(EnglishGreeting.class));
     }
 
     @Test
     public void testInjectionManagerParent() {
         ClassBinding<EnglishGreeting> greetingBinding = Bindings.serviceAsContract(EnglishGreeting.class);
-        InjectionManager parentInjectionManager = new HK2InjectionManager();
-        parentInjectionManager.initialize();
+        InjectionManager parentInjectionManager = new ImmediateHk2InjectionManager();
         parentInjectionManager.register(greetingBinding);
+        parentInjectionManager.completeRegistration();
 
-        InjectionManager injectionManager = new HK2InjectionManager();
-        injectionManager.initialize(parentInjectionManager);
+        InjectionManager injectionManager = new ImmediateHk2InjectionManager(parentInjectionManager);
+        injectionManager.completeRegistration();
         assertNotNull(injectionManager.getInstance(EnglishGreeting.class));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testUnknownParent() {
-        InjectionManager parentInjectionManager = new HK2InjectionManager();
-        parentInjectionManager.initialize(new Object());
-        Injections.createInjectionManager(parentInjectionManager);
+        Injections.createInjectionManager(new Object());
     }
 
     @Test
     public void testIsRegistrable() {
-        InjectionManager injectionManager = new HK2InjectionManager();
+        InjectionManager injectionManager = new ImmediateHk2InjectionManager();
         assertTrue(injectionManager.isRegistrable(Binder.class));
         assertTrue(injectionManager.isRegistrable(AbstractBinder.class));
         assertFalse(injectionManager.isRegistrable(org.glassfish.jersey.internal.inject.AbstractBinder.class));
@@ -112,16 +110,15 @@ public class InjectionManagerTest {
             }
         };
 
-        InjectionManager injectionManager = new HK2InjectionManager();
-        injectionManager.initialize();
+        InjectionManager injectionManager = new ImmediateHk2InjectionManager();
         injectionManager.register(binder);
+        injectionManager.completeRegistration();
         assertNotNull(injectionManager.getInstance(EnglishGreeting.class));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testRegisterUnknownProvider() {
-        InjectionManager injectionManager = new HK2InjectionManager();
-        injectionManager.initialize();
+        InjectionManager injectionManager = new ImmediateHk2InjectionManager();
         injectionManager.register(new Object());
     }
 }

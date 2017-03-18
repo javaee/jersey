@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.monitoring.jmx;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.glassfish.jersey.server.internal.monitoring.MonitoringUtils;
@@ -47,8 +48,6 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ResourceMXBean;
 import org.glassfish.jersey.server.monitoring.ResourceMethodStatistics;
 import org.glassfish.jersey.server.monitoring.ResourceStatistics;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * MXBean implementing the {@link org.glassfish.jersey.server.monitoring.ResourceMethodMXBean} MXBean interface.
@@ -59,7 +58,7 @@ public class ResourceMxBeanImpl implements ResourceMXBean {
     private final String name;
     private volatile ExecutionStatisticsDynamicBean methodsExecutionStatisticsBean;
     private volatile ExecutionStatisticsDynamicBean requestExecutionStatisticsBean;
-    private final Map<String, ResourceMethodMXBeanImpl> resourceMethods = Maps.newHashMap();
+    private final Map<String, ResourceMethodMXBeanImpl> resourceMethods = new HashMap<>();
     private final String resourcePropertyName;
     private final boolean uriResource;
     private final MBeanExposer mBeanExposer;

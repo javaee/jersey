@@ -81,9 +81,20 @@ public abstract class AbstractBinder implements Binder {
      * @return initialized binding builder.
      */
     public <T> ClassBinding<T> bind(Class<T> serviceType) {
-        ClassBinding<T> descriptor = Bindings.service(serviceType);
-        bindings.add(descriptor);
-        return descriptor;
+        ClassBinding<T> binding = Bindings.service(serviceType);
+        bindings.add(binding);
+        return binding;
+    }
+
+    /**
+     * Binds the provided binding and return the same instance.
+     *
+     * @param binding binding.
+     * @return the same provided binding.
+     */
+    public Binding bind(Binding binding) {
+        bindings.add(binding);
+        return binding;
     }
 
     /**
@@ -96,9 +107,9 @@ public abstract class AbstractBinder implements Binder {
      * @return initialized binding builder.
      */
     public <T> ClassBinding<T> bindAsContract(Class<T> serviceType) {
-        ClassBinding<T> descriptor = Bindings.serviceAsContract(serviceType);
-        bindings.add(descriptor);
-        return descriptor;
+        ClassBinding<T> binding = Bindings.serviceAsContract(serviceType);
+        bindings.add(binding);
+        return binding;
     }
 
     /**
@@ -111,9 +122,9 @@ public abstract class AbstractBinder implements Binder {
      * @return initialized binding builder.
      */
     public <T> ClassBinding<T> bindAsContract(GenericType<T> serviceType) {
-        ClassBinding<T> descriptor = Bindings.service(serviceType);
-        bindings.add(descriptor);
-        return descriptor;
+        ClassBinding<T> binding = Bindings.service(serviceType);
+        bindings.add(binding);
+        return binding;
     }
 
     /**
@@ -125,9 +136,9 @@ public abstract class AbstractBinder implements Binder {
      * @return initialized binding builder.
      */
     public ClassBinding<Object> bindAsContract(Type serviceType) {
-        ClassBinding<Object> descriptor = Bindings.serviceAsContract(serviceType);
-        bindings.add(descriptor);
-        return descriptor;
+        ClassBinding<Object> binding = Bindings.serviceAsContract(serviceType);
+        bindings.add(binding);
+        return binding;
     }
 
     /**
@@ -141,9 +152,9 @@ public abstract class AbstractBinder implements Binder {
      * @return initialized binding builder.
      */
     public <T> InstanceBinding<T> bind(T service) {
-        InstanceBinding<T> descriptor = Bindings.service(service);
-        bindings.add(descriptor);
-        return descriptor;
+        InstanceBinding<T> binding = Bindings.service(service);
+        bindings.add(binding);
+        return binding;
     }
 
     /**
@@ -196,14 +207,14 @@ public abstract class AbstractBinder implements Binder {
      * There is no need to provide any additional information. Other method on {@link Binding}
      * will be ignored.
      *
-     * @param <T>        type of the injection resolver.
-     * @param resolver   injection resolver instance.
+     * @param <T>      type of the injection resolver.
+     * @param resolver injection resolver instance.
      * @return initialized binding builder.
      */
     public <T extends InjectionResolver> InjectionResolverBinding<T> bind(T resolver) {
-        InjectionResolverBinding<T> descriptor = Bindings.injectionResolver(resolver);
-        bindings.add(descriptor);
-        return descriptor;
+        InjectionResolverBinding<T> binding = Bindings.injectionResolver(resolver);
+        bindings.add(binding);
+        return binding;
     }
 
     /**

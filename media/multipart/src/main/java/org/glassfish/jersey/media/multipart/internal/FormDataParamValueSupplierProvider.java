@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MediaType;
@@ -79,9 +80,6 @@ import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor
 import org.glassfish.jersey.server.model.Parameter;
 
 import org.jvnet.mimepull.MIMEParsingException;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Value supplier provider supporting the {@link FormDataParam} injection annotation and entity ({@link FormDataMultiPart})
@@ -176,12 +174,9 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
         public List<FormDataContentDisposition> get() {
             final List<FormDataBodyPart> parts = getEntity().getFields(name);
 
-            return parts == null ? null : Lists.transform(parts, new Function<FormDataBodyPart, FormDataContentDisposition>() {
-                @Override
-                public FormDataContentDisposition apply(final FormDataBodyPart part) {
-                    return part.getFormDataContentDisposition();
-                }
-            });
+            return parts == null ? null : parts.stream()
+                                               .map(FormDataBodyPart::getFormDataContentDisposition)
+                                               .collect(Collectors.toList());
         }
     }
 
@@ -400,7 +395,7 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
      * @param requestProvider   request provider.
      */
     public FormDataParamValueSupplierProvider(
-            MultivaluedParameterExtractorProvider extractorProvider, Provider<ContainerRequest> requestProvider) {
+            Provider<MultivaluedParameterExtractorProvider> extractorProvider, Provider<ContainerRequest> requestProvider) {
         super(extractorProvider, requestProvider, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
     }
 

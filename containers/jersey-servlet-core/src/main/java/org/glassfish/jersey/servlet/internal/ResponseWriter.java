@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.servlet.internal;
 
 import java.io.IOException;
@@ -44,6 +45,7 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -60,8 +62,6 @@ import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.JerseyRequestTimeoutHandler;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
-
-import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
 
 /**
  * An internal implementation of {@link ContainerResponseWriter} for Servlet containers.
@@ -88,7 +88,7 @@ public class ResponseWriter implements ContainerResponseWriter {
      * If {@code true} method {@link HttpServletResponse#setStatus} is used over {@link HttpServletResponse#sendError}.
      */
     private final boolean configSetStatusOverSendError;
-    private final SettableFuture<ContainerResponse> responseContext;
+    private final CompletableFuture<ContainerResponse> responseContext;
     private final AsyncContextDelegate asyncExt;
 
     private final JerseyRequestTimeoutHandler requestTimeoutHandler;
@@ -113,7 +113,7 @@ public class ResponseWriter implements ContainerResponseWriter {
         this.configSetStatusOverSendError = configSetStatusOverSendError;
         this.response = response;
         this.asyncExt = asyncExt;
-        this.responseContext = SettableFuture.create();
+        this.responseContext = new CompletableFuture<>();
 
         this.requestTimeoutHandler = new JerseyRequestTimeoutHandler(this, timeoutTaskExecutor);
     }
@@ -139,7 +139,7 @@ public class ResponseWriter implements ContainerResponseWriter {
     @Override
     public OutputStream writeResponseStatusAndHeaders(final long contentLength, final ContainerResponse responseContext)
             throws ContainerException {
-        this.responseContext.set(responseContext);
+        this.responseContext.complete(responseContext);
 
         // first set the content length, so that if headers have an explicit value, it takes precedence over this one
         if (responseContext.hasEntity() && contentLength != -1 && contentLength < Integer.MAX_VALUE) {
@@ -216,7 +216,7 @@ public class ResponseWriter implements ContainerResponseWriter {
             final boolean hasEntity = responseContext.hasEntity();
             final Response.StatusType status = responseContext.getStatusInfo();
             if (!hasEntity && status != null && status.getStatusCode() >= 400
-                    && !(useSetStatusOn404 && status == Response.Status.NOT_FOUND)) {
+                && !(useSetStatusOn404 && status == Response.Status.NOT_FOUND)) {
                 final String reason = status.getReasonPhrase();
                 try {
                     if (reason == null || reason.isEmpty()) {

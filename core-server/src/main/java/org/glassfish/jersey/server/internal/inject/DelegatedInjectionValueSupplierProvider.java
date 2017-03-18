@@ -53,6 +53,7 @@ import org.glassfish.jersey.internal.inject.ForeignDescriptor;
 import org.glassfish.jersey.internal.inject.Injectee;
 import org.glassfish.jersey.internal.inject.InjecteeImpl;
 import org.glassfish.jersey.internal.util.collection.Cache;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
@@ -67,7 +68,7 @@ import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 @Singleton
 class DelegatedInjectionValueSupplierProvider implements ValueSupplierProvider {
 
-    private final ContextInjectionResolver resolver;
+    private final LazyValue<ContextInjectionResolver> resolver;
 
     private final Function<Binding, ForeignDescriptor> foreignDescriptorFactory;
 
@@ -77,7 +78,7 @@ class DelegatedInjectionValueSupplierProvider implements ValueSupplierProvider {
      * @param resolver                 context injection resolver.
      * @param foreignDescriptorFactory function that is able to create a new foreign descriptor.
      */
-    public DelegatedInjectionValueSupplierProvider(ContextInjectionResolver resolver,
+    public DelegatedInjectionValueSupplierProvider(LazyValue<ContextInjectionResolver> resolver,
             Function<Binding, ForeignDescriptor> foreignDescriptorFactory) {
         this.resolver = resolver;
         this.foreignDescriptorFactory = foreignDescriptorFactory;
@@ -87,7 +88,7 @@ class DelegatedInjectionValueSupplierProvider implements ValueSupplierProvider {
     public Supplier<?> getValueSupplier(final Parameter parameter) {
         Source paramSource = parameter.getSource();
         if (paramSource == Parameter.Source.CONTEXT) {
-            return () -> resolver.resolve(getInjectee(parameter));
+            return () -> resolver.get().resolve(getInjectee(parameter));
         }
         return null;
     }

@@ -53,13 +53,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -73,14 +77,16 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.xml.transform.Source;
 
+import org.glassfish.jersey.internal.BootstrapBag;
+import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.guava.Primitives;
+import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -95,11 +101,6 @@ import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.message.ReaderModel;
 import org.glassfish.jersey.message.WriterModel;
 
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
-import jersey.repackaged.com.google.common.primitives.Primitives;
-
 /**
  * A factory for managing {@link MessageBodyReader}, {@link MessageBodyWriter} instances.
  *
@@ -112,13 +113,28 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private static final Logger LOGGER = Logger.getLogger(MessageBodyFactory.class.getName());
 
     /**
-     * Message body factory injection binder.
+     * Configurator which initializes and register {@link MessageBodyWorkers} instance into {@link InjectionManager} and
+     * {@link BootstrapBag}.
+     *
+     * @author Petr Bouda (petr.bouda at oracle.com)
      */
-    public static class Binder extends AbstractBinder {
+    public static class MessageBodyWorkersConfigurator implements BootstrapConfigurator {
+
+        private MessageBodyFactory messageBodyFactory;
 
         @Override
-        protected void configure() {
-            bindAsContract(MessageBodyFactory.class).to(MessageBodyWorkers.class).in(Singleton.class);
+        public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            messageBodyFactory = new MessageBodyFactory(bootstrapBag.getConfiguration());
+            InstanceBinding<MessageBodyFactory> binding =
+                    Bindings.service(messageBodyFactory)
+                            .to(MessageBodyWorkers.class);
+            injectionManager.register(binding);
+        }
+
+        @Override
+        public void postInit(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            messageBodyFactory.initialize(injectionManager);
+            bootstrapBag.setMessageBodyWorkers(messageBodyFactory);
         }
     }
 
@@ -173,17 +189,15 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             };
 
-    private final InjectionManager injectionManager;
+    private InjectionManager injectionManager;
 
     private final Boolean legacyProviderOrdering;
 
-    private final List<ReaderModel> readers;
-    private final List<WriterModel> writers;
+    private List<ReaderModel> readers;
+    private List<WriterModel> writers;
 
-    private final Map<MediaType, List<MessageBodyReader>> readersCache =
-            new KeyComparatorHashMap<MediaType, List<MessageBodyReader>>(MEDIA_TYPE_KEY_COMPARATOR);
-    private final Map<MediaType, List<MessageBodyWriter>> writersCache =
-            new KeyComparatorHashMap<MediaType, List<MessageBodyWriter>>(MEDIA_TYPE_KEY_COMPARATOR);
+    private final Map<MediaType, List<MessageBodyReader>> readersCache = new KeyComparatorHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
+    private final Map<MediaType, List<MessageBodyWriter>> writersCache = new KeyComparatorHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
 
     private static final int LOOKUP_CACHE_INITIAL_CAPACITY = 32;
     private static final float LOOKUP_CACHE_LOAD_FACTOR = 0.75f;
@@ -203,19 +217,24 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
 
     /**
-     * Create new message body workers factory.
+     * Create a new message body factory.
      *
-     * @param injectionManager   injection manager.
      * @param configuration configuration. Optional - can be null.
      */
-    @Inject
-    public MessageBodyFactory(final InjectionManager injectionManager, final Configuration configuration) {
-        this.injectionManager = injectionManager;
+    public MessageBodyFactory(Configuration configuration) {
         this.legacyProviderOrdering = configuration != null
                 && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
+    }
 
+    /**
+     * Must be initialize at the time of completed populated {@link InjectionManager}.
+     *
+     * @param injectionManager completed injection manager.
+     */
+    public void initialize(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
         // Initialize readers
-        this.readers = new ArrayList<ReaderModel>();
+        this.readers = new ArrayList<>();
         final Set<MessageBodyReader> customMbrs = Providers.getCustomProviders(injectionManager, MessageBodyReader.class);
         final Set<MessageBodyReader> mbrs = Providers.getProviders(injectionManager, MessageBodyReader.class);
 
@@ -224,14 +243,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         addReaders(readers, mbrs, false);
 
         if (legacyProviderOrdering) {
-            Collections.sort(readers, new LegacyWorkerComparator<MessageBodyReader>(MessageBodyReader.class));
+            readers.sort(new LegacyWorkerComparator<>(MessageBodyReader.class));
 
             for (final ReaderModel model : readers) {
                 for (final MediaType mt : model.declaredTypes()) {
                     List<MessageBodyReader> readerList = readersCache.get(mt);
 
                     if (readerList == null) {
-                        readerList = new ArrayList<MessageBodyReader>();
+                        readerList = new ArrayList<>();
                         readersCache.put(mt, readerList);
                     }
                     readerList.add(model.provider());
@@ -240,7 +259,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         // Initialize writers
-        this.writers = new ArrayList<WriterModel>();
+        this.writers = new ArrayList<>();
 
         final Set<MessageBodyWriter> customMbws = Providers.getCustomProviders(injectionManager, MessageBodyWriter.class);
         final Set<MessageBodyWriter> mbws = Providers.getProviders(injectionManager, MessageBodyWriter.class);
@@ -250,14 +269,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         addWriters(writers, mbws, false);
 
         if (legacyProviderOrdering) {
-            Collections.sort(writers, new LegacyWorkerComparator<MessageBodyWriter>(MessageBodyWriter.class));
+            writers.sort(new LegacyWorkerComparator<>(MessageBodyWriter.class));
 
             for (final AbstractEntityProviderModel<MessageBodyWriter> model : writers) {
                 for (final MediaType mt : model.declaredTypes()) {
                     List<MessageBodyWriter> writerList = writersCache.get(mt);
 
                     if (writerList == null) {
-                        writerList = new ArrayList<MessageBodyWriter>();
+                        writerList = new ArrayList<>();
                         writersCache.put(mt, writerList);
                     }
                     writerList.add(model.provider());
@@ -280,7 +299,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private static class DeclarationDistanceComparator<T> implements Comparator<T> {
 
         private final Class<T> declared;
-        private final Map<Class, Integer> distanceMap = new HashMap<Class, Integer>();
+        private final Map<Class, Integer> distanceMap = new HashMap<>();
 
         DeclarationDistanceComparator(final Class<T> declared) {
             this.declared = declared;
@@ -413,8 +432,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 return Collections.<Class<?>>emptyList().iterator();
             }
 
-            final ArrayList<Class<?>> classes = new ArrayList<Class<?>>();
-            final LinkedList<Class<?>> unprocessed = new LinkedList<Class<?>>();
+            final ArrayList<Class<?>> classes = new ArrayList<>();
+            final LinkedList<Class<?>> unprocessed = new LinkedList<>();
 
             unprocessed.add(classParam);
             while (!unprocessed.isEmpty()) {
@@ -448,7 +467,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         final DeclarationDistanceComparator<T> distanceComparator;
 
         private LegacyWorkerComparator(final Class<T> type) {
-            distanceComparator = new DeclarationDistanceComparator<T>(type);
+            distanceComparator = new DeclarationDistanceComparator<>(type);
         }
 
         @Override
@@ -518,18 +537,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     // MessageBodyWorkers
     @Override
     public Map<MediaType, List<MessageBodyReader>> getReaders(final MediaType mediaType) {
-        final Map<MediaType, List<MessageBodyReader>> subSet =
-                new KeyComparatorLinkedHashMap<MediaType, List<MessageBodyReader>>(MEDIA_TYPE_KEY_COMPARATOR);
-
+        final Map<MediaType, List<MessageBodyReader>> subSet = new KeyComparatorLinkedHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
         getCompatibleProvidersMap(mediaType, readers, subSet);
         return subSet;
     }
 
     @Override
     public Map<MediaType, List<MessageBodyWriter>> getWriters(final MediaType mediaType) {
-        final Map<MediaType, List<MessageBodyWriter>> subSet =
-                new KeyComparatorLinkedHashMap<MediaType, List<MessageBodyWriter>>(MEDIA_TYPE_KEY_COMPARATOR);
-
+        final Map<MediaType, List<MessageBodyWriter>> subSet = new KeyComparatorLinkedHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
         getCompatibleProvidersMap(mediaType, writers, subSet);
         return subSet;
     }
@@ -593,7 +608,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     public List<MediaType> getMessageBodyReaderMediaTypes(final Class<?> type,
                                                           final Type genericType,
                                                           final Annotation[] annotations) {
-        final Set<MediaType> readableMediaTypes = Sets.newLinkedHashSet();
+        final Set<MediaType> readableMediaTypes = new LinkedHashSet<>();
 
         for (final ReaderModel model : readers) {
             boolean readableWorker = false;
@@ -612,8 +627,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             }
         }
 
-        final List<MediaType> mtl = Lists.newArrayList(readableMediaTypes);
-        Collections.sort(mtl, MediaTypes.PARTIAL_ORDER_COMPARATOR);
+        final List<MediaType> mtl = new ArrayList<>(readableMediaTypes);
+        mtl.sort(MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mtl;
     }
 
@@ -653,14 +668,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         final ModelLookupKey lookupKey = new ModelLookupKey(c, lookupType);
         List<ReaderModel> readers = mbrLookupCache.get(lookupKey);
         if (readers == null) {
-            readers = new ArrayList<ReaderModel>();
+            readers = new ArrayList<>();
 
             for (final ReaderModel model : models) {
                 if (isCompatible(model, c, mediaType)) {
                     readers.add(model);
                 }
             }
-            Collections.sort(readers, new WorkerComparator<MessageBodyReader>(c, mediaType));
+            readers.sort(new WorkerComparator<>(c, mediaType));
             mbrLookupCache.put(lookupKey, readers);
         }
 
@@ -773,14 +788,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         List<WriterModel> writers = mbwLookupCache.get(lookupKey);
         if (writers == null) {
 
-            writers = new ArrayList<WriterModel>();
+            writers = new ArrayList<>();
 
             for (final WriterModel model : models) {
                 if (isCompatible(model, c, mediaType)) {
                     writers.add(model);
                 }
             }
-            Collections.sort(writers, new WorkerComparator<MessageBodyWriter>(c, mediaType));
+            writers.sort(new WorkerComparator<>(c, mediaType));
             mbwLookupCache.put(lookupKey, writers);
         }
 
@@ -869,7 +884,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             final List<? extends AbstractEntityProviderModel<T>> set,
             final Map<MediaType, List<T>> subSet) {
 
-        final List<T> providers = new ArrayList<T>();
+        final List<T> providers = new ArrayList<>();
 
         for (final AbstractEntityProviderModel<T> model : set) {
             if (model.declaredTypes().contains(mediaType)) {
@@ -885,7 +900,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     @Override
     @SuppressWarnings("unchecked")
     public List<MediaType> getMessageBodyWriterMediaTypes(final Class<?> c, final Type t, final Annotation[] as) {
-        final Set<MediaType> writeableMediaTypes = Sets.newLinkedHashSet();
+        final Set<MediaType> writeableMediaTypes = new LinkedHashSet<>();
 
         for (final WriterModel model : writers) {
             boolean writeableWorker = false;
@@ -904,23 +919,17 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             }
         }
 
-        final List<MediaType> mtl = Lists.newArrayList(writeableMediaTypes);
-        Collections.sort(mtl, MediaTypes.PARTIAL_ORDER_COMPARATOR);
+        final List<MediaType> mtl = new ArrayList<>(writeableMediaTypes);
+        mtl.sort(MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mtl;
     }
 
-    private static final Function<WriterModel, MessageBodyWriter> MODEL_TO_WRITER =
-            new Function<WriterModel, MessageBodyWriter>() {
-                @Override
-                public MessageBodyWriter apply(final WriterModel input) {
-                    return input.provider();
-                }
-            };
+    private static final Function<WriterModel, MessageBodyWriter> MODEL_TO_WRITER = AbstractEntityProviderModel::provider;
 
     @Override
     @SuppressWarnings("unchecked")
     public List<MessageBodyWriter> getMessageBodyWritersForType(final Class<?> type) {
-        return Lists.transform(getWritersModelsForType(type), MODEL_TO_WRITER);
+        return getWritersModelsForType(type).stream().map(MODEL_TO_WRITER).collect(Collectors.toList());
     }
 
     @Override
@@ -933,7 +942,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private List<WriterModel> processMessageBodyWritersForType(final Class<?> clazz) {
-        final List<WriterModel> suitableWriters = Lists.newArrayList();
+        final List<WriterModel> suitableWriters = new ArrayList<>();
 
         if (Response.class.isAssignableFrom(clazz)) {
             suitableWriters.addAll(writers);
@@ -950,7 +959,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             }
         }
         // Type -> Writer.
-        Collections.sort(suitableWriters, WORKER_BY_TYPE_COMPARATOR);
+        suitableWriters.sort(WORKER_BY_TYPE_COMPARATOR);
         mbwTypeLookupCache.put(clazz, suitableWriters);
 
         // Type -> MediaType.
@@ -979,28 +988,22 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private static <T> List<MediaType> getMessageBodyWorkersMediaTypesByType(
             final List<? extends AbstractEntityProviderModel<T>> workerModels) {
 
-        final Set<MediaType> mediaTypeSet = Sets.newHashSet();
+        final Set<MediaType> mediaTypeSet = new HashSet<>();
         for (final AbstractEntityProviderModel<T> model : workerModels) {
             mediaTypeSet.addAll(model.declaredTypes());
         }
 
-        final List<MediaType> mediaTypes = Lists.newArrayList(mediaTypeSet);
-        Collections.sort(mediaTypes, MediaTypes.PARTIAL_ORDER_COMPARATOR);
+        final List<MediaType> mediaTypes = new ArrayList<>(mediaTypeSet);
+        mediaTypes.sort(MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mediaTypes;
     }
 
-    private static final Function<ReaderModel, MessageBodyReader> MODEL_TO_READER =
-            new Function<ReaderModel, MessageBodyReader>() {
-                @Override
-                public MessageBodyReader apply(final ReaderModel input) {
-                    return input.provider();
-                }
-            };
+    private static final Function<ReaderModel, MessageBodyReader> MODEL_TO_READER = AbstractEntityProviderModel::provider;
 
     @Override
     @SuppressWarnings("unchecked")
     public List<MessageBodyReader> getMessageBodyReadersForType(final Class<?> type) {
-        return Lists.transform(getReaderModelsForType(type), MODEL_TO_READER);
+        return getReaderModelsForType(type).stream().map(MODEL_TO_READER).collect(Collectors.toList());
     }
 
     @Override
@@ -1013,7 +1016,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private List<ReaderModel> processMessageBodyReadersForType(final Class<?> clazz) {
-        final List<ReaderModel> suitableReaders = Lists.newArrayList();
+        final List<ReaderModel> suitableReaders = new ArrayList<>();
 
         final Class<?> wrapped = Primitives.wrap(clazz);
         for (final ReaderModel reader : readers) {
@@ -1025,7 +1028,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         // Type -> Writer.
-        Collections.sort(suitableReaders, WORKER_BY_TYPE_COMPARATOR);
+        suitableReaders.sort(WORKER_BY_TYPE_COMPARATOR);
         mbrTypeLookupCache.put(clazz, suitableReaders);
 
         // Type -> MediaType.

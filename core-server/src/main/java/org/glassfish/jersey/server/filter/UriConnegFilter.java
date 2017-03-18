@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,8 +64,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.uri.UriComponent;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * A URI-based content negotiation filter mapping a dot-declared suffix in
@@ -247,7 +245,7 @@ public final class UriConnegFilter implements ContainerRequestFilter {
             return (Map<String, T>) mappings;
         }
 
-        final HashMap<String, T> mappingsMap = Maps.newHashMap();
+        final HashMap<String, T> mappingsMap = new HashMap<>();
 
         if (mappings instanceof String) {
             parseMappings(property, (String) mappings, mappingsMap, parser);

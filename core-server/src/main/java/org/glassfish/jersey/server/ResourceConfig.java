@@ -43,13 +43,16 @@ package org.glassfish.jersey.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.AccessController;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.RuntimeType;
@@ -74,9 +77,6 @@ import org.glassfish.jersey.server.internal.scanning.AnnotationAcceptingListener
 import org.glassfish.jersey.server.internal.scanning.FilesScanner;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
 import org.glassfish.jersey.server.model.Resource;
-
-import jersey.repackaged.com.google.common.base.Predicate;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * The resource configuration for configuring a web application.
@@ -113,9 +113,9 @@ public class ResourceConfig extends Application implements Configurable<Resource
             super(RuntimeType.SERVER, ComponentBag.INCLUDE_ALL);
             this.classLoader = AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA());
 
-            this.resourceFinders = Sets.newHashSet();
+            this.resourceFinders = new HashSet<>();
 
-            this.resources = Sets.newHashSet();
+            this.resources = new HashSet<>();
             this.resourcesView = Collections.unmodifiableSet(this.resources);
         }
 
@@ -124,10 +124,10 @@ public class ResourceConfig extends Application implements Configurable<Resource
             this.classLoader = original.classLoader;
             this.applicationName = original.applicationName;
 
-            this.resources = Sets.newHashSet(original.resources);
+            this.resources = new HashSet<>(original.resources);
             this.resourcesView = Collections.unmodifiableSet(this.resources);
 
-            this.resourceFinders = Sets.newHashSet(original.resourceFinders);
+            this.resourceFinders = new HashSet<>(original.resourceFinders);
         }
 
         public void setClassLoader(final ClassLoader classLoader) {
@@ -368,7 +368,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param classes application-specific resource and/or provider classes.
      */
     public ResourceConfig(final Class<?>... classes) {
-        this(Sets.newHashSet(classes));
+        this(Arrays.stream(classes).collect(Collectors.toSet()));
     }
 
     /**
@@ -519,7 +519,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
             return this;
         }
 
-        return registerClasses(Sets.newHashSet(classes));
+        return registerClasses(Arrays.stream(classes).collect(Collectors.toSet()));
     }
 
     /**
@@ -564,7 +564,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
             return this;
         }
 
-        return registerInstances(Sets.newHashSet(instances));
+        return registerInstances(Arrays.stream(instances).collect(Collectors.toSet()));
     }
 
     /**
@@ -578,7 +578,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
             return this;
         }
 
-        return registerResources(Sets.newHashSet(resources));
+        return registerResources(Arrays.stream(resources).collect(Collectors.toSet()));
     }
 
     /**
@@ -814,8 +814,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
         state.configureAutoDiscoverableProviders(injectionManager, true);
     }
 
-    final void configureMetaProviders(InjectionManager InjectionManager) {
-        state.configureMetaProviders(InjectionManager);
+    final void configureMetaProviders(InjectionManager injectionManager) {
+        state.configureMetaProviders(injectionManager);
     }
 
     @Override
@@ -861,10 +861,10 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     private Set<Class<?>> scanClasses() {
-        final Set<Class<?>> result = Sets.newHashSet();
+        final Set<Class<?>> result = new HashSet<>();
 
         final ResourceConfig.State _state = state;
-        final Set<ResourceFinder> rfs = Sets.newHashSet(_state.getResourceFinders());
+        final Set<ResourceFinder> rfs = new HashSet<>(_state.getResourceFinders());
 
         // In case new entity is registered the available finders should be reset.
         resetFinders = true;
@@ -948,7 +948,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @return set of configured resource and/or provider instances.
      */
     Set<Object> _getSingletons() {
-        final Set<Object> result = Sets.newHashSet();
+        final Set<Object> result = new HashSet<>();
         result.addAll(state.getInstances());
         return result;
     }
@@ -1032,7 +1032,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
         private Application application;
         private Class<? extends Application> applicationClass;
-        private final Set<Class<?>> defaultClasses = Sets.newHashSet();
+        private final Set<Class<?>> defaultClasses = new HashSet<>();
 
         public WrappingResourceConfig(
                 final Application application, final Class<? extends Application> applicationClass,
@@ -1132,7 +1132,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
         @Override
         Set<Class<?>> _getClasses() {
-            final Set<Class<?>> result = Sets.newHashSet();
+            final Set<Class<?>> result = new HashSet<>();
             final Set<Class<?>> applicationClasses = application.getClasses();
             result.addAll(applicationClasses == null ? new HashSet<Class<?>>() : applicationClasses);
             if (result.isEmpty() && getSingletons().isEmpty()) {
@@ -1179,25 +1179,20 @@ public class ResourceConfig extends Application implements Configurable<Resource
                 registerComponentsOf(customRootApp);
             }
 
-            originalRegistrations = Sets.newIdentityHashSet();
+            originalRegistrations = Collections.newSetFromMap(new IdentityHashMap<>());
             originalRegistrations.addAll(super.getRegisteredClasses());
 
             // Register externally provided instances.
-            final Set<Object> externalInstances = Sets.filter(original.getSingletons(), new Predicate<Object>() {
-                @Override
-                public boolean apply(final Object external) {
-                    return !originalRegistrations.contains(external.getClass());
-                }
-            });
+            final Set<Object> externalInstances =
+                    original.getSingletons().stream()
+                            .filter(external -> !originalRegistrations.contains(external.getClass()))
+                            .collect(Collectors.toSet());
             registerInstances(externalInstances);
 
             // Register externally provided classes.
-            final Set<Class<?>> externalClasses = Sets.filter(original.getClasses(), new Predicate<Class<?>>() {
-                @Override
-                public boolean apply(final Class<?> external) {
-                    return !originalRegistrations.contains(external);
-                }
-            });
+            final Set<Class<?>> externalClasses = original.getClasses().stream()
+                                                          .filter(external -> !originalRegistrations.contains(external))
+                                                          .collect(Collectors.toSet());
             registerClasses(externalClasses);
         }
 
@@ -1209,28 +1204,29 @@ public class ResourceConfig extends Application implements Configurable<Resource
                     // in case of duplicate registrations
                     final Set<Object> singletons = application.getSingletons();
                     if (singletons != null) {
-                        registerInstances(Sets.filter(singletons, new Predicate<Object>() {
-                            @Override
-                            public boolean apply(final Object input) {
-                                if (input == null) {
-                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(null));
-                                }
-                                return input != null;
-                            }
-                        }));
+                        registerInstances(
+                                singletons.stream()
+                                          .filter(input -> {
+                                              if (input == null) {
+                                                  Errors.warning(application,
+                                                                 LocalizationMessages.NON_INSTANTIABLE_COMPONENT(null));
+                                              }
+                                              return input != null;
+                                          })
+                                          .collect(Collectors.toSet()));
                     }
 
                     final Set<Class<?>> classes = application.getClasses();
                     if (classes != null) {
-                        registerClasses(Sets.filter(classes, new Predicate<Class<?>>() {
-                            @Override
-                            public boolean apply(final Class<?> input) {
-                                if (input == null) {
-                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(null));
-                                }
-                                return input != null;
-                            }
-                        }));
+                        registerClasses(classes.stream()
+                                               .filter(input -> {
+                                                   if (input == null) {
+                                                       Errors.warning(application,
+                                                                      LocalizationMessages.NON_INSTANTIABLE_COMPONENT(null));
+                                                   }
+                                                   return input != null;
+                                               })
+                                               .collect(Collectors.toSet()));
                     }
                 }
             });

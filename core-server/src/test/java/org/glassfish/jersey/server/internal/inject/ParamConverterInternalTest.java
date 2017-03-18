@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -74,9 +75,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Tests {@link ParamConverter param converters}.
@@ -245,12 +243,7 @@ public class ParamConverterInternalTest extends AbstractTest {
                         public T fromString(final String value) {
                             final List<String> values = Arrays.asList(value.split(","));
 
-                            return rawType.cast(Lists.transform(values, new Function<String, Integer>() {
-                                @Override
-                                public Integer apply(final String input) {
-                                    return Integer.valueOf(input);
-                                }
-                            }));
+                            return rawType.cast(values.stream().map(Integer::valueOf).collect(Collectors.toList()));
                         }
 
                         @Override

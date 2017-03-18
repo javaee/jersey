@@ -41,7 +41,10 @@
 package org.glassfish.jersey.server.model;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
@@ -60,32 +63,33 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.RuntimeType;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.Suspended;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.sse.SseEventSink;
 
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.Severity;
+import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.PerLookup;
 import org.glassfish.jersey.internal.util.Producer;
-import org.glassfish.jersey.model.internal.CommonConfig;
-import org.glassfish.jersey.model.internal.ComponentBag;
+import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.InjectionManagerFactory;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerBootstrapBag;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.TestConfigConfigurator;
+import org.glassfish.jersey.server.internal.inject.ParamExtractorConfigurator;
+import org.glassfish.jersey.server.internal.inject.ValueSupplierProviderConfigurator;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 
 import org.junit.Ignore;
@@ -94,8 +98,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Taken from Jersey 1: jersey-server:com.sun.jersey.server.impl.modelapi.validation.ResourceModelValidatorTest.java
@@ -130,7 +132,9 @@ public class ValidatorTest {
         LOGGER.info("No issue should be reported if more public ctors exists with the same number of params, "
                 + "but another just one is presented with more params at a root resource:");
         Resource resource = Resource.builder(TestRootResourceNonAmbigCtors.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.getIssueList().isEmpty());
     }
@@ -346,7 +350,7 @@ public class ValidatorTest {
         return Errors.process(new Producer<List<ResourceModelIssue>>() {
             @Override
             public List<ResourceModelIssue> call() {
-                List<Resource> resources = Lists.newArrayList();
+                List<Resource> resources = new ArrayList<>();
                 for (Class<?> clazz : resourceClasses) {
                     final Resource res = Resource.builder(clazz).build();
                     if (res.getPath() != null) {
@@ -355,8 +359,9 @@ public class ValidatorTest {
                 }
 
                 ResourceModel model = new ResourceModel.Builder(resources, false).build();
-                InjectionManager injectionManager = createInjectionManager();
-                ComponentModelValidator validator = new ComponentModelValidator(injectionManager);
+                ServerBootstrapBag serverBag = initializeApplication();
+                ComponentModelValidator validator = new ComponentModelValidator(
+                        serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
                 validator.validate(model);
                 return ModelErrors.getErrorsAsResourceModelIssues();
             }
@@ -478,7 +483,9 @@ public class ValidatorTest {
     public void testSRLReturningVoid() throws Exception {
         LOGGER.info("An issue should be reported if a sub-resource locator returns void:");
         Resource resource = Resource.builder(TestSRLReturningVoid.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -554,7 +561,9 @@ public class ValidatorTest {
         LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a resource "
                 + "method:");
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsRM.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -575,7 +584,9 @@ public class ValidatorTest {
         LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a sub-resource "
                 + "method:");
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsSRM.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -593,7 +604,9 @@ public class ValidatorTest {
     public void testEntityParamOnSRL() throws Exception {
         LOGGER.info("An issue should be reported if an entity parameter exists on a sub-resource locator:");
         Resource resource = Resource.builder(TestEntityParamOnSRL.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -672,7 +685,9 @@ public class ValidatorTest {
             @Override
             public void run() {
                 Resource resource = Resource.builder(TestAmbiguousParams.class).build();
-                ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+                ServerBootstrapBag serverBag = initializeApplication();
+                ComponentModelValidator validator = new ComponentModelValidator(
+                        serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
                 validator.validate(resource);
 
                 assertTrue(!validator.fatalIssuesFound());
@@ -696,7 +711,9 @@ public class ValidatorTest {
     public void testEmptyPathSegment() throws Exception {
         LOGGER.info("A warning should be reported if @Path with \"/\" or empty string value is seen");
         Resource resource = Resource.builder(TestEmptyPathSegment.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -739,7 +756,9 @@ public class ValidatorTest {
             @Override
             public void run() {
                 Resource resource = Resource.builder(TypeVariableResource.class).build();
-                ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+                ServerBootstrapBag serverBag = initializeApplication();
+                ComponentModelValidator validator = new ComponentModelValidator(
+                        serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
                 validator.validate(resource);
 
                 assertTrue(!validator.fatalIssuesFound());
@@ -784,7 +803,9 @@ public class ValidatorTest {
     public void testParameterizedTypeResource() throws Exception {
         LOGGER.info("");
         Resource resource = Resource.builder(ConcreteParameterizedTypeResource.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -821,7 +842,9 @@ public class ValidatorTest {
     public void testGenericArrayResource() throws Exception {
         LOGGER.info("");
         Resource resource = Resource.builder(ConcreteGenericArrayResource.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -886,7 +909,9 @@ public class ValidatorTest {
     @Test
     public void testNotAnnotatedParameters() throws Exception {
         Resource resource = Resource.builder(AmbiguousParameterResource.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(createInjectionManager());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         final List<ResourceModelIssue> errorMessages = validator.getIssueList();
@@ -1194,14 +1219,17 @@ public class ValidatorTest {
         assertEquals("PASSED", response.getEntity());
     }
 
-    private InjectionManager createInjectionManager() {
-        InjectionManager injectionManager = InjectionManagerFactory.createInjectionManager();
-        injectionManager.register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new CommonConfig(RuntimeType.SERVER, ComponentBag.EXCLUDE_EMPTY)).to(Configuration.class);
-            }
-        });
-        return injectionManager;
+    private ServerBootstrapBag initializeApplication() {
+        List<BootstrapConfigurator> bootstrapConfigurators = Collections.unmodifiableList(Arrays.asList(
+                new TestConfigConfigurator(),
+                new ParamExtractorConfigurator(),
+                new ValueSupplierProviderConfigurator(),
+                new MessageBodyFactory.MessageBodyWorkersConfigurator()));
+
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        ServerBootstrapBag bootstrapBag = new ServerBootstrapBag();
+        bootstrapConfigurators.forEach(configurer -> configurer.init(injectionManager, bootstrapBag));
+        bootstrapConfigurators.forEach(configurer -> configurer.postInit(injectionManager, bootstrapBag));
+        return bootstrapBag;
     }
 }

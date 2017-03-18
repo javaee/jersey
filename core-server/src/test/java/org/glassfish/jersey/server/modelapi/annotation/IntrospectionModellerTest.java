@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@ package org.glassfish.jersey.server.modelapi.annotation;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -63,9 +64,6 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
 
 /**
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -223,13 +221,8 @@ public class IntrospectionModellerTest {
 
     private void assertSources(Collection<Parameter> parameters, Parameter.Source... sources) {
         assertThat("Expected sources not found in the collection",
-                Collections2.transform(parameters, new Function<Parameter, Parameter.Source>() {
-                    @Override
-                    public Parameter.Source apply(final Parameter parameter) {
-                        return parameter.getSource();
-                    }
-                }),
-                Matchers.containsInAnyOrder(sources)
+                   parameters.stream().map(Parameter::getSource).collect(Collectors.toList()),
+                   Matchers.containsInAnyOrder(sources)
         );
     }
 }

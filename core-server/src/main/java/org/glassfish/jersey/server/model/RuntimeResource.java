@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,14 +40,13 @@
 
 package org.glassfish.jersey.server.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.glassfish.jersey.uri.PathPattern;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Runtime resource is a group of {@link Resource resources} with the same {@link Resource#getPath() path}
@@ -175,12 +174,12 @@ public class RuntimeResource implements ResourceModelComponent {
         this.parent = parent;
         this.pathPattern = resources.get(0).getPathPattern();
 
-        this.resources = Lists.newArrayList(resources);
+        this.resources = new ArrayList<>(resources);
 
         this.regex = regex;
-        this.resourceMethods = Lists.newArrayList();
-        this.resourceLocators = Lists.newArrayList();
-        this.childRuntimeResources = Lists.newArrayList();
+        this.resourceMethods = new ArrayList<>();
+        this.resourceLocators = new ArrayList<>();
+        this.childRuntimeResources = new ArrayList<>();
         for (Builder childRuntimeResourceBuilder : childRuntimeResourceBuilders) {
             this.childRuntimeResources.add(childRuntimeResourceBuilder.build(this));
         }
@@ -289,12 +288,7 @@ public class RuntimeResource implements ResourceModelComponent {
      *         this runtime resource is the parent resource.
      */
     public List<Resource> getParentResources() {
-        return Lists.transform(resources, new Function<Resource, Resource>() {
-            @Override
-            public Resource apply(Resource child) {
-                return (child == null) ? null : child.getParent();
-            }
-        });
+        return resources.stream().map(child -> (child == null) ? null : child.getParent()).collect(Collectors.toList());
     }
 
     /**

@@ -43,15 +43,17 @@ package org.glassfish.jersey.internal.util;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.Flow;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -60,8 +62,6 @@ import static org.junit.Assert.assertTrue;
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public class JerseyPublisherTest {
-
-    private static final Logger LOGGER = Logger.getLogger(JerseyPublisherTest.class.getName());
 
     @Test
     public void test() throws InterruptedException {
@@ -76,7 +76,7 @@ public class JerseyPublisherTest {
 
         final CountDownLatch closeLatch = new CountDownLatch(3);
 
-        final JerseyPublisher<String> publisher = new JerseyPublisher<>();
+        final JerseyPublisher<String> publisher = new JerseyPublisher<>(JerseyPublisher.PublisherStrategy.BLOCKING);
         final PublisherTestSubscriber subscriber1 =
                 new PublisherTestSubscriber("SUBSCRIBER-1", openLatch1, writeLatch1, closeLatch);
         final PublisherTestSubscriber subscriber2 =
@@ -84,26 +84,26 @@ public class JerseyPublisherTest {
         final PublisherTestSubscriber subscriber3 =
                 new PublisherTestSubscriber("SUBSCRIBER-3", openLatch3, writeLatch3, closeLatch);
 
-        publisher.submit("START");  // sent before any subscriber subscribed - should not be received
+        publisher.publish("START");  // sent before any subscriber subscribed - should not be received
 
         publisher.subscribe(subscriber1);
-        publisher.submit("Zero");   // before receive, but should be received by SUBSCRIBER-1
+        publisher.publish("Zero");   // before receive, but should be received by SUBSCRIBER-1
         assertTrue(openLatch1.await(200, TimeUnit.MILLISECONDS));
 
         subscriber1.receive(3);
-        publisher.submit("One");    // should be received by SUBSCRIBER-1
+        publisher.publish("One");    // should be received by SUBSCRIBER-1
 
         publisher.subscribe(subscriber2);
         assertTrue(openLatch2.await(200, TimeUnit.MILLISECONDS));
         subscriber2.receive(5);
 
-        publisher.submit("Two");    // should be received by SUBSCRIBER-1 and SUBSCRIBER-2
+        publisher.publish("Two");    // should be received by SUBSCRIBER-1 and SUBSCRIBER-2
 
         publisher.subscribe(subscriber3);
         assertTrue(openLatch3.await(200, TimeUnit.MILLISECONDS));
         subscriber3.receive(5);
 
-        publisher.submit("Three");  // should be received by SUBSCRIBER-2 and SUBSCRIBER-3
+        publisher.publish("Three");  // should be received by SUBSCRIBER-2 and SUBSCRIBER-3
 
         assertTrue(writeLatch1.await(1000, TimeUnit.MILLISECONDS));
         assertTrue(writeLatch2.await(1000, TimeUnit.MILLISECONDS));
@@ -127,17 +127,71 @@ public class JerseyPublisherTest {
         publisher.close();
         subscriber1.receive(1);     // --> with this, the CDL is successfully counted down and await returns true
         assertTrue(closeLatch.await(10000, TimeUnit.MILLISECONDS));
-        // - the strange thing is, that all SubmissionPublisher attempts to invoke all the three callbacks
-        //   and gets to the sysout behind the onComplete() call for all the three subscribers (see output)
+        // this behaviour is a little counter-intuitive, but confirmed as correct by Flow.SubmissionPublisher author,
+        // Dough Lea on the JDK mailing list
+    }
+
+    @Test
+    public void testNonBlocking() throws InterruptedException {
+        final int MSG_COUNT = 300;
+
+        final JerseyPublisher<String> publisher = new JerseyPublisher<>();
+
+        final CountDownLatch openLatchActive = new CountDownLatch(1);
+        final CountDownLatch writeLatch = new CountDownLatch(MSG_COUNT);
+        final CountDownLatch closeLatch = new CountDownLatch(1);
+
+        final CountDownLatch openLatchDead = new CountDownLatch(1);
+
+        final PublisherTestSubscriber deadSubscriber =
+                new PublisherTestSubscriber("dead", openLatchDead, new CountDownLatch(0), new CountDownLatch(0));
+
+        final PublisherTestSubscriber activeSubscriber =
+                new PublisherTestSubscriber("active", openLatchActive, writeLatch, closeLatch);
+
+        // subscribe to publisher
+        publisher.subscribe(deadSubscriber);
+        assertTrue(openLatchDead.await(200, TimeUnit.MILLISECONDS));
+        publisher.subscribe(activeSubscriber);
+        assertTrue(openLatchActive.await(200, TimeUnit.MILLISECONDS));
+
+        activeSubscriber.receive(1000);
+
+        AtomicInteger counter = new AtomicInteger(0);
+        final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+        scheduledExecutorService.scheduleAtFixedRate(() -> {
+            int i = counter.getAndIncrement();
+            publisher.publish("MSG-" + i);
+            if (i > MSG_COUNT - 1) {
+                scheduledExecutorService.shutdown();
+            }
+        }, 0, 10, TimeUnit.MILLISECONDS);
+
+        assertTrue(writeLatch.await(6000, TimeUnit.MILLISECONDS));
+
+        assertEquals(MSG_COUNT, activeSubscriber.getReceivedData().size());
+        assertEquals(0, deadSubscriber.getReceivedData().size());
+
+        assertFalse(activeSubscriber.hasError());
+        assertTrue(deadSubscriber.hasError());
+
+        publisher.close();
+
+        assertTrue(closeLatch.await(6000, TimeUnit.MILLISECONDS));
+        assertTrue(activeSubscriber.isCompleted());
+        assertFalse(deadSubscriber.isCompleted());
     }
 
     class PublisherTestSubscriber implements Flow.Subscriber<String> {
+
         private final String name;
         private final CountDownLatch openLatch;
         private final CountDownLatch writeLatch;
         private final CountDownLatch closeLatch;
         private Flow.Subscription subscription;
         private final Queue<String> data;
+        private boolean hasError = false;
+        private boolean completed = false;
 
         PublisherTestSubscriber(final String name,
                                 final CountDownLatch openLatch,
@@ -160,17 +214,17 @@ public class JerseyPublisherTest {
         public void onNext(final String item) {
             data.add(item);
             writeLatch.countDown();
-            LOGGER.info("[" + name + "] (" + Thread.currentThread().getName() + ") " + item);
         }
 
         @Override
         public void onError(final Throwable throwable) {
-            LOGGER.log(Level.INFO, "[" + name + "] (" + Thread.currentThread().getName() + ") onError()", throwable);
+            throwable.printStackTrace();
+            hasError = true;
         }
 
         @Override
         public void onComplete() {
-            LOGGER.info("[" + name + "] (" + Thread.currentThread().getName() + ") onComplete()");
+            completed = true;
             closeLatch.countDown();
         }
 
@@ -182,8 +236,6 @@ public class JerseyPublisherTest {
         public void receive(final long n) {
             if (subscription != null) {
                 subscription.request(n);
-            } else {
-                System.out.println("[" + this.name + "] Subscription is null");
             }
         }
 
@@ -196,13 +248,12 @@ public class JerseyPublisherTest {
             return this.data;
         }
 
-        /**
-         * Instruct subscriber to request {@code n} items.
-         *
-         * @param n amount of items to request
-         */
-        public void request(final long n) {
-            this.subscription.request(n);
+        public boolean hasError() {
+            return hasError;
+        }
+
+        public boolean isCompleted() {
+            return completed;
         }
     }
 }

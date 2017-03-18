@@ -41,7 +41,8 @@
 package org.glassfish.jersey.hk2;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.InjectionManager;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * {@link AbstractBinder} that registers all components needed for a proper bootstrap of Jersey based on HK2 framework.
@@ -52,26 +53,24 @@ public class Hk2BootstrapBinder extends AbstractBinder {
 
     private final AbstractBinder externalBinder;
 
-    private final InjectionManager injectionManager;
+    private final ServiceLocator serviceLocator;
 
     /**
      * Create a bootstrap which is specific for HK2 module and automatically install {@code externalBinder}.
      *
-     * @param injectionManager HK2 service locator.
-     * @param externalBinder   externally provided binder (particularly Jersey specific services).
+     * @param serviceLocator HK2 service locator.
+     * @param externalBinder externally provided binder (particularly Jersey specific services).
      */
-    public Hk2BootstrapBinder(InjectionManager injectionManager, AbstractBinder externalBinder) {
-        this.injectionManager = injectionManager;
+    Hk2BootstrapBinder(ServiceLocator serviceLocator, AbstractBinder externalBinder) {
+        this.serviceLocator = serviceLocator;
         this.externalBinder = externalBinder;
     }
 
     @Override
     protected void configure() {
         install(
-                // First service the current injection manager to be able to inject itself into other services.
-                new HK2InjectionManagerBinder(injectionManager),
-                // Jersey-like class analyzer that is able to choose the right services' construtor.
-                new JerseyClassAnalyzer.Binder(injectionManager),
+                // Jersey-like class analyzer that is able to choose the right services' constructor.
+                new JerseyClassAnalyzer.Binder(serviceLocator),
                 // Activate possibility to start Request Scope.
                 new RequestContext.Binder(),
                 // Add support for Context annotation.
@@ -80,27 +79,5 @@ public class Hk2BootstrapBinder extends AbstractBinder {
                 externalBinder,
                 // Improved HK2 Error reporting.
                 new JerseyErrorService.Binder());
-    }
-
-    /**
-     * Binder that registers a provided injection manager.
-     */
-    private static class HK2InjectionManagerBinder extends AbstractBinder {
-
-        private final InjectionManager injectionManager;
-
-        /**
-         * Constructor for a creation injection manager binder.
-         *
-         * @param injectionManager current injection manager.
-         */
-        private HK2InjectionManagerBinder(InjectionManager injectionManager) {
-            this.injectionManager = injectionManager;
-        }
-
-        @Override
-        protected void configure() {
-            bind(injectionManager).to(InjectionManager.class);
-        }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,8 +54,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
@@ -73,10 +75,6 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Base outbound message context implementation.
@@ -324,12 +322,11 @@ public class OutboundMessageContext {
 
         if (conversionApplied) {
             // cache converted
-            headers.put(HttpHeaders.ACCEPT, Lists.transform(result, new Function<MediaType, Object>() {
-                @Override
-                public Object apply(MediaType input) {
-                    return input;
-                }
-            }));
+            // cache converted
+            headers.put(HttpHeaders.ACCEPT,
+                    result.stream()
+                          .map((Function<MediaType, Object>) mediaType -> mediaType)
+                          .collect(Collectors.toList()));
         }
 
         return Collections.unmodifiableList(result);
@@ -357,15 +354,10 @@ public class OutboundMessageContext {
             } else {
                 conversionApplied = true;
                 try {
-                    result.addAll(Lists.transform(
-                            HttpHeaderReader.readAcceptLanguage(HeaderUtils.asString(value, rd)),
-                            new Function<AcceptableLanguageTag, Locale>() {
-
-                                @Override
-                                public Locale apply(AcceptableLanguageTag input) {
-                                    return input.getAsLocale();
-                                }
-                            }));
+                    result.addAll(HttpHeaderReader.readAcceptLanguage(HeaderUtils.asString(value, rd))
+                                                  .stream()
+                                                  .map(LanguageTag::getAsLocale)
+                                                  .collect(Collectors.toList()));
                 } catch (java.text.ParseException e) {
                     throw exception(HttpHeaders.ACCEPT_LANGUAGE, value, e);
                 }
@@ -374,12 +366,10 @@ public class OutboundMessageContext {
 
         if (conversionApplied) {
             // cache converted
-            headers.put(HttpHeaders.ACCEPT_LANGUAGE, Lists.transform(result, new Function<Locale, Object>() {
-                @Override
-                public Object apply(Locale input) {
-                    return input;
-                }
-            }));
+            headers.put(HttpHeaders.ACCEPT_LANGUAGE,
+                        result.stream()
+                              .map((Function<Locale, Object>) locale -> locale)
+                              .collect(Collectors.toList()));
         }
 
         return Collections.unmodifiableList(result);
@@ -583,13 +573,10 @@ public class OutboundMessageContext {
 
         if (conversionApplied) {
             // cache converted
-            headers.put(HttpHeaders.LINK, new ArrayList<Object>(Collections2
-                    .transform(result, new Function<Link, Object>() {
-                        @Override
-                        public Object apply(Link input) {
-                            return input;
-                        }
-                    })));
+            headers.put(HttpHeaders.LINK,
+                        result.stream()
+                              .map((Function<Link, Object>) link -> link)
+                              .collect(Collectors.toList()));
         }
 
         return Collections.unmodifiableSet(result);

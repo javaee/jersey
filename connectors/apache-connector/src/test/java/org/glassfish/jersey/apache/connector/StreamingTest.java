@@ -49,6 +49,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import javax.inject.Singleton;
 
@@ -85,6 +86,15 @@ public class StreamingTest extends JerseyTest {
         assertEquals("NOK", sendTarget.request().get().readEntity(String.class));
     }
 
+    /**
+     * Tests that closing a request without reading the entity does not throw an exception.
+     */
+    @Test
+    public void clientCloseThrowsNoExceptionTest() throws IOException {
+        Response response = target().path("/streamingEndpoint/get").request().get();
+        response.close();
+    }
+
     @Override
     protected void configureClient(ClientConfig config) {
         config.connectorProvider(new ApacheConnectorProvider());
@@ -117,6 +127,13 @@ public class StreamingTest extends JerseyTest {
         @Produces(MediaType.TEXT_PLAIN)
         public ChunkedOutput<String> get() {
             return output;
+        }
+
+        @GET
+        @Path("get")
+        @Produces(MediaType.TEXT_PLAIN)
+        public String getString() {
+            return "OK";
         }
     }
 }

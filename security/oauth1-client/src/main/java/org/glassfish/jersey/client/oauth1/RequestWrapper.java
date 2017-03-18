@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,8 +55,6 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.oauth1.signature.OAuth1Request;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Implements the OAuth signature library Request interface, wrapping a Jersey
@@ -124,7 +122,7 @@ class RequestWrapper implements OAuth1Request {
     @Override
     public List<String> getHeaderValues(final String name) {
 
-        ArrayList<String> list = Lists.newArrayList();
+        ArrayList<String> list = new ArrayList<>();
 
         for (String header : clientRequest.getStringHeaders().get(name)) {
             list.add(header);

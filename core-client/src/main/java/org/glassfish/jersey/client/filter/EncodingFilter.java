@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.ClientRequestContext;
@@ -57,8 +58,6 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.spi.ContentEncoder;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Client filter adding support for {@link org.glassfish.jersey.spi.ContentEncoder content encoding}. The filter adds
@@ -105,12 +104,12 @@ public final class EncodingFilter implements ClientRequestFilter {
         // no need for synchronization - in case of a race condition, the property
         // may be set twice, but it does not break anything
         if (supportedEncodings == null) {
-            SortedSet<String> se = Sets.newTreeSet();
+            SortedSet<String> se = new TreeSet<>();
             List<ContentEncoder> encoders = injectionManager.getAllInstances(ContentEncoder.class);
             for (ContentEncoder encoder : encoders) {
                 se.addAll(encoder.getSupportedEncodings());
             }
-            supportedEncodings = new ArrayList<Object>(se);
+            supportedEncodings = new ArrayList<>(se);
         }
         return supportedEncodings;
     }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.model.internal;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -54,8 +55,6 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.RuntimeResource;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Helper class with methods supporting processing resource model by {@link org.glassfish.jersey.server.model.ModelProcessor
@@ -78,7 +77,7 @@ public final class ModelProcessorUtil {
      */
     public static Set<String> getAllowedMethods(RuntimeResource resource) {
         boolean getFound = false;
-        Set<String> allowedMethods = Sets.newHashSet();
+        Set<String> allowedMethods = new HashSet<>();
         for (ResourceMethod resourceMethod : resource.getResourceMethods()) {
             final String httpMethod = resourceMethod.getHttpMethod();
             allowedMethods.add(httpMethod);
@@ -304,7 +303,7 @@ public final class ModelProcessorUtil {
 
         if (methodsSuitableForResource(firstResource, methods)) {
             for (Method method : methods) {
-                final Set<MediaType> produces = Sets.newHashSet(method.produces);
+                final Set<MediaType> produces = new HashSet<>(method.produces);
 
                 for (ResourceMethod resourceMethod : resource.getResourceMethods()) {
                     for (final MediaType produce : method.produces) {
