@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,7 @@ import java.util.Set;
 
 import javax.ws.rs.Path;
 
+import jersey.repackaged.com.google.common.collect.ArrayListMultimap;
 import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.util.collection.Value;
@@ -564,22 +565,27 @@ public final class Resource implements Routed, ResourceModelComponent {
         }
 
         private List<Resource.Data> mergeResources(List<Resource.Data> resources) {
-            List<Resource.Data> mergedResources = Lists.newArrayList();
-            for (int i = 0; i < resources.size(); i++) {
-                Resource.Data outer = resources.get(i);
+            //Separate out the Resources by their path
+            final ArrayListMultimap<String, Resource.Data> resourceMap = ArrayListMultimap.create();
+            for (final Resource.Data resource : resources){
+                resourceMap.put(resource.path, resource);
+            }
+
+            final List<Resource.Data> mergedResources = Lists.newArrayList();
+
+            //Merge resources with matching paths
+            for (final String key : resourceMap.keySet()) {
+                final List<Resource.Data> resourcesForPath = resourceMap.get(key);
+                final Resource.Data outer = resourcesForPath.get(0);
                 Resource.Builder builder = null;
-
-                for (int j = i + 1; j < resources.size(); j++) {
-                    Resource.Data inner = resources.get(j);
-
-                    if (outer.path.equals(inner.path)) {
+                if (resourcesForPath.size() > 1) {
+                    final List<Resource.Data> remainingResources = resourcesForPath.subList(1, resourcesForPath.size());
+                    for (final Iterator<Resource.Data> iterator = remainingResources.iterator(); iterator.hasNext(); ) {
+                        final Resource.Data inner = iterator.next();
                         if (builder == null) {
                             builder = Resource.builder(outer);
                         }
                         builder.mergeWith(inner);
-                        resources.remove(j);
-                        //noinspection AssignmentToForLoopParameter
-                        j--;
                     }
                 }
                 if (builder == null) {
