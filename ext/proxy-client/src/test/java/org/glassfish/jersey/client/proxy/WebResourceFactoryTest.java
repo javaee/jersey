@@ -94,7 +94,8 @@ public class WebResourceFactoryTest extends JerseyTest {
         final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>(1);
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML);
         resourceWithXML = WebResourceFactory
-                .newResource(MyResourceIfc.class, target(), false, headers, Collections.<Cookie>emptyList(), new Form());
+                .newResource(MyResourceIfc.class, target(), false, headers, Collections.<Cookie>emptyList(), new Form(),
+                        new JerseyResourceMethodInvoker());
     }
 
     @Test

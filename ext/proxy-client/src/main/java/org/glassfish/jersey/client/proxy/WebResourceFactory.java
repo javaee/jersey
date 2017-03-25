@@ -96,11 +96,13 @@ public final class WebResourceFactory implements InvocationHandler {
     private final MultivaluedMap<String, Object> headers;
     private final List<Cookie> cookies;
     private final Form form;
+    private final ResourceMethodInvoker methodInvoker;
 
     private static final MultivaluedMap<String, Object> EMPTY_HEADERS = new MultivaluedHashMap<>();
     private static final Form EMPTY_FORM = new Form();
     private static final List<Class> PARAM_ANNOTATION_CLASSES = Arrays.<Class>asList(PathParam.class, QueryParam.class,
             HeaderParam.class, CookieParam.class, MatrixParam.class, FormParam.class);
+    private static final ResourceMethodInvoker METHOD_INVOKER = new JerseyResourceMethodInvoker();
 
     /**
      * Creates a new client-side representation of a resource described by
@@ -116,7 +118,8 @@ public final class WebResourceFactory implements InvocationHandler {
      * be used for making requests to the server.
      */
     public static <C> C newResource(final Class<C> resourceInterface, final WebTarget target) {
-        return newResource(resourceInterface, target, false, EMPTY_HEADERS, Collections.<Cookie>emptyList(), EMPTY_FORM);
+        return newResource(resourceInterface, target, false, EMPTY_HEADERS, Collections.<Cookie>emptyList(), EMPTY_FORM,
+                METHOD_INVOKER);
     }
 
     /**
@@ -140,20 +143,23 @@ public final class WebResourceFactory implements InvocationHandler {
                                     final boolean ignoreResourcePath,
                                     final MultivaluedMap<String, Object> headers,
                                     final List<Cookie> cookies,
-                                    final Form form) {
+                                    final Form form,
+                                    final ResourceMethodInvoker methodInvoker) {
 
         return (C) Proxy.newProxyInstance(AccessController.doPrivileged(ReflectionHelper.getClassLoaderPA(resourceInterface)),
                 new Class[] {resourceInterface},
                 new WebResourceFactory(ignoreResourcePath ? target : addPathFromAnnotation(resourceInterface, target),
-                        headers, cookies, form));
+                        headers, cookies, form, methodInvoker));
     }
 
     private WebResourceFactory(final WebTarget target, final MultivaluedMap<String, Object> headers,
-                               final List<Cookie> cookies, final Form form) {
+                               final List<Cookie> cookies, final Form form,
+                               final ResourceMethodInvoker methodInvoker) {
         this.target = target;
         this.headers = headers;
         this.cookies = cookies;
         this.form = form;
+        this.methodInvoker = methodInvoker;
     }
 
     @Override
@@ -292,7 +298,7 @@ public final class WebResourceFactory implements InvocationHandler {
 
         if (httpMethod == null) {
             // the method is a subresource locator
-            return WebResourceFactory.newResource(responseType, newTarget, true, headers, cookies, form);
+            return WebResourceFactory.newResource(responseType, newTarget, true, headers, cookies, form, methodInvoker);
         }
 
         // accepted media types
@@ -350,9 +356,9 @@ public final class WebResourceFactory implements InvocationHandler {
             if (entityType instanceof ParameterizedType) {
                 entity = new GenericEntity(entity, entityType);
             }
-            result = builder.method(httpMethod, Entity.entity(entity, contentType), responseGenericType);
+            result = methodInvoker.method(builder, httpMethod, Entity.entity(entity, contentType), responseGenericType);
         } else {
-            result = builder.method(httpMethod, responseGenericType);
+            result = methodInvoker.method(builder, httpMethod, responseGenericType);
         }
 
         return result;
