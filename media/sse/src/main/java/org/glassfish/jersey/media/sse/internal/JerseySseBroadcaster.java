@@ -117,7 +117,7 @@ class JerseySseBroadcaster extends JerseyPublisher<OutboundSseEvent> implements 
         if (event == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("event"));
         }
-        submit(event);
+        publish(event);
     }
 
     @Override
