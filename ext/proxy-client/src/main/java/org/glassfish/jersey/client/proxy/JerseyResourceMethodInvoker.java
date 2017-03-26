@@ -4,6 +4,9 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.GenericType;
 
+/**
+ * Default method invoker for {@link WebResourceFactory}
+ */
 public class JerseyResourceMethodInvoker implements ResourceMethodInvoker<Invocation.Builder> {
 
     @Override
