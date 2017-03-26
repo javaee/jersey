@@ -131,12 +131,12 @@ public class JerseySseEventSource implements SseEventSource, EventListener {
         this.reconnectDelay = reconnectDelay;
         this.reconnectTimeUnit = reconnectTimeUnit;
         this.clientExecutor = endpoint.getConfiguration().getClientExecutor();
-        this.publisher = new JerseyPublisher<>(clientExecutor::submit);
+        this.publisher = new JerseyPublisher<>(clientExecutor::submit, JerseyPublisher.PublisherStrategy.BLOCKING);
     }
 
     @Override
     public void onEvent(final InboundEvent inboundEvent) {
-        publisher.submit(inboundEvent);
+        publisher.publish(inboundEvent);
     }
 
     public static class Builder extends javax.ws.rs.sse.SseEventSource.Builder {
@@ -421,7 +421,7 @@ public class JerseySseEventSource implements SseEventSource, EventListener {
             if (inboundEvent.isReconnectDelaySet()) {
                 reconnectDelay = inboundEvent.getReconnectDelay();
             }
-            publisher.submit(inboundEvent);
+            publisher.publish(inboundEvent);
         }
 
         void awaitFirstContact() {
