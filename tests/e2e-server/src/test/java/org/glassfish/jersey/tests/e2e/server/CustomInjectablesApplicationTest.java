@@ -201,10 +201,10 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
     @Test
     public void plainHK2Test() throws Exception {
         final InjectionManager locator = Injections.createInjectionManager(
-                new RequestScope.Binder(),
                 new AbstractBinder() {
                     @Override
                     protected void configure() {
+                        bind(new RequestScope()).to(RequestScope.class);
                         bindAsContract(MyInjectablePerRequest.class).in(RequestScoped.class);
                         bindAsContract(MyInjectableSingleton.class).in(Singleton.class);
                     }
@@ -237,10 +237,11 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
 
     @Test
     public void plainHK2DynamicTest() throws Exception {
-        InjectionManager injectionManager = Injections.createInjectionManager(new RequestScope.Binder());
         Binder binder = new AbstractBinder() {
             @Override
             protected void configure() {
+                bind(new RequestScope()).to(RequestScope.class);
+
                 bindAsContract(MyInjectablePerRequest.class)
                         .in(RequestScoped.class);
 
@@ -248,6 +249,7 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
                         .in(Singleton.class);
             }
         };
+        InjectionManager injectionManager = Injections.createInjectionManager();
         injectionManager.register(binder);
 
         final RequestScope requestScope = injectionManager.getInstance(RequestScope.class);

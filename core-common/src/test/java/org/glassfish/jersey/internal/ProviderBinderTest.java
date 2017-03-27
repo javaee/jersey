@@ -67,6 +67,7 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.CustomAnnotationLiteral;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -122,12 +123,10 @@ public class ProviderBinderTest {
         }
     }
 
-    private static Binder[] initBinders(Binder... binders) {
+    private static Binder initBinders(Binder... binders) {
         List<Binder> binderList = Arrays.stream(binders).collect(Collectors.toList());
-
         binderList.add(new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER));
-
-        return binderList.toArray(new Binder[binderList.size()]);
+        return CompositeBinder.wrap(binderList);
     }
 
     public ProviderBinderTest() {
@@ -137,6 +136,7 @@ public class ProviderBinderTest {
     @Test
     public void testServicesNotEmpty() {
         InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
+        injectionManager.completeRegistration();
         Set<MessageBodyReader> providers = Providers.getProviders(injectionManager, MessageBodyReader.class);
         assertTrue(providers.size() > 0);
     }
@@ -144,6 +144,7 @@ public class ProviderBinderTest {
     @Test
     public void testServicesMbr() {
         InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
+        injectionManager.completeRegistration();
         Set<MessageBodyReader> providers = Providers.getProviders(injectionManager, MessageBodyReader.class);
         assertTrue(providers.size() > 0);
     }
@@ -151,6 +152,7 @@ public class ProviderBinderTest {
     @Test
     public void testServicesMbw() {
         InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
+        injectionManager.completeRegistration();
         Set<MessageBodyWriter> providers = Providers.getProviders(injectionManager, MessageBodyWriter.class);
         assertTrue(providers.size() > 0);
     }
@@ -160,6 +162,8 @@ public class ProviderBinderTest {
         InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
         ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindClasses(Collections.singleton(MyProvider.class));
+
+        injectionManager.completeRegistration();
         Set<MessageBodyReader> providers = Providers.getCustomProviders(injectionManager, MessageBodyReader.class);
         assertEquals(1, instancesOfType(MyProvider.class, providers).size());
     }
@@ -170,6 +174,7 @@ public class ProviderBinderTest {
         ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindClasses(Collections.singleton(MyProvider.class));
 
+        injectionManager.completeRegistration();
         Set<MessageBodyWriter> providers = Providers.getCustomProviders(injectionManager, MessageBodyWriter.class);
         final Collection<MyProvider> myProviders = instancesOfType(MyProvider.class, providers);
         assertEquals(1, myProviders.size());
@@ -180,6 +185,8 @@ public class ProviderBinderTest {
         InjectionManager injectionManager = Injections.createInjectionManager(initBinders());
         ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindInstances(Collections.singleton(new MyProvider()));
+
+        injectionManager.completeRegistration();
         Set<MessageBodyReader> providers = Providers.getCustomProviders(injectionManager, MessageBodyReader.class);
         assertEquals(1, instancesOfType(MyProvider.class, providers).size());
     }
@@ -190,6 +197,7 @@ public class ProviderBinderTest {
         ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindInstances(Collections.singleton(new MyProvider()));
 
+        injectionManager.completeRegistration();
         Set<MessageBodyWriter> providers = Providers.getCustomProviders(injectionManager, MessageBodyWriter.class);
         assertEquals(instancesOfType(MyProvider.class, providers).size(), 1);
     }
@@ -210,6 +218,7 @@ public class ProviderBinderTest {
         ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindClasses(Child.class);
         providerBinder.bindClasses(NotFilterChild.class);
+        injectionManager.completeRegistration();
 
         ContainerRequestFilter requestFilter = getRequestFilter(injectionManager);
         ContainerRequestFilter requestFilter2 = getRequestFilter(injectionManager);

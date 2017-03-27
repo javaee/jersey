@@ -41,6 +41,8 @@
 package org.glassfish.jersey.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.ws.rs.RuntimeType;
@@ -54,6 +56,7 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
@@ -63,7 +66,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
-/**
+/**®
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JaxrsProvidersTest {
@@ -90,34 +93,39 @@ public class JaxrsProvidersTest {
 
     @Test
     public void testProviders() throws Exception {
-        final InjectionManager injectionManager = Injections.createInjectionManager(
-                new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER), new Binder());
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        injectionManager.register(new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER));
+        injectionManager.register(new Binder());
 
-        injectionManager.register(new TestBinder(injectionManager));
+        BootstrapBag bootstrapBag = new BootstrapBag();
+        List<BootstrapConfigurator> bootstrapConfigurators = Arrays.asList(
+                new RequestScope.RequestScopeConfigurator(),
+                new TestConfigConfigurator(),
+                new ContextResolverFactory.ContextResolversConfigurator(),
+                new MessageBodyFactory.MessageBodyWorkersConfigurator(),
+                new ExceptionMapperFactory.ExceptionMappersConfigurator());
+        injectionManager.register(new TestBinder());
 
         TestBinder.initProviders(injectionManager);
-        RequestScope scope = injectionManager.getInstance(RequestScope.class);
+        bootstrapConfigurators.forEach(configurator -> configurator.init(injectionManager, bootstrapBag));
+        injectionManager.completeRegistration();
+        bootstrapConfigurators.forEach(configurator -> configurator.postInit(injectionManager, bootstrapBag));
 
-        scope.runInScope(new Callable<Object>() {
+        RequestScope scope = bootstrapBag.getRequestScope();
 
-            @Override
-            public Object call() throws Exception {
-                Providers instance = injectionManager.getInstance(Providers.class);
+        scope.runInScope((Callable<Object>) () -> {
+            Providers instance = injectionManager.getInstance(Providers.class);
 
-                assertNotNull(instance);
-                assertSame(JaxrsProviders.class, instance.getClass());
+            assertNotNull(instance);
+            assertSame(JaxrsProviders.class, instance.getClass());
 
-                assertNotNull(instance.getExceptionMapper(Throwable.class));
-                assertNotNull(instance.getMessageBodyReader(String.class, String.class, new Annotation[0],
-                        MediaType.TEXT_PLAIN_TYPE));
-                assertNotNull(instance.getMessageBodyWriter(String.class, String.class, new Annotation[0],
-                        MediaType.TEXT_PLAIN_TYPE));
-                assertNotNull(instance.getContextResolver(String.class, MediaType.TEXT_PLAIN_TYPE));
-
-                return null;
-            }
-
+            assertNotNull(instance.getExceptionMapper(Throwable.class));
+            assertNotNull(instance.getMessageBodyReader(String.class, String.class, new Annotation[0],
+                    MediaType.TEXT_PLAIN_TYPE));
+            assertNotNull(instance.getMessageBodyWriter(String.class, String.class, new Annotation[0],
+                    MediaType.TEXT_PLAIN_TYPE));
+            assertNotNull(instance.getContextResolver(String.class, MediaType.TEXT_PLAIN_TYPE));
+            return null;
         });
-
     }
 }

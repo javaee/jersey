@@ -65,7 +65,7 @@ final class QueryParamValueSupplierProvider extends AbstractValueSupplierProvide
      * @param mpep            multivalued map parameter extractor provider.
      * @param requestProvider request provider.
      */
-    public QueryParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+    public QueryParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
             Provider<ContainerRequest> requestProvider) {
         super(mpep, requestProvider, Parameter.Source.QUERY);
     }

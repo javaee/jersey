@@ -814,8 +814,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
         state.configureAutoDiscoverableProviders(injectionManager, true);
     }
 
-    final void configureMetaProviders(InjectionManager InjectionManager) {
-        state.configureMetaProviders(InjectionManager);
+    final void configureMetaProviders(InjectionManager injectionManager) {
+        state.configureMetaProviders(injectionManager);
     }
 
     @Override

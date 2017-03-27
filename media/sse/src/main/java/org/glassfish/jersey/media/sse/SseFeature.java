@@ -47,7 +47,6 @@ import javax.ws.rs.core.MediaType;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.Property;
 import org.glassfish.jersey.media.sse.internal.SseBinder;
 import org.glassfish.jersey.media.sse.internal.SseEventSinkValueSupplierProvider;
@@ -155,8 +154,8 @@ public class SseFeature implements Feature {
                 context.register(new SseBinder());
 
                 final SseEventSinkValueSupplierProvider eventSinkSupplier = new SseEventSinkValueSupplierProvider(
-                        injectionManager.getInstance(MultivaluedParameterExtractorProvider.class),
-                        Injections.getProvider(injectionManager, ContainerRequest.class));
+                        () -> injectionManager.getInstance(MultivaluedParameterExtractorProvider.class),
+                        () -> injectionManager.getInstance(ContainerRequest.class));
 
                 context.register(eventSinkSupplier, ValueSupplierProvider.class);
                 break;

@@ -44,15 +44,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedAction;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.SecurityContext;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.SubjectSecurityContext;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -63,6 +63,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 /**
  * An methodAcceptorPair to accept sub-resource requests.
@@ -81,27 +82,27 @@ final class SubResourceLocatorRouter implements Router {
     private final List<ParamValueFactoryWithSource<?>> valueProviders;
     private final RuntimeLocatorModelBuilder runtimeLocatorBuilder;
     private final JerseyResourceContext resourceContext;
-
-    private final InjectionManager injectionManager;
+    private final Function<Class<?>, ?> createFunction;
 
     /**
      * Create a new sub-resource locator router.
      *
-     * @param injectionManager        DI injection manager.
-     * @param locatorModel            resource locator method model.
-     * @param resourceContext         resource context to bind sub-resource locator singleton instances.
-     * @param runtimeLocatorBuilder   original runtime model builder.
+     * @param createServiceFunction function to create a new service and make other operations (injection).
+     * @param valueSuppliers        all registered value suppliers.
+     * @param locatorModel          resource locator method model.
+     * @param resourceContext       resource context to bind sub-resource locator singleton instances.
+     * @param runtimeLocatorBuilder original runtime model builder.
      */
-    SubResourceLocatorRouter(final InjectionManager injectionManager,
+    SubResourceLocatorRouter(final Function<Class<?>, ?> createServiceFunction,
+                             final Collection<ValueSupplierProvider> valueSuppliers,
                              final ResourceMethod locatorModel,
                              final JerseyResourceContext resourceContext,
                              final RuntimeLocatorModelBuilder runtimeLocatorBuilder) {
         this.runtimeLocatorBuilder = runtimeLocatorBuilder;
         this.locatorModel = locatorModel;
         this.resourceContext = resourceContext;
-        this.injectionManager = injectionManager;
-
-        this.valueProviders = ParameterValueHelper.createValueProviders(injectionManager, locatorModel.getInvocable());
+        this.createFunction = createServiceFunction;
+        this.valueProviders = ParameterValueHelper.createValueProviders(valueSuppliers, locatorModel.getInvocable());
     }
 
     @Override
@@ -128,7 +129,7 @@ final class SubResourceLocatorRouter implements Router {
 
                 if (!runtimeLocatorBuilder.isCached(locatorClass)) {
                     // If we can't create an instance of the class, don't proceed.
-                    subResourceInstance = Injections.getOrCreate(injectionManager, locatorClass);
+                    subResourceInstance = createFunction.apply(locatorClass);
                 }
             }
             routingContext.pushMatchedResource(subResourceInstance);
@@ -150,26 +151,21 @@ final class SubResourceLocatorRouter implements Router {
 
         context.triggerEvent(RequestEvent.Type.LOCATOR_MATCHED);
 
-        final PrivilegedAction invokeMethodAction = new PrivilegedAction() {
-            @Override
-            public Object run() {
-                try {
-
-                    return handlingMethod.invoke(resource, parameterValues);
-
-                } catch (IllegalAccessException | IllegalArgumentException | UndeclaredThrowableException ex) {
-                    throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
-                } catch (final InvocationTargetException ex) {
-                    final Throwable cause = ex.getCause();
-                    if (cause instanceof WebApplicationException) {
-                        throw (WebApplicationException) cause;
-                    }
-
-                    // handle all exceptions as potentially mappable (incl. ProcessingException)
-                    throw new MappableException(cause);
-                } catch (final Throwable t) {
-                    throw new ProcessingException(t);
+        final PrivilegedAction invokeMethodAction = () -> {
+            try {
+                return handlingMethod.invoke(resource, parameterValues);
+            } catch (IllegalAccessException | IllegalArgumentException | UndeclaredThrowableException ex) {
+                throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
+            } catch (final InvocationTargetException ex) {
+                final Throwable cause = ex.getCause();
+                if (cause instanceof WebApplicationException) {
+                    throw (WebApplicationException) cause;
                 }
+
+                // handle all exceptions as potentially mappable (incl. ProcessingException)
+                throw new MappableException(cause);
+            } catch (final Throwable t) {
+                throw new ProcessingException(t);
             }
         };
 

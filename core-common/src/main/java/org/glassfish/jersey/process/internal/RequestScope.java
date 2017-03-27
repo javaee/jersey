@@ -50,16 +50,15 @@ import java.util.logging.Logger;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.hk2.RequestContext;
+import org.glassfish.jersey.internal.BootstrapBag;
+import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.ForeignDescriptor;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.LazyUid;
 import org.glassfish.jersey.internal.util.Producer;
-
-import org.glassfish.hk2.api.Context;
-import org.glassfish.hk2.api.TypeLiteral;
 
 import static org.glassfish.jersey.internal.guava.Preconditions.checkState;
 
@@ -154,13 +153,17 @@ public class RequestScope {
     }
 
     /**
-     * Request scope injection binder.
+     * Configurator which initializes and register {@link RequestScope} instance int {@link InjectionManager} and
+     * {@link BootstrapBag}.
+     *
+     * @author Petr Bouda (petr.bouda at oracle.com)
      */
-    public static class Binder extends AbstractBinder {
+    public static class RequestScopeConfigurator implements BootstrapConfigurator {
 
         @Override
-        protected void configure() {
-            bind(new RequestScope()).to(RequestScope.class);
+        public void init(InjectionManager injectionManagerFactory, BootstrapBag bootstrapBag) {
+            bootstrapBag.setRequestScope(new RequestScope());
+            injectionManagerFactory.register(Bindings.service(bootstrapBag.getRequestScope()).to(RequestScope.class));
         }
     }
 

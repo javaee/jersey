@@ -42,17 +42,19 @@ package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.server.InjectionManagerFactory;
+import org.glassfish.jersey.server.TestInjectionManagerFactory;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelComponent;
+import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -68,10 +70,14 @@ public class ResourceMethodDispatcherFactoryTest {
 
     @Before
     public void setupApplication() {
-        InjectionManager locator = InjectionManagerFactory.createInjectionManager();
+        TestInjectionManagerFactory.BootstrapResult result = TestInjectionManagerFactory.createInjectionManager();
 
-        rmdf = locator.getInstance(ResourceMethodDispatcherFactory.class);
-        rmihf = locator.getInstance(ResourceMethodInvocationHandlerFactory.class);
+        List<ResourceMethodDispatcher.Provider> providers = Arrays.asList(
+                new VoidVoidDispatcherProvider(result.bootstrapBag.getResourceContext()),
+                new JavaResourceMethodDispatcherProvider(result.bootstrapBag.getValueSupplierProviders()));
+
+        rmdf = new ResourceMethodDispatcherFactory(providers);
+        rmihf = new ResourceMethodInvocationHandlerFactory(result.injectionManager);
     }
 
     @Test

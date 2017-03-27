@@ -130,11 +130,19 @@ public class ContextResolverFactoryTest {
 
     @Before
     public void setUp() {
-        final InjectionManager locator = Injections.createInjectionManager(new ContextResolverFactory.Binder(), new Binder());
-        final ProviderBinder providerBinder = new ProviderBinder(locator);
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        ProviderBinder providerBinder = new ProviderBinder(injectionManager);
         providerBinder.bindClasses(Collections.singleton(CustomIntegerResolverC.class));
+        injectionManager.register(new Binder());
 
-        crf = locator.getInstance(ContextResolverFactory.class);
+        BootstrapBag bootstrapBag = new BootstrapBag();
+        ContextResolverFactory.ContextResolversConfigurator configurator =
+                new ContextResolverFactory.ContextResolversConfigurator();
+        configurator.init(injectionManager, bootstrapBag);
+        injectionManager.completeRegistration();
+        configurator.postInit(injectionManager, bootstrapBag);
+
+        crf = injectionManager.getInstance(ContextResolverFactory.class);
     }
 
     @Test

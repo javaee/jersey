@@ -52,8 +52,6 @@ import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Parameter;
@@ -113,20 +111,19 @@ public final class ParameterValueHelper {
      * Create list of parameter value providers for the given {@link Parameterized
      * parameterized} resource model component.
      *
-     * @param injectionManager injection manager.
-     * @param parameterized parameterized resource model component.
+     * @param valueSuppliers all registered value suppliers.
+     * @param parameterized  parameterized resource model component.
      * @return list of parameter value providers for the parameterized component.
      */
-    public static List<ParamValueFactoryWithSource<?>> createValueProviders(InjectionManager injectionManager,
-                                                                    Parameterized parameterized) {
+    public static List<ParamValueFactoryWithSource<?>> createValueProviders(Collection<ValueSupplierProvider> valueSuppliers,
+            Parameterized parameterized) {
         if ((null == parameterized.getParameters()) || (0 == parameterized.getParameters().size())) {
             return Collections.emptyList();
         }
 
-        List<ValueSupplierProvider> valueSupplierProviders =
-                Providers.getProviders(injectionManager, ValueSupplierProvider.class).stream()
-                    .sorted((o1, o2) -> o2.getPriority().getWeight() - o1.getPriority().getWeight())
-                    .collect(Collectors.toList());
+        List<ValueSupplierProvider> valueSupplierProviders = valueSuppliers.stream()
+                        .sorted((o1, o2) -> o2.getPriority().getWeight() - o1.getPriority().getWeight())
+                        .collect(Collectors.toList());
 
         boolean entityParamFound = false;
         final List<ParamValueFactoryWithSource<?>> providers = new ArrayList<>(parameterized.getParameters().size());

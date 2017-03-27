@@ -67,6 +67,7 @@ class BindingTestHelper {
         };
 
         injectionManager.register(binder);
+        injectionManager.completeRegistration();
     }
 
     /**
@@ -75,8 +76,6 @@ class BindingTestHelper {
      * @return newly created {@code InjectionManager}.
      */
     static InjectionManager createInjectionManager() {
-        HK2InjectionManager injectionManager = new HK2InjectionManager();
-        injectionManager.initialize();
-        return injectionManager;
+        return new ImmediateHk2InjectionManager();
     }
 }

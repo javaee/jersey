@@ -45,54 +45,32 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 /**
- * Interface provides the communication API between Jersey and Dependency Injection provider
+ * Interface provides the communication API between Jersey and Dependency Injection provider.
  * <p>
- * First, the method {@link #initialize(String, Object, Binder...)} should be call to initialize DI provider
- * (e.g. create underlying storage for registered services) and to do other stuff needed for successful start of DI provider.
+ * Lifecycle methods should be called in this order:
+ * <ul>
+ * <li>{@link #completeRegistration()} - notifies that Jersey bootstrap has been finished and DI provider should be ready for a runtime.</li>
+ * <li>{@link #shutdown()} - Jersey application has been closed and DI provider should make needed cleaning steps.</li>
+ * </ul>
+ * <p>
+ * All {@code getInstance} methods can be called after {@link #completeRegistration()} method has been called because at this all
+ * components are bound to injection manager and ready for getting.
+ * In turn, {@link #shutdown()} method stops the possibility to use these methods and closes {@code InjectionManager}.
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
 public interface InjectionManager {
 
     /**
-     * Initializes {@code InjectionManager} and underlying DI provider. The method may get the array of binders to
-     * register {@link Binding} them during initialization process. {@code name} and {@code parent} are not required parameters
-     * and can be {@code null} without the initialization exception.
-     *
-     * @param name    Name of the injection manager.
-     * @param parent  Parent object of the underlying DI provider on which new injection manager should be dependent. A specific
-     *                DI provider checks whether the parent object is in the proper type of underlying service storage or
-     *                a proper implementation of {@link InjectionManager}.
-     * @param binders Binders with descriptions to include them during initialization process.
+     * Completes {@link InjectionManager} and the underlying DI provider. All registered components are bound to injection
+     * manager and after an invocation of this method all components are available using e.g. {@link #getInstance(Class)}.
      */
-    void initialize(String name, Object parent, Binder... binders);
+    void completeRegistration();
 
     /**
-     * Initializes {@code InjectionManager} and underlying DI provider. The method may get the array of binders to
-     * register {@link Binding} them during initialization process. {@code parent} is not required parameters and can be
-     * {@code null} without the initialization exception.
-     *
-     * @param parent  Parent object of the underlying DI provider on which new injection manager should be dependent. A specific
-     *                DI provider checks whether the parent object is in the proper type of underlying service storage or
-     *                a proper implementation of {@link InjectionManager}.
-     * @param binders Binders with descriptions to include them during initialization process.
-     */
-    default void initialize(Object parent, Binder... binders) {
-        initialize(null, parent, binders);
-    }
-
-    /**
-     * Initializes {@code InjectionManager} and underlying DI provider. The method may get the array of binders to
-     * register {@link Binding} them during initialization process.
-
-     * @param binders Binders with descriptions to include them during initialization process.
-     */
-    default void initialize(Binder... binders) {
-        initialize(null, null, binders);
-    }
-
-    /**
-     * Shuts down the entire {@link InjectionManager}and underlying DI provider along with injected executors and schedulers.
+     * Shuts down the entire {@link InjectionManager} and the underlying DI provider.
+     * <p>
+     * Shutdown phase is dedicated to make some final cleaning steps regarding underlying DI provider.
      */
     void shutdown();
 
@@ -145,7 +123,7 @@ public interface InjectionManager {
      * @param provider object that can be registered in {@code InjectionManager}.
      * @throws IllegalArgumentException provider cannot be registered.
      */
-    void register(Object provider);
+    void register(Object provider) throws IllegalArgumentException;
 
     /**
      * Tests whether the provided {@code clazz} can be registered by the implementation of the {@link InjectionManager}.

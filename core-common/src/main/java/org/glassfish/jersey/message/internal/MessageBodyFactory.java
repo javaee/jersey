@@ -77,15 +77,16 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.xml.transform.Source;
 
+import org.glassfish.jersey.internal.BootstrapBag;
+import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.guava.Primitives;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -112,13 +113,28 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private static final Logger LOGGER = Logger.getLogger(MessageBodyFactory.class.getName());
 
     /**
-     * Message body factory injection binder.
+     * Configurator which initializes and register {@link MessageBodyWorkers} instance into {@link InjectionManager} and
+     * {@link BootstrapBag}.
+     *
+     * @author Petr Bouda (petr.bouda at oracle.com)
      */
-    public static class Binder extends AbstractBinder {
+    public static class MessageBodyWorkersConfigurator implements BootstrapConfigurator {
+
+        private MessageBodyFactory messageBodyFactory;
 
         @Override
-        protected void configure() {
-            bindAsContract(MessageBodyFactory.class).to(MessageBodyWorkers.class).in(Singleton.class);
+        public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            messageBodyFactory = new MessageBodyFactory(bootstrapBag.getConfiguration());
+            InstanceBinding<MessageBodyFactory> binding =
+                    Bindings.service(messageBodyFactory)
+                            .to(MessageBodyWorkers.class);
+            injectionManager.register(binding);
+        }
+
+        @Override
+        public void postInit(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            messageBodyFactory.initialize(injectionManager);
+            bootstrapBag.setMessageBodyWorkers(messageBodyFactory);
         }
     }
 
@@ -173,17 +189,15 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             };
 
-    private final InjectionManager injectionManager;
+    private InjectionManager injectionManager;
 
     private final Boolean legacyProviderOrdering;
 
-    private final List<ReaderModel> readers;
-    private final List<WriterModel> writers;
+    private List<ReaderModel> readers;
+    private List<WriterModel> writers;
 
-    private final Map<MediaType, List<MessageBodyReader>> readersCache =
-            new KeyComparatorHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
-    private final Map<MediaType, List<MessageBodyWriter>> writersCache =
-            new KeyComparatorHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
+    private final Map<MediaType, List<MessageBodyReader>> readersCache = new KeyComparatorHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
+    private final Map<MediaType, List<MessageBodyWriter>> writersCache = new KeyComparatorHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
 
     private static final int LOOKUP_CACHE_INITIAL_CAPACITY = 32;
     private static final float LOOKUP_CACHE_LOAD_FACTOR = 0.75f;
@@ -203,17 +217,22 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
 
     /**
-     * Create new message body workers factory.
+     * Create a new message body factory.
      *
-     * @param injectionManager   injection manager.
      * @param configuration configuration. Optional - can be null.
      */
-    @Inject
-    public MessageBodyFactory(final InjectionManager injectionManager, final Configuration configuration) {
-        this.injectionManager = injectionManager;
+    public MessageBodyFactory(Configuration configuration) {
         this.legacyProviderOrdering = configuration != null
                 && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
+    }
 
+    /**
+     * Must be initialize at the time of completed populated {@link InjectionManager}.
+     *
+     * @param injectionManager completed injection manager.
+     */
+    public void initialize(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
         // Initialize readers
         this.readers = new ArrayList<>();
         final Set<MessageBodyReader> customMbrs = Providers.getCustomProviders(injectionManager, MessageBodyReader.class);
@@ -224,7 +243,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         addReaders(readers, mbrs, false);
 
         if (legacyProviderOrdering) {
-            Collections.sort(readers, new LegacyWorkerComparator<>(MessageBodyReader.class));
+            readers.sort(new LegacyWorkerComparator<>(MessageBodyReader.class));
 
             for (final ReaderModel model : readers) {
                 for (final MediaType mt : model.declaredTypes()) {
@@ -250,7 +269,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         addWriters(writers, mbws, false);
 
         if (legacyProviderOrdering) {
-            Collections.sort(writers, new LegacyWorkerComparator<>(MessageBodyWriter.class));
+            writers.sort(new LegacyWorkerComparator<>(MessageBodyWriter.class));
 
             for (final AbstractEntityProviderModel<MessageBodyWriter> model : writers) {
                 for (final MediaType mt : model.declaredTypes()) {
@@ -518,18 +537,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     // MessageBodyWorkers
     @Override
     public Map<MediaType, List<MessageBodyReader>> getReaders(final MediaType mediaType) {
-        final Map<MediaType, List<MessageBodyReader>> subSet =
-                new KeyComparatorLinkedHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
-
+        final Map<MediaType, List<MessageBodyReader>> subSet = new KeyComparatorLinkedHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
         getCompatibleProvidersMap(mediaType, readers, subSet);
         return subSet;
     }
 
     @Override
     public Map<MediaType, List<MessageBodyWriter>> getWriters(final MediaType mediaType) {
-        final Map<MediaType, List<MessageBodyWriter>> subSet =
-                new KeyComparatorLinkedHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
-
+        final Map<MediaType, List<MessageBodyWriter>> subSet = new KeyComparatorLinkedHashMap<>(MEDIA_TYPE_KEY_COMPARATOR);
         getCompatibleProvidersMap(mediaType, writers, subSet);
         return subSet;
     }
@@ -613,7 +628,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         final List<MediaType> mtl = new ArrayList<>(readableMediaTypes);
-        Collections.sort(mtl, MediaTypes.PARTIAL_ORDER_COMPARATOR);
+        mtl.sort(MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mtl;
     }
 
@@ -660,7 +675,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                     readers.add(model);
                 }
             }
-            Collections.sort(readers, new WorkerComparator<>(c, mediaType));
+
+            readers.sort(new WorkerComparator<>(c, mediaType));
             mbrLookupCache.put(lookupKey, readers);
         }
 
@@ -780,7 +796,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                     writers.add(model);
                 }
             }
-            Collections.sort(writers, new WorkerComparator<>(c, mediaType));
+            writers.sort(new WorkerComparator<>(c, mediaType));
             mbwLookupCache.put(lookupKey, writers);
         }
 
@@ -871,7 +887,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         final List<T> providers = set.stream()
                                      .filter(model -> model.declaredTypes().contains(mediaType))
-                                     .map((Function<AbstractEntityProviderModel<T>, T>) AbstractEntityProviderModel::provider)
+                                     .map(AbstractEntityProviderModel::provider)
                                      .collect(Collectors.toList());
 
         if (!providers.isEmpty()) {
@@ -902,7 +918,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         final List<MediaType> mtl = new ArrayList<>(writeableMediaTypes);
-        Collections.sort(mtl, MediaTypes.PARTIAL_ORDER_COMPARATOR);
+        mtl.sort(MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mtl;
     }
 
@@ -940,7 +956,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             }
         }
         // Type -> Writer.
-        Collections.sort(suitableWriters, WORKER_BY_TYPE_COMPARATOR);
+        suitableWriters.sort(WORKER_BY_TYPE_COMPARATOR);
         mbwTypeLookupCache.put(clazz, suitableWriters);
 
         // Type -> MediaType.
@@ -975,7 +991,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         final List<MediaType> mediaTypes = new ArrayList<>(mediaTypeSet);
-        Collections.sort(mediaTypes, MediaTypes.PARTIAL_ORDER_COMPARATOR);
+        mediaTypes.sort(MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mediaTypes;
     }
 
@@ -1008,7 +1024,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         // Type -> Writer.
-        Collections.sort(suitableReaders, WORKER_BY_TYPE_COMPARATOR);
+        suitableReaders.sort(WORKER_BY_TYPE_COMPARATOR);
         mbrTypeLookupCache.put(clazz, suitableReaders);
 
         // Type -> MediaType.

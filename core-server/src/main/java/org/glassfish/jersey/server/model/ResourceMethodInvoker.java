@@ -52,7 +52,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -68,13 +68,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
-
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.NameBound;
 import org.glassfish.jersey.model.internal.ComponentBag;
@@ -116,23 +113,74 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
     private final Iterable<WriterInterceptor> writerInterceptors;
 
     /**
-     * Resource method invoker "assisted" injection helper.
+     * Resource method invoker helper.
      *
-     * The injectable builder API provides means for constructing a properly
-     * injected {@link ResourceMethodInvoker resource method invoker} instances.
+     * The builder API provides means for constructing a properly initialized
+     * {@link ResourceMethodInvoker resource method invoker} instances.
      */
     public static class Builder {
 
-        @Inject
-        private ResourceMethodDispatcherFactory dispatcherProviderFactory;
-        @Inject
-        private ResourceMethodInvocationHandlerFactory invocationHandlerProviderFactory;
-        @Inject
+        private ResourceMethodDispatcherFactory resourceMethodDispatcherFactory;
+        private ResourceMethodInvocationHandlerFactory resourceMethodInvocationHandlerFactory;
         private InjectionManager injectionManager;
-        @Inject
-        private Configuration globalConfig;
-        @Inject
-        private javax.inject.Provider<ConfiguredValidator> validatorProvider;
+        private Configuration configuration;
+        private Supplier<ConfiguredValidator> configurationValidator;
+
+        /**
+         * Set resource method dispatcher factory.
+         *
+         * @param resourceMethodDispatcherFactory resource method dispatcher factory.
+         * @return updated builder.
+         */
+        public Builder resourceMethodDispatcherFactory(ResourceMethodDispatcherFactory resourceMethodDispatcherFactory) {
+            this.resourceMethodDispatcherFactory = resourceMethodDispatcherFactory;
+            return this;
+        }
+
+        /**
+         * Set resource method invocation handler factory.
+         *
+         * @param resourceMethodInvocationHandlerFactory resource method invocation handler factory.
+         * @return updated builder.
+         */
+        public Builder resourceMethodInvocationHandlerFactory(
+                ResourceMethodInvocationHandlerFactory resourceMethodInvocationHandlerFactory) {
+            this.resourceMethodInvocationHandlerFactory = resourceMethodInvocationHandlerFactory;
+            return this;
+        }
+
+        /**
+         * Set runtime DI injection manager.
+         *
+         * @param injectionManager DI injection manager.
+         * @return updated builder.
+         */
+        public Builder injectionManager(InjectionManager injectionManager) {
+            this.injectionManager = injectionManager;
+            return this;
+        }
+
+        /**
+         * Set global configuration.
+         *
+         * @param configuration global configuration.
+         * @return updated builder.
+         */
+        public Builder configuration(Configuration configuration) {
+            this.configuration = configuration;
+            return this;
+        }
+
+        /**
+         * Set global configuration validator.
+         *
+         * @param configurationValidator configuration validator.
+         * @return updated builder.
+         */
+        public Builder configurationValidator(Supplier<ConfiguredValidator> configurationValidator) {
+            this.configurationValidator = configurationValidator;
+            return this;
+        }
 
         /**
          * Build a new resource method invoker instance.
@@ -141,17 +189,30 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
          * @param processingProviders Processing providers.
          * @return new resource method invoker instance.
          */
-        public ResourceMethodInvoker build(
-                final ResourceMethod method,
-                final ProcessingProviders processingProviders
-        ) {
+        public ResourceMethodInvoker build(ResourceMethod method, ProcessingProviders processingProviders) {
+            if (resourceMethodDispatcherFactory == null) {
+                throw new NullPointerException("ResourceMethodDispatcherFactory is not set.");
+            }
+            if (resourceMethodInvocationHandlerFactory == null) {
+                throw new NullPointerException("ResourceMethodInvocationHandlerFactory is not set.");
+            }
+            if (injectionManager == null) {
+                throw new NullPointerException("DI injection manager is not set.");
+            }
+            if (configuration == null) {
+                throw new NullPointerException("Configuration is not set.");
+            }
+            if (configurationValidator == null) {
+                throw new NullPointerException("Configuration validator is not set.");
+            }
+
             return new ResourceMethodInvoker(
-                    dispatcherProviderFactory,
-                    invocationHandlerProviderFactory,
+                    resourceMethodDispatcherFactory,
+                    resourceMethodInvocationHandlerFactory,
                     method,
                     processingProviders, injectionManager,
-                    globalConfig,
-                    validatorProvider.get());
+                    configuration,
+                    configurationValidator.get());
         }
     }
 
@@ -186,7 +247,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         // Get instances of providers.
         final Set<Class<?>> providerClasses = componentBag.getClasses(ComponentBag.excludeMetaProviders(injectionManager));
         if (!providerClasses.isEmpty()) {
-            injectionManager = Injections.createInjectionManager(injectionManager, new AbstractBinder() {
+            injectionManager = Injections.createInjectionManager(injectionManager);
+            injectionManager.register(new AbstractBinder() {
                 @Override
                 protected void configure() {
                     bind(config).to(Configuration.class);
@@ -336,16 +398,13 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         }
 
         if (method.isManagedAsyncDeclared()) {
-            processingContext.asyncContext().invokeManaged(new Producer<Response>() {
-                @Override
-                public Response call() {
-                    final Response response = invoke(processingContext, resource);
-                    if (method.isSuspendDeclared()) {
-                        // we ignore any response returned from a method that injects AsyncResponse
-                        return null;
-                    }
-                    return response;
+            processingContext.asyncContext().invokeManaged(() -> {
+                final Response response = invoke(processingContext, resource);
+                if (method.isSuspendDeclared()) {
+                    // we ignore any response returned from a method that injects AsyncResponse
+                    return null;
                 }
+                return response;
             });
             return null; // return null on current thread
         } else {
@@ -359,36 +418,33 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         Response jaxrsResponse;
         context.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_START);
 
-        context.push(new Function<ContainerResponse, ContainerResponse>() {
-            @Override
-            public ContainerResponse apply(final ContainerResponse response) {
-                // Need to check whether the response is null or mapped from exception. In these cases we don't want to modify
-                // response with resource method metadata.
-                if (response == null
-                        || response.isMappedFromException()) {
-                    return response;
-                }
-
-                final Annotation[] entityAnn = response.getEntityAnnotations();
-                if (methodAnnotations.length > 0) {
-                    if (entityAnn.length == 0) {
-                        response.setEntityAnnotations(methodAnnotations);
-                    } else {
-                        final Annotation[] mergedAnn = Arrays.copyOf(methodAnnotations,
-                                methodAnnotations.length + entityAnn.length);
-                        System.arraycopy(entityAnn, 0, mergedAnn, methodAnnotations.length, entityAnn.length);
-                        response.setEntityAnnotations(mergedAnn);
-                    }
-                }
-
-                if (canUseInvocableResponseType
-                        && response.hasEntity()
-                        && !(response.getEntityType() instanceof ParameterizedType)) {
-                    response.setEntityType(invocableResponseType);
-                }
-
+        context.push(response -> {
+            // Need to check whether the response is null or mapped from exception. In these cases we don't want to modify
+            // response with resource method metadata.
+            if (response == null
+                    || response.isMappedFromException()) {
                 return response;
             }
+
+            final Annotation[] entityAnn = response.getEntityAnnotations();
+            if (methodAnnotations.length > 0) {
+                if (entityAnn.length == 0) {
+                    response.setEntityAnnotations(methodAnnotations);
+                } else {
+                    final Annotation[] mergedAnn = Arrays.copyOf(methodAnnotations,
+                            methodAnnotations.length + entityAnn.length);
+                    System.arraycopy(entityAnn, 0, mergedAnn, methodAnnotations.length, entityAnn.length);
+                    response.setEntityAnnotations(mergedAnn);
+                }
+            }
+
+            if (canUseInvocableResponseType
+                    && response.hasEntity()
+                    && !(response.getEntityType() instanceof ParameterizedType)) {
+                response.setEntityType(invocableResponseType);
+            }
+
+            return response;
         });
 
         try {

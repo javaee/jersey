@@ -41,23 +41,26 @@
 package org.glassfish.jersey.server.internal.routing;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import javax.ws.rs.core.Configuration;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.process.Endpoint;
+import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 import org.glassfish.jersey.uri.PathPattern;
 import org.glassfish.jersey.uri.UriTemplate;
 
@@ -71,7 +74,7 @@ import org.glassfish.jersey.uri.UriTemplate;
 final class RuntimeModelBuilder {
 
     private final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder;
-    private final MessageBodyWorkers workers;
+    private final MessageBodyWorkers messageBodyWorkers;
     private final ProcessingProviders processingProviders;
 
     // SubResourceLocator Model Builder.
@@ -80,31 +83,30 @@ final class RuntimeModelBuilder {
     /**
      * Create a new instance of the runtime model builder.
      *
-     * @param injectionManager             DI injection manager.
      * @param resourceContext              Jersey resource context.
      * @param config                       configuration of the application.
-     * @param workers                      message body workers.
+     * @param messageBodyWorkers           message body messageBodyWorkers.
      * @param processingProviders          processing providers.
      * @param resourceMethodInvokerBuilder method invoker builder.
+     * @param modelProcessors              all registered model processors.
+     * @param createServiceFunction        function that is able to create and initialize new service.
      */
     public RuntimeModelBuilder(
-            final InjectionManager injectionManager,
             final JerseyResourceContext resourceContext,
             final Configuration config,
-            final MessageBodyWorkers workers,
+            final MessageBodyWorkers messageBodyWorkers,
+            final Collection<ValueSupplierProvider> valueSuppliers,
             final ProcessingProviders processingProviders,
-            final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder) {
+            final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder,
+            final Iterable<ModelProcessor> modelProcessors,
+            final Function<Class<?>, ?> createServiceFunction) {
 
         this.resourceMethodInvokerBuilder = resourceMethodInvokerBuilder;
-        this.workers = workers;
+        this.messageBodyWorkers = messageBodyWorkers;
         this.processingProviders = processingProviders;
-
-        this.locatorBuilder = Values.lazy(new Value<RuntimeLocatorModelBuilder>() {
-            @Override
-            public RuntimeLocatorModelBuilder get() {
-                return new RuntimeLocatorModelBuilder(injectionManager, config, resourceContext, RuntimeModelBuilder.this);
-            }
-        });
+        this.locatorBuilder = Values.lazy((Value<RuntimeLocatorModelBuilder>)
+                () -> new RuntimeLocatorModelBuilder(config, messageBodyWorkers, valueSuppliers, resourceContext,
+                        RuntimeModelBuilder.this, modelProcessors, createServiceFunction));
     }
 
     private Router createMethodRouter(final ResourceMethod resourceMethod) {
@@ -136,7 +138,7 @@ final class RuntimeModelBuilder {
         if (lastRoutedBuilder != null) {
             routingRoot = lastRoutedBuilder.build();
         } else {
-            /**
+            /*
              * Create an empty routing root that accepts any request, does not do
              * anything and does not return any inflector. This will cause 404 being
              * returned for every request.
@@ -171,7 +173,7 @@ final class RuntimeModelBuilder {
             // resource methods
             if (!resource.getResourceMethods().isEmpty()) {
                 final List<MethodRouting> methodRoutings = createResourceMethodRouters(resource, subResourceMode);
-                final Router methodSelectingRouter = new MethodSelectingRouter(workers, methodRoutings);
+                final Router methodSelectingRouter = new MethodSelectingRouter(messageBodyWorkers, methodRoutings);
                 if (subResourceMode) {
                     currentRouterBuilder = startNextRoute(currentRouterBuilder, PathPattern.END_OF_PATH_PATTERN)
                             .to(resourcePushingRouter)
@@ -200,7 +202,7 @@ final class RuntimeModelBuilder {
                         srRoutedBuilder = startNextRoute(srRoutedBuilder, childClosedPattern)
                                 .to(uriPushingRouter)
                                 .to(childResourcePushingRouter)
-                                .to(new MethodSelectingRouter(workers, childMethodRoutings));
+                                .to(new MethodSelectingRouter(messageBodyWorkers, childMethodRoutings));
                     }
 
                     // sub resource locator
@@ -309,7 +311,7 @@ final class RuntimeModelBuilder {
                         createMethodRouter(resourceMethod)));
             }
         }
-        return methodRoutings.isEmpty() ? Collections.<MethodRouting>emptyList() : methodRoutings;
+        return methodRoutings.isEmpty() ? Collections.emptyList() : methodRoutings;
     }
 
     private PathToRouterBuilder startNextRoute(final PathMatchingRouterBuilder currentRouterBuilder, PathPattern routingPattern) {

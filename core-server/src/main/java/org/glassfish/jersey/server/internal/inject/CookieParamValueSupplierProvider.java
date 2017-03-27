@@ -114,7 +114,7 @@ final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvid
      * @param mpep            multivalued parameter extractor provider.
      * @param requestProvider request provider.
      */
-    public CookieParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+    public CookieParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
             Provider<ContainerRequest> requestProvider) {
         super(mpep, requestProvider, Parameter.Source.COOKIE);
     }

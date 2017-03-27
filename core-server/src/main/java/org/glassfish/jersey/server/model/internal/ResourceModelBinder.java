@@ -42,8 +42,6 @@ package org.glassfish.jersey.server.model.internal;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.model.ModelProcessor;
-import org.glassfish.jersey.server.model.ResourceMethodInvoker;
-import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor;
 
 /**
@@ -55,15 +53,7 @@ public class ResourceModelBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        // Resource method invocation bindings
-        bindAsContract(ResourceMethodInvoker.Builder.class);
-        bindAsContract(ResourceMethodDispatcherFactory.class);
-        bindAsContract(ResourceMethodInvocationHandlerFactory.class);
-
         // Dispatcher providers
-        bind(VoidVoidDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
-        bind(JavaResourceMethodDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
-
         bind(OptionsMethodProcessor.class).to(ModelProcessor.class);
     }
 }

@@ -73,6 +73,9 @@ public class PostConstructTest extends JerseyTest {
         private int value;
 
         @Context
+        private UriInfo uri;
+
+        @Context
         private Configuration configuration;
 
         @PostConstruct

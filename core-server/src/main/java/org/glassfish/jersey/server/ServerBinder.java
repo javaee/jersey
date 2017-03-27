@@ -40,33 +40,18 @@
 
 package org.glassfish.jersey.server;
 
-import java.util.Map;
-
-import javax.ws.rs.RuntimeType;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.ContextResolverFactory;
-import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
-import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
-import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor;
-import org.glassfish.jersey.server.internal.ProcessingProviders;
-import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
 import org.glassfish.jersey.server.internal.process.ServerProcessingBinder;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
-import org.glassfish.jersey.server.spi.ContainerProvider;
 
 /**
  * Server injection binder.
@@ -76,35 +61,11 @@ import org.glassfish.jersey.server.spi.ContainerProvider;
  */
 class ServerBinder extends AbstractBinder {
 
-    private final Map<String, Object> applicationProperties;
-
-    private final InjectionManager injectionManager;
-
-    /**
-     * Create new {@code ServerBinder} instance.
-     *
-     * @param applicationProperties map of application-specific properties.
-     */
-    public ServerBinder(Map<String, Object> applicationProperties, InjectionManager injectionManager) {
-        this.applicationProperties = applicationProperties;
-        this.injectionManager = injectionManager;
-    }
-
     @Override
     protected void configure() {
-        install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
-                new ServerProcessingBinder(),
-                new ParameterInjectionBinder(injectionManager),
-                new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.SERVER),
-                new MessageBodyFactory.Binder(),
-                new ExceptionMapperFactory.Binder(),
-                new ContextResolverFactory.Binder(),
+        install(new ServerProcessingBinder(),
                 new JaxrsProviders.Binder(),
-                new ProcessingProviders.Binder(),
                 new ResourceModelBinder(),
-                new ServiceFinderBinder<>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
-                new JerseyResourceContext.Binder(),
-                new ServiceFinderBinder<>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER),
                 new MappableExceptionWrapperInterceptor.Binder(),
                 new MonitoringContainerListener.Binder());
 
