@@ -40,17 +40,21 @@
 
 package org.glassfish.jersey.server.internal.routing;
 
+import java.util.Collection;
+import java.util.function.Function;
+
 import javax.ws.rs.core.Configuration;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
+import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 /**
  * Jersey routing entry point.
@@ -93,11 +97,14 @@ public final class Routing {
 
         private final RuntimeResourceModel resourceModel;
 
-        private InjectionManager injectionManager;
         private JerseyResourceContext resourceContext;
         private Configuration config;
         private MessageBodyWorkers entityProviders;
+        private Collection<ValueSupplierProvider> valueSuppliers;
+        private Iterable<ModelProcessor> modelProcessors;
+        private Function<Class<?>, ?> createServiceFunction;
         private ProcessingProviders processingProviders;
+        private ResourceMethodInvoker.Builder resourceMethodInvokerBuilder;
 
         private Builder(RuntimeResourceModel resourceModel) {
             if (resourceModel == null) {
@@ -105,17 +112,6 @@ public final class Routing {
                 throw new NullPointerException("Resource model must not be null.");
             }
             this.resourceModel = resourceModel;
-        }
-
-        /**
-         * Set runtime DI injection manager.
-         *
-         * @param injectionManager DI injection manager.
-         * @return updated routing builder.
-         */
-        public Builder beanManager(InjectionManager injectionManager) {
-            this.injectionManager = injectionManager;
-            return this;
         }
 
         /**
@@ -152,6 +148,17 @@ public final class Routing {
         }
 
         /**
+         * Set value suppliers.
+         *
+         * @param valueSuppliers all registered value suppliers.
+         * @return updated routing builder.
+         */
+        public Builder valueSupplierProviders(Collection<ValueSupplierProvider> valueSuppliers) {
+            this.valueSuppliers = valueSuppliers;
+            return this;
+        }
+
+        /**
          * Set request/response processing providers.
          *
          * @param processingProviders request/response processing providers.
@@ -163,15 +170,45 @@ public final class Routing {
         }
 
         /**
+         * Set model processors.
+         *
+         * @param modelProcessors all registered model processors.
+         * @return updated routing builder.
+         */
+        public Builder modelProcessors(Iterable<ModelProcessor> modelProcessors) {
+            this.modelProcessors = modelProcessors;
+            return this;
+        }
+
+        /**
+         * Set model processors.
+         *
+         * @param createServiceFunction all registered model processors.
+         * @return updated routing builder.
+         */
+        public Builder createService(Function<Class<?>, ?> createServiceFunction) {
+            this.createServiceFunction = createServiceFunction;
+            return this;
+        }
+
+        /**
+         * Set builder of ResourceMethodInvoker.
+         *
+         * @param resourceMethodInvokerBuilder resource method invoker builder.
+         * @return updated routing builder.
+         */
+        public Builder resourceMethodInvokerBuilder(ResourceMethodInvoker.Builder resourceMethodInvokerBuilder) {
+            this.resourceMethodInvokerBuilder = resourceMethodInvokerBuilder;
+            return this;
+        }
+
+        /**
          * Build routing stage.
          *
          * @return routing stage for the runtime resource model.
          */
         public ChainableStage<RequestProcessingContext> buildStage() {
             // No L10N - internally used class
-            if (injectionManager == null) {
-                throw new NullPointerException("DI injection manager is not set.");
-            }
             if (resourceContext == null) {
                 throw new NullPointerException("Resource context is not set.");
             }
@@ -181,16 +218,31 @@ public final class Routing {
             if (entityProviders == null) {
                 throw new NullPointerException("Entity providers are not set.");
             }
+            if (valueSuppliers == null) {
+                throw new NullPointerException("Value supplier providers are not set.");
+            }
+            if (modelProcessors == null) {
+                throw new NullPointerException("Model processors are not set.");
+            }
+            if (createServiceFunction == null) {
+                throw new NullPointerException("Create function is not set.");
+            }
             if (processingProviders == null) {
                 throw new NullPointerException("Processing providers are not set.");
             }
+            if (resourceMethodInvokerBuilder == null) {
+                throw new NullPointerException("ResourceMethodInvokerBuilder is not set.");
+            }
 
-            final RuntimeModelBuilder runtimeModelBuilder = new RuntimeModelBuilder(injectionManager,
+            final RuntimeModelBuilder runtimeModelBuilder = new RuntimeModelBuilder(
                     resourceContext,
                     config,
                     entityProviders,
+                    valueSuppliers,
                     processingProviders,
-                    injectionManager.getInstance(ResourceMethodInvoker.Builder.class));
+                    resourceMethodInvokerBuilder,
+                    modelProcessors,
+                    createServiceFunction);
 
             return new RoutingStage(runtimeModelBuilder.buildModel(resourceModel, false));
         }

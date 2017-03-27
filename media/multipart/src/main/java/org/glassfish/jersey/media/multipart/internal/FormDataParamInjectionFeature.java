@@ -49,7 +49,6 @@ import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
@@ -70,8 +69,8 @@ public final class FormDataParamInjectionFeature implements Feature {
     @Override
     public boolean configure(final FeatureContext context) {
         FormDataParamValueSupplierProvider valueSupplier = new FormDataParamValueSupplierProvider(
-                injectionManager.getInstance(MultivaluedParameterExtractorProvider.class),
-                Injections.getProvider(injectionManager, ContainerRequest.class));
+                () -> injectionManager.getInstance(MultivaluedParameterExtractorProvider.class),
+                () -> injectionManager.getInstance(ContainerRequest.class));
 
         injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(valueSupplier, FormDataParam.class)));
         context.register(valueSupplier, ValueSupplierProvider.class);

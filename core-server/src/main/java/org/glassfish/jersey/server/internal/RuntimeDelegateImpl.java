@@ -60,8 +60,7 @@ import org.glassfish.jersey.server.ContainerFactory;
 public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
 
     public RuntimeDelegateImpl() {
-        // TODO add more binders as necessary
-        super(Injections.createInjectionManager("jersey-server-rd-locator", new MessagingBinders.HeaderDelegateProviders()));
+        super(Injections.createInjectionManager(new MessagingBinders.HeaderDelegateProviders()));
     }
 
     @Override

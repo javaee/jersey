@@ -47,7 +47,7 @@ import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 
-import org.glassfish.jersey.hk2.HK2InjectionManager;
+import org.glassfish.jersey.hk2.ImmediateHk2InjectionManager;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.Binding;
@@ -109,7 +109,7 @@ public class SpringComponentProvider implements ComponentProvider {
 
         // initialize HK2 spring-bridge
 
-        HK2InjectionManager hk2InjectionManager = (HK2InjectionManager) injectionManager;
+        ImmediateHk2InjectionManager hk2InjectionManager = (ImmediateHk2InjectionManager) injectionManager;
         SpringBridge.getSpringBridge().initializeSpringBridge(hk2InjectionManager.getServiceLocator());
         SpringIntoHK2Bridge springBridge = injectionManager.getInstance(SpringIntoHK2Bridge.class);
         springBridge.bridgeSpringBeanFactory(ctx);

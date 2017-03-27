@@ -65,10 +65,19 @@ import org.glassfish.jersey.internal.inject.InjectionManager;
 @Singleton
 public class ManagedObjectsFinalizer {
 
-    @Inject
-    private InjectionManager injectionManager;
+    private final InjectionManager injectionManager;
 
     private final Set<Object> managedObjects = new HashSet<>();
+
+    /**
+     * Creates a new instance of {@link ManagedObjectsFinalizer}.
+     *
+     * @param injectionManager injection manager call {@code preDestroy} on managed objects.
+     */
+    @Inject
+    public ManagedObjectsFinalizer(final InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
+    }
 
     /**
      * Register an object for invocation of its {@link PreDestroy} method.

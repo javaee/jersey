@@ -46,17 +46,13 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 /**
  * A common interface for invocable resource components. This includes resource
@@ -307,18 +303,6 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
     public boolean isInflector() {
         // Method.equals(...) does not perform the identity check (in Java SE 6)
         return APPLY_INFLECTOR_METHOD == definitionMethod || APPLY_INFLECTOR_METHOD.equals(definitionMethod);
-    }
-
-    /**
-     * Returns list of {@link ValueSupplierProvider value providers} which provides
-     * values for parameters of this Invocable returned by {@link #getParameters()}. Value providers are ordered in the same
-     * order as parameters.
-     *
-     * @param injectionManager injection manager.
-     * @return Set of value providers for this Invocable.
-     */
-    public List<? extends Supplier<?>> getValueProviders(InjectionManager injectionManager) {
-        return ParameterValueHelper.createValueProviders(injectionManager, this);
     }
 
     @Override

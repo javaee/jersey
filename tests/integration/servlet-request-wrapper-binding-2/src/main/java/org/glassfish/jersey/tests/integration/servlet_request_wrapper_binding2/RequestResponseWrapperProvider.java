@@ -76,7 +76,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
-import org.glassfish.jersey.hk2.HK2InjectionManager;
+import org.glassfish.jersey.hk2.ImmediateHk2InjectionManager;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
@@ -118,7 +118,7 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
 
         @Override
         public void initialize(InjectionManager injectionManager) {
-            ServiceLocator locator = ((HK2InjectionManager) injectionManager).getServiceLocator();
+            ServiceLocator locator = ((ImmediateHk2InjectionManager) injectionManager).getServiceLocator();
             ServiceLocatorUtilities.addOneDescriptor(locator, new HttpServletRequestDescriptor(locator));
         }
 
@@ -169,7 +169,7 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
                 return new RequestScopedInitializer() {
                     @Override
                     public void initialize(InjectionManager injectionManager) {
-                        ServiceLocator locator = ((HK2InjectionManager) injectionManager).getServiceLocator();
+                        ServiceLocator locator = ((ImmediateHk2InjectionManager) injectionManager).getServiceLocator();
                         locator.<Ref<HttpServletRequest>>getService(REQUEST_TYPE)
                                 .set(finalWrap(context.getHttpServletRequest()));
                         locator.<Ref<HttpServletResponse>>getService(RESPONSE_TYPE)

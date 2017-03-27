@@ -124,10 +124,10 @@ public class ComponentBag {
 
     /**
      * A filtering strategy that includes only models that contain contract registrable by
-     * {@link org.glassfish.jersey.internal.inject.InjectionManager}.
+     * {@link InjectionManager}.
      * <p>
      * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
-     * that represent an object which can be registered using specific {@link org.glassfish.jersey.internal.inject.InjectionManager}
+     * that represent an object which can be registered using specific {@link InjectionManager}
      * contract.
      * </p>
      */

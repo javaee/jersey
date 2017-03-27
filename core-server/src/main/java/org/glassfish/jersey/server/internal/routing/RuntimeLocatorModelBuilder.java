@@ -40,8 +40,10 @@
 
 package org.glassfish.jersey.server.internal.routing;
 
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,10 +51,7 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.model.internal.RankedProvider;
+import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -64,6 +63,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.ResourceModelComponent;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 import jersey.repackaged.com.google.common.cache.CacheBuilder;
 import jersey.repackaged.com.google.common.cache.CacheLoader;
@@ -78,11 +78,13 @@ final class RuntimeLocatorModelBuilder {
 
     private static final Logger LOGGER = Logger.getLogger(RuntimeLocatorModelBuilder.class.getName());
 
-    private final InjectionManager injectionManager;
     private final Configuration config;
     private final RuntimeModelBuilder runtimeModelBuilder;
+    private final MessageBodyWorkers messageBodyWorkers;
+    private final Collection<ValueSupplierProvider> valueSuppliers;
     private final JerseyResourceContext resourceContext;
-
+    private final Iterable<ModelProcessor> modelProcessors;
+    private final Function<Class<?>, ?> createServiceFunction;
     private final LoadingCache<LocatorCacheKey, LocatorRouting> cache;
 
     // Configuration.
@@ -93,20 +95,29 @@ final class RuntimeLocatorModelBuilder {
     /**
      * Create a new instance of the runtime model builder for sub-resource locators.
      *
-     * @param injectionManager    DI injection manager.
-     * @param config              configuration of the application.
-     * @param resourceContext     resource context to bind sub-resource locator singleton instances.
-     * @param runtimeModelBuilder runtime model builder to build routers for locator models.
+     * @param config                configuration of the application.
+     * @param messageBodyWorkers    message body workers registred in an application.
+     * @param valueSuppliers        all value registered value providers.
+     * @param resourceContext       resource context to bind sub-resource locator singleton instances.
+     * @param runtimeModelBuilder   runtime model builder to build routers for locator models.
+     * @param modelProcessors       all registered model processors.
+     * @param createServiceFunction function that is able to create and initialize new service.
      */
-    RuntimeLocatorModelBuilder(final InjectionManager injectionManager,
-                               final Configuration config,
+    RuntimeLocatorModelBuilder(final Configuration config,
+                               final MessageBodyWorkers messageBodyWorkers,
+                               final Collection<ValueSupplierProvider> valueSuppliers,
                                final JerseyResourceContext resourceContext,
-                               final RuntimeModelBuilder runtimeModelBuilder) {
+                               final RuntimeModelBuilder runtimeModelBuilder,
+                               final Iterable<ModelProcessor> modelProcessors,
+                               final Function<Class<?>, ?> createServiceFunction) {
 
-        this.injectionManager = injectionManager;
         this.config = config;
+        this.messageBodyWorkers = messageBodyWorkers;
+        this.valueSuppliers = valueSuppliers;
         this.runtimeModelBuilder = runtimeModelBuilder;
         this.resourceContext = resourceContext;
+        this.modelProcessors = modelProcessors;
+        this.createServiceFunction = createServiceFunction;
 
         // Configuration.
         this.disableValidation = ServerProperties.getValue(config.getProperties(),
@@ -162,7 +173,7 @@ final class RuntimeLocatorModelBuilder {
      * @return sub-resource locator router.
      */
     Router getRouter(final ResourceMethod resourceMethod) {
-        return new SubResourceLocatorRouter(injectionManager, resourceMethod, resourceContext, this);
+        return new SubResourceLocatorRouter(createServiceFunction, valueSuppliers, resourceMethod, resourceContext, this);
     }
 
     /**
@@ -242,7 +253,7 @@ final class RuntimeLocatorModelBuilder {
         Errors.process(new Runnable() {
             @Override
             public void run() {
-                final ComponentModelValidator validator = new ComponentModelValidator(injectionManager);
+                final ComponentModelValidator validator = new ComponentModelValidator(valueSuppliers, messageBodyWorkers);
                 validator.validate(component);
 
                 if (Errors.fatalIssuesFound() && !ignoreValidationErrors) {
@@ -254,11 +265,6 @@ final class RuntimeLocatorModelBuilder {
     }
 
     private ResourceModel enhance(ResourceModel subResourceModel) {
-        final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers
-                .getAllRankedProviders(injectionManager, ModelProcessor.class);
-        final Iterable<ModelProcessor> modelProcessors = Providers
-                .sortRankedProviders(new RankedComparator<ModelProcessor>(), allRankedProviders);
-
         for (final ModelProcessor modelProcessor : modelProcessors) {
             subResourceModel = modelProcessor.processSubResource(subResourceModel, config);
             validateSubResource(subResourceModel);

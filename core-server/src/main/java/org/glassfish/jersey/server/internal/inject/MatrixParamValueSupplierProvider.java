@@ -68,7 +68,7 @@ final class MatrixParamValueSupplierProvider extends AbstractValueSupplierProvid
      * @param mpep            multivalued map parameter extractor provider.
      * @param requestProvider request provider.
      */
-    public MatrixParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+    public MatrixParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
             Provider<ContainerRequest> requestProvider) {
         super(mpep, requestProvider, Parameter.Source.MATRIX);
     }

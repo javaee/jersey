@@ -48,12 +48,10 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 
 import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 
-import javax.inject.Singleton;
-
 import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
@@ -63,6 +61,7 @@ import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
 
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -71,15 +70,27 @@ import static org.junit.Assert.assertEquals;
  */
 public class InboundEventReaderTest {
 
-    private static final MultivaluedStringMap headers;
+    private static final MultivaluedStringMap HEADERS;
 
-    private static final InjectionManager INSTANCE_MANAGER;
+    private InjectionManager injectionManager;
 
     static {
-        headers = new MultivaluedStringMap();
-        headers.put("Transfer-Encoding", Collections.singletonList("chunked"));
-        headers.put("Content-Type", Collections.singletonList("text/event-stream"));
-        INSTANCE_MANAGER = Injections.createInjectionManager(new TestBinder());
+        HEADERS = new MultivaluedStringMap();
+        HEADERS.put("Transfer-Encoding", Collections.singletonList("chunked"));
+        HEADERS.put("Content-Type", Collections.singletonList("text/event-stream"));
+    }
+
+    @Before
+    public void setup() {
+        injectionManager = Injections.createInjectionManager();
+        injectionManager.register(new TestBinder());
+
+        MessageBodyFactory messageBodyFactory =
+                new MessageBodyFactory(new CommonConfig(RuntimeType.SERVER, ComponentBag.EXCLUDE_EMPTY));
+        messageBodyFactory.initialize(injectionManager);
+
+        injectionManager.register(Bindings.service(messageBodyFactory).to(MessageBodyWorkers.class));
+        injectionManager.completeRegistration();
     }
 
     @Test
@@ -136,10 +147,10 @@ public class InboundEventReaderTest {
         assertDataEquals("message 1", event);
     }
 
-    private static InboundEvent parse(InputStream stream) throws IOException {
-        return INSTANCE_MANAGER.getInstance(InboundEventReader.class)
+    private InboundEvent parse(InputStream stream) throws IOException {
+        return injectionManager.getInstance(InboundEventReader.class)
                 .readFrom(InboundEvent.class, InboundEvent.class, new Annotation[0],
-                MediaType.valueOf(SseFeature.SERVER_SENT_EVENTS), headers, stream);
+                MediaType.valueOf(SseFeature.SERVER_SENT_EVENTS), HEADERS, stream);
     }
 
     private void assertDataEquals(final String expectedData, final InboundEvent event) {
@@ -152,9 +163,7 @@ public class InboundEventReaderTest {
         @Override
         protected void configure() {
             install(new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER));
-            bindAsContract(MessageBodyFactory.class).to(MessageBodyWorkers.class).in(Singleton.class);
-            bind(InboundEventReader.class).to(InboundEventReader.class);
-            bind(new CommonConfig(RuntimeType.SERVER, ComponentBag.EXCLUDE_EMPTY)).to(Configuration.class);
+            bindAsContract(InboundEventReader.class);
         }
     }
 }

@@ -164,7 +164,7 @@ public class ProviderBinder {
      * Bind all providers contained in {@code providerBag} (classes and instances) using injection manager. Configuration is
      * also committed.
      *
-     * @param componentBag    bag of provider classes and instances.
+     * @param componentBag     bag of provider classes and instances.
      * @param injectionManager injection manager the binder will use to bind the providers into.
      */
     public static void bindProviders(final ComponentBag componentBag, final InjectionManager injectionManager) {
@@ -172,7 +172,7 @@ public class ProviderBinder {
     }
 
     /**
-     * Bind all providers contained in {@code p roviderBag} (classes and instances) using injection manager. Configuration is
+     * Bind all providers contained in {@code providerBag} (classes and instances) using injection manager. Configuration is
      * also committed.
      *
      * @param componentBag      bag of provider classes and instances.
@@ -184,7 +184,8 @@ public class ProviderBinder {
                                      RuntimeType constrainedTo,
                                      Set<Class<?>> registeredClasses,
                                      InjectionManager injectionManager) {
-        Predicate<ContractProvider> filter = ComponentBag.EXCLUDE_EMPTY.and(ComponentBag.excludeMetaProviders(injectionManager));
+        Predicate<ContractProvider> filter = ComponentBag.EXCLUDE_EMPTY
+                .and(ComponentBag.excludeMetaProviders(injectionManager));
 
         /*
          * Check the {@code component} whether it is correctly configured for client or server {@link RuntimeType runtime}.
@@ -198,8 +199,8 @@ public class ProviderBinder {
                         false);
 
         /*
-         * These binder will be register to Bean Manager at the and of method because of a bulk registration to avoid register
-         * each binder alone.
+         * These binder will be registered to InjectionManager at the end of method because of a bulk registration to avoid a
+         * registration each binder alone.
          */
         Collection<Binder> binderToRegister = new ArrayList<>();
 
@@ -215,7 +216,7 @@ public class ProviderBinder {
             binderToRegister.addAll(createProviderBinders(providerClass, model));
         }
 
-        // Bind pure provider instances except for pure meta-providers and providers with empty contract models (e.g. resources)
+        // Bind provider instances except for pure meta-providers and providers with empty contract models (e.g. resources)
         Set<Object> instances = componentBag.getInstances(filter);
         if (constrainedTo != null) {
             instances = instances.stream()

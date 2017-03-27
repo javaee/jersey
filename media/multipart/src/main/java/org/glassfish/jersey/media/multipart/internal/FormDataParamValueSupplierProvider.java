@@ -400,7 +400,7 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
      * @param requestProvider   request provider.
      */
     public FormDataParamValueSupplierProvider(
-            MultivaluedParameterExtractorProvider extractorProvider, Provider<ContainerRequest> requestProvider) {
+            Provider<MultivaluedParameterExtractorProvider> extractorProvider, Provider<ContainerRequest> requestProvider) {
         super(extractorProvider, requestProvider, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
     }
 

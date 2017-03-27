@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.List;
 
 import javax.ws.rs.ProcessingException;
@@ -49,9 +50,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.sse.SseEventSink;
 
-import javax.inject.Inject;
-
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
@@ -59,6 +57,7 @@ import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 /**
  * An implementation of {@link ResourceMethodDispatcher.Provider} that
@@ -69,15 +68,18 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
  */
 class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.Provider {
 
-    @Inject
-    private InjectionManager injectionManager;
+    private final Collection<ValueSupplierProvider> allValueProviders;
+
+    JavaResourceMethodDispatcherProvider(Collection<ValueSupplierProvider> allValueProviders) {
+        this.allValueProviders = allValueProviders;
+    }
 
     @Override
     public ResourceMethodDispatcher create(final Invocable resourceMethod,
             final InvocationHandler invocationHandler,
             final ConfiguredValidator validator) {
         final List<ParamValueFactoryWithSource<?>> valueProviders =
-                ParameterValueHelper.createValueProviders(injectionManager, resourceMethod);
+                ParameterValueHelper.createValueProviders(allValueProviders, resourceMethod);
         final Class<?> returnType = resourceMethod.getHandlingMethod().getReturnType();
 
         ResourceMethodDispatcher resourceMethodDispatcher = null;
@@ -109,19 +111,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
             }
         }
 
-        // Inject validator.
-        injectionManager.inject(resourceMethodDispatcher);
-
         return resourceMethodDispatcher;
-    }
-
-    /**
-     * Get the application-configured injection manager.
-     *
-     * @return application-configured injection manager.
-     */
-    final InjectionManager getInjectionManager() {
-        return injectionManager;
     }
 
     private abstract static class AbstractMethodParamInvoker extends AbstractJavaResourceMethodDispatcher {

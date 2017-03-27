@@ -58,7 +58,6 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionResolver;
 import org.glassfish.jersey.internal.util.collection.ImmutableCollectors;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
@@ -67,6 +66,7 @@ import org.glassfish.jersey.internal.util.collection.Values;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.MultiException;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Implementation of the {@link ClassAnalyzer} that supports selection
@@ -90,23 +90,23 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
      */
     public static final class Binder extends AbstractBinder {
 
-        private final InjectionManager injectionManager;
+        private final ServiceLocator serviceLocator;
 
         /**
          * Constructor for {@code JerseyClassAnalyzer}.
          *
-         * @param injectionManager current injection manager.
+         * @param serviceLocator current injection manager.
          */
-        public Binder(InjectionManager injectionManager) {
-            this.injectionManager = injectionManager;
+        public Binder(ServiceLocator serviceLocator) {
+            this.serviceLocator = serviceLocator;
         }
 
         @Override
         protected void configure() {
             ClassAnalyzer defaultAnalyzer =
-                    injectionManager.getInstance(ClassAnalyzer.class, ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME);
+                    serviceLocator.getService(ClassAnalyzer.class, ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME);
 
-            Supplier<List<InjectionResolver>> resolvers = () -> injectionManager.getAllInstances(InjectionResolver.class);
+            Supplier<List<InjectionResolver>> resolvers = () -> serviceLocator.getAllServices(InjectionResolver.class);
 
             bind(new JerseyClassAnalyzer(defaultAnalyzer, resolvers))
                     .analyzeWith(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME)
@@ -169,12 +169,8 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
         }
 
         // At this point, we simply need to find the constructor with the largest number of parameters
-        final Constructor<?>[] constructors = AccessController.doPrivileged(new PrivilegedAction<Constructor<?>[]>() {
-            @Override
-            public Constructor<?>[] run() {
-                return clazz.getDeclaredConstructors();
-            }
-        });
+        final Constructor<?>[] constructors = AccessController.doPrivileged(
+                (PrivilegedAction<Constructor<?>[]>) clazz::getDeclaredConstructors);
         Constructor<?> selected = null;
         int selectedSize = 0;
         int maxParams = -1;

@@ -45,7 +45,6 @@ import java.util.Collections;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -66,7 +65,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 public class RequestProcessingInitializationStage implements Function<ClientRequest, ClientRequest> {
     private final Provider<Ref<ClientRequest>> requestRefProvider;
-    private final Provider<MessageBodyWorkers> workersProvider;
+    private final MessageBodyWorkers workersProvider;
     private final Iterable<WriterInterceptor> writerInterceptors;
     private final Iterable<ReaderInterceptor> readerInterceptors;
 
@@ -78,23 +77,22 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
      * @param workersProvider message body workers injection provider.
      * @param injectionManager injection manager.
      */
-    @Inject
     public RequestProcessingInitializationStage(
             Provider<Ref<ClientRequest>> requestRefProvider,
-            Provider<MessageBodyWorkers> workersProvider,
+            MessageBodyWorkers workersProvider,
             InjectionManager injectionManager) {
         this.requestRefProvider = requestRefProvider;
         this.workersProvider = workersProvider;
         writerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(injectionManager,
-                WriterInterceptor.class, new RankedComparator<WriterInterceptor>())));
+                WriterInterceptor.class, new RankedComparator<>())));
         readerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(injectionManager,
-                ReaderInterceptor.class, new RankedComparator<ReaderInterceptor>())));
+                ReaderInterceptor.class, new RankedComparator<>())));
     }
 
     @Override
     public ClientRequest apply(ClientRequest requestContext) {
         requestRefProvider.get().set(requestContext);
-        requestContext.setWorkers(workersProvider.get());
+        requestContext.setWorkers(workersProvider);
         requestContext.setWriterInterceptors(writerInterceptors);
         requestContext.setReaderInterceptors(readerInterceptors);
 

@@ -82,9 +82,9 @@ final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider
      * Injection constructor.
      *
      * @param mpep            extractor provider.
-     * @param requestProvider requestProvider.
+     * @param requestProvider requestSupplier.
      */
-    public FormParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+    public FormParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
             Provider<ContainerRequest> requestProvider) {
         super(mpep, requestProvider, Parameter.Source.FORM);
     }

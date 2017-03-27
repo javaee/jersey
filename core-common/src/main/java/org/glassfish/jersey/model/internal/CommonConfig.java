@@ -210,13 +210,13 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     public CommonConfig(final RuntimeType type, final Predicate<ContractProvider> registrationStrategy) {
         this.type = type;
 
-        this.properties = new HashMap<String, Object>();
+        this.properties = new HashMap<>();
         this.immutablePropertiesView = Collections.unmodifiableMap(properties);
         this.immutablePropertyNames = Collections.unmodifiableCollection(properties.keySet());
 
         this.componentBag = ComponentBag.newInstance(registrationStrategy);
 
-        this.newFeatureRegistrations = new LinkedList<FeatureRegistration>();
+        this.newFeatureRegistrations = new LinkedList<>();
 
         this.enabledFeatureClasses = Collections.newSetFromMap(new IdentityHashMap<>());
         this.enabledFeatures = new HashSet<>();
@@ -232,7 +232,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     public CommonConfig(final CommonConfig config) {
         this.type = config.type;
 
-        this.properties = new HashMap<String, Object>(config.properties.size());
+        this.properties = new HashMap<>(config.properties.size());
         this.immutablePropertiesView = Collections.unmodifiableMap(this.properties);
         this.immutablePropertyNames = Collections.unmodifiableCollection(this.properties.keySet());
 
@@ -324,7 +324,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     @Override
     public Map<Class<?>, Integer> getContracts(final Class<?> componentClass) {
         final ContractProvider model = componentBag.getModel(componentClass);
-        return (model == null) ? Collections.<Class<?>, Integer>emptyMap() : model.getContractMap();
+        return (model == null) ? Collections.emptyMap() : model.getContractMap();
     }
 
     @Override
@@ -576,10 +576,11 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     /**
      * Configure {@link AutoDiscoverable auto-discoverables} in the injection manager.
      *
-     * @param injectionManager locator in which the auto-discoverables should be configured.
+     * @param injectionManager injection manager in which the auto-discoverables should be configured.
      * @param forcedOnly defines whether all or only forced auto-discoverables should be configured.
      */
-    public void configureAutoDiscoverableProviders(final InjectionManager injectionManager, final boolean forcedOnly) {
+    public void configureAutoDiscoverableProviders(final InjectionManager injectionManager,
+            final boolean forcedOnly) {
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
             final Set<AutoDiscoverable> providers = new TreeSet<>((o1, o2) -> {
@@ -622,7 +623,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     /**
      * Configure binders in the injection manager and enable JAX-RS features.
      *
-     * @param injectionManager locator in which the binders and features should be configured.
+     * @param injectionManager injection manager in which the binders and features should be configured.
      */
     public void configureMetaProviders(InjectionManager injectionManager) {
         // First, configure existing binders

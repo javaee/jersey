@@ -60,7 +60,7 @@ import org.glassfish.jersey.message.internal.MessagingBinders;
 public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
 
     public RuntimeDelegateImpl() {
-        super(Injections.createInjectionManager("jersey-common-rd-locator", new MessagingBinders.HeaderDelegateProviders()));
+        super(Injections.createInjectionManager(new MessagingBinders.HeaderDelegateProviders()));
     }
 
     @Override
