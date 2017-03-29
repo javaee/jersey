@@ -71,44 +71,63 @@ public class Hk2InjectionManagerFactory implements InjectionManagerFactory {
         /**
          * @see ImmediateHk2InjectionManager
          */
-        IMMEDIATE,
+        IMMEDIATE {
+            @Override
+            InjectionManager createInjectionManager() {
+                return new ImmediateHk2InjectionManager();
+            }
+
+            @Override
+            InjectionManager createInjectionManager(final Object parent) {
+                return new ImmediateHk2InjectionManager(parent);
+            }
+
+            @Override
+            InjectionManager createInjectionManager(final Binder binder) {
+                return new ImmediateHk2InjectionManager(binder);
+            }
+        },
         /**
          * @see DelayedHk2InjectionManager
          */
-        DELAYED
+        DELAYED {
+            @Override
+            InjectionManager createInjectionManager() {
+                return new DelayedHk2InjectionManager();
+            }
+
+            @Override
+            InjectionManager createInjectionManager(final Object parent) {
+                return new DelayedHk2InjectionManager(parent);
+            }
+
+            @Override
+            InjectionManager createInjectionManager(final Binder binder) {
+                return new DelayedHk2InjectionManager(binder);
+            }
+        };
+
+        abstract InjectionManager createInjectionManager();
+
+        abstract InjectionManager createInjectionManager(Object parent);
+
+        abstract InjectionManager createInjectionManager(Binder binder);
     }
 
     @Override
     public InjectionManager create() {
-        switch (getStrategy()) {
-            case DELAYED:
-                return initInjectionManager(new DelayedHk2InjectionManager());
-            default:
-                return initInjectionManager(new ImmediateHk2InjectionManager());
-
-        }
+        return initInjectionManager(getStrategy().createInjectionManager());
     }
 
     @Override
     public InjectionManager create(Object parent) {
-        switch (getStrategy()) {
-            case DELAYED:
-                return initInjectionManager(new DelayedHk2InjectionManager(parent));
-            default:
-                return initInjectionManager(new ImmediateHk2InjectionManager(parent));
-
-        }
+        return initInjectionManager(getStrategy().createInjectionManager(parent));
     }
 
     // TODO: CANDIDATE TO DELETE: is used in RuntimeDelegateImpl super(...).
     @Override
     public InjectionManager create(Binder binder) {
-        switch (getStrategy()) {
-            case DELAYED:
-                return initInjectionManager(new DelayedHk2InjectionManager(binder));
-            default:
-                return initInjectionManager(new ImmediateHk2InjectionManager(binder));
-        }
+        return initInjectionManager(getStrategy().createInjectionManager(binder));
     }
 
     private Hk2InjectionManagerStrategy getStrategy() {
