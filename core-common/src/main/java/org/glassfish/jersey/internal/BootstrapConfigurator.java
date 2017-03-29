@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,43 +38,40 @@
  * holder.
  */
 
-package org.glassfish.jersey.server;
-
-import java.util.Map;
+package org.glassfish.jersey.internal;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.Injections;
 
 /**
- * Utility class to create initialized server-side injection manager.
+ * Configurator which contains two methods, {@link #init(InjectionManager, BootstrapBag)} contains {@link InjectionManager}
+ * into which only registering services make sense because injection manager has not been completed yet and
+ * {@link #postInit(InjectionManager, BootstrapBag)} in which {@link InjectionManager} has been already completed and is able to
+ * create and provide services.
+ * <p>
+ * The configurators should register instances into {@link InjectionManager} only if the instance must be really injectable if
+ * the instance can be used internally without the injection, then extend {@link BootstrapBag} and propagate the instance to
+ * correct services using constructors or methods in a phase of Jersey initialization.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public final class InjectionManagerFactory {
-    private InjectionManagerFactory() {
-        // prevents instantiation
-    }
+public interface BootstrapConfigurator {
 
     /**
-     * Create new initialized server injection manager.
+     * Pre-initialization method should only register services into {@link InjectionManager} and populate {@link BootstrapBag}.
      *
-     * @return new initialized server injection manager.
+     * @param injectionManager not completed injection manager.
+     * @param bootstrapBag     bootstrap bag with services used in following processing.
      */
-    public static InjectionManager createInjectionManager() {
-        InjectionManager injectionManager = Injections.createInjectionManager();
-        injectionManager.register(new ServerBinder(null, injectionManager));
-        return injectionManager;
-    }
+    void init(InjectionManager injectionManager, BootstrapBag bootstrapBag);
 
     /**
-     * Create new initialized server injection manager.
+     * Post-initialization method can get services from {@link InjectionManager} and is not able to register the new one because
+     * injection manager is already completed.
      *
-     * @param applicationProperties map of application-specific properties.
-     * @return new initialized server injection manager.
+     * @param injectionManager already completed injection manager.
+     * @param bootstrapBag     bootstrap bag with services used in following processing.
      */
-    public static InjectionManager createInjectionManager(Map<String, Object> applicationProperties) {
-        InjectionManager injectionManager = Injections.createInjectionManager();
-        injectionManager.register(new ServerBinder(applicationProperties, injectionManager));
-        return injectionManager;
+    default void postInit(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
     }
+
 }

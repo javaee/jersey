@@ -59,7 +59,8 @@ import org.glassfish.jersey.server.model.Parameter;
 public class MyValueSupplierProvider extends AbstractValueSupplierProvider {
 
     @Inject
-    public MyValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, Provider<ContainerRequest> requestProvider) {
+    public MyValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
+            Provider<ContainerRequest> requestProvider) {
         super(mpep, requestProvider, Parameter.Source.UNKNOWN);
     }
 

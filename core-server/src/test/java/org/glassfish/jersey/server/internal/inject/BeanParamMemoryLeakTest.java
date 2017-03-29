@@ -47,7 +47,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey.hk2.HK2InjectionManager;
+import org.glassfish.jersey.hk2.ImmediateHk2InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
@@ -95,11 +95,11 @@ public class BeanParamMemoryLeakTest extends AbstractTest {
         initiateWebApplication(BeanParamInjectionResource.class);
         final InjectionManager injectionManager = app().getInjectionManager();
 
-        if (!(injectionManager instanceof HK2InjectionManager)) {
+        if (!(injectionManager instanceof ImmediateHk2InjectionManager)) {
             throw new RuntimeException("Bean Manager is not an injection manager");
         }
 
-        HK2InjectionManager hk2BeanManager = (HK2InjectionManager) injectionManager;
+        ImmediateHk2InjectionManager hk2BeanManager = (ImmediateHk2InjectionManager) injectionManager;
         ServiceLocator serviceLocator = hk2BeanManager.getServiceLocator();
 
         // we do not expect any descriptor registered yet

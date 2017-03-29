@@ -49,9 +49,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
-import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.process.internal.RequestScope;
 
 /**
  * Binder for testing purposes.
@@ -59,12 +57,6 @@ import org.glassfish.jersey.process.internal.RequestScope;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class TestBinder extends AbstractBinder {
-
-    private final InjectionManager injectionManager;
-
-    public TestBinder(InjectionManager injectionManager) {
-        this.injectionManager = injectionManager;
-    }
 
     public static void initProviders(final InjectionManager injectionManager) {
         initProviders(injectionManager, Collections.emptySet(), Collections.emptySet());
@@ -81,11 +73,7 @@ public class TestBinder extends AbstractBinder {
     @Override
     protected void configure() {
         install(
-                new RequestScope.Binder(),
                 new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER),
-                new MessageBodyFactory.Binder(),
-                new ExceptionMapperFactory.Binder(),
-                new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder());
 
         bind(new ExceptionMapper<Throwable>() {

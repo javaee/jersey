@@ -45,10 +45,9 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.server.InjectionManagerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.TestInjectionManagerFactory;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
@@ -82,9 +81,10 @@ public class WadlGeneratorConfigurationLoaderTest {
         resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG,
                 MyWadlGeneratorConfig.class.getName());
 
-        final InjectionManager locator = InjectionManagerFactory.createInjectionManager(resourceConfig.getProperties());
+        TestInjectionManagerFactory.BootstrapResult result =
+                TestInjectionManagerFactory.createInjectionManager(resourceConfig.getProperties());
         final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
-                .createWadlGenerator(locator);
+                .createWadlGenerator(result.injectionManager);
         Assert.assertEquals(MyWadlGenerator.class, wadlGenerator.getClass());
 
     }
@@ -95,9 +95,10 @@ public class WadlGeneratorConfigurationLoaderTest {
 
         final ResourceConfig resourceConfig = new ResourceConfig();
         resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG, config);
-        final InjectionManager locator = InjectionManagerFactory.createInjectionManager(resourceConfig.getProperties());
+        TestInjectionManagerFactory.BootstrapResult result =
+                TestInjectionManagerFactory.createInjectionManager(resourceConfig.getProperties());
         final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
-                .createWadlGenerator(locator);
+                .createWadlGenerator(result.injectionManager);
         Assert.assertTrue(wadlGenerator instanceof MyWadlGenerator);
     }
 

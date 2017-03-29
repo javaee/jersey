@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.client;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -52,16 +52,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
+
+import javax.inject.Provider;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.internal.BootstrapBag;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -98,13 +103,19 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
     /**
      * Create new client request processing runtime.
      *
-     * @param config    client runtime configuration.
-     * @param connector client transport connector.
-     * @param injectionManager   injection manager.
+     * @param config           client runtime configuration.
+     * @param connector        client transport connector.
+     * @param injectionManager injection manager.
      */
-    public ClientRuntime(final ClientConfig config, final Connector connector, final InjectionManager injectionManager) {
-        Stage.Builder<ClientRequest> requestingChainBuilder = Stages
-                .chain(injectionManager.createAndInitialize(RequestProcessingInitializationStage.class));
+    public ClientRuntime(final ClientConfig config, final Connector connector, final InjectionManager injectionManager,
+            final BootstrapBag bootstrapBag) {
+        Provider<Ref<ClientRequest>> clientRequest =
+                injectionManager.getInstance(new GenericType<Provider<Ref<ClientRequest>>>() {}.getType());
+
+        RequestProcessingInitializationStage requestProcessingInitializationStage =
+                new RequestProcessingInitializationStage(clientRequest, bootstrapBag.getMessageBodyWorkers(), injectionManager);
+
+        Stage.Builder<ClientRequest> requestingChainBuilder = Stages.chain(requestProcessingInitializationStage);
 
         ChainableStage<ClientRequest> requestFilteringStage = ClientFilteringStages.createRequestFilteringStage(injectionManager);
         this.requestProcessingRoot = requestFilteringStage != null
@@ -116,12 +127,9 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
 
         this.config = config;
         this.connector = connector;
-
-        this.requestScope = injectionManager.getInstance(RequestScope.class);
-
-        this.asyncRequestExecutor = Values.lazy((Value<ExecutorService>) ()
-                -> injectionManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE));
-
+        this.requestScope = bootstrapBag.getRequestScope();
+        this.asyncRequestExecutor = Values.lazy((Value<ExecutorService>)
+                () -> injectionManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE));
         this.backgroundScheduler = Values.lazy((Value<ScheduledExecutorService>) ()
                 -> injectionManager.getInstance(ScheduledExecutorService.class, ClientBackgroundSchedulerLiteral.INSTANCE));
 
@@ -146,44 +154,35 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
      * @return {@code Runnable} to be submitted for async processing using {@link #submit(Runnable)}.
      */
     Runnable createRunnableForAsyncProcessing(ClientRequest request, final ResponseCallback callback) {
-        return () -> {
-            requestScope.runInScope(() -> {
+        return () -> requestScope.runInScope(() -> {
+            try {
+                ClientRequest processedRequest;
                 try {
-                    ClientRequest processedRequest;
-                    try {
-                        processedRequest = Stages.process(request, requestProcessingRoot);
-                        processedRequest = addUserAgent(processedRequest, connector.getName());
-                    } catch (final AbortException aborted) {
-                        processResponse(aborted.getAbortResponse(), callback);
-                        return;
+                    processedRequest = Stages.process(request, requestProcessingRoot);
+                    processedRequest = addUserAgent(processedRequest, connector.getName());
+                } catch (final AbortException aborted) {
+                    processResponse(aborted.getAbortResponse(), callback);
+                    return;
+                }
+
+                final AsyncConnectorCallback connectorCallback = new AsyncConnectorCallback() {
+
+                    @Override
+                    public void response(final ClientResponse response) {
+                        requestScope.runInScope(() -> processResponse(response, callback));
                     }
 
-                    final AsyncConnectorCallback connectorCallback = new AsyncConnectorCallback() {
+                    @Override
+                    public void failure(final Throwable failure) {
+                        requestScope.runInScope(() -> processFailure(failure, callback));
+                    }
+                };
 
-                        @Override
-                        public void response(final ClientResponse response) {
-                            requestScope.runInScope(new Runnable() {
-                                public void run() {
-                                    processResponse(response, callback);
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void failure(final Throwable failure) {
-                            requestScope.runInScope(new Runnable() {
-                                public void run() {
-                                    processFailure(failure, callback);
-                                }
-                            });
-                        }
-                    };
-                    connector.apply(processedRequest, connectorCallback);
-                } catch (final Throwable throwable) {
-                    processFailure(throwable, callback);
-                }
-            });
-        };
+                connector.apply(processedRequest, connectorCallback);
+            } catch (final Throwable throwable) {
+                processFailure(throwable, callback);
+            }
+        });
     }
 
     @Override
@@ -228,12 +227,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
     }
 
     private Future<?> submit(final ExecutorService executor, final Runnable task) {
-        return executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                requestScope.runInScope(task);
-            }
-        });
+        return executor.submit(() -> requestScope.runInScope(task));
     }
 
     private ClientRequest addUserAgent(final ClientRequest clientRequest, final String connectorName) {
@@ -247,10 +241,10 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
         } else if (!clientRequest.ignoreUserAgent()) {
             if (connectorName != null && !connectorName.isEmpty()) {
                 headers.put(HttpHeaders.USER_AGENT,
-                        Arrays.asList(String.format("Jersey/%s (%s)", Version.getVersion(), connectorName)));
+                        Collections.singletonList(String.format("Jersey/%s (%s)", Version.getVersion(), connectorName)));
             } else {
                 headers.put(HttpHeaders.USER_AGENT,
-                        Arrays.asList(String.format("Jersey/%s", Version.getVersion())));
+                        Collections.singletonList(String.format("Jersey/%s", Version.getVersion())));
             }
         }
 

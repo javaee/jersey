@@ -44,6 +44,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -63,8 +64,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.sse.SseEventSink;
 
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 /**
  * Validator checking resource methods and sub resource locators. The validator mainly checks the parameters of resource
@@ -74,15 +76,10 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
  */
 class ResourceMethodValidator extends AbstractResourceModelVisitor {
 
-    private final InjectionManager injectionManager;
+    private final Collection<ValueSupplierProvider> valueSupplierProviders;
 
-    /**
-     * Create new resource method validator.
-     *
-     * @param injectionManager injection manager.
-     */
-    public ResourceMethodValidator(InjectionManager injectionManager) {
-        this.injectionManager = injectionManager;
+    ResourceMethodValidator(Collection<ValueSupplierProvider> valueSupplierProviders) {
+        this.valueSupplierProviders = valueSupplierProviders;
     }
 
     @Override
@@ -176,7 +173,8 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
     }
 
     private void checkValueProviders(ResourceMethod method) {
-        final List<? extends Supplier<?>> valueProviders = method.getInvocable().getValueProviders(injectionManager);
+        List<? extends Supplier<?>> valueProviders =
+                ParameterValueHelper.createValueProviders(valueSupplierProviders, method.getInvocable());
         if (valueProviders.contains(null)) {
             int index = valueProviders.indexOf(null);
             Errors.fatal(method, LocalizationMessages.ERROR_PARAMETER_MISSING_VALUE_PROVIDER(index, method.getInvocable()

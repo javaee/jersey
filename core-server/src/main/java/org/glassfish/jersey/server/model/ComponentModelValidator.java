@@ -51,13 +51,14 @@
  */
 package org.glassfish.jersey.server.model;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
+import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 
@@ -91,11 +92,11 @@ public final class ComponentModelValidator {
 
     private final List<ResourceModelIssue> issueList = Lists.newLinkedList();
 
-    public ComponentModelValidator(InjectionManager injectionManager) {
+    public ComponentModelValidator(Collection<ValueSupplierProvider> valueSupplierProviders, MessageBodyWorkers msgBodyWorkers) {
         validators = Lists.newArrayList();
         validators.add(new ResourceValidator());
-        validators.add(new RuntimeResourceModelValidator(injectionManager.getInstance(MessageBodyWorkers.class)));
-        validators.add(new ResourceMethodValidator(injectionManager));
+        validators.add(new RuntimeResourceModelValidator(msgBodyWorkers));
+        validators.add(new ResourceMethodValidator(valueSupplierProviders));
         validators.add(new InvocableValidator());
     }
 

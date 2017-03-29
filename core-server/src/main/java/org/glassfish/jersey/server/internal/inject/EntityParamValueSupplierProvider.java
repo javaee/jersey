@@ -67,7 +67,8 @@ class EntityParamValueSupplierProvider extends AbstractValueSupplierProvider {
      * @param mpep            Injected multivaluedParameterExtractor provider.
      * @param requestProvider Request provider.
      */
-    EntityParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep, Provider<ContainerRequest> requestProvider) {
+    EntityParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
+            Provider<ContainerRequest> requestProvider) {
         super(mpep, requestProvider, Parameter.Source.ENTITY);
     }
 

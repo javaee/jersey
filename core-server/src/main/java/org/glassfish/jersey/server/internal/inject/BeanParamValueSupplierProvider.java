@@ -107,7 +107,7 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
      * @param mpep            multivalued parameter extractor provider.
      * @param requestProvider request provider.
      */
-    public BeanParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+    public BeanParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
             Provider<ContainerRequest> requestProvider, InjectionManager injectionManager) {
         super(mpep, requestProvider, Parameter.Source.BEAN_PARAM);
         this.injectionManager = injectionManager;

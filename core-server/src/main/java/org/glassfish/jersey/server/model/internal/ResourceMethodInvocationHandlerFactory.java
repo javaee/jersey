@@ -45,11 +45,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
@@ -73,17 +75,17 @@ public final class ResourceMethodInvocationHandlerFactory implements ResourceMet
 
     private static final InvocationHandler DEFAULT_HANDLER = (target, method, args) -> method.invoke(target, args);
     private static final Logger LOGGER = Logger.getLogger(ResourceMethodInvocationHandlerFactory.class.getName());
-    private final Set<ResourceMethodInvocationHandlerProvider> providers;
+    private final LazyValue<Set<ResourceMethodInvocationHandlerProvider>> providers;
 
-    @Inject
     ResourceMethodInvocationHandlerFactory(InjectionManager injectionManager) {
-        providers = Providers.getProviders(injectionManager, ResourceMethodInvocationHandlerProvider.class);
+        this.providers = Values.lazy((Value<Set<ResourceMethodInvocationHandlerProvider>>)
+                () -> Providers.getProviders(injectionManager, ResourceMethodInvocationHandlerProvider.class));
     }
 
     // ResourceMethodInvocationHandlerProvider
     @Override
     public InvocationHandler create(Invocable resourceMethod) {
-        for (ResourceMethodInvocationHandlerProvider provider : providers) {
+        for (ResourceMethodInvocationHandlerProvider provider : providers.get()) {
             try {
                 InvocationHandler handler = provider.create(resourceMethod);
                 if (handler != null) {

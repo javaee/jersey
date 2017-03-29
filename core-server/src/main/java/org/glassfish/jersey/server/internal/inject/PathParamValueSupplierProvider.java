@@ -69,7 +69,7 @@ final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider
      * @param mpep            multivalued map parameter extractor provider.
      * @param requestProvider request provider.
      */
-    public PathParamValueSupplierProvider(MultivaluedParameterExtractorProvider mpep,
+    public PathParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
             Provider<ContainerRequest> requestProvider) {
         super(mpep, requestProvider, Parameter.Source.PATH);
     }

@@ -45,9 +45,7 @@ import java.util.ServiceLoader;
 
 import javax.ws.rs.WebApplicationException;
 
-import javax.inject.Provider;
-
-import org.glassfish.jersey.hk2.HK2InjectionManager;
+import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
 
 /**
  * Injection binding utility methods.
@@ -58,69 +56,44 @@ import org.glassfish.jersey.hk2.HK2InjectionManager;
 public class Injections {
 
     /**
-     * Create a {@link InjectionManager}. In case the {@code name} is not specified, the locator will be unnamed.
+     * Creates a {@link InjectionManager} without parent and initial binder.
      *
-     * @param name    The name of this injection manager. Passing a {@code null} name will result in a newly created injection
-     *                manager with a generated name.
-     * @param parent  The parent of this injection manager. Services can be found in the parent (and all grand-parents). May be
-     *                {@code null}. An underlying DI provider checks whether the parent is in a proper type.
-     * @param binders custom the {@link Binder binders}.
      * @return a injection manager with all the bindings.
      */
-    public static InjectionManager createInjectionManager(String name, Object parent, Binder... binders) {
-        return _injectionManager(name, parent, binders);
+    public static InjectionManager createInjectionManager() {
+        return lookupInjectionManagerFactory().create();
     }
 
     /**
-     * Create a {@link InjectionManager}. In case the {@code name} is not specified, the locator
-     * will be unnamed.
+     * Creates a {@link InjectionManager} with initial binder that is immediately registered.
      *
-     * @param binders custom the {@link Binder binders}.
+     * @param binder custom the {@link Binder binder}.
      * @return a injection manager with all the bindings.
      */
-    public static InjectionManager createInjectionManager(Binder... binders) {
-        return _injectionManager(null, null, binders);
+    public static InjectionManager createInjectionManager(Binder binder) {
+        return lookupInjectionManagerFactory().create(binder);
     }
 
     /**
-     * Create a {@link InjectionManager}. In case the {@code name} is not specified, the locator
-     * will be unnamed.
-     *
-     * @param name    The name of this injection manager. Passing a {@code null}
-     *                name will result in a newly created injection manager with a
-     *                generated name.
-     * @param binders custom the {@link Binder binders}.
-     * @return a injection manager with all the bindings.
-     */
-    public static InjectionManager createInjectionManager(String name, Binder... binders) {
-        return _injectionManager(name, null, binders);
-    }
-
-    /**
-     * Create an unnamed, parented {@link InjectionManager}. In case the {@code parent} injection manager is not specified, the
+     * Creates an unnamed, parented {@link InjectionManager}. In case the {@code parent} injection manager is not specified, the
      * locator will not be parented.
      *
      * @param parent  The parent of this injection manager. Services can be found in the parent (and all grand-parents). May be
      *                {@code null}. An underlying DI provider checks whether the parent is in a proper type.
-     * @param binders custom the {@link Binder binders}.
      * @return an injection manager with all the bindings.
      */
-    public static InjectionManager createInjectionManager(Object parent, Binder... binders) {
-        return _injectionManager(null, parent, binders);
+    public static InjectionManager createInjectionManager(Object parent) {
+        return lookupInjectionManagerFactory().create(parent);
     }
 
-    private static InjectionManager _injectionManager(String name, Object parent, Binder... binders) {
-        Iterator<InjectionManager> iterator = ServiceLoader.load(InjectionManager.class).iterator();
-        InjectionManager injectionManager;
+    private static InjectionManagerFactory lookupInjectionManagerFactory() {
+        Iterator<InjectionManagerFactory> iterator = ServiceLoader.load(InjectionManagerFactory.class).iterator();
         if (iterator.hasNext()) {
-            injectionManager = iterator.next();
+            return iterator.next();
         } else {
             // TODO: Log that there is no explicitly configured InjectionManager, default is used.
-            injectionManager = new HK2InjectionManager();
+            return new Hk2InjectionManagerFactory();
         }
-
-        injectionManager.initialize(name, parent, binders);
-        return injectionManager;
     }
 
     /**
@@ -149,17 +122,5 @@ public class Injections {
 
             throw e;
         }
-    }
-
-    /**
-     * Get a provider for a contract.
-     *
-     * @param <T>              instance type.
-     * @param injectionManager injection manager.
-     * @param clazz            class of the instance to be provider.
-     * @return provider of contract class.
-     */
-    public static <T> Provider<T> getProvider(final InjectionManager injectionManager, final Class<T> clazz) {
-        return () -> injectionManager.getInstance(clazz);
     }
 }
