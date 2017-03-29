@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.model;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -97,8 +98,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Taken from Jersey 1: jersey-server:com.sun.jersey.server.impl.modelapi.validation.ResourceModelValidatorTest.java
@@ -351,7 +350,7 @@ public class ValidatorTest {
         return Errors.process(new Producer<List<ResourceModelIssue>>() {
             @Override
             public List<ResourceModelIssue> call() {
-                List<Resource> resources = Lists.newArrayList();
+                List<Resource> resources = new ArrayList<>();
                 for (Class<?> clazz : resourceClasses) {
                     final Resource res = Resource.builder(clazz).build();
                     if (res.getPath() != null) {

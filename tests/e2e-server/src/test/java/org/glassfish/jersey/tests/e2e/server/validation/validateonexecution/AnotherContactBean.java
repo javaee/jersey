@@ -53,8 +53,6 @@ import org.glassfish.jersey.tests.e2e.server.validation.Extended;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
-import jersey.repackaged.com.google.common.base.MoreObjects;
-
 /**
  * @author Michal Gajdos
  */
@@ -142,10 +140,10 @@ public class AnotherContactBean implements Serializable {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(AnotherContactBean.class)
-                .add("email", email)
-                .add("phone", phone)
-                .add("name", name)
-                .toString();
+        return "AnotherContactBean{"
+                + "email='" + email + '\''
+                + ", phone='" + phone + '\''
+                + ", name='" + name + '\''
+                + '}';
     }
 }

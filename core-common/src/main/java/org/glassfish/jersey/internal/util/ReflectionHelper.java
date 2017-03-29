@@ -64,11 +64,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
@@ -79,11 +82,6 @@ import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Utility methods for Java reflection.
@@ -512,13 +510,9 @@ public final class ReflectionHelper {
             return Collections.emptyList();
         }
 
-        return Lists.newArrayList(Collections2.transform(Arrays.asList(types), new Function<Type, Class<?>>() {
-
-            @Override
-            public Class<?> apply(final Type input) {
-                return erasure(input);
-            }
-        }));
+        return Arrays.stream(types)
+                     .map((Function<Type, Class<?>>) ReflectionHelper::erasure)
+                     .collect(Collectors.toList());
     }
 
     /**
@@ -550,13 +544,9 @@ public final class ReflectionHelper {
             return Collections.emptyList();
         }
 
-        return Lists.newArrayList(Collections2.transform(Arrays.asList(types), new Function<Type, ClassTypePair>() {
-
-            @Override
-            public ClassTypePair apply(final Type input) {
-                return ClassTypePair.of(erasure(input), input);
-            }
-        }));
+        return Arrays.stream(types)
+                     .map(type1 -> ClassTypePair.of(erasure(type1), type1))
+                     .collect(Collectors.toList());
     }
 
     /**
@@ -893,7 +883,7 @@ public final class ReflectionHelper {
      */
     public static Collection<Class<? extends Annotation>> getAnnotationTypes(final AnnotatedElement annotatedElement,
                                                                              final Class<? extends Annotation> metaAnnotation) {
-        final Set<Class<? extends Annotation>> result = Sets.newIdentityHashSet();
+        final Set<Class<? extends Annotation>> result = Collections.newSetFromMap(new IdentityHashMap<>());
         for (final Annotation a : annotatedElement.getAnnotations()) {
             final Class<? extends Annotation> aType = a.annotationType();
             if (metaAnnotation == null || aType.getAnnotation(metaAnnotation) != null) {

@@ -40,15 +40,10 @@
 
 package org.glassfish.jersey.tests.e2e.server.filter;
 
-import java.util.Map;
-
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * @author Martin Matula
@@ -57,14 +52,6 @@ public class UriConnegMappingFromProperty extends UriConnegLanguageMediaTypeTest
 
     @Override
     protected Application configure() {
-        Map<String, MediaType> mediaTypes = Maps.newHashMap();
-        mediaTypes.put("foo", MediaType.valueOf("application/foo"));
-        mediaTypes.put("bar", MediaType.valueOf("application/bar"));
-
-        Map<String, String> languages = Maps.newHashMap();
-        languages.put("english", "en");
-        languages.put("french", "fr");
-
         ResourceConfig rc = new ResourceConfig(UriConnegLanguageMediaTypeTest.LanguageVariantResource.class);
         rc.property(ServerProperties.MEDIA_TYPE_MAPPINGS, "foo : application/foo, bar : application/bar");
         rc.property(ServerProperties.LANGUAGE_MAPPINGS, "english : en, french : fr");

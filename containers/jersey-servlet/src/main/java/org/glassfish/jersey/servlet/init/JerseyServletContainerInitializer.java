@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,9 @@
 
 package org.glassfish.jersey.servlet.init;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -68,9 +70,6 @@ import org.glassfish.jersey.servlet.init.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.ServletContainerProviderFactory;
 import org.glassfish.jersey.servlet.internal.Utils;
 import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
-
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /*
  It is RECOMMENDED that implementations support the Servlet 3 framework
@@ -214,7 +213,7 @@ public final class JerseyServletContainerInitializer implements ServletContainer
 
     private static List<Registration> getInitParamDeclaredRegistrations(final ServletContext context,
                                                                         final Class<? extends Application> clazz) {
-        final List<Registration> registrations = Lists.newArrayList();
+        final List<Registration> registrations = new ArrayList<>();
         collectJaxRsRegistrations(context.getServletRegistrations(), registrations, clazz);
         collectJaxRsRegistrations(context.getFilterRegistrations(), registrations, clazz);
         return registrations;
@@ -339,7 +338,7 @@ public final class JerseyServletContainerInitializer implements ServletContainer
     }
 
     private static Map<String, Object> getInitParams(final ServletRegistration sr) {
-        final Map<String, Object> initParams = Maps.newHashMap();
+        final Map<String, Object> initParams = new HashMap<>();
         for (final Map.Entry<String, String> entry : sr.getInitParameters().entrySet()) {
             initParams.put(entry.getKey(), entry.getValue());
         }

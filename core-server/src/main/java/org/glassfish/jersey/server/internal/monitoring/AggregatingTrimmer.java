@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,9 +49,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.glassfish.jersey.server.internal.monitoring.ReservoirConstants.COLLISION_BUFFER_POWER;
+import org.glassfish.jersey.internal.guava.TreeMultimap;
 
-import jersey.repackaged.com.google.common.collect.TreeMultimap;
+import static org.glassfish.jersey.server.internal.monitoring.ReservoirConstants.COLLISION_BUFFER_POWER;
 
 /**
  * An aggregating trimmer for sliding window measurements. This trimmer updates registered time reservoirs with the aggregated

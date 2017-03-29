@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,10 +41,12 @@
 package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.function.Function;
 
+import org.glassfish.jersey.internal.util.collection.Views;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
@@ -53,9 +55,6 @@ import org.glassfish.jersey.server.monitoring.ExecutionStatistics;
 import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
 import org.glassfish.jersey.server.monitoring.ResourceStatistics;
 import org.glassfish.jersey.server.monitoring.ResponseStatistics;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Monitoring statistics implementation.
@@ -90,25 +89,15 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
     static class Builder {
 
         private static final Function<ResourceStatisticsImpl.Builder, ResourceStatistics> BUILDING_FUNCTION =
-                new Function<ResourceStatisticsImpl.Builder, ResourceStatistics>() {
-                    @Override
-                    public ResourceStatistics apply(final ResourceStatisticsImpl.Builder builder) {
-                        return builder.build();
-                    }
-                };
+                ResourceStatisticsImpl.Builder::build;
 
         private final ResponseStatisticsImpl.Builder responseStatisticsBuilder;
         private final ExceptionMapperStatisticsImpl.Builder exceptionMapperStatisticsBuilder;
 
         private final ResourceMethodStatisticsImpl.Factory methodFactory = new ResourceMethodStatisticsImpl.Factory();
-        private final SortedMap<String, ResourceStatisticsImpl.Builder> uriStatistics = Maps.newTreeMap();
+        private final SortedMap<String, ResourceStatisticsImpl.Builder> uriStatistics = new TreeMap<>();
         private final SortedMap<Class<?>, ResourceStatisticsImpl.Builder> resourceClassStatistics
-                = Maps.newTreeMap(new Comparator<Class<?>>() {
-            @Override
-            public int compare(final Class<?> o1, final Class<?> o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+                = new TreeMap<>((o1, o2) -> o1.getName().compareTo(o2.getName()));
 
         private ExecutionStatisticsImpl.Builder executionStatisticsBuilder;
 
@@ -212,7 +201,7 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
 
             // Resource method stats.
             methodFactory.getOrCreate(resourceMethod)
-                    .addResourceMethodExecution(methodTime, methodDuration, requestTime, requestDuration);
+                         .addResourceMethodExecution(methodTime, methodDuration, requestTime, requestDuration);
         }
 
         /**
@@ -231,9 +220,9 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
          */
         MonitoringStatisticsImpl build() {
             final Map<String, ResourceStatistics> uriStats = Collections.unmodifiableMap(
-                    Maps.transformValues(uriStatistics, BUILDING_FUNCTION));
+                    Views.mapView(uriStatistics, BUILDING_FUNCTION));
             final Map<Class<?>, ResourceStatistics> classStats = Collections.unmodifiableMap(
-                    Maps.transformValues(resourceClassStatistics, BUILDING_FUNCTION));
+                    Views.mapView(resourceClassStatistics, BUILDING_FUNCTION));
 
             final ExecutionStatistics requestStats = executionStatisticsBuilder == null
                     ? ExecutionStatisticsImpl.EMPTY : executionStatisticsBuilder.build();
@@ -274,7 +263,7 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
     }
 
     /**
-     * Refreshed (re-built) on every access. (uses {@link Maps#transformValues(Map, Function)})
+     * Refreshed (re-built) on every access.
      *
      * @return resource statistics
      */
@@ -284,7 +273,7 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
     }
 
     /**
-     * Refreshed (re-built) on every access. (uses {@link Maps#transformValues(Map, Function)})
+     * Refreshed (re-built) on every access.
      *
      * @return resource statistics
      */

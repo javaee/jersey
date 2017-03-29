@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.tests.e2e.server.filter;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -56,11 +57,8 @@ import javax.ws.rs.core.Variant;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
-
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  *
@@ -94,7 +92,7 @@ public class UriConnegLanguageTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        Map<String, String> languages = Maps.newHashMap();
+        Map<String, String> languages = new HashMap<>();
         languages.put("english", "en");
         languages.put("french", "fr");
 

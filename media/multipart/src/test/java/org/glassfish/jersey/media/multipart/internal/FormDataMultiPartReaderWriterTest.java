@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -92,7 +93,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import jersey.repackaged.com.google.common.collect.Sets;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
@@ -108,7 +108,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
 
     @Override
     protected Set<Class<?>> getResourceClasses() {
-        return Sets.newHashSet(
+        return Arrays.asList(
                 ProducesFormDataUsingMultiPart.class,
                 ProducesFormDataResource.class,
                 ProducesFormDataCharsetResource.class,
@@ -122,8 +122,9 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
                 NonContentTypeForPartResource.class,
                 MediaTypeWithBoundaryResource.class,
                 FileResource.class,
-                InputStreamResource.class);
+                InputStreamResource.class).stream().collect(Collectors.toSet());
     }
+
 
     @Path("/ProducesFormDataUsingMultiPart")
     public static class ProducesFormDataUsingMultiPart {

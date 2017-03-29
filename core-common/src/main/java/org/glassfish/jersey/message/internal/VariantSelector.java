@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,15 +46,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Utility for selecting variant that best matches request from a list of variants.
@@ -355,12 +353,9 @@ public final class VariantSelector {
             if (!varyValue.isEmpty()) {
                 varyHeaderValue.set(varyValue);
             }
-            return Lists.transform(vhs, new Function<VariantHolder, Variant>() {
-                @Override
-                public Variant apply(final VariantHolder holder) {
-                    return holder.v;
-                }
-            });
+            return vhs.stream()
+                      .map(variantHolder -> variantHolder.v)
+                      .collect(Collectors.toList());
         }
     }
 }

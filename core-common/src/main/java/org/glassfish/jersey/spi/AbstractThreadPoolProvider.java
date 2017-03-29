@@ -53,13 +53,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
-
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Abstract thread pool executor provider.

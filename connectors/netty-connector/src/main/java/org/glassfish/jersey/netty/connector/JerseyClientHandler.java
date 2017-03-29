@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,9 +44,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.netty.connector.internal.NettyInputStream;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -59,11 +65,6 @@ import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
-import org.glassfish.jersey.client.ClientRequest;
-import org.glassfish.jersey.client.ClientResponse;
-import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
-import org.glassfish.jersey.netty.connector.internal.NettyInputStream;
 
 /**
  * Jersey implementation of Netty channel handler.
@@ -77,10 +78,10 @@ class JerseyClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
     private final AsyncConnectorCallback asyncConnectorCallback;
     private final ClientRequest jerseyRequest;
-    private final SettableFuture future;
+    private final CompletableFuture future;
 
     JerseyClientHandler(NettyConnector nettyConnector, ClientRequest request,
-                        AsyncConnectorCallback callback, SettableFuture future) {
+                        AsyncConnectorCallback callback, CompletableFuture future) {
         this.connector = nettyConnector;
         this.asyncConnectorCallback = callback;
         this.jerseyRequest = request;
@@ -115,7 +116,7 @@ class JerseyClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
             // request entity handling.
             if ((response.headers().contains(HttpHeaderNames.CONTENT_LENGTH) && HttpUtil.getContentLength(response) > 0)
-                    || HttpUtil.isTransferEncodingChunked(response)) {
+                || HttpUtil.isTransferEncodingChunked(response)) {
 
                 ctx.channel().closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
                     @Override
@@ -139,7 +140,7 @@ class JerseyClientHandler extends SimpleChannelInboundHandler<HttpObject> {
                     @Override
                     public void run() {
                         asyncConnectorCallback.response(jerseyResponse);
-                        future.set(jerseyResponse);
+                        future.complete(jerseyResponse);
                     }
                 });
             }
@@ -175,7 +176,7 @@ class JerseyClientHandler extends SimpleChannelInboundHandler<HttpObject> {
                 }
             });
         }
-        future.setException(cause);
+        future.completeExceptionally(cause);
         isList.add(NettyInputStream.END_OF_INPUT_ERROR);
     }
 }

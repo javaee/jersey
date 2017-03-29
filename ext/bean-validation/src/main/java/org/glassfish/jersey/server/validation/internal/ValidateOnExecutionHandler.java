@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,27 +43,27 @@ package org.glassfish.jersey.server.validation.internal;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.security.AccessController;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import javax.validation.Configuration;
 import javax.validation.ValidationException;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
 
+import org.glassfish.jersey.internal.guava.Multimap;
+import org.glassfish.jersey.internal.guava.Multimaps;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-
-import jersey.repackaged.com.google.common.base.Supplier;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Multimap;
-import jersey.repackaged.com.google.common.collect.Multimaps;
-import jersey.repackaged.com.google.common.collect.Queues;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Handler providing methods to determine whether an executable should be validated during the validation process based on the
@@ -73,8 +73,8 @@ import jersey.repackaged.com.google.common.collect.Sets;
  */
 class ValidateOnExecutionHandler {
 
-    private final ConcurrentMap<Method, Boolean> validateMethodCache = Maps.newConcurrentMap();
-    private final ConcurrentMap<Method, Boolean> validateGetterCache = Maps.newConcurrentMap();
+    private final ConcurrentMap<Method, Boolean> validateMethodCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Method, Boolean> validateGetterCache = new ConcurrentHashMap<>();
 
     private final Configuration config;
     private final boolean checkOverrides;
@@ -228,7 +228,9 @@ class ValidateOnExecutionHandler {
      */
     private Set<ExecutableType> getExecutableTypes(final AnnotatedElement element) {
         final ValidateOnExecution validateExecutable = element.getAnnotation(ValidateOnExecution.class);
-        return validateExecutable != null ? Sets.newHashSet(validateExecutable.type()) : Collections.<ExecutableType>emptySet();
+        return validateExecutable != null
+                ? Arrays.stream(validateExecutable.type()).collect(Collectors.toSet())
+                : Collections.emptySet();
     }
 
     /**
@@ -239,7 +241,7 @@ class ValidateOnExecutionHandler {
      * @return class hierarchy.
      */
     private Deque<Class<?>> getValidationClassHierarchy(final Class<?> clazz) {
-        final List<Class<?>> hierarchy = Lists.newArrayList();
+        final List<Class<?>> hierarchy = new ArrayList<>();
 
         // Get all superclasses.
         for (Class<?> currentClass = clazz; currentClass != Object.class; currentClass = currentClass.getSuperclass()) {
@@ -249,21 +251,16 @@ class ValidateOnExecutionHandler {
         hierarchy.addAll(getAllValidationInterfaces(clazz));
         Collections.reverse(hierarchy);
 
-        return Queues.newArrayDeque(hierarchy);
+        return new ArrayDeque<>(hierarchy);
     }
 
     private List<Class<?>> getAllValidationInterfaces(final Class<?> clazz) {
-        final Multimap<Integer, Class<?>> map = Multimaps.newListMultimap(Maps.<Integer, Collection<Class<?>>>newTreeMap(),
-                new Supplier<List<Class<?>>>() {
-                    @Override
-                    public List<Class<?>> get() {
-                        return Lists.newArrayList();
-                    }
-                });
+        final Multimap<Integer, Class<?>> map = Multimaps.newListMultimap(
+                new TreeMap<Integer, Collection<Class<?>>>(), ArrayList::new);
 
         retrieveAllValidationInterfaces(clazz, map);
 
-        final List<Class<?>> interfaces = Lists.newArrayList(map.values());
+        final List<Class<?>> interfaces = new ArrayList<>(map.values());
         Collections.reverse(interfaces);
 
         return interfaces;

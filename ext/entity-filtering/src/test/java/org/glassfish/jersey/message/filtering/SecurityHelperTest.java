@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,8 +41,10 @@
 package org.glassfish.jersey.message.filtering;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.core.SecurityContext;
 
@@ -54,8 +56,6 @@ import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * {@link org.glassfish.jersey.message.filtering.SecurityHelper} unit tests.
@@ -80,12 +80,14 @@ public class SecurityHelperTest {
         // Mixed.
         annotations = new Annotation[] {CustomAnnotationLiteral.INSTANCE, SecurityAnnotations
                 .rolesAllowed("manager"), CustomAnnotationLiteral.INSTANCE};
-        expected = Sets.newHashSet(RolesAllowed.class.getName() + "_manager");
+        expected = Collections.singleton(RolesAllowed.class.getName() + "_manager");
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(expected));
 
         // Multiple.
         annotations = new Annotation[] {SecurityAnnotations.rolesAllowed("manager", "user")};
-        expected = Sets.newHashSet(RolesAllowed.class.getName() + "_manager", RolesAllowed.class.getName() + "_user");
+        expected = Arrays.asList(RolesAllowed.class.getName() + "_manager", RolesAllowed.class.getName() + "_user")
+                         .stream()
+                         .collect(Collectors.toSet());
         assertThat(SecurityHelper.getFilteringScopes(annotations), equalTo(expected));
 
         // PermitAll weirdo.
@@ -115,12 +117,12 @@ public class SecurityHelperTest {
         // Mixed.
         annotations = new Annotation[] {CustomAnnotationLiteral.INSTANCE, SecurityAnnotations
                 .rolesAllowed("manager"), CustomAnnotationLiteral.INSTANCE};
-        expected = Sets.newHashSet(RolesAllowed.class.getName() + "_manager");
+        expected = Collections.singleton(RolesAllowed.class.getName() + "_manager");
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(expected));
 
         // Multiple.
         annotations = new Annotation[] {SecurityAnnotations.rolesAllowed("client", "user")};
-        expected = Sets.newHashSet(RolesAllowed.class.getName() + "_user");
+        expected = Collections.singleton(RolesAllowed.class.getName() + "_user");
         assertThat(SecurityHelper.getFilteringScopes(context, annotations), equalTo(expected));
 
         // PermitAll weirdo.

@@ -51,6 +51,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 
 import org.junit.After;
@@ -61,8 +62,6 @@ import org.reactivestreams.Subscription;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
-
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)

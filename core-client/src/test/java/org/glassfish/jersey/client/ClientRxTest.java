@@ -54,6 +54,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.ext.Provider;
 
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
+
 import org.hamcrest.core.AllOf;
 import org.hamcrest.core.StringContains;
 import org.junit.After;
@@ -61,8 +63,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Sanity test for {@link Invocation.Builder#rx()} methods.

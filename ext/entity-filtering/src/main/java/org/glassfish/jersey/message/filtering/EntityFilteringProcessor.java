@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@
 package org.glassfish.jersey.message.filtering;
 
 import java.lang.annotation.Annotation;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.annotation.Priority;
@@ -49,8 +50,6 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.message.filtering.spi.AbstractEntityProcessor;
 import org.glassfish.jersey.message.filtering.spi.EntityGraph;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessorContext;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Entity processor handling entity-filtering annotations.
@@ -79,7 +78,7 @@ final class EntityFilteringProcessor extends AbstractEntityProcessor {
     @Override
     protected Result process(final String field, final Class<?> fieldClass, final Annotation[] fieldAnnotations,
                              final Annotation[] annotations, final EntityGraph graph) {
-        final Set<String> filteringScopes = Sets.newHashSet();
+        final Set<String> filteringScopes = new HashSet<>();
 
         if (fieldAnnotations.length > 0) {
             filteringScopes.addAll(EntityFilteringHelper.getFilteringScopes(fieldAnnotations));

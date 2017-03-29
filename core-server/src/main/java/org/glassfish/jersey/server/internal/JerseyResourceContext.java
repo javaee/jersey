@@ -42,6 +42,8 @@ package org.glassfish.jersey.server.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -63,8 +65,6 @@ import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.model.ResourceModel;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Jersey implementation of JAX-RS {@link ResourceContext resource context}.
@@ -96,7 +96,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
         this.getOrCreateInstance = getOrCreateInstance;
         this.injectInstance = injectInstance;
         this.registerBinding = registerBinding;
-        this.bindingCache = Sets.newIdentityHashSet();
+        this.bindingCache = Collections.newSetFromMap(new IdentityHashMap<>());
         this.bindingCacheLock = new Object();
     }
 

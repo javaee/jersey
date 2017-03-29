@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,11 +40,10 @@
 
 package org.glassfish.jersey.server.internal.monitoring.jmx;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.glassfish.jersey.server.monitoring.ResourceStatistics;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Group of resource MXBeans.
@@ -52,7 +51,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
  * @author Miroslav Fuksa
  */
 public class ResourcesMBeanGroup {
-    private final Map<String, ResourceMxBeanImpl> exposedResourceMBeans = Maps.newHashMap();
+    private final Map<String, ResourceMxBeanImpl> exposedResourceMBeans = new HashMap<>();
     private final String parentName;
     private final boolean uriResource;
     private final MBeanExposer exposer;

@@ -55,9 +55,8 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.examples.rx.Helper;
 import org.glassfish.jersey.examples.rx.domain.Destination;
+import org.glassfish.jersey.internal.util.collection.Views;
 import org.glassfish.jersey.server.ManagedAsync;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Obtain a list of visited / recommended places for a given user.
@@ -91,7 +90,7 @@ public class DestinationResource {
             VISITED.put(user, Helper.getCountries(5));
         }
 
-        return Lists.transform(VISITED.get(user), Destination::new);
+        return Views.listView(VISITED.get(user), Destination::new);
     }
 
     @GET
@@ -106,6 +105,6 @@ public class DestinationResource {
             VISITED.put(user, Helper.getCountries(5));
         }
 
-        return Lists.transform(Helper.getCountries(limit, VISITED.get(user)), Destination::new);
+        return Views.listView(Helper.getCountries(limit, VISITED.get(user)), Destination::new);
     }
 }

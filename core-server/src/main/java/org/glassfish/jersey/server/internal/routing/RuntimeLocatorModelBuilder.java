@@ -51,6 +51,9 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.guava.CacheBuilder;
+import org.glassfish.jersey.internal.guava.CacheLoader;
+import org.glassfish.jersey.internal.guava.LoadingCache;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
@@ -64,10 +67,6 @@ import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.ResourceModelComponent;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-
-import jersey.repackaged.com.google.common.cache.CacheBuilder;
-import jersey.repackaged.com.google.common.cache.CacheLoader;
-import jersey.repackaged.com.google.common.cache.LoadingCache;
 
 /**
  * Base for sub-resource locator runtime model builder.

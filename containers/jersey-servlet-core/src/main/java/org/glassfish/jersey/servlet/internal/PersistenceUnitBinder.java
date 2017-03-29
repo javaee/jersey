@@ -42,6 +42,7 @@ package org.glassfish.jersey.servlet.internal;
 
 import java.lang.reflect.Proxy;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.core.GenericType;
@@ -55,8 +56,6 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Injectee;
 import org.glassfish.jersey.internal.inject.InjectionResolver;
 import org.glassfish.jersey.server.ContainerException;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * {@link PersistenceUnit Persistence unit} injection binder.
@@ -84,7 +83,7 @@ public class PersistenceUnitBinder extends AbstractBinder {
     @Singleton
     private static class PersistenceUnitInjectionResolver implements InjectionResolver<PersistenceUnit> {
 
-        private final Map<String, String> persistenceUnits = Maps.newHashMap();
+        private final Map<String, String> persistenceUnits = new HashMap<>();
 
         private PersistenceUnitInjectionResolver(ServletConfig servletConfig) {
             for (final Enumeration parameterNames = servletConfig.getInitParameterNames(); parameterNames.hasMoreElements(); ) {

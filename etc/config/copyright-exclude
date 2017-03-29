@@ -63,6 +63,7 @@ build.readme
 /core-server/src/main/java/com/sun/research/ws/wadl
 /core-common/src/main/java/org/glassfish/jersey/internal/jsr166
 /tests/performance/etc/data/MEASUREMENT_DATA
+/core-common/src/main/java/org/glassfish/jersey/internal/guava/
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/AbstractSlidingWindowTimeReservoir.java
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/TimeReservoir.java
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/UniformTimeReservoir.java

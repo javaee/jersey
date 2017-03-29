@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,7 +45,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -72,9 +74,6 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * In-memory client connector.
@@ -137,7 +136,7 @@ class InMemoryConnector implements Connector {
 
         @Override
         public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext) {
-            List<Object> length = Lists.newArrayList();
+            List<Object> length = new ArrayList<>();
             length.add(String.valueOf(contentLength));
 
             responseContext.getHeaders().put(HttpHeaders.CONTENT_LENGTH, length);
@@ -284,18 +283,18 @@ class InMemoryConnector implements Connector {
 
     @Override
     public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
-        return MoreExecutors.sameThreadExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    callback.response(apply(request));
-                } catch (ProcessingException ex) {
-                    throw ex;
-                } catch (Throwable t) {
-                    callback.failure(t);
-                }
-            }
-        });
+        CompletableFuture<ClientResponse> future = new CompletableFuture<>();
+        try {
+            ClientResponse response = apply(request);
+            callback.response(response);
+            future.complete(response);
+        } catch (ProcessingException ex) {
+            future.completeExceptionally(ex);
+        } catch (Throwable t) {
+            callback.failure(t);
+            future.completeExceptionally(t);
+        }
+        return future;
     }
 
     @Override

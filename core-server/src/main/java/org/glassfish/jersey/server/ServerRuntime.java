@@ -76,6 +76,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 
 import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.guava.Preconditions;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -117,8 +118,6 @@ import static org.glassfish.jersey.server.internal.process.AsyncContext.State.CO
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
-
-import jersey.repackaged.com.google.common.base.Preconditions;
 
 /**
  * Server-side request processing runtime.

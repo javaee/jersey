@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.internal.util;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.RuntimeType;
@@ -47,8 +48,6 @@ import javax.ws.rs.RuntimeType;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * @author Miroslav Fuksa
@@ -58,7 +57,7 @@ public class PropertiesHelperTest {
 
     @Test
     public void testGetValueWithType() {
-        Map<String, String> properties = Maps.newHashMap();
+        Map<String, String> properties = new HashMap<>();
         final String key = "my.property";
         properties.put(key, "15");
 
@@ -69,7 +68,7 @@ public class PropertiesHelperTest {
 
     @Test
     public void testGetValueWithTypeAndDefaultValue() {
-        Map<String, String> properties = Maps.newHashMap();
+        Map<String, String> properties = new HashMap<>();
         final String key = "my.property";
         properties.put(key, "15");
 
@@ -80,7 +79,7 @@ public class PropertiesHelperTest {
 
     @Test
     public void testGetValueWithDefaultValue() {
-        Map<String, String> properties = Maps.newHashMap();
+        Map<String, String> properties = new HashMap<>();
         final String key = "my.property";
         properties.put(key, "15");
 
@@ -91,7 +90,7 @@ public class PropertiesHelperTest {
 
     @Test
     public void testGetValueByIgnoredRuntime() {
-        Map<String, String> properties = Maps.newHashMap();
+        Map<String, String> properties = new HashMap<>();
         final String key = "my.property";
         properties.put(key, "15");
 
@@ -103,7 +102,7 @@ public class PropertiesHelperTest {
 
     @Test
     public void testGetValueByRuntime1() {
-        Map<String, String> properties = Maps.newHashMap();
+        Map<String, String> properties = new HashMap<>();
         final String key = "jersey.config.my.property";
         properties.put(key, "15");
         properties.put("jersey.config.client.my.property", "999");
@@ -121,7 +120,7 @@ public class PropertiesHelperTest {
 
     @Test
     public void testGetValueByRuntime2() {
-        Map<String, String> properties = Maps.newHashMap();
+        Map<String, String> properties = new HashMap<>();
         final String key = "jersey.config.my.property";
         properties.put(key, "15");
         properties.put("jersey.config.client.my.property", "999");
@@ -140,7 +139,7 @@ public class PropertiesHelperTest {
 
     @Test
     public void testGetValueByRuntime3() {
-        Map<String, String> properties = Maps.newHashMap();
+        Map<String, String> properties = new HashMap<>();
         final String key = "jersey.config.my.property";
         properties.put("jersey.config.client.my.property", "999");
 
@@ -155,7 +154,7 @@ public class PropertiesHelperTest {
      */
     @Test
     public void testGetValueNoTransformation() {
-        Map<String, Object> properties = Maps.newHashMap();
+        Map<String, Object> properties = new HashMap<>();
         final String key = "my.property";
         properties.put(key, Boolean.TRUE);
 
@@ -166,10 +165,10 @@ public class PropertiesHelperTest {
 
     @Test
     public void testFallback() {
-        Map<String, String> fallback = Maps.newHashMap();
+        Map<String, String> fallback = new HashMap<>();
         fallback.put("my.property", "my.old.property");
 
-        Map<String, Object> properties = Maps.newHashMap();
+        Map<String, Object> properties = new HashMap<>();
         properties.put("my.old.property", "foo");
 
         assertEquals("foo", PropertiesHelper.getValue(properties, "my.property", String.class, fallback));

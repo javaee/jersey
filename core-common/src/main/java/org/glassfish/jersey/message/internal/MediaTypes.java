@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,13 +46,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import jersey.repackaged.com.google.common.base.Predicate;
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Common media types and functionality.
@@ -155,13 +154,9 @@ public final class MediaTypes {
     /**
      * Predicate for constructing filtering parameter maps that ignore the "q" and "qs" parameters.
      */
-    private static final Predicate<String> QUALITY_PARAM_FILTERING_PREDICATE = new Predicate<String>() {
-        @Override
-        public boolean apply(String input) {
-            return !Quality.QUALITY_SOURCE_PARAMETER_NAME.equals(input)
-                    && !Quality.QUALITY_PARAMETER_NAME.equals(input);
-        }
-    };
+    private static final Predicate<String> QUALITY_PARAM_FILTERING_PREDICATE =
+            input -> !Quality.QUALITY_SOURCE_PARAMETER_NAME.equals(input)
+                     && !Quality.QUALITY_PARAMETER_NAME.equals(input);
 
     /**
      * Prevents initialization.
@@ -364,7 +359,10 @@ public final class MediaTypes {
         }
 
         return new MediaType(mediaType.getType(), mediaType.getSubtype(),
-                Maps.filterKeys(oldParameters, QUALITY_PARAM_FILTERING_PREDICATE));
+                             oldParameters.entrySet()
+                                          .stream()
+                                          .filter(entry -> QUALITY_PARAM_FILTERING_PREDICATE.test(entry.getKey()))
+                                          .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
     /**

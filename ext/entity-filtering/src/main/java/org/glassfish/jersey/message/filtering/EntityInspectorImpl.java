@@ -44,9 +44,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.AccessController;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -61,9 +65,6 @@ import org.glassfish.jersey.message.filtering.spi.EntityProcessor;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessorContext;
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.model.internal.RankedComparator;
-
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Class responsible for inspecting entity classes. This class invokes all available {@link EntityProcessor entity processors} in
@@ -86,15 +87,16 @@ final class EntityInspectorImpl implements EntityInspector {
      */
     @Inject
     public EntityInspectorImpl(final InjectionManager injectionManager) {
-        this.entityProcessors = Lists.newArrayList(Providers.getAllProviders(injectionManager, EntityProcessor.class,
-                new RankedComparator<EntityProcessor>()));
+        Spliterator<EntityProcessor> entities =
+                Providers.getAllProviders(injectionManager, EntityProcessor.class, new RankedComparator<>()).spliterator();
+        this.entityProcessors = StreamSupport.stream(entities, false).collect(Collectors.toList());
     }
 
     @Override
     public void inspect(final Class<?> entityClass, final boolean forWriter) {
         if (!graphProvider.containsEntityGraph(entityClass, forWriter)) {
             final EntityGraph graph = graphProvider.getOrCreateEntityGraph(entityClass, forWriter);
-            final Set<Class<?>> inspect = Sets.newHashSet();
+            final Set<Class<?>> inspect = new HashSet<>();
 
             // Class.
             if (!inspectEntityClass(entityClass, graph, forWriter)) {

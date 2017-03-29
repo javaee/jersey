@@ -53,13 +53,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -79,6 +83,7 @@ import org.glassfish.jersey.internal.BootstrapBag;
 import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.internal.guava.Primitives;
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
@@ -95,11 +100,6 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.message.ReaderModel;
 import org.glassfish.jersey.message.WriterModel;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
-import jersey.repackaged.com.google.common.primitives.Primitives;
 
 /**
  * A factory for managing {@link MessageBodyReader}, {@link MessageBodyWriter} instances.
@@ -608,7 +608,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     public List<MediaType> getMessageBodyReaderMediaTypes(final Class<?> type,
                                                           final Type genericType,
                                                           final Annotation[] annotations) {
-        final Set<MediaType> readableMediaTypes = Sets.newLinkedHashSet();
+        final Set<MediaType> readableMediaTypes = new LinkedHashSet<>();
 
         for (final ReaderModel model : readers) {
             boolean readableWorker = false;
@@ -627,7 +627,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             }
         }
 
-        final List<MediaType> mtl = Lists.newArrayList(readableMediaTypes);
+        final List<MediaType> mtl = new ArrayList<>(readableMediaTypes);
         mtl.sort(MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mtl;
     }
@@ -900,7 +900,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     @Override
     @SuppressWarnings("unchecked")
     public List<MediaType> getMessageBodyWriterMediaTypes(final Class<?> c, final Type t, final Annotation[] as) {
-        final Set<MediaType> writeableMediaTypes = Sets.newLinkedHashSet();
+        final Set<MediaType> writeableMediaTypes = new LinkedHashSet<>();
 
         for (final WriterModel model : writers) {
             boolean writeableWorker = false;
@@ -919,7 +919,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             }
         }
 
-        final List<MediaType> mtl = Lists.newArrayList(writeableMediaTypes);
+        final List<MediaType> mtl = new ArrayList<>(writeableMediaTypes);
         mtl.sort(MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mtl;
     }
@@ -929,7 +929,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     @Override
     @SuppressWarnings("unchecked")
     public List<MessageBodyWriter> getMessageBodyWritersForType(final Class<?> type) {
-        return Lists.transform(getWritersModelsForType(type), MODEL_TO_WRITER);
+        return getWritersModelsForType(type).stream().map(MODEL_TO_WRITER).collect(Collectors.toList());
     }
 
     @Override
@@ -942,7 +942,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private List<WriterModel> processMessageBodyWritersForType(final Class<?> clazz) {
-        final List<WriterModel> suitableWriters = Lists.newArrayList();
+        final List<WriterModel> suitableWriters = new ArrayList<>();
 
         if (Response.class.isAssignableFrom(clazz)) {
             suitableWriters.addAll(writers);
@@ -988,12 +988,12 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private static <T> List<MediaType> getMessageBodyWorkersMediaTypesByType(
             final List<? extends AbstractEntityProviderModel<T>> workerModels) {
 
-        final Set<MediaType> mediaTypeSet = Sets.newHashSet();
+        final Set<MediaType> mediaTypeSet = new HashSet<>();
         for (final AbstractEntityProviderModel<T> model : workerModels) {
             mediaTypeSet.addAll(model.declaredTypes());
         }
 
-        final List<MediaType> mediaTypes = Lists.newArrayList(mediaTypeSet);
+        final List<MediaType> mediaTypes = new ArrayList<>(mediaTypeSet);
         mediaTypes.sort(MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mediaTypes;
     }
@@ -1003,7 +1003,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     @Override
     @SuppressWarnings("unchecked")
     public List<MessageBodyReader> getMessageBodyReadersForType(final Class<?> type) {
-        return Lists.transform(getReaderModelsForType(type), MODEL_TO_READER);
+        return getReaderModelsForType(type).stream().map(MODEL_TO_READER).collect(Collectors.toList());
     }
 
     @Override
@@ -1016,7 +1016,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     private List<ReaderModel> processMessageBodyReadersForType(final Class<?> clazz) {
-        final List<ReaderModel> suitableReaders = Lists.newArrayList();
+        final List<ReaderModel> suitableReaders = new ArrayList<>();
 
         final Class<?> wrapped = Primitives.wrap(clazz);
         for (final ReaderModel reader : readers) {

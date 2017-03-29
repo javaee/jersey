@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.ProcessingException;
@@ -55,8 +56,6 @@ import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.message.internal.HeaderUtils;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
-
-import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Loop-Back connector used for testing/benchmarking purposes. It returns a response that contains the same data (headers, entity)
@@ -101,16 +100,16 @@ final class LoopBackConnector implements Connector {
 
     @Override
     public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
-        return MoreExecutors.sameThreadExecutor().submit(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    callback.response(_apply(request));
-                } catch (final Throwable t) {
-                    callback.failure(t);
-                }
-            }
-        });
+        CompletableFuture<ClientResponse> future = new CompletableFuture<>();
+        try {
+            ClientResponse response = _apply(request);
+            callback.response(response);
+            future.complete(response);
+        } catch (final Throwable t) {
+            callback.failure(t);
+            future.completeExceptionally(t);
+        }
+        return future;
     }
 
     private ClientResponse _apply(final ClientRequest request) {

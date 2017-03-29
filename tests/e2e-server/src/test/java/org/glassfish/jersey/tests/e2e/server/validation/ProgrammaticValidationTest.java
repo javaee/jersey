@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.tests.e2e.server.validation;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.client.Entity;
@@ -57,8 +58,6 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
-import jersey.repackaged.com.google.common.collect.Sets;
-
 /**
  * Bean Validation tests for programmatically created resources.
  *
@@ -68,7 +67,7 @@ public class ProgrammaticValidationTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        final Set<Resource> resources = Sets.newHashSet();
+        final Set<Resource> resources = new HashSet<>();
 
         Resource.Builder resourceBuilder = Resource.builder("instance");
         resourceBuilder

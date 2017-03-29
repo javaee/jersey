@@ -40,14 +40,13 @@
 
 package org.glassfish.jersey.tests.e2e.entity.filtering;
 
-import java.util.HashSet;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.glassfish.jersey.test.JerseyTest;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Common parent class for Entity Filtering tests.
@@ -63,8 +62,8 @@ abstract class EntityFilteringTest extends JerseyTest {
      * @param expected expected fields.
      */
     static void assertSameFields(final String actual, final String expected) {
-        final HashSet<String> actualSet = Sets.newHashSet(actual.split(","));
-        final HashSet<String> expectedSet = Sets.newHashSet(expected.split(","));
+        final Set<String> actualSet = Arrays.stream(actual.split(",")).collect(Collectors.toSet());
+        final Set<String> expectedSet = Arrays.stream(expected.split(",")).collect(Collectors.toSet());
 
         assertThat(actualSet, equalTo(expectedSet));
     }

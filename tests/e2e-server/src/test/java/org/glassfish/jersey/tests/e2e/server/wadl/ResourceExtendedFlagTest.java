@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.e2e.server.wadl;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -51,7 +52,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -78,13 +78,10 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 import org.glassfish.jersey.test.JerseyTest;
-
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import static org.junit.Assert.assertEquals;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Test verifies functionality of {@link org.glassfish.jersey.server.model.Resource#isExtended()} and its
@@ -163,14 +160,14 @@ public class ResourceExtendedFlagTest extends JerseyTest {
         }
 
         private String validateModel() {
-            Map<String, Boolean> extendedMethods = Maps.newHashMap();
+            Map<String, Boolean> extendedMethods = new HashMap<>();
             extendedMethods.put("resourceExtendedGet", false);
             extendedMethods.put("resourceExtendedPost", false);
             extendedMethods.put("allExtendedGet", false);
             extendedMethods.put("allExtendedSubGet", false);
             extendedMethods.put("allExtendedSubLocator", false);
 
-            Map<String, Boolean> visibleMethods = Maps.newHashMap();
+            Map<String, Boolean> visibleMethods = new HashMap<>();
             visibleMethods.put("resourceVisiblePost", false);
             visibleMethods.put("resourceGet", false);
 

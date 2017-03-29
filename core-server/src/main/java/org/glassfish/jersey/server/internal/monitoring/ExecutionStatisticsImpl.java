@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -49,9 +50,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.glassfish.jersey.server.monitoring.ExecutionStatistics;
 import org.glassfish.jersey.server.monitoring.TimeWindowStatistics;
-
-import jersey.repackaged.com.google.common.collect.ImmutableList;
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Immutable Execution statistics.
@@ -90,7 +88,8 @@ final class ExecutionStatisticsImpl implements ExecutionStatistics {
             final TimeWindowStatisticsImpl.Builder<Long> infiniteIntervalWindowBuilder =
                     new TimeWindowStatisticsImpl.Builder<>(new UniformTimeReservoir(nowMillis, TimeUnit.MILLISECONDS));
 
-            this.updatableIntervalStatistics = ImmutableList.of(infiniteIntervalWindowBuilder, oneSecondIntervalWindowBuilder);
+            this.updatableIntervalStatistics =
+                    Arrays.asList(infiniteIntervalWindowBuilder, oneSecondIntervalWindowBuilder);
 
             // create unmodifiable map to ensure that an iteration in the build() won't have multi-threading issues
             final HashMap<Long, TimeWindowStatisticsImpl.Builder> tmpIntervalStatistics = new HashMap<>(6);
@@ -142,7 +141,7 @@ final class ExecutionStatisticsImpl implements ExecutionStatistics {
          * @return new instance of execution statistics.
          */
         public ExecutionStatisticsImpl build() {
-            final Map<Long, TimeWindowStatistics> newIntervalStatistics = Maps.newHashMap();
+            final Map<Long, TimeWindowStatistics> newIntervalStatistics = new HashMap<>();
             for (final Map.Entry<Long, TimeWindowStatisticsImpl.Builder> builderEntry : intervalStatistics.entrySet()) {
                 newIntervalStatistics.put(builderEntry.getKey(), builderEntry.getValue().build());
             }

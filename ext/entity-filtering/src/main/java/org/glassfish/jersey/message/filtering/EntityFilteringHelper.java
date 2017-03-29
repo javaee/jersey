@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,14 +41,13 @@
 package org.glassfish.jersey.message.filtering;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
-
-import jersey.repackaged.com.google.common.collect.Lists;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Utility methods for Entity Data Filtering.
@@ -80,7 +79,7 @@ final class EntityFilteringHelper {
             return Collections.emptySet();
         }
 
-        final Set<String> contexts = Sets.newHashSetWithExpectedSize(annotations.length);
+        final Set<String> contexts = new HashSet<>(annotations.length);
 
         annotations = filter ? getFilteringAnnotations(annotations) : annotations;
         for (final Annotation annotation : annotations) {
@@ -101,7 +100,7 @@ final class EntityFilteringHelper {
             return FilteringHelper.EMPTY_ANNOTATIONS;
         }
 
-        final List<Annotation> filteringAnnotations = Lists.newArrayListWithExpectedSize(annotations.length);
+        final List<Annotation> filteringAnnotations = new ArrayList<>(annotations.length);
 
         for (final Annotation annotation : annotations) {
             final Class<? extends Annotation> annotationType = annotation.annotationType();

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,8 +75,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import jersey.repackaged.com.google.common.collect.Sets;
-
 /**
  * Tests whether providers are correctly validated in the server runtime (for example if provider constrained to
  * client runtime is skipped on the server).
@@ -147,7 +145,7 @@ public class ConstrainedToServerTest {
         Application app = new Application() {
             @Override
             public Set<Class<?>> getClasses() {
-                final HashSet<Class<?>> classes = Sets.newHashSet();
+                final HashSet<Class<?>> classes = new HashSet<>();
                 classes.add(Resource.class);
                 classes.add(MyClientFilter.class);
                 classes.add(MyServerWrongFilter.class);

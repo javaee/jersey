@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ package org.glassfish.jersey.tests.e2e.container;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory;
@@ -56,9 +57,6 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * @author Michal Gajdos
@@ -77,14 +75,9 @@ public abstract class JerseyContainerTest extends JerseyTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<TestContainerFactory[]> parameters() throws Exception {
-        return Lists.transform(FACTORIES, new Function<TestContainerFactory, TestContainerFactory[]>() {
-
-            @Override
-            public TestContainerFactory[] apply(final TestContainerFactory input) {
-                return new TestContainerFactory[]{input};
-            }
-        });
+        return FACTORIES.stream().map(input -> new TestContainerFactory[]{input}).collect(Collectors.toList());
     }
+
 
     @Parameterized.Parameter(0)
     public TestContainerFactory factory;

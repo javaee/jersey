@@ -68,11 +68,10 @@ import org.glassfish.jersey.examples.rx.domain.Calculation;
 import org.glassfish.jersey.examples.rx.domain.Destination;
 import org.glassfish.jersey.examples.rx.domain.Forecast;
 import org.glassfish.jersey.examples.rx.domain.Recommendation;
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.Uri;
-
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Obtain information about visited (destination) and recommended (destination, forecast, price) places for "Async" user. Uses

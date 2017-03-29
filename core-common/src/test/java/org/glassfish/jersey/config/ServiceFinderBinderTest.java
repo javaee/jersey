@@ -42,6 +42,7 @@ package org.glassfish.jersey.config;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.RuntimeType;
 
@@ -56,9 +57,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
 
 /**
  * Service finder injection binder unit test.
@@ -94,13 +92,10 @@ public class ServiceFinderBinderTest {
         final Set<TestContract> providers = Providers.getProviders(injectionManager, TestContract.class);
         assertEquals(4, providers.size());
 
-        final Collection<String> providerNames = Collections2.transform(providers, new Function<TestContract, String>() {
-
-            @Override
-            public String apply(TestContract input) {
-                return input.name();
-            }
-        });
+        final Collection<String> providerNames =
+                providers.stream()
+                         .map(TestContract::name)
+                         .collect(Collectors.toList());
 
         assertTrue(providerNames.contains(TestServiceA.class.getName()));
         assertTrue(providerNames.contains(TestServiceB.class.getName()));

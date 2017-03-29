@@ -42,6 +42,7 @@ package org.glassfish.jersey.server;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -68,8 +69,6 @@ import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Configurator which initializes and register {@link ProcessingProviders} instance into {@link BootstrapBag}.
@@ -111,7 +110,7 @@ class ProcessingProvidersConfigurator implements BootstrapConfigurator {
         Iterable<RankedProvider<ContainerRequestFilter>> requestFilters =
                 Providers.getAllRankedProviders(injectionManager, ContainerRequestFilter.class);
 
-        List<RankedProvider<ContainerRequestFilter>> preMatchFilters = Lists.newArrayList();
+        List<RankedProvider<ContainerRequestFilter>> preMatchFilters = new ArrayList<>();
 
         MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundReqFilters =
                 filterNameBound(requestFilters, preMatchFilters, componentBag, applicationNameBindings,

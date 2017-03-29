@@ -46,18 +46,23 @@ import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.RuntimeType;
@@ -129,11 +134,6 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Collections2;
-import jersey.repackaged.com.google.common.collect.Sets;
-import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
 
 /**
  * Jersey server-side application handler.
@@ -533,8 +533,13 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         final Set<MessageBodyWriter> messageBodyWriters;
 
         if (LOGGER.isLoggable(Level.FINE)) {
-            messageBodyReaders = Sets.newHashSet(Providers.getAllProviders(injectionManager, MessageBodyReader.class));
-            messageBodyWriters = Sets.newHashSet(Providers.getAllProviders(injectionManager, MessageBodyWriter.class));
+            Spliterator<MessageBodyReader> mbrSpliterator =
+                    Providers.getAllProviders(injectionManager, MessageBodyReader.class).spliterator();
+            messageBodyReaders = StreamSupport.stream(mbrSpliterator, false).collect(Collectors.toSet());
+
+            Spliterator<MessageBodyWriter> mbwSpliterator =
+                    Providers.getAllProviders(injectionManager, MessageBodyWriter.class).spliterator();
+            messageBodyWriters = StreamSupport.stream(mbwSpliterator, false).collect(Collectors.toSet());
         } else {
             messageBodyReaders = Providers.getCustomProviders(injectionManager, MessageBodyReader.class);
             messageBodyWriters = Providers.getCustomProviders(injectionManager, MessageBodyWriter.class);
@@ -561,9 +566,9 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         printProviders(LocalizationMessages.LOGGING_DYNAMIC_FEATURES(),
                 processingProviders.getDynamicFeatures(), sb);
         printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_READERS(),
-                Collections2.transform(messageBodyReaders, new WorkersToStringTransform<>()), sb);
+                       messageBodyReaders.stream().map(new WorkersToStringTransform<>()).collect(Collectors.toList()), sb);
         printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_WRITERS(),
-                Collections2.transform(messageBodyWriters, new WorkersToStringTransform<>()), sb);
+                       messageBodyWriters.stream().map(new WorkersToStringTransform<>()).collect(Collectors.toList()), sb);
 
         LOGGER.log(Level.CONFIG, sb.toString());
     }
@@ -625,8 +630,8 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             ServerBootstrapBag bootstrapBag,
             ResourceModel resourceModel,
             ResourceBag resourceBag) {
-        final Set<Class<?>> newClasses = Sets.newHashSet();
-        final Set<Object> newInstances = Sets.newHashSet();
+        final Set<Class<?>> newClasses = new HashSet<>();
+        final Set<Object> newInstances = new HashSet<>();
         for (final Resource res : resourceModel.getRootResources()) {
             newClasses.addAll(res.getHandlerClasses());
             newInstances.addAll(res.getHandlerInstances());
@@ -770,7 +775,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         return responseFuture;
     }
 
-    private static class FutureResponseWriter extends AbstractFuture<ContainerResponse> implements ContainerResponseWriter {
+    private static class FutureResponseWriter extends CompletableFuture<ContainerResponse> implements ContainerResponseWriter {
 
         private ContainerResponse response = null;
 
@@ -818,26 +823,20 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                     current.setEntity(null);
                 }
                 requestTimeoutHandler.close();
-                super.set(current);
+                super.complete(current);
             }
         }
 
         @Override
         public void failure(final Throwable error) {
             requestTimeoutHandler.close();
-            super.setException(error);
+            super.completeExceptionally(error);
         }
 
         @Override
         public boolean enableResponseBuffering() {
             return true;
         }
-
-        @Override
-        protected void interruptTask() {
-            // TODO implement cancellation logic.
-        }
-
     }
 
     /**

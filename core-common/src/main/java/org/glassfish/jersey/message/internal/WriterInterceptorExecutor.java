@@ -49,6 +49,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
@@ -63,8 +65,6 @@ import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Represents writer interceptor chain executor for both client and server side.
@@ -128,7 +128,8 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
         this.outputStream = entityStream;
         this.injectionManager = injectionManager;
 
-        final List<WriterInterceptor> effectiveInterceptors = Lists.newArrayList(writerInterceptors);
+        final List<WriterInterceptor> effectiveInterceptors = StreamSupport.stream(writerInterceptors.spliterator(), false)
+                                                                           .collect(Collectors.toList());
         effectiveInterceptors.add(new TerminalWriterInterceptor(workers));
 
         this.iterator = effectiveInterceptors.iterator();

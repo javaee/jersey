@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@ package org.glassfish.jersey.server.wadl.processor;
 
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -73,8 +74,6 @@ import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 
 import com.sun.research.ws.wadl.Application;
 
-import jersey.repackaged.com.google.common.collect.Lists;
-
 /**
  * WADL {@link ModelProcessor model processor} which enhance resource model by WADL related resources (like "/application.wadl").
  * The provider should be registered using
@@ -94,7 +93,7 @@ public class WadlModelProcessor implements ModelProcessor {
      * Create new WADL model processor instance.
      */
     public WadlModelProcessor() {
-        methodList = Lists.newArrayList();
+        methodList = new ArrayList<>();
         methodList.add(new ModelProcessorUtil.Method(HttpMethod.OPTIONS, MediaType.WILDCARD_TYPE, MediaTypes.WADL_TYPE,
                 OptionsHandler.class));
     }

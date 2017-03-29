@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,16 +41,15 @@
 package org.glassfish.jersey.server.internal.monitoring.jmx;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.monitoring.ApplicationMXBean;
 import org.glassfish.jersey.server.monitoring.ApplicationInfo;
-
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
+import org.glassfish.jersey.server.monitoring.ApplicationMXBean;
 
 /**
  * MXBean implementing {@link org.glassfish.jersey.server.monitoring.ApplicationMXBean} MXBean interface.
@@ -76,9 +75,9 @@ public class ApplicationMXBeanImpl implements ApplicationMXBean {
      */
     public ApplicationMXBeanImpl(final ApplicationInfo applicationInfo, final MBeanExposer mBeanExposer,
                                  final String parentName) {
-        this.providers = Sets.newHashSet();
-        this.registeredClasses = Sets.newHashSet();
-        this.registeredInstances = Sets.newHashSet();
+        this.providers = new HashSet<>();
+        this.registeredClasses = new HashSet<>();
+        this.registeredInstances = new HashSet<>();
 
         for (final Class<?> provider : applicationInfo.getProviders()) {
             this.providers.add(provider.getName());
@@ -95,7 +94,7 @@ public class ApplicationMXBeanImpl implements ApplicationMXBean {
         final ResourceConfig resourceConfig = applicationInfo.getResourceConfig();
         this.applicationName = resourceConfig.getApplicationName();
         this.applicationClass = resourceConfig.getApplication().getClass().getName();
-        this.configurationProperties = Maps.newHashMap();
+        this.configurationProperties = new HashMap<>();
         for (final Map.Entry<String, Object> entry : resourceConfig.getProperties().entrySet()) {
             final Object value = entry.getValue();
             String stringValue;

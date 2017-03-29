@@ -40,13 +40,13 @@
 
 package org.glassfish.jersey.server.internal.process;
 
+import java.util.function.Function;
+
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-
-import jersey.repackaged.com.google.common.base.Function;
 
 /**
  * Request/response scoped injection support initialization stage.

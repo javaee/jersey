@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -54,8 +55,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 
 import org.glassfish.jersey.message.internal.ReaderWriter;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Class that provides methods to build {@link OAuth2CodeGrantFlow} pre-configured for usage
@@ -106,7 +105,7 @@ class OAuth2FlowFacebookBuilder {
                                     MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
                                     InputStream entityStream) throws IOException, WebApplicationException {
 
-            Map<String, Object> map = Maps.newHashMap();
+            Map<String, Object> map = new HashMap<>();
             final String str = ReaderWriter.readFromAsString(entityStream, mediaType);
             final String[] splitArray = str.split("&");
             for (String s : splitArray) {

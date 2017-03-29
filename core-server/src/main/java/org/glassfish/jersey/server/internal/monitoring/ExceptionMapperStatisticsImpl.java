@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,8 +46,6 @@ import java.util.Map;
 
 import org.glassfish.jersey.server.monitoring.ExceptionMapperStatistics;
 
-import jersey.repackaged.com.google.common.collect.Maps;
-
 /**
  * Exception mapper statistics.
  *
@@ -62,7 +60,7 @@ final class ExceptionMapperStatisticsImpl implements ExceptionMapperStatistics {
      */
     static class Builder {
 
-        private Map<Class<?>, Long> exceptionMapperExecutionCountMap = Maps.newHashMap();
+        private Map<Class<?>, Long> exceptionMapperExecutionCountMap = new HashMap<>();
         private long successfulMappings;
         private long unsuccessfulMappings;
         private long totalMappings;

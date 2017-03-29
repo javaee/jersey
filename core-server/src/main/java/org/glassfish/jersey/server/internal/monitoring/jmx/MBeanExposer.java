@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,16 +41,17 @@
 package org.glassfish.jersey.server.internal.monitoring.jmx;
 
 import java.lang.management.ManagementFactory;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.ws.rs.ProcessingException;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.management.JMException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -62,8 +63,6 @@ import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
 import org.glassfish.jersey.server.monitoring.ResourceStatistics;
 import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * The main exposer class of Jersey JMX MBeans. The class creates MBeans and contains methods that
@@ -99,7 +98,7 @@ public class MBeanExposer extends AbstractContainerLifecycleListener implements 
 
 
     private Map<String, ResourceStatistics> transformToStringKeys(Map<Class<?>, ResourceStatistics> stats) {
-        Map<String, ResourceStatistics> newMap = Maps.newHashMap();
+        Map<String, ResourceStatistics> newMap = new HashMap<>();
         for (Map.Entry<Class<?>, ResourceStatistics> entry : stats.entrySet()) {
             newMap.put(entry.getKey().getName(), entry.getValue());
         }

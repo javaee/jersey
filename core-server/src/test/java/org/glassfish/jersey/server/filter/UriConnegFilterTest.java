@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.filter;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.GET;
@@ -56,8 +57,6 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  *
@@ -84,7 +83,7 @@ public class UriConnegFilterTest {
 
     @Before
     public void setUp() {
-        Map<String, MediaType> mediaTypes = Maps.newHashMap();
+        Map<String, MediaType> mediaTypes = new HashMap<>();
         mediaTypes.put("foo", MediaType.valueOf("application/foo"));
         mediaTypes.put("bar", MediaType.valueOf("application/bar"));
 
