@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -81,8 +81,7 @@ import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @since 2.18
  */
-// TODO implement AutoCloseable once switched to Java SE 7+
-public abstract class AbstractThreadPoolProvider<E extends ThreadPoolExecutor> {
+public abstract class AbstractThreadPoolProvider<E extends ThreadPoolExecutor> implements AutoCloseable {
 
     private static final ExtendedLogger LOGGER = new ExtendedLogger(
             Logger.getLogger(AbstractThreadPoolProvider.class.getName()), Level.FINEST);
@@ -95,13 +94,7 @@ public abstract class AbstractThreadPoolProvider<E extends ThreadPoolExecutor> {
     private final String name;
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final LazyValue<E> lazyExecutorServiceProvider =
-            Values.lazy(new Value<E>() {
-
-                @Override
-                public E get() {
-                    return createExecutor(getCorePoolSize(), createThreadFactory(), getRejectedExecutionHandler());
-                }
-            });
+            Values.lazy((Value<E>) () -> createExecutor(getCorePoolSize(), createThreadFactory(), getRejectedExecutionHandler()));
 
     /**
      * Inheritance constructor.
@@ -211,11 +204,8 @@ public abstract class AbstractThreadPoolProvider<E extends ThreadPoolExecutor> {
      * @see #createExecutor
      */
     protected RejectedExecutionHandler getRejectedExecutionHandler() {
-        return new RejectedExecutionHandler() {
-            @Override
-            public void rejectedExecution(final Runnable r, final ThreadPoolExecutor executor) {
-                // TODO: implement the rejected execution handler method.
-            }
+        return (r, executor) -> {
+            // TODO: implement the rejected execution handler method.
         };
     }
 
@@ -345,51 +335,47 @@ public abstract class AbstractThreadPoolProvider<E extends ThreadPoolExecutor> {
             final int terminationTimeout,
             final TimeUnit terminationTimeUnit) {
 
-        return new PrivilegedAction<Void>() {
-
-            @Override
-            public Void run() {
-                if (!executorService.isShutdown()) {
-                    executorService.shutdown();
-                }
-                if (executorService.isTerminated()) {
-                    return null;
-                }
-
-                boolean terminated = false;
-                boolean interrupted = false;
-                try {
-                    terminated = executorService.awaitTermination(terminationTimeout, terminationTimeUnit);
-                } catch (InterruptedException e) {
-                    if (LOGGER.isDebugLoggable()) {
-                        LOGGER.log(LOGGER.getDebugLevel(),
-                                "Interrupted while waiting for thread pool executor " + executorName + " to shutdown.", e);
-                    }
-                    interrupted = true;
-                }
-
-                try {
-                    if (!terminated) {
-                        final List<Runnable> cancelledTasks = executorService.shutdownNow();
-                        for (Runnable cancelledTask : cancelledTasks) {
-                            if (cancelledTask instanceof Future) {
-                                ((Future) cancelledTask).cancel(true);
-                            }
-                        }
-
-                        if (LOGGER.isDebugLoggable()) {
-                            LOGGER.debugLog("Thread pool executor {0} forced-shut down. List of cancelled tasks: {1}",
-                                    executorName, cancelledTasks);
-                        }
-                    }
-                } finally {
-                    if (interrupted) {
-                        // restoring the interrupt flag
-                        Thread.currentThread().interrupt();
-                    }
-                }
+        return (PrivilegedAction<Void>) () -> {
+            if (!executorService.isShutdown()) {
+                executorService.shutdown();
+            }
+            if (executorService.isTerminated()) {
                 return null;
             }
+
+            boolean terminated = false;
+            boolean interrupted = false;
+            try {
+                terminated = executorService.awaitTermination(terminationTimeout, terminationTimeUnit);
+            } catch (InterruptedException e) {
+                if (LOGGER.isDebugLoggable()) {
+                    LOGGER.log(LOGGER.getDebugLevel(),
+                            "Interrupted while waiting for thread pool executor " + executorName + " to shutdown.", e);
+                }
+                interrupted = true;
+            }
+
+            try {
+                if (!terminated) {
+                    final List<Runnable> cancelledTasks = executorService.shutdownNow();
+                    for (Runnable cancelledTask : cancelledTasks) {
+                        if (cancelledTask instanceof Future) {
+                            ((Future) cancelledTask).cancel(true);
+                        }
+                    }
+
+                    if (LOGGER.isDebugLoggable()) {
+                        LOGGER.debugLog("Thread pool executor {0} forced-shut down. List of cancelled tasks: {1}",
+                                executorName, cancelledTasks);
+                    }
+                }
+            } finally {
+                if (interrupted) {
+                    // restoring the interrupt flag
+                    Thread.currentThread().interrupt();
+                }
+            }
+            return null;
         };
     }
 }
