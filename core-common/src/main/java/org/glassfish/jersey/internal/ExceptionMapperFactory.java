@@ -52,6 +52,8 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ext.ExceptionMapper;
 
@@ -135,13 +137,9 @@ public class ExceptionMapperFactory implements ExceptionMappers {
             if (d >= 0 && d <= minDistance) {
                 final ExceptionMapper<T> candidate = mapperType.mapper.getInstance();
 
-                if (isPreferredCandidate(exceptionInstance, candidate, d == minDistance)) {
+                if (isPreferredCandidate(exceptionInstance, candidate, d == minDistance, mapper)) {
                     mapper = candidate;
                     minDistance = d;
-                    if (d == 0) {
-                        // slight optimization: if the distance is 0, it is already the best case, so we can exit
-                        return mapper;
-                    }
                 }
             }
         }
@@ -159,16 +157,30 @@ public class ExceptionMapperFactory implements ExceptionMappers {
      * {@code false} otherwise.
      */
     private <T extends Throwable> boolean isPreferredCandidate(final T exceptionInstance, final ExceptionMapper<T> candidate,
-                                                               final boolean sameDistance) {
+                                                               final boolean sameDistance, ExceptionMapper<T> previousCandidate) {
         if (exceptionInstance == null) {
             return true;
         }
+        int priority = getPriority(candidate);
+        boolean hasBetterPriority = previousCandidate == null || priority < getPriority(previousCandidate);
+        boolean isBetter = !sameDistance || hasBetterPriority;
         if (candidate instanceof ExtendedExceptionMapper) {
-            return !sameDistance
+            return isBetter
                     && ((ExtendedExceptionMapper<T>) candidate).isMappable(exceptionInstance);
         } else {
-            return !sameDistance;
+            return isBetter;
         }
+    }
+
+    private <T extends Throwable> int getPriority(ExceptionMapper<T> mapper) {
+        int priority = Priorities.USER; // default
+        if (mapper != null) {
+            Priority[] priorities = mapper.getClass().getAnnotationsByType(Priority.class);
+            if (priorities != null && priorities.length > 0) {
+                priority = priorities[0].value();
+            }
+        }
+        return priority;
     }
 
     /**
