@@ -51,15 +51,15 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
-    <section xml:id="mig-3.0">
-        <title>Migrating from Jersey 2.22 to 2.26</title>
-        <section xml:id="mig-3.0-breaking-changes">
+    <section xml:id="mig-2.26">
+        <title>Migrating from Jersey 2.23 to 2.26</title>
+        <section xml:id="mig-2.26-breaking-changes">
             <title>Breaking Changes</title>
             <para>
                 <itemizedlist>
                     <listitem>
                         <para>
-                            The most fundamental change in Jersey 3.26 is that all the modules (including the client module) are
+                            The most fundamental change in Jersey 2.26 is that all the modules (including the client module) are
                             now being built with Java SE 8 and with 1.8 language level.
                         </para>
                         <para>
@@ -78,7 +78,7 @@
                 </itemizedlist>
             </para>
         </section>
-        <section xml:id="mig-3.0-removed-deprecated">
+        <section xml:id="mig-2.26-removed-deprecated">
             <title>Removed deprecated APIs</title>
             <para>Following, already deprecated, APIs were removed:</para>
             <para>
@@ -158,6 +158,7 @@
                 the &jersey.server.ServerProperties.LOCATION_HEADER_RELATIVE_URI_RESOLUTION_DISABLED; disabled switch. Both
                 properties are false by default.
             </para>
+        </section>
     </section>
 
     <section xml:id="mig-2.22">
