@@ -42,9 +42,10 @@ package org.glassfish.jersey.server.model;
 
 import javax.inject.Inject;
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.List;
-
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -179,4 +180,28 @@ public class ParameterTest {
         assertNotEquals(param1.hashCode(), param3.hashCode());
     }
 
+    @Test
+    public void test_toString_JERSEY_3186() {
+        Annotation[] annotations = new Annotation[]{new DocumentParameter() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return DocumentParameter.class;
+            }
+
+            @Override
+            public String value() {
+                return "represents something";
+            }
+        }};
+
+        Parameter param = Parameter.create(String.class, String.class, false, String.class, String.class, annotations);
+
+        assertEquals("Parameter [type=class java.lang.String, sourceAnnotationType=interface org.glassfish.jersey.server.model.ParameterTest$DocumentParameter, source=represents something, defaultValue=null, paramSource=UNKNOWN]",
+                     param.toString());
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface DocumentParameter {
+        String value();
+    }
 }

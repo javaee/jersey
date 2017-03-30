@@ -39,6 +39,17 @@
  */
 package org.glassfish.jersey.server.model;
 
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.Encoded;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
@@ -56,19 +67,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.Encoded;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.container.Suspended;
-import javax.ws.rs.core.Context;
-
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.server.Uri;
@@ -573,6 +571,15 @@ public class Parameter implements AnnotatedElement {
     }
 
     /**
+     * Get the parameter source annotation type.
+     *
+     * @return parameter source annotation type or null.
+     */
+    private Class<? extends Annotation> getSourceAnnotationType() {
+        return sourceAnnotation != null ? sourceAnnotation.annotationType() : null;
+    }
+
+    /**
      * Get the parameter value source type.
      *
      * @return parameter value source type.
@@ -682,8 +689,8 @@ public class Parameter implements AnnotatedElement {
 
     @Override
     public String toString() {
-        return String.format("Parameter [type=%s, source=%s, defaultValue=%s]",
-                getRawType(), getSourceName(), getDefaultValue());
+        return String.format("Parameter [type=%s, sourceAnnotationType=%s, source=%s, defaultValue=%s, paramSource=%s]",
+                getRawType(), getSourceAnnotationType(), getSourceName(), getDefaultValue(), getSource());
     }
 
     @Override
