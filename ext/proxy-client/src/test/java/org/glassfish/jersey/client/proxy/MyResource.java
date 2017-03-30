@@ -186,4 +186,10 @@ public class MyResource implements MyResourceIfc {
     public String putIt(MyBean dummyBean) {
         return headers.getHeaderString(HttpHeaders.CONTENT_TYPE);
     }
+
+    @Override
+    public String putItLocalized(MyBean dummyBean) {
+        return headers.getHeaderString(HttpHeaders.CONTENT_LANGUAGE);
+    }
+
 }
