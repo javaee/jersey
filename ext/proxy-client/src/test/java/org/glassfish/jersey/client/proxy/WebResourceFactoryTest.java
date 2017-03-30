@@ -147,6 +147,19 @@ public class WebResourceFactoryTest extends JerseyTest {
     }
 
     @Test
+    public void testBeanParam() {
+        MyBeanParam bean = new MyBeanParam();
+        bean.setQueryName("Query");
+        bean.setCookieName("Cookie");
+        bean.setHeaderName("Header");
+        bean.setSetterQueryName("SetterQuery");
+        bean.setSetterCookieName("SetterCookie");
+        bean.setSetterHeaderName("SetterHeader");
+        assertEquals("QueryCookieHeaderSetterQuerySetterCookieSetterHeader",
+            resource.getByBean(bean));
+    }
+
+    @Test
     public void testSubResource() {
         assertEquals("Got it!", resource.getSubResource().getMyBean().name);
     }
