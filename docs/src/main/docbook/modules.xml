@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -147,6 +147,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-container-netty-http/dependencies.html">
+    jersey-container-netty-http
+</link>
+</entry>
+<entry>Netty Http Container.</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-container-servlet/dependencies.html">
     jersey-container-servlet
 </link>
@@ -215,6 +223,14 @@
 </entry>
 <entry>Jersey Client Transport via Jetty</entry>
 </row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-netty-connector/dependencies.html">
+    jersey-netty-connector
+</link>
+</entry>
+<entry>Jersey Client Transport via Netty</entry>
+</row>
         </tbody>
     </tgroup>
 </table>
@@ -229,17 +245,6 @@
             </row>
         </thead>
         <tbody>
-<row>
-<entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/html-json/dependencies.html">
-    html-json
-</link>
-</entry>
-<entry>JAX-RS Reader/Writer via net.java.html.json library that provides
-        JSON serialization and deserialization using lightweight (no reflection)
-        net.java.html.json library. Define your objects via @Model annotation.
-        Use them in Jersey.</entry>
-</row>
 <row>
 <entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-media-jaxb/dependencies.html">
@@ -448,14 +453,6 @@
 </row>
 <row>
 <entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client/dependencies.html">
-    jersey-rx-client
-</link>
-</entry>
-<entry>Jersey Reactive Client extension implementation.</entry>
-</row>
-<row>
-<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-guava/dependencies.html">
     jersey-rx-client-guava
 </link>
@@ -464,27 +461,19 @@
 </row>
 <row>
 <entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-java8/dependencies.html">
-    jersey-rx-client-java8
-</link>
-</entry>
-<entry>Jersey Reactive Client - Java 8 (CompletionStage) provider.</entry>
-</row>
-<row>
-<entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-jsr166e/dependencies.html">
-    jersey-rx-client-jsr166e
-</link>
-</entry>
-<entry>Jersey Reactive Client - JSR-166e, pre-Java 8, (CompletableFuture) provider.</entry>
-</row>
-<row>
-<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-rxjava/dependencies.html">
     jersey-rx-client-rxjava
 </link>
 </entry>
 <entry>Jersey Reactive Client - RxJava (Observable) provider.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-rxjava2/dependencies.html">
+    jersey-rx-client-rxjava2
+</link>
+</entry>
+<entry>Jersey Reactive Client - RxJava2 (Flowable) provider.</entry>
 </row>
 <row>
 <entry>
@@ -609,6 +598,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-netty/dependencies.html">
+    jersey-test-framework-provider-netty
+</link>
+</entry>
+<entry>Jersey Test Framework - Netty container</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-simple/dependencies.html">
     jersey-test-framework-provider-simple
 </link>
@@ -692,6 +689,14 @@
 </link>
 </entry>
 <entry>Jersey Test Framework - Jetty HTTP container</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-netty/dependencies.html">
+    jersey-test-framework-provider-netty
+</link>
+</entry>
+<entry>Jersey Test Framework - Netty container</entry>
 </row>
 <row>
 <entry>
@@ -985,6 +990,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/helloworld-netty/dependencies.html">
+    helloworld-netty
+</link>
+</entry>
+<entry>Jersey "Hello world" example on Netty container.</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/helloworld-programmatic/dependencies.html">
     helloworld-programmatic
 </link>
@@ -1244,19 +1257,11 @@
 </row>
 <row>
 <entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/rx-client-java8-webapp/dependencies.html">
-    rx-client-java8-webapp
-</link>
-</entry>
-<entry>Jersey Reactive Client Extension (Java8) WebApp Example.</entry>
-</row>
-<row>
-<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/rx-client-webapp/dependencies.html">
     rx-client-webapp
 </link>
 </entry>
-<entry>Jersey Reactive Client Extension WebApp Example.</entry>
+<entry>Jersey Reactive Client WebApp Example.</entry>
 </row>
 <row>
 <entry>

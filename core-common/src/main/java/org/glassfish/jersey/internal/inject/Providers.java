@@ -231,9 +231,9 @@ public final class Providers {
                                                       final Iterable<RankedProvider<T>> providers) {
 
         return StreamSupport.stream(providers.spliterator(), false)
-                            .sorted(comparator)
-                            .map(RankedProvider::getProvider)
-                            .collect(Collectors.toList());
+                .sorted(comparator)
+                .map(RankedProvider::getProvider)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -250,10 +250,10 @@ public final class Providers {
                                                               final Iterable<Iterable<RankedProvider<T>>> providerIterables) {
 
         return StreamSupport.stream(providerIterables.spliterator(), false)
-                            .flatMap(rankedProviders -> StreamSupport.stream(rankedProviders.spliterator(), false))
-                            .sorted(comparator)
-                            .map(RankedProvider::getProvider)
-                            .collect(Collectors.toList());
+                .flatMap(rankedProviders -> StreamSupport.stream(rankedProviders.spliterator(), false))
+                .sorted(comparator)
+                .map(RankedProvider::getProvider)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -337,8 +337,8 @@ public final class Providers {
 
     private static <T> Set<T> getProviderClasses(final Collection<ServiceHolder<T>> providers) {
         return providers.stream()
-                        .map(Providers::holder2service)
-                        .collect(Collectors.toCollection(LinkedHashSet::new));
+                .map(Providers::holder2service)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private static <T> T holder2service(ServiceHolder<T> holder) {

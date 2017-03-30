@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -413,6 +413,7 @@ public class OutboundMessageContext {
      * @throws ProcessingException when {@link Integer#parseInt(String)} (String)} throws {@link NumberFormatException}.
      */
     public int getLength() {
+
         return singleHeader(HttpHeaders.CONTENT_LENGTH, Integer.class, input -> {
             try {
                 if (input != null && !input.isEmpty()) {
@@ -422,6 +423,7 @@ public class OutboundMessageContext {
                     }
                 }
                 return -1;
+
             } catch (NumberFormatException ex) {
                 throw new ProcessingException(ex);
             }

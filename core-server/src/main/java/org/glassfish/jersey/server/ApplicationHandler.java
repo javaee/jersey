@@ -630,7 +630,6 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             ServerBootstrapBag bootstrapBag,
             ResourceModel resourceModel,
             ResourceBag resourceBag) {
-
         final Set<Class<?>> newClasses = new HashSet<>();
         final Set<Object> newInstances = new HashSet<>();
         for (final Resource res : resourceModel.getRootResources()) {

@@ -245,7 +245,6 @@ public final class ContractProvider implements Scoped, NameBound {
                                                              return (priority != NO_PRIORITY) ? priority : defaultPriority;
                                                          }));
 
-
             final Set<Class<? extends Annotation>> bindings = (nameBindings.isEmpty())
                     ? Collections.emptySet() : Collections.unmodifiableSet(nameBindings);
 

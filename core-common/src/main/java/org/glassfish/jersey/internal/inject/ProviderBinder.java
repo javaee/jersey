@@ -208,8 +208,8 @@ public class ProviderBinder {
         Set<Class<?>> classes = new LinkedHashSet<>(componentBag.getClasses(filter));
         if (constrainedTo != null) {
             classes = classes.stream()
-                             .filter(correctlyConfigured)
-                             .collect(Collectors.toSet());
+                    .filter(correctlyConfigured)
+                    .collect(Collectors.toSet());
         }
         for (final Class<?> providerClass : classes) {
             final ContractProvider model = componentBag.getModel(providerClass);
@@ -220,8 +220,8 @@ public class ProviderBinder {
         Set<Object> instances = componentBag.getInstances(filter);
         if (constrainedTo != null) {
             instances = instances.stream()
-                                 .filter(component -> correctlyConfigured.test(component.getClass()))
-                                 .collect(Collectors.toSet());
+                    .filter(component -> correctlyConfigured.test(component.getClass()))
+                    .collect(Collectors.toSet());
         }
         for (final Object provider : instances) {
             final ContractProvider model = componentBag.getModel(provider.getClass());

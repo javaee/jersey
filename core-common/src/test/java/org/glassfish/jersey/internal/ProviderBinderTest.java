@@ -205,9 +205,9 @@ public class ProviderBinderTest {
     private <T> Collection<T> instancesOfType(final Class<T> c, Collection<?> collection) {
 
         return collection.stream()
-                  .filter((java.util.function.Predicate<Object>) o -> o.getClass() == c)
-                  .map((java.util.function.Function<Object, T>) c::cast)
-                  .collect(Collectors.toList());
+                .filter((java.util.function.Predicate<Object>) o -> o.getClass() == c)
+                .map((java.util.function.Function<Object, T>) c::cast)
+                .collect(Collectors.toList());
     }
 
 

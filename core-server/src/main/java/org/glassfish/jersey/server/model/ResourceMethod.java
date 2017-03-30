@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -190,7 +190,6 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
 
             this.consumedTypes = new LinkedHashSet<>();
             this.producedTypes = new LinkedHashSet<>();
-
             this.suspended = false;
             this.suspendTimeout = AsyncResponse.NO_TIMEOUT;
             this.suspendTimeoutUnit = TimeUnit.MILLISECONDS;
@@ -345,8 +344,8 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         public Builder nameBindings(final Annotation... nameBindings) {
             return nameBindings(
                     Arrays.stream(nameBindings)
-                            .map((Function<Annotation, Class<? extends Annotation>>) Annotation::annotationType)
-                            .collect(Collectors.toList())
+                          .map((Function<Annotation, Class<? extends Annotation>>) Annotation::annotationType)
+                          .collect(Collectors.toList())
             );
         }
 

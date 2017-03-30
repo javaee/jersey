@@ -252,11 +252,11 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
     @Override
     public String toString() {
         return "ClientResponse{"
-                + "method=" + requestContext.getMethod()
-                + ", uri=" + requestContext.getUri()
-                + ", status=" + status.getStatusCode()
-                + ", reason=" + status.getReasonPhrase()
-                + "}";
+               + "method=" + requestContext.getMethod()
+               + ", uri=" + requestContext.getUri()
+               + ", status=" + status.getStatusCode()
+               + ", reason=" + status.getReasonPhrase()
+               + "}";
     }
 
     /**

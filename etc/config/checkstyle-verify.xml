@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -44,10 +44,6 @@
 
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
-
-    <!--<module name="SuppressionFilter">
-        <property name="file" value="etc/config/checkstyle-suppressions.xml"/>
-    </module>-->
 
     <!-- Checks for whitespace                               -->
     <!-- See http://checkstyle.sf.net/config_whitespace.html -->

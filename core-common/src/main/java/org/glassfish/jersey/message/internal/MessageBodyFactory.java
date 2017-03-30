@@ -675,7 +675,6 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                     readers.add(model);
                 }
             }
-
             readers.sort(new WorkerComparator<>(c, mediaType));
             mbrLookupCache.put(lookupKey, readers);
         }

@@ -50,6 +50,7 @@ import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
 

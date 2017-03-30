@@ -223,7 +223,7 @@ public class BasicClientTest extends JerseyTest {
         }
 
         Future<List<String>> f3 = target().path("resource").path("errorlist").request()
-                .async().get(new GenericType<List<String>>() {
+                                          .async().get(new GenericType<List<String>>() {
                 });
         try {
             f3.get();

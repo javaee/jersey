@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -309,7 +309,7 @@ public class UriRoutingContext implements RoutingContext {
                             UriComponent.decode(e.getKey(), UriComponent.Type.PATH_SEGMENT),
                             // we need to keep the ability to add new entries
                             e.getValue().stream().map(s -> UriComponent.decode(s, UriComponent.Type.PATH))
-                                    .collect(Collectors.toCollection(ArrayList::new)));
+                             .collect(Collectors.toCollection(ArrayList::new)));
                 }
             }
             decodedTemplateValuesView = new ImmutableMultivaluedMap<>(decodedTemplateValues);

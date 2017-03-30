@@ -64,7 +64,6 @@ import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 public class ParamInjectionResolver<A extends Annotation> implements InjectionResolver<A> {
 
     private final ValueSupplierProvider valueSupplierProvider;
-
     private final Class<A> annotation;
 
     /**
@@ -98,6 +97,7 @@ public class ParamInjectionResolver<A extends Annotation> implements InjectionRe
             targetGenericType = genericType;
         }
         final Class<?> targetType = ReflectionHelper.erasure(targetGenericType);
+
         final Parameter parameter = Parameter.create(
                 componentClass,
                 componentClass,

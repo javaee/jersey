@@ -402,7 +402,7 @@ public class ComponentBag {
         return Errors.process(() -> {
             if (models.containsKey(componentClass)) {
                 Errors.error(LocalizationMessages.COMPONENT_TYPE_ALREADY_REGISTERED(componentClass),
-                        Severity.HINT);
+                             Severity.HINT);
                 return false;
             }
 

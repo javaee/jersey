@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -164,7 +164,7 @@ class JettyConnector implements Connector {
         sslContextFactory.setSslContext(sslContext);
 
         Boolean enableHostnameVerification = (Boolean) config.getProperties()
-                .get(JettyClientProperties.ENABLE_SSL_HOSTNAME_VERIFICATION);
+                                                             .get(JettyClientProperties.ENABLE_SSL_HOSTNAME_VERIFICATION);
         if (enableHostnameVerification != null && enableHostnameVerification) {
             sslContextFactory.setEndpointIdentificationAlgorithm("https");
         }
@@ -253,7 +253,7 @@ class JettyConnector implements Connector {
         try {
             final ContentResponse jettyResponse = jettyRequest.send();
             HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
-                    JettyConnector.this.getClass().getName());
+                                           JettyConnector.this.getClass().getName());
 
             final javax.ws.rs.core.Response.StatusType status = jettyResponse.getReason() == null
                     ? Statuses.from(jettyResponse.getStatus())
@@ -402,7 +402,7 @@ class JettyConnector implements Connector {
                 @Override
                 public void onHeaders(final Response jettyResponse) {
                     HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
-                            JettyConnector.this.getClass().getName());
+                                                   JettyConnector.this.getClass().getName());
 
                     if (responseFuture.isDone()) {
                         if (!callbackInvoked.compareAndSet(false, true)) {

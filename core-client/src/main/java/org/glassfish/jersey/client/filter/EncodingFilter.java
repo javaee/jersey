@@ -109,7 +109,7 @@ public final class EncodingFilter implements ClientRequestFilter {
             for (ContentEncoder encoder : encoders) {
                 se.addAll(encoder.getSupportedEncodings());
             }
-            supportedEncodings = new ArrayList<Object>(se);
+            supportedEncodings = new ArrayList<>(se);
         }
         return supportedEncodings;
     }

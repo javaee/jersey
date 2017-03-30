@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -89,8 +89,7 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
         final Set<String> propertyNames = new HashSet<>();
 
         for (final Field field : AccessController.doPrivileged(ReflectionHelper.getDeclaredFieldsPA(propertiesClass))) {
-            if (String.class == field.getType()
-                    && Modifier.isStatic(field.getModifiers())) {
+            if (String.class == field.getType() && Modifier.isStatic(field.getModifiers())) {
                 try {
                     propertyNames.add((String) field.get(null));
                 } catch (final IllegalAccessException e) {

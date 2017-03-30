@@ -136,6 +136,7 @@ public class SseEventSinkCloseTest extends JerseyTest {
                 // countdown to zero
                 while (closeLatch.getCount() > 0) {
                     closeLatch.countDown();
+                    return;
                 }
             }
             final Response response = target("sse/send").request().get();
