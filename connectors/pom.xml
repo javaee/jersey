@@ -61,6 +61,7 @@
         <module>grizzly-connector</module>
         <module>jetty-connector</module>
         <module>netty-connector</module>
+        <module>resilient-connector</module>
     </modules>
 
     <dependencies>
