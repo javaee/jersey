@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -78,6 +78,8 @@
 <!ENTITY jaxb.javadoc.uri "&jaxb.release.uri;/docs/api/javax/xml/bind">
 <!ENTITY jaxrs.release.uri "http://jax-rs-spec.java.net/nonav/&jax-rs.version;">
 <!ENTITY jaxrs.javadoc.uri "https://jersey.java.net/apidocs-javax.jax-rs/&jax-rs.version;/javax/ws/rs">
+<!ENTITY jaxrs21.javadoc.uri "#/javax/ws/rs">   <!-- TODO - once we have published javadocs to link here -->
+
 <!ENTITY jersey.ext.bean-validation.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
 <!ENTITY jersey.ext.declarative-linking.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-declarative-linking/dependencies.html'>jersey-declarative-linking</link>" >
 <!ENTITY jersey.ext.entity-filtering.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-entity-filtering/dependencies.html'>jersey-entity-filtering</link>" >
@@ -252,6 +254,8 @@
 <!ENTITY jaxrs.ext.Providers "<link xlink:href='&jaxrs.javadoc.uri;/ext/Providers.html'>Providers</link>">
 <!ENTITY jaxrs.ext.RuntimeDelegate "<link xlink:href='&jaxrs.javadoc.uri;/ext/RuntimeDelegate.html'>RuntimeDelegate</link>">
 <!ENTITY jaxrs.ext.RuntimeDelegate.HeaderDelegate "<link xlink:href='&jaxrs.javadoc.uri;/ext/RuntimeDelegate.HeaderDelegate.html'>RuntimeDelegate.HeaderDelegate&lt;T&gt;</link>">
+<!ENTITY jaxrs21.sse.SseEventSink "<link xlink:href='&jaxrs21.javadoc.uri;/sse/SseEventSink.html'>SseEventSink</link>">
+<!ENTITY jaxrs21.sse.Sse "<link xlink:href='&jaxrs21.javadoc.uri;/sse/Sse.html'>Sse</link>">
 
 <!ENTITY jdk6.Boolean "<link xlink:href='&jdk6.javadoc.uri;/java/lang/Boolean.html'>Boolean</link>">
 <!ENTITY jdk6.CountDownLatch "<link xlink:href='&jdk6.javadoc.uri;/java/util/concurrent/CountDownLatch.html'>CountDownLatch</link>">
@@ -593,6 +597,9 @@
 <!ENTITY jersey.test.spi.TestContainerFactory "<link xlink:href='&jersey.javadoc.uri.prefix;/test/spi/TestContainerFactory.html'>TestContainerFactory</link>">
 <!ENTITY jersey.test.util.ContainerRequestBuilder "<link xlink:href='&jersey.javadoc.uri.prefix;/test/util/server/ContainerRequestBuilder.html'>ContainerRequestBuilder</link>">
 <!ENTITY jersey.test.util.LoopBackConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/test/util/client/LoopBackConnectorProvider.html'>LoopBackConnectorProvider</link>">
+<!ENTITY javax.ws.rs.sse.SseEventSource.Builder "<link xlink:href='&jaxrs21.javadoc.uri;/sse/SseEventSource.Builder.html'>SseEventSource.Builder</link>">
+<!ENTITY javax.ws.rs.sse.SseEventSource "<link xlink:href='&jaxrs21.javadoc.uri;/sse/SseEventSource.html'>SseEventSource</link>">
+<!ENTITY javax.ws.rs.sse.InboundSseEvent "<link xlink:href='&jaxrs21.javadoc.uri;/sse/InboundSseEvent.html'>InboundSseEvent</link>">
 
 <!-- Links to specific JIRA issues -->
 <!ENTITY jersey.jira.2883 "<link xlink:href='&jira.uri.prefix;/2838'>JERSEY-2838</link>">
