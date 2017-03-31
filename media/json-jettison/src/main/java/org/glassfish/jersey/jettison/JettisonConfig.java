@@ -42,9 +42,12 @@ package org.glassfish.jersey.jettison;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 
 /**
  * An immutable configuration of JSON notation and options. {@code JettisonConfig}
@@ -52,7 +55,7 @@ import java.util.Map;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class JettisonConfig {
+public abstract class JettisonConfig {
 
     /**
      * Enumeration of supported JSON notations.
@@ -75,17 +78,14 @@ public class JettisonConfig {
     }
 
     private final Notation notation;
-    private final Map<String, String> jsonXml2JsonNs;
-    private final List<String> serializeAsArray;
 
     /**
      * Builder class for constructing {@link JettisonConfig} options
      */
-    public static class Builder {
+    public abstract static class Builder {
 
         private final Notation notation;
-        protected Map<String, String> jsonXml2JsonNs = new HashMap<String, String>(0);
-        protected List<String> serializeAsArray = new LinkedList<String>();
+
 
         private Builder(final Notation notation) {
             this.notation = notation;
@@ -97,13 +97,15 @@ public class JettisonConfig {
          * @return a non-null {@link JettisonConfig} instance
          */
         public JettisonConfig build() {
-            return new JettisonConfig(this);
+            if (this instanceof MappedJettisonBuilder) {
+                return new JettisonConfig.Mapped((MappedJettisonBuilder) this);
+            }
+            if (this instanceof BadgerfishBuilder) {
+                return new JettisonConfig.Badgerfish((BadgerfishBuilder) this);
+            }
+            throw new RuntimeException(this.getClass().toString());
         }
 
-        private void copyAttributes(final JettisonConfig jc) {
-            jsonXml2JsonNs.putAll(jc.getXml2JsonNs());
-            serializeAsArray.addAll(jc.getArrayElements());
-        }
     }
 
     /**
@@ -112,8 +114,46 @@ public class JettisonConfig {
      */
     public static class MappedJettisonBuilder extends Builder {
 
-        private MappedJettisonBuilder(final Notation notation) {
-            super(notation);
+        private List<String> serializeAsArray;
+        private Map<String, String> xmlToJsonNamespaces;
+        private List attributesAsElements;
+        private List ignoredElements;
+        private boolean supressAtAttributes;
+        private String attributeKey;
+        private boolean ignoreNamespaces;
+        private boolean dropRootElement;
+        private Set primitiveArrayKeys;
+        private boolean writeNullAsString;
+        private boolean readNullAsString;
+        private boolean ignoreEmptyArrayValues;
+        private boolean escapeForwardSlashAlways;
+        private String jsonNamespaceSeparator;
+
+        private MappedJettisonBuilder() {
+            super(Notation.MAPPED_JETTISON);
+            copyAttributes(defaultInstance);
+        }
+
+        private static final JettisonConfig.Mapped defaultInstance = new Mapped();
+
+
+
+        private void copyAttributes(final JettisonConfig.Mapped jc) {
+            xmlToJsonNamespaces = new HashMap<>(jc.getXml2JsonNs());
+            serializeAsArray = new LinkedList<>(jc.getArrayElements());
+            attributeKey = jc.getAttributeKey();
+            attributesAsElements = new LinkedList<>(jc.getAttributesAsElements());
+            dropRootElement = jc.isDropRootElement();
+            escapeForwardSlashAlways = jc.isEscapeForwardSlashAlways();
+            ignoredElements = new LinkedList<>(jc.getIgnoredElements());
+            ignoreEmptyArrayValues = jc.isIgnoreEmptyArrayValues();
+            ignoreNamespaces = jc.isIgnoreNamespaces();
+            jsonNamespaceSeparator = jc.getJsonNamespaceSeparator();
+            primitiveArrayKeys = new HashSet<>(jc.getPrimitiveArrayKeys());
+            readNullAsString = jc.isReadNullAsString();
+            supressAtAttributes = jc.supressAtAttributes;
+            writeNullAsString = jc.writeNullAsString;
+
         }
 
         /**
@@ -131,7 +171,7 @@ public class JettisonConfig {
          * @return updated builder instance.
          */
         public MappedJettisonBuilder xml2JsonNs(final Map<String, String> jsonXml2JsonNs) {
-            this.jsonXml2JsonNs = jsonXml2JsonNs;
+            xmlToJsonNamespaces = jsonXml2JsonNs;
             return this;
         }
 
@@ -166,15 +206,84 @@ public class JettisonConfig {
          * @return updated builder instance.
          */
         public MappedJettisonBuilder serializeAsArray(final List<String> arrays) {
-            this.serializeAsArray.addAll(arrays);
+            serializeAsArray = new LinkedList<>(arrays);
+            return this;
+        }
+           public MappedJettisonBuilder setIgnoreNamespaces(boolean ignoreNamespaces) {
+              this.ignoreNamespaces = ignoreNamespaces;
+             return this;
+         }
+         public MappedJettisonBuilder setAttributesAsElements(List attributesAsElements) {
+             this.attributesAsElements = attributesAsElements;
+            return this;
+         }
+          public MappedJettisonBuilder setIgnoredElements(List ignoredElements) {
+             this.ignoredElements = ignoredElements;
+              return this;
+          }
+        public MappedJettisonBuilder setXmlToJsonNamespaces(Map xmlToJsonNamespaces) {
+            this.xmlToJsonNamespaces = xmlToJsonNamespaces;
+            return this;
+        }
+        public MappedJettisonBuilder setSupressAtAttributes(boolean supressAtAttributes) {
+            this.supressAtAttributes = supressAtAttributes;
+            return this;
+        }
+         public MappedJettisonBuilder setAttributeKey(String attributeKey) {
+             this.attributeKey = attributeKey;
+            return this;
+         }
+          public MappedJettisonBuilder setPrimitiveArrayKeys(Set primitiveArrayKeys) {
+              this.primitiveArrayKeys = primitiveArrayKeys;
+              return this;
+          }
+        public MappedJettisonBuilder setDropRootElement(boolean dropRootElement) {
+            this.dropRootElement = dropRootElement;
+            return this;
+        }
+          public MappedJettisonBuilder setWriteNullAsString(boolean writeNullAsString) {
+            this.writeNullAsString = writeNullAsString;
+            return this;
+        }
+        public MappedJettisonBuilder setReadNullAsString(boolean readNullString) {
+            this.readNullAsString = readNullString;
+            return this;
+        }
+        public MappedJettisonBuilder setIgnoreEmptyArrayValues(boolean ignoreEmptyArrayValues) {
+            this.ignoreEmptyArrayValues = ignoreEmptyArrayValues;
+            return this;
+        }
+        public MappedJettisonBuilder setEscapeForwardSlashAlways(boolean escapeForwardSlash) {
+            this.escapeForwardSlashAlways = escapeForwardSlash;
+            return this;
+        }
+         public MappedJettisonBuilder setJsonNamespaceSeparator(String jsonNamespaceSeparator) {
+            this.jsonNamespaceSeparator = jsonNamespaceSeparator;
             return this;
         }
     }
 
-    private JettisonConfig(final Builder b) {
-        notation = b.notation;
-        jsonXml2JsonNs = b.jsonXml2JsonNs;
-        serializeAsArray = b.serializeAsArray;
+    /**
+     * Builder class for constructing {@link JettisonConfig} options
+     * for the {@link JettisonConfig.Notation#BADGERFISH} convention.
+     */
+    public static class BadgerfishBuilder extends Builder {
+
+        private static final JettisonConfig.Badgerfish defaultInstance = new Badgerfish();
+
+          private BadgerfishBuilder() {
+              super(Notation.BADGERFISH);
+              copyAttributes(defaultInstance);
+          }
+
+
+        public void copyAttributes(Badgerfish jc) {
+
+        }
+    }
+
+    protected JettisonConfig(Notation notation) {
+        this.notation = notation;
     }
 
     /**
@@ -209,7 +318,7 @@ public class JettisonConfig {
      * @return a builder for {@code JettisonConfig} instance
      */
     public static MappedJettisonBuilder mappedJettison() {
-        return new MappedJettisonBuilder(Notation.MAPPED_JETTISON);
+        return new MappedJettisonBuilder();
     }
 
     /**
@@ -219,25 +328,26 @@ public class JettisonConfig {
      *
      * @return a builder for {@code JettisonConfig} instance
      */
-    public static Builder badgerFish() {
-        return new Builder(Notation.BADGERFISH);
+    public static BadgerfishBuilder badgerFish() {
+        return new BadgerfishBuilder();
     }
 
     public static Builder copyBuilder(final JettisonConfig jc) {
 
-        Builder result = new Builder(jc.getNotation());
+        Builder result = null;
 
         switch (jc.notation) {
             case BADGERFISH:
-                result = new Builder(jc.getNotation());
+                result = new BadgerfishBuilder();
+                ((BadgerfishBuilder) result).copyAttributes((JettisonConfig.Badgerfish) jc);
                 break;
             case MAPPED_JETTISON:
-                result = new MappedJettisonBuilder(jc.getNotation());
+                result = new MappedJettisonBuilder();
+                ((MappedJettisonBuilder) result).copyAttributes((JettisonConfig.Mapped) jc);
                 break;
+            default:
+                throw new RuntimeException("Unsupported notation " + jc.notation.toString());
         }
-
-        result.copyAttributes(jc);
-
         return result;
     }
 
@@ -249,31 +359,164 @@ public class JettisonConfig {
         return notation;
     }
 
-    /**
-     * Returns a map for XML to JSON namespace mapping
-     * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
-     * notation only.
-     * @return a map for XML to JSON namespace mapping.
-     * @see JettisonConfig.MappedJettisonBuilder#xml2JsonNs(java.util.Map)
-     */
-    public Map<String, String> getXml2JsonNs() {
-        return (jsonXml2JsonNs != null) ? Collections.unmodifiableMap(jsonXml2JsonNs) : null;
-    }
-
-    /**
-     * Returns a list of elements to be treated as arrays. I.e. these elements will be serialized
-     * as arrays even if only a single element is included.
-     * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
-     * notation only.
-     * @return a list of elements representing arrays.
-     * @see JettisonConfig.MappedJettisonBuilder#serializeAsArray(java.util.List)
-     */
-    public List<String> getArrayElements() {
-        return Collections.unmodifiableList(serializeAsArray);
-    }
-
     @Override
     public String toString() {
         return String.format("{notation:%s}", notation);
+    }
+
+
+     public static class Mapped extends JettisonConfig {
+            private final List<String> serializeAsArray;
+            private final Map<String, String> xmlToJsonNamespaces;
+            private final List attributesAsElements;
+            private final List ignoredElements;
+            private final boolean supressAtAttributes;
+            private final String attributeKey;
+            private final boolean ignoreNamespaces;
+            private final boolean dropRootElement;
+            private final Set primitiveArrayKeys;
+            private final boolean writeNullAsString;
+            private final boolean readNullAsString;
+            private final boolean ignoreEmptyArrayValues;
+            private final boolean escapeForwardSlashAlways;
+            private final String jsonNamespaceSeparator;
+
+
+            public Mapped() {
+                this(null);
+            }
+
+            public Mapped(MappedJettisonBuilder mappedJettisonBuilder) {
+                super(Notation.MAPPED_JETTISON);
+                List<String> serializeAsArray = Collections.EMPTY_LIST;
+                Map<String, String> xmlToJsonNamespaces = Collections.EMPTY_MAP;
+                List attributesAsElements = Collections.EMPTY_LIST;
+                List ignoredElements = Collections.EMPTY_LIST;;
+                boolean supressAtAttributes = false;
+                String attributeKey = "@";
+                boolean ignoreNamespaces = false;
+                boolean dropRootElement = false;
+                Set primitiveArrayKeys = Collections.EMPTY_SET;
+                boolean writeNullAsString = true;
+                boolean readNullAsString = false;
+                boolean ignoreEmptyArrayValues = false;
+                boolean escapeForwardSlashAlways = false;
+                String jsonNamespaceSeparator = null;
+                  if (mappedJettisonBuilder != null) {
+                      serializeAsArray = mappedJettisonBuilder.serializeAsArray;
+                      xmlToJsonNamespaces = mappedJettisonBuilder.xmlToJsonNamespaces;
+                      attributesAsElements = mappedJettisonBuilder.attributesAsElements;
+                      ignoredElements = mappedJettisonBuilder.ignoredElements;
+                      supressAtAttributes = mappedJettisonBuilder.supressAtAttributes;
+                      attributeKey = mappedJettisonBuilder.attributeKey;
+                      ignoreNamespaces = mappedJettisonBuilder.ignoreNamespaces;
+                      dropRootElement = mappedJettisonBuilder.dropRootElement;
+                      primitiveArrayKeys = mappedJettisonBuilder.primitiveArrayKeys;
+                      writeNullAsString = mappedJettisonBuilder.writeNullAsString;
+                      readNullAsString = mappedJettisonBuilder.readNullAsString;
+                      ignoreEmptyArrayValues = mappedJettisonBuilder.ignoreEmptyArrayValues;
+                      escapeForwardSlashAlways = mappedJettisonBuilder.escapeForwardSlashAlways;
+                      jsonNamespaceSeparator = mappedJettisonBuilder.jsonNamespaceSeparator;
+                  }
+                  this.serializeAsArray = serializeAsArray;
+                  this.xmlToJsonNamespaces = xmlToJsonNamespaces;
+                  this.attributesAsElements = attributesAsElements;
+                  this.ignoredElements = ignoredElements;
+                  this.supressAtAttributes = supressAtAttributes;
+                  this.attributeKey = attributeKey;
+                  this.ignoreNamespaces = ignoreNamespaces;
+                  this.dropRootElement = dropRootElement;
+                  this.primitiveArrayKeys = primitiveArrayKeys;
+                  this.writeNullAsString = writeNullAsString;
+                  this.readNullAsString = readNullAsString;
+                  this.ignoreEmptyArrayValues = ignoreEmptyArrayValues;
+                  this.escapeForwardSlashAlways = escapeForwardSlashAlways;
+                  this.jsonNamespaceSeparator = jsonNamespaceSeparator;
+
+            }
+
+            /**
+            * Returns a list of elements to be treated as arrays. I.e. these elements will be serialized
+            * as arrays even if only a single element is included.
+            * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
+            * notation only.
+            * @return a list of elements representing arrays.
+            * @see JettisonConfig.MappedJettisonBuilder#serializeAsArray(java.util.List)
+            */
+           public List<String> getArrayElements() {
+                return Collections.unmodifiableList(serializeAsArray);
+           }
+
+            /**
+             * Returns a map for XML to JSON namespace mapping
+             * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
+             * notation only.
+             * @return a map for XML to JSON namespace mapping.
+             * @see JettisonConfig.MappedJettisonBuilder#xml2JsonNs(java.util.Map)
+             */
+           public Map<String, String> getXml2JsonNs() {
+//                return (jsonXml2JsonNs != null) ? Collections.unmodifiableMap(jsonXml2JsonNs) : null;
+               return (xmlToJsonNamespaces != null) ? Collections.unmodifiableMap(xmlToJsonNamespaces) : null;
+           }
+           public boolean isIgnoreNamespaces() {
+                return ignoreNamespaces;
+           }
+            public List getAttributesAsElements() {
+                return attributesAsElements;
+            }
+            public List getIgnoredElements() {
+                return ignoredElements;
+            }
+
+            public Map getXmlToJsonNamespaces() {
+                return xmlToJsonNamespaces;
+            }
+
+
+            public boolean isSupressAtAttributes() {
+                return this.supressAtAttributes;
+            }
+
+           public String getAttributeKey() {
+                return this.attributeKey;
+            }
+
+
+
+            public Set getPrimitiveArrayKeys() {
+                return primitiveArrayKeys;
+            }
+
+            public boolean isDropRootElement() {
+                return dropRootElement;
+            }
+
+            public boolean isWriteNullAsString() {
+                return writeNullAsString;
+            }
+            public boolean isReadNullAsString() {
+                return readNullAsString;
+            }
+            public boolean isIgnoreEmptyArrayValues() {
+                return ignoreEmptyArrayValues;
+            }
+
+            public boolean isEscapeForwardSlashAlways() {
+                return escapeForwardSlashAlways;
+            }
+            public String getJsonNamespaceSeparator() {
+                return jsonNamespaceSeparator;
+            }
+    }
+    public static class Badgerfish extends JettisonConfig {
+
+        protected Badgerfish() {
+            this(null);
+        }
+
+        public Badgerfish(BadgerfishBuilder badgerfishBuilder) {
+            super(Notation.BADGERFISH);
+        }
+
     }
 }

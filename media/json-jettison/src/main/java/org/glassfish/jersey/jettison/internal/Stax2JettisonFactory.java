@@ -49,6 +49,7 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.glassfish.jersey.jettison.JettisonConfig;
+import org.glassfish.jersey.jettison.JettisonConfig.Mapped;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 
 import org.codehaus.jettison.badgerfish.BadgerFishXMLStreamReader;
@@ -77,16 +78,12 @@ public class Stax2JettisonFactory {
             case BADGERFISH:
                 return new BadgerFishXMLStreamWriter(writer);
             case MAPPED_JETTISON:
-                Configuration jmConfig;
-                if (null == config.getXml2JsonNs()) {
-                    jmConfig = new Configuration();
-                } else {
-                    jmConfig = new Configuration(config.getXml2JsonNs());
-                }
+                JettisonConfig.Mapped mapped = (JettisonConfig.Mapped) config;
+                Configuration jmConfig = createMappedConfig(mapped);
 
                 final MappedXMLStreamWriter result = new MappedXMLStreamWriter(new MappedNamespaceConvention(jmConfig), writer);
 
-                for (String array : config.getArrayElements()) {
+                for (String array : mapped.getArrayElements()) {
                     result.serializeAsArray(array);
                 }
 
@@ -94,6 +91,23 @@ public class Stax2JettisonFactory {
             default:
                 return null;
         }
+    }
+    private static Configuration createMappedConfig(JettisonConfig.Mapped mapped) {
+         Configuration jmConfig = new Configuration();
+         jmConfig.setAttributeKey(mapped.getAttributeKey());
+         jmConfig.setAttributesAsElements(mapped.getAttributesAsElements());
+         jmConfig.setDropRootElement(mapped.isDropRootElement());
+         jmConfig.setEscapeForwardSlashAlways(mapped.isEscapeForwardSlashAlways());
+         jmConfig.setIgnoredElements(mapped.getIgnoredElements());
+         jmConfig.setIgnoreEmptyArrayValues(mapped.isIgnoreEmptyArrayValues());
+         jmConfig.setIgnoreNamespaces(mapped.isIgnoreNamespaces());
+         jmConfig.setJsonNamespaceSeparator(mapped.getJsonNamespaceSeparator());
+         jmConfig.setPrimitiveArrayKeys(mapped.getPrimitiveArrayKeys());
+         jmConfig.setReadNullAsString(mapped.isReadNullAsString());
+         jmConfig.setSupressAtAttributes(mapped.isSupressAtAttributes());
+         jmConfig.setWriteNullAsString(mapped.isWriteNullAsString());
+         jmConfig.setXmlToJsonNamespaces(mapped.getXml2JsonNs());
+         return jmConfig;
     }
 
     public static XMLStreamReader createReader(final Reader reader,
@@ -103,12 +117,8 @@ public class Stax2JettisonFactory {
         switch (config.getNotation()) {
             case MAPPED_JETTISON:
                 try {
-                    Configuration jmConfig;
-                    if (null == config.getXml2JsonNs()) {
-                        jmConfig = new Configuration();
-                    } else {
-                        jmConfig = new Configuration(config.getXml2JsonNs());
-                    }
+                    JettisonConfig.Mapped mapped = (JettisonConfig.Mapped) config;
+                    Configuration jmConfig = createMappedConfig(mapped);
                     return new MappedXMLStreamReader(
                             new JSONObject(new JSONTokener(ReaderWriter.readFromAsString(nonEmptyReader))),
                             new MappedNamespaceConvention(jmConfig));
