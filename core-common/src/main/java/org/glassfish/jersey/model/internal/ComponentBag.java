@@ -65,6 +65,8 @@ import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
+import org.glassfish.jersey.spi.ExecutorServiceProvider;
+import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
 
 /**
  * An internal Jersey container for custom component classes and instances.
@@ -135,13 +137,34 @@ public class ComponentBag {
             model.getImplementationClass() != null && injectionManager.isRegistrable(model.getImplementationClass());
 
     /**
-     * A filtering strategy that includes only models that contain Binder provider contract.
+     * A filtering strategy that includes only models that contain {@link Binder} provider contract.
      * <p>
      * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
      * that represent a provider registered to provide {@link Binder} contract.
      * </p>
      */
     public static final Predicate<ContractProvider> BINDERS_ONLY = model -> model.getContracts().contains(Binder.class);
+
+    /**
+     * A filtering strategy that includes only models that contain {@link ExecutorServiceProvider} provider contract.
+     * <p>
+     * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
+     * that represent a provider registered to provide {@link ExecutorServiceProvider} contract.
+     * </p>
+     */
+    public static final Predicate<ContractProvider> EXECUTOR_SERVICE_PROVIDER_ONLY =
+            model -> model.getContracts().contains(ExecutorServiceProvider.class)
+                    && !model.getContracts().contains(ScheduledExecutorServiceProvider.class);
+
+    /**
+     * A filtering strategy that includes only models that contain {@link ScheduledExecutorServiceProvider} provider contract.
+     * <p>
+     * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
+     * that represent a provider registered to provide {@link ScheduledExecutorServiceProvider} contract.
+     * </p>
+     */
+    public static final Predicate<ContractProvider> SCHEDULED_EXECUTOR_SERVICE_PROVIDER_ONLY =
+            model -> model.getContracts().contains(ScheduledExecutorServiceProvider.class);
 
     /**
      * A filtering strategy that excludes models with no recognized contracts.

@@ -103,7 +103,8 @@ public class JaxrsProvidersTest {
                 new TestConfigConfigurator(),
                 new ContextResolverFactory.ContextResolversConfigurator(),
                 new MessageBodyFactory.MessageBodyWorkersConfigurator(),
-                new ExceptionMapperFactory.ExceptionMappersConfigurator());
+                new ExceptionMapperFactory.ExceptionMappersConfigurator(),
+                new JaxrsProviders.ProvidersConfigurator());
         injectionManager.register(new TestBinder());
 
         TestBinder.initProviders(injectionManager);

@@ -190,7 +190,7 @@ public final class Providers {
      * @param <T>             service provider contract Java type.
      * @param injectionManager underlying injection manager.
      * @param contract        service provider contract.
-     * @return iterable of all available ranked service providers for the contract. Return value is never null.
+     * @return iterable of all available ranked service providers for the contract. Return value is never {@code null}.
      */
     public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(InjectionManager injectionManager, Class<T> contract) {
         List<ServiceHolder<T>> providers = getServiceHolders(injectionManager, contract, CustomAnnotationLiteral.INSTANCE);
@@ -234,6 +234,22 @@ public final class Providers {
                 .sorted(comparator)
                 .map(RankedProvider::getProvider)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get the iterable of all providers (custom and default) registered for the given service provider contract in the underlying
+     * {@link InjectionManager injection manager} container and automatically sorted using
+     * {@link RankedComparator ranked comparator}.
+     *
+     * @param <T>             service provider contract Java type.
+     * @param injectionManager underlying injection manager.
+     * @param contract        service provider contract.
+     * @return iterable of all available service providers for the contract. Return value is never {@code null}.
+     */
+    @SuppressWarnings("TypeMayBeWeakened")
+    public static <T> Iterable<T> getAllRankedSortedProviders(InjectionManager injectionManager, Class<T> contract) {
+        Iterable<RankedProvider<T>> allRankedProviders = Providers.getAllRankedProviders(injectionManager, contract);
+        return Providers.sortRankedProviders(new RankedComparator<>(), allRankedProviders);
     }
 
     /**

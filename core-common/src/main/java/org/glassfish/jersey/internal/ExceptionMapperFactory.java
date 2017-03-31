@@ -90,13 +90,19 @@ public class ExceptionMapperFactory implements ExceptionMappers {
      */
     public static class ExceptionMappersConfigurator implements BootstrapConfigurator {
 
+        private ExceptionMapperFactory exceptionMapperFactory;
+
         @Override
         public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
-            ExceptionMapperFactory exceptionMapperFactory = new ExceptionMapperFactory(injectionManager);
+            exceptionMapperFactory = new ExceptionMapperFactory(injectionManager);
             InstanceBinding<ExceptionMapperFactory> binding =
                     Bindings.service(exceptionMapperFactory)
                             .to(ExceptionMappers.class);
             injectionManager.register(binding);
+        }
+
+        @Override
+        public void postInit(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
             bootstrapBag.setExceptionMappers(exceptionMapperFactory);
         }
     }

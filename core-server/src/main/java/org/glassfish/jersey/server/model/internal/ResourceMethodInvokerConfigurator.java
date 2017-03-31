@@ -45,11 +45,14 @@ import java.util.List;
 
 import org.glassfish.jersey.internal.BootstrapBag;
 import org.glassfish.jersey.internal.BootstrapConfigurator;
+import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.ServerBootstrapBag;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
+import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
+import org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor;
 
 /**
  * Configurator which initializes and register {@link ResourceMethodDispatcher} instance into {@link BootstrapBag}.
@@ -60,6 +63,9 @@ public class ResourceMethodInvokerConfigurator implements BootstrapConfigurator 
 
     @Override
     public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+        injectionManager.register(
+                Bindings.service(OptionsMethodProcessor.class)
+                        .to(ModelProcessor.class));
     }
 
     @Override

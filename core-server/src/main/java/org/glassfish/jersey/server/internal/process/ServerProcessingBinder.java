@@ -51,24 +51,16 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferenceTransformingFactory;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.server.BackgroundScheduler;
-import org.glassfish.jersey.server.BackgroundSchedulerLiteral;
 import org.glassfish.jersey.server.CloseableService;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ExtendedUriInfo;
-import org.glassfish.jersey.server.ManagedAsyncExecutor;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
-import org.glassfish.jersey.spi.ExecutorServiceProvider;
-import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
-import org.glassfish.jersey.spi.ScheduledThreadPoolExecutorProvider;
-import org.glassfish.jersey.spi.ThreadPoolExecutorProvider;
 
 /**
  * Defines server-side request processing injection bindings.
@@ -126,17 +118,6 @@ public class ServerProcessingBinder extends AbstractBinder {
                 .to(AsyncContext.class)
                 .to(AsyncResponse.class)
                 .in(RequestScoped.class);
-
-        // Bind default runtime processing executor providers
-        // Default background scheduler provider
-        bind(DefaultBackgroundSchedulerProvider.class)
-                .to(ScheduledExecutorServiceProvider.class)
-                .qualifiedBy(BackgroundSchedulerLiteral.INSTANCE)
-                .in(Singleton.class);
-        // Default managed async executor provider
-        bind(DefaultManagedAsyncExecutorProvider.class)
-                .to(ExecutorServiceProvider.class)
-                .in(Singleton.class);
 
         // Bind request-scoped references initializer.
         bindAsContract(ReferencesInitializer.class);
@@ -200,38 +181,5 @@ public class ServerProcessingBinder extends AbstractBinder {
         public AsyncContext get() {
             return super.get();
         }
-    }
-
-    /**
-     * Default {@link org.glassfish.jersey.spi.ScheduledExecutorServiceProvider} used on the server side for
-     * providing the scheduled executor service that runs background tasks.
-     */
-    @BackgroundScheduler
-    private static class DefaultBackgroundSchedulerProvider extends ScheduledThreadPoolExecutorProvider {
-
-        public DefaultBackgroundSchedulerProvider() {
-            super("jersey-background-task-scheduler");
-        }
-
-        @Override
-        protected int getCorePoolSize() {
-            return 1;
-        }
-    }
-
-    /**
-     * Default {@link org.glassfish.jersey.spi.ExecutorServiceProvider} used on the server side for managed asynchronous
-     * request processing.
-     */
-    @ManagedAsyncExecutor
-    private static class DefaultManagedAsyncExecutorProvider extends ThreadPoolExecutorProvider {
-
-        /**
-         * Create new instance for the default managed async executor provider.
-         */
-        public DefaultManagedAsyncExecutorProvider() {
-            super("jersey-server-managed-async-executor");
-        }
-
     }
 }

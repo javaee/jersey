@@ -44,10 +44,6 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.security.Principal;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +53,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -80,6 +75,7 @@ import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
+import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -89,7 +85,6 @@ import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
-import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -97,17 +92,15 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.message.internal.NullOutputStream;
-import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
+import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.ChainableStage;
-import org.glassfish.jersey.process.internal.ExecutorProviders;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.JerseyRequestTimeoutHandler;
-import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.inject.ParamConverterConfigurator;
@@ -123,17 +116,14 @@ import org.glassfish.jersey.server.model.ComponentModelValidator;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.model.internal.ResourceMethodInvokerConfigurator;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
-import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 
 /**
  * Jersey server-side application handler.
@@ -238,6 +228,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
     private Iterable<ContainerLifecycleListener> containerLifecycleListeners;
     private InjectionManager injectionManager;
     private MessageBodyWorkers msgBodyWorkers;
+    private ManagedObjectsFinalizer managedObjectsFinalizer;
 
     /**
      * Create a new Jersey application handler using a default configuration.
@@ -296,10 +287,13 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
 
     private void initialize(ApplicationConfigurator applicationConfigurator, InjectionManager injectionManager,
             Binder customBinder) {
+        LOGGER.config(LocalizationMessages.INIT_MSG(Version.getBuildId()));
         this.injectionManager = injectionManager;
         this.injectionManager.register(CompositeBinder.wrap(new ServerBinder(), customBinder));
+        this.managedObjectsFinalizer = new ManagedObjectsFinalizer(injectionManager);
 
         ServerBootstrapBag bootstrapBag = new ServerBootstrapBag();
+        bootstrapBag.setManagedObjectsFinalizer(managedObjectsFinalizer);
         List<BootstrapConfigurator> bootstrapConfigurators = Arrays.asList(
                 new RequestScope.RequestScopeConfigurator(),
                 new ParamConverterConfigurator(),
@@ -312,19 +306,11 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 new ContextResolverFactory.ContextResolversConfigurator(),
                 new MessageBodyFactory.MessageBodyWorkersConfigurator(),
                 new ExceptionMapperFactory.ExceptionMappersConfigurator(),
+                new JaxrsProviders.ProvidersConfigurator(),
                 new ResourceMethodInvokerConfigurator(),
                 new ProcessingProvidersConfigurator());
 
         bootstrapConfigurators.forEach(configurator -> configurator.init(injectionManager, bootstrapBag));
-
-        this.application = bootstrapBag.getApplication();
-        this.runtimeConfig = bootstrapBag.getRuntimeConfig();
-
-        AbstractBinder dependentBinders =
-                CompositeBinder.wrap(new MessagingBinders.MessageBodyProviders(application.getProperties(), RuntimeType.SERVER),
-                        new ServiceFinderBinder<>(ContainerProvider.class, application.getProperties(), RuntimeType.SERVER),
-                        new ServiceFinderBinder<>(AutoDiscoverable.class, application.getProperties(), RuntimeType.SERVER));
-        injectionManager.register(dependentBinders);
 
         this.runtime = Errors.processWithException(
                 () -> initialize(injectionManager, bootstrapConfigurators, bootstrapBag));
@@ -334,41 +320,29 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
     /**
      * Assumes the configuration field is initialized with a valid ResourceConfig.
      */
-    private ServerRuntime initialize(InjectionManager injectionManager,
-            List<BootstrapConfigurator> bootstrapConfigurators, ServerBootstrapBag bootstrapBag) {
-        this.injectionManager = injectionManager;
-        LOGGER.config(LocalizationMessages.INIT_MSG(Version.getBuildId()));
+    private ServerRuntime initialize(InjectionManager injectionManager, List<BootstrapConfigurator> bootstrapConfigurators,
+            ServerBootstrapBag bootstrapBag) {
+
+        this.application = bootstrapBag.getApplication();
+        this.runtimeConfig = bootstrapBag.getRuntimeConfig();
+
+        // Register the binders which are dependent on "Application.properties()"
+        AbstractBinder dependentBinders =
+                CompositeBinder.wrap(new MessagingBinders.MessageBodyProviders(application.getProperties(), RuntimeType.SERVER),
+                        new ServiceFinderBinder<>(ContainerProvider.class, application.getProperties(), RuntimeType.SERVER),
+                        new ServiceFinderBinder<>(AutoDiscoverable.class, application.getProperties(), RuntimeType.SERVER));
+        injectionManager.register(dependentBinders);
 
         // Lock original ResourceConfig.
         if (application instanceof ResourceConfig) {
             ((ResourceConfig) application).lock();
         }
 
-        final boolean ignoreValidationErrors = ServerProperties.getValue(runtimeConfig.getProperties(),
-                ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS,
-                Boolean.FALSE,
-                Boolean.class);
-        final boolean disableValidation = ServerProperties.getValue(runtimeConfig.getProperties(),
-                ServerProperties.RESOURCE_VALIDATION_DISABLE,
-                Boolean.FALSE,
-                Boolean.class);
-
-        // Temporary way to eliminate injection manager in deeper bootstrap processing.
-        final java.util.function.Function<Class<?>, ?> createServiceFunction =
-                serviceType -> Injections.getOrCreate(injectionManager, serviceType);
-
-        final Collection<ValueSupplierProvider> valueSupplierProviders;
-        final ResourceBag resourceBag;
-        final ProcessingProviders processingProviders;
-        final JerseyResourceContext jerseyResourceContext = bootstrapBag.getResourceContext();
-        final Collection<ComponentProvider> componentProviders = bootstrapBag.getComponentProviders().get();
-        final ComponentBag componentBag;
-
-        ResourceModel resourceModel;
         CompositeApplicationEventListener compositeListener = null;
 
         Errors.mark(); // mark begin of validation phase
         try {
+            // TODO: Create as a configurator? / The same code in ClientConfig.
             // AutoDiscoverable.
             if (!CommonProperties.getValue(runtimeConfig.getProperties(), RuntimeType.SERVER,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
@@ -378,60 +352,50 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             }
 
             // Configure binders and features.
-            runtimeConfig.configureMetaProviders(injectionManager);
+            runtimeConfig.configureMetaProviders(injectionManager, bootstrapBag.getManagedObjectsFinalizer());
 
             ResourceBagConfigurator resourceBagConfigurator = new ResourceBagConfigurator();
             resourceBagConfigurator.init(injectionManager, bootstrapBag);
-            resourceBag = bootstrapBag.getResourceBag();
 
             runtimeConfig.lock();
-
-            componentBag = runtimeConfig.getComponentBag();
 
             ExternalRequestScopeConfigurator externalRequestScopeConfigurator = new ExternalRequestScopeConfigurator();
             externalRequestScopeConfigurator.init(injectionManager, bootstrapBag);
 
-            // Adds all providers from resource config to InjectionManager -> BootstrapConfigurators are able to work with these
-            // services and get them.
-            bindProvidersAndResources(injectionManager, bootstrapBag, componentBag, resourceBag.classes,
-                    resourceBag.instances);
+            ResourceModelConfigurator resourceModelConfigurator = new ResourceModelConfigurator();
+            resourceModelConfigurator.init(injectionManager, bootstrapBag);
 
-            resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
-            resourceModel = processResourceModel(resourceModel);
-            bindEnhancingResourceClasses(injectionManager, bootstrapBag, resourceModel, resourceBag);
+            ServerExecutorProvidersConfigurator executorProvidersConfigurator = new ServerExecutorProvidersConfigurator();
+            executorProvidersConfigurator.init(injectionManager, bootstrapBag);
 
-            // All service are registered in InjectionManager
             injectionManager.completeRegistration();
 
             bootstrapConfigurators.forEach(configurator -> configurator.postInit(injectionManager, bootstrapBag));
-
-            componentProviders.forEach(ComponentProvider::done);
-
-            msgBodyWorkers = bootstrapBag.getMessageBodyWorkers();
-            processingProviders = bootstrapBag.getProcessingProviders();
-            valueSupplierProviders = bootstrapBag.getValueSupplierProviders();
+            resourceModelConfigurator.postInit(injectionManager, bootstrapBag);
 
             Iterable<ApplicationEventListener> appEventListeners =
                     Providers.getAllProviders(injectionManager, ApplicationEventListener.class, new RankedComparator<>());
 
             if (appEventListeners.iterator().hasNext()) {
+                ResourceBag resourceBag = bootstrapBag.getResourceBag();
                 compositeListener = new CompositeApplicationEventListener(appEventListeners);
                 compositeListener.onEvent(new ApplicationEventImpl(ApplicationEvent.Type.INITIALIZATION_START,
-                        this.runtimeConfig, componentBag.getRegistrations(), resourceBag.classes, resourceBag.instances,
-                        null));
+                        this.runtimeConfig, runtimeConfig.getComponentBag().getRegistrations(),
+                        resourceBag.classes, resourceBag.instances, null));
             }
 
-            if (!disableValidation) {
-                final ComponentModelValidator validator = new ComponentModelValidator(valueSupplierProviders, msgBodyWorkers);
-                validator.validate(resourceModel);
+            if (!disableValidation()) {
+                ComponentModelValidator validator = new ComponentModelValidator(
+                        bootstrapBag.getValueSupplierProviders(), bootstrapBag.getMessageBodyWorkers());
+                    validator.validate(bootstrapBag.getResourceModel());
             }
 
-            if (Errors.fatalIssuesFound() && !ignoreValidationErrors) {
+            if (Errors.fatalIssuesFound() && !ignoreValidationError()) {
                 throw new ModelValidationException(LocalizationMessages.RESOURCE_MODEL_VALIDATION_FAILED_AT_INIT(),
                         ModelErrors.getErrorsAsResourceModelIssues(true));
             }
         } finally {
-            if (ignoreValidationErrors) {
+            if (ignoreValidationError()) {
                 Errors.logErrors(true);
                 Errors.reset(); // reset errors to the state before validation phase
             } else {
@@ -439,40 +403,34 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             }
         }
 
-        // TODO: replace by ExecutorProviderConfigurator
-        ExecutorProviders.createInjectionBindings(injectionManager);
-
-        // initiate resource model into JerseyResourceContext
-        jerseyResourceContext.setResourceModel(resourceModel);
+        this.msgBodyWorkers = bootstrapBag.getMessageBodyWorkers();
 
         // assembly request processing chain
+        ProcessingProviders processingProviders = bootstrapBag.getProcessingProviders();
+        final ContainerFilteringStage preMatchRequestFilteringStage = new ContainerFilteringStage(
+                processingProviders.getPreMatchFilters(),
+                processingProviders.getGlobalResponseFilters());
+        final ChainableStage<RequestProcessingContext> routingStage =
+                Routing.forModel(bootstrapBag.getResourceModel().getRuntimeResourceModel())
+                    .resourceContext(bootstrapBag.getResourceContext())
+                    .configuration(runtimeConfig)
+                    .entityProviders(msgBodyWorkers)
+                    .valueSupplierProviders(bootstrapBag.getValueSupplierProviders())
+                    .modelProcessors(Providers.getAllRankedSortedProviders(injectionManager, ModelProcessor.class))
+                    .createService(serviceType -> Injections.getOrCreate(injectionManager, serviceType))
+                    .processingProviders(processingProviders)
+                    .resourceMethodInvokerBuilder(bootstrapBag.getResourceMethodInvokerBuilder())
+                    .buildStage();
+        /*
+         *  Root linear request acceptor. This is the main entry point for the whole request processing.
+         */
+        final ContainerFilteringStage resourceFilteringStage =
+                new ContainerFilteringStage(processingProviders.getGlobalRequestFilters(), null);
+
         GenericType<Ref<RequestProcessingContext>> requestProcessingType = new GenericType<Ref<RequestProcessingContext>>() {};
         ReferencesInitializer referencesInitializer = new ReferencesInitializer(injectionManager,
                 () -> injectionManager.getInstance(requestProcessingType.getType()));
 
-        Iterable<RankedProvider<ModelProcessor>> allRankedProviders =
-                 Providers.getAllRankedProviders(injectionManager, ModelProcessor.class);
-        Iterable<ModelProcessor> modelProcessors =
-                Providers.sortRankedProviders(new RankedComparator<>(), allRankedProviders);
-
-        final ContainerFilteringStage preMatchRequestFilteringStage = new ContainerFilteringStage(
-                processingProviders.getPreMatchFilters(),
-                processingProviders.getGlobalResponseFilters());
-        final ChainableStage<RequestProcessingContext> routingStage = Routing.forModel(resourceModel.getRuntimeResourceModel())
-                .resourceContext(jerseyResourceContext)
-                .configuration(runtimeConfig)
-                .entityProviders(msgBodyWorkers)
-                .valueSupplierProviders(valueSupplierProviders)
-                .modelProcessors(modelProcessors)
-                .createService(createServiceFunction)
-                .processingProviders(processingProviders)
-                .resourceMethodInvokerBuilder(bootstrapBag.getResourceMethodInvokerBuilder())
-                .buildStage();
-        final ContainerFilteringStage resourceFilteringStage =
-                new ContainerFilteringStage(processingProviders.getGlobalRequestFilters(), null);
-        /*
-         *  Root linear request acceptor. This is the main entry point for the whole request processing.
-         */
         final Stage<RequestProcessingContext> rootStage = Stages
                 .chain(referencesInitializer)
                 .to(preMatchRequestFilteringStage)
@@ -484,6 +442,8 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 injectionManager, bootstrapBag, rootStage, compositeListener, processingProviders);
 
         // Inject instances.
+        ComponentBag componentBag = runtimeConfig.getComponentBag();
+        ResourceBag resourceBag = bootstrapBag.getResourceBag();
         for (final Object instance : componentBag.getInstances(ComponentBag.excludeMetaProviders(injectionManager))) {
             injectionManager.inject(instance);
         }
@@ -494,17 +454,31 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         logApplicationInitConfiguration(injectionManager, resourceBag, processingProviders);
 
         if (compositeListener != null) {
-            final ApplicationEvent initFinishedEvent = new ApplicationEventImpl(
+            ApplicationEvent initFinishedEvent = new ApplicationEventImpl(
                     ApplicationEvent.Type.INITIALIZATION_APP_FINISHED, runtimeConfig,
-                    componentBag.getRegistrations(), resourceBag.classes, resourceBag.instances, resourceModel);
+                    componentBag.getRegistrations(), resourceBag.classes, resourceBag.instances,
+                    bootstrapBag.getResourceModel());
             compositeListener.onEvent(initFinishedEvent);
 
-            final MonitoringContainerListener containerListener
-                    = injectionManager.getInstance(MonitoringContainerListener.class);
+            MonitoringContainerListener containerListener = injectionManager.getInstance(MonitoringContainerListener.class);
             containerListener.init(compositeListener, initFinishedEvent);
         }
 
         return serverRuntime;
+    }
+
+    private boolean ignoreValidationError() {
+        return ServerProperties.getValue(runtimeConfig.getProperties(),
+                ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS,
+                Boolean.FALSE,
+                Boolean.class);
+    }
+
+    private boolean disableValidation() {
+        return ServerProperties.getValue(runtimeConfig.getProperties(),
+                ServerProperties.RESOURCE_VALIDATION_DISABLE,
+                Boolean.FALSE,
+                Boolean.class);
     }
 
     private static void logApplicationInitConfiguration(final InjectionManager injectionManager,
@@ -611,136 +585,6 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             final T provider = iterator.next();
             sb.append("   ").append(provider).append('\n');
         }
-    }
-
-    private ResourceModel processResourceModel(ResourceModel resourceModel) {
-        Iterable<RankedProvider<ModelProcessor>> allRankedProviders =
-                Providers.getAllRankedProviders(injectionManager, ModelProcessor.class);
-        Iterable<ModelProcessor> modelProcessors =
-                Providers.sortRankedProviders(new RankedComparator<>(), allRankedProviders);
-
-        for (final ModelProcessor modelProcessor : modelProcessors) {
-            resourceModel = modelProcessor.processResourceModel(resourceModel, getConfiguration());
-        }
-        return resourceModel;
-    }
-
-    private void bindEnhancingResourceClasses(
-            InjectionManager injectionManager,
-            ServerBootstrapBag bootstrapBag,
-            ResourceModel resourceModel,
-            ResourceBag resourceBag) {
-        final Set<Class<?>> newClasses = new HashSet<>();
-        final Set<Object> newInstances = new HashSet<>();
-        for (final Resource res : resourceModel.getRootResources()) {
-            newClasses.addAll(res.getHandlerClasses());
-            newInstances.addAll(res.getHandlerInstances());
-        }
-        newClasses.removeAll(resourceBag.classes);
-        newInstances.removeAll(resourceBag.instances);
-
-        final ComponentBag emptyComponentBag = ComponentBag.newInstance(input -> false);
-        bindProvidersAndResources(injectionManager, bootstrapBag, emptyComponentBag, newClasses, newInstances);
-    }
-
-    private void bindProvidersAndResources(
-            InjectionManager injectionManager,
-            ServerBootstrapBag bootstrapBag,
-            ComponentBag componentBag,
-            Collection<Class<?>> resourceClasses,
-            Collection<Object> resourceInstances) {
-
-        Collection<ComponentProvider> componentProviders = bootstrapBag.getComponentProviders().get();
-        JerseyResourceContext resourceContext = bootstrapBag.getResourceContext();
-
-        Set<Class<?>> registeredClasses = runtimeConfig.getRegisteredClasses();
-
-        /*
-         * Check the {@code component} whether it is correctly configured for client or server {@link RuntimeType runtime}.
-         */
-        java.util.function.Predicate<Class<?>> correctlyConfigured =
-                componentClass -> Providers.checkProviderRuntime(componentClass,
-                                                                 componentBag.getModel(componentClass),
-                                                                 RuntimeType.SERVER,
-                                                                 !registeredClasses.contains(componentClass),
-                                                                 resourceClasses.contains(componentClass));
-
-        /*
-         * Check the {@code resource class} whether it is correctly configured for client or server {@link RuntimeType runtime}.
-         */
-        BiPredicate<Class<?>, ContractProvider> correctlyConfiguredResource =
-                (resourceClass, model) -> Providers.checkProviderRuntime(
-                        resourceClass,
-                        model,
-                        RuntimeType.SERVER,
-                        !registeredClasses.contains(resourceClass),
-                        true);
-
-        Set<Class<?>> componentClasses =
-                componentBag.getClasses(ComponentBag.excludeMetaProviders(injectionManager)).stream()
-                .filter(correctlyConfigured)
-                .collect(Collectors.toSet());
-
-        // Merge programmatic resource classes with component classes.
-        Set<Class<?>> classes = Collections.newSetFromMap(new IdentityHashMap<>());
-        classes.addAll(componentClasses);
-        classes.addAll(resourceClasses);
-
-        // Bind classes.
-        for (final Class<?> componentClass: classes) {
-            ContractProvider model = componentBag.getModel(componentClass);
-            if (bindWithComponentProvider(componentClass, model, componentProviders)) {
-                continue;
-            }
-
-            if (resourceClasses.contains(componentClass)) {
-                if (!Resource.isAcceptable(componentClass)) {
-                    LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_COMPONENT(componentClass));
-                    continue;
-                }
-
-                if (model != null && !correctlyConfiguredResource.test(componentClass, model)) {
-                    model = null;
-                }
-                resourceContext.unsafeBindResource(componentClass, model);
-            } else {
-                ProviderBinder.bindProvider(componentClass, model, injectionManager);
-            }
-        }
-
-        // Merge programmatic resource instances with other component instances.
-        Set<Object> instances =
-                componentBag.getInstances(ComponentBag.excludeMetaProviders(injectionManager)).stream()
-                .filter(instance -> correctlyConfigured.test(instance.getClass()))
-                .collect(Collectors.toSet());
-        instances.addAll(resourceInstances);
-
-        // Bind instances.
-        for (Object component: instances) {
-            ContractProvider model = componentBag.getModel(component.getClass());
-            if (resourceInstances.contains(component)) {
-                if (model != null && !correctlyConfiguredResource.test(component.getClass(), model)) {
-                    model = null;
-                }
-                resourceContext.unsafeBindResource(component, model);
-            } else {
-                ProviderBinder.bindProvider(component, model, injectionManager);
-            }
-        }
-    }
-
-    private boolean bindWithComponentProvider(
-            final Class<?> component,
-            final ContractProvider providerModel,
-            final Iterable<ComponentProvider> componentProviders) {
-
-        final Set<Class<?>> contracts = providerModel == null ? Collections.emptySet() : providerModel.getContracts();
-        for (final ComponentProvider provider : componentProviders) {
-            if (provider.bind(component, contracts)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -909,6 +753,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             } finally {
                 // Shutdown ServiceLocator.
                 // Takes care of the injected executors & schedulers shut-down too.
+                managedObjectsFinalizer.preDestroy();
                 injectionManager.shutdown();
             }
         }

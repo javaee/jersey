@@ -70,6 +70,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
@@ -97,7 +98,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
     private final Iterable<ClientLifecycleListener> lifecycleListeners;
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
-
+    private final ManagedObjectsFinalizer managedObjectsFinalizer;
     private final InjectionManager injectionManager;
 
     /**
@@ -124,7 +125,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
         ChainableStage<ClientResponse> responseFilteringStage = ClientFilteringStages.createResponseFilteringStage(
                 injectionManager);
         this.responseProcessingRoot = responseFilteringStage != null ? responseFilteringStage : Stages.identity();
-
+        this.managedObjectsFinalizer = bootstrapBag.getManagedObjectsFinalizer();
         this.config = config;
         this.connector = connector;
         this.requestScope = bootstrapBag.getRequestScope();
@@ -336,6 +337,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
                 try {
                     connector.close();
                 } finally {
+                    managedObjectsFinalizer.preDestroy();
                     injectionManager.shutdown();
                 }
             }

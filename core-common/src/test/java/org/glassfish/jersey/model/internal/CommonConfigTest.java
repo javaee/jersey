@@ -812,7 +812,8 @@ public class CommonConfigTest {
         config.register(ComplexFeature.class);
 
         InjectionManager injectionManager = Injections.createInjectionManager();
-        config.configureMetaProviders(injectionManager);
+        ManagedObjectsFinalizer finalizer = new ManagedObjectsFinalizer(injectionManager);
+        config.configureMetaProviders(injectionManager, finalizer);
 
         assertTrue(config.getConfiguration().isEnabled(ComplexFeature.class));
 
@@ -824,7 +825,8 @@ public class CommonConfigTest {
     public void testConfigureFeatureRecursive() throws Exception {
         config.register(RecursiveFeature.class);
         InjectionManager injectionManager = Injections.createInjectionManager();
-        config.configureMetaProviders(injectionManager);
+        ManagedObjectsFinalizer finalizer = new ManagedObjectsFinalizer(injectionManager);
+        config.configureMetaProviders(injectionManager, finalizer);
 
         assertTrue(config.getConfiguration().isEnabled(RecursiveFeature.class));
         assertEquals(1, config.getInstances().size());
@@ -839,7 +841,8 @@ public class CommonConfigTest {
         config.register(f2);
 
         InjectionManager injectionManager = Injections.createInjectionManager();
-        config.configureMetaProviders(injectionManager);
+        ManagedObjectsFinalizer finalizer = new ManagedObjectsFinalizer(injectionManager);
+        config.configureMetaProviders(injectionManager, finalizer);
 
         assertTrue(config.getConfiguration().isEnabled(f1));
         assertFalse(config.getConfiguration().isEnabled(f2));
@@ -856,7 +859,8 @@ public class CommonConfigTest {
         config.register(f2);
 
         InjectionManager injectionManager = Injections.createInjectionManager();
-        config.configureMetaProviders(injectionManager);
+        ManagedObjectsFinalizer finalizer = new ManagedObjectsFinalizer(injectionManager);
+        config.configureMetaProviders(injectionManager, finalizer);
 
         assertTrue(config.getConfiguration().isEnabled(f1));
         assertFalse(config.getConfiguration().isEnabled(f2));
@@ -885,7 +889,8 @@ public class CommonConfigTest {
     public void testConfigureFeatureInstanceRecursive() throws Exception {
         config.register(new RecursiveInstanceFeature());
         InjectionManager injectionManager = Injections.createInjectionManager();
-        config.configureMetaProviders(injectionManager);
+        ManagedObjectsFinalizer finalizer = new ManagedObjectsFinalizer(injectionManager);
+        config.configureMetaProviders(injectionManager, finalizer);
         assertEquals(0, config.getClasses().size());
         assertEquals(2, config.getInstances().size());
         final Set<Object> pureProviders =
@@ -921,7 +926,8 @@ public class CommonConfigTest {
     public void testBinderConfiguringFeature() throws Exception {
         config.register(ContractBinderFeature.class);
         InjectionManager injectionManager = Injections.createInjectionManager();
-        config.configureMetaProviders(injectionManager);
+        ManagedObjectsFinalizer finalizer = new ManagedObjectsFinalizer(injectionManager);
+        config.configureMetaProviders(injectionManager, finalizer);
         injectionManager.completeRegistration();
 
         assertTrue(config.isEnabled(ContractBinderFeature.class));
@@ -985,7 +991,8 @@ public class CommonConfigTest {
                 });
 
         InjectionManager injectionManager = Injections.createInjectionManager();
-        config.configureMetaProviders(injectionManager);
+        ManagedObjectsFinalizer finalizer = new ManagedObjectsFinalizer(injectionManager);
+        config.configureMetaProviders(injectionManager, finalizer);
 
         assertThat("Feature instance not injected", config.getProperty("instance-injected").toString(), is("true"));
         assertThat("Feature class not injected", config.getProperty("class-injected").toString(), is("true"));
@@ -999,7 +1006,8 @@ public class CommonConfigTest {
         config.register(new InjectIntoFeatureInstance());
 
         InjectionManager injectionManager = Injections.createInjectionManager();
-        config.configureMetaProviders(injectionManager);
+        ManagedObjectsFinalizer finalizer = new ManagedObjectsFinalizer(injectionManager);
+        config.configureMetaProviders(injectionManager, finalizer);
 
         assertThat("Feature instance not injected", config.getProperty("instance-injected").toString(), is("true"));
         assertThat("Feature class not injected", config.getProperty("class-injected").toString(), is("true"));
