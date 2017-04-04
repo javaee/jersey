@@ -89,7 +89,7 @@ function receiveMessages() {
             display("Added new item: " + event.data, "#444444");
         };
 
-        source.addEventListener("size", function(e) {
+        source.addEventListener("size", function(event) {
             console.log('Received event ' + event.name + ': ' + event.data);
             display("New items size: " + event.data, "#0000FF");
         }, false);
