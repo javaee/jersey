@@ -485,11 +485,11 @@
 </row>
 <row>
 <entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-spring3/dependencies.html">
-    jersey-spring3
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-spring4/dependencies.html">
+    jersey-spring4
 </link>
 </entry>
-<entry>Jersey extension module providing support for Spring 3 integration.</entry>
+<entry>Jersey extension module providing support for Spring 4 integration.</entry>
 </row>
 <row>
 <entry>
@@ -1018,7 +1018,7 @@
     helloworld-spring-annotations
 </link>
 </entry>
-<entry>Spring 3 Integration Jersey Example</entry>
+<entry>Spring 4 Integration Jersey Example</entry>
 </row>
 <row>
 <entry>
@@ -1026,7 +1026,7 @@
     helloworld-spring-webapp
 </link>
 </entry>
-<entry>Spring 3 Integration Jersey Example</entry>
+<entry>Spring 4 Integration Jersey Example</entry>
 </row>
 <row>
 <entry>
@@ -1305,8 +1305,16 @@
 </row>
 <row>
 <entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/server-sent-events/dependencies.html">
-    server-sent-events
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/server-sent-events-jaxrs/dependencies.html">
+    server-sent-events-jaxrs
+</link>
+</entry>
+<entry>Jersey JAX-RS 2.1 Server-Sent Events example.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/server-sent-events-jersey/dependencies.html">
+    server-sent-events-jersey
 </link>
 </entry>
 <entry>Jersey Server-Sent Events example.</entry>
@@ -1345,11 +1353,19 @@
 </row>
 <row>
 <entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/sse-item-store-webapp/dependencies.html">
-    sse-item-store-webapp
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/sse-item-store-jaxrs-webapp/dependencies.html">
+    sse-item-store-jaxrs-webapp
 </link>
 </entry>
-<entry>Jersey SSE-based item store example.</entry>
+<entry>Jersey JAX-RS 2.1 SSE API-based item store example.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/sse-item-store-jersey-webapp/dependencies.html">
+    sse-item-store-jersey-webapp
+</link>
+</entry>
+<entry>Jersey SSE API-based item store example.</entry>
 </row>
 <row>
 <entry>
