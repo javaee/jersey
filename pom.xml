@@ -369,14 +369,14 @@
                         mvn release:perform -DconnectionUrl="scm:git:file://<path-to-local-repo>" \
                             -Prelease,skip-tests
                     -->
-                    <!--<configuration>
+                    <configuration>
                         <mavenExecutorId>forked-path</mavenExecutorId>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <preparationGoals>clean install</preparationGoals>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
                         <arguments>${release.tests.args} ${release.arguments}</arguments>
-                    </configuration>-->
+                    </configuration>
                 </plugin>
 
                 <plugin>
