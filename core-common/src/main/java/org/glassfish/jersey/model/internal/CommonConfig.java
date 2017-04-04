@@ -66,12 +66,10 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import javax.annotation.Priority;
-import javax.inject.Singleton;
 
 import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ServiceFinder;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -625,27 +623,18 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
      *
      * @param injectionManager injection manager in which the binders and features should be configured.
      */
-    public void configureMetaProviders(InjectionManager injectionManager) {
+    public void configureMetaProviders(InjectionManager injectionManager, ManagedObjectsFinalizer finalizer) {
         // First, configure existing binders
         Set<Binder> configuredBinders = configureBinders(injectionManager, Collections.emptySet());
 
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
-            injectionManager.register(new ManagedObjectsFinalizerBinder());
             // Register external meta objects
             configureExternalObjects(injectionManager);
             // Next, configure all features
-            configureFeatures(injectionManager, new HashSet<>(), resetRegistrations());
+            configureFeatures(injectionManager, new HashSet<>(), resetRegistrations(), finalizer);
             // At last, configure any new binders added by features
             configureBinders(injectionManager, configuredBinders);
-        }
-    }
-
-    public static class ManagedObjectsFinalizerBinder extends AbstractBinder {
-        @Override
-        protected void configure() {
-            bindAsContract(ManagedObjectsFinalizer.class)
-                    .in(Singleton.class);
         }
     }
 
@@ -679,9 +668,8 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
     private void configureFeatures(InjectionManager injectionManager,
                                    Set<FeatureRegistration> processed,
-                                   List<FeatureRegistration> unprocessed) {
-        ManagedObjectsFinalizer managedObjectsFinalizer = injectionManager.getInstance(ManagedObjectsFinalizer.class);
-
+                                   List<FeatureRegistration> unprocessed,
+                                   ManagedObjectsFinalizer managedObjectsFinalizer) {
         FeatureContextWrapper featureContextWrapper = null;
         for (final FeatureRegistration registration : unprocessed) {
             if (processed.contains(registration)) {
@@ -714,7 +702,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
             if (success) {
                 processed.add(registration);
-                configureFeatures(injectionManager, processed, resetRegistrations());
+                configureFeatures(injectionManager, processed, resetRegistrations(), managedObjectsFinalizer);
                 enabledFeatureClasses.add(registration.getFeatureClass());
                 enabledFeatures.add(feature);
             }

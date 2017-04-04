@@ -72,9 +72,7 @@ public class TestBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        install(
-                new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER),
-                new JaxrsProviders.Binder());
+        install(new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER));
 
         bind(new ExceptionMapper<Throwable>() {
             @Override

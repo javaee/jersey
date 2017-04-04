@@ -49,11 +49,13 @@ import javax.ws.rs.core.GenericType;
 import org.glassfish.jersey.internal.BootstrapBag;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
+import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 import org.glassfish.jersey.spi.ContextResolvers;
@@ -77,6 +79,7 @@ public class ServerBootstrapBag extends BootstrapBag {
     private LazyValue<Collection<ComponentProvider>> componentProviders;
     private ResourceMethodInvoker.Builder resourceMethodInvokerBuilder;
     private ResourceBag resourceBag;
+    private ResourceModel resourceModel;
 
     public ResourceBag getResourceBag() {
         requireNonNull(resourceBag, ResourceBag.class);
@@ -163,6 +166,14 @@ public class ServerBootstrapBag extends BootstrapBag {
         this.resourceMethodInvokerBuilder = resourceMethodInvokerBuilder;
     }
 
+    public ResourceModel getResourceModel() {
+        return resourceModel;
+    }
+
+    public void setResourceModel(ResourceModel resourceModel) {
+        this.resourceModel = resourceModel;
+    }
+
     /**
      * Creates an immutable version of bootstrap bag.
      *
@@ -181,6 +192,14 @@ public class ServerBootstrapBag extends BootstrapBag {
 
         private ImmutableServerBootstrapBag(ServerBootstrapBag delegate) {
             this.delegate = delegate;
+        }
+
+        public ResourceModel getResourceModel() {
+            return delegate.getResourceModel();
+        }
+
+        public void setResourceModel(ResourceModel resourceModel) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -325,6 +344,16 @@ public class ServerBootstrapBag extends BootstrapBag {
 
         @Override
         public void setContextResolvers(ContextResolvers contextResolvers) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ManagedObjectsFinalizer getManagedObjectsFinalizer() {
+            return delegate.getManagedObjectsFinalizer();
+        }
+
+        @Override
+        public void setManagedObjectsFinalizer(ManagedObjectsFinalizer managedObjectsFinalizer) {
             throw new UnsupportedOperationException();
         }
     }

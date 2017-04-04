@@ -228,7 +228,7 @@ public class ExecutorProvidersTest extends AbstractBinder {
     @Before
     public void setup() {
         injectionManager = Injections.createInjectionManager(this);
-        ExecutorProviders.createInjectionBindings(injectionManager);
+        ExecutorProviders.registerExecutorBindings(injectionManager);
         injectionManager.completeRegistration();
     }
 

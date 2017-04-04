@@ -70,6 +70,7 @@ import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
+import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -294,7 +295,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         @Override
-        public void configureMetaProviders(final InjectionManager injectionManager) {
+        public void configureMetaProviders(final InjectionManager injectionManager, final ManagedObjectsFinalizer finalizer) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
     }
@@ -814,8 +815,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
         state.configureAutoDiscoverableProviders(injectionManager, true);
     }
 
-    final void configureMetaProviders(InjectionManager injectionManager) {
-        state.configureMetaProviders(injectionManager);
+    final void configureMetaProviders(InjectionManager injectionManager, ManagedObjectsFinalizer finalizer) {
+        state.configureMetaProviders(injectionManager, finalizer);
     }
 
     @Override

@@ -82,26 +82,59 @@ public final class ExecutorProviders {
     }
 
     /**
-     * Create qualified {@link java.util.concurrent.ExecutorService} and {@link java.util.concurrent.ScheduledExecutorService}
-     * injection bindings based on the registered providers implementing the
-     * {@link org.glassfish.jersey.spi.ExecutorServiceProvider} and/or
-     * {@link org.glassfish.jersey.spi.ScheduledExecutorServiceProvider} SPI.
+     * Create qualified {@link ExecutorService} and {@link ScheduledExecutorService} injection bindings based on the registered
+     * providers implementing the {@link ExecutorServiceProvider} and/or {@link ScheduledExecutorServiceProvider} SPI.
      * <p>
-     * This method supports creation of qualified injection bindings based on custom
-     * {@link javax.inject.Qualifier qualifier annotations} attached to the registered provider implementation classes
-     * as well as named injection bindings based on the {@link javax.inject.Named} qualifier annotation attached to the
-     * registered provider implementation classes.
-     * </p>
+     * This method supports creation of qualified injection bindings based on custom {@link Qualifier qualifier annotations}
+     * attached to the registered provider implementation classes as well as named injection bindings based on the {@link Named}
+     * qualifier annotation attached to the registered provider implementation classes. {@link ExecutorServiceProvider} and
+     * {@link ScheduledExecutorServiceProvider} will be retrieved from {@link InjectionManager}.
      *
      * @param injectionManager application's injection manager.
      */
-    public static void createInjectionBindings(InjectionManager injectionManager) {
+    public static void registerExecutorBindings(InjectionManager injectionManager) {
+        List<ExecutorServiceProvider> executorProviders =
+                getExecutorProviders(injectionManager, ExecutorServiceProvider.class);
+        List<ScheduledExecutorServiceProvider> scheduledProviders =
+                getExecutorProviders(injectionManager, ScheduledExecutorServiceProvider.class);
+
+        registerExecutorBindings(injectionManager, executorProviders, scheduledProviders);
+    }
+
+    private static <T> List<T> getExecutorProviders(InjectionManager injectionManager, Class<T> providerClass) {
+        Set<T> customProviders = Providers.getCustomProviders(injectionManager, providerClass);
+        Set<T> defaultProviders = Providers.getProviders(injectionManager, providerClass);
+        // Get only default providers
+        defaultProviders.removeAll(customProviders);
+
+        List<T> executorProviders = new LinkedList<>(customProviders);
+        executorProviders.addAll(defaultProviders);
+        return executorProviders;
+    }
+
+    /**
+     * Create qualified {@link ExecutorService} and {@link ScheduledExecutorService} injection bindings based on the registered
+     * providers implementing the {@link ExecutorServiceProvider} and/or {@link ScheduledExecutorServiceProvider} SPI.
+     * <p>
+     * This method supports creation of qualified injection bindings based on custom {@link Qualifier qualifier annotations}
+     * attached to the registered provider implementation classes as well as named injection bindings based on the {@link Named}
+     * qualifier annotation attached to the registered provider implementation classes.
+     *
+     * @param injectionManager   injection manager to register newly created executor bindings.
+     * @param executorProviders  all executor providers registered internally in Jersey and in configuration.
+     * @param scheduledProviders all scheduled executor providers registered internally in Jersey and in configuration.
+     */
+    public static void registerExecutorBindings(
+            InjectionManager injectionManager,
+            List<ExecutorServiceProvider> executorProviders,
+            List<ScheduledExecutorServiceProvider> scheduledProviders) {
+
+        Map<Class<? extends Annotation>, List<ExecutorServiceProvider>> executorProviderMap =
+                getQualifierToProviderMap(executorProviders);
+
         /*
          * Add ExecutorService into DI framework.
          */
-        Map<Class<? extends Annotation>, List<ExecutorServiceProvider>> executorProviderMap =
-                getQualifierToProviderMap(injectionManager, ExecutorServiceProvider.class);
-
         for (Map.Entry<Class<? extends Annotation>, List<ExecutorServiceProvider>> qualifierToProviders
                 : executorProviderMap.entrySet()) {
             Class<? extends Annotation> qualifierAnnotationClass = qualifierToProviders.getKey();
@@ -125,12 +158,12 @@ public final class ExecutorProviders {
             injectionManager.register(descriptor);
         }
 
+        Map<Class<? extends Annotation>, List<ScheduledExecutorServiceProvider>> schedulerProviderMap =
+                getQualifierToProviderMap(scheduledProviders);
+
         /*
          * Add ScheduledExecutorService into DI framework.
          */
-        Map<Class<? extends Annotation>, List<ScheduledExecutorServiceProvider>> schedulerProviderMap =
-                getQualifierToProviderMap(injectionManager, ScheduledExecutorServiceProvider.class);
-
         for (Map.Entry<Class<? extends Annotation>, List<ScheduledExecutorServiceProvider>> qualifierToProviders
                 : schedulerProviderMap.entrySet()) {
             Class<? extends Annotation> qualifierAnnotationClass = qualifierToProviders.getKey();
@@ -197,26 +230,12 @@ public final class ExecutorProviders {
     }
 
     private static <T extends ExecutorServiceProvider> Map<Class<? extends Annotation>, List<T>> getQualifierToProviderMap(
-            InjectionManager injectionManager, Class<T> providerClass) {
-
-        // get all ExecutorServiceProvider registrations and create iterator with custom providers in the front
-        final Set<T> customExecutorProviders =
-                Providers.getCustomProviders(injectionManager, providerClass);
-        final Set<T> defaultExecutorProviders =
-                Providers.getProviders(injectionManager, providerClass);
-        defaultExecutorProviders.removeAll(customExecutorProviders);
-
-        final List<T> executorProviders = new LinkedList<>(customExecutorProviders);
-        executorProviders.addAll(defaultExecutorProviders);
-        final Iterator<T> providersIterator = executorProviders.iterator();
+            List<T> executorProviders) {
 
         // iterate over providers and map them by Qualifier annotations (custom ones will be added to the buckets first)
-        final Map<Class<? extends Annotation>, List<T>> executorProviderMap =
-                new HashMap<>();
+        final Map<Class<? extends Annotation>, List<T>> executorProviderMap = new HashMap<>();
 
-        while (providersIterator.hasNext()) {
-            final T provider = providersIterator.next();
-
+        for (T provider : executorProviders) {
             for (Class<? extends Annotation> qualifier
                     : ReflectionHelper.getAnnotationTypes(provider.getClass(), Qualifier.class)) {
 
@@ -233,7 +252,6 @@ public final class ExecutorProviders {
         }
 
         return executorProviderMap;
-
     }
 
     private static class ExecutorServiceSupplier implements DisposableSupplier<ExecutorService> {

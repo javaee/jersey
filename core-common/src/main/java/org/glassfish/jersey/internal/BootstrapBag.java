@@ -46,6 +46,7 @@ import java.util.Objects;
 import javax.ws.rs.core.Configuration;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -64,6 +65,25 @@ public class BootstrapBag {
     private MessageBodyWorkers messageBodyWorkers;
     private ExceptionMappers exceptionMappers;
     private ContextResolvers contextResolvers;
+    private ManagedObjectsFinalizer managedObjectsFinalizer;
+
+    /**
+     * Gets an instance of {@link ManagedObjectsFinalizer}
+     *
+     * @return {@code ManagedObjectsFinalizer} instance.
+     */
+    public ManagedObjectsFinalizer getManagedObjectsFinalizer() {
+        return managedObjectsFinalizer;
+    }
+
+    /**
+     * Sets an instance of {@link ManagedObjectsFinalizer}.
+     *
+     * @param managedObjectsFinalizer {@code ManagedObjectsFinalizer} instance.
+     */
+    public void setManagedObjectsFinalizer(ManagedObjectsFinalizer managedObjectsFinalizer) {
+        this.managedObjectsFinalizer = managedObjectsFinalizer;
+    }
 
     /**
      * Gets an instance of {@link RequestScope}.
@@ -189,6 +209,16 @@ public class BootstrapBag {
 
         protected ImmutableBootstrapBag(BootstrapBag delegate) {
             this.delegate = delegate;
+        }
+
+        @Override
+        public ManagedObjectsFinalizer getManagedObjectsFinalizer() {
+            return delegate.getManagedObjectsFinalizer();
+        }
+
+        @Override
+        public void setManagedObjectsFinalizer(ManagedObjectsFinalizer managedObjectsFinalizer) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

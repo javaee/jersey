@@ -48,31 +48,41 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Providers;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.PerLookup;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
 /**
- * Jersey implementation of JAX-RS {@link javax.ws.rs.ext.Providers} contract.
+ * Jersey implementation of JAX-RS {@link Providers} contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JaxrsProviders implements javax.ws.rs.ext.Providers {
+public class JaxrsProviders implements Providers {
 
     /**
-     * Jersey binder registering {@link javax.ws.rs.ext.Providers JAX-RS Providers} injection bindings.
+     * Configurator which initializes and registers {@link Providers} instance into {@link InjectionManager} and
+     * {@link BootstrapBag}.
+     * Instances of these interfaces are processed, configured and provided using this configurator:
+     * <ul>
+     * <li>{@link Providers}</li>
+     * </ul>
      */
-    public static class Binder extends AbstractBinder {
+    public static class ProvidersConfigurator implements BootstrapConfigurator{
 
         @Override
-        protected void configure() {
-            bind(JaxrsProviders.class).to(javax.ws.rs.ext.Providers.class).in(PerLookup.class);
+        public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            injectionManager.register(
+                    Bindings.service(JaxrsProviders.class)
+                            .to(Providers.class)
+                            .in(PerLookup.class));
         }
     }
 

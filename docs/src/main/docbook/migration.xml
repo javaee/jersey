@@ -74,6 +74,11 @@
                             Spring version used in the extension module was upgraded to 4.2.1.RELEASE. The reason for that is lack
                             of Java 8 support with Spring 3.x versions.
                         </para>
+                        <para>
+                            <literal>CommonConfig#configureMetaProviders</literal> and
+                            <literal>ImmutableState#configureMetaProviders</literal> was extended about an object ensuring
+                            a finalizing the objects (e.g. pre-destroy) which were registered into.
+                        </para>
                     </listitem>
                 </itemizedlist>
             </para>
