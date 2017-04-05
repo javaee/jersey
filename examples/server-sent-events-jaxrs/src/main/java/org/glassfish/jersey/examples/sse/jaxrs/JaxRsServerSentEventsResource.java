@@ -59,7 +59,7 @@ import javax.ws.rs.sse.SseEventSink;
 @Path("server-sent-events")
 public class JaxRsServerSentEventsResource {
 
-    private static SseEventSink eventSink = null;
+    private static volatile SseEventSink eventSink = null;
 
     @GET
     @Produces(MediaType.SERVER_SENT_EVENTS)
@@ -69,12 +69,18 @@ public class JaxRsServerSentEventsResource {
 
     @POST
     public void addMessage(final String message, @Context Sse sse) throws IOException {
-        eventSink.onNext(sse.newEventBuilder().name("custom-message").data(String.class, message).build());
+        final SseEventSink localSink = eventSink;
+        if (localSink != null) {
+            localSink.onNext(sse.newEventBuilder().name("custom-message").data(String.class, message).build());
+        }
     }
 
     @DELETE
     public void close() throws IOException {
-        eventSink.close();
+        final SseEventSink localSink = eventSink;
+        if (localSink != null) {
+            eventSink.close();
+        }
         eventSink = null;
     }
 

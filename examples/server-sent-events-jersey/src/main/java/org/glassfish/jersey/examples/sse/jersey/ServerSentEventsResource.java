@@ -58,7 +58,7 @@ import org.glassfish.jersey.media.sse.SseFeature;
 @Path("server-sent-events")
 public class ServerSentEventsResource {
 
-    private static EventOutput eventOutput = new EventOutput();
+    private static volatile EventOutput eventOutput = new EventOutput();
 
     @GET
     @Produces(SseFeature.SERVER_SENT_EVENTS)
@@ -68,12 +68,18 @@ public class ServerSentEventsResource {
 
     @POST
     public void addMessage(final String message) throws IOException {
-        eventOutput.write(new OutboundEvent.Builder().name("custom-message").data(String.class, message).build());
+        final EventOutput localOutput = eventOutput;
+        if (localOutput != null) {
+            eventOutput.write(new OutboundEvent.Builder().name("custom-message").data(String.class, message).build());
+        }
     }
 
     @DELETE
     public void close() throws IOException {
-        eventOutput.close();
+        final EventOutput localOutput = eventOutput;
+        if (localOutput != null) {
+            eventOutput.close();
+        }
         ServerSentEventsResource.setEventOutput(new EventOutput());
     }
 

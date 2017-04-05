@@ -41,6 +41,7 @@ package org.glassfish.jersey.examples.sseitemstore.jaxrs;
 
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Logger;
 
@@ -61,8 +62,6 @@ import javax.ws.rs.sse.Sse;
 import javax.ws.rs.sse.SseBroadcaster;
 import javax.ws.rs.sse.SseEventSink;
 
-import javax.inject.Singleton;
-
 import org.glassfish.jersey.media.sse.SseFeature;
 
 
@@ -71,7 +70,6 @@ import org.glassfish.jersey.media.sse.SseFeature;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Singleton
 @Path("items")
 public class JaxrsItemStoreResource {
     private static final Logger LOGGER = Logger.getLogger(JaxrsItemStoreResource.class.getName());
@@ -79,12 +77,12 @@ public class JaxrsItemStoreResource {
     private static final ReentrantReadWriteLock storeLock = new ReentrantReadWriteLock();
     private static final LinkedList<String> itemStore = new LinkedList<>();
 
+    private static final AtomicReference<SseBroadcaster> BROADCASTER = new AtomicReference<>(null);
+
     private final Sse sse;
-    private SseBroadcaster broadcaster;
 
     public JaxrsItemStoreResource(@Context final Sse sse) {
         this.sse = sse;
-        broadcaster = sse.newBroadcaster();
     }
 
     private static volatile long reconnectDelay = 0;
@@ -130,8 +128,7 @@ public class JaxrsItemStoreResource {
         }
 
         if ("disconnect".equals(command)) {
-            broadcaster.close();
-            broadcaster = sse.newBroadcaster();
+            closeBroadcaster();
             return "Disconnected.";
         } else if ("reconnect ".length() < command.length() && command.startsWith("reconnect ")) {
             final String when = command.substring("reconnect ".length());
@@ -174,10 +171,10 @@ public class JaxrsItemStoreResource {
             }
         }
 
-        broadcaster.subscribe(eventSink);
+        getBroadcaster().subscribe(eventSink);
     }
 
-    private void replayMissedEvents(final int lastEventId, final SseEventSink eventSink) {
+    private void replayMissedEvents(int lastEventId, SseEventSink eventSink) {
         try {
             storeLock.readLock().lock();
             final int firstUnreceived = lastEventId + 1;
@@ -215,12 +212,15 @@ public class JaxrsItemStoreResource {
             storeLock.writeLock().lock();
             eventId = itemStore.size();
             itemStore.add(name);
+
+            SseBroadcaster sseBroadcaster = getBroadcaster();
+
             // Broadcasting an un-named event with the name of the newly added item in data
-            broadcaster.broadcast(createItemEvent(eventId, name));
+            sseBroadcaster.broadcast(createItemEvent(eventId, name));
 
             // Broadcasting a named "size" event with the current size of the items collection in data
             final OutboundSseEvent event = sse.newEventBuilder().name("size").data(Integer.class, eventId + 1).build();
-            broadcaster.broadcast(event);
+            sseBroadcaster.broadcast(event);
         } finally {
             storeLock.writeLock().unlock();
         }
@@ -230,5 +230,30 @@ public class JaxrsItemStoreResource {
         Logger.getLogger(JaxrsItemStoreResource.class.getName())
                 .info("Creating event id [" + eventId + "] name [" + name + "]");
         return sse.newEventBuilder().id("" + eventId).data(String.class, name).build();
+    }
+
+    /**
+     * Get stored broadcaster or create a new one and store it.
+     *
+     * @return broadcaster instance.
+     */
+    private SseBroadcaster getBroadcaster() {
+        SseBroadcaster sseBroadcaster = BROADCASTER.get();
+        if (sseBroadcaster == null) {
+            BROADCASTER.compareAndSet(null, sse.newBroadcaster());
+        }
+
+        return BROADCASTER.get();
+    }
+
+    /**
+     * Close currently stored broadcaster.
+     */
+    private void closeBroadcaster() {
+        SseBroadcaster sseBroadcaster = BROADCASTER.getAndSet(null);
+        if (sseBroadcaster == null) {
+            return;
+        }
+        sseBroadcaster.close();
     }
 }
