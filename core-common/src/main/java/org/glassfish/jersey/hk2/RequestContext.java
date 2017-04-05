@@ -45,7 +45,6 @@ import java.lang.annotation.Annotation;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ForeignDescriptor;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
@@ -54,6 +53,7 @@ import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Context;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Class is able to communicate with {@link RequestScope} and provide request-scoped descriptors to HK2 DI provider to create or

@@ -42,8 +42,7 @@ package org.glassfish.jersey.hk2;
 
 import java.security.AccessController;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerFactory;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -81,11 +80,6 @@ public class Hk2InjectionManagerFactory implements InjectionManagerFactory {
             InjectionManager createInjectionManager(final Object parent) {
                 return new ImmediateHk2InjectionManager(parent);
             }
-
-            @Override
-            InjectionManager createInjectionManager(final Binder binder) {
-                return new ImmediateHk2InjectionManager(binder);
-            }
         },
         /**
          * @see DelayedHk2InjectionManager
@@ -100,18 +94,11 @@ public class Hk2InjectionManagerFactory implements InjectionManagerFactory {
             InjectionManager createInjectionManager(final Object parent) {
                 return new DelayedHk2InjectionManager(parent);
             }
-
-            @Override
-            InjectionManager createInjectionManager(final Binder binder) {
-                return new DelayedHk2InjectionManager(binder);
-            }
         };
 
         abstract InjectionManager createInjectionManager();
 
         abstract InjectionManager createInjectionManager(Object parent);
-
-        abstract InjectionManager createInjectionManager(Binder binder);
     }
 
     @Override
@@ -122,12 +109,6 @@ public class Hk2InjectionManagerFactory implements InjectionManagerFactory {
     @Override
     public InjectionManager create(Object parent) {
         return initInjectionManager(getStrategy().createInjectionManager(parent));
-    }
-
-    // TODO: CANDIDATE TO DELETE: is used in RuntimeDelegateImpl super(...).
-    @Override
-    public InjectionManager create(Binder binder) {
-        return initInjectionManager(getStrategy().createInjectionManager(binder));
     }
 
     private Hk2InjectionManagerStrategy getStrategy() {
@@ -147,29 +128,7 @@ public class Hk2InjectionManagerFactory implements InjectionManagerFactory {
     }
 
     private InjectionManager initInjectionManager(InjectionManager injectionManager) {
-        injectionManager.register(new Hk2InjectionManagerBinder(injectionManager));
+        injectionManager.register(Bindings.service(injectionManager).to(InjectionManager.class));
         return injectionManager;
-    }
-
-    /**
-     * Binder that registers a provided injection manager.
-     */
-    private static class Hk2InjectionManagerBinder extends AbstractBinder {
-
-        private final InjectionManager injectionManager;
-
-        /**
-         * Constructor for a creation injection manager binder.
-         *
-         * @param injectionManager current injection manager.
-         */
-        private Hk2InjectionManagerBinder(InjectionManager injectionManager) {
-            this.injectionManager = injectionManager;
-        }
-
-        @Override
-        protected void configure() {
-            bind(injectionManager).to(InjectionManager.class);
-        }
     }
 }

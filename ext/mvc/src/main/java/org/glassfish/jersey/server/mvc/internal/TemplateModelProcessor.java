@@ -91,7 +91,7 @@ class TemplateModelProcessor implements ModelProcessor {
     private static final String IMPLICIT_VIEW_PATH_PARAMETER = "implicit-view-path-parameter";
     private static final String IMPLICIT_VIEW_PATH_PARAMETER_TEMPLATE = "{" + IMPLICIT_VIEW_PATH_PARAMETER + "}";
 
-    private final Provider<ResourceContext> resourceContext;
+    private final Provider<ResourceContext> resourceContextProvider;
     private final Provider<ExtendedUriInfo> extendedUriInfoProvider;
     private final Provider<ConfiguredValidator> validatorProvider;
 
@@ -165,7 +165,7 @@ class TemplateModelProcessor implements ModelProcessor {
             } else if (matchedResources.size() > 1) {
                 return setModelClass(matchedResources.get(1));
             } else {
-                return setModelClass(resourceContext.get().getResource(resourceClass));
+                return setModelClass(resourceContextProvider.get().getResource(resourceClass));
             }
         }
 
@@ -227,15 +227,15 @@ class TemplateModelProcessor implements ModelProcessor {
     /**
      * Create a {@code TemplateModelProcessor} instance.
      *
-     * @param resourceContext         (injected) resource context.
+     * @param resourceContextProvider (injected) resource context provider.
      * @param validatorProvider       Jersey extension of BeanValidation Validator.
      * @param extendedUriInfoProvider (injected) extended uri info provider.
      */
     @Inject
-    TemplateModelProcessor(final Provider<ResourceContext> resourceContext,
+    TemplateModelProcessor(final Provider<ResourceContext> resourceContextProvider,
                            final Provider<ConfiguredValidator> validatorProvider,
                            final Provider<ExtendedUriInfo> extendedUriInfoProvider) {
-        this.resourceContext = resourceContext;
+        this.resourceContextProvider = resourceContextProvider;
         this.validatorProvider = validatorProvider;
         this.extendedUriInfoProvider = extendedUriInfoProvider;
     }

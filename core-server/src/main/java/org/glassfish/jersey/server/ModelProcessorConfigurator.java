@@ -109,7 +109,7 @@ class ModelProcessorConfigurator implements BootstrapConfigurator {
     private List<ModelProcessor> getProcessorsFromBinders(InjectionManager injectionManager, ComponentBag componentBag) {
         return componentBag.getInstances(ComponentBag.BINDERS_ONLY).stream()
                 .map(CAST_TO_BINDER)
-                .flatMap(binder -> binder.getBindings().stream())
+                .flatMap(binder -> Bindings.getBindings(injectionManager, binder).stream())
                 .filter(binding -> binding.getContracts().contains(ModelProcessor.class))
                 .map(binding -> {
                     if (binding instanceof ClassBinding) {

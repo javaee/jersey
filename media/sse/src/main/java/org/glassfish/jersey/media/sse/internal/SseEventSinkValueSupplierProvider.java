@@ -42,6 +42,7 @@ package org.glassfish.jersey.media.sse.internal;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.sse.SseEventSink;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.server.ContainerRequest;
@@ -63,6 +64,7 @@ public class SseEventSinkValueSupplierProvider extends AbstractValueSupplierProv
      * @param mpep    multivalued map parameter extractor provider.
      * @param requestProvider request provider.
      */
+    @Inject
     public SseEventSinkValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
                                              Provider<ContainerRequest> requestProvider) {
         super(mpep, requestProvider, Parameter.Source.CONTEXT);

@@ -52,6 +52,10 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.core.GenericType;
 
+import javax.inject.Provider;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
+
 /**
  * Implementation of {@link Binder} interface dedicated to keep some level of code compatibility between previous HK2
  * implementation and new DI SPI.
@@ -66,12 +70,43 @@ public abstract class AbstractBinder implements Binder {
 
     private List<AbstractBinder> installed = new ArrayList<>();
 
+    private InjectionManager injectionManager;
+
     private boolean configured = false;
 
     /**
      * Implement to provide binding definitions using the exposed binding methods.
      */
     protected abstract void configure();
+
+    /**
+     * Sets {@link InjectionManager} to be able to create instance providers using the injection manager. {@code InjectionManager}
+     * should be called before the invocation of {@link #configure()}, otherwise immediate invocation {@link Provider#get()}
+     * returns
+     *
+     * @param injectionManager injection manager to create a provider.
+     */
+    void setInjectionManager(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
+    }
+
+    /**
+     * Creates a new instance of {@link Provider} which is able to retrieve a managed instance registered in
+     * {@link InjectionManager}. If {@code InjectionManager} is {@code null} at the time of calling {@link Provider#get()} then
+     * {@link IllegalStateException} is thrown.
+     *
+     * @param clazz class of managed instance.
+     * @param <T>   type of the managed instance returned using provider.
+     * @return provider with instance of managed instance.
+     */
+    protected final <T> Provider<T> createManagedInstanceProvider(Class<T> clazz) {
+        return () -> {
+            if (injectionManager == null) {
+                throw new IllegalStateException(LocalizationMessages.INJECTION_MANAGER_NOT_PROVIDED());
+            }
+            return injectionManager.getInstance(clazz);
+        };
+    }
 
     /**
      * Start building a new class-based service binding.
@@ -230,16 +265,11 @@ public abstract class AbstractBinder implements Binder {
                 .forEach(installed::add);
     }
 
-    /**
-     * Gets a collection of descriptors registered in this jersey binder.
-     *
-     * @return collection of descriptors.
-     */
     @Override
     public Collection<Binding> getBindings() {
         invokeConfigure();
         List<Binding> bindings = installed.stream()
-                .flatMap(binder -> binder.getBindings().stream())
+                .flatMap(binder -> Bindings.getBindings(injectionManager, binder).stream())
                 .collect(Collectors.toList());
         bindings.addAll(internalBindings);
         return bindings;

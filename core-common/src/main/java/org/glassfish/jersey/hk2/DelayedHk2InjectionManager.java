@@ -46,6 +46,7 @@ import java.util.List;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -85,15 +86,6 @@ public class DelayedHk2InjectionManager extends AbstractHk2InjectionManager {
         super(parent);
     }
 
-    /**
-     * Constructor with initial binder.
-     *
-     * @param binder initial binder which will be immediately registered.
-     */
-    DelayedHk2InjectionManager(Binder binder) {
-        super(binder);
-    }
-
     @Override
     public void register(Binding binding) {
         bindings.bind(binding);
@@ -108,7 +100,7 @@ public class DelayedHk2InjectionManager extends AbstractHk2InjectionManager {
 
     @Override
     public void register(Binder binder) {
-        for (Binding binding : binder.getBindings()) {
+        for (Binding binding : Bindings.getBindings(this, binder)) {
             bindings.bind(binding);
         }
     }
@@ -124,7 +116,7 @@ public class DelayedHk2InjectionManager extends AbstractHk2InjectionManager {
 
     @Override
     public void completeRegistration() throws IllegalStateException {
-        Hk2Helper.bind(getServiceLocator(), bindings);
+        Hk2Helper.bind(this, bindings);
         ServiceLocatorUtilities.bind(getServiceLocator(), providers.toArray(new org.glassfish.hk2.utilities.Binder[]{}));
     }
 }

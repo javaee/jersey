@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.message.internal.CacheControlProvider;
@@ -103,6 +104,37 @@ public class AbstractBinderTest {
 
         Collection<Binding> bindings2 = binder.getBindings();
         assertEquals(1, bindings2.size());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testInjectionManagerIsNotAvailable() {
+        AbstractBinder binder = new AbstractBinder() {
+            @Override
+            protected void configure() {
+                Provider<HeaderDelegateProvider> managedInstanceProvider =
+                        createManagedInstanceProvider(HeaderDelegateProvider.class);
+                managedInstanceProvider.get();
+            }
+        };
+        binder.configure();
+    }
+
+    @Test
+    public void testCreateProvider() {
+        CacheControlProvider cacheControlProvider = new CacheControlProvider();
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        injectionManager.register(Bindings.service(cacheControlProvider).to(HeaderDelegateProvider.class));
+
+        AbstractBinder binder = new AbstractBinder() {
+            @Override
+            protected void configure() {
+                Provider<HeaderDelegateProvider> managedInstanceProvider =
+                        createManagedInstanceProvider(HeaderDelegateProvider.class);
+                assertEquals(cacheControlProvider, managedInstanceProvider.get());
+            }
+        };
+        binder.setInjectionManager(injectionManager);
+        binder.configure();
     }
 
     @Test

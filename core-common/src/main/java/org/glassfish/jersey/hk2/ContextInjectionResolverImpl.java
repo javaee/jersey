@@ -48,12 +48,10 @@ import java.util.Set;
 import java.util.function.Function;
 
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericType;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.ForeignRequestScopeBridge;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -69,9 +67,11 @@ import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.InjecteeImpl;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Injection resolver for {@link Context @Context} injection annotation.
@@ -90,8 +90,8 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
         @Override
         protected void configure() {
             bind(ContextInjectionResolverImpl.class)
-                    .to(new GenericType<InjectionResolver<Context>>() {})
-                    .to(new GenericType<org.glassfish.jersey.internal.inject.InjectionResolver<Context>>() {})
+                    .to(new TypeLiteral<InjectionResolver<Context>>() {})
+                    .to(new TypeLiteral<org.glassfish.jersey.internal.inject.InjectionResolver<Context>>() {})
                     .to(ContextInjectionResolver.class)
                     .in(Singleton.class);
         }

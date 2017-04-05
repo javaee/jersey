@@ -71,7 +71,9 @@ public class Injections {
      * @return a injection manager with all the bindings.
      */
     public static InjectionManager createInjectionManager(Binder binder) {
-        return lookupInjectionManagerFactory().create(binder);
+        InjectionManager injectionManager = lookupInjectionManagerFactory().create();
+        injectionManager.register(binder);
+        return injectionManager;
     }
 
     /**

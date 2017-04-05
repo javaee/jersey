@@ -47,10 +47,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.ClassBinding;
-import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.ForeignDescriptor;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
@@ -82,39 +80,20 @@ abstract class AbstractHk2InjectionManager implements InjectionManager {
      * Constructor without parent and initial binder.
      */
     AbstractHk2InjectionManager() {
-        this(null, null);
-    }
-
-    /**
-     * Constructor with parent.
-     *
-     * @param parent parent of type {@link org.glassfish.jersey.internal.inject.InjectionManager} or {@link ServiceLocator}.
-     */
-    AbstractHk2InjectionManager(Object parent) {
-        this(parent, null);
-    }
-
-    /**
-     * Constructor with initial binder.
-     *
-     * @param binder initial binder which will be immediately registered.
-     */
-    AbstractHk2InjectionManager(Binder binder) {
-        this(null, binder);
+        this(null);
     }
 
     /**
      * Private constructor.
      *
      * @param parent parent of type {@link org.glassfish.jersey.internal.inject.InjectionManager} or {@link ServiceLocator}.
-     * @param binder initial binder which will be immediately registered.
      */
-    private AbstractHk2InjectionManager(Object parent, Binder binder) {
+    AbstractHk2InjectionManager(Object parent) {
         ServiceLocator parentLocator = resolveServiceLocatorParent(parent);
         this.locator = createLocator(parentLocator);
 
         // Register all components needed for proper HK2 locator bootstrap
-        Hk2Helper.bind(locator, new Hk2BootstrapBinder(locator, CompositeBinder.wrap(binder)));
+        ServiceLocatorUtilities.bind(locator, new Hk2BootstrapBinder(locator));
 
         this.locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 

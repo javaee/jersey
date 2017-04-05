@@ -69,15 +69,6 @@ public class ImmediateHk2InjectionManager extends AbstractHk2InjectionManager {
         super(parent);
     }
 
-    /**
-     * Constructor with initial binder.
-     *
-     * @param binder initial binder which will be immediately registered.
-     */
-    ImmediateHk2InjectionManager(Binder binder) {
-        super(binder);
-    }
-
     @Override
     public void completeRegistration() throws IllegalStateException {
         // No-op method.
@@ -95,7 +86,7 @@ public class ImmediateHk2InjectionManager extends AbstractHk2InjectionManager {
 
     @Override
     public void register(Binder binder) {
-        Hk2Helper.bind(getServiceLocator(), binder);
+        Hk2Helper.bind(this, binder);
     }
 
     @Override

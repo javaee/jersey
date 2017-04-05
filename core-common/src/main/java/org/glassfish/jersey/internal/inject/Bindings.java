@@ -42,6 +42,7 @@ package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.function.Supplier;
 
 import javax.ws.rs.core.GenericType;
@@ -57,6 +58,14 @@ public final class Bindings {
 
     private Bindings() {
         throw new AssertionError("Utility class instantiation forbidden.");
+    }
+
+    public static Collection<Binding> getBindings(InjectionManager injectionManager, Binder binder) {
+        if (binder instanceof AbstractBinder) {
+            ((AbstractBinder) binder).setInjectionManager(injectionManager);
+        }
+
+        return binder.getBindings();
     }
 
     /**

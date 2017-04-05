@@ -46,11 +46,11 @@ import java.io.StringWriter;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 import org.glassfish.hk2.api.ErrorInformation;
 import org.glassfish.hk2.api.ErrorService;
 import org.glassfish.hk2.api.MultiException;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Jersey implementation of HK2 Error Service to provide improved reporting

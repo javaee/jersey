@@ -83,11 +83,11 @@ class Hk2Helper {
     /**
      * Bind a translated Jersey-like {@link org.glassfish.jersey.internal.inject.Binder} to HK2-like {@link Binder}.
      *
-     * @param locator      HK2 locator.
-     * @param jerseyBinder Jersey-like binder.
+     * @param injectionManager HK2 injection manager.
+     * @param jerseyBinder     Jersey-like binder.
      */
-    static void bind(ServiceLocator locator, org.glassfish.jersey.internal.inject.Binder jerseyBinder) {
-        bind(locator, jerseyBinder.getBindings());
+    static void bind(AbstractHk2InjectionManager injectionManager, org.glassfish.jersey.internal.inject.Binder jerseyBinder) {
+        bind(injectionManager.getServiceLocator(), Bindings.getBindings(injectionManager, jerseyBinder));
     }
 
     /**

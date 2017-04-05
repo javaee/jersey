@@ -40,9 +40,8 @@
 
 package org.glassfish.jersey.hk2;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * {@link AbstractBinder} that registers all components needed for a proper bootstrap of Jersey based on HK2 framework.
@@ -51,19 +50,15 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 public class Hk2BootstrapBinder extends AbstractBinder {
 
-    private final AbstractBinder externalBinder;
-
     private final ServiceLocator serviceLocator;
 
     /**
      * Create a bootstrap which is specific for HK2 module and automatically install {@code externalBinder}.
      *
      * @param serviceLocator HK2 service locator.
-     * @param externalBinder externally provided binder (particularly Jersey specific services).
      */
-    Hk2BootstrapBinder(ServiceLocator serviceLocator, AbstractBinder externalBinder) {
+    Hk2BootstrapBinder(ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
-        this.externalBinder = externalBinder;
     }
 
     @Override
@@ -75,8 +70,6 @@ public class Hk2BootstrapBinder extends AbstractBinder {
                 new RequestContext.Binder(),
                 // Add support for Context annotation.
                 new ContextInjectionResolverImpl.Binder(),
-                // Compose together the initialization binders and bind them as a whole.
-                externalBinder,
                 // Improved HK2 Error reporting.
                 new JerseyErrorService.Binder());
     }

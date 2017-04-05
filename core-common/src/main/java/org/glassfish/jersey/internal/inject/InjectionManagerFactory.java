@@ -61,13 +61,4 @@ public interface InjectionManagerFactory {
      * @return initialized injection manager.
      */
     InjectionManager create(Object parent);
-
-    /**
-     * Load a new injection manager with an initial binder.
-     *
-     * @param binder an initial which is immediately registered into injection manager.
-     * @return initialized injection manager.
-     */
-    // TODO: CANDIDATE TO DELETE: is used in RuntimeDelegateImpl super(...).
-    InjectionManager create(Binder binder);
 }

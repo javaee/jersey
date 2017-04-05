@@ -57,7 +57,6 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionResolver;
 import org.glassfish.jersey.internal.util.collection.ImmutableCollectors;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
@@ -67,6 +66,7 @@ import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.MultiException;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Implementation of the {@link ClassAnalyzer} that supports selection
