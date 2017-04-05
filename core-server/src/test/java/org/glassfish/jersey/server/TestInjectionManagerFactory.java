@@ -46,15 +46,13 @@ import java.util.Map;
 
 import javax.ws.rs.RuntimeType;
 
+import org.glassfish.jersey.internal.AutoDiscoverableConfigurator;
 import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
-import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -62,7 +60,6 @@ import org.glassfish.jersey.server.internal.inject.ParamConverterConfigurator;
 import org.glassfish.jersey.server.internal.inject.ParamExtractorConfigurator;
 import org.glassfish.jersey.server.internal.inject.ValueSupplierProviderConfigurator;
 import org.glassfish.jersey.server.model.internal.ResourceMethodInvokerConfigurator;
-import org.glassfish.jersey.server.spi.ContainerProvider;
 
 /**
  * Utility class to create initialized server-side injection manager.
@@ -107,14 +104,13 @@ public final class TestInjectionManagerFactory {
                 new MessageBodyFactory.MessageBodyWorkersConfigurator(),
                 new ExceptionMapperFactory.ExceptionMappersConfigurator(),
                 new ResourceMethodInvokerConfigurator(),
-                new ProcessingProvidersConfigurator());
+                new ProcessingProvidersConfigurator(),
+                new ContainerProviderConfigurator(RuntimeType.SERVER),
+                new AutoDiscoverableConfigurator(RuntimeType.SERVER));
 
         bootstrapConfigurators.forEach(configurator -> configurator.init(injectionManager, bootstrapBag));
 
-        AbstractBinder dependentBinders =
-                CompositeBinder.wrap(new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.SERVER),
-                        new ServiceFinderBinder<>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
-                        new ServiceFinderBinder<>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER));
+        AbstractBinder dependentBinders = new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.SERVER);
         injectionManager.register(dependentBinders);
 
         injectionManager.completeRegistration();

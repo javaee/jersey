@@ -58,8 +58,6 @@ import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
-import org.glassfish.jersey.model.internal.RankedComparator;
-import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.ModelProcessor;
@@ -79,26 +77,19 @@ public class ResourceModelConfigurator implements BootstrapConfigurator {
     @Override
     public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
         ServerBootstrapBag serverBag = (ServerBootstrapBag) bootstrapBag;
-
+        Collection<ModelProcessor> modelProcessors = serverBag.getModelProcessors();
         ResourceConfig runtimeConfig = serverBag.getRuntimeConfig();
-        ComponentBag componentBag = runtimeConfig.getComponentBag();
         ResourceBag resourceBag = serverBag.getResourceBag();
+        ComponentBag componentBag = runtimeConfig.getComponentBag();
 
         // Adds all providers from resource config to InjectionManager -> BootstrapConfigurators are able to work with these
         // services and get them.
         bindProvidersAndResources(
                 injectionManager, serverBag, componentBag, resourceBag.classes, resourceBag.instances, runtimeConfig);
-    }
-
-    @Override
-    public void postInit(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
-        ServerBootstrapBag serverBag = (ServerBootstrapBag) bootstrapBag;
-
-        ResourceConfig runtimeConfig = serverBag.getRuntimeConfig();
-        ResourceBag resourceBag = serverBag.getResourceBag();
 
         ResourceModel resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
-        resourceModel = processResourceModel(injectionManager, resourceModel, runtimeConfig);
+        resourceModel = processResourceModel(modelProcessors, resourceModel, runtimeConfig);
+
         bindEnhancingResourceClasses(injectionManager, serverBag, resourceModel, resourceBag, runtimeConfig);
         serverBag.setResourceModel(resourceModel);
 
@@ -106,13 +97,8 @@ public class ResourceModelConfigurator implements BootstrapConfigurator {
         serverBag.getResourceContext().setResourceModel(resourceModel);
     }
 
-    private ResourceModel processResourceModel(InjectionManager injectionManager, ResourceModel resourceModel,
+    private ResourceModel processResourceModel(Collection<ModelProcessor> modelProcessors, ResourceModel resourceModel,
             ResourceConfig runtimeConfig) {
-        Iterable<RankedProvider<ModelProcessor>> allRankedProviders =
-                Providers.getAllRankedProviders(injectionManager, ModelProcessor.class);
-        Iterable<ModelProcessor> modelProcessors =
-                Providers.sortRankedProviders(new RankedComparator<>(), allRankedProviders);
-
         for (final ModelProcessor modelProcessor : modelProcessors) {
             resourceModel = modelProcessor.processResourceModel(resourceModel, runtimeConfig);
         }

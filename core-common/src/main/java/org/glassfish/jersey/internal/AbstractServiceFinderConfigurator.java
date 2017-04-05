@@ -38,45 +38,61 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.model.internal;
+package org.glassfish.jersey.internal;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.glassfish.jersey.internal.BootstrapBag;
-import org.glassfish.jersey.internal.BootstrapConfigurator;
+import javax.ws.rs.RuntimeType;
+
+import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.server.ServerBootstrapBag;
-import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
-import org.glassfish.jersey.server.model.ResourceMethodInvoker;
-import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 /**
- * Configurator which initializes and register {@link ResourceMethodDispatcher} instance into {@link BootstrapBag}.
+ * Simple ServiceFinder configuration.
  *
+ * Looks for all implementations of a given contract using {@link ServiceFinder} and registers found instances to
+ * {@link InjectionManager}.
+ *
+ * @param <T> contract type.
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class ResourceMethodInvokerConfigurator implements BootstrapConfigurator {
+public abstract class AbstractServiceFinderConfigurator<T> implements BootstrapConfigurator {
 
-    @Override
-    public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+    private final Class<T> contract;
+    private final RuntimeType runtimeType;
+
+    /**
+     * Create a new configurator.
+     *
+     * @param contract    contract of the service providers bound by this binder.
+     * @param runtimeType runtime (client or server) where the service finder binder is used.
+     */
+    protected AbstractServiceFinderConfigurator(Class<T> contract, RuntimeType runtimeType) {
+        this.contract = contract;
+        this.runtimeType = runtimeType;
     }
 
-    @Override
-    public void postInit(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
-        ServerBootstrapBag serverBag = (ServerBootstrapBag) bootstrapBag;
-
-        List<ResourceMethodDispatcher.Provider> providers = Arrays.asList(
-                new VoidVoidDispatcherProvider(serverBag.getResourceContext()),
-                new JavaResourceMethodDispatcherProvider(serverBag.getValueSupplierProviders()));
-
-        ResourceMethodInvoker.Builder builder = new ResourceMethodInvoker.Builder()
-                .injectionManager(injectionManager)
-                .resourceMethodDispatcherFactory(new ResourceMethodDispatcherFactory(providers))
-                .resourceMethodInvocationHandlerFactory(new ResourceMethodInvocationHandlerFactory(injectionManager))
-                .configuration(bootstrapBag.getConfiguration())
-                .configurationValidator(() -> injectionManager.getInstance(ConfiguredValidator.class));
-
-        serverBag.setResourceMethodInvokerBuilder(builder);
+    /**
+     * Load all particular implementations of the type {@code T} using {@link ServiceFinder}.
+     *
+     * @param applicationProperties map containing application properties. May be {@code null}
+     * @return all registered classes of the type {@code T}.
+     */
+    protected List<Class<T>> loadImplementations(Map<String, Object> applicationProperties) {
+        boolean METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT = false;
+        boolean disableMetaInfServicesLookup = METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT;
+        if (applicationProperties != null) {
+            disableMetaInfServicesLookup = CommonProperties.getValue(applicationProperties, runtimeType,
+                    CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT, Boolean.class);
+        }
+        if (!disableMetaInfServicesLookup) {
+            return Stream.of(ServiceFinder.find(contract, true).toClassArray())
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 }

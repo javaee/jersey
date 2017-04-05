@@ -53,10 +53,8 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScoped;
@@ -107,8 +105,7 @@ class ClientBinder extends AbstractBinder {
     @Override
     protected void configure() {
         install(new MessagingBinders.MessageBodyProviders(clientRuntimeProperties, RuntimeType.CLIENT),
-                new MessagingBinders.HeaderDelegateProviders(),
-                new ServiceFinderBinder<>(AutoDiscoverable.class, clientRuntimeProperties, RuntimeType.CLIENT));
+                new MessagingBinders.HeaderDelegateProviders());
 
         bindFactory(ReferencingFactory.referenceFactory()).to(new GenericType<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);

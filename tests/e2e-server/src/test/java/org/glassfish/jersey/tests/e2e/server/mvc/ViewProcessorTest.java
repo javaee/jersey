@@ -56,6 +56,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -77,7 +78,7 @@ public class ViewProcessorTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
         enable(TestProperties.LOG_TRAFFIC);
 
-        return new ResourceConfig(
+        ResourceConfig register = new ResourceConfig(
                 ExplicitTemplate.class,
                 ImplicitTemplate.class,
                 ImplicitExplicitTemplate.class,
@@ -85,6 +86,8 @@ public class ViewProcessorTest extends JerseyTest {
                 ImplicitWithSubResourceGetTemplate.class)
                 .register(MvcFeature.class)
                 .register(TestViewProcessor.class);
+        register.property(ServerProperties.WADL_FEATURE_DISABLE, true);
+        return register;
     }
 
     @Template

@@ -38,16 +38,14 @@
  * holder.
  */
 
-package org.glassfish.jersey.spi.inject;
+package org.glassfish.jersey.internal.inject;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.Binding;
-import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.message.internal.CacheControlProvider;
 import org.glassfish.jersey.message.internal.CookieProvider;
 import org.glassfish.jersey.message.internal.DateProvider;
@@ -92,9 +90,24 @@ public class AbstractBinderTest {
     }
 
     @Test
+    public void testRepeatedGetBindings() {
+        AbstractBinder binder = new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(CacheControlProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            }
+        };
+
+        Collection<Binding> bindings1 = binder.getBindings();
+        assertEquals(1, bindings1.size());
+
+        Collection<Binding> bindings2 = binder.getBindings();
+        assertEquals(1, bindings2.size());
+    }
+
+    @Test
     public void testWithInstall() {
         AbstractBinder internalBinder = new AbstractBinder() {
-
             @Override
             protected void configure() {
                 bind(MediaTypeProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);

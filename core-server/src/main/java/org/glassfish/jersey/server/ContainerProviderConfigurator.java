@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,27 +38,39 @@
  * holder.
  */
 
-package org.glassfish.jersey.jaxb.internal;
+package org.glassfish.jersey.server;
 
 import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.core.Configuration;
 
-import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
+import org.glassfish.jersey.internal.AbstractServiceFinderConfigurator;
+import org.glassfish.jersey.internal.BootstrapBag;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
+import org.glassfish.jersey.server.spi.ContainerProvider;
 
 /**
- * JAXB {@link ForcedAutoDiscoverable} that registers all necessary JAXB features
- * into the injection manager directly.
+ * Configurator which initializes and register {@link ContainerProvider} instances into {@link InjectionManager} and
+ * {@link BootstrapBag}.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public final class JaxbAutoDiscoverable implements ForcedAutoDiscoverable {
+class ContainerProviderConfigurator extends AbstractServiceFinderConfigurator<ContainerProvider> {
+
+    /**
+     * Create a new configurator.
+     *
+     * @param runtimeType runtime (client or server) where the service finder binder is used.
+     */
+    ContainerProviderConfigurator(RuntimeType runtimeType) {
+        super(ContainerProvider.class, runtimeType);
+    }
 
     @Override
-    public void configure(final FeatureContext context) {
-        context.register(new JaxbMessagingBinder());
-
-        if (RuntimeType.SERVER == context.getConfiguration().getRuntimeType()) {
-            context.register(new JaxbParamConverterBinder());
-        }
+    public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+        Configuration configuration = bootstrapBag.getConfiguration();
+        loadImplementations(configuration.getProperties())
+                .forEach(implClass -> injectionManager.register(Bindings.service(implClass).to(AutoDiscoverable.class)));
     }
 }

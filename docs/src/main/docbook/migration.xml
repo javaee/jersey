@@ -79,6 +79,11 @@
                             <literal>ImmutableState#configureMetaProviders</literal> was extended about an object ensuring
                             a finalizing the objects (e.g. pre-destroy) which were registered into.
                         </para>
+                        <para>
+                            <literal>CommonConfig#configureAutoDiscoverableProviders</literal> accepts a collection of
+                            <literal>AutoDiscoverable</literal> instead of retrieving this collection from
+                            <literal>ServiceLocator</literal>.
+                        </para>
                     </listitem>
                 </itemizedlist>
             </para>

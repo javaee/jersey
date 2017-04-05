@@ -73,7 +73,6 @@ import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -574,11 +573,12 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     /**
      * Configure {@link AutoDiscoverable auto-discoverables} in the injection manager.
      *
-     * @param injectionManager injection manager in which the auto-discoverables should be configured.
-     * @param forcedOnly defines whether all or only forced auto-discoverables should be configured.
+     * @param injectionManager  injection manager in which the auto-discoverables should be configured.
+     * @param autoDiscoverables list of registered auto discoverable components.
+     * @param forcedOnly        defines whether all or only forced auto-discoverables should be configured.
      */
     public void configureAutoDiscoverableProviders(final InjectionManager injectionManager,
-            final boolean forcedOnly) {
+            final Collection<AutoDiscoverable> autoDiscoverables, final boolean forcedOnly) {
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
             final Set<AutoDiscoverable> providers = new TreeSet<>((o1, o2) -> {
@@ -600,7 +600,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
             // Regular.
             if (!forcedOnly) {
-                providers.addAll(Providers.getProviders(injectionManager, AutoDiscoverable.class));
+                providers.addAll(autoDiscoverables);
             }
 
             for (final AutoDiscoverable autoDiscoverable : providers) {
@@ -642,7 +642,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         Set<Binder> allConfigured = Collections.newSetFromMap(new IdentityHashMap<>());
         allConfigured.addAll(configured);
 
-        Collection<Binder> binders = getBeanDescriptors(configured);
+        Collection<Binder> binders = getBinder(configured);
         if (!binders.isEmpty()) {
             injectionManager.register(CompositeBinder.wrap(binders));
             allConfigured.addAll(binders);
@@ -651,11 +651,11 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         return allConfigured;
     }
 
-    private Collection<Binder> getBeanDescriptors(Set<Binder> configured) {
+    private Collection<Binder> getBinder(Set<Binder> configured) {
         return componentBag.getInstances(ComponentBag.BINDERS_ONLY)
                 .stream()
                 .map(CAST_TO_BINDER)
-                .filter(descriptor -> !configured.contains(descriptor))
+                .filter(binder -> !configured.contains(binder))
                 .collect(Collectors.toList());
     }
 

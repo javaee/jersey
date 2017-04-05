@@ -62,9 +62,11 @@ import javax.ws.rs.core.GenericType;
  */
 public abstract class AbstractBinder implements Binder {
 
-    private List<Binding> bindings = new ArrayList<>();
+    private List<Binding> internalBindings = new ArrayList<>();
 
     private List<AbstractBinder> installed = new ArrayList<>();
+
+    private boolean configured = false;
 
     /**
      * Implement to provide binding definitions using the exposed binding methods.
@@ -82,7 +84,7 @@ public abstract class AbstractBinder implements Binder {
      */
     public <T> ClassBinding<T> bind(Class<T> serviceType) {
         ClassBinding<T> binding = Bindings.service(serviceType);
-        bindings.add(binding);
+        internalBindings.add(binding);
         return binding;
     }
 
@@ -93,7 +95,7 @@ public abstract class AbstractBinder implements Binder {
      * @return the same provided binding.
      */
     public Binding bind(Binding binding) {
-        bindings.add(binding);
+        internalBindings.add(binding);
         return binding;
     }
 
@@ -108,7 +110,7 @@ public abstract class AbstractBinder implements Binder {
      */
     public <T> ClassBinding<T> bindAsContract(Class<T> serviceType) {
         ClassBinding<T> binding = Bindings.serviceAsContract(serviceType);
-        bindings.add(binding);
+        internalBindings.add(binding);
         return binding;
     }
 
@@ -123,7 +125,7 @@ public abstract class AbstractBinder implements Binder {
      */
     public <T> ClassBinding<T> bindAsContract(GenericType<T> serviceType) {
         ClassBinding<T> binding = Bindings.service(serviceType);
-        bindings.add(binding);
+        internalBindings.add(binding);
         return binding;
     }
 
@@ -137,7 +139,7 @@ public abstract class AbstractBinder implements Binder {
      */
     public ClassBinding<Object> bindAsContract(Type serviceType) {
         ClassBinding<Object> binding = Bindings.serviceAsContract(serviceType);
-        bindings.add(binding);
+        internalBindings.add(binding);
         return binding;
     }
 
@@ -153,7 +155,7 @@ public abstract class AbstractBinder implements Binder {
      */
     public <T> InstanceBinding<T> bind(T service) {
         InstanceBinding<T> binding = Bindings.service(service);
-        bindings.add(binding);
+        internalBindings.add(binding);
         return binding;
     }
 
@@ -168,7 +170,7 @@ public abstract class AbstractBinder implements Binder {
     public <T> SupplierClassBinding<T> bindFactory(
             Class<? extends Supplier<T>> supplierType, Class<? extends Annotation> supplierScope) {
         SupplierClassBinding<T> binding = Bindings.supplier(supplierType, supplierScope);
-        bindings.add(binding);
+        internalBindings.add(binding);
         return binding;
     }
 
@@ -183,7 +185,7 @@ public abstract class AbstractBinder implements Binder {
      */
     public <T> SupplierClassBinding<T> bindFactory(Class<? extends Supplier<T>> supplierType) {
         SupplierClassBinding<T> binding = Bindings.supplier(supplierType);
-        bindings.add(binding);
+        internalBindings.add(binding);
         return binding;
     }
 
@@ -196,7 +198,7 @@ public abstract class AbstractBinder implements Binder {
      */
     public <T> SupplierInstanceBinding<T> bindFactory(Supplier<T> factory) {
         SupplierInstanceBinding<T> binding = Bindings.supplier(factory);
-        bindings.add(binding);
+        internalBindings.add(binding);
         return binding;
     }
 
@@ -213,7 +215,7 @@ public abstract class AbstractBinder implements Binder {
      */
     public <T extends InjectionResolver> InjectionResolverBinding<T> bind(T resolver) {
         InjectionResolverBinding<T> binding = Bindings.injectionResolver(resolver);
-        bindings.add(binding);
+        internalBindings.add(binding);
         return binding;
     }
 
@@ -233,26 +235,20 @@ public abstract class AbstractBinder implements Binder {
      *
      * @return collection of descriptors.
      */
+    @Override
     public Collection<Binding> getBindings() {
-        return flatten(this).stream()
-                .flatMap(binder -> binder.bindings.stream())
+        invokeConfigure();
+        List<Binding> bindings = installed.stream()
+                .flatMap(binder -> binder.getBindings().stream())
                 .collect(Collectors.toList());
+        bindings.addAll(internalBindings);
+        return bindings;
     }
 
-
-    private static List<AbstractBinder> flatten(AbstractBinder binder) {
-        List<AbstractBinder> binders = new ArrayList<>();
-        flatten(binder, binders);
-        return binders;
-    }
-
-    private static void flatten(AbstractBinder binder, List<AbstractBinder> binders) {
-        binder.configure();
-
-        if (binder.installed.size() > 0) {
-            binder.installed.forEach(b -> flatten(b, binders));
+    private void invokeConfigure() {
+        if (!configured) {
+            configure();
+            configured = true;
         }
-
-        binders.add(binder);
     }
 }

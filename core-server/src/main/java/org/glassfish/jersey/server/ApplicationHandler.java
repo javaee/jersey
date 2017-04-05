@@ -70,15 +70,14 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.AutoDiscoverableConfigurator;
 import org.glassfish.jersey.internal.BootstrapBag;
 import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.JaxrsProviders;
-import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.Version;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.CompositeBinder;
@@ -86,7 +85,6 @@ import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
@@ -122,7 +120,6 @@ import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.ContainerProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
 /**
@@ -308,7 +305,9 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 new ExceptionMapperFactory.ExceptionMappersConfigurator(),
                 new JaxrsProviders.ProvidersConfigurator(),
                 new ResourceMethodInvokerConfigurator(),
-                new ProcessingProvidersConfigurator());
+                new ProcessingProvidersConfigurator(),
+                new ContainerProviderConfigurator(RuntimeType.SERVER),
+                new AutoDiscoverableConfigurator(RuntimeType.SERVER));
 
         bootstrapConfigurators.forEach(configurator -> configurator.init(injectionManager, bootstrapBag));
 
@@ -327,11 +326,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         this.runtimeConfig = bootstrapBag.getRuntimeConfig();
 
         // Register the binders which are dependent on "Application.properties()"
-        AbstractBinder dependentBinders =
-                CompositeBinder.wrap(new MessagingBinders.MessageBodyProviders(application.getProperties(), RuntimeType.SERVER),
-                        new ServiceFinderBinder<>(ContainerProvider.class, application.getProperties(), RuntimeType.SERVER),
-                        new ServiceFinderBinder<>(AutoDiscoverable.class, application.getProperties(), RuntimeType.SERVER));
-        injectionManager.register(dependentBinders);
+        injectionManager.register(new MessagingBinders.MessageBodyProviders(application.getProperties(), RuntimeType.SERVER));
 
         // Lock original ResourceConfig.
         if (application instanceof ResourceConfig) {
@@ -346,7 +341,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
             // AutoDiscoverable.
             if (!CommonProperties.getValue(runtimeConfig.getProperties(), RuntimeType.SERVER,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
-                runtimeConfig.configureAutoDiscoverableProviders(injectionManager);
+                runtimeConfig.configureAutoDiscoverableProviders(injectionManager, bootstrapBag.getAutoDiscoverables());
             } else {
                 runtimeConfig.configureForcedAutoDiscoverableProviders(injectionManager);
             }
@@ -361,6 +356,9 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
 
             ExternalRequestScopeConfigurator externalRequestScopeConfigurator = new ExternalRequestScopeConfigurator();
             externalRequestScopeConfigurator.init(injectionManager, bootstrapBag);
+
+            ModelProcessorConfigurator modelProcessorConfigurator = new ModelProcessorConfigurator();
+            modelProcessorConfigurator.init(injectionManager, bootstrapBag);
 
             ResourceModelConfigurator resourceModelConfigurator = new ResourceModelConfigurator();
             resourceModelConfigurator.init(injectionManager, bootstrapBag);

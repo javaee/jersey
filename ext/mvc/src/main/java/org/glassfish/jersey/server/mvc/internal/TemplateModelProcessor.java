@@ -91,8 +91,7 @@ class TemplateModelProcessor implements ModelProcessor {
     private static final String IMPLICIT_VIEW_PATH_PARAMETER = "implicit-view-path-parameter";
     private static final String IMPLICIT_VIEW_PATH_PARAMETER_TEMPLATE = "{" + IMPLICIT_VIEW_PATH_PARAMETER + "}";
 
-    private final ResourceContext resourceContext;
-
+    private final Provider<ResourceContext> resourceContext;
     private final Provider<ExtendedUriInfo> extendedUriInfoProvider;
     private final Provider<ConfiguredValidator> validatorProvider;
 
@@ -166,7 +165,7 @@ class TemplateModelProcessor implements ModelProcessor {
             } else if (matchedResources.size() > 1) {
                 return setModelClass(matchedResources.get(1));
             } else {
-                return setModelClass(resourceContext.getResource(resourceClass));
+                return setModelClass(resourceContext.get().getResource(resourceClass));
             }
         }
 
@@ -233,7 +232,7 @@ class TemplateModelProcessor implements ModelProcessor {
      * @param extendedUriInfoProvider (injected) extended uri info provider.
      */
     @Inject
-    TemplateModelProcessor(final ResourceContext resourceContext,
+    TemplateModelProcessor(final Provider<ResourceContext> resourceContext,
                            final Provider<ConfiguredValidator> validatorProvider,
                            final Provider<ExtendedUriInfo> extendedUriInfoProvider) {
         this.resourceContext = resourceContext;
