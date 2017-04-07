@@ -357,6 +357,10 @@
 <!ENTITY jersey.common.CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/CommonProperties.html#METAINF_SERVICES_LOOKUP_DISABLE'>CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE</link>" >
 <!ENTITY jersey.common.CommonProperties.MOXY_JSON_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/CommonProperties.html#MOXY_JSON_FEATURE_DISABLE'>CommonProperties.MOXY_JSON_FEATURE_DISABLE</link>" >
 <!ENTITY jersey.common.CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<link xlink:href='&jersey.javadoc.uri.prefix;/CommonProperties.html#OUTBOUND_CONTENT_LENGTH_BUFFER'>CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</link>" >
+<!ENTITY jersey.common.internal.inject.DisposableSupplier "<link xlink:href='&jersey.javadoc.uri.prefix;/internal/inject/DisposableSupplier.html'>DisposableSupplier</link>">
+<!ENTITY jersey.common.internal.inject.InjectionManager "<link xlink:href='&jersey.javadoc.uri.prefix;/internal/inject/InjectionManager.html'>InjectionManager</link>">
+<!ENTITY jersey.common.internal.inject.AbstractBinder "<link xlink:href='&jersey.javadoc.uri.prefix;/internal/inject/AbstractBinder.html'>AbstractBinder</link>">
+<!ENTITY jersey.common.internal.inject.Binder "<link xlink:href='&jersey.javadoc.uri.prefix;/internal/inject/Binder.html'>Binder</link>">
 <!ENTITY jersey.common.ServiceLocatorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/ServiceLocatorProvider.html'>ServiceLocatorProvider</link>">
 <!ENTITY jersey.common.SslConfigurator "<link xlink:href='&jersey.javadoc.uri.prefix;/SslConfigurator.html'>SslConfigurator</link>">
 <!ENTITY jersey.common.spi.AbstractThreadPoolProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/AbstractThreadPoolProvider.html>AbstractThreadPoolProvider</link>">
@@ -525,6 +529,8 @@
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/server/wadl/WadlFeature.html'>WadlFeature</link>">
 <!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.uri.prefix;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
 <!ENTITY jersey.server.WadlGeneratorConfig "<link xlink:href='&jersey.javadoc.uri.prefix;/server/wadl/config/WadlGeneratorConfig.html'>WadlGeneratorConfig</link>">
+<!ENTITY jersey.server.model.MethodHandler "<link xlink:href='&jersey.javadoc.uri.prefix;/server/model/MethodHandler.html'>MethodHandler</link>">
+<!ENTITY jersey.server.model.ComponentModelValidator "<link xlink:href='&jersey.javadoc.uri.prefix;/server/model/ComponentModelValidator.html'>ComponentModelValidator</link>">
 <!ENTITY jersey.server.monitoring.ApplicationEvent "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ApplicationEvent.html'>ApplicationEvent</link>">
 <!ENTITY jersey.server.monitoring.ApplicationEventListener "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ApplicationEventListener.html'>ApplicationEventListener</link>">
 <!ENTITY jersey.server.monitoring.ApplicationMXBean "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ApplicationMXBean.html'>ApplicationMXBean</link>">
@@ -549,6 +555,7 @@
 <!ENTITY jersey.server.mvc.JspMvcFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/server/mvc/jsp/JspMvcFeature.html'>JspMvcFeature</link>">
 <!ENTITY jersey.server.mvc.MustacheMvcFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/server/mvc/mustache/MustacheMvcFeature.html'>MustacheMvcFeature</link>">
 <!ENTITY jersey.server.mvc.MvcFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/server/mvc/MvcFeature.html'>MvcFeature</link>">
+<!ENTITY jersey.server.mvc.spi.AbstractTemplateProcessor "<link xlink:href='&jersey.javadoc.uri.prefix;/server/mvc/spi/AbstractTemplateProcessor.html'>AbstractTemplateProcessor</link>">
 <!ENTITY jersey.server.mvc.Template "<link xlink:href='&jersey.javadoc.uri.prefix;/server/mvc/Template.html'>@Template</link>">
 <!ENTITY jersey.server.mvc.TemplateProcessor "<link xlink:href='&jersey.javadoc.uri.prefix;/server/mvc/spi/TemplateProcessor.html'>TemplateProcessor</link>">
 <!ENTITY jersey.server.mvc.Viewable "<link xlink:href='&jersey.javadoc.uri.prefix;/server/mvc/Viewable.html'>Viewable</link>">
@@ -563,6 +570,7 @@
 <!ENTITY jersey.server.spi.ComponentProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ComponentProvider.html'>ComponentProvider</link>">
 <!ENTITY jersey.server.spi.ContainerProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ContainerProvider.html'>ContainerProvider</link>">
 <!ENTITY jersey.server.spi.ExternalRequestScope "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ExternalRequestScope.html'>ExternalRequestScope</link>">
+<!ENTITY jersey.server.spi.RequestScopedInitializer "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/RequestScopedInitializer.html'>RequestScopedInitializer</link>">
 <!ENTITY jersey.servlet.ServletContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletContainer.html'>ServletContainer</link>">
 <!ENTITY jersey.servlet.ServletProperties "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html'>ServletProperties</link>">
 <!ENTITY jersey.servlet.ServletProperties.FILTER_CONTEXT_PATH "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html#FILTER_CONTEXT_PATH'>ServletProperties.FILTER_CONTEXT_PATH</link>">
@@ -848,6 +856,7 @@
 <!ENTITY lit.jersey.common.CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE "<literal>CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE</literal>" >
 <!ENTITY lit.jersey.common.CommonProperties.MOXY_JSON_FEATURE_DISABLE "<literal>CommonProperties.MOXY_JSON_FEATURE_DISABLE</literal>" >
 <!ENTITY lit.jersey.common.CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<literal>CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</literal>" >
+<!ENTITY lit.jersey.common.internal.inject.InjectionManager "<literal>InjectionManager</literal>">
 <!ENTITY lit.jersey.common.ServiceLocatorProvider "<literal>ServiceLocatorProvider</literal>">
 <!ENTITY lit.jersey.common.SslConfigurator "<literal>SslConfigurator</literal>">
 <!ENTITY lit.jersey.common.spi.AbstractThreadPoolProvider "<literal>AbstractThreadPoolProvider</literal>">

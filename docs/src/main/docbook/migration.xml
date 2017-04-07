@@ -74,15 +74,66 @@
                             Spring version used in the extension module was upgraded to 4.2.1.RELEASE. The reason for that is lack
                             of Java 8 support with Spring 3.x versions.
                         </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <section xml:id="mig-2.26-injection-manager">
+            <title>Breaking Changes - Injection Manager</title>
+            <para>Following breaking changes are caused by removing and replacing HK2 (<literal>ServiceLocator</literal>) by
+            &jersey.common.internal.inject.InjectionManager;. Jersey injection API is considered as an internal API (except
+            &lit.jersey.common.internal.inject.InjectionManager;) </para>
+            <para>
+                <itemizedlist>
+                    <listitem>
                         <para>
-                            <literal>CommonConfig#configureMetaProviders</literal> and
-                            <literal>ImmutableState#configureMetaProviders</literal> was extended about an object ensuring
-                            a finalizing the objects (e.g. pre-destroy) which were registered into.
+                            Classes in which <literal>HK2 ServiceLocator</literal> was simply replaced by
+                            &jersey.common.internal.inject.InjectionManager; and the replacing influenced their public methods:
+                            <simplelist>
+                                <member>&jersey.server.model.MethodHandler;</member>
+                                <member>&jersey.server.spi.ComponentProvider;</member>
+                                <member>&jersey.server.spi.ExternalRequestScope;</member>
+                                <member>&jersey.server.WadlGeneratorConfig;</member>
+                                <member>&jersey.server.spi.RequestScopedInitializer;</member>
+                            </simplelist>
                         </para>
                         <para>
-                            <literal>CommonConfig#configureAutoDiscoverableProviders</literal> accepts a collection of
-                            <literal>AutoDiscoverable</literal> instead of retrieving this collection from
-                            <literal>ServiceLocator</literal>.
+                            Support for <literal>HK2 Binder</literal> in the case of using HK2 Injection Module was implemented
+                            but Jersey newly supports a registration its own &jersey.common.internal.inject.AbstractBinder; and
+                            &jersey.common.internal.inject.Binder; in &jaxrs.core.Application; to easily switch from HK2 classes
+                            to Jersey ones just by adjusting the imports.
+                        </para>
+                        <para>
+                            &lit.jersey.common.internal.inject.InjectionManager; contains a mechanism for registering DI specific
+                            injection bindings, in case the application uses CDI, developers should use CDI mechanism, in case the
+                            application uses HK2, developers should configure HK2 - ideally via configuring a parent locator that
+                            is then passed to Jersey. The custom bindings can be also registered through &jaxrs.core.Application;
+                            if &lit.jersey.common.internal.inject.InjectionManager; supports the bindings type that means that
+                            <literal>InjectionManager#isRegistrable</literal> returns <literal>true</literal>;
+                        </para>
+                        <para>
+                            In &jersey.server.ResourceConfig; and &jersey.client.ClientConfig; configuration methods for
+                            auto-discoverable components and meta-components (e.g. &lit.jaxrs.core.Feature;) accept
+                            &lit.jersey.common.internal.inject.InjectionManager; and moreover the meta-components accept
+                            <literal>ManagedObjectFinalizer</literal> which ensures a pre-destroy method invocation on registered
+                            components.
+                        </para>
+                        <para>
+                            Method <literal>getTemplateObjectFactory</literal> in
+                            &jersey.server.mvc.spi.AbstractTemplateProcessor; accepts a function that initializes a retrieved
+                            template factory from a configuration, usually this function is just a wrapper with underlying
+                            &lit.jersey.common.internal.inject.InjectionManager; invocation.
+                        </para>
+                            <literal>HK2 Factory</literal> support is replaced by <literal>java.util.function.Supplier</literal>
+                            and Jersey-specific &jersey.common.internal.inject.DisposableSupplier;.
+                        <para>
+                            HK2-specific annotations <literal>@Optional</literal>, <literal>@Immediate</literal>,
+                            <literal>@Unqualified</literal> are no longer supported directly in Jersey but can be used if HK2
+                            Injection Module is used.
+                        </para>
+                        <para>
+                            HK2-specific annotations <literal>@PerLookup</literal> and <literal>@PerThread</literal> are migrated
+                            to Jersey with an adjusted package.
                         </para>
                     </listitem>
                 </itemizedlist>
