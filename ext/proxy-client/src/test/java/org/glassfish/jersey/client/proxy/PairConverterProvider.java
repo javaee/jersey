@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,44 +37,27 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.client.proxy;
 
-package org.glassfish.jersey.server.internal.inject;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
+import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import org.glassfish.jersey.internal.BootstrapBag;
-import org.glassfish.jersey.internal.BootstrapConfigurator;
-import org.glassfish.jersey.internal.inject.Bindings;
-import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.ParamConverterFactory;
-import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.util.collection.LazyValue;
-import org.glassfish.jersey.internal.util.collection.Value;
-import org.glassfish.jersey.internal.util.collection.Values;
-import org.glassfish.jersey.server.ServerBootstrapBag;
-
 /**
- * Configurator which initializes and register {@link MultivaluedParameterExtractorProvider} instance into
- * {@link InjectionManager}.
- *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Harald Wellmann
  */
-public class ParamExtractorConfigurator implements BootstrapConfigurator {
+public class PairConverterProvider implements ParamConverterProvider {
 
+    @SuppressWarnings("unchecked")
     @Override
-    public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
-        ServerBootstrapBag serverBag = (ServerBootstrapBag) bootstrapBag;
-
-        // Param Converters must be initialized Lazy and created at the time of the call on extractor
-        LazyValue<ParamConverterFactory> lazyParamConverterFactory =
-                Values.lazy((Value<ParamConverterFactory>) () -> new ParamConverterFactory(
-                        Providers.getProviders(injectionManager, ParamConverterProvider.class),
-                        Providers.getCustomProviders(injectionManager, ParamConverterProvider.class)));
-
-        MultivaluedParameterExtractorFactory multiExtractor = new MultivaluedParameterExtractorFactory(lazyParamConverterFactory);
-        serverBag.setMultivaluedParameterExtractorProvider(multiExtractor);
-        injectionManager.register(
-                Bindings.service(multiExtractor)
-                        .to(MultivaluedParameterExtractorProvider.class));
+    public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType,
+        Annotation[] annotations) {
+        if (rawType.equals(Pair.class)) {
+            return (ParamConverter<T>) new PairConverter();
+        }
+        return null;
     }
+
 }
