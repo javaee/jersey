@@ -103,6 +103,7 @@ public class ExceptionMapperFactoryTest {
     @Test
     public void testFindMappingExtendedExceptions() throws Exception {
         final InjectionManager injectionManager = Injections.createInjectionManager(new ExtendedExceptionMappers());
+        injectionManager.completeRegistration();
         final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(injectionManager);
 
         final ExceptionMapper mapper = mapperFactory.findMapping(new IllegalArgumentException());
@@ -133,6 +134,7 @@ public class ExceptionMapperFactoryTest {
     @Test
     public void testFindMapping() throws Exception {
         final InjectionManager injectionManager = Injections.createInjectionManager(new AllMappers());
+        injectionManager.completeRegistration();
         final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(injectionManager);
 
         final ExceptionMapper<RuntimeException> mapper = mapperFactory.findMapping(new RuntimeException());
@@ -163,6 +165,7 @@ public class ExceptionMapperFactoryTest {
     @Test
     public void testFindExtendedExceptions() throws Exception {
         final InjectionManager injectionManager = Injections.createInjectionManager(new ExtendedExceptionMappers());
+        injectionManager.completeRegistration();
         final ExceptionMapperFactory mapperFactory = new ExceptionMapperFactory(injectionManager);
 
         final ExceptionMapper mapper = mapperFactory.find(IllegalArgumentException.class);

@@ -54,13 +54,6 @@ import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 public class ImmediateHk2InjectionManager extends AbstractHk2InjectionManager {
 
     /**
-     * Constructor without parent and initial binder.
-     */
-    ImmediateHk2InjectionManager() {
-        super();
-    }
-
-    /**
      * Constructor with parent.
      *
      * @param parent parent of type {@link org.glassfish.jersey.internal.inject.InjectionManager} or {@link ServiceLocator}.

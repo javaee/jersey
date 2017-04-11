@@ -44,6 +44,7 @@ import java.util.function.Consumer;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.Injections;
 
 /**
  * Helper class to minimize the code in tested classes.
@@ -76,6 +77,6 @@ class BindingTestHelper {
      * @return newly created {@code InjectionManager}.
      */
     static InjectionManager createInjectionManager() {
-        return new ImmediateHk2InjectionManager();
+        return Injections.createInjectionManager();
     }
 }

@@ -48,11 +48,9 @@ import java.util.stream.Stream;
 
 import org.glassfish.jersey.internal.BootstrapBag;
 import org.glassfish.jersey.internal.BootstrapConfigurator;
-import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.Bindings;
-import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.server.model.ModelProcessor;
@@ -67,10 +65,11 @@ class ModelProcessorConfigurator implements BootstrapConfigurator {
 
     private static final Function<Object, ModelProcessor> CAST_TO_MODEL_PROCESSOR = ModelProcessor.class::cast;
 
-    private static final Function<Object, Binder> CAST_TO_BINDER = Binder.class::cast;
+    private static final Predicate<Binding> BINDING_MODEL_PROCESSOR_ONLY =
+            binding -> binding.getContracts().contains(ModelProcessor.class);
 
-    private static final Predicate<ContractProvider> MODEL_PROCESSOR_ONLY =
-            model -> model.getContracts().contains(ModelProcessor.class);
+    private static final Predicate<ContractProvider> CONTRACT_PROVIDER_MODEL_PROCESSOR_ONLY =
+            provider -> provider.getContracts().contains(ModelProcessor.class);
 
     @Override
     public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
@@ -84,43 +83,18 @@ class ModelProcessorConfigurator implements BootstrapConfigurator {
         // Get all model processors, registered as an instance or class
         List<ModelProcessor> modelProcessors =
                 Stream.concat(
-                        componentBag.getClasses(MODEL_PROCESSOR_ONLY).stream().map(injectionManager::createAndInitialize),
-                        componentBag.getInstances(MODEL_PROCESSOR_ONLY).stream())
+                        componentBag.getClasses(CONTRACT_PROVIDER_MODEL_PROCESSOR_ONLY).stream()
+                                .map(injectionManager::createAndInitialize),
+                        componentBag.getInstances(CONTRACT_PROVIDER_MODEL_PROCESSOR_ONLY).stream())
                         .map(CAST_TO_MODEL_PROCESSOR)
                         .collect(Collectors.toList());
         modelProcessors.add(optionsMethodProcessor);
 
         // model processors registered using binders
-        modelProcessors.addAll(getProcessorsFromBinders(injectionManager, componentBag));
+        List<ModelProcessor> modelProcessorsFromBinders = ComponentBag
+                .getFromBinders(injectionManager, componentBag, CAST_TO_MODEL_PROCESSOR, BINDING_MODEL_PROCESSOR_ONLY);
+        modelProcessors.addAll(modelProcessorsFromBinders);
 
         serverBag.setModelProcessors(modelProcessors);
-    }
-
-    /**
-     * If {@link ModelProcessor} is registered in {@link ComponentBag} using the {@link Binder}, {@code ModelProcessor} is not
-     * visible using the methods for getting classes and instances {@link ComponentBag#getClasses(Predicate)} and
-     * {@link ComponentBag#getInstances(Predicate)}.
-     *
-     * @param injectionManager injection manager to create an object from {@link ModelProcessor} class.
-     * @param componentBag     component bag which provides registered binders.
-     * @return all {@link ModelProcessor} registered using binders.
-     */
-    @SuppressWarnings("unchecked")
-    private List<ModelProcessor> getProcessorsFromBinders(InjectionManager injectionManager, ComponentBag componentBag) {
-        return componentBag.getInstances(ComponentBag.BINDERS_ONLY).stream()
-                .map(CAST_TO_BINDER)
-                .flatMap(binder -> Bindings.getBindings(injectionManager, binder).stream())
-                .filter(binding -> binding.getContracts().contains(ModelProcessor.class))
-                .map(binding -> {
-                    if (binding instanceof ClassBinding) {
-                        ClassBinding classBinding = (ClassBinding) binding;
-                        return injectionManager.createAndInitialize(classBinding.getService());
-                    } else {
-                        InstanceBinding instanceBinding = (InstanceBinding) binding;
-                        return instanceBinding.getService();
-                    }
-                })
-                .map(CAST_TO_MODEL_PROCESSOR)
-                .collect(Collectors.toList());
     }
 }

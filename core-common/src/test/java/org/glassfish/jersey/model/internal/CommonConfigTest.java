@@ -64,6 +64,7 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 
+import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -71,6 +72,7 @@ import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.ContractProvider;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -981,6 +983,8 @@ public class CommonConfigTest {
 
     @Test
     public void testFeatureInjections() throws Exception {
+        Assume.assumeTrue(Hk2InjectionManagerFactory.isImmediateStrategy());
+
         config.register(InjectIntoFeatureClass.class)
                 .register(new InjectIntoFeatureInstance())
                 .register(new AbstractBinder() {

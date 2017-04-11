@@ -52,7 +52,9 @@ public interface InjectionManagerFactory {
      *
      * @return initialized injection manager.
      */
-    InjectionManager create();
+    default InjectionManager create() {
+        return create(null);
+    }
 
     /**
      * Load a new injection manager with parent object.

@@ -72,11 +72,6 @@ public class Hk2InjectionManagerFactory implements InjectionManagerFactory {
          */
         IMMEDIATE {
             @Override
-            InjectionManager createInjectionManager() {
-                return new ImmediateHk2InjectionManager();
-            }
-
-            @Override
             InjectionManager createInjectionManager(final Object parent) {
                 return new ImmediateHk2InjectionManager(parent);
             }
@@ -86,24 +81,12 @@ public class Hk2InjectionManagerFactory implements InjectionManagerFactory {
          */
         DELAYED {
             @Override
-            InjectionManager createInjectionManager() {
-                return new DelayedHk2InjectionManager();
-            }
-
-            @Override
             InjectionManager createInjectionManager(final Object parent) {
                 return new DelayedHk2InjectionManager(parent);
             }
         };
 
-        abstract InjectionManager createInjectionManager();
-
         abstract InjectionManager createInjectionManager(Object parent);
-    }
-
-    @Override
-    public InjectionManager create() {
-        return initInjectionManager(getStrategy().createInjectionManager());
     }
 
     @Override
@@ -111,7 +94,17 @@ public class Hk2InjectionManagerFactory implements InjectionManagerFactory {
         return initInjectionManager(getStrategy().createInjectionManager(parent));
     }
 
-    private Hk2InjectionManagerStrategy getStrategy() {
+    /**
+     * Check HK2 Strategy property {@link #HK2_INJECTION_MANAGER_STRATEGY} and returns {@code true} if the current HK2 Strategy is
+     * "immediate".
+     *
+     * @return {@code true} if the current HK2 Strategy is "immediate".
+     */
+    public static boolean isImmediateStrategy() {
+        return getStrategy() == Hk2InjectionManagerStrategy.IMMEDIATE;
+    }
+
+    private static Hk2InjectionManagerStrategy getStrategy() {
         String value = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(HK2_INJECTION_MANAGER_STRATEGY));
         if (value == null || value.isEmpty()) {
             return Hk2InjectionManagerStrategy.IMMEDIATE;

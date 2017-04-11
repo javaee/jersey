@@ -77,13 +77,6 @@ abstract class AbstractHk2InjectionManager implements InjectionManager {
     private ServiceLocator locator;
 
     /**
-     * Constructor without parent and initial binder.
-     */
-    AbstractHk2InjectionManager() {
-        this(null);
-    }
-
-    /**
      * Private constructor.
      *
      * @param parent parent of type {@link org.glassfish.jersey.internal.inject.InjectionManager} or {@link ServiceLocator}.

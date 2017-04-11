@@ -83,9 +83,10 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
      */
     protected AbstractRuntimeDelegate(final InjectionManager injectionManager) {
         try {
+            injectionManager.completeRegistration();
             hps = Providers.getProviders(injectionManager, HeaderDelegateProvider.class);
 
-            /**
+            /*
              * Construct a map for quick look up of known header classes
              */
             map = new WeakHashMap<>();

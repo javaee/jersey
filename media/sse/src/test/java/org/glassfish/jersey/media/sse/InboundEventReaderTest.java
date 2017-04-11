@@ -87,10 +87,11 @@ public class InboundEventReaderTest {
 
         MessageBodyFactory messageBodyFactory =
                 new MessageBodyFactory(new CommonConfig(RuntimeType.SERVER, ComponentBag.EXCLUDE_EMPTY));
-        messageBodyFactory.initialize(injectionManager);
 
         injectionManager.register(Bindings.service(messageBodyFactory).to(MessageBodyWorkers.class));
         injectionManager.completeRegistration();
+
+        messageBodyFactory.initialize(injectionManager);
     }
 
     @Test

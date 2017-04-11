@@ -57,6 +57,7 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.xml.bind.Marshaller;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -127,20 +128,20 @@ public class WadlModelProcessor implements ModelProcessor {
                 new SimpleDateFormat(WadlResource.HTTPDATEFORMAT).format(new Date());
 
         @Inject
-        private ExtendedUriInfo extendedUriInfo;
+        private Provider<ExtendedUriInfo> extendedUriInfo;
 
         @Context
-        private WadlApplicationContext wadlApplicationContext;
+        private Provider<WadlApplicationContext> wadlApplicationContext;
 
 
         @Override
         public Response apply(ContainerRequestContext containerRequestContext) {
 
-            final RuntimeResource resource = extendedUriInfo.getMatchedRuntimeResources().get(0);
+            final RuntimeResource resource = extendedUriInfo.get().getMatchedRuntimeResources().get(0);
             // TODO: support multiple resources, see ignored tests in WadlResourceTest.Wadl8Test
             final UriInfo uriInfo = containerRequestContext.getUriInfo();
 
-            final Application wadlApplication = wadlApplicationContext.getApplication(uriInfo,
+            final Application wadlApplication = wadlApplicationContext.get().getApplication(uriInfo,
                     resource.getResources().get(0), WadlUtils.isDetailedWadlRequested(uriInfo));
 
             if (wadlApplication == null) {
@@ -152,7 +153,7 @@ public class WadlModelProcessor implements ModelProcessor {
 
             byte[] bytes;
             try {
-                final Marshaller marshaller = wadlApplicationContext.getJAXBContext().createMarshaller();
+                final Marshaller marshaller = wadlApplicationContext.get().getJAXBContext().createMarshaller();
                 marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
                 final ByteArrayOutputStream os = new ByteArrayOutputStream();
                 marshaller.marshal(wadlApplication, os);

@@ -57,6 +57,7 @@ import javax.inject.Inject;
 import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 import org.glassfish.jersey.internal.inject.Binder;
@@ -67,9 +68,12 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
@@ -166,9 +170,20 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
         }
     }
 
+    @Before
+    public void setup() {
+        Assume.assumeTrue(Hk2InjectionManagerFactory.isImmediateStrategy());
+    }
+
     @Override
     protected DeploymentContext configureDeployment() {
-        return DeploymentContext.newInstance(MyApplication.class);
+        // If strategy is not IMMEDIATE then test will fail even before @Before setup method invocation.
+        // It has no other reason then just run the tests in IMMEDIATE strategy.
+        if (Hk2InjectionManagerFactory.isImmediateStrategy()) {
+            return DeploymentContext.newInstance(MyApplication.class);
+        } else {
+            return DeploymentContext.newInstance(new ResourceConfig());
+        }
     }
 
     @Test
@@ -200,7 +215,7 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
 
     @Test
     public void plainHK2Test() throws Exception {
-        final InjectionManager locator = Injections.createInjectionManager(
+        final InjectionManager injectionManager = Injections.createInjectionManager(
                 new AbstractBinder() {
                     @Override
                     protected void configure() {
@@ -209,18 +224,19 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
                         bindAsContract(MyInjectableSingleton.class).in(Singleton.class);
                     }
                 });
+        injectionManager.completeRegistration();
 
-        final RequestScope requestScope = locator.getInstance(RequestScope.class);
+        final RequestScope requestScope = injectionManager.getInstance(RequestScope.class);
 
-        final MyInjectableSingleton myInjectableSingleton = locator.getInstance(MyInjectableSingleton.class);
-        assertEquals(myInjectableSingleton, locator.getInstance(MyInjectableSingleton.class));
+        final MyInjectableSingleton myInjectableSingleton = injectionManager.getInstance(MyInjectableSingleton.class);
+        assertEquals(myInjectableSingleton, injectionManager.getInstance(MyInjectableSingleton.class));
 
         final MyInjectablePerRequest myInjectablePerRequest = requestScope.runInScope(new Callable<MyInjectablePerRequest>() {
 
             @Override
             public MyInjectablePerRequest call() throws Exception {
-                final MyInjectablePerRequest myInjectablePerRequest = locator.getInstance(MyInjectablePerRequest.class);
-                assertEquals(myInjectablePerRequest, locator.getInstance(MyInjectablePerRequest.class));
+                final MyInjectablePerRequest myInjectablePerRequest = injectionManager.getInstance(MyInjectablePerRequest.class);
+                assertEquals(myInjectablePerRequest, injectionManager.getInstance(MyInjectablePerRequest.class));
                 return myInjectablePerRequest;
             }
         });
@@ -229,7 +245,7 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
 
             @Override
             public void run() {
-                assertNotSame(myInjectablePerRequest, locator.getInstance(MyInjectablePerRequest.class));
+                assertNotSame(myInjectablePerRequest, injectionManager.getInstance(MyInjectablePerRequest.class));
             }
         });
 
@@ -251,6 +267,7 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
         };
         InjectionManager injectionManager = Injections.createInjectionManager();
         injectionManager.register(binder);
+        injectionManager.completeRegistration();
 
         final RequestScope requestScope = injectionManager.getInstance(RequestScope.class);
 

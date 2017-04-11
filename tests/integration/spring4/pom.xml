@@ -128,4 +128,26 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>delayed-strategy-skip-test</id>
+            <activation>
+                <property>
+                    <name>org.glassfish.jersey.injection.manager.strategy</name>
+                    <value>delayed</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <skipTests>true</skipTests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
