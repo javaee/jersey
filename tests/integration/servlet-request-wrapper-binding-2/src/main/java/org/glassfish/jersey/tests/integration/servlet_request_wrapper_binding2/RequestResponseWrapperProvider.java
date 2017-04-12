@@ -76,6 +76,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
+import org.glassfish.jersey.hk2.DelayedHk2InjectionManager;
 import org.glassfish.jersey.hk2.ImmediateHk2InjectionManager;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -118,7 +119,7 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
 
         @Override
         public void initialize(InjectionManager injectionManager) {
-            ServiceLocator locator = ((ImmediateHk2InjectionManager) injectionManager).getServiceLocator();
+            ServiceLocator locator = getServiceLocator(injectionManager);
             ServiceLocatorUtilities.addOneDescriptor(locator, new HttpServletRequestDescriptor(locator));
         }
 
@@ -169,7 +170,7 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
                 return new RequestScopedInitializer() {
                     @Override
                     public void initialize(InjectionManager injectionManager) {
-                        ServiceLocator locator = ((ImmediateHk2InjectionManager) injectionManager).getServiceLocator();
+                        ServiceLocator locator = getServiceLocator(injectionManager);
                         locator.<Ref<HttpServletRequest>>getService(REQUEST_TYPE)
                                 .set(finalWrap(context.getHttpServletRequest()));
                         locator.<Ref<HttpServletResponse>>getService(RESPONSE_TYPE)
@@ -847,6 +848,16 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
         @Override
         public void login(String u, String p) throws ServletException {
             getHttpServletRequest().login(u, p);
+        }
+    }
+
+    private static ServiceLocator getServiceLocator(InjectionManager injectionManager) {
+        if (injectionManager instanceof ImmediateHk2InjectionManager) {
+            return  ((ImmediateHk2InjectionManager) injectionManager).getServiceLocator();
+        } else if (injectionManager instanceof DelayedHk2InjectionManager) {
+            return  ((DelayedHk2InjectionManager) injectionManager).getServiceLocator();
+        } else {
+            throw new RuntimeException("Invalid InjectionManager");
         }
     }
 }

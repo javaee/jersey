@@ -54,9 +54,13 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.annotation.PostConstruct;
 
+import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -114,9 +118,20 @@ public class PostConstructTest extends JerseyTest {
         }
     }
 
+    @Before
+    public void setup() {
+        Assume.assumeTrue(Hk2InjectionManagerFactory.isImmediateStrategy());
+    }
+
     @Override
     protected DeploymentContext configureDeployment() {
-        return DeploymentContext.newInstance(MyApplication.class);
+        // If strategy is not IMMEDIATE then test will fail even before @Before setup method invocation.
+        // It has no other reason then just run the tests in IMMEDIATE strategy.
+        if (Hk2InjectionManagerFactory.isImmediateStrategy()) {
+            return DeploymentContext.newInstance(MyApplication.class);
+        } else {
+            return DeploymentContext.newInstance(new ResourceConfig());
+        }
     }
 
     @Test

@@ -136,6 +136,7 @@ public class ReferencingFactoryTest extends AbstractBinder {
     @Test
     public void testReferencedBinding() {
         InjectionManager injectionManager = Injections.createInjectionManager(this);
+        injectionManager.completeRegistration();
 
         RefInjected refValues = injectionManager.createAndInitialize(RefInjected.class);
         expectedFoo = new Foo(10);

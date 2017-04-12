@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,14 +42,15 @@ package org.glassfish.jersey.tests.cdi.bv;
 
 import javax.ws.rs.core.Application;
 
+import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 
 import org.jboss.weld.environment.se.Weld;
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * Validation result test for CDI environment.
@@ -60,21 +61,30 @@ public class RawCdiTest extends BaseValidationTest {
 
     Weld weld;
 
+    @Before
+    public void setup() {
+        Assume.assumeTrue(Hk2InjectionManagerFactory.isImmediateStrategy());
+    }
+
     @Override
     public void setUp() throws Exception {
-        if (!ExternalTestContainerFactory.class.isAssignableFrom(getTestContainerFactory().getClass())) {
-            weld = new Weld();
-            weld.initialize();
+        if (Hk2InjectionManagerFactory.isImmediateStrategy()) {
+            if (!ExternalTestContainerFactory.class.isAssignableFrom(getTestContainerFactory().getClass())) {
+                weld = new Weld();
+                weld.initialize();
+            }
+            super.setUp();
         }
-        super.setUp();
     }
 
     @Override
     public void tearDown() throws Exception {
-        if (!ExternalTestContainerFactory.class.isAssignableFrom(getTestContainerFactory().getClass())) {
-            weld.shutdown();
+        if (Hk2InjectionManagerFactory.isImmediateStrategy()) {
+            if (!ExternalTestContainerFactory.class.isAssignableFrom(getTestContainerFactory().getClass())) {
+                weld.shutdown();
+            }
+            super.tearDown();
         }
-        super.tearDown();
     }
 
     @Override

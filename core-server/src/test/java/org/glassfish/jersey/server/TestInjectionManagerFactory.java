@@ -42,7 +42,6 @@ package org.glassfish.jersey.server;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.RuntimeType;
 
@@ -51,10 +50,12 @@ import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
+import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.inject.ParamConverterConfigurator;
 import org.glassfish.jersey.server.internal.inject.ParamExtractorConfigurator;
@@ -68,6 +69,12 @@ import org.glassfish.jersey.server.model.internal.ResourceMethodInvokerConfigura
  */
 public final class TestInjectionManagerFactory {
 
+    private static Binder EMPTY_BINDER = new AbstractBinder() {
+        @Override
+        protected void configure() {
+        }
+    };
+
     private TestInjectionManagerFactory() {
         // prevents instantiation
     }
@@ -78,20 +85,36 @@ public final class TestInjectionManagerFactory {
      * @return new initialized server injection manager.
      */
     public static BootstrapResult createInjectionManager() {
-        return createInjectionManager(null);
+        return createInjectionManager(new ResourceConfig(), EMPTY_BINDER);
     }
 
     /**
      * Create new initialized server injection manager.
      *
-     * @param applicationProperties map of application-specific properties.
+     * @param runtimeConfig runtime config with test's components.
      * @return new initialized server injection manager.
      */
-    public static BootstrapResult createInjectionManager(Map<String, Object> applicationProperties) {
+    public static BootstrapResult createInjectionManager(ResourceConfig runtimeConfig) {
+        return createInjectionManager(runtimeConfig, EMPTY_BINDER);
+    }
+
+    /**
+     * Create new initialized server injection manager.
+     *
+     * @param runtimeConfig runtime config with test's components.
+     * @param customBinder  binder which is immediately registered.
+     * @return new initialized server injection manager.
+     */
+    public static BootstrapResult createInjectionManager(ResourceConfig runtimeConfig,  Binder customBinder) {
         InjectionManager injectionManager = Injections.createInjectionManager();
         injectionManager.register(new ServerBinder());
+        injectionManager.register(new MessagingBinders.MessageBodyProviders(runtimeConfig.getProperties(), RuntimeType.SERVER));
+        injectionManager.register(customBinder);
 
         ServerBootstrapBag bootstrapBag = new ServerBootstrapBag();
+        ManagedObjectsFinalizer managedObjectsFinalizer = new ManagedObjectsFinalizer(injectionManager);
+        bootstrapBag.setManagedObjectsFinalizer(managedObjectsFinalizer);
+
         List<BootstrapConfigurator> bootstrapConfigurators = Arrays.asList(
                 new RequestScope.RequestScopeConfigurator(),
                 new ParamConverterConfigurator(),
@@ -99,19 +122,24 @@ public final class TestInjectionManagerFactory {
                 new ValueSupplierProviderConfigurator(),
                 new JerseyResourceContextConfigurator(),
                 new ComponentProviderConfigurator(),
-                new TestConfigConfigurator(),
+                new TestConfigConfigurator(runtimeConfig),
                 new ContextResolverFactory.ContextResolversConfigurator(),
                 new MessageBodyFactory.MessageBodyWorkersConfigurator(),
                 new ExceptionMapperFactory.ExceptionMappersConfigurator(),
                 new ResourceMethodInvokerConfigurator(),
                 new ProcessingProvidersConfigurator(),
                 new ContainerProviderConfigurator(RuntimeType.SERVER),
-                new AutoDiscoverableConfigurator(RuntimeType.SERVER));
+                new AutoDiscoverableConfigurator(RuntimeType.SERVER),
+                new ResourceBagConfigurator(),
+                new ExternalRequestScopeConfigurator(),
+                new ModelProcessorConfigurator(),
+                new ResourceModelConfigurator(),
+                new ServerExecutorProvidersConfigurator());
 
         bootstrapConfigurators.forEach(configurator -> configurator.init(injectionManager, bootstrapBag));
 
-        AbstractBinder dependentBinders = new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.SERVER);
-        injectionManager.register(dependentBinders);
+        // Configure binders and features.
+        bootstrapBag.getRuntimeConfig().configureMetaProviders(injectionManager, bootstrapBag.getManagedObjectsFinalizer());
 
         injectionManager.completeRegistration();
         bootstrapConfigurators.forEach(configurator -> configurator.postInit(injectionManager, bootstrapBag));

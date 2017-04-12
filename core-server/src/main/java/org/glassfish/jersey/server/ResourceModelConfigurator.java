@@ -111,8 +111,8 @@ public class ResourceModelConfigurator implements BootstrapConfigurator {
             ResourceModel resourceModel,
             ResourceBag resourceBag,
             ResourceConfig runtimeConfig) {
-        final Set<Class<?>> newClasses = new HashSet<>();
-        final Set<Object> newInstances = new HashSet<>();
+        Set<Class<?>> newClasses = new HashSet<>();
+        Set<Object> newInstances = new HashSet<>();
         for (final Resource res : resourceModel.getRootResources()) {
             newClasses.addAll(res.getHandlerClasses());
             newInstances.addAll(res.getHandlerInstances());
@@ -120,7 +120,7 @@ public class ResourceModelConfigurator implements BootstrapConfigurator {
         newClasses.removeAll(resourceBag.classes);
         newInstances.removeAll(resourceBag.instances);
 
-        final ComponentBag emptyComponentBag = ComponentBag.newInstance(input -> false);
+        ComponentBag emptyComponentBag = ComponentBag.newInstance(input -> false);
         bindProvidersAndResources(injectionManager, bootstrapBag, emptyComponentBag, newClasses, newInstances, runtimeConfig);
     }
 
@@ -212,12 +212,9 @@ public class ResourceModelConfigurator implements BootstrapConfigurator {
     }
 
     private boolean bindWithComponentProvider(
-            final Class<?> component,
-            final ContractProvider providerModel,
-            final Iterable<ComponentProvider> componentProviders) {
-
-        final Set<Class<?>> contracts = providerModel == null ? Collections.emptySet() : providerModel.getContracts();
-        for (final ComponentProvider provider : componentProviders) {
+            Class<?> component, ContractProvider providerModel, Iterable<ComponentProvider> componentProviders) {
+        Set<Class<?>> contracts = providerModel == null ? Collections.emptySet() : providerModel.getContracts();
+        for (ComponentProvider provider : componentProviders) {
             if (provider.bind(component, contracts)) {
                 return true;
             }

@@ -43,10 +43,13 @@ package org.glassfish.jersey.hk2;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -70,12 +73,7 @@ public class DelayedHk2InjectionManager extends AbstractHk2InjectionManager {
     // Keeps DI provider specific object for registration.
     private final List<org.glassfish.hk2.utilities.Binder> providers = new ArrayList<>();
 
-    /**
-     * Constructor without parent and initial binder.
-     */
-    DelayedHk2InjectionManager() {
-        super();
-    }
+    private boolean completed = false;
 
     /**
      * Constructor with parent.
@@ -88,7 +86,15 @@ public class DelayedHk2InjectionManager extends AbstractHk2InjectionManager {
 
     @Override
     public void register(Binding binding) {
-        bindings.bind(binding);
+        // TODO: Remove this temporary hack and replace it using different Singleton SubResource/EnhancedSubResource registration.
+        // After the completed registration is able to register ClassBinding Singleton and InstanceBinding.
+        // Unfortunately, there is no other simple way how to recognize and allow only SubResource registration after the
+        // completed registration.
+        if (completed && (binding.getScope() == Singleton.class || binding instanceof InstanceBinding)) {
+            Hk2Helper.bind(getServiceLocator(), binding);
+        } else {
+            bindings.bind(binding);
+        }
     }
 
     @Override
@@ -118,5 +124,6 @@ public class DelayedHk2InjectionManager extends AbstractHk2InjectionManager {
     public void completeRegistration() throws IllegalStateException {
         Hk2Helper.bind(this, bindings);
         ServiceLocatorUtilities.bind(getServiceLocator(), providers.toArray(new org.glassfish.hk2.utilities.Binder[]{}));
+        completed = true;
     }
 }

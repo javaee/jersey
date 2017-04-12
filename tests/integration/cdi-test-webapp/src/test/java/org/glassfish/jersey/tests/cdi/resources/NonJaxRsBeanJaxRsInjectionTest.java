@@ -51,6 +51,7 @@ import javax.ws.rs.client.WebTarget;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainerProvider;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
 
@@ -95,6 +96,8 @@ public class NonJaxRsBeanJaxRsInjectionTest {
 
     @Before
     public void before() throws IOException {
+        Assume.assumeTrue(Hk2InjectionManagerFactory.isImmediateStrategy());
+
         if (isDefaultTestContainerFactorySet) {
             initializeWeld();
             startGrizzlyContainer();
@@ -104,10 +107,12 @@ public class NonJaxRsBeanJaxRsInjectionTest {
 
     @After
     public void after() {
-        if (isDefaultTestContainerFactorySet) {
-            httpServer.shutdownNow();
-            weld.shutdown();
-            client.close();
+        if (Hk2InjectionManagerFactory.isImmediateStrategy()) {
+            if (isDefaultTestContainerFactorySet) {
+                httpServer.shutdownNow();
+                weld.shutdown();
+                client.close();
+            }
         }
     }
 

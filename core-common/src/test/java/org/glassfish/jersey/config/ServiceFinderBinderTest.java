@@ -81,6 +81,7 @@ public class ServiceFinderBinderTest {
             }
         };
         injectionManager = Injections.createInjectionManager(binder);
+        injectionManager.completeRegistration();
     }
 
     @AfterClass

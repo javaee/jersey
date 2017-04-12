@@ -124,6 +124,7 @@ public class AbstractBinderTest {
         CacheControlProvider cacheControlProvider = new CacheControlProvider();
         InjectionManager injectionManager = Injections.createInjectionManager();
         injectionManager.register(Bindings.service(cacheControlProvider).to(HeaderDelegateProvider.class));
+        injectionManager.completeRegistration();
 
         AbstractBinder binder = new AbstractBinder() {
             @Override

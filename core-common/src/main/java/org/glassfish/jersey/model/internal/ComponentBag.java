@@ -45,9 +45,11 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -61,7 +63,11 @@ import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
@@ -112,6 +118,9 @@ public class ComponentBag {
         }
         return contracts.size() > count;
     };
+
+
+    private static final Function<Object, Binder> CAST_TO_BINDER = Binder.class::cast;
 
     /**
      * A method creates the {@link Predicate} which is able to filter all Jersey meta-providers along with the components which
@@ -221,6 +230,41 @@ public class ComponentBag {
      */
     public static ComponentBag newInstance(Predicate<ContractProvider> registrationStrategy) {
         return new ComponentBag(registrationStrategy);
+    }
+
+    /**
+     * If {@code T} object is registered in {@link ComponentBag} using the {@link Binder}, {@code T} is not visible using the
+     * methods for getting classes and instances {@link ComponentBag#getClasses(Predicate)} and
+     * {@link ComponentBag#getInstances(Predicate)}.
+     * <p>
+     * Method selects all {@link org.glassfish.jersey.internal.inject.Binding bindings} and picks up the instances or creates
+     * the instances from {@link ClassBinding} (injection does not work at this moment).
+     *
+     * @param injectionManager injection manager to create an object from {@code T} class.
+     * @param componentBag     component bag which provides registered binders.
+     * @return all instances/classes registered using binders.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> getFromBinders(InjectionManager injectionManager, ComponentBag componentBag,
+            Function<Object, T> cast, Predicate<Binding> filter) {
+
+        Function<Binding, Object> bindingToObject = binding -> {
+            if (binding instanceof ClassBinding) {
+                ClassBinding classBinding = (ClassBinding) binding;
+                return injectionManager.createAndInitialize(classBinding.getService());
+            } else {
+                InstanceBinding instanceBinding = (InstanceBinding) binding;
+                return instanceBinding.getService();
+            }
+        };
+
+        return componentBag.getInstances(ComponentBag.BINDERS_ONLY).stream()
+                .map(CAST_TO_BINDER)
+                .flatMap(binder -> Bindings.getBindings(injectionManager, binder).stream())
+                .filter(filter)
+                .map(bindingToObject)
+                .map(cast)
+                .collect(Collectors.toList());
     }
 
     private ComponentBag(Predicate<ContractProvider> registrationStrategy) {
