@@ -96,7 +96,7 @@ public class DomainResource {
             if (testSource) {
                 process.release();
             }
-            process.getBroadcaster().subscribe(eventSink);
+            process.getBroadcaster().register(eventSink);
         } else {
             throw new NotFoundException();
         }

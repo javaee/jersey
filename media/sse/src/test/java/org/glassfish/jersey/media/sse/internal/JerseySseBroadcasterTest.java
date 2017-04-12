@@ -39,11 +39,12 @@
  */
 package org.glassfish.jersey.media.sse.internal;
 
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.ws.rs.Flow;
 import javax.ws.rs.sse.OutboundSseEvent;
+import javax.ws.rs.sse.SseEventSink;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -81,84 +82,6 @@ public class JerseySseBroadcasterTest {
     }
 
     @Test
-    public void testOnErrorFromOnSubscribe() throws InterruptedException {
-        try (JerseySseBroadcaster broadcaster = new JerseySseBroadcaster()) {
-
-            final CountDownLatch latch = new CountDownLatch(1);
-
-
-            broadcaster.onError((subscriber, throwable) -> {
-                if (TEST_EXCEPTION_MSG.equals(throwable.getMessage())) {
-                    latch.countDown();
-                }
-            });
-
-            broadcaster.subscribe(new Flow.Subscriber<OutboundSseEvent>() {
-                @Override
-                public void onSubscribe(Flow.Subscription subscription) {
-                    throw new RuntimeException(TEST_EXCEPTION_MSG);
-                }
-
-                @Override
-                public void onNext(OutboundSseEvent item) {
-                }
-
-                @Override
-                public void onError(Throwable throwable) {
-                }
-
-                @Override
-                public void onComplete() {
-                }
-            });
-
-            Assert.assertTrue(latch.await(2000, TimeUnit.MILLISECONDS));
-        }
-    }
-
-    @Test
-    public void testOnErrorFromOnSubscribeTwoListeners() throws InterruptedException {
-        try (JerseySseBroadcaster broadcaster = new JerseySseBroadcaster()) {
-
-            final CountDownLatch latch = new CountDownLatch(2);
-
-
-            broadcaster.onError((subscriber, throwable) -> {
-                if (TEST_EXCEPTION_MSG.equals(throwable.getMessage())) {
-                    latch.countDown();
-                }
-            });
-
-            broadcaster.onError((subscriber, throwable) -> {
-                if (TEST_EXCEPTION_MSG.equals(throwable.getMessage())) {
-                    latch.countDown();
-                }
-            });
-
-            broadcaster.subscribe(new Flow.Subscriber<OutboundSseEvent>() {
-                @Override
-                public void onSubscribe(Flow.Subscription subscription) {
-                    throw new RuntimeException(TEST_EXCEPTION_MSG);
-                }
-
-                @Override
-                public void onNext(OutboundSseEvent item) {
-                }
-
-                @Override
-                public void onError(Throwable throwable) {
-                }
-
-                @Override
-                public void onComplete() {
-                }
-            });
-
-            Assert.assertTrue(latch.await(2000, TimeUnit.MILLISECONDS));
-        }
-    }
-
-    @Test
     public void testOnErrorFromOnNext() throws InterruptedException {
         try (JerseySseBroadcaster broadcaster = new JerseySseBroadcaster()) {
 
@@ -171,23 +94,20 @@ public class JerseySseBroadcasterTest {
                 }
             });
 
-            broadcaster.subscribe(new Flow.Subscriber<OutboundSseEvent>() {
+            broadcaster.register(new SseEventSink() {
                 @Override
-                public void onSubscribe(Flow.Subscription subscription) {
-                    subscription.request(Long.MAX_VALUE);
+                public boolean isClosed() {
+                    return false;
                 }
 
                 @Override
-                public void onNext(OutboundSseEvent item) {
+                public CompletionStage<?> send(OutboundSseEvent event) {
                     throw new RuntimeException(TEST_EXCEPTION_MSG);
                 }
 
                 @Override
-                public void onError(Throwable throwable) {
-                }
+                public void close() {
 
-                @Override
-                public void onComplete() {
                 }
             });
 
@@ -202,29 +122,26 @@ public class JerseySseBroadcasterTest {
 
             final CountDownLatch latch = new CountDownLatch(1);
 
-            final Flow.Subscriber<OutboundSseEvent> subscriber = new Flow.Subscriber<OutboundSseEvent>() {
+            final SseEventSink eventSink = new SseEventSink() {
                 @Override
-                public void onSubscribe(Flow.Subscription subscription) {
-                    subscription.request(Long.MAX_VALUE);
+                public boolean isClosed() {
+                    return false;
                 }
 
                 @Override
-                public void onNext(OutboundSseEvent item) {
+                public CompletionStage<?> send(OutboundSseEvent event) {
+                    return null;
                 }
 
                 @Override
-                public void onError(Throwable throwable) {
-                }
+                public void close() {
 
-                @Override
-                public void onComplete() {
                 }
             };
-            broadcaster.subscribe(subscriber);
-
+            broadcaster.register(eventSink);
 
             broadcaster.onClose((s) -> {
-                if (s.equals(subscriber)) {
+                if (s.equals(eventSink)) {
                     latch.countDown();
                 }
             });

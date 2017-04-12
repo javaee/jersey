@@ -224,6 +224,9 @@
                     </compilerArguments>
                     <showWarnings>false</showWarnings>
                     <fork>false</fork>
+                    <excludes>
+                        <exclude>module-info.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <!-- producing single jar bundle -->

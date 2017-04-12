@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,8 +67,9 @@ public class JerseyChunkedInput extends OutputStream implements ChunkedInput<Byt
 
     private static final ByteBuffer VOID = ByteBuffer.allocate(0);
     private static final int CAPACITY = 8;
-    private static final int WRITE_TIMEOUT = 1000;
-    private static final int READ_TIMEOUT = 1000;
+    // TODO this needs to be configurable, see JERSEY-3228
+    private static final int WRITE_TIMEOUT = 10000;
+    private static final int READ_TIMEOUT = 10000;
 
     private final LinkedBlockingDeque<ByteBuffer> queue = new LinkedBlockingDeque<>(CAPACITY);
     private final Channel ctx;

@@ -56,6 +56,7 @@ import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -69,6 +70,7 @@ import static org.hamcrest.core.Is.is;
 public class RxFlowableTest {
 
     private Client client;
+    private Client clientWithExecutor;
     private ExecutorService executor;
 
     @Before
@@ -79,6 +81,12 @@ public class RxFlowableTest {
                 .setNameFormat("jersey-rx-client-test-%d")
                 .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
                 .build());
+
+        // TODO JAX-RS 2.1
+        // clientWithExecutor = ClientBuilder.newBuilder().executorService(executor).build();
+        // clientWithExecutor.register(TerminalClientRequestFilter.class);
+        // clientWithExecutor.register(RxFlowableInvokerProvider.class);
+        clientWithExecutor = null;
     }
 
     @After
@@ -100,11 +108,12 @@ public class RxFlowableTest {
     }
 
     @Test
+    @Ignore("TODO JAX-RS 2.1")
     public void testNotFoundWithCustomExecutor() throws Exception {
-        final RxFlowableInvoker invoker = client.target("http://jersey.java.net")
-                                                .request()
-                                                .header("Response-Status", 404)
-                                                .rx(RxFlowableInvoker.class, executor);
+        final RxFlowableInvoker invoker = clientWithExecutor.target("http://jersey.java.net")
+                                                            .request()
+                                                            .header("Response-Status", 404)
+                                                            .rx(RxFlowableInvoker.class);
 
         testInvoker(invoker, 404, true);
     }

@@ -42,12 +42,13 @@ package org.glassfish.jersey.tests.e2e.sse;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import javax.ws.rs.Flow;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -93,39 +94,36 @@ public class BroadcasterCloseTest extends JerseyTest {
         private final Sse sse;
         private final SseBroadcaster broadcaster;
         private final List<String> data = new ArrayList<>();
-        private Flow.Subscription subscription = null;
 
         public SseResource(@Context final Sse sse) {
             this.sse = sse;
             this.broadcaster = sse.newBroadcaster();
-            this.broadcaster.subscribe(new Flow.Subscriber<OutboundSseEvent>() {
+            this.broadcaster.register(new SseEventSink() {
+
+                volatile boolean closed = false;
+
                 @Override
-                public void onSubscribe(Flow.Subscription subscription) {
-                    System.out.println("Slow subscriber onSubscribe");
-                    SseResource.this.subscription = subscription;
-                    subscription.request(1);
+                public boolean isClosed() {
+                    return closed;
                 }
 
                 @Override
-                public void onNext(OutboundSseEvent item) {
+                public CompletionStage<?> send(OutboundSseEvent event) {
                     try {
                         Thread.sleep(SLOW_SUBSCRIBER_LATENCY);
                     } catch (InterruptedException e) {
                         System.out.println("Slow subscriber's sleep was interrupted.");
                     }
-                    data.add("" + item.getData());
-                    subscription.request(1);
+                    data.add("" + event.getData());
+
+                    return CompletableFuture.completedFuture(null);
                 }
 
                 @Override
-                public void onError(Throwable throwable) {
-                    System.out.println("Slow subscriber error.");
-                }
-
-                @Override
-                public void onComplete() {
+                public void close() {
                     System.out.println("Slow subscriber completed");
                     onCompleteLatch.countDown();
+                    this.closed = true;
                 }
             });
         }
@@ -133,7 +131,7 @@ public class BroadcasterCloseTest extends JerseyTest {
         @GET
         @Produces(MediaType.SERVER_SENT_EVENTS)
         public void getServerSentEvents(@Context final SseEventSink eventSink) {
-            broadcaster.subscribe(eventSink);
+            broadcaster.register(eventSink);
         }
 
         @GET

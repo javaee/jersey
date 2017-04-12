@@ -87,7 +87,7 @@ public class SseEventSinkCloseTest extends JerseyTest {
         public String sendEvent(@Context Sse sse) throws InterruptedException {
             OutboundSseEvent event = sse.newEventBuilder().data("An event").build();
             if (!output.isClosed()) {
-                output.onNext(event);
+                output.send(event);
                 return "OK";
             }
             return "Closed";

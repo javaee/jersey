@@ -48,7 +48,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.ws.rs.Flow;
+import org.glassfish.jersey.internal.jsr166.Flow;
 
 import org.junit.Test;
 
@@ -57,7 +57,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test Jersey {@link javax.ws.rs.Flow.Publisher} implementation, {@link JerseyPublisher}.
+ * Test Jersey {@link Flow.Publisher} implementation, {@link JerseyPublisher}.
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */

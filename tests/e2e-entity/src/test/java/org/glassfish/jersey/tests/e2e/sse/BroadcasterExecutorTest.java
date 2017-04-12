@@ -40,11 +40,11 @@
 
 package org.glassfish.jersey.tests.e2e.sse;
 
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import javax.ws.rs.Flow;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -71,7 +71,6 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-
 /**
  * Managed executor service injection and propagation into broadcaster test.
  *
@@ -85,9 +84,7 @@ public class BroadcasterExecutorTest extends JerseyTest {
     private static CountDownLatch closeLatch = new CountDownLatch(1);
     private static CountDownLatch txLatch = new CountDownLatch(2);
 
-    private static boolean onSubscribeThreadOk = false;
-    private static boolean onNextThreadOk = false;
-    private static String onErrorThreadName = "";
+    private static boolean sendThreadOk = false;
     private static boolean onCompleteThreadOk = false;
 
     @Path("sse")
@@ -106,43 +103,32 @@ public class BroadcasterExecutorTest extends JerseyTest {
         @Produces(MediaType.SERVER_SENT_EVENTS)
         @Path("events")
         public void getServerSentEvents(@Context final SseEventSink eventSink, @Context final Sse sse) {
-            broadcaster.subscribe(new Flow.Subscriber<OutboundSseEvent>() {
-                private Flow.Subscription subscription;
 
+            // TODO JAX-RS 2.1
+            broadcaster.register(new SseEventSink() {
                 @Override
-                public void onSubscribe(Flow.Subscription subscription) {
-                    this.subscription = subscription;
-                    final String name = Thread.currentThread().getName();
-                    LOGGER.info("onSubscribe called from " + name);
-                    onSubscribeThreadOk = name.startsWith(THREAD_PREFIX);
-                    subscription.request(Long.MAX_VALUE);
+                public boolean isClosed() {
+                    return eventSink.isClosed();
                 }
 
                 @Override
-                public void onNext(OutboundSseEvent item) {
+                public CompletionStage<?> send(OutboundSseEvent event) {
                     final String name = Thread.currentThread().getName();
-                    LOGGER.info("onNext called with [" + item + "] from " + name);
-                    onNextThreadOk = name.startsWith(THREAD_PREFIX);
+                    LOGGER.info("onNext called with [" + event + "] from " + name);
+                    sendThreadOk = name.startsWith(THREAD_PREFIX);
                     txLatch.countDown();
+                    return eventSink.send(event);
                 }
 
                 @Override
-                public void onError(Throwable throwable) {
-                    final String name = Thread.currentThread().getName();
-                    LOGGER.info("onError called with [" + throwable + "] from " + name);
-                    onErrorThreadName = name;
-                }
-
-                @Override
-                public void onComplete() {
+                public void close() {
                     final String name = Thread.currentThread().getName();
                     LOGGER.info("onComplete called from " + name);
                     onCompleteThreadOk = name.startsWith(THREAD_PREFIX);
-                    subscription.cancel();
                     closeLatch.countDown();
+                    eventSink.close();
                 }
             });
-            broadcaster.subscribe(eventSink);
         }
 
         @Path("push/{msg}")
@@ -209,12 +195,10 @@ public class BroadcasterExecutorTest extends JerseyTest {
         target().path("sse/close").request().get();
         Assert.assertTrue("closeLatch time-outed.", closeLatch.await(2000, TimeUnit.MILLISECONDS));
 
-        Assert.assertTrue("onSubscribe either not invoked at all or from wrong thread", onSubscribeThreadOk);
-        Assert.assertTrue("onNext either not invoked at all or from wrong thread", onNextThreadOk);
-        Assert.assertEquals("onError invoked from [" + onErrorThreadName + "]", "", onErrorThreadName);
+        Assert.assertTrue("send either not invoked at all or from wrong thread", sendThreadOk);
         Assert.assertTrue("onComplete either not invoked at all or from wrong thread", onCompleteThreadOk);
 
         Assert.assertTrue("Client event called from wrong thread ( " + onEventThreadName[0] + ")",
-                onEventThreadName[0].startsWith("custom-client-executor"));
+               onEventThreadName[0].startsWith("custom-client-executor"));
     }
 }

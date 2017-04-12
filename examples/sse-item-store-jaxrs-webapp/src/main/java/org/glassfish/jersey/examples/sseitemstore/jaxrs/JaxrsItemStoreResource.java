@@ -171,7 +171,7 @@ public class JaxrsItemStoreResource {
             }
         }
 
-        getBroadcaster().subscribe(eventSink);
+        getBroadcaster().register(eventSink);
     }
 
     private void replayMissedEvents(int lastEventId, SseEventSink eventSink) {
@@ -183,7 +183,7 @@ public class JaxrsItemStoreResource {
                 LOGGER.info("Replaying events - starting with id " + firstUnreceived);
                 final ListIterator<String> it = itemStore.subList(firstUnreceived, itemStore.size()).listIterator();
                 while (it.hasNext()) {
-                    eventSink.onNext(createItemEvent(it.nextIndex() + firstUnreceived, it.next()));
+                    eventSink.send(createItemEvent(it.nextIndex() + firstUnreceived, it.next()));
                 }
             } else {
                 LOGGER.info("No events to replay.");

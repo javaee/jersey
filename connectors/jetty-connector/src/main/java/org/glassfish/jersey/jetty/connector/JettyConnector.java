@@ -92,7 +92,6 @@ import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.client.util.OutputStreamContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
-import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.util.HttpCookieStore;
 import org.eclipse.jetty.util.Jetty;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -298,13 +297,10 @@ class JettyConnector implements Connector {
     }
 
     private Request translateRequest(final ClientRequest clientRequest) {
-        final HttpMethod method = HttpMethod.fromString(clientRequest.getMethod());
-        if (method == null) {
-            throw new ProcessingException(LocalizationMessages.METHOD_NOT_SUPPORTED(clientRequest.getMethod()));
-        }
+
         final URI uri = clientRequest.getUri();
         final Request request = client.newRequest(uri);
-        request.method(method);
+        request.method(clientRequest.getMethod());
 
         request.followRedirects(clientRequest.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, true));
         final Object readTimeout = clientRequest.getConfiguration().getProperties().get(ClientProperties.READ_TIMEOUT);

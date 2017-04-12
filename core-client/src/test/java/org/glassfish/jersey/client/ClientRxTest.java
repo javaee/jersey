@@ -47,7 +47,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.client.RxInvokerProvider;
 import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.client.WebTarget;
@@ -59,6 +58,7 @@ import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.hamcrest.core.AllOf;
 import org.hamcrest.core.StringContains;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -71,37 +71,47 @@ import static org.junit.Assert.assertTrue;
  */
 public class ClientRxTest {
 
-    public static final ExecutorService EXECUTOR_SERVICE =
+    private static final ExecutorService EXECUTOR_SERVICE =
             Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("rxTest-%d").build());
 
-    public final Client client = ClientBuilder.newClient();
+    private final Client CLIENT;
+    private final Client CLIENT_WITH_EXECUTOR;
+
+    public ClientRxTest() {
+        CLIENT = ClientBuilder.newClient();
+
+        // TODO JAX-RS 2.1
+        // CLIENT_WITH_EXECUTOR = ClientBuilder.newBuilder().executorService(EXECUTOR_SERVICE).build();
+        CLIENT_WITH_EXECUTOR = null;
+    }
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @After
     public void afterClass() {
-        client.close();
+        CLIENT.close();
     }
 
     @Test
     public void testRxInvoker() {
         // explicit register is not necessary, but it can be used.
-        client.register(TestRxInvokerProvider.class, RxInvokerProvider.class);
+        CLIENT.register(TestRxInvokerProvider.class, RxInvokerProvider.class);
 
-        String s = target(client).request().rx(TestRxInvoker.class).get();
+        String s = target(CLIENT).request().rx(TestRxInvoker.class).get();
 
         assertTrue("Provided RxInvoker was not used.", s.startsWith("rxTestInvoker"));
     }
 
     @Test
+    @Ignore("TODO JAX-RS 2.1")
     public void testRxInvokerWithExecutor() {
         // implicit register (not saying that the contract is RxInvokerProvider).
-        client.register(TestRxInvokerProvider.class);
+        CLIENT.register(TestRxInvokerProvider.class);
 
         ExecutorService executorService = Executors
                 .newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("rxTest-%d").build());
-        String s = target(client).request().rx(TestRxInvoker.class, EXECUTOR_SERVICE).get();
+        String s = target(CLIENT_WITH_EXECUTOR).request().rx(TestRxInvoker.class).get();
 
         assertTrue("Provided RxInvoker was not used.", s.startsWith("rxTestInvoker"));
         assertTrue("Executor Service was not passed to RxInvoker", s.contains("rxTest-"));
@@ -109,15 +119,15 @@ public class ClientRxTest {
 
     @Test
     public void testRxInvokerInvalid() {
-        Invocation.Builder request = target(client).request();
+        Invocation.Builder request = target(CLIENT).request();
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("clazz")));
-        request.rx((Class) null).get();
+        request.rx(null).get();
     }
 
     @Test
     public void testRxInvokerNotRegistered() {
-        Invocation.Builder request = target(client).request();
+        Invocation.Builder request = target(CLIENT).request();
         thrown.expect(IllegalStateException.class);
         thrown.expectMessage(AllOf.allOf(
                 new StringContains("TestRxInvoker"),
@@ -126,155 +136,9 @@ public class ClientRxTest {
         request.rx(TestRxInvoker.class).get();
     }
 
-    @Test
-    public void testRxInvokerWithExecutorInvalid() {
-        Invocation.Builder request = target(client).request();
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage(AllOf.allOf(new StringContains("null"), new StringContains("clazz")));
-        request.rx((Class) null, EXECUTOR_SERVICE);
-    }
-
     private WebTarget target(Client client) {
         // Uri is not relevant, the call won't be ever executed.
         return client.target("http://localhost:9999");
-    }
-
-    public static class InvalidInvokerProvider implements RxInvokerProvider<InvalidInvokerProvider>, RxInvoker<Void> {
-
-        @Override
-        public InvalidInvokerProvider getRxInvoker(SyncInvoker invocationBuilder, ExecutorService executorService) {
-            return null;
-        }
-
-        @Override
-        public boolean isProviderFor(Class<?> clazz) {
-            return true;
-        }
-
-        @Override
-        public Void get() {
-            return null;
-        }
-
-        @Override
-        public <R> Void get(Class<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public <R> Void get(GenericType<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public Void put(Entity<?> entity) {
-            return null;
-        }
-
-        @Override
-        public <R> Void put(Entity<?> entity, Class<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public <R> Void put(Entity<?> entity, GenericType<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public Void post(Entity<?> entity) {
-            return null;
-        }
-
-        @Override
-        public <R> Void post(Entity<?> entity, Class<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public <R> Void post(Entity<?> entity, GenericType<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public Void delete() {
-            return null;
-        }
-
-        @Override
-        public <R> Void delete(Class<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public <R> Void delete(GenericType<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public Void head() {
-            return null;
-        }
-
-        @Override
-        public Void options() {
-            return null;
-        }
-
-        @Override
-        public <R> Void options(Class<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public <R> Void options(GenericType<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public Void trace() {
-            return null;
-        }
-
-        @Override
-        public <R> Void trace(Class<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public <R> Void trace(GenericType<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public Void method(String name) {
-            return null;
-        }
-
-        @Override
-        public <R> Void method(String name, Class<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public <R> Void method(String name, GenericType<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public Void method(String name, Entity<?> entity) {
-            return null;
-        }
-
-        @Override
-        public <R> Void method(String name, Entity<?> entity, Class<R> responseType) {
-            return null;
-        }
-
-        @Override
-        public <R> Void method(String name, Entity<?> entity, GenericType<R> responseType) {
-            return null;
-        }
     }
 
     @Provider

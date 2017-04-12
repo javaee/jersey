@@ -108,7 +108,7 @@ public final class MessageStreamResourceJaxRs {
     @Produces(MediaType.SERVER_SENT_EVENTS)
     public void getMessageStream(@Context SseEventSink eventSink) {
         LOGGER.info("--> SSE connection received.");
-        broadcaster.subscribe(eventSink);
+        broadcaster.register(eventSink);
     }
 
 }

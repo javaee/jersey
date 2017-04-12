@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,8 @@ package org.glassfish.jersey.client;
 
 import java.security.KeyStore;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
@@ -138,6 +140,18 @@ public class JerseyClientBuilder extends ClientBuilder {
     public JerseyClientBuilder hostnameVerifier(HostnameVerifier hostnameVerifier) {
         this.hostnameVerifier = hostnameVerifier;
         return this;
+    }
+
+    @Override
+    public ClientBuilder executorService(ExecutorService executorService) {
+        // TODO JAX-RS 2.1
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ClientBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
+        // TODO JAX-RS 2.1
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -93,10 +93,10 @@ public class BroadcasterTest extends JerseyTest {
         @Path("events")
         public void getServerSentEvents(@Context final SseEventSink eventSink, @Context final Sse sse) {
             isSingleton = this.sse == sse;
-            eventSink.onNext(sse.newEventBuilder().data("Event1").build());
-            eventSink.onNext(sse.newEventBuilder().data("Event2").build());
-            eventSink.onNext(sse.newEventBuilder().data("Event3").build());
-            broadcaster.subscribe(eventSink);
+            eventSink.send(sse.newEventBuilder().data("Event1").build());
+            eventSink.send(sse.newEventBuilder().data("Event2").build());
+            eventSink.send(sse.newEventBuilder().data("Event3").build());
+            broadcaster.register(eventSink);
             broadcaster.onClose((subscriber) -> {
                 if (subscriber == eventSink) {
                     closeLatch.countDown();

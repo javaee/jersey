@@ -215,6 +215,9 @@ public class ExecutorProvidersTest extends AbstractBinder {
 
     @Override
     protected void configure() {
+
+
+
         bind(CustomExecutorProvider.class).to(ExecutorServiceProvider.class).in(Singleton.class);
         bind(CustomNamedExecutorProvider.class).to(ExecutorServiceProvider.class).in(Singleton.class);
         bind(CustomSchedulerProvider.class).to(ScheduledExecutorServiceProvider.class).in(Singleton.class);

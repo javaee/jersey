@@ -47,17 +47,16 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.Flow;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.sse.InboundSseEvent;
 import javax.ws.rs.sse.SseEventSource;
-import javax.ws.rs.sse.SseSubscription;
 
 import org.glassfish.jersey.client.ClientExecutor;
 import org.glassfish.jersey.client.JerseyWebTarget;
+import org.glassfish.jersey.internal.jsr166.Flow;
 import org.glassfish.jersey.internal.util.JerseyPublisher;
 import org.glassfish.jersey.media.sse.EventInput;
 import org.glassfish.jersey.media.sse.EventListener;
@@ -73,7 +72,7 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
     private static final Level CONNECTION_ERROR_LEVEL = Level.FINE;
     private static final Logger LOGGER = Logger.getLogger(JerseySseEventSource.class.getName());
 
-    private static final Consumer<SseSubscription> DEFAULT_SUBSCRIPTION_HANDLER =
+    private static final Consumer<Flow.Subscription> DEFAULT_SUBSCRIPTION_HANDLER =
             sseSubscription -> sseSubscription.request(Long.MAX_VALUE);
 
     private static final Consumer<Throwable> DEFAULT_ERROR_HANDLER =
@@ -151,12 +150,6 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
         }
 
         @Override
-        public Builder named(final String name) {
-            // NO-OP - not supported now
-            return this;
-        }
-
-        @Override
         public Builder reconnectingEvery(final long delay, final TimeUnit unit) {
             this.reconnectDelay = delay;
             this.reconnectTimeUnit = unit;
@@ -190,8 +183,7 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
         this.subscribe(DEFAULT_SUBSCRIPTION_HANDLER, onEvent, onError, onComplete);
     }
 
-    @Override
-    public void subscribe(final Consumer<SseSubscription> onSubscribe,
+    public void subscribe(final Consumer<Flow.Subscription> onSubscribe,
                           final Consumer<InboundSseEvent> onEvent,
                           final Consumer<Throwable> onError,
                           final Runnable onComplete) {
@@ -202,7 +194,7 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
         publisher.subscribe(new Flow.Subscriber<InboundSseEvent>() {
             @Override
             public void onSubscribe(final Flow.Subscription subscription) {
-                onSubscribe.accept(new SseSubscription() {
+                onSubscribe.accept(new Flow.Subscription() {
                     @Override
                     public void request(final long n) {
                         subscription.request(n);
