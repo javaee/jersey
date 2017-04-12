@@ -74,6 +74,11 @@
                             Spring version used in the extension module was upgraded to 4.2.1.RELEASE. The reason for that is lack
                             of Java 8 support with Spring 3.x versions.
                         </para>
+                        <para>
+                            Jersey proprietary reactive client API has beed dropped and replaced by JAX-RS 2.1 Reactive Client API.
+                            The backwards compatibility rule couldn't be respected in this case, since the JAX-RS API are based on
+                            what was done in Jersey and there were unresolvable code incompatibilities.
+                        </para>
                     </listitem>
                 </itemizedlist>
             </para>
