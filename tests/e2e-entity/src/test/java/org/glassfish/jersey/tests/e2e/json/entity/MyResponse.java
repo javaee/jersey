@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.e2e.json.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.json.bind.annotation.JsonbVisibility;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -74,6 +75,7 @@ import javax.xml.bind.annotation.XmlType;
         "myMessage", "myError"
 })
 @XmlRootElement(name = "myResponse")
+@JsonbVisibility(CustomJsonbVisibilityStrategy.class)
 public class MyResponse {
 
     @XmlElement(namespace = "http://test.jaxb.com")
@@ -103,7 +105,7 @@ public class MyResponse {
      */
     public List<MyMessage> getMyMessage() {
         if (myMessage == null) {
-            myMessage = new ArrayList<MyMessage>();
+            myMessage = new ArrayList<>();
         }
         return this.myMessage;
     }

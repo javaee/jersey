@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.tests.e2e.json.entity;
 
+import javax.json.bind.annotation.JsonbTransient;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -55,6 +56,7 @@ public class User {
     public String id;
     public String name;
     @XmlTransient
+    @JsonbTransient
     public String password;
 
     public User() {

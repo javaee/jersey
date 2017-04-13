@@ -44,6 +44,7 @@ import java.util.Formatter;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.json.bind.annotation.JsonbVisibility;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -55,6 +56,7 @@ import org.glassfish.jersey.tests.e2e.json.JsonTestHelper;
  */
 @SuppressWarnings({"StringEquality", "RedundantIfStatement"})
 @XmlRootElement
+@JsonbVisibility(CustomJsonbVisibilityStrategy.class)
 public class ComplexBeanWithAttributes {
 
     @XmlAttribute
@@ -77,7 +79,7 @@ public class ComplexBeanWithAttributes {
         instance.filler1 = "111";
         instance.filler2 = "222";
         instance.b = JsonTestHelper.createTestInstance(SimpleBeanWithAttributes.class);
-        instance.list = new LinkedList<SimpleBeanWithAttributes>();
+        instance.list = new LinkedList<>();
         instance.list.add(JsonTestHelper.createTestInstance(SimpleBeanWithAttributes.class));
         instance.list.add(JsonTestHelper.createTestInstance(SimpleBeanWithAttributes.class));
         return instance;
