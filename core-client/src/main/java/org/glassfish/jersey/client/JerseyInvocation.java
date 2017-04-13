@@ -687,23 +687,23 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public Future<Response> patch(final Entity<?> entity) {
-            return method("PATCH");
+            return method("PATCH", entity);
         }
 
         @Override
         public <T> Future<T> patch(final Entity<?> entity, Class<T> responseType) {
-            return method("PATCH", responseType);
+            return method("PATCH", entity, responseType);
 
         }
 
         @Override
         public <T> Future<T> patch(final Entity<?> entity, GenericType<T> responseType) {
-            return method("PATCH", responseType);
+            return method("PATCH", entity, responseType);
         }
 
         @Override
         public <T> Future<T> patch(final Entity<?> entity, InvocationCallback<T> callback) {
-            return method("PATCH", callback);
+            return method("PATCH", entity, callback);
         }
 
         @Override

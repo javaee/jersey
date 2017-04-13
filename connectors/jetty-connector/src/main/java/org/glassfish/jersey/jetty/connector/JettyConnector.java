@@ -407,13 +407,23 @@ class JettyConnector implements Connector {
                     }
                     final ClientResponse response = translateResponse(jerseyRequest, jettyResponse, entityStream);
                     jerseyResponse.set(response);
-                    callback.response(response);
                 }
 
                 @Override
                 public void onContent(final Response jettyResponse, final ByteBuffer content) {
                     try {
-                        entityStream.put(content);
+                        // content must be consumed before returning from this method.
+
+                        if (content.hasArray()) {
+                            byte[] array = content.array();
+                            byte[] buff = new byte[content.remaining()];
+                            System.arraycopy(array, content.arrayOffset(), buff, 0, content.remaining());
+                            entityStream.put(ByteBuffer.wrap(buff));
+                        } else {
+                            byte[] buff = new byte[content.remaining()];
+                            content.get(buff);
+                            entityStream.put(ByteBuffer.wrap(buff));
+                        }
                     } catch (final InterruptedException ex) {
                         final ProcessingException pe = new ProcessingException(ex);
                         entityStream.closeQueue(pe);
@@ -426,7 +436,7 @@ class JettyConnector implements Connector {
                 @Override
                 public void onComplete(final Result result) {
                     entityStream.closeQueue();
-                    // try to complete the future with the response only once truly done
+                    callback.response(jerseyResponse.get());
                     responseFuture.complete(jerseyResponse.get());
                 }
 

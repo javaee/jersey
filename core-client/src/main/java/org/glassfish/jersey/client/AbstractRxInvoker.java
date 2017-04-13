@@ -188,17 +188,17 @@ public abstract class AbstractRxInvoker<T> implements RxInvoker<T> {
 
     @Override
     public T patch(final Entity<?> entity) {
-        return method("PATCH");
+        return method("PATCH", entity);
     }
 
     @Override
     public <R> T patch(final Entity<?> entity, Class<R> responseType) {
-        return method("PATCH", responseType);
+        return method("PATCH", entity, responseType);
     }
 
     @Override
     public <R> T patch(final Entity<?> entity, GenericType<R> responseType) {
-        return method("PATCH", responseType);
+        return method("PATCH", entity, responseType);
     }
 
     @Override

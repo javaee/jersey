@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
@@ -65,7 +66,7 @@ public class OptionsAcceptPatchHeaderFilter implements ContainerResponseFilter {
         if (HttpMethod.OPTIONS.equals(requestContext.getMethod())) {
             final MultivaluedMap<String, Object> headers = responseContext.getHeaders();
             if (!headers.containsKey(ACCEPT_PATCH_HEADER)) {
-                headers.putSingle(ACCEPT_PATCH_HEADER, PatchingInterceptor.PATCH_MEDIA_TYPE);
+                headers.putSingle(ACCEPT_PATCH_HEADER, MediaType.APPLICATION_JSON_PATCH_JSON);
             }
         }
     }
