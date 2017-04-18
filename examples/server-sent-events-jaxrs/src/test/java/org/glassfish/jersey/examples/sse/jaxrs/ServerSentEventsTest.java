@@ -88,7 +88,7 @@ public class ServerSentEventsTest extends JerseyTest {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<String> message = new AtomicReference<>();
         final SseEventSource eventSource = SseEventSource.target(target().path(App.ROOT_PATH)).build();
-        eventSource.subscribe((inboundEvent) -> {
+        eventSource.register((inboundEvent) -> {
             final String value = inboundEvent.readData();
             message.set(value);
             latch.countDown();
@@ -135,7 +135,7 @@ public class ServerSentEventsTest extends JerseyTest {
             final AtomicInteger messageCount = new AtomicInteger(0);  // will this work?
             final int id = i;
             sources[id] = SseEventSource.target(sseTarget).build();
-            sources[id].subscribe((event) -> {
+            sources[id].register((event) -> {
                 messageCount.incrementAndGet();
                 final String message = event.readData(String.class);
                 if ("done".equals(message)) {

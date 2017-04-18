@@ -167,19 +167,19 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
     }
 
     @Override
-    public void subscribe(final Consumer<InboundSseEvent> onEvent) {
+    public void register(final Consumer<InboundSseEvent> onEvent) {
         this.subscribe(DEFAULT_SUBSCRIPTION_HANDLER, onEvent, DEFAULT_ERROR_HANDLER, () -> {
         });
     }
 
     @Override
-    public void subscribe(final Consumer<InboundSseEvent> onEvent, final Consumer<Throwable> onError) {
+    public void register(final Consumer<InboundSseEvent> onEvent, final Consumer<Throwable> onError) {
         this.subscribe(DEFAULT_SUBSCRIPTION_HANDLER, onEvent, onError, () -> {
         });
     }
 
     @Override
-    public void subscribe(final Consumer<InboundSseEvent> onEvent, final Consumer<Throwable> onError, final Runnable onComplete) {
+    public void register(final Consumer<InboundSseEvent> onEvent, final Consumer<Throwable> onError, final Runnable onComplete) {
         this.subscribe(DEFAULT_SUBSCRIPTION_HANDLER, onEvent, onError, onComplete);
     }
 

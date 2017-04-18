@@ -75,7 +75,7 @@ public class ClientExecutorCloseTest extends JerseyTest {
                 .target(target("resource/fail"))
                 .reconnectingEvery(11, TimeUnit.MILLISECONDS)
                 .build();
-        eventSource.subscribe(System.out::println);
+        eventSource.register(System.out::println);
         eventSource.open();
         assertTrue("Waiting for eventSource to open time-outed", cdl.await(5000, TimeUnit.MILLISECONDS));
         assertTrue("Client async executor thread not found.", clientExecutorThreadPresent());

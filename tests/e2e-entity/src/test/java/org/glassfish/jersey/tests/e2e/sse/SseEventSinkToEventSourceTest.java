@@ -133,7 +133,7 @@ public class SseEventSinkToEventSourceTest extends JerseyTest {
         final List<InboundSseEvent> results = new ArrayList<>();
         try (final SseEventSource eventSource = SseEventSource.target(endpoint).build()) {
             final CountDownLatch receivedLatch = new CountDownLatch(3 * MSG_COUNT);
-            eventSource.subscribe((event) -> {
+            eventSource.register((event) -> {
                 results.add(event);
                 receivedLatch.countDown();
             });
@@ -183,8 +183,8 @@ public class SseEventSinkToEventSourceTest extends JerseyTest {
         final CountDownLatch count1 = new CountDownLatch(3 * MSG_COUNT);
         final CountDownLatch count2 = new CountDownLatch(3 * MSG_COUNT);
 
-        eventSource.subscribe(new InboundHandler("consumer1", count1));
-        eventSource.subscribe(new InboundHandler("consumer2", count2));
+        eventSource.register(new InboundHandler("consumer1", count1));
+        eventSource.register(new InboundHandler("consumer2", count2));
 
         eventSource.open();
         final boolean sent = transmitLatch.await(5 * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS);

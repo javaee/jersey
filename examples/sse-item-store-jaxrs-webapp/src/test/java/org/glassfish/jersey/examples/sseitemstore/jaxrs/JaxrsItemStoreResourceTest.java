@@ -138,7 +138,7 @@ public class JaxrsItemStoreResourceTest extends JerseyTest {
             final Queue<Integer> indexes = new ConcurrentLinkedQueue<>();
             indexQueues.add(indexes);
 
-            es.subscribe(inboundEvent -> {
+            es.register(inboundEvent -> {
                 try {
                     if (null == inboundEvent.getName()) {
                         final String data = inboundEvent.readData();
@@ -206,7 +206,7 @@ public class JaxrsItemStoreResourceTest extends JerseyTest {
             final Queue<String> received = new ConcurrentLinkedQueue<>();
             receivedQueues.add(received);
 
-            es.subscribe(inboundEvent -> {
+            es.register(inboundEvent -> {
                 try {
                     if (null == inboundEvent.getName()) {
                         final String data = inboundEvent.readData();

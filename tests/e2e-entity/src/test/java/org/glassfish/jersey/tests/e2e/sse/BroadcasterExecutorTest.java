@@ -180,7 +180,7 @@ public class BroadcasterExecutorTest extends JerseyTest {
                 .target(target().path("sse/events"))
                 .build();
 
-        eventSource.subscribe((event) -> {
+        eventSource.register((event) -> {
                     LOGGER.info("Event: " + event + " from: " + Thread.currentThread().getName());
                     onEventThreadName[0] = Thread.currentThread().getName();
                 }

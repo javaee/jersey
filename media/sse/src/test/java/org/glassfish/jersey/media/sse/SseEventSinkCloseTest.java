@@ -113,7 +113,7 @@ public class SseEventSinkCloseTest extends JerseyTest {
 
         final CountDownLatch eventLatch = new CountDownLatch(3);
         SseEventSource eventSource = SseEventSource.target(sseTarget).build();
-        eventSource.subscribe((event) -> eventLatch.countDown());
+        eventSource.register((event) -> eventLatch.countDown());
         eventSource.open();
         openLatch.await();
 
