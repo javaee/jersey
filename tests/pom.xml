@@ -62,6 +62,7 @@
     <modules>
         <module>e2e</module>
         <module>e2e-client</module>
+        <module>e2e-core-common</module>
         <module>e2e-entity</module>
         <module>e2e-server</module>
         <module>e2e-testng</module>
@@ -84,6 +85,13 @@
         </dependencies>
     </dependencyManagement>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>

@@ -47,8 +47,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 
-import org.glassfish.jersey.hk2.DelayedHk2InjectionManager;
-import org.glassfish.jersey.hk2.ImmediateHk2InjectionManager;
+import org.glassfish.jersey.inject.hk2.DelayedHk2InjectionManager;
+import org.glassfish.jersey.inject.hk2.ImmediateHk2InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;

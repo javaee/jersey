@@ -41,7 +41,7 @@ package org.glassfish.jersey.tests.integration.jersey1883;
 
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
+import org.glassfish.jersey.inject.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;

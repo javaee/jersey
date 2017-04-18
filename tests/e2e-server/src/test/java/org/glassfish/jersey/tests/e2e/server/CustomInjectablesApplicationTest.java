@@ -57,7 +57,7 @@ import javax.inject.Inject;
 import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
+import org.glassfish.jersey.inject.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 import org.glassfish.jersey.internal.inject.Binder;

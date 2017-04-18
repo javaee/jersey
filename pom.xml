@@ -1303,6 +1303,7 @@
 
         <module>ext</module>
         <module>incubator</module>
+        <module>inject</module>
         <module>media</module>
         <module>security</module>
     </modules>

@@ -165,9 +165,9 @@ public final class Providers {
      * @return set of all available service provider instances for the contract.
      */
     public static <T> Set<T> getCustomProviders(InjectionManager injectionManager, Class<T> contract) {
-        Collection<ServiceHolder<T>> hk2Providers =
+        Collection<ServiceHolder<T>> providers =
                 getServiceHolders(injectionManager, contract, CustomAnnotationLiteral.INSTANCE);
-        return getProviderClasses(hk2Providers);
+        return getProviderClasses(providers);
     }
 
     /**

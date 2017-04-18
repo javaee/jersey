@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,7 +57,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  * @author Marc Hadley
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-/* package */ class CookiesParser {
+public class CookiesParser {
 
     private static final Logger LOGGER = Logger.getLogger(CookiesParser.class.getName());
 

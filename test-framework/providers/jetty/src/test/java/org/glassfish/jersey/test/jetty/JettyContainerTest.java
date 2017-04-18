@@ -46,8 +46,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.hk2.DelayedHk2InjectionManager;
-import org.glassfish.jersey.hk2.ImmediateHk2InjectionManager;
+import org.glassfish.jersey.inject.hk2.DelayedHk2InjectionManager;
+import org.glassfish.jersey.inject.hk2.ImmediateHk2InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.jetty.JettyHttpContainer;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
