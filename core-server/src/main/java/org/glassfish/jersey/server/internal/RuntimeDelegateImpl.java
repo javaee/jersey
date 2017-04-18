@@ -43,7 +43,6 @@ package org.glassfish.jersey.server.internal;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.internal.AbstractRuntimeDelegate;
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.server.ContainerFactory;
 
@@ -60,7 +59,7 @@ import org.glassfish.jersey.server.ContainerFactory;
 public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
 
     public RuntimeDelegateImpl() {
-        super(Injections.createInjectionManager(new MessagingBinders.HeaderDelegateProviders()));
+        super(new MessagingBinders.HeaderDelegateProviders().getHeaderDelegateProviders());
     }
 
     @Override
