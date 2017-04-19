@@ -73,6 +73,7 @@
         <module>j-376</module>
         <module>j-441</module>
         <module>j-59</module>
+        <module>jaxrs-component-inject</module>
         <module>jersey-1107</module>
         <module>jersey-1223</module>
         <module>jersey-1604</module>
