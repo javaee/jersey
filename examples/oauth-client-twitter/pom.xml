@@ -63,6 +63,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.glassfish.jersey.security</groupId>
             <artifactId>oauth1-client</artifactId>
             <version>${project.version}</version>

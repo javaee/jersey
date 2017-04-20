@@ -49,7 +49,7 @@ import javax.ws.rs.core.Context;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
+import org.glassfish.jersey.inject.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 

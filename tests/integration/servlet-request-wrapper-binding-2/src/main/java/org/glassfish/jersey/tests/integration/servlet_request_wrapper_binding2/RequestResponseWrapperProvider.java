@@ -76,8 +76,8 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
-import org.glassfish.jersey.hk2.DelayedHk2InjectionManager;
-import org.glassfish.jersey.hk2.ImmediateHk2InjectionManager;
+import org.glassfish.jersey.inject.hk2.DelayedHk2InjectionManager;
+import org.glassfish.jersey.inject.hk2.ImmediateHk2InjectionManager;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;

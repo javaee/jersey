@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.spring.scope;
 
 import java.io.IOException;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;

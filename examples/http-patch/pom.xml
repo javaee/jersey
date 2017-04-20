@@ -64,7 +64,10 @@
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-grizzly2-http</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.github.fge</groupId>
             <artifactId>json-patch</artifactId>

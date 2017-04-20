@@ -47,13 +47,10 @@ import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 
-import org.glassfish.jersey.hk2.ImmediateHk2InjectionManager;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.inject.hk2.ImmediateHk2InjectionManager;
 import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.InjectionResolver;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 
@@ -114,20 +111,8 @@ public class SpringComponentProvider implements ComponentProvider {
         SpringIntoHK2Bridge springBridge = injectionManager.getInstance(SpringIntoHK2Bridge.class);
         springBridge.bridgeSpringBeanFactory(ctx);
 
-        // register Spring @Autowired annotation handler with HK2 ServiceLocator
-        Binder binder = new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new AutowiredInjectResolver(ctx))
-                        .to(InjectionResolver.class);
-
-                bind(ctx)
-                        .to(ApplicationContext.class)
-                        .named("SpringContext");
-            }
-        };
-
-        injectionManager.register(binder);
+        injectionManager.register(Bindings.injectionResolver(new AutowiredInjectResolver(ctx)));
+        injectionManager.register(Bindings.service(ctx).to(ApplicationContext.class).named("SpringContext"));
         LOGGER.config(LocalizationMessages.SPRING_COMPONENT_PROVIDER_INITIALIZED());
     }
 

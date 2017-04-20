@@ -44,7 +44,7 @@ import java.net.URI;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
+import org.glassfish.jersey.inject.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;

@@ -1,0 +1,2 @@
+org.glassfish.jersey.tests.e2e.common.config.TestServiceA
+org.glassfish.jersey.tests.e2e.common.config.TestServiceC

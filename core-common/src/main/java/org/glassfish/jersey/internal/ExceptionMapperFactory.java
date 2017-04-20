@@ -183,7 +183,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
      *
      * @param injectionManager injection manager.
      */
-    ExceptionMapperFactory(InjectionManager injectionManager) {
+    public ExceptionMapperFactory(InjectionManager injectionManager) {
         exceptionMapperTypes = createLazyExceptionMappers(injectionManager);
     }
 

@@ -42,7 +42,7 @@ package org.glassfish.jersey.tests.cdi.bv;
 
 import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
+import org.glassfish.jersey.inject.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 
