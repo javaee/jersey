@@ -51,7 +51,7 @@
 
     <artifactId>e2e-client</artifactId>
     <packaging>jar</packaging>
-    <name>jersey-tests-e2e</name>
+    <name>jersey-tests-e2e-client</name>
 
     <description>Jersey E2E Client tests</description>
 

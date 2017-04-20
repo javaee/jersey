@@ -306,6 +306,9 @@
 <!ENTITY jee6.servlet.HttpServletRequest "<link xlink:href='&jee.javadoc.uri;/javax/servlet/http/HttpServletRequest.html'>HttpServletRequest</link>">
 <!ENTITY jee6.servlet.HttpSession "<link xlink:href='&jee.javadoc.uri;/javax/servlet/http/HttpSession.html'>HttpSession</link>">
 
+<!ENTITY jee6.javax.enterprise.concurrent.ManagedExecutorService "<link xlink:href='&jee.javadoc.uri;/javax/enterprise/concurrent/ManagedExecutorService.html'>ManagedExecutorService</link>">
+<!ENTITY jee6.javax.enterprise.concurrent.ManagedScheduledExecutorService "<link xlink:href='&jee.javadoc.uri;/javax/enterprise/concurrent/ManagedScheduledExecutorService.html'>ManagedScheduledExecutorService</link>">
+
 <!ENTITY jersey.apache.ApacheConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/apache/connector/ApacheConnectorProvider.html'>ApacheConnectorProvider</link>">
 <!ENTITY jersey.client.ChunkParser "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ChunkParser.html'>ChunkParser</link>">
 <!ENTITY jersey.client.ChunkedInput "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ChunkedInput.html'>ChunkedInput</link>">

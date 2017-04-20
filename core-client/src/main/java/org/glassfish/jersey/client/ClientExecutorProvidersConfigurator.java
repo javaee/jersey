@@ -40,12 +40,22 @@
 
 package org.glassfish.jersey.client;
 
+import java.lang.reflect.Method;
+import java.security.AccessController;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.glassfish.jersey.internal.BootstrapBag;
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.internal.AbstractExecutorProvidersConfigurator;
@@ -60,10 +70,14 @@ import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
  */
 class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfigurator {
 
-    private final ComponentBag componentBag;
+    private static final Logger LOGGER = Logger.getLogger(ClientExecutorProvidersConfigurator.class.getName());
 
-    ClientExecutorProvidersConfigurator(ComponentBag componentBag) {
+    private final ComponentBag componentBag;
+    private final JerseyClient client;
+
+    ClientExecutorProvidersConfigurator(ComponentBag componentBag, JerseyClient client) {
         this.componentBag = componentBag;
+        this.client = client;
     }
 
     @Override
@@ -71,30 +85,155 @@ class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfi
         Map<String, Object> runtimeProperties = bootstrapBag.getConfiguration().getProperties();
         ManagedObjectsFinalizer finalizer = bootstrapBag.getManagedObjectsFinalizer();
 
-        // Default async request executors support
-        int asyncThreadPoolSize = ClientProperties.getValue(runtimeProperties, ClientProperties.ASYNC_THREADPOOL_SIZE, 0);
-        asyncThreadPoolSize = (asyncThreadPoolSize < 0) ? 0 : asyncThreadPoolSize;
+        ExecutorServiceProvider defaultAsyncExecutorProvider = null;
+        ScheduledExecutorServiceProvider defaultScheduledExecutorProvider = null;
 
-        // TODO: Do we need to register DEFAULT Executor and ScheduledExecutor to InjectionManager?
-        InstanceBinding<Integer> asyncThreadPoolSizeBinding = Bindings
-                .service(asyncThreadPoolSize)
-                .named("ClientAsyncThreadPoolSize");
-        injectionManager.register(asyncThreadPoolSizeBinding);
+        final ExecutorService clientExecutorService = client.getExecutorService();
 
-        ScheduledExecutorServiceProvider defaultScheduledExecutorProvider = new DefaultClientBackgroundSchedulerProvider();
+        // if there is a users provided executor service, use it
+        if (clientExecutorService != null) {
+            defaultAsyncExecutorProvider = new ClientExecutorServiceProvider(Values.<ExecutorService>of(clientExecutorService));
+        // otherwise, check for ClientProperties.ASYNC_THREADPOOL_SIZE - if that is set, Jersey will create the
+        // ExecutorService to be used. If not and running on Java EE container, ManagedExecutorService will be used.
+        // Final fallback is ForkJoinPool.commonPool()).
+        } else {
+
+            // Default async request executors support
+            Integer asyncThreadPoolSize = ClientProperties
+                    .getValue(runtimeProperties, ClientProperties.ASYNC_THREADPOOL_SIZE, Integer.class);
+
+            if (asyncThreadPoolSize != null) {
+                // TODO: Do we need to register DEFAULT Executor and ScheduledExecutor to InjectionManager?
+                asyncThreadPoolSize = (asyncThreadPoolSize < 0) ? 0 : asyncThreadPoolSize;
+                InstanceBinding<Integer> asyncThreadPoolSizeBinding = Bindings
+                        .service(asyncThreadPoolSize)
+                        .named("ClientAsyncThreadPoolSize");
+                injectionManager.register(asyncThreadPoolSizeBinding);
+
+                defaultAsyncExecutorProvider = new DefaultClientAsyncExecutorProvider(asyncThreadPoolSize);
+            } else {
+                defaultAsyncExecutorProvider = new ClientExecutorServiceProvider(Values.lazy(new Value<ExecutorService>() {
+                    @Override
+                    public ExecutorService get() {
+                        ExecutorService executorService = lookupManagedExecutorService();
+                        return executorService == null ? ForkJoinPool.commonPool() : executorService;
+                    }
+                }));
+            }
+        }
+
+        InstanceBinding<ExecutorServiceProvider> executorBinding = Bindings
+                .service(defaultAsyncExecutorProvider)
+                .to(ExecutorServiceProvider.class);
+
+        injectionManager.register(executorBinding);
+        finalizer.registerForPreDestroyCall(defaultAsyncExecutorProvider);
+
+        final ScheduledExecutorService clientScheduledExecutorService = client.getScheduledExecutorService();
+        if (clientScheduledExecutorService != null) {
+            defaultScheduledExecutorProvider =
+                    new ClientScheduledExecutorServiceProvider(Values.of(clientScheduledExecutorService));
+        } else {
+            ScheduledExecutorService scheduledExecutorService = lookupManagedScheduledExecutorService();
+            defaultScheduledExecutorProvider =
+                scheduledExecutorService == null
+                        // default client background scheduler disposes the executor service when client is closed.
+                        // we don't need to do that for user provided (via ClientBuilder) or managed executor service.
+                        ? new DefaultClientBackgroundSchedulerProvider()
+                        : new ClientScheduledExecutorServiceProvider(Values.of(scheduledExecutorService));
+        }
+
         InstanceBinding<ScheduledExecutorServiceProvider> schedulerBinding = Bindings
                 .service(defaultScheduledExecutorProvider)
                 .to(ScheduledExecutorServiceProvider.class);
         injectionManager.register(schedulerBinding);
         finalizer.registerForPreDestroyCall(defaultScheduledExecutorProvider);
 
-        ExecutorServiceProvider defaultAsyncExecutorProvider = new DefaultClientAsyncExecutorProvider(asyncThreadPoolSize);
-        InstanceBinding<ExecutorServiceProvider> executorBinding = Bindings
-                .service(defaultAsyncExecutorProvider)
-                .to(ExecutorServiceProvider.class);
-        injectionManager.register(executorBinding);
-        finalizer.registerForPreDestroyCall(defaultAsyncExecutorProvider);
-
         registerExecutors(injectionManager, componentBag, defaultAsyncExecutorProvider, defaultScheduledExecutorProvider);
+    }
+
+    private ExecutorService lookupManagedExecutorService() {
+        // Get the default ManagedExecutorService, if available
+        try {
+            // Android and some other environments don't have InitialContext class available.
+            final Class<?> aClass =
+                    AccessController.doPrivileged(ReflectionHelper.classForNamePA("javax.naming.InitialContext"));
+
+            final Object initialContext = aClass.newInstance();
+
+            final Method lookupMethod = aClass.getMethod("lookup", String.class);
+            return (ExecutorService) lookupMethod.invoke(initialContext, "java:comp/DefaultManagedExecutorService");
+        } catch (Exception e) {
+            // ignore
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, e.getMessage(), e);
+            }
+        } catch (LinkageError error) {
+            // ignore - JDK8 compact2 profile - http://openjdk.java.net/jeps/161
+        }
+
+        return null;
+    }
+
+    private ScheduledExecutorService lookupManagedScheduledExecutorService() {
+        try {
+            // Android and some other environments don't have InitialContext class available.
+            final Class<?> aClass =
+                    AccessController.doPrivileged(ReflectionHelper.classForNamePA("javax.naming.InitialContext"));
+            final Object initialContext = aClass.newInstance();
+
+            final Method lookupMethod = aClass.getMethod("lookup", String.class);
+            return (ScheduledExecutorService) lookupMethod
+                    .invoke(initialContext, "java:comp/DefaultManagedScheduledExecutorService");
+        } catch (Exception e) {
+            // ignore
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, e.getMessage(), e);
+            }
+        } catch (LinkageError error) {
+            // ignore - JDK8 compact2 profile - http://openjdk.java.net/jeps/161
+        }
+
+        return null;
+    }
+
+    @ClientAsyncExecutor
+    public static class ClientExecutorServiceProvider implements ExecutorServiceProvider {
+
+        private final Value<ExecutorService> executorService;
+
+        ClientExecutorServiceProvider(Value<ExecutorService> executorService) {
+            this.executorService = executorService;
+        }
+
+        @Override
+        public ExecutorService getExecutorService() {
+            return executorService.get();
+        }
+
+        @Override
+        public void dispose(ExecutorService executorService) {
+
+        }
+    }
+
+    @ClientBackgroundScheduler
+    public static class ClientScheduledExecutorServiceProvider implements ScheduledExecutorServiceProvider {
+
+        private final Value<ScheduledExecutorService> executorService;
+
+        ClientScheduledExecutorServiceProvider(Value<ScheduledExecutorService> executorService) {
+            this.executorService = executorService;
+        }
+
+        @Override
+        public ScheduledExecutorService getExecutorService() {
+            return executorService.get();
+        }
+
+        @Override
+        public void dispose(ExecutorService executorService) {
+
+        }
     }
 }

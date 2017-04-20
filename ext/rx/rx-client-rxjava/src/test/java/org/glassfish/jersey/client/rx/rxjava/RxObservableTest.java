@@ -56,7 +56,6 @@ import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -83,11 +82,9 @@ public class RxObservableTest {
                 .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
                 .build());
 
-        // TODO JAX-RS 2.1
-        // clientWithExecutor = ClientBuilder.newBuilder().executorService(executor).build();
-        // clientWithExecutor.register(TerminalClientRequestFilter.class);
-        // clientWithExecutor.register(RxObservableInvokerProvider.class);
-        clientWithExecutor = null;
+        clientWithExecutor = ClientBuilder.newBuilder().executorService(executor).build();
+        clientWithExecutor.register(TerminalClientRequestFilter.class);
+        clientWithExecutor.register(RxObservableInvokerProvider.class);
     }
 
     @After
@@ -109,7 +106,6 @@ public class RxObservableTest {
     }
 
     @Test
-    @Ignore("TODO JAX-RS 2.1")
     public void testNotFoundWithCustomExecutor() throws Exception {
         final RxObservableInvoker invoker = clientWithExecutor.target("http://jersey.java.net")
                                                               .request()
@@ -227,7 +223,7 @@ public class RxObservableTest {
 
         // Executor.
         assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread
-                ? containsString("jersey-rx-client-test") : containsString("RxIoScheduler"));
+                ? containsString("jersey-rx-client-test") : containsString("ForkJoinPool.commonPool"));
 
         // Properties.
         assertThat(response.getHeaderString("Test-Uri"), is("http://jersey.java.net"));

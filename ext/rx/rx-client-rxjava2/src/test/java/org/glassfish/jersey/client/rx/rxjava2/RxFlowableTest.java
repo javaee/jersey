@@ -56,7 +56,6 @@ import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -82,11 +81,9 @@ public class RxFlowableTest {
                 .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
                 .build());
 
-        // TODO JAX-RS 2.1
-        // clientWithExecutor = ClientBuilder.newBuilder().executorService(executor).build();
-        // clientWithExecutor.register(TerminalClientRequestFilter.class);
-        // clientWithExecutor.register(RxFlowableInvokerProvider.class);
-        clientWithExecutor = null;
+        clientWithExecutor = ClientBuilder.newBuilder().executorService(executor).build();
+        clientWithExecutor.register(TerminalClientRequestFilter.class);
+        clientWithExecutor.register(RxFlowableInvokerProvider.class);
     }
 
     @After
@@ -108,7 +105,6 @@ public class RxFlowableTest {
     }
 
     @Test
-    @Ignore("TODO JAX-RS 2.1")
     public void testNotFoundWithCustomExecutor() throws Exception {
         final RxFlowableInvoker invoker = clientWithExecutor.target("http://jersey.java.net")
                                                             .request()
@@ -216,7 +212,7 @@ public class RxFlowableTest {
 
         // Executor.
         assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread
-                ? containsString("jersey-rx-client-test") : containsString("RxCachedThreadScheduler"));
+                ? containsString("jersey-rx-client-test") : containsString("ForkJoinPool.commonPool"));
 
         // Properties.
         assertThat(response.getHeaderString("Test-Uri"), is("http://jersey.java.net"));

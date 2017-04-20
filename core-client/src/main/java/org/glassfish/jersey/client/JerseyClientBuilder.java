@@ -66,6 +66,8 @@ public class JerseyClientBuilder extends ClientBuilder {
     private HostnameVerifier hostnameVerifier;
     private SslConfigurator sslConfigurator;
     private SSLContext sslContext;
+    private ExecutorService executorService;
+    private ScheduledExecutorService scheduledExecutorService;
 
     /**
      * Create a new custom-configured {@link JerseyClient} instance.
@@ -144,20 +146,21 @@ public class JerseyClientBuilder extends ClientBuilder {
 
     @Override
     public ClientBuilder executorService(ExecutorService executorService) {
-        // TODO JAX-RS 2.1
-        throw new UnsupportedOperationException();
+        this.executorService = executorService;
+        return this;
     }
 
     @Override
     public ClientBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
-        // TODO JAX-RS 2.1
-        throw new UnsupportedOperationException();
+        this.scheduledExecutorService = scheduledExecutorService;
+        return this;
     }
 
     @Override
     public JerseyClient build() {
         if (sslContext != null) {
-            return new JerseyClient(config, sslContext, hostnameVerifier);
+            return new JerseyClient(config, sslContext, hostnameVerifier, null, executorService,
+                                    scheduledExecutorService);
         } else if (sslConfigurator != null) {
             final SslConfigurator sslConfiguratorCopy = sslConfigurator.copy();
             return new JerseyClient(
@@ -168,9 +171,10 @@ public class JerseyClientBuilder extends ClientBuilder {
                             return sslConfiguratorCopy.createSSLContext();
                         }
                     }),
-                    hostnameVerifier);
+                    hostnameVerifier, executorService, scheduledExecutorService);
         } else {
-            return new JerseyClient(config, (UnsafeValue<SSLContext, IllegalStateException>) null, hostnameVerifier);
+            return new JerseyClient(config, (UnsafeValue<SSLContext, IllegalStateException>) null, hostnameVerifier,
+                                    executorService, scheduledExecutorService);
         }
     }
 

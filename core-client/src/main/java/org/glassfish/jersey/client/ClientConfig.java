@@ -427,7 +427,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             ProviderBinder.bindProviders(runtimeCfgState.getComponentBag(), RuntimeType.CLIENT, null, injectionManager);
 
             ClientExecutorProvidersConfigurator executorProvidersConfigurator =
-                    new ClientExecutorProvidersConfigurator(runtimeCfgState.getComponentBag());
+                    new ClientExecutorProvidersConfigurator(runtimeCfgState.getComponentBag(), runtimeCfgState.client);
             executorProvidersConfigurator.init(injectionManager, bootstrapBag);
 
             injectionManager.completeRegistration();

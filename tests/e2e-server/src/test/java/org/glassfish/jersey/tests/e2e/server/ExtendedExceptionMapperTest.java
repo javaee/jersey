@@ -292,6 +292,12 @@ public class ExtendedExceptionMapperTest extends JerseyTest {
 
         // Check logs. (??)
         for (final LogRecord logRecord : getLoggedRecords()) {
+
+            // TODO: this test is fragile.
+            if (logRecord.getLoggerName().contains("ClientExecutorProvidersConfigurator")) {
+                continue;
+            }
+
             for (final String message : new String[]{
                     LocalizationMessages.ERROR_EXCEPTION_MAPPING_ORIGINAL_EXCEPTION(),
                     LocalizationMessages.ERROR_EXCEPTION_MAPPING_THROWN_TO_CONTAINER()}) {

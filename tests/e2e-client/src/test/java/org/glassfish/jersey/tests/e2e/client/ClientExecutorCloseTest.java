@@ -52,6 +52,7 @@ import javax.ws.rs.sse.SseEventSource;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -68,6 +69,7 @@ public class ClientExecutorCloseTest extends JerseyTest {
      * Tests that closing a client shuts down a corresponding client async executor service.
      */
     @Test
+    @Ignore("Jersey uses ForkJoin common pool by default, which shouldn't be closed when client closes.")
     public void testCloseAsyncExecutor() throws InterruptedException {
         assertFalse(clientExecutorThreadPresent());
         target("resource").request().async().get();

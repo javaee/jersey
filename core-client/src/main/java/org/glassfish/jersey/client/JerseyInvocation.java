@@ -87,6 +87,7 @@ import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.spi.ExecutorServiceProvider;
 
 /**
  * Jersey implementation of {@link javax.ws.rs.client.Invocation JAX-RS client-side
@@ -488,18 +489,22 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public CompletionStageRxInvoker rx() {
-            return new JerseyCompletionStageRxInvoker(this, null);
+            ExecutorServiceProvider instance = this.requestContext.getInjectionManager()
+                                                                  .getInstance(ExecutorServiceProvider.class);
+
+            return new JerseyCompletionStageRxInvoker(this, instance.getExecutorService());
         }
 
         @Override
         public <T extends RxInvoker> T rx(Class<T> clazz) {
-            return createRxInvoker(clazz, null);
+            ExecutorServiceProvider instance = this.requestContext.getInjectionManager()
+                                                                  .getInstance(ExecutorServiceProvider.class);
+
+            return createRxInvoker(clazz, instance.getExecutorService());
         }
 
         private <T extends RxInvoker> T rx(Class<T> clazz, ExecutorService executorService) {
             if (executorService == null) {
-                // TODO JAX-RS 2.1 - Get the executor service from the client runtime
-                // TODO @see ClientBuilder#executorService
                 throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("executorService"));
             }
 

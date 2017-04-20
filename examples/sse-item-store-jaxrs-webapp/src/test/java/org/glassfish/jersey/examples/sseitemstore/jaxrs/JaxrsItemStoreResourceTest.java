@@ -47,11 +47,16 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -64,6 +69,7 @@ import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 
@@ -84,18 +90,21 @@ import static org.junit.Assert.assertTrue;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JaxrsItemStoreResourceTest extends JerseyTest {
+
     private static final int RECONNECT_DEFAULT = 500;
     private static final Logger LOGGER = Logger.getLogger(JaxrsItemStoreResourceTest.class.getName());
     private static final int MAX_LISTENERS = 5;
     private static final int MAX_ITEMS = 10;
 
+    private final ExecutorService executorService =
+            Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("JaxrsItemStoreResourceTest-%d").build());
+    private final AtomicReference<Client> client = new AtomicReference<>(null);
 
     @Override
     protected Application configure() {
         return new JaxrsItemStoreApp();
     }
 
-    @Override
     protected void configureClient(ClientConfig config) {
         // using AHC as a test client connector to avoid issues with HttpUrlConnection socket management.
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
@@ -107,6 +116,27 @@ public class JaxrsItemStoreResourceTest extends JerseyTest {
         config.property(ApacheClientProperties.CONNECTION_MANAGER, cm)
                 .property(ClientProperties.READ_TIMEOUT, 2000)
                 .connectorProvider(new ApacheConnectorProvider());
+    }
+
+    @Override
+    protected Client getClient() {
+        if (client.get() == null) {
+            ClientConfig clientConfig = new ClientConfig();
+            configureClient(clientConfig);
+            client.compareAndSet(null,
+                                 ClientBuilder.newBuilder()
+                                              .withConfig(clientConfig)
+                                              .executorService(executorService).build());
+        }
+
+        return client.get();
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        client.get().close();
+        executorService.shutdown();
     }
 
     @Override
