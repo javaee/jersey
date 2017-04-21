@@ -949,14 +949,14 @@
 
     <!--distributionManagement /-->
 
-    <pluginRepositories>
+   <!-- <pluginRepositories>
         <pluginRepository>
             <id>snapshots.codehaus.org</id>
             <name>Codehaus.org Snapshots Maven Repository</name>
             <url>http://nexus.codehaus.org/snapshots</url>
             <layout>default</layout>
         </pluginRepository>
-    </pluginRepositories>
+    </pluginRepositories>-->
 
     <!-- TODO remove the java.net maven repository reference -->
     <repositories>

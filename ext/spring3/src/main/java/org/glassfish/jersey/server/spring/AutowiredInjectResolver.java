@@ -53,6 +53,16 @@ import org.glassfish.hk2.api.ServiceHandle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.config.DependencyDescriptor;
+import java.util.HashSet;
+import java.util.Set;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import org.springframework.core.MethodParameter;
+
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import java.lang.reflect.Constructor;
 
 /**
  * HK2 injection resolver for Spring framework {@link Autowired} annotation injection.
@@ -82,20 +92,38 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
                 beanName = an.value();
             }
         }
-        return getBeanFromSpringContext(beanName, injectee.getRequiredType());
+        boolean required = parent != null ? parent.getAnnotation(Autowired.class).required() : false;
+        return getBeanFromSpringContext(beanName, injectee, required);
     }
 
-    private Object getBeanFromSpringContext(String beanName, Type beanType) {
-        Class<?> bt = getClassFromType(beanType);
-        if(beanName != null) {
-            return ctx.getBean(beanName, bt);
+    private Object getBeanFromSpringContext(String beanName, Injectee injectee, final boolean required) {
+    	 try {
+             DependencyDescriptor dependencyDescriptor = createSpringDependencyDescriptor(injectee);
+             Set<String> autowiredBeanNames = new HashSet<String>(1);
+             autowiredBeanNames.add(beanName);
+             return ctx.getAutowireCapableBeanFactory().resolveDependency(dependencyDescriptor, null,
+                     autowiredBeanNames, null);
+         } catch (NoSuchBeanDefinitionException e) {
+             if (required) {
+                 LOGGER.warning(e.getMessage());
+                 throw e;
+             }
+             return null;
+         }
+    }
+    
+    private DependencyDescriptor createSpringDependencyDescriptor(final Injectee injectee) {
+        AnnotatedElement annotatedElement = injectee.getParent();
+
+        if (annotatedElement.getClass().isAssignableFrom(Field.class)) {
+            return new DependencyDescriptor((Field) annotatedElement, !injectee.isOptional());
+        } else if (annotatedElement.getClass().isAssignableFrom(Method.class)) {
+            return new DependencyDescriptor(
+                    new MethodParameter((Method) annotatedElement, injectee.getPosition()), !injectee.isOptional());
+        } else {
+            return new DependencyDescriptor(
+                    new MethodParameter((Constructor) annotatedElement, injectee.getPosition()), !injectee.isOptional());
         }
-        Map<String, ?> beans = ctx.getBeansOfType(bt);
-        if(beans == null || beans.size() != 1) {
-            LOGGER.warning(LocalizationMessages.NO_BEANS_FOUND_FOR_TYPE(beanType));
-            return null;
-        }
-        return beans.values().iterator().next();
     }
 
     private Class<?> getClassFromType(Type type) {
