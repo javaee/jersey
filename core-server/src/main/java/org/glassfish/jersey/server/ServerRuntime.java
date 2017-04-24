@@ -855,6 +855,11 @@ public class ServerRuntime {
         }
 
         @Override
+        public void invokeManaged(Runnable runnable) {
+            responder.runtime.managedAsyncExecutor.get().submit(runnable);
+        }
+
+        @Override
         public boolean suspend() {
             synchronized (stateLock) {
                 if (state == RUNNING) {

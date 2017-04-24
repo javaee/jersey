@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -97,4 +97,11 @@ public interface AsyncContext extends AsyncResponse {
      * @param producer response producer.
      */
     public void invokeManaged(Producer<Response> producer);
+
+    /**
+     * Invoke the provided runnable in a Jersey-managed asynchronous thread.
+     *
+     * @param runnable to be invoked.
+     */
+    public void invokeManaged(Runnable runnable);
 }
