@@ -60,8 +60,11 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Feature;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.model.ContractProvider;
@@ -158,15 +161,22 @@ public final class Providers {
     /**
      * Get the set of all custom providers registered for the given service provider contract
      * in the underlying {@link InjectionManager injection manager} container.
+     * <p>
+     * Returned providers are sorted based on {@link Priority} (lower {@code Priority} value is higher priority,
+     * see {@link Priorities}.
      *
-     * @param <T>             service provider contract Java type.
+     * @param <T>              service provider contract Java type.
      * @param injectionManager underlying injection manager.
-     * @param contract        service provider contract.
+     * @param contract         service provider contract.
      * @return set of all available service provider instances for the contract.
      */
     public static <T> Set<T> getCustomProviders(InjectionManager injectionManager, Class<T> contract) {
-        Collection<ServiceHolder<T>> providers =
-                getServiceHolders(injectionManager, contract, CustomAnnotationLiteral.INSTANCE);
+
+        List<ServiceHolder<T>> providers = getServiceHolders(injectionManager,
+                                                             contract,
+                                                             Comparator.comparingInt(Providers::getPriority),
+                                                             CustomAnnotationLiteral.INSTANCE);
+
         return getProviderClasses(providers);
     }
 
@@ -316,6 +326,16 @@ public final class Providers {
         return bm.getAllServiceHolders(contract, qualifiers);
     }
 
+    private static <T> List<ServiceHolder<T>> getServiceHolders(InjectionManager injectionManager,
+                                                                Class<T> contract,
+                                                                Comparator<Class<?>> objectComparator,
+                                                                Annotation... qualifiers) {
+
+        List<ServiceHolder<T>> serviceHolders = injectionManager.getAllServiceHolders(contract, qualifiers);
+        serviceHolders.sort((o1, o2) -> objectComparator.compare(o1.getImplementationClass(), o2.getImplementationClass()));
+        return serviceHolders;
+    }
+
     /**
      * Returns {@code true} if given component class is a JAX-RS provider.
      *
@@ -353,12 +373,22 @@ public final class Providers {
 
     private static <T> Set<T> getProviderClasses(final Collection<ServiceHolder<T>> providers) {
         return providers.stream()
-                .map(Providers::holder2service)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+                        .map(Providers::holder2service)
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private static <T> T holder2service(ServiceHolder<T> holder) {
         return (holder != null) ? holder.getInstance() : null;
+    }
+
+    private static int getPriority(Class<?> serviceClass) {
+        Priority annotation = serviceClass.getAnnotation(Priority.class);
+        if (annotation != null) {
+            return annotation.value();
+        }
+
+        // default priority
+        return Priorities.USER;
     }
 
     /**
