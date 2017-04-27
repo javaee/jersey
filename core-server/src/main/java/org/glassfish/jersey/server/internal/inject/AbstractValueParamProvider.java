@@ -43,16 +43,16 @@ package org.glassfish.jersey.server.internal.inject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import javax.inject.Provider;
 
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
- * A parameter value supplier provider that provides parameter value factories
+ * A parameter value provider that provides parameter value factories
  * which are using {@link MultivaluedParameterExtractorProvider} to extract parameter
  * values from the supplied {@link javax.ws.rs.core.MultivaluedMap multivalued
  * parameter map}.
@@ -60,24 +60,20 @@ import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class AbstractValueSupplierProvider implements ValueSupplierProvider {
+public abstract class AbstractValueParamProvider implements ValueParamProvider {
 
     private final Provider<MultivaluedParameterExtractorProvider> mpep;
     private final Set<Parameter.Source> compatibleSources;
-    private final Provider<ContainerRequest> requestProvider;
 
     /**
      * Initialize the provider.
      *
      * @param mpep              multivalued map parameter extractor provider.
-     * @param requestProvider   container request provider.
      * @param compatibleSources compatible parameter sources.
      */
-    protected AbstractValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
-                                            Provider<ContainerRequest> requestProvider,
+    protected AbstractValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
                                             Parameter.Source... compatibleSources) {
         this.mpep = mpep;
-        this.requestProvider = requestProvider;
         this.compatibleSources = new HashSet<>(Arrays.asList(compatibleSources));
     }
 
@@ -96,32 +92,29 @@ public abstract class AbstractValueSupplierProvider implements ValueSupplierProv
     }
 
     /**
-     * Create a value supplier for the parameter. May return {@code null} in case
-     * the parameter is not supported by the value supplier provider.
+     * Create a value provider for the parameter. May return {@code null} in case
+     * the parameter is not supported by the value provider.
      *
-     * @param parameter       parameter requesting the value supplier instance.
-     * @param requestProvider container request provider that provides request context specific access to the
-     *                        {@link ContainerRequest} instance.
+     * @param parameter       parameter requesting the value provider instance.
      * @return parameter value supplier. Returns {@code null} if parameter is not supported.
      */
-    protected abstract AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter, Provider<ContainerRequest> requestProvider);
+    protected abstract Function<ContainerRequest, ?> createValueProvider(Parameter parameter);
 
     /**
-     * Get an injected value supplier for the parameter. May return {@code null}
-     * in case the parameter is not supported by the value supplier provider.
+     * Get an injected value provider for the parameter. May return {@code null}
+     * in case the parameter is not supported by the value provider.
      *
-     * @param parameter parameter requesting the value supplier instance.
+     * @param parameter parameter requesting the value provider instance.
      * @return injected parameter value supplier. Returns {@code null} if parameter
      * is not supported.
      */
     @Override
-    public final Supplier<?> getValueSupplier(Parameter parameter) {
+    public final Function<ContainerRequest, ?> getValueProvider(Parameter parameter) {
         if (!compatibleSources.contains(parameter.getSource())) {
             // not compatible
             return null;
         }
-        return createValueSupplier(parameter, requestProvider);
+        return createValueProvider(parameter);
     }
 
     @Override

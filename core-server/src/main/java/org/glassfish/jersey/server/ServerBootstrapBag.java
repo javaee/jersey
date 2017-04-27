@@ -54,7 +54,7 @@ import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * {@inheritDoc}
@@ -67,7 +67,7 @@ public class ServerBootstrapBag extends BootstrapBag {
 
     private Application application;
     private ApplicationHandler applicationHandler;
-    private Collection<ValueSupplierProvider> valueSupplierProviders;
+    private Collection<ValueParamProvider> valueParamProviders;
     private MultivaluedParameterExtractorProvider multivaluedParameterExtractorProvider;
     private ProcessingProviders processingProviders;
     private JerseyResourceContext resourceContext;
@@ -134,13 +134,13 @@ public class ServerBootstrapBag extends BootstrapBag {
         this.multivaluedParameterExtractorProvider = provider;
     }
 
-    public Collection<ValueSupplierProvider> getValueSupplierProviders() {
-        requireNonNull(valueSupplierProviders, new GenericType<Collection<ValueSupplierProvider>>() {}.getType());
-        return valueSupplierProviders;
+    public Collection<ValueParamProvider> getValueParamProviders() {
+        requireNonNull(valueParamProviders, new GenericType<Collection<ValueParamProvider>>() {}.getType());
+        return valueParamProviders;
     }
 
-    public void setValueSupplierProviders(Collection<ValueSupplierProvider> valueSupplierProviders) {
-        this.valueSupplierProviders = valueSupplierProviders;
+    public void setValueParamProviders(Collection<ValueParamProvider> valueParamProviders) {
+        this.valueParamProviders = valueParamProviders;
     }
 
     public JerseyResourceContext getResourceContext() {

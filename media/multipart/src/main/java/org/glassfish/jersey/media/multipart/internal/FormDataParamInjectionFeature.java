@@ -53,7 +53,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * Feature providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
@@ -73,10 +73,11 @@ public final class FormDataParamInjectionFeature implements Feature {
                 Provider<ContainerRequest> requestProvider =
                         createManagedInstanceProvider(ContainerRequest.class);
 
-                FormDataParamValueSupplierProvider valueSupplier =
-                        new FormDataParamValueSupplierProvider(extractorProvider, requestProvider);
-                bind(Bindings.service(valueSupplier).to(ValueSupplierProvider.class));
-                bind(Bindings.injectionResolver(new ParamInjectionResolver<>(valueSupplier, FormDataParam.class)));
+                FormDataParamValueParamProvider valueSupplier =
+                        new FormDataParamValueParamProvider(extractorProvider);
+                bind(Bindings.service(valueSupplier).to(ValueParamProvider.class));
+                bind(Bindings.injectionResolver(
+                        new ParamInjectionResolver<>(valueSupplier, FormDataParam.class, requestProvider)));
             }
         });
         return true;

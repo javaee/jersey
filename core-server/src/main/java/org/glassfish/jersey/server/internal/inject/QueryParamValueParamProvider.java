@@ -40,7 +40,9 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
-import javax.ws.rs.HeaderParam;
+import java.util.function.Function;
+
+import javax.ws.rs.QueryParam;
 
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -51,33 +53,28 @@ import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
 /**
- * Value supplier provider supporting the {@link HeaderParam &#64;HeaderParam} injection annotation.
+ * Value supplier provider supporting the {@link QueryParam &#64;QueryParam} injection annotation.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class HeaderParamValueSupplierProvider extends AbstractValueSupplierProvider {
+final class QueryParamValueParamProvider extends AbstractValueParamProvider {
 
     /**
      * Injection constructor.
      *
-     * @param mpep            multivalued map parameter extractor provider.
-     * @param requestProvider request provider.
+     * @param mpep multivalued map parameter extractor provider.
      */
-    public HeaderParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
-            Provider<ContainerRequest> requestProvider) {
-        super(mpep, requestProvider, Parameter.Source.HEADER);
+    public QueryParamValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep) {
+        super(mpep, Parameter.Source.QUERY);
     }
 
     @Override
-    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter,
-            Provider<ContainerRequest> requestProvider) {
-
+    public Function<ContainerRequest, ?> createValueProvider(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
-            // Invalid header parameter name
+            // Invalid query parameter name
             return null;
         }
 
@@ -86,25 +83,25 @@ final class HeaderParamValueSupplierProvider extends AbstractValueSupplierProvid
             return null;
         }
 
-        return new HeaderParamValueSupplier(e, requestProvider);
+        return new QueryParamValueProvider(e, !parameter.isEncoded());
     }
 
-    private static final class HeaderParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
+    private static final class QueryParamValueProvider implements Function<ContainerRequest, Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
+        private final boolean decode;
 
-        HeaderParamValueSupplier(MultivaluedParameterExtractor<?> extractor, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        QueryParamValueProvider(MultivaluedParameterExtractor<?> extractor, boolean decode) {
             this.extractor = extractor;
+            this.decode = decode;
         }
 
         @Override
-        public Object get() {
+        public Object apply(ContainerRequest containerRequest) {
             try {
-                return extractor.extract(getRequest().getHeaders());
+                return extractor.extract(containerRequest.getUriInfo().getQueryParameters(decode));
             } catch (ExtractorException e) {
-                throw new ParamException.HeaderParamException(e.getCause(),
+                throw new ParamException.QueryParamException(e.getCause(),
                         extractor.getName(), extractor.getDefaultValueString());
             }
         }

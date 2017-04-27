@@ -39,11 +39,12 @@
  */
 package org.glassfish.jersey.server.spi.internal;
 
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.spi.Contract;
 
@@ -55,17 +56,16 @@ import org.glassfish.jersey.spi.Contract;
  */
 @Contract
 @ConstrainedTo(RuntimeType.SERVER)
-public interface ValueSupplierProvider {
+public interface ValueParamProvider {
 
     /**
-     * Get an injected value supplier for the parameter. May return {@code null}
-     * in case the parameter is not supported by the value supplier provider.
+     * Get an injected value provider for the parameter. May return {@code null}
+     * in case the parameter is not supported by the value provider.
      *
-     * @param parameter parameter requesting the value supplier instance.
-     * @return injected parameter value supplier. Returns {@code null} if parameter
-     *         is not supported.
+     * @param parameter parameter requesting the value provider instance.
+     * @return injected parameter value provider. Returns {@code null} if parameter is not supported.
      */
-    Supplier<?> getValueSupplier(Parameter parameter);
+    Function<ContainerRequest, ?> getValueProvider(Parameter parameter);
 
     /**
      * Gets the priority of this provider.
@@ -84,7 +84,7 @@ public interface ValueSupplierProvider {
      * <p/>
      * If two objects are of the same priority there is no guarantee which one comes first.
      *
-     * @see ValueSupplierProvider.Priority
+     * @see ValueParamProvider.Priority
      */
     interface PriorityType {
 

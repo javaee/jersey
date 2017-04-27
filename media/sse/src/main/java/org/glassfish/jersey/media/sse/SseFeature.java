@@ -46,8 +46,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.util.Property;
 import org.glassfish.jersey.media.sse.internal.SseBinder;
-import org.glassfish.jersey.media.sse.internal.SseEventSinkValueSupplierProvider;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.media.sse.internal.SseEventSinkValueParamProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 
 /**
@@ -144,7 +144,7 @@ public class SseFeature implements Feature {
             case SERVER:
                 context.register(OutboundEventWriter.class);
                 context.register(new SseBinder());
-                context.register(SseEventSinkValueSupplierProvider.class, ValueSupplierProvider.class);
+                context.register(SseEventSinkValueParamProvider.class, ValueParamProvider.class);
                 break;
         }
         return true;

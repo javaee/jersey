@@ -66,7 +66,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.ResourceModelComponent;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * Base for sub-resource locator runtime model builder.
@@ -80,7 +80,7 @@ final class RuntimeLocatorModelBuilder {
     private final Configuration config;
     private final RuntimeModelBuilder runtimeModelBuilder;
     private final MessageBodyWorkers messageBodyWorkers;
-    private final Collection<ValueSupplierProvider> valueSuppliers;
+    private final Collection<ValueParamProvider> valueSuppliers;
     private final JerseyResourceContext resourceContext;
     private final Iterable<ModelProcessor> modelProcessors;
     private final Function<Class<?>, ?> createServiceFunction;
@@ -104,7 +104,7 @@ final class RuntimeLocatorModelBuilder {
      */
     RuntimeLocatorModelBuilder(final Configuration config,
                                final MessageBodyWorkers messageBodyWorkers,
-                               final Collection<ValueSupplierProvider> valueSuppliers,
+                               final Collection<ValueParamProvider> valueSuppliers,
                                final JerseyResourceContext resourceContext,
                                final RuntimeModelBuilder runtimeModelBuilder,
                                final Iterable<ModelProcessor> modelProcessors,

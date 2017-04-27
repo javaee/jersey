@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import java.util.Map;
+import java.util.function.Function;
 
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.core.Cookie;
@@ -62,24 +63,22 @@ import org.glassfish.jersey.server.model.Parameter;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvider {
+final class CookieParamValueParamProvider extends AbstractValueParamProvider {
 
-    private static final class CookieParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
+    private static final class CookieParamValueProvider implements Function<ContainerRequest, Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
 
-        CookieParamValueSupplier(MultivaluedParameterExtractor<?> extractor, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        CookieParamValueProvider(MultivaluedParameterExtractor<?> extractor) {
             this.extractor = extractor;
         }
 
         @Override
-        public Object get() {
+        public Object apply(ContainerRequest containerRequest) {
             // TODO: cache?
             MultivaluedMap<String, String> cookies = new MultivaluedStringMap();
 
-            for (Map.Entry<String, Cookie> e : getRequest().getCookies().entrySet()) {
+            for (Map.Entry<String, Cookie> e : containerRequest.getCookies().entrySet()) {
                 cookies.putSingle(e.getKey(), e.getValue().getValue());
             }
 
@@ -92,19 +91,17 @@ final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvid
         }
     }
 
-    private static final class CookieTypeParamValueSupplier extends AbstractRequestDerivedValueSupplier<Cookie> {
+    private static final class CookieTypeParamValueProvider  implements Function<ContainerRequest, Cookie> {
 
         private final String name;
 
-        CookieTypeParamValueSupplier(String name, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        CookieTypeParamValueProvider(String name) {
             this.name = name;
         }
 
         @Override
-        public Cookie get() {
-            return getRequest().getCookies().get(name);
+        public Cookie apply(ContainerRequest containerRequest) {
+            return containerRequest.getCookies().get(name);
         }
     }
 
@@ -112,18 +109,13 @@ final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvid
      * {@link CookieParam} annotation value factory provider injection constructor.
      *
      * @param mpep            multivalued parameter extractor provider.
-     * @param requestProvider request provider.
      */
-    public CookieParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
-            Provider<ContainerRequest> requestProvider) {
-        super(mpep, requestProvider, Parameter.Source.COOKIE);
+    public CookieParamValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep) {
+        super(mpep, Parameter.Source.COOKIE);
     }
 
     @Override
-    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter,
-            Provider<ContainerRequest> requestProvider) {
-
+    public Function<ContainerRequest, ?> createValueProvider(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
             // Invalid cookie parameter name
@@ -131,13 +123,13 @@ final class CookieParamValueSupplierProvider extends AbstractValueSupplierProvid
         }
 
         if (parameter.getRawType() == Cookie.class) {
-            return new CookieTypeParamValueSupplier(parameterName, requestProvider);
+            return new CookieTypeParamValueProvider(parameterName);
         } else {
             MultivaluedParameterExtractor e = get(parameter);
             if (e == null) {
                 return null;
             }
-            return new CookieParamValueSupplier(e, requestProvider);
+            return new CookieParamValueProvider(e);
         }
     }
 }

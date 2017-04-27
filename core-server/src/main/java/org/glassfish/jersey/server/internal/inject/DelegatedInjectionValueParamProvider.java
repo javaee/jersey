@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.inject.Singleton;
 
@@ -55,9 +54,10 @@ import org.glassfish.jersey.internal.inject.InjecteeImpl;
 import org.glassfish.jersey.internal.util.collection.Cache;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * Value factory provider that delegates the injection target lookup to the underlying injection provider.
@@ -66,7 +66,7 @@ import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Singleton
-class DelegatedInjectionValueSupplierProvider implements ValueSupplierProvider {
+class DelegatedInjectionValueParamProvider implements ValueParamProvider {
 
     private final LazyValue<ContextInjectionResolver> resolver;
 
@@ -78,17 +78,17 @@ class DelegatedInjectionValueSupplierProvider implements ValueSupplierProvider {
      * @param resolver                 context injection resolver.
      * @param foreignDescriptorFactory function that is able to create a new foreign descriptor.
      */
-    public DelegatedInjectionValueSupplierProvider(LazyValue<ContextInjectionResolver> resolver,
+    public DelegatedInjectionValueParamProvider(LazyValue<ContextInjectionResolver> resolver,
             Function<Binding, ForeignDescriptor> foreignDescriptorFactory) {
         this.resolver = resolver;
         this.foreignDescriptorFactory = foreignDescriptorFactory;
     }
 
     @Override
-    public Supplier<?> getValueSupplier(final Parameter parameter) {
+    public Function<ContainerRequest, ?> getValueProvider(final Parameter parameter) {
         Source paramSource = parameter.getSource();
         if (paramSource == Parameter.Source.CONTEXT) {
-            return () -> resolver.get().resolve(getInjectee(parameter));
+            return containerRequest -> resolver.get().resolve(getInjectee(parameter));
         }
         return null;
     }

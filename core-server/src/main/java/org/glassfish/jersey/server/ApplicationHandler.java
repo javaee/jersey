@@ -103,7 +103,7 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.inject.ParamConverterConfigurator;
 import org.glassfish.jersey.server.internal.inject.ParamExtractorConfigurator;
-import org.glassfish.jersey.server.internal.inject.ValueSupplierProviderConfigurator;
+import org.glassfish.jersey.server.internal.inject.ValueParamProviderConfigurator;
 import org.glassfish.jersey.server.internal.monitoring.ApplicationEventImpl;
 import org.glassfish.jersey.server.internal.monitoring.CompositeApplicationEventListener;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
@@ -295,7 +295,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                 new RequestScope.RequestScopeConfigurator(),
                 new ParamConverterConfigurator(),
                 new ParamExtractorConfigurator(),
-                new ValueSupplierProviderConfigurator(),
+                new ValueParamProviderConfigurator(),
                 new JerseyResourceContextConfigurator(),
                 new ComponentProviderConfigurator(),
                 new JaxrsProviders.ProvidersConfigurator(),
@@ -384,7 +384,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
 
             if (!disableValidation()) {
                 ComponentModelValidator validator = new ComponentModelValidator(
-                        bootstrapBag.getValueSupplierProviders(), bootstrapBag.getMessageBodyWorkers());
+                        bootstrapBag.getValueParamProviders(), bootstrapBag.getMessageBodyWorkers());
                     validator.validate(bootstrapBag.getResourceModel());
             }
 
@@ -413,7 +413,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
                     .resourceContext(bootstrapBag.getResourceContext())
                     .configuration(runtimeConfig)
                     .entityProviders(msgBodyWorkers)
-                    .valueSupplierProviders(bootstrapBag.getValueSupplierProviders())
+                    .valueSupplierProviders(bootstrapBag.getValueParamProviders())
                     .modelProcessors(Providers.getAllRankedSortedProviders(injectionManager, ModelProcessor.class))
                     .createService(serviceType -> Injections.getOrCreate(injectionManager, serviceType))
                     .processingProviders(processingProviders)

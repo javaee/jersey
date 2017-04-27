@@ -45,15 +45,19 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.ws.rs.Encoded;
 
+import javax.inject.Provider;
+
 import org.glassfish.jersey.internal.inject.Injectee;
 import org.glassfish.jersey.internal.inject.InjectionResolver;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * Abstract base class for resolving JAX-RS {@code &#64;XxxParam} injection.
@@ -63,17 +67,20 @@ import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
  */
 public class ParamInjectionResolver<A extends Annotation> implements InjectionResolver<A> {
 
-    private final ValueSupplierProvider valueSupplierProvider;
+    private final ValueParamProvider valueParamProvider;
     private final Class<A> annotation;
+    private final Provider<ContainerRequest> request;
 
     /**
      * Initialize the base parameter injection resolver.
      *
-     * @param valueSupplierProvider parameter value supplier provider.
+     * @param valueParamProvider parameter value supplier provider.
      */
-    public ParamInjectionResolver(ValueSupplierProvider valueSupplierProvider, Class<A> annotation) {
-        this.valueSupplierProvider = valueSupplierProvider;
+    public ParamInjectionResolver(ValueParamProvider valueParamProvider, Class<A> annotation,
+            Provider<ContainerRequest> request) {
+        this.valueParamProvider = valueParamProvider;
         this.annotation = annotation;
+        this.request = request;
     }
 
     @Override
@@ -106,12 +113,12 @@ public class ParamInjectionResolver<A extends Annotation> implements InjectionRe
                 targetGenericType,
                 annotations);
 
-        final Supplier<?> paramValueSupplier = valueSupplierProvider.getValueSupplier(parameter);
-        if (paramValueSupplier != null) {
+        final Function<ContainerRequest, ?> valueProvider = valueParamProvider.getValueProvider(parameter);
+        if (valueProvider != null) {
             if (injectee.isFactory()) {
-                return paramValueSupplier;
+                return (Supplier<Object>) () -> valueProvider.apply(request.get());
             } else {
-                return paramValueSupplier.get();
+                return valueProvider.apply(request.get());
             }
         }
 

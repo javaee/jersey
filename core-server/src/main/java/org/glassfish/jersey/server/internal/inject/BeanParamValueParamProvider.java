@@ -61,11 +61,11 @@ import org.glassfish.jersey.server.model.Parameter;
  * @author Miroslav Fuksa
  */
 @Singleton
-final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider {
+final class BeanParamValueParamProvider extends AbstractValueParamProvider {
 
     private final InjectionManager injectionManager;
 
-    private static final class BeanParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
+    private static final class BeanParamValueProvider implements Function<ContainerRequest, Object> {
         private final Parameter parameter;
         private final InjectionManager injectionManager;
 
@@ -81,16 +81,13 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
                     }
                 });
 
-        private BeanParamValueSupplier(InjectionManager injectionManager, Parameter parameter,
-                Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        private BeanParamValueProvider(InjectionManager injectionManager, Parameter parameter) {
             this.injectionManager = injectionManager;
             this.parameter = parameter;
         }
 
         @Override
-        public Object get() {
+        public Object apply(ContainerRequest request) {
             Class<?> rawType = parameter.getRawType();
             Object fromHk2 = injectionManager.getInstance(rawType);
             if (fromHk2 != null) { // the bean parameter type is already bound in HK2, let's just take it from there
@@ -105,19 +102,15 @@ final class BeanParamValueSupplierProvider extends AbstractValueSupplierProvider
      * Creates new instance initialized from parameters injected by HK2.
      *
      * @param mpep            multivalued parameter extractor provider.
-     * @param requestProvider request provider.
      */
-    public BeanParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
-            Provider<ContainerRequest> requestProvider, InjectionManager injectionManager) {
-        super(mpep, requestProvider, Parameter.Source.BEAN_PARAM);
+    public BeanParamValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
+            InjectionManager injectionManager) {
+        super(mpep, Parameter.Source.BEAN_PARAM);
         this.injectionManager = injectionManager;
     }
 
     @Override
-    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter,
-            Provider<ContainerRequest> requestProvider) {
-
-        return new BeanParamValueSupplier(injectionManager, parameter, requestProvider);
+    public Function<ContainerRequest, ?> createValueProvider(Parameter parameter) {
+        return new BeanParamValueProvider(injectionManager, parameter);
     }
 }

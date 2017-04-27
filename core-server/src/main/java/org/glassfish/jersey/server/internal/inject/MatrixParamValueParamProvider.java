@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import java.util.List;
+import java.util.function.Function;
 
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.core.PathSegment;
@@ -60,24 +61,19 @@ import org.glassfish.jersey.server.model.Parameter;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class MatrixParamValueSupplierProvider extends AbstractValueSupplierProvider {
+final class MatrixParamValueParamProvider extends AbstractValueParamProvider {
 
     /**
      * Injection constructor.
      *
-     * @param mpep            multivalued map parameter extractor provider.
-     * @param requestProvider request provider.
+     * @param mpep multivalued map parameter extractor provider.
      */
-    public MatrixParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
-            Provider<ContainerRequest> requestProvider) {
-        super(mpep, requestProvider, Parameter.Source.MATRIX);
+    public MatrixParamValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep) {
+        super(mpep, Parameter.Source.MATRIX);
     }
 
     @Override
-    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter,
-            Provider<ContainerRequest> requestProvider) {
-
+    public Function<ContainerRequest, ?> createValueProvider(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
             // Invalid header parameter name
@@ -89,28 +85,22 @@ final class MatrixParamValueSupplierProvider extends AbstractValueSupplierProvid
             return null;
         }
 
-        return new MatrixParamValueSupplier(e, !parameter.isEncoded(), requestProvider);
+        return new MatrixParamValueProvider(e, !parameter.isEncoded());
     }
 
-    private static final class MatrixParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
+    private static final class MatrixParamValueProvider implements Function<ContainerRequest, Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
 
-        MatrixParamValueSupplier(
-                MultivaluedParameterExtractor<?> extractor,
-                boolean decode,
-                Provider<ContainerRequest> requestProvider) {
-
-            super(requestProvider);
-
+        MatrixParamValueProvider(MultivaluedParameterExtractor<?> extractor, boolean decode) {
             this.extractor = extractor;
             this.decode = decode;
         }
 
         @Override
-        public Object get() {
-            List<PathSegment> l = getRequest().getUriInfo().getPathSegments(decode);
+        public Object apply(ContainerRequest containerRequest) {
+            List<PathSegment> l = containerRequest.getUriInfo().getPathSegments(decode);
             PathSegment p = l.get(l.size() - 1);
             try {
                 return extractor.extract(p.getMatrixParameters());

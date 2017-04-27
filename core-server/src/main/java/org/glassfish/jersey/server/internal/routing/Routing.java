@@ -54,7 +54,7 @@ import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * Jersey routing entry point.
@@ -100,7 +100,7 @@ public final class Routing {
         private JerseyResourceContext resourceContext;
         private Configuration config;
         private MessageBodyWorkers entityProviders;
-        private Collection<ValueSupplierProvider> valueSuppliers;
+        private Collection<ValueParamProvider> valueSuppliers;
         private Iterable<ModelProcessor> modelProcessors;
         private Function<Class<?>, ?> createServiceFunction;
         private ProcessingProviders processingProviders;
@@ -153,7 +153,7 @@ public final class Routing {
          * @param valueSuppliers all registered value suppliers.
          * @return updated routing builder.
          */
-        public Builder valueSupplierProviders(Collection<ValueSupplierProvider> valueSuppliers) {
+        public Builder valueSupplierProviders(Collection<ValueParamProvider> valueSuppliers) {
             this.valueSuppliers = valueSuppliers;
             return this;
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,51 +37,57 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.media.sse.internal;
 
-package org.glassfish.jersey.server.internal.inject;
+import java.util.function.Function;
 
-import java.util.function.Supplier;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.sse.SseEventSink;
 
-import javax.ws.rs.container.AsyncResponse;
-
+import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.glassfish.jersey.server.internal.process.AsyncContext;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.inject.AbstractValueParamProvider;
+import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
- * Value factory provider supporting the {@link javax.ws.rs.container.Suspended} injection annotation.
+ * {@link ValueParamProvider} for binding {@link SseEventSink} to its implementation.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-final class AsyncResponseValueSupplierProvider implements ValueSupplierProvider {
-
-    private final Provider<AsyncContext> asyncContextProvider;
+public class SseEventSinkValueParamProvider extends AbstractValueParamProvider {
 
     /**
-     * Initialize the provider.
+     * Constructor.
      *
-     * @param asyncContextProvider async processing context provider.
+     * @param mpep multivalued map parameter extractor provider.
      */
-    public AsyncResponseValueSupplierProvider(Provider<AsyncContext> asyncContextProvider) {
-        this.asyncContextProvider = asyncContextProvider;
+    @Inject
+    public SseEventSinkValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep) {
+        super(mpep, Parameter.Source.CONTEXT);
     }
 
     @Override
-    public Supplier<AsyncResponse> getValueSupplier(final Parameter parameter) {
-        if (parameter.getSource() != Parameter.Source.SUSPENDED) {
-            return null;
-        }
-        if (!AsyncResponse.class.isAssignableFrom(parameter.getRawType())) {
+    protected Function<ContainerRequest, SseEventSink> createValueProvider(Parameter parameter) {
+        if (parameter == null) {
             return null;
         }
 
-        return asyncContextProvider::get;
+        final Class<?> rawParameterType = parameter.getRawType();
+        if (rawParameterType == SseEventSink.class && parameter.isAnnotationPresent(Context.class)) {
+            return new SseEventSinkValueSupplier();
+        }
+        return null;
     }
 
-    @Override
-    public PriorityType getPriority() {
-        return Priority.NORMAL;
+    private static final class SseEventSinkValueSupplier implements Function<ContainerRequest, SseEventSink> {
+
+        @Override
+        public SseEventSink apply(ContainerRequest containerRequest) {
+            return new JerseyEventSink();
+        }
     }
 }

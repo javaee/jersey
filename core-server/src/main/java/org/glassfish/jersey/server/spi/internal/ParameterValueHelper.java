@@ -45,7 +45,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.NotSupportedException;
@@ -53,6 +53,7 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 
 import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameterized;
@@ -71,7 +72,7 @@ public final class ParameterValueHelper {
      * @param valueProviders a list of value providers.
      * @return array of parameter values provided by the value providers.
      */
-    public static Object[] getParameterValues(List<ParamValueFactoryWithSource<?>> valueProviders) {
+    public static Object[] getParameterValues(List<ParamValueFactoryWithSource<?>> valueProviders, ContainerRequest request) {
         final Object[] params = new Object[valueProviders.size()];
         try {
             int entityProviderIndex = -1;
@@ -84,11 +85,11 @@ public final class ParameterValueHelper {
                     continue;
                 }
 
-                params[index++] = paramValProvider.get();
+                params[index++] = paramValProvider.apply(request);
             }
 
             if (entityProviderIndex != -1) {
-                params[entityProviderIndex] = valueProviders.get(entityProviderIndex).get();
+                params[entityProviderIndex] = valueProviders.get(entityProviderIndex).apply(request);
             }
 
             return params;
@@ -115,13 +116,13 @@ public final class ParameterValueHelper {
      * @param parameterized  parameterized resource model component.
      * @return list of parameter value providers for the parameterized component.
      */
-    public static List<ParamValueFactoryWithSource<?>> createValueProviders(Collection<ValueSupplierProvider> valueSuppliers,
+    public static List<ParamValueFactoryWithSource<?>> createValueProviders(Collection<ValueParamProvider> valueSuppliers,
             Parameterized parameterized) {
         if ((null == parameterized.getParameters()) || (0 == parameterized.getParameters().size())) {
             return Collections.emptyList();
         }
 
-        List<ValueSupplierProvider> valueSupplierProviders = valueSuppliers.stream()
+        List<ValueParamProvider> valueParamProviders = valueSuppliers.stream()
                         .sorted((o1, o2) -> o2.getPriority().getWeight() - o1.getPriority().getWeight())
                         .collect(Collectors.toList());
 
@@ -130,9 +131,9 @@ public final class ParameterValueHelper {
         for (final Parameter parameter : parameterized.getParameters()) {
             final Parameter.Source parameterSource = parameter.getSource();
             entityParamFound = entityParamFound || Parameter.Source.ENTITY == parameterSource;
-            final Supplier<?> valueSupplier = getParamValueSupplier(valueSupplierProviders, parameter);
-            if (valueSupplier != null) {
-                providers.add(wrapParamValueSupplier(valueSupplier, parameterSource));
+            final Function<ContainerRequest, ?> valueFunction = getParamValueProvider(valueParamProviders, parameter);
+            if (valueFunction != null) {
+                providers.add(wrapParamValueProvider(valueFunction, parameterSource));
             } else {
                 providers.add(null);
             }
@@ -144,11 +145,11 @@ public final class ParameterValueHelper {
             final Parameter parameter = parameterized.getParameters().get(entityParamIndex);
             if (Parameter.Source.UNKNOWN == parameter.getSource() && !parameter.isQualified()) {
                 final Parameter overriddenParameter = Parameter.overrideSource(parameter, Parameter.Source.ENTITY);
-                final Supplier<?> valueSupplier = getParamValueSupplier(
-                        valueSupplierProviders,
+                final Function<ContainerRequest, ?> valueFunction = getParamValueProvider(
+                        valueParamProviders,
                         overriddenParameter);
-                if (valueSupplier != null) {
-                    providers.set(entityParamIndex, wrapParamValueSupplier(valueSupplier, overriddenParameter.getSource()));
+                if (valueFunction != null) {
+                    providers.set(entityParamIndex, wrapParamValueProvider(valueFunction, overriddenParameter.getSource()));
                 } else {
                     providers.set(entityParamIndex, null);
                 }
@@ -158,18 +159,19 @@ public final class ParameterValueHelper {
         return providers;
     }
 
-    private static <T> ParamValueFactoryWithSource<T> wrapParamValueSupplier(Supplier<T> factory, Parameter.Source paramSource) {
+    private static <T> ParamValueFactoryWithSource<T> wrapParamValueProvider(
+            Function<ContainerRequest, T> factory, Parameter.Source paramSource) {
         return new ParamValueFactoryWithSource<>(factory, paramSource);
     }
 
-    private static Supplier<?> getParamValueSupplier(
-            Collection<ValueSupplierProvider> valueSupplierProviders, final Parameter parameter) {
-        Supplier<?> paramValueSupplier = null;
-        final Iterator<ValueSupplierProvider> vfpIterator = valueSupplierProviders.iterator();
-        while (paramValueSupplier == null && vfpIterator.hasNext()) {
-            paramValueSupplier = vfpIterator.next().getValueSupplier(parameter);
+    private static Function<ContainerRequest, ?> getParamValueProvider(
+            Collection<ValueParamProvider> valueProviders, final Parameter parameter) {
+        Function<ContainerRequest, ?> valueProvider = null;
+        Iterator<ValueParamProvider> vfpIterator = valueProviders.iterator();
+        while (valueProvider == null && vfpIterator.hasNext()) {
+            valueProvider = vfpIterator.next().getValueProvider(parameter);
         }
-        return paramValueSupplier;
+        return valueProvider;
     }
 
     /**

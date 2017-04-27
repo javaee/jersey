@@ -59,7 +59,7 @@ import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.inject.ParamConverterConfigurator;
 import org.glassfish.jersey.server.internal.inject.ParamExtractorConfigurator;
-import org.glassfish.jersey.server.internal.inject.ValueSupplierProviderConfigurator;
+import org.glassfish.jersey.server.internal.inject.ValueParamProviderConfigurator;
 import org.glassfish.jersey.server.model.internal.ResourceMethodInvokerConfigurator;
 
 /**
@@ -119,7 +119,7 @@ public final class TestInjectionManagerFactory {
                 new RequestScope.RequestScopeConfigurator(),
                 new ParamConverterConfigurator(),
                 new ParamExtractorConfigurator(),
-                new ValueSupplierProviderConfigurator(),
+                new ValueParamProviderConfigurator(),
                 new JerseyResourceContextConfigurator(),
                 new ComponentProviderConfigurator(),
                 new TestConfigConfigurator(runtimeConfig),

@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
+import java.util.function.Function;
+
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Request;
@@ -59,49 +61,40 @@ import org.glassfish.jersey.server.model.Parameter;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-class EntityParamValueSupplierProvider extends AbstractValueSupplierProvider {
+class EntityParamValueParamProvider extends AbstractValueParamProvider {
 
     /**
      * Creates new instance initialized with parameters.
      *
-     * @param mpep            Injected multivaluedParameterExtractor provider.
-     * @param requestProvider Request provider.
+     * @param mpep Injected multivaluedParameterExtractor provider.
      */
-    EntityParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
-            Provider<ContainerRequest> requestProvider) {
-        super(mpep, requestProvider, Parameter.Source.ENTITY);
+    EntityParamValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep) {
+        super(mpep, Parameter.Source.ENTITY);
     }
 
     @Override
-    protected AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter,
-            Provider<ContainerRequest> requestProvider) {
-
-        return new EntityValueSupplier(parameter, requestProvider);
+    protected Function<ContainerRequest, ?> createValueProvider(Parameter parameter) {
+        return new EntityValueSupplier(parameter);
     }
 
-    private static class EntityValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
+    private static class EntityValueSupplier implements Function<ContainerRequest, Object> {
 
         private final Parameter parameter;
 
-        public EntityValueSupplier(Parameter parameter, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        public EntityValueSupplier(Parameter parameter) {
             this.parameter = parameter;
         }
 
         @Override
-        public Object get() {
-            final ContainerRequest requestContext = getRequest();
-
+        public Object apply(ContainerRequest containerRequest) {
             final Class<?> rawType = parameter.getRawType();
 
             Object value;
             if ((Request.class.isAssignableFrom(rawType) || ContainerRequestContext.class.isAssignableFrom(rawType))
-                    && rawType.isInstance(requestContext)) {
-                value = requestContext;
+                    && rawType.isInstance(containerRequest)) {
+                value = containerRequest;
             } else {
-                value = requestContext.readEntity(rawType, parameter.getType(), parameter.getAnnotations());
+                value = containerRequest.readEntity(rawType, parameter.getType(), parameter.getAnnotations());
                 if (rawType.isPrimitive() && value == null) {
                     throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
                             .entity(LocalizationMessages.ERROR_PRIMITIVE_TYPE_NULL()).build());

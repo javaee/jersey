@@ -68,7 +68,7 @@ public class ResourceMethodInvokerConfigurator implements BootstrapConfigurator 
 
         List<ResourceMethodDispatcher.Provider> providers = Arrays.asList(
                 new VoidVoidDispatcherProvider(serverBag.getResourceContext()),
-                new JavaResourceMethodDispatcherProvider(serverBag.getValueSupplierProviders()));
+                new JavaResourceMethodDispatcherProvider(serverBag.getValueParamProviders()));
 
         ResourceMethodInvoker.Builder builder = new ResourceMethodInvoker.Builder()
                 .injectionManager(injectionManager)

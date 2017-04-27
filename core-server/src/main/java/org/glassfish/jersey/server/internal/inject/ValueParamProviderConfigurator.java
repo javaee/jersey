@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,20 +72,19 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ServerBootstrapBag;
 import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
- * Configurator which initializes and register {@link ValueSupplierProvider} instances into {@link InjectionManager} and
+ * Configurator which initializes and register {@link ValueParamProvider} instances into {@link InjectionManager} and
  * {@link BootstrapBag}.
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class ValueSupplierProviderConfigurator implements BootstrapConfigurator {
+public class ValueParamProviderConfigurator implements BootstrapConfigurator {
 
     public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
         ServerBootstrapBag serverBag = (ServerBootstrapBag) bootstrapBag;
 
-        Provider<ContainerRequest> requestProvider = () -> injectionManager.getInstance(ContainerRequest.class);
         Provider<AsyncContext> asyncContextProvider = () -> injectionManager.getInstance(AsyncContext.class);
 
         Function<Class<? extends Configuration>, Configuration> clientConfigProvider =
@@ -99,78 +99,83 @@ public class ValueSupplierProviderConfigurator implements BootstrapConfigurator 
         Provider<MultivaluedParameterExtractorProvider> paramExtractor = serverBag::getMultivaluedParameterExtractorProvider;
 
         // Parameter injection value providers
-        Collection<ValueSupplierProvider> suppliers = new ArrayList<>();
+        Collection<ValueParamProvider> suppliers = new ArrayList<>();
 
-        AsyncResponseValueSupplierProvider asyncProvider = new AsyncResponseValueSupplierProvider(asyncContextProvider);
+        AsyncResponseValueParamProvider asyncProvider = new AsyncResponseValueParamProvider(asyncContextProvider);
         suppliers.add(asyncProvider);
 
-        CookieParamValueSupplierProvider cookieProvider = new CookieParamValueSupplierProvider(paramExtractor, requestProvider);
+        CookieParamValueParamProvider cookieProvider = new CookieParamValueParamProvider(paramExtractor);
         suppliers.add(cookieProvider);
 
-        EntityParamValueSupplierProvider entityProvider = new EntityParamValueSupplierProvider(paramExtractor, requestProvider);
+        EntityParamValueParamProvider entityProvider = new EntityParamValueParamProvider(paramExtractor);
         suppliers.add(entityProvider);
 
-        FormParamValueSupplierProvider formProvider = new FormParamValueSupplierProvider(paramExtractor, requestProvider);
+        FormParamValueParamProvider formProvider = new FormParamValueParamProvider(paramExtractor);
         suppliers.add(formProvider);
 
-        HeaderParamValueSupplierProvider headerProvider = new HeaderParamValueSupplierProvider(paramExtractor, requestProvider);
+        HeaderParamValueParamProvider headerProvider = new HeaderParamValueParamProvider(paramExtractor);
         suppliers.add(headerProvider);
 
-        MatrixParamValueSupplierProvider matrixProvider = new MatrixParamValueSupplierProvider(paramExtractor, requestProvider);
+        MatrixParamValueParamProvider matrixProvider = new MatrixParamValueParamProvider(paramExtractor);
         suppliers.add(matrixProvider);
 
-        PathParamValueSupplierProvider pathProvider = new PathParamValueSupplierProvider(paramExtractor, requestProvider);
+        PathParamValueParamProvider pathProvider = new PathParamValueParamProvider(paramExtractor);
         suppliers.add(pathProvider);
 
-        QueryParamValueSupplierProvider queryProvider = new QueryParamValueSupplierProvider(paramExtractor, requestProvider);
+        QueryParamValueParamProvider queryProvider = new QueryParamValueParamProvider(paramExtractor);
         suppliers.add(queryProvider);
 
-        BeanParamValueSupplierProvider beanProvider =
-                new BeanParamValueSupplierProvider(paramExtractor, requestProvider, injectionManager);
+        BeanParamValueParamProvider beanProvider = new BeanParamValueParamProvider(paramExtractor, injectionManager);
         suppliers.add(beanProvider);
 
-        WebTargetValueSupplierProvider webTargetProvider =
-                new WebTargetValueSupplierProvider(requestProvider, lazyConfiguration, clientConfigProvider);
+        WebTargetValueParamProvider webTargetProvider =
+                new WebTargetValueParamProvider(lazyConfiguration, clientConfigProvider);
         suppliers.add(webTargetProvider);
 
-        DelegatedInjectionValueSupplierProvider contextProvider =
-                new DelegatedInjectionValueSupplierProvider(lazyContextResolver, injectionManager::createForeignDescriptor);
+        DelegatedInjectionValueParamProvider contextProvider =
+                new DelegatedInjectionValueParamProvider(lazyContextResolver, injectionManager::createForeignDescriptor);
         suppliers.add(contextProvider);
 
-        serverBag.setValueSupplierProviders(Collections.unmodifiableCollection(suppliers));
+        serverBag.setValueParamProviders(Collections.unmodifiableCollection(suppliers));
 
         // Needs to be in InjectionManager because of CdiComponentProvider
-        injectionManager.register(Bindings.service(asyncProvider).to(ValueSupplierProvider.class));
-        injectionManager.register(Bindings.service(cookieProvider).to(ValueSupplierProvider.class));
-        injectionManager.register(Bindings.service(formProvider).to(ValueSupplierProvider.class));
-        injectionManager.register(Bindings.service(headerProvider).to(ValueSupplierProvider.class));
-        injectionManager.register(Bindings.service(matrixProvider).to(ValueSupplierProvider.class));
-        injectionManager.register(Bindings.service(pathProvider).to(ValueSupplierProvider.class));
-        injectionManager.register(Bindings.service(queryProvider).to(ValueSupplierProvider.class));
-        injectionManager.register(Bindings.service(webTargetProvider).to(ValueSupplierProvider.class));
-        injectionManager.register(Bindings.service(beanProvider).to(ValueSupplierProvider.class));
-        injectionManager.register(Bindings.service(entityProvider).to(ValueSupplierProvider.class));
-        injectionManager.register(Bindings.service(contextProvider).to(ValueSupplierProvider.class));
+        injectionManager.register(Bindings.service(asyncProvider).to(ValueParamProvider.class));
+        injectionManager.register(Bindings.service(cookieProvider).to(ValueParamProvider.class));
+        injectionManager.register(Bindings.service(formProvider).to(ValueParamProvider.class));
+        injectionManager.register(Bindings.service(headerProvider).to(ValueParamProvider.class));
+        injectionManager.register(Bindings.service(matrixProvider).to(ValueParamProvider.class));
+        injectionManager.register(Bindings.service(pathProvider).to(ValueParamProvider.class));
+        injectionManager.register(Bindings.service(queryProvider).to(ValueParamProvider.class));
+        injectionManager.register(Bindings.service(webTargetProvider).to(ValueParamProvider.class));
+        injectionManager.register(Bindings.service(beanProvider).to(ValueParamProvider.class));
+        injectionManager.register(Bindings.service(entityProvider).to(ValueParamProvider.class));
+        injectionManager.register(Bindings.service(contextProvider).to(ValueParamProvider.class));
 
-        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(asyncProvider, Suspended.class)));
-        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(cookieProvider, CookieParam.class)));
-        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(formProvider, FormParam.class)));
-        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(headerProvider, HeaderParam.class)));
-        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(matrixProvider, MatrixParam.class)));
-        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(pathProvider, PathParam.class)));
-        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(queryProvider, QueryParam.class)));
-        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(webTargetProvider, Uri.class)));
-        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(beanProvider, BeanParam.class)));
+        Provider<ContainerRequest> request = () -> injectionManager.getInstance(ContainerRequest.class);
+        registerResolver(injectionManager, asyncProvider, Suspended.class, request);
+        registerResolver(injectionManager, cookieProvider, CookieParam.class, request);
+        registerResolver(injectionManager, formProvider, FormParam.class, request);
+        registerResolver(injectionManager, headerProvider, HeaderParam.class, request);
+        registerResolver(injectionManager, matrixProvider, MatrixParam.class, request);
+        registerResolver(injectionManager, pathProvider, PathParam.class, request);
+        registerResolver(injectionManager, queryProvider, QueryParam.class, request);
+        registerResolver(injectionManager, webTargetProvider, Uri.class, request);
+        registerResolver(injectionManager, beanProvider, BeanParam.class, request);
+    }
+
+    private void registerResolver(InjectionManager im, ValueParamProvider vfp, Class<?  extends Annotation> annotation,
+            Provider<ContainerRequest> request) {
+        im.register(Bindings.injectionResolver(new ParamInjectionResolver<>(vfp, annotation, request)));
     }
 
     @Override
     public void postInit(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
         // Add the ValueSupplierProviders which has been added to ResourceConfig/Feature
-        List<ValueSupplierProvider> addedInstances = injectionManager.getAllInstances(ValueSupplierProvider.class);
+        List<ValueParamProvider> addedInstances = injectionManager.getAllInstances(ValueParamProvider.class);
         if (!addedInstances.isEmpty()) {
             ServerBootstrapBag serverBag = (ServerBootstrapBag) bootstrapBag;
-            addedInstances.addAll(serverBag.getValueSupplierProviders());
-            serverBag.setValueSupplierProviders(Collections.unmodifiableCollection(addedInstances));
+            addedInstances.addAll(serverBag.getValueParamProviders());
+            serverBag.setValueParamProviders(Collections.unmodifiableCollection(addedInstances));
         }
     }
 }

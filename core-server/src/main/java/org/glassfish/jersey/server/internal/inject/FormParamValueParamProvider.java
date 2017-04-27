@@ -47,6 +47,7 @@ import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.ws.rs.Encoded;
 import javax.ws.rs.FormParam;
@@ -76,24 +77,19 @@ import org.glassfish.jersey.server.model.Parameter;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Singleton
-final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider {
+final class FormParamValueParamProvider extends AbstractValueParamProvider {
 
     /**
      * Injection constructor.
      *
-     * @param mpep            extractor provider.
-     * @param requestProvider requestSupplier.
+     * @param mpep extractor provider.
      */
-    public FormParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
-            Provider<ContainerRequest> requestProvider) {
-        super(mpep, requestProvider, Parameter.Source.FORM);
+    public FormParamValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep) {
+        super(mpep, Parameter.Source.FORM);
     }
 
     @Override
-    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter,
-            Provider<ContainerRequest> requestProvider) {
-
+    public Function<ContainerRequest, ?> createValueProvider(Parameter parameter) {
         String parameterName = parameter.getSourceName();
 
         if (parameterName == null || parameterName.isEmpty()) {
@@ -105,22 +101,16 @@ final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider
         if (e == null) {
             return null;
         }
-        return new FormParamValueSupplier(e, !parameter.isEncoded(), requestProvider);
+        return new FormParamValueProvider(e, !parameter.isEncoded());
     }
 
-    private static final class FormParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
+    private static final class FormParamValueProvider implements Function<ContainerRequest, Object> {
 
         private static final Annotation encodedAnnotation = getEncodedAnnotation();
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
 
-        FormParamValueSupplier(
-                MultivaluedParameterExtractor<?> extractor,
-                boolean decode,
-                Provider<ContainerRequest> requestProvider) {
-
-            super(requestProvider);
-
+        FormParamValueProvider(MultivaluedParameterExtractor<?> extractor, boolean decode) {
             this.extractor = extractor;
             this.decode = decode;
         }
@@ -154,9 +144,7 @@ final class FormParamValueSupplierProvider extends AbstractValueSupplierProvider
         }
 
         @Override
-        public Object get() {
-            ContainerRequest request = getRequest();
-
+        public Object apply(ContainerRequest request) {
             Form form = getCachedForm(request, decode);
 
             if (form == null) {

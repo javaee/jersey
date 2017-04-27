@@ -60,7 +60,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 import org.glassfish.jersey.uri.PathPattern;
 import org.glassfish.jersey.uri.UriTemplate;
 
@@ -95,7 +95,7 @@ final class RuntimeModelBuilder {
             final JerseyResourceContext resourceContext,
             final Configuration config,
             final MessageBodyWorkers messageBodyWorkers,
-            final Collection<ValueSupplierProvider> valueSuppliers,
+            final Collection<ValueParamProvider> valueSuppliers,
             final ProcessingProviders processingProviders,
             final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder,
             final Iterable<ModelProcessor> modelProcessors,

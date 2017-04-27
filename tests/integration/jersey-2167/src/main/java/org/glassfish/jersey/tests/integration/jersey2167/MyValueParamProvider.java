@@ -40,13 +40,14 @@
 
 package org.glassfish.jersey.tests.integration.jersey2167;
 
+import java.util.function.Function;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.internal.inject.AbstractRequestDerivedValueSupplier;
-import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
+import org.glassfish.jersey.server.internal.inject.AbstractValueParamProvider;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.model.Parameter;
 
@@ -56,30 +57,22 @@ import org.glassfish.jersey.server.model.Parameter;
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 @Singleton
-public class MyValueSupplierProvider extends AbstractValueSupplierProvider {
+public class MyValueParamProvider extends AbstractValueParamProvider {
 
     @Inject
-    public MyValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
-            Provider<ContainerRequest> requestProvider) {
-        super(mpep, requestProvider, Parameter.Source.UNKNOWN);
+    public MyValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep) {
+        super(mpep, Parameter.Source.UNKNOWN);
     }
 
     @Override
-    protected AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter,
-            Provider<ContainerRequest> requestProvider) {
-
-        return new MyValueSupplier(requestProvider);
+    protected Function<ContainerRequest, ?> createValueProvider(Parameter parameter) {
+        return new MyValueSupplier();
     }
 
-    private static final class MyValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
-
-        public MyValueSupplier(final Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-        }
+    private static final class MyValueSupplier implements Function<ContainerRequest, Object> {
 
         @Override
-        public Object get() {
+        public Object apply(ContainerRequest request) {
             // returns some testing value
             return "injected timestamp=" + System.currentTimeMillis();
         }

@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -73,8 +74,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageUtils;
 import org.glassfish.jersey.message.internal.Utils;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.internal.inject.AbstractRequestDerivedValueSupplier;
-import org.glassfish.jersey.server.internal.inject.AbstractValueSupplierProvider;
+import org.glassfish.jersey.server.internal.inject.AbstractValueParamProvider;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.model.Parameter;
@@ -89,23 +89,18 @@ import org.jvnet.mimepull.MIMEParsingException;
  * @author Paul Sandoz
  * @author Michal Gajdos
  */
-final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProvider {
+final class FormDataParamValueParamProvider extends AbstractValueParamProvider {
 
-    private static final Logger LOGGER = Logger.getLogger(FormDataParamValueSupplierProvider.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FormDataParamValueParamProvider.class.getName());
 
-    private abstract class ValueSupplier<T> extends AbstractRequestDerivedValueSupplier<T> {
-
-        public ValueSupplier(Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-        }
+    private abstract class ValueProvider<T> implements Function<ContainerRequest, T> {
 
         /**
          * Returns a {@code FormDataMultiPart} entity from the request and stores it in the request context properties.
          *
          * @return a form data multi part entity.
          */
-        FormDataMultiPart getEntity() {
-            final ContainerRequest request = getRequest();
+        FormDataMultiPart getEntity(ContainerRequest request) {
             final String requestPropertyName = FormDataMultiPart.class.getName();
 
             Object entity = request.getProperty(requestPropertyName);
@@ -124,15 +119,11 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
     /**
      * Provider supplier for entity of {@code FormDataMultiPart} type.
      */
-    private final class FormDataMultiPartSupplier extends ValueSupplier<FormDataMultiPart> {
-
-        public FormDataMultiPartSupplier(final Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-        }
+    private final class FormDataMultiPartProvider extends ValueProvider<FormDataMultiPart> {
 
         @Override
-        public FormDataMultiPart get() {
-            return getEntity();
+        public FormDataMultiPart apply(ContainerRequest request) {
+            return getEntity(request);
         }
     }
 
@@ -140,19 +131,17 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
      * Provider supplier for list of {@link org.glassfish.jersey.media.multipart.FormDataBodyPart} types injected via
      * {@link FormDataParam} annotation.
      */
-    private final class ListFormDataBodyPartValueSupplier extends ValueSupplier<List<FormDataBodyPart>> {
+    private final class ListFormDataBodyPartValueProvider extends ValueProvider<List<FormDataBodyPart>> {
 
         private final String name;
 
-        public ListFormDataBodyPartValueSupplier(final String name, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        public ListFormDataBodyPartValueProvider(final String name) {
             this.name = name;
         }
 
         @Override
-        public List<FormDataBodyPart> get() {
-            return getEntity().getFields(name);
+        public List<FormDataBodyPart> apply(ContainerRequest request) {
+            return getEntity(request).getFields(name);
         }
     }
 
@@ -160,19 +149,17 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
      * Provider supplier for list of {@link org.glassfish.jersey.media.multipart.FormDataContentDisposition} types injected via
      * {@link FormDataParam} annotation.
      */
-    private final class ListFormDataContentDispositionSupplier extends ValueSupplier<List<FormDataContentDisposition>> {
+    private final class ListFormDataContentDispositionProvider extends ValueProvider<List<FormDataContentDisposition>> {
 
         private final String name;
 
-        public ListFormDataContentDispositionSupplier(final String name, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        public ListFormDataContentDispositionProvider(final String name) {
             this.name = name;
         }
 
         @Override
-        public List<FormDataContentDisposition> get() {
-            final List<FormDataBodyPart> parts = getEntity().getFields(name);
+        public List<FormDataContentDisposition> apply(ContainerRequest request) {
+            final List<FormDataBodyPart> parts = getEntity(request).getFields(name);
 
             return parts == null ? null : parts.stream()
                                                .map(FormDataBodyPart::getFormDataContentDisposition)
@@ -184,19 +171,17 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
      * Provider supplier for {@link org.glassfish.jersey.media.multipart.FormDataBodyPart} types injected via
      * {@link FormDataParam} annotation.
      */
-    private final class FormDataBodyPartSupplier extends ValueSupplier<FormDataBodyPart> {
+    private final class FormDataBodyPartProvider extends ValueProvider<FormDataBodyPart> {
 
         private final String name;
 
-        public FormDataBodyPartSupplier(final String name, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        public FormDataBodyPartProvider(final String name) {
             this.name = name;
         }
 
         @Override
-        public FormDataBodyPart get() {
-            return getEntity().getField(name);
+        public FormDataBodyPart apply(ContainerRequest request) {
+            return getEntity(request).getField(name);
         }
     }
 
@@ -204,19 +189,17 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
      * Provider supplier for {@link org.glassfish.jersey.media.multipart.FormDataContentDisposition} types injected via
      * {@link FormDataParam} annotation.
      */
-    private final class FormDataContentDispositionSupplier extends ValueSupplier<FormDataContentDisposition> {
+    private final class FormDataContentDispositionProvider extends ValueProvider<FormDataContentDisposition> {
 
         private final String name;
 
-        public FormDataContentDispositionSupplier(final String name, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        public FormDataContentDispositionProvider(final String name) {
             this.name = name;
         }
 
         @Override
-        public FormDataContentDisposition get() {
-            final FormDataBodyPart part = getEntity().getField(name);
+        public FormDataContentDisposition apply(ContainerRequest request) {
+            final FormDataBodyPart part = getEntity(request).getField(name);
 
             return part == null ? null : part.getFormDataContentDisposition();
         }
@@ -225,19 +208,17 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
     /**
      * Provider supplier for {@link java.io.File} types injected via {@link FormDataParam} annotation.
      */
-    private final class FileSupplier extends ValueSupplier<File> {
+    private final class FileProvider extends ValueProvider<File> {
 
         private final String name;
 
-        public FileSupplier(final String name, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        public FileProvider(final String name) {
             this.name = name;
         }
 
         @Override
-        public File get() {
-            final FormDataBodyPart part = getEntity().getField(name);
+        public File apply(ContainerRequest request) {
+            final FormDataBodyPart part = getEntity(request).getField(name);
             final BodyPartEntity entity = part != null ? part.getEntityAs(BodyPartEntity.class) : null;
 
             if (entity != null) {
@@ -262,31 +243,24 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
     /**
      * Provider supplier for generic types injected via {@link FormDataParam} annotation.
      */
-    private final class FormDataParamValueSupplier extends ValueSupplier<Object> {
+    private final class FormDataParamValueProvider extends ValueProvider<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final Parameter parameter;
 
-        public FormDataParamValueSupplier(
-                Parameter parameter,
-                MultivaluedParameterExtractor<?> extractor,
-                Provider<ContainerRequest> requestProvider) {
-
-            super(requestProvider);
-
+        public FormDataParamValueProvider(Parameter parameter, MultivaluedParameterExtractor<?> extractor) {
             this.parameter = parameter;
             this.extractor = extractor;
         }
 
         @Override
-        public Object get() {
+        public Object apply(ContainerRequest request) {
             // Return the field value for the field specified by the sourceName property.
-            final List<FormDataBodyPart> parts = getEntity().getFields(parameter.getSourceName());
+            final List<FormDataBodyPart> parts = getEntity(request).getFields(parameter.getSourceName());
 
             final FormDataBodyPart part = parts != null ? parts.get(0) : null;
             final MediaType mediaType = part != null ? part.getMediaType() : MediaType.TEXT_PLAIN_TYPE;
 
-            final ContainerRequest request = getRequest();
             final MessageBodyWorkers messageBodyWorkers = request.getWorkers();
 
             MessageBodyReader reader = messageBodyWorkers.getMessageBodyReader(
@@ -392,22 +366,18 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
      * Injection constructor.
      *
      * @param extractorProvider multi-valued map parameter extractor provider.
-     * @param requestProvider   request provider.
      */
-    public FormDataParamValueSupplierProvider(
-            Provider<MultivaluedParameterExtractorProvider> extractorProvider, Provider<ContainerRequest> requestProvider) {
-        super(extractorProvider, requestProvider, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
+    public FormDataParamValueParamProvider(Provider<MultivaluedParameterExtractorProvider> extractorProvider) {
+        super(extractorProvider, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
     }
 
     @Override
-    protected AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter, Provider<ContainerRequest> requestProvider) {
-
+    protected Function<ContainerRequest, ?> createValueProvider(Parameter parameter) {
         final Class<?> rawType = parameter.getRawType();
 
         if (Parameter.Source.ENTITY == parameter.getSource()) {
             if (FormDataMultiPart.class.isAssignableFrom(rawType)) {
-                return new FormDataMultiPartSupplier(requestProvider);
+                return new FormDataMultiPartProvider();
             } else {
                 return null;
             }
@@ -423,22 +393,22 @@ final class FormDataParamValueSupplierProvider extends AbstractValueSupplierProv
 
                 if (FormDataBodyPart.class == clazz) {
                     // Return a collection of form data body part.
-                    return new ListFormDataBodyPartValueSupplier(paramName, requestProvider);
+                    return new ListFormDataBodyPartValueProvider(paramName);
                 } else if (FormDataContentDisposition.class == clazz) {
                     // Return a collection of form data content disposition.
-                    return new ListFormDataContentDispositionSupplier(paramName, requestProvider);
+                    return new ListFormDataContentDispositionProvider(paramName);
                 } else {
                     // Return a collection of specific type.
-                    return new FormDataParamValueSupplier(parameter, get(parameter), requestProvider);
+                    return new FormDataParamValueProvider(parameter, get(parameter));
                 }
             } else if (FormDataBodyPart.class == rawType) {
-                return new FormDataBodyPartSupplier(paramName, requestProvider);
+                return new FormDataBodyPartProvider(paramName);
             } else if (FormDataContentDisposition.class == rawType) {
-                return new FormDataContentDispositionSupplier(paramName, requestProvider);
+                return new FormDataContentDispositionProvider(paramName);
             } else if (File.class == rawType) {
-                return new FileSupplier(paramName, requestProvider);
+                return new FileProvider(paramName);
             } else {
-                return new FormDataParamValueSupplier(parameter, get(parameter), requestProvider);
+                return new FormDataParamValueProvider(parameter, get(parameter));
             }
         }
 

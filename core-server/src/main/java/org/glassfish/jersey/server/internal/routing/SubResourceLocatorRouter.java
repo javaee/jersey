@@ -63,7 +63,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * An methodAcceptorPair to accept sub-resource requests.
@@ -94,7 +94,7 @@ final class SubResourceLocatorRouter implements Router {
      * @param runtimeLocatorBuilder original runtime model builder.
      */
     SubResourceLocatorRouter(final Function<Class<?>, ?> createServiceFunction,
-                             final Collection<ValueSupplierProvider> valueSuppliers,
+                             final Collection<ValueParamProvider> valueSuppliers,
                              final ResourceMethod locatorModel,
                              final JerseyResourceContext resourceContext,
                              final RuntimeLocatorModelBuilder runtimeLocatorBuilder) {
@@ -147,7 +147,7 @@ final class SubResourceLocatorRouter implements Router {
     private Object getResource(final RequestProcessingContext context) {
         final Object resource = context.routingContext().peekMatchedResource();
         final Method handlingMethod = locatorModel.getInvocable().getHandlingMethod();
-        final Object[] parameterValues = ParameterValueHelper.getParameterValues(valueProviders);
+        final Object[] parameterValues = ParameterValueHelper.getParameterValues(valueProviders, context.request());
 
         context.triggerEvent(RequestEvent.Type.LOCATOR_MATCHED);
 

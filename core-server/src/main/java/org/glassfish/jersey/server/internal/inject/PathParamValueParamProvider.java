@@ -43,6 +43,7 @@ package org.glassfish.jersey.server.internal.inject;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.function.Function;
 
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.PathSegment;
@@ -56,29 +57,24 @@ import org.glassfish.jersey.server.ParamException.PathParamException;
 import org.glassfish.jersey.server.model.Parameter;
 
 /**
- * {@link PathParam &#64;PathParam} injection value supplier provider.
+ * {@link PathParam &#64;PathParam} injection value provider.
  *
  * @author Paul Sandoz
  */
 @Singleton
-final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider {
+final class PathParamValueParamProvider extends AbstractValueParamProvider {
 
     /**
      * Injection constructor.
      *
-     * @param mpep            multivalued map parameter extractor provider.
-     * @param requestProvider request provider.
+     * @param mpep multivalued map parameter extractor provider.
      */
-    public PathParamValueSupplierProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
-            Provider<ContainerRequest> requestProvider) {
-        super(mpep, requestProvider, Parameter.Source.PATH);
+    public PathParamValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep) {
+        super(mpep, Parameter.Source.PATH);
     }
 
     @Override
-    public AbstractRequestDerivedValueSupplier<?> createValueSupplier(
-            Parameter parameter,
-            Provider<ContainerRequest> requestProvider) {
-
+    public Function<ContainerRequest, ?> createValueProvider(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
             // Invalid URI parameter name
@@ -87,12 +83,12 @@ final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider
 
         final Class<?> rawParameterType = parameter.getRawType();
         if (rawParameterType == PathSegment.class) {
-            return new PathParamPathSegmentValueSupplier(parameterName, !parameter.isEncoded(), requestProvider);
+            return new PathParamPathSegmentValueSupplier(parameterName, !parameter.isEncoded());
         } else if (rawParameterType == List.class && parameter.getType() instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) parameter.getType();
             Type[] targs = pt.getActualTypeArguments();
             if (targs.length == 1 && targs[0] == PathSegment.class) {
-                return new PathParamListPathSegmentValueSupplier(parameterName, !parameter.isEncoded(), requestProvider);
+                return new PathParamListPathSegmentValueSupplier(parameterName, !parameter.isEncoded());
             }
         }
 
@@ -101,48 +97,42 @@ final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider
             return null;
         }
 
-        return new PathParamValueSupplier(e, !parameter.isEncoded(), requestProvider);
+        return new PathParamValueProvider(e, !parameter.isEncoded());
     }
 
-    private static final class PathParamValueSupplier extends AbstractRequestDerivedValueSupplier<Object> {
+    private static final class PathParamValueProvider implements Function<ContainerRequest, Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
 
-        PathParamValueSupplier(MultivaluedParameterExtractor<?> extractor,
-                               boolean decode,
-                               Provider<ContainerRequest> requestProvider) {
-
-            super(requestProvider);
+        PathParamValueProvider(MultivaluedParameterExtractor<?> extractor, boolean decode) {
             this.extractor = extractor;
             this.decode = decode;
         }
 
         @Override
-        public Object get() {
+        public Object apply(ContainerRequest request) {
             try {
-                return extractor.extract(getRequest().getUriInfo().getPathParameters(decode));
+                return extractor.extract(request.getUriInfo().getPathParameters(decode));
             } catch (ExtractorException e) {
                 throw new PathParamException(e.getCause(), extractor.getName(), extractor.getDefaultValueString());
             }
         }
     }
 
-    private static final class PathParamPathSegmentValueSupplier extends AbstractRequestDerivedValueSupplier<PathSegment> {
+    private static final class PathParamPathSegmentValueSupplier implements Function<ContainerRequest, PathSegment> {
 
         private final String name;
         private final boolean decode;
 
-        PathParamPathSegmentValueSupplier(String name, boolean decode, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        PathParamPathSegmentValueSupplier(String name, boolean decode) {
             this.name = name;
             this.decode = decode;
         }
 
         @Override
-        public PathSegment get() {
-            List<PathSegment> ps = getRequest().getUriInfo().getPathSegments(name, decode);
+        public PathSegment apply(ContainerRequest request) {
+            List<PathSegment> ps = request.getUriInfo().getPathSegments(name, decode);
             if (ps.isEmpty()) {
                 return null;
             }
@@ -150,22 +140,19 @@ final class PathParamValueSupplierProvider extends AbstractValueSupplierProvider
         }
     }
 
-    private static final class PathParamListPathSegmentValueSupplier
-            extends AbstractRequestDerivedValueSupplier<List<PathSegment>> {
+    private static final class PathParamListPathSegmentValueSupplier implements Function<ContainerRequest, List<PathSegment>> {
 
         private final String name;
         private final boolean decode;
 
-        PathParamListPathSegmentValueSupplier(String name, boolean decode, Provider<ContainerRequest> requestProvider) {
-            super(requestProvider);
-
+        PathParamListPathSegmentValueSupplier(String name, boolean decode) {
             this.name = name;
             this.decode = decode;
         }
 
         @Override
-        public List<PathSegment> get() {
-            return getRequest().getUriInfo().getPathSegments(name, decode);
+        public List<PathSegment> apply(ContainerRequest request) {
+            return request.getUriInfo().getPathSegments(name, decode);
         }
     }
 }
