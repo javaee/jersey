@@ -308,7 +308,10 @@ public final class Providers {
      * @return set of all available service provider instances for the contract
      */
     public static <T> Collection<ServiceHolder<T>> getAllServiceHolders(InjectionManager injectionManager, Class<T> contract) {
-        List<ServiceHolder<T>> providers = getServiceHolders(injectionManager, contract, CustomAnnotationLiteral.INSTANCE);
+        List<ServiceHolder<T>> providers = getServiceHolders(injectionManager,
+                                                             contract,
+                                                             Comparator.comparingInt(Providers::getPriority),
+                                                             CustomAnnotationLiteral.INSTANCE);
         providers.addAll(getServiceHolders(injectionManager, contract));
 
         LinkedHashSet<ServiceHolder<T>> providersSet = new LinkedHashSet<>();
