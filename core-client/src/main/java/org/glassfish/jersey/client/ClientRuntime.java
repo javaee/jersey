@@ -214,11 +214,10 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
         final ClientResponse processedResponse;
         try {
             processedResponse = Stages.process(response, responseProcessingRoot);
+            callback.completed(processedResponse, requestScope);
         } catch (final Throwable throwable) {
             processFailure(throwable, callback);
-            return;
         }
-        callback.completed(processedResponse, requestScope);
     }
 
     private void processFailure(final Throwable failure, final ResponseCallback callback) {
