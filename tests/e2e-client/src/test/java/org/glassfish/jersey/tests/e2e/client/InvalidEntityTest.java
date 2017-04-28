@@ -15,6 +15,8 @@ import javax.ws.rs.client.InvocationCallback;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class InvalidEntityTest extends JerseyTest {
 
@@ -33,13 +35,13 @@ public class InvalidEntityTest extends JerseyTest {
     }
 
     @Test(expected = ExecutionException.class)
-    public void shouldReceiveErrorOnInvalidEntity() throws ExecutionException, InterruptedException {
+    public void shouldReceiveErrorOnInvalidEntity() throws ExecutionException, InterruptedException, TimeoutException {
         target("/test")
                 .path("/")
                 .request(MediaType.APPLICATION_JSON)
                 .async()
                 .get(new EmptyCallback())
-                .get();
+                .get(30, TimeUnit.SECONDS);
     }
 
     @Path("/test")
