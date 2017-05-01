@@ -64,6 +64,7 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -168,6 +169,19 @@ public class AuthTest extends JerseyTest {
             return "GET";
         }
 
+        @GET
+        @Path("digest")
+        public String getDigest(@Context HttpHeaders h) {
+            String value = h.getRequestHeaders().getFirst("Authorization");
+            if (value == null) {
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Digest realm=\"WallyWorld\"")
+                            .entity("Forbidden").build());
+            }
+
+            return "GET";
+        }
+
         @POST
         public String post(@Context HttpHeaders h, String e) {
             requestCount++;
@@ -257,6 +271,24 @@ public class AuthTest extends JerseyTest {
         WebTarget r = client.target(getBaseUri()).path("test/filter");
 
         assertEquals("GET", r.request().get(String.class));
+    }
+
+    @Test
+    public void testAuthGetWithDigestFilter() {
+        ClientConfig cc = new ClientConfig();
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+        cc.connectorProvider(new ApacheConnectorProvider());
+        cc.property(ApacheClientProperties.CONNECTION_MANAGER, cm);
+        Client client = ClientBuilder.newClient(cc);
+        client.register(HttpAuthenticationFeature.universal("name", "password"));
+        WebTarget r = client.target(getBaseUri()).path("test/digest");
+
+        assertEquals("GET", r.request().get(String.class));
+
+        // Verify the connection that was used for the request is available for reuse
+        // and no connections are leased
+        assertEquals(cm.getTotalStats().getAvailable(), 1);
+        assertEquals(cm.getTotalStats().getLeased(), 0);
     }
 
     @Test
