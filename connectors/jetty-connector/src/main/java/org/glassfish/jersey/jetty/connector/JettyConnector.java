@@ -67,6 +67,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.net.ssl.SSLContext;
 
+import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
@@ -147,6 +148,8 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 class JettyConnector implements Connector {
 
     private static final Logger LOGGER = Logger.getLogger(JettyConnector.class.getName());
+
+    private static final int DEFAULT_READ_TIMEOUT = 5000;
 
     private final HttpClient client;
     private final CookieStore cookieStore;
@@ -250,7 +253,24 @@ class JettyConnector implements Connector {
         }
 
         try {
-            final ContentResponse jettyResponse = jettyRequest.send();
+
+            InputStreamResponseListener listener = new InputStreamResponseListener();
+            jettyRequest.send(listener);
+
+            ByteArrayOutputStream responseContent = new ByteArrayOutputStream();
+
+            long readTimeout = (jettyRequest.getTimeout() != 0) ? jettyRequest.getTimeout() : DEFAULT_READ_TIMEOUT;
+
+            Response jettyResponse = listener.get(readTimeout, TimeUnit.MILLISECONDS);
+            byte[] buffer = new byte[256];
+            try (InputStream input = listener.getInputStream()) {
+                int read = input.read(buffer);
+                while (read >= 0) {
+                    responseContent.write(buffer, 0, read);
+                    read = input.read(buffer);
+                }
+            }
+
             HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
                                            JettyConnector.this.getClass().getName());
 
@@ -260,11 +280,8 @@ class JettyConnector implements Connector {
 
             final ClientResponse jerseyResponse = new ClientResponse(status, jerseyRequest);
             processResponseHeaders(jettyResponse.getHeaders(), jerseyResponse);
-            try {
-                jerseyResponse.setEntityStream(new HttpClientResponseInputStream(jettyResponse));
-            } catch (final IOException e) {
-                LOGGER.log(Level.SEVERE, null, e);
-            }
+            jerseyResponse.setEntityStream(new ByteArrayInputStream(responseContent.toByteArray()));
+
 
             return jerseyResponse;
         } catch (final Exception e) {
@@ -282,17 +299,6 @@ class JettyConnector implements Connector {
             }
             list.add(header.getValue());
             headers.put(headerName, list);
-        }
-    }
-
-    private static final class HttpClientResponseInputStream extends FilterInputStream {
-
-        HttpClientResponseInputStream(final ContentResponse jettyResponse) throws IOException {
-            super(getInputStream(jettyResponse));
-        }
-
-        private static InputStream getInputStream(final ContentResponse response) {
-            return new ByteArrayInputStream(response.getContent());
         }
     }
 
