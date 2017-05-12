@@ -130,7 +130,7 @@ public final class RequestProcessingContext implements RespondingContext {
      * Get the underlying {@link UriRoutingContext} instance for the processed
      * container request.
      * <p>
-     * This instance is used  by {@link ServerProcessingBinder} to satisfy injection of multiple types, namely:
+     * This instance is used  by {@link RequestProcessingConfigurator} to satisfy injection of multiple types, namely:
      * <ul>
      * <li>{@link javax.ws.rs.core.UriInfo}<li>
      * </li>{@link org.glassfish.jersey.server.ExtendedUriInfo}<li>

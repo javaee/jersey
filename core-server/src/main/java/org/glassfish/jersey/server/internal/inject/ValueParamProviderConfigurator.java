@@ -45,7 +45,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.CookieParam;
@@ -72,6 +72,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ServerBootstrapBag;
 import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContextReference;
 import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
@@ -85,17 +86,17 @@ public class ValueParamProviderConfigurator implements BootstrapConfigurator {
     public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
         ServerBootstrapBag serverBag = (ServerBootstrapBag) bootstrapBag;
 
-        Provider<AsyncContext> asyncContextProvider = () -> injectionManager.getInstance(AsyncContext.class);
+        // Provide request scoped AsyncContext without the proxy.
+        Provider<AsyncContext> asyncContextProvider = () -> {
+            RequestProcessingContextReference reference = injectionManager.getInstance(RequestProcessingContextReference.class);
+            return reference.get().asyncContext();
+        };
 
-        Function<Class<? extends Configuration>, Configuration> clientConfigProvider =
-                clientConfigClass -> Injections.getOrCreate(injectionManager, clientConfigClass);
-
-        LazyValue<Configuration> lazyConfiguration =
-                Values.lazy((Value<Configuration>) () -> injectionManager.getInstance(Configuration.class));
-
+        // Provide ContextInjectionResolver that is implemented by Injection Provider.
         LazyValue<ContextInjectionResolver> lazyContextResolver =
                 Values.lazy((Value<ContextInjectionResolver>) () -> injectionManager.getInstance(ContextInjectionResolver.class));
 
+        Supplier<Configuration> configuration = serverBag::getConfiguration;
         Provider<MultivaluedParameterExtractorProvider> paramExtractor = serverBag::getMultivaluedParameterExtractorProvider;
 
         // Parameter injection value providers
@@ -128,8 +129,8 @@ public class ValueParamProviderConfigurator implements BootstrapConfigurator {
         BeanParamValueParamProvider beanProvider = new BeanParamValueParamProvider(paramExtractor, injectionManager);
         suppliers.add(beanProvider);
 
-        WebTargetValueParamProvider webTargetProvider =
-                new WebTargetValueParamProvider(lazyConfiguration, clientConfigProvider);
+        WebTargetValueParamProvider webTargetProvider = new WebTargetValueParamProvider(configuration,
+                clientConfigClass -> Injections.getOrCreate(injectionManager, clientConfigClass));
         suppliers.add(webTargetProvider);
 
         DelegatedInjectionValueParamProvider contextProvider =
@@ -151,7 +152,12 @@ public class ValueParamProviderConfigurator implements BootstrapConfigurator {
         injectionManager.register(Bindings.service(entityProvider).to(ValueParamProvider.class));
         injectionManager.register(Bindings.service(contextProvider).to(ValueParamProvider.class));
 
-        Provider<ContainerRequest> request = () -> injectionManager.getInstance(ContainerRequest.class);
+        // Provide request scoped ContainerRequest without the proxy.
+        Provider<ContainerRequest> request = () -> {
+            RequestProcessingContextReference reference = injectionManager.getInstance(RequestProcessingContextReference.class);
+            return reference.get().request();
+        };
+
         registerResolver(injectionManager, asyncProvider, Suspended.class, request);
         registerResolver(injectionManager, cookieProvider, CookieParam.class, request);
         registerResolver(injectionManager, formProvider, FormParam.class, request);
@@ -163,7 +169,7 @@ public class ValueParamProviderConfigurator implements BootstrapConfigurator {
         registerResolver(injectionManager, beanProvider, BeanParam.class, request);
     }
 
-    private void registerResolver(InjectionManager im, ValueParamProvider vfp, Class<?  extends Annotation> annotation,
+    private void registerResolver(InjectionManager im, ValueParamProvider vfp, Class<? extends Annotation> annotation,
             Provider<ContainerRequest> request) {
         im.register(Bindings.injectionResolver(new ParamInjectionResolver<>(vfp, annotation, request)));
     }
