@@ -104,10 +104,11 @@ import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.SupplierInstanceBinding;
 import org.glassfish.jersey.internal.util.collection.Cache;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 
@@ -276,12 +277,13 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             if (parameter != null) {
                 InjectionManager injectionManager =
                         beanManager.getExtension(CdiComponentProvider.class).getEffectiveInjectionManager();
-                Set<ValueSupplierProvider> providers = Providers.getProviders(injectionManager, ValueSupplierProvider.class);
 
-                for (final ValueSupplierProvider vfp : providers) {
-                    final Supplier<?> paramValueSupplier = vfp.getValueSupplier(parameter);
+                Set<ValueParamProvider> providers = Providers.getProviders(injectionManager, ValueParamProvider.class);
+                ContainerRequest containerRequest = injectionManager.getInstance(ContainerRequest.class);
+                for (ValueParamProvider vfp : providers) {
+                    Function<ContainerRequest, ?> paramValueSupplier = vfp.getValueProvider(parameter);
                     if (paramValueSupplier != null) {
-                        return (String) paramValueSupplier.get();
+                        return (String) paramValueSupplier.apply(containerRequest);
                     }
                 }
             }

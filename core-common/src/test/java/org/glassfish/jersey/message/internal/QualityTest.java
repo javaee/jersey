@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,9 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
@@ -48,7 +50,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import static org.glassfish.jersey.message.internal.MediaTypesTest.asMap;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -127,5 +128,25 @@ public class QualityTest {
 
         result = Quality.enhanceWithQualityParameter(parameters, "q", 222);
         assertThat(result, equalTo(asMap("a=b;q=0.222")));
+    }
+
+    /**
+     * Creates a map from HTTP header parameter strings.
+     *
+     * @param parameters HTTP header parameters string.
+     * @return HTTP header parameters map.
+     */
+    public static Map<String, String> asMap(String parameters) {
+        HttpHeaderReader reader = HttpHeaderReader.newInstance(";" + parameters);
+
+        if (reader.hasNext()) {
+            try {
+                return HttpHeaderReader.readParameters(reader);
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return Collections.emptyMap();
     }
 }

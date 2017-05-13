@@ -52,17 +52,12 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.spi.ExecutorServiceProvider;
-import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
 
 /**
  * Registers all binders necessary for {@link Client} runtime.
@@ -110,9 +105,7 @@ class ClientBinder extends AbstractBinder {
     @Override
     protected void configure() {
         install(new MessagingBinders.MessageBodyProviders(clientRuntimeProperties, RuntimeType.CLIENT),
-                new MessagingBinders.HeaderDelegateProviders(),
-                new JaxrsProviders.Binder(),
-                new ServiceFinderBinder<>(AutoDiscoverable.class, clientRuntimeProperties, RuntimeType.CLIENT));
+                new MessagingBinders.HeaderDelegateProviders());
 
         bindFactory(ReferencingFactory.referenceFactory()).to(new GenericType<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);
@@ -128,15 +121,5 @@ class ClientBinder extends AbstractBinder {
 
         // ChunkedInput entity support
         bind(ChunkedInputReader.class).to(MessageBodyReader.class).in(Singleton.class);
-
-        // Default async request executors support
-        int asyncThreadPoolSize = ClientProperties.getValue(clientRuntimeProperties, ClientProperties.ASYNC_THREADPOOL_SIZE, 0);
-        asyncThreadPoolSize = (asyncThreadPoolSize < 0) ? 0 : asyncThreadPoolSize;
-        // a constructor parameter injected into DefaultClientAsyncExecutorProvider
-        bind(asyncThreadPoolSize).named("ClientAsyncThreadPoolSize");
-        // DefaultClientAsyncExecutorProvider must be singleton scoped, so that @PreDestroy, which closes the executor, is called
-        bind(DefaultClientAsyncExecutorProvider.class).to(ExecutorServiceProvider.class).in(Singleton.class);
-
-        bind(DefaultClientBackgroundSchedulerProvider.class).to(ScheduledExecutorServiceProvider.class).in(Singleton.class);
     }
 }

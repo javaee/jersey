@@ -57,8 +57,6 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import javax.inject.Inject;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.internal.InternalProperties;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -124,7 +122,7 @@ public class RuntimeConfigTest extends JerseyTest {
             assertThat(config.getProperty(InternalProperties.JSON_FEATURE_CLIENT), notNullValue());
 
             // MetaInfAutoDiscoverable
-            assertThat(config.getInstances().size(), is(0));
+            assertThat(config.getInstances().size(), is(1));
             assertTrue(config.isEnabled(ClientFeature.class));
 
             context.getHeaders().add("CustomHeader", "ClientReaderInterceptor");

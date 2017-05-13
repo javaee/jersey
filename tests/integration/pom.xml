@@ -40,7 +40,8 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -72,6 +73,7 @@
         <module>j-376</module>
         <module>j-441</module>
         <module>j-59</module>
+        <module>jaxrs-component-inject</module>
         <module>jersey-1107</module>
         <module>jersey-1223</module>
         <module>jersey-1604</module>
@@ -147,7 +149,7 @@
         <module>servlet-request-wrapper-binding</module>
         <module>servlet-tests</module>
         <module>sonar-test</module>
-        <module>spring3</module>
+        <module>spring4</module>
         <module>tracing-support</module>
     </modules>
 

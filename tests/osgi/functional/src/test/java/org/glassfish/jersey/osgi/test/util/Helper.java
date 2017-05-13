@@ -189,7 +189,10 @@ public class Helper {
                     mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-common").versionAsInProject(),
                     mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-jaxb").versionAsInProject(),
                     mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
-                    mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject()
+                    mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
+
+                    // Jersey Injection provider
+                    mavenBundle().groupId("org.glassfish.jersey.inject").artifactId("jersey-hk2").versionAsInProject()
             ));
         }
 

@@ -81,6 +81,12 @@ class ComponentProviderConfigurator implements BootstrapConfigurator {
         serverBag.setComponentProviders(componentProviders);
     }
 
+    @Override
+    public void postInit(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+        ServerBootstrapBag serverBag = (ServerBootstrapBag) bootstrapBag;
+        serverBag.getComponentProviders().get().forEach(ComponentProvider::done);
+    }
+
     private static Collection<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
         return StreamSupport.stream(ServiceFinder.find(ComponentProvider.class).spliterator(), false)
                 .map(RankedProvider::new)

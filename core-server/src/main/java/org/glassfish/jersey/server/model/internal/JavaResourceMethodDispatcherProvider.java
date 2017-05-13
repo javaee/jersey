@@ -57,7 +57,7 @@ import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ParamValueFactoryWithSource;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * An implementation of {@link ResourceMethodDispatcher.Provider} that
@@ -68,9 +68,9 @@ import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
  */
 class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.Provider {
 
-    private final Collection<ValueSupplierProvider> allValueProviders;
+    private final Collection<ValueParamProvider> allValueProviders;
 
-    JavaResourceMethodDispatcherProvider(Collection<ValueSupplierProvider> allValueProviders) {
+    JavaResourceMethodDispatcherProvider(Collection<ValueParamProvider> allValueProviders) {
         this.allValueProviders = allValueProviders;
     }
 
@@ -127,8 +127,8 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
             this.valueProviders = valueProviders;
         }
 
-        final Object[] getParamValues() {
-            return ParameterValueHelper.getParameterValues(valueProviders);
+        final Object[] getParamValues(ContainerRequest request) {
+            return ParameterValueHelper.getParameterValues(valueProviders, request);
         }
     }
 
@@ -148,7 +148,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
         @Override
         protected Response doDispatch(final Object resource, final ContainerRequest request) throws ProcessingException {
-            final Object[] paramValues = getParamValues();
+            final Object[] paramValues = getParamValues(request);
             invoke(request, resource, paramValues);
 
             final SseEventSink eventSink = (SseEventSink) paramValues[parameterIndex];
@@ -172,7 +172,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
         @Override
         protected Response doDispatch(final Object resource, final ContainerRequest containerRequest) throws ProcessingException {
-            invoke(containerRequest, resource, getParamValues());
+            invoke(containerRequest, resource, getParamValues(containerRequest));
             return Response.noContent().build();
         }
     }
@@ -189,7 +189,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
         @Override
         protected Response doDispatch(Object resource, final ContainerRequest containerRequest) throws ProcessingException {
-            return Response.class.cast(invoke(containerRequest, resource, getParamValues()));
+            return Response.class.cast(invoke(containerRequest, resource, getParamValues(containerRequest)));
         }
     }
 
@@ -205,7 +205,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
         @Override
         protected Response doDispatch(final Object resource, final ContainerRequest containerRequest) throws ProcessingException {
-            final Object o = invoke(containerRequest, resource, getParamValues());
+            final Object o = invoke(containerRequest, resource, getParamValues(containerRequest));
 
             if (o instanceof Response) {
                 return Response.class.cast(o);
@@ -234,7 +234,7 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
         @Override
         protected Response doDispatch(final Object resource, final ContainerRequest containerRequest) throws ProcessingException {
-            final Object o = invoke(containerRequest, resource, getParamValues());
+            final Object o = invoke(containerRequest, resource, getParamValues(containerRequest));
             if (o != null) {
 
                 Response response = Response.ok().entity(o).build();

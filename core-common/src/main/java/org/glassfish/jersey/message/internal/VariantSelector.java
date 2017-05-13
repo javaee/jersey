@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.util.Collections;
@@ -69,7 +70,7 @@ public final class VariantSelector {
      * Interface to get a dimension value from a variant and check if an
      * acceptable dimension value is compatible with a dimension value.
      */
-    private static interface DimensionChecker<T, U> {
+    private interface DimensionChecker<T, U> {
 
         /**
          * Get the dimension value from the variant.
@@ -217,7 +218,7 @@ public final class VariantSelector {
         int cq = Quality.MINIMUM;
         int cqs = Quality.MINIMUM;
 
-        final LinkedList<VariantHolder> selected = new LinkedList<VariantHolder>();
+        final LinkedList<VariantHolder> selected = new LinkedList<>();
 
         // Iterate over the acceptable entries
         // This assumes the entries are ordered by the quality
@@ -273,18 +274,18 @@ public final class VariantSelector {
         private final Variant v;
         private final int mediaTypeQs;
 
-        public VariantHolder(final Variant v) {
+        VariantHolder(final Variant v) {
             this(v, Quality.DEFAULT);
         }
 
-        public VariantHolder(final Variant v, final int mediaTypeQs) {
+        VariantHolder(final Variant v, final int mediaTypeQs) {
             this.v = v;
             this.mediaTypeQs = mediaTypeQs;
         }
     }
 
     private static LinkedList<VariantHolder> getVariantHolderList(final List<Variant> variants) {
-        final LinkedList<VariantHolder> l = new LinkedList<VariantHolder>();
+        final LinkedList<VariantHolder> l = new LinkedList<>();
         for (final Variant v : variants) {
             final MediaType mt = v.getMediaType();
             if (mt != null) {
@@ -333,7 +334,7 @@ public final class VariantSelector {
                                                final Ref<String> varyHeaderValue) {
         LinkedList<VariantHolder> vhs = getVariantHolderList(variants);
 
-        final Set<String> vary = new HashSet<String>();
+        final Set<String> vary = new HashSet<>();
         vhs = selectVariants(vhs, context.getQualifiedAcceptableMediaTypes(), MEDIA_TYPE_DC, vary);
         vhs = selectVariants(vhs, context.getQualifiedAcceptableLanguages(), LANGUAGE_TAG_DC, vary);
         vhs = selectVariants(vhs, context.getQualifiedAcceptCharset(), CHARSET_DC, vary);

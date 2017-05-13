@@ -41,11 +41,14 @@
 package org.glassfish.jersey.internal;
 
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Objects;
 
 import javax.ws.rs.core.Configuration;
 
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -64,6 +67,44 @@ public class BootstrapBag {
     private MessageBodyWorkers messageBodyWorkers;
     private ExceptionMappers exceptionMappers;
     private ContextResolvers contextResolvers;
+    private ManagedObjectsFinalizer managedObjectsFinalizer;
+    private List<AutoDiscoverable> autoDiscoverables;
+
+    /**
+     * Gets a list of {@link AutoDiscoverable}.
+     *
+     * @return list of {@link AutoDiscoverable}.
+     */
+    public List<AutoDiscoverable> getAutoDiscoverables() {
+        return autoDiscoverables;
+    }
+
+    /**
+     * Sets a list of {@link AutoDiscoverable}.
+     *
+     * @param autoDiscoverables list of {@code AutoDiscoverable}.
+     */
+    public void setAutoDiscoverables(List<AutoDiscoverable> autoDiscoverables) {
+        this.autoDiscoverables = autoDiscoverables;
+    }
+
+    /**
+     * Gets an instance of {@link ManagedObjectsFinalizer}.
+     *
+     * @return {@code ManagedObjectsFinalizer} instance.
+     */
+    public ManagedObjectsFinalizer getManagedObjectsFinalizer() {
+        return managedObjectsFinalizer;
+    }
+
+    /**
+     * Sets an instance of {@link ManagedObjectsFinalizer}.
+     *
+     * @param managedObjectsFinalizer {@code ManagedObjectsFinalizer} instance.
+     */
+    public void setManagedObjectsFinalizer(ManagedObjectsFinalizer managedObjectsFinalizer) {
+        this.managedObjectsFinalizer = managedObjectsFinalizer;
+    }
 
     /**
      * Gets an instance of {@link RequestScope}.
@@ -161,15 +202,6 @@ public class BootstrapBag {
     }
 
     /**
-     * Creates an immutable version of bootstrap bag.
-     *
-     * @return immutable bootstrap bag.
-     */
-    public BootstrapBag toImmutable() {
-        return new ImmutableBootstrapBag(this);
-    }
-
-    /**
      * Check whether the value is not {@code null} that means that the proper {@link BootstrapConfigurator} has not been configured
      * or in a wrong order.
      *
@@ -178,67 +210,5 @@ public class BootstrapBag {
      */
     protected static void requireNonNull(Object object, Type type) {
         Objects.requireNonNull(object, type + " has not been added into BootstrapBag yet");
-    }
-
-    /**
-     * Immutable version of {@link BootstrapBag}.
-     */
-    public static class ImmutableBootstrapBag extends BootstrapBag {
-
-        private final BootstrapBag delegate;
-
-        protected ImmutableBootstrapBag(BootstrapBag delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        public RequestScope getRequestScope() {
-            return delegate.getRequestScope();
-        }
-
-        @Override
-        public void setRequestScope(RequestScope requestScope) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public MessageBodyWorkers getMessageBodyWorkers() {
-            return delegate.getMessageBodyWorkers();
-        }
-
-        @Override
-        public void setMessageBodyWorkers(MessageBodyWorkers messageBodyWorkers) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Configuration getConfiguration() {
-            return delegate.getConfiguration();
-        }
-
-        @Override
-        public void setConfiguration(Configuration configuration) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ExceptionMappers getExceptionMappers() {
-            return delegate.getExceptionMappers();
-        }
-
-        @Override
-        public void setExceptionMappers(ExceptionMappers exceptionMappers) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ContextResolvers getContextResolvers() {
-            return delegate.getContextResolvers();
-        }
-
-        @Override
-        public void setContextResolvers(ContextResolvers contextResolvers) {
-            throw new UnsupportedOperationException();
-        }
     }
 }

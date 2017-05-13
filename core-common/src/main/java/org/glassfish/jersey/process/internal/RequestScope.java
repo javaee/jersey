@@ -519,10 +519,10 @@ public class RequestScope {
         @Override
         public String toString() {
             return "Instance{"
-                   + "id=" + id
-                   + ", referenceCounter=" + referenceCounter
-                   + ", store size=" + store.size()
-                   + '}';
+                    + "id=" + id
+                    + ", referenceCounter=" + referenceCounter
+                    + ", store size=" + store.size()
+                    + '}';
         }
     }
 }

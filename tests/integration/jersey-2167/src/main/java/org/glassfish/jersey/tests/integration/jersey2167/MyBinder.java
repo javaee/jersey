@@ -43,7 +43,7 @@ package org.glassfish.jersey.tests.integration.jersey2167;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * Custom annotation binder for JERSEY-2167 reproducer.
@@ -54,6 +54,6 @@ public class MyBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        bind(MyValueSupplierProvider.class).to(ValueSupplierProvider.class).in(Singleton.class);
+        bind(MyValueParamProvider.class).to(ValueParamProvider.class).in(Singleton.class);
     }
 }

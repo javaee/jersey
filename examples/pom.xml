@@ -99,6 +99,7 @@
         <module>json-moxy</module>
         <module>json-processing-webapp</module>
         <module>json-with-padding</module>
+        <module>json-binding</module>
         <module>managed-beans-webapp</module>
         <module>managed-client</module>
         <module>managed-client-webapp</module>
@@ -114,12 +115,14 @@
         <module>server-async</module>
         <module>server-async-managed</module>
         <module>server-async-standalone</module>
-        <module>server-sent-events</module>
+        <module>server-sent-events-jersey</module>
+        <module>server-sent-events-jaxrs</module>
         <module>servlet3-webapp</module>
         <module>simple-console</module>
         <module>shortener-webapp</module>
         <module>sparklines</module>
-        <module>sse-item-store-webapp</module>
+        <module>sse-item-store-jersey-webapp</module>
+        <module>sse-item-store-jaxrs-webapp</module>
         <module>sse-twitter-aggregator</module>
         <module>system-properties-example</module>
         <module>tone-generator</module>

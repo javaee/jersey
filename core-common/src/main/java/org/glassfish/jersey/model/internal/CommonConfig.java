@@ -66,16 +66,13 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import javax.annotation.Priority;
-import javax.inject.Singleton;
 
 import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ServiceFinder;
-import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -576,11 +573,12 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     /**
      * Configure {@link AutoDiscoverable auto-discoverables} in the injection manager.
      *
-     * @param injectionManager injection manager in which the auto-discoverables should be configured.
-     * @param forcedOnly defines whether all or only forced auto-discoverables should be configured.
+     * @param injectionManager  injection manager in which the auto-discoverables should be configured.
+     * @param autoDiscoverables list of registered auto discoverable components.
+     * @param forcedOnly        defines whether all or only forced auto-discoverables should be configured.
      */
     public void configureAutoDiscoverableProviders(final InjectionManager injectionManager,
-            final boolean forcedOnly) {
+            final Collection<AutoDiscoverable> autoDiscoverables, final boolean forcedOnly) {
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
             final Set<AutoDiscoverable> providers = new TreeSet<>((o1, o2) -> {
@@ -602,7 +600,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
             // Regular.
             if (!forcedOnly) {
-                providers.addAll(Providers.getProviders(injectionManager, AutoDiscoverable.class));
+                providers.addAll(autoDiscoverables);
             }
 
             for (final AutoDiscoverable autoDiscoverable : providers) {
@@ -625,27 +623,18 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
      *
      * @param injectionManager injection manager in which the binders and features should be configured.
      */
-    public void configureMetaProviders(InjectionManager injectionManager) {
+    public void configureMetaProviders(InjectionManager injectionManager, ManagedObjectsFinalizer finalizer) {
         // First, configure existing binders
         Set<Binder> configuredBinders = configureBinders(injectionManager, Collections.emptySet());
 
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
-            injectionManager.register(new ManagedObjectsFinalizerBinder());
             // Register external meta objects
             configureExternalObjects(injectionManager);
             // Next, configure all features
-            configureFeatures(injectionManager, new HashSet<>(), resetRegistrations());
+            configureFeatures(injectionManager, new HashSet<>(), resetRegistrations(), finalizer);
             // At last, configure any new binders added by features
             configureBinders(injectionManager, configuredBinders);
-        }
-    }
-
-    public static class ManagedObjectsFinalizerBinder extends AbstractBinder {
-        @Override
-        protected void configure() {
-            bindAsContract(ManagedObjectsFinalizer.class)
-                    .in(Singleton.class);
         }
     }
 
@@ -653,7 +642,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         Set<Binder> allConfigured = Collections.newSetFromMap(new IdentityHashMap<>());
         allConfigured.addAll(configured);
 
-        Collection<Binder> binders = getBeanDescriptors(configured);
+        Collection<Binder> binders = getBinder(configured);
         if (!binders.isEmpty()) {
             injectionManager.register(CompositeBinder.wrap(binders));
             allConfigured.addAll(binders);
@@ -662,11 +651,11 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         return allConfigured;
     }
 
-    private Collection<Binder> getBeanDescriptors(Set<Binder> configured) {
+    private Collection<Binder> getBinder(Set<Binder> configured) {
         return componentBag.getInstances(ComponentBag.BINDERS_ONLY)
                 .stream()
                 .map(CAST_TO_BINDER)
-                .filter(descriptor -> !configured.contains(descriptor))
+                .filter(binder -> !configured.contains(binder))
                 .collect(Collectors.toList());
     }
 
@@ -679,9 +668,8 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
     private void configureFeatures(InjectionManager injectionManager,
                                    Set<FeatureRegistration> processed,
-                                   List<FeatureRegistration> unprocessed) {
-        ManagedObjectsFinalizer managedObjectsFinalizer = injectionManager.getInstance(ManagedObjectsFinalizer.class);
-
+                                   List<FeatureRegistration> unprocessed,
+                                   ManagedObjectsFinalizer managedObjectsFinalizer) {
         FeatureContextWrapper featureContextWrapper = null;
         for (final FeatureRegistration registration : unprocessed) {
             if (processed.contains(registration)) {
@@ -714,7 +702,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
             if (success) {
                 processed.add(registration);
-                configureFeatures(injectionManager, processed, resetRegistrations());
+                configureFeatures(injectionManager, processed, resetRegistrations(), managedObjectsFinalizer);
                 enabledFeatureClasses.add(registration.getFeatureClass());
                 enabledFeatures.add(feature);
             }

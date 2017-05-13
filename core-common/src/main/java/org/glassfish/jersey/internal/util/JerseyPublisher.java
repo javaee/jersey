@@ -60,7 +60,7 @@ import org.glassfish.jersey.internal.jsr166.SubmissionPublisher;
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public class JerseyPublisher<T> implements javax.ws.rs.Flow.Publisher<T> {
+public class JerseyPublisher<T> implements Flow.Publisher<T> {
 
     private static final int DEFAULT_BUFFER_CAPACITY = 256;
     private SubmissionPublisher<T> submissionPublisher = new SubmissionPublisher<>();
@@ -156,7 +156,7 @@ public class JerseyPublisher<T> implements javax.ws.rs.Flow.Publisher<T> {
     }
 
     @Override
-    public void subscribe(final javax.ws.rs.Flow.Subscriber<? super T> subscriber) {
+    public void subscribe(final Flow.Subscriber<? super T> subscriber) {
         submissionPublisher.subscribe(new SubscriberWrapper<T>(subscriber));
     }
 
@@ -193,14 +193,14 @@ public class JerseyPublisher<T> implements javax.ws.rs.Flow.Publisher<T> {
     /**
      * Publishes the given item, if possible, to each current subscriber
      * by asynchronously invoking its
-     * {@link javax.ws.rs.Flow.Subscriber#onNext(Object) onNext} method.
+     * {@link Flow.Subscriber#onNext(Object) onNext} method.
      * The item may be dropped by one or more subscribers if resource
      * limits are exceeded, in which case the given handler (if non-null)
      * is invoked, and if it returns true, retried once.  Other calls to
      * methods in this class by other threads are blocked while the
      * handler is invoked.  Unless recovery is assured, options are
      * usually limited to logging the error and/or issuing an {@link
-     * javax.ws.rs.Flow.Subscriber#onError(Throwable) onError}
+     * Flow.Subscriber#onError(Throwable) onError}
      * signal to the subscriber.
      * <p>
      * This method returns a status indicator: If negative, it
@@ -227,14 +227,14 @@ public class JerseyPublisher<T> implements javax.ws.rs.Flow.Publisher<T> {
      * @throws NullPointerException       if item is null
      * @throws RejectedExecutionException if thrown by Executor
      */
-    private int offer(T item, BiPredicate<javax.ws.rs.Flow.Subscriber<? super T>, ? super T> onDrop) {
+    private int offer(T item, BiPredicate<Flow.Subscriber<? super T>, ? super T> onDrop) {
         return offer(item, 0, TimeUnit.MILLISECONDS, onDrop);
     }
 
     /**
      * Publishes the given item, if possible, to each current subscriber
      * by asynchronously invoking its {@link
-     * javax.ws.rs.Flow.Subscriber#onNext(Object) onNext} method,
+     * Flow.Subscriber#onNext(Object) onNext} method,
      * blocking while resources for any subscription are unavailable,
      * up to the specified timeout or until the caller thread is
      * interrupted, at which point the given handler (if non-null) is
@@ -245,7 +245,7 @@ public class JerseyPublisher<T> implements javax.ws.rs.Flow.Publisher<T> {
      * threads are blocked while the handler is invoked.  Unless
      * recovery is assured, options are usually limited to logging the
      * error and/or issuing an
-     * {@link javax.ws.rs.Flow.Subscriber#onError(Throwable) onError}
+     * {@link Flow.Subscriber#onError(Throwable) onError}
      * signal to the subscriber.
      * <p>
      * This method returns a status indicator: If negative, it
@@ -279,7 +279,7 @@ public class JerseyPublisher<T> implements javax.ws.rs.Flow.Publisher<T> {
     private int offer(T item,
                       long timeout,
                       TimeUnit unit,
-                      BiPredicate<javax.ws.rs.Flow.Subscriber<? super T>, ? super T> onDrop) {
+                      BiPredicate<Flow.Subscriber<? super T>, ? super T> onDrop) {
 
 
         BiPredicate<Flow.Subscriber<? super T>, ? super T> callback;
@@ -387,17 +387,17 @@ public class JerseyPublisher<T> implements javax.ws.rs.Flow.Publisher<T> {
     }
 
     public static class SubscriberWrapper<T> implements Flow.Subscriber<T> {
-        private javax.ws.rs.Flow.Subscriber<? super T> subscriber;
+        private Flow.Subscriber<? super T> subscriber;
         private Flow.Subscription subscription = null;
 
-        public SubscriberWrapper(javax.ws.rs.Flow.Subscriber<? super T> subscriber) {
+        public SubscriberWrapper(Flow.Subscriber<? super T> subscriber) {
             this.subscriber = subscriber;
         }
 
         @Override
         public void onSubscribe(final Flow.Subscription subscription) {
             this.subscription = subscription;
-            subscriber.onSubscribe(new javax.ws.rs.Flow.Subscription() {
+            subscriber.onSubscribe(new Flow.Subscription() {
                 @Override
                 public void request(final long n) {
                     subscription.request(n);
@@ -425,7 +425,7 @@ public class JerseyPublisher<T> implements javax.ws.rs.Flow.Publisher<T> {
             subscriber.onComplete();
         }
 
-        public javax.ws.rs.Flow.Subscriber<? super T> getWrappedSubscriber() {
+        public Flow.Subscriber<? super T> getWrappedSubscriber() {
             return subscriber;
         }
 

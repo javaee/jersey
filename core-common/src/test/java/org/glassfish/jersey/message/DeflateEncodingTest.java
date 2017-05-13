@@ -70,7 +70,7 @@ public class DeflateEncodingTest extends AbstractEncodingTest {
 
         private final HashMap<String, Object> properties;
 
-        public DummyConfiguration(boolean noZLib) {
+        DummyConfiguration(boolean noZLib) {
             properties = new HashMap<>();
             properties.put(MessageProperties.DEFLATE_WITHOUT_ZLIB, noZLib);
         }

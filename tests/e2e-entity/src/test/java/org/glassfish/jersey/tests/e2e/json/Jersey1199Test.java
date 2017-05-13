@@ -39,9 +39,12 @@
  */
 package org.glassfish.jersey.tests.e2e.json;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.json.bind.adapter.JsonbAdapter;
 
 import org.glassfish.jersey.tests.e2e.json.entity.ColorHolder;
 import org.glassfish.jersey.tests.e2e.json.entity.Jersey1199List;
@@ -57,7 +60,7 @@ public class Jersey1199Test extends AbstractJsonTest {
 
     @Parameterized.Parameters()
     public static Collection<JsonTestSetup[]> generateTestCases() throws Exception {
-        final List<JsonTestSetup[]> jsonTestSetups = new LinkedList<JsonTestSetup[]>();
+        final List<JsonTestSetup[]> jsonTestSetups = new LinkedList<>();
         final Class<?>[] classes = {Jersey1199List.class, ColorHolder.class};
 
         for (final JsonTestProvider jsonProvider : JsonTestProvider.JAXB_PROVIDERS) {
@@ -69,6 +72,23 @@ public class Jersey1199Test extends AbstractJsonTest {
 
     public Jersey1199Test(final JsonTestSetup jsonTestSetup) throws Exception {
         super(jsonTestSetup);
+    }
+
+    /**
+     * Custom {@link JsonbAdapter} to provide JSONB with the type hidden behind the generic Object array returned by
+     * {@link Jersey1199List#getObjects()}
+     */
+    public static class JsonbObjectToColorHolderAdapter implements JsonbAdapter<Object[], ColorHolder[]> {
+
+        @Override
+        public ColorHolder[] adaptToJson(Object[] o) throws Exception {
+            return Arrays.copyOf(o, o.length, ColorHolder[].class);
+        }
+
+        @Override
+        public Object[] adaptFromJson(ColorHolder[] colorHolder) throws Exception {
+            return colorHolder;
+        }
     }
 
 }

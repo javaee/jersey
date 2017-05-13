@@ -43,21 +43,18 @@ package org.glassfish.jersey.server;
 import java.util.Collection;
 
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.internal.BootstrapBag;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
-import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
+import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
+import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
-import org.glassfish.jersey.spi.ContextResolvers;
-import org.glassfish.jersey.spi.ExceptionMappers;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * {@inheritDoc}
@@ -70,13 +67,23 @@ public class ServerBootstrapBag extends BootstrapBag {
 
     private Application application;
     private ApplicationHandler applicationHandler;
-    private Collection<ValueSupplierProvider> valueSupplierProviders;
+    private Collection<ValueParamProvider> valueParamProviders;
     private MultivaluedParameterExtractorProvider multivaluedParameterExtractorProvider;
     private ProcessingProviders processingProviders;
     private JerseyResourceContext resourceContext;
     private LazyValue<Collection<ComponentProvider>> componentProviders;
     private ResourceMethodInvoker.Builder resourceMethodInvokerBuilder;
     private ResourceBag resourceBag;
+    private ResourceModel resourceModel;
+    private Collection<ModelProcessor> modelProcessors;
+
+    public Collection<ModelProcessor> getModelProcessors() {
+        return modelProcessors;
+    }
+
+    public void setModelProcessors(Collection<ModelProcessor> modelProcessors) {
+        this.modelProcessors = modelProcessors;
+    }
 
     public ResourceBag getResourceBag() {
         requireNonNull(resourceBag, ResourceBag.class);
@@ -127,13 +134,13 @@ public class ServerBootstrapBag extends BootstrapBag {
         this.multivaluedParameterExtractorProvider = provider;
     }
 
-    public Collection<ValueSupplierProvider> getValueSupplierProviders() {
-        requireNonNull(valueSupplierProviders, new GenericType<Collection<ValueSupplierProvider>>() {}.getType());
-        return valueSupplierProviders;
+    public Collection<ValueParamProvider> getValueParamProviders() {
+        requireNonNull(valueParamProviders, new GenericType<Collection<ValueParamProvider>>() {}.getType());
+        return valueParamProviders;
     }
 
-    public void setValueSupplierProviders(Collection<ValueSupplierProvider> valueSupplierProviders) {
-        this.valueSupplierProviders = valueSupplierProviders;
+    public void setValueParamProviders(Collection<ValueParamProvider> valueParamProviders) {
+        this.valueParamProviders = valueParamProviders;
     }
 
     public JerseyResourceContext getResourceContext() {
@@ -163,169 +170,11 @@ public class ServerBootstrapBag extends BootstrapBag {
         this.resourceMethodInvokerBuilder = resourceMethodInvokerBuilder;
     }
 
-    /**
-     * Creates an immutable version of bootstrap bag.
-     *
-     * @return immutable bootstrap bag.
-     */
-    public ServerBootstrapBag toImmutable() {
-        return new ImmutableServerBootstrapBag(this);
+    public ResourceModel getResourceModel() {
+        return resourceModel;
     }
 
-    /**
-     * Immutable version of {@link BootstrapBag}.
-     */
-    static class ImmutableServerBootstrapBag extends ServerBootstrapBag {
-
-        private final ServerBootstrapBag delegate;
-
-        private ImmutableServerBootstrapBag(ServerBootstrapBag delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        public ResourceBag getResourceBag() {
-            return delegate.getResourceBag();
-        }
-
-        @Override
-        public void setResourceBag(ResourceBag resourceBag) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ResourceConfig getRuntimeConfig() {
-            return delegate.getRuntimeConfig();
-        }
-
-        @Override
-        public Application getApplication() {
-            return delegate.getApplication();
-        }
-
-        @Override
-        public void setApplication(Application application) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ApplicationHandler getApplicationHandler() {
-            return delegate.getApplicationHandler();
-        }
-
-        @Override
-        public void setApplicationHandler(ApplicationHandler applicationHandler) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ProcessingProviders getProcessingProviders() {
-            return delegate.getProcessingProviders();
-        }
-
-        @Override
-        public void setProcessingProviders(ProcessingProviders processingProviders) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public MultivaluedParameterExtractorProvider getMultivaluedParameterExtractorProvider() {
-            return delegate.getMultivaluedParameterExtractorProvider();
-        }
-
-        @Override
-        public void setMultivaluedParameterExtractorProvider(MultivaluedParameterExtractorProvider provider) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Collection<ValueSupplierProvider> getValueSupplierProviders() {
-            return delegate.getValueSupplierProviders();
-        }
-
-        @Override
-        public void setValueSupplierProviders(Collection<ValueSupplierProvider> valueSupplierProviders) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public JerseyResourceContext getResourceContext() {
-            return delegate.getResourceContext();
-        }
-
-        @Override
-        public void setResourceContext(JerseyResourceContext resourceContext) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public LazyValue<Collection<ComponentProvider>> getComponentProviders() {
-            return delegate.getComponentProviders();
-        }
-
-        @Override
-        public void setComponentProviders(LazyValue<Collection<ComponentProvider>> componentProviders) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ResourceMethodInvoker.Builder getResourceMethodInvokerBuilder() {
-            return delegate.getResourceMethodInvokerBuilder();
-        }
-
-        @Override
-        public void setResourceMethodInvokerBuilder(ResourceMethodInvoker.Builder resourceMethodInvokerBuilder) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public RequestScope getRequestScope() {
-            return delegate.getRequestScope();
-        }
-
-        @Override
-        public void setRequestScope(RequestScope requestScope) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public MessageBodyWorkers getMessageBodyWorkers() {
-            return delegate.getMessageBodyWorkers();
-        }
-
-        @Override
-        public void setMessageBodyWorkers(MessageBodyWorkers messageBodyWorkers) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Configuration getConfiguration() {
-            return delegate.getConfiguration();
-        }
-
-        @Override
-        public void setConfiguration(Configuration configuration) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ExceptionMappers getExceptionMappers() {
-            return delegate.getExceptionMappers();
-        }
-
-        @Override
-        public void setExceptionMappers(ExceptionMappers exceptionMappers) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ContextResolvers getContextResolvers() {
-            return delegate.getContextResolvers();
-        }
-
-        @Override
-        public void setContextResolvers(ContextResolvers contextResolvers) {
-            throw new UnsupportedOperationException();
-        }
+    public void setResourceModel(ResourceModel resourceModel) {
+        this.resourceModel = resourceModel;
     }
 }

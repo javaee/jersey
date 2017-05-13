@@ -56,7 +56,7 @@
     <description>
         This test is to verify if ServiceLocator can be configured within the server context
         in such a way that Jersey can use it as a parent ServiceLocator in the WebComponent.
-        More details can be found in JERSEY-2704. 
+        More details can be found in JERSEY-2704.
     </description>
 
     <dependencies>

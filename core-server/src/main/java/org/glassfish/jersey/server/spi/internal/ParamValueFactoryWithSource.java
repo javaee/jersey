@@ -39,8 +39,10 @@
  */
 package org.glassfish.jersey.server.spi.internal;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 
 /**
@@ -50,25 +52,25 @@ import org.glassfish.jersey.server.model.Parameter;
  * @param <T> This must be the type of entity for which this is a factory.
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public final class ParamValueFactoryWithSource<T> implements Supplier<T> {
+public final class ParamValueFactoryWithSource<T> implements Function<ContainerRequest, T> {
 
-    private final Supplier<T> parameterSupplier;
+    private final Function<ContainerRequest, T> parameterFunction;
     private final Parameter.Source parameterSource;
 
     /**
      * Wrap provided param supplier.
      *
-     * @param supplier        param supplier to be wrapped.
+     * @param paramFunction   param supplier to be wrapped.
      * @param parameterSource param source.
      */
-    public ParamValueFactoryWithSource(Supplier<T> supplier, Parameter.Source parameterSource) {
-        this.parameterSupplier = supplier;
+    public ParamValueFactoryWithSource(Function<ContainerRequest, T> paramFunction, Parameter.Source parameterSource) {
+        this.parameterFunction = paramFunction;
         this.parameterSource = parameterSource;
     }
 
     @Override
-    public T get() {
-        return parameterSupplier.get();
+    public T apply(ContainerRequest request) {
+        return parameterFunction.apply(request);
     }
 
     /**

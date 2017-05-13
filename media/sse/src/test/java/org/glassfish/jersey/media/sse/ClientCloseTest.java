@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ package org.glassfish.jersey.media.sse;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -76,8 +77,8 @@ public class ClientCloseTest extends JerseyTest {
     public void testClose() throws InterruptedException {
         WebTarget sseTarget = target("sse");
 
-        final CountDownLatch eventLatch = new CountDownLatch(3);
-        final CountDownLatch eventLatch2 = new CountDownLatch(4);
+        CountDownLatch eventLatch = new CountDownLatch(3);
+        CountDownLatch eventLatch2 = new CountDownLatch(4);
         EventSource eventSource = new EventSource(sseTarget) {
             @Override
             public void onEvent(final InboundEvent inboundEvent) {
@@ -87,10 +88,8 @@ public class ClientCloseTest extends JerseyTest {
         };
 
         // Server sends 3 events we are interested in.
-        for (int i = 0; i < 3; i++) {
-            assertEquals("OK", target("sse/send").request().get().readEntity(String.class));
-        }
-
+        IntStream.range(0, 3).forEach((i) -> assertEquals("OK",
+                target("sse/send").request().get().readEntity(String.class)));
         assertTrue(eventLatch.await(5, TimeUnit.SECONDS));
 
         // After receiving the 3 events, we try to close.

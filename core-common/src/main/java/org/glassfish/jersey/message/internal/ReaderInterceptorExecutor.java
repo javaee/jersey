@@ -132,7 +132,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
         this.injectionManager = injectionManager;
 
         final List<ReaderInterceptor> effectiveInterceptors = StreamSupport.stream(readerInterceptors.spliterator(), false)
-                .collect(Collectors.toList());
+                                                                           .collect(Collectors.toList());
         effectiveInterceptors.add(new TerminalReaderInterceptor());
 
         this.interceptors = effectiveInterceptors.iterator();

@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
 import java.io.IOException;
@@ -244,14 +245,11 @@ public class OutboundMessageContext {
      * @return the message date, otherwise {@code null} if not present.
      */
     public Date getDate() {
-        return singleHeader(HttpHeaders.DATE, Date.class, new Function<String, Date>() {
-            @Override
-            public Date apply(String input) {
-                try {
-                    return HttpHeaderReader.readDate(input);
-                } catch (ParseException e) {
-                    throw new ProcessingException(e);
-                }
+        return singleHeader(HttpHeaders.DATE, Date.class, input -> {
+            try {
+                return HttpHeaderReader.readDate(input);
+            } catch (ParseException e) {
+                throw new ProcessingException(e);
             }
         }, false);
     }
@@ -262,14 +260,11 @@ public class OutboundMessageContext {
      * @return the language of the entity or {@code null} if not specified
      */
     public Locale getLanguage() {
-        return singleHeader(HttpHeaders.CONTENT_LANGUAGE, Locale.class, new Function<String, Locale>() {
-            @Override
-            public Locale apply(String input) {
-                try {
-                    return new LanguageTag(input).getAsLocale();
-                } catch (ParseException e) {
-                    throw new ProcessingException(e);
-                }
+        return singleHeader(HttpHeaders.CONTENT_LANGUAGE, Locale.class, input -> {
+            try {
+                return new LanguageTag(input).getAsLocale();
+            } catch (ParseException e) {
+                throw new ProcessingException(e);
             }
         }, false);
     }
@@ -281,12 +276,7 @@ public class OutboundMessageContext {
      * message entity).
      */
     public MediaType getMediaType() {
-        return singleHeader(HttpHeaders.CONTENT_TYPE, MediaType.class, new Function<String, MediaType>() {
-            @Override
-            public MediaType apply(String input) {
-                return MediaType.valueOf(input);
-            }
-        }, false);
+        return singleHeader(HttpHeaders.CONTENT_TYPE, MediaType.class, MediaType::valueOf, false);
     }
 
     /**
@@ -302,7 +292,7 @@ public class OutboundMessageContext {
         if (values == null || values.isEmpty()) {
             return WILDCARD_ACCEPTABLE_TYPE_SINGLETON_LIST;
         }
-        final List<MediaType> result = new ArrayList<MediaType>(values.size());
+        final List<MediaType> result = new ArrayList<>(values.size());
         final RuntimeDelegate rd = RuntimeDelegate.getInstance();
         boolean conversionApplied = false;
         for (final Object value : values) {
@@ -322,11 +312,10 @@ public class OutboundMessageContext {
 
         if (conversionApplied) {
             // cache converted
-            // cache converted
             headers.put(HttpHeaders.ACCEPT,
-                    result.stream()
-                          .map((Function<MediaType, Object>) mediaType -> mediaType)
-                          .collect(Collectors.toList()));
+                        result.stream()
+                              .map((Function<MediaType, Object>) mediaType -> mediaType)
+                              .collect(Collectors.toList()));
         }
 
         return Collections.unmodifiableList(result);
@@ -424,21 +413,19 @@ public class OutboundMessageContext {
      * @throws ProcessingException when {@link Integer#parseInt(String)} (String)} throws {@link NumberFormatException}.
      */
     public int getLength() {
-        return singleHeader(HttpHeaders.CONTENT_LENGTH, Integer.class, new Function<String, Integer>() {
-            @Override
-            public Integer apply(String input) {
-                try {
-                    if (input != null && !input.isEmpty()) {
-                        int i = Integer.parseInt(input);
-                        if (i >= 0) {
-                            return i;
-                        }
-                    }
-                    return -1;
 
-                } catch (NumberFormatException ex) {
-                    throw new ProcessingException(ex);
+        return singleHeader(HttpHeaders.CONTENT_LENGTH, Integer.class, input -> {
+            try {
+                if (input != null && !input.isEmpty()) {
+                    int i = Integer.parseInt(input);
+                    if (i >= 0) {
+                        return i;
+                    }
                 }
+                return -1;
+
+            } catch (NumberFormatException ex) {
+                throw new ProcessingException(ex);
             }
         }, true);
     }
@@ -450,20 +437,17 @@ public class OutboundMessageContext {
      * @throws ProcessingException when {@link Long#parseLong(String)} throws {@link NumberFormatException}.
      */
     public long getLengthLong() {
-        return singleHeader(HttpHeaders.CONTENT_LENGTH, Long.class, new Function<String, Long>() {
-            @Override
-            public Long apply(String input) {
-                try {
-                    if (input != null && !input.isEmpty()) {
-                        long l = Long.parseLong(input);
-                        if (l >= 0) {
-                            return l;
-                        }
+        return singleHeader(HttpHeaders.CONTENT_LENGTH, Long.class, input -> {
+            try {
+                if (input != null && !input.isEmpty()) {
+                    long l = Long.parseLong(input);
+                    if (l >= 0) {
+                        return l;
                     }
-                    return -1L;
-                } catch (NumberFormatException ex) {
-                    throw new ProcessingException(ex);
                 }
+                return -1L;
+            } catch (NumberFormatException ex) {
+                throw new ProcessingException(ex);
             }
         }, true);
     }

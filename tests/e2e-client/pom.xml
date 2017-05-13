@@ -51,7 +51,7 @@
 
     <artifactId>e2e-client</artifactId>
     <packaging>jar</packaging>
-    <name>jersey-tests-e2e</name>
+    <name>jersey-tests-e2e-client</name>
 
     <description>Jersey E2E Client tests</description>
 
@@ -159,6 +159,12 @@
         <dependency>
             <groupId>org.glassfish.jersey.connectors</groupId>
             <artifactId>jersey-jetty-connector</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.incubator</groupId>
+            <artifactId>jersey-jdk-connector</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

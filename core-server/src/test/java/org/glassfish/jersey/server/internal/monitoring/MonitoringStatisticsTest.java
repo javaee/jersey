@@ -46,6 +46,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -136,8 +139,9 @@ public class MonitoringStatisticsTest {
     }
 
     private MonitoringStatisticsImpl getSimpleStats() {
-        final List<Resource> resources = Arrays.asList(Resource.from(TestResource.class),
-                                                       Resource.from(HelloResource.class));
+        final List<Resource> resources = Stream.of(TestResource.class, HelloResource.class)
+                                               .map(Resource::from)
+                                               .collect(Collectors.toList());
 
         ResourceModel model = new ResourceModel.Builder(resources, false).build();
         MonitoringStatisticsImpl.Builder monBuilder = new MonitoringStatisticsImpl.Builder(model);
@@ -156,8 +160,7 @@ public class MonitoringStatisticsTest {
         resources.add(prog.build());
 
         ResourceModel model = new ResourceModel.Builder(resources, false).build();
-        MonitoringStatisticsImpl.Builder monBuilder = new MonitoringStatisticsImpl.Builder(model);
-        return monBuilder;
+        return new MonitoringStatisticsImpl.Builder(model);
     }
 
     @Test

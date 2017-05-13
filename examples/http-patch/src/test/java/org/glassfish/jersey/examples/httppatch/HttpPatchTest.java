@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@ package org.glassfish.jersey.examples.httppatch;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -119,8 +120,9 @@ public class HttpPatchTest extends JerseyTest {
                         .build())
                 .build();
 
-        assertEquals(expected, target.request("application/json")
-                .method("PATCH", Entity.entity(patch_1, PatchingInterceptor.PATCH_MEDIA_TYPE), State.class));
+        assertEquals(expected, target.request()
+                                     .method("PATCH",
+                                             Entity.entity(patch_1, MediaType.APPLICATION_JSON_PATCH_JSON), State.class));
         assertEquals(expected, target.request("application/json").get(State.class));
 
         // apply second patch
@@ -133,8 +135,9 @@ public class HttpPatchTest extends JerseyTest {
                         .add("value", expected.getList().get(2))
                         .build())
                 .build();
-        assertEquals(expected, target.request("application/json")
-                .method("PATCH", Entity.entity(patch_2, PatchingInterceptor.PATCH_MEDIA_TYPE), State.class));
+        assertEquals(expected, target.request()
+                                     .method("PATCH",
+                                             Entity.entity(patch_2, MediaType.APPLICATION_JSON_PATCH_JSON), State.class));
         assertEquals(expected, target.request("application/json").get(State.class));
     }
 }

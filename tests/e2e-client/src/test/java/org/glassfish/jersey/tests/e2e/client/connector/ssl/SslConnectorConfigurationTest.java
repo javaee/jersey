@@ -141,4 +141,31 @@ public class SslConnectorConfigurationTest extends AbstractConnectorServerTest {
 
         assertTrue(caught);
     }
+
+    /**
+     * Test that a response to an authentication challenge has the same SSL configuration as the original request.
+     */
+    @Test
+    public void testSSLWithNonPreemptiveAuth() throws Exception {
+        final SSLContext sslContext = getSslContext();
+
+        final ClientConfig cc = new ClientConfig().connectorProvider(connectorProvider);
+        final Client client = ClientBuilder.newBuilder()
+                .withConfig(cc)
+                .sslContext(sslContext)
+                .build();
+
+        // client basic auth demonstration
+        HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.basicBuilder()
+                .nonPreemptive()
+                .credentials("user", "password")
+                .build();
+
+        client.register(authFeature);
+        final WebTarget target = client.target(Server.BASE_URI).register(LoggingFeature.class);
+
+        final Response response = target.path("/").request().get(Response.class);
+
+        assertEquals(200, response.getStatus());
+    }
 }

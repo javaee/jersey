@@ -45,10 +45,6 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import javax.inject.Inject;
-import javax.servlet.ServletContext;
-
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 
 /**
@@ -63,9 +59,6 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 public final class FreemarkerMvcFeature implements Feature {
 
     private static final String SUFFIX = ".freemarker";
-
-    @Inject
-    private InjectionManager injectionManager;
 
     /**
      * {@link String} property defining the base path to Freemarker templates. If set, the value of the property is added in front
@@ -139,9 +132,7 @@ public final class FreemarkerMvcFeature implements Feature {
 
         if (!config.isRegistered(FreemarkerViewProcessor.class)) {
             // Template Processor.
-            Configuration configuration = injectionManager.getInstance(Configuration.class);
-            ServletContext servletContext = injectionManager.getInstance(ServletContext.class);
-            context.register(new FreemarkerViewProcessor(configuration, servletContext, injectionManager::createAndInitialize));
+            context.register(FreemarkerViewProcessor.class);
 
             // MvcFeature.
             if (!config.isRegistered(MvcFeature.class)) {

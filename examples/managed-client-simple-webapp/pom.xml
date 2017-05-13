@@ -54,6 +54,14 @@
     <packaging>war</packaging>
     <name>jersey-examples-managed-client-simple-webapp</name>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>

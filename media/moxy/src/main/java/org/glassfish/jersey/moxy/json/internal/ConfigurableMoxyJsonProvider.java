@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.moxy.json.internal;
 
 import java.lang.annotation.Annotation;
@@ -49,26 +50,24 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Singleton;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
-
-import javax.inject.Singleton;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
 
-import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
-
 import org.eclipse.persistence.internal.core.helper.CoreClassConstants;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.eclipse.persistence.jaxb.UnmarshallerProperties;
 import org.eclipse.persistence.jaxb.rs.MOXyJsonProvider;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 
 /**
  * Jersey specific {@link MOXyJsonProvider} that can be configured via {@code ContextResolver<JsonMoxyConfiguration>} instance.
@@ -90,8 +89,7 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
         final Set<String> propertyNames = new HashSet<>();
 
         for (final Field field : AccessController.doPrivileged(ReflectionHelper.getDeclaredFieldsPA(propertiesClass))) {
-            if (String.class == field.getType()
-                    && Modifier.isStatic(field.getModifiers())) {
+            if (String.class == field.getType() && Modifier.isStatic(field.getModifiers())) {
                 try {
                     propertyNames.add((String) field.get(null));
                 } catch (final IllegalAccessException e) {
@@ -164,9 +162,9 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
     }
 
     private Map<String, Object> getProperties(final boolean forMarshaller) {
-        final Map<String, Object> properties = new HashMap<>(
-                forMarshaller ? getGlobalConfig().getMarshallerProperties()
-                        : getGlobalConfig().getUnmarshallerProperties());
+        final Map<String, Object> properties = new HashMap<>(forMarshaller
+                ? getGlobalConfig().getMarshallerProperties()
+                : getGlobalConfig().getUnmarshallerProperties());
 
         final ContextResolver<MoxyJsonConfig> contextResolver =
                 providers.getContextResolver(MoxyJsonConfig.class, MediaType.APPLICATION_JSON_TYPE);

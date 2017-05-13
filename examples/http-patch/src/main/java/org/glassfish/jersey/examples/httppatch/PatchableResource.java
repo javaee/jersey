@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.PATCH;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -81,7 +82,7 @@ public class PatchableResource {
      * @return patched state.
      */
     @PATCH
-    @Consumes(PatchingInterceptor.PATCH_MEDIA_TYPE)
+    @Consumes(MediaType.APPLICATION_JSON_PATCH_JSON)
     public State patchState(State newState) {
         LOGGER.info("New resource state: " + newState.toString());
         state = newState;

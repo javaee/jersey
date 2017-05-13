@@ -294,7 +294,8 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
      * {@code false} otherwise).
      */
     static boolean repeatRequest(ClientRequestContext request, ClientResponseContext response, String newAuthorizationHeader) {
-        Client client = ClientBuilder.newClient(request.getConfiguration());
+        Client client = request.getClient();
+
         String method = request.getMethod();
         MediaType mediaType = request.getMediaType();
         URI lUri = request.getUri();

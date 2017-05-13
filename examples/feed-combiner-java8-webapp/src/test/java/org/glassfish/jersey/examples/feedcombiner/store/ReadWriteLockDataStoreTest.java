@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.examples.feedcombiner.store;
 
 import java.io.ByteArrayInputStream;
@@ -337,8 +338,8 @@ public class ReadWriteLockDataStoreTest extends EasyMockSupport {
         Collection<Serializable> newlySavedEntities = captureSaveAll.getValue();
         assertEquals(1, newlySavedEntities.size());
         boolean exists = newlySavedEntities.stream()
-                                           .map(CombinedFeed.class::cast)
-                                           .anyMatch(entity -> Objects.equals(entity.getId(), id2));
+                .map(CombinedFeed.class::cast)
+                .anyMatch(entity -> Objects.equals(entity.getId(), id2));
         if (!exists) {
             fail("The new stored CombinedFeed was not found.");
         }

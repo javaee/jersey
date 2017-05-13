@@ -52,6 +52,7 @@ import javax.ws.rs.sse.SseEventSource;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -68,6 +69,7 @@ public class ClientExecutorCloseTest extends JerseyTest {
      * Tests that closing a client shuts down a corresponding client async executor service.
      */
     @Test
+    @Ignore("Jersey uses ForkJoin common pool by default, which shouldn't be closed when client closes.")
     public void testCloseAsyncExecutor() throws InterruptedException {
         assertFalse(clientExecutorThreadPresent());
         target("resource").request().async().get();
@@ -75,7 +77,7 @@ public class ClientExecutorCloseTest extends JerseyTest {
                 .target(target("resource/fail"))
                 .reconnectingEvery(11, TimeUnit.MILLISECONDS)
                 .build();
-        eventSource.subscribe(System.out::println);
+        eventSource.register(System.out::println);
         eventSource.open();
         assertTrue("Waiting for eventSource to open time-outed", cdl.await(5000, TimeUnit.MILLISECONDS));
         assertTrue("Client async executor thread not found.", clientExecutorThreadPresent());
@@ -89,12 +91,7 @@ public class ClientExecutorCloseTest extends JerseyTest {
 
     private boolean clientExecutorThreadPresent() {
         Set<Thread> threads = Thread.getAllStackTraces().keySet();
-        for (Thread thread : threads) {
-            if (thread.getName().contains("jersey-client-async-executor")) {
-                return true;
-            }
-        }
-        return false;
+        return threads.stream().map(Thread::getName).anyMatch(name -> name.contains("jersey-client-async-executor"));
     }
 
     private static boolean clientSchedulerThreadPresent() {

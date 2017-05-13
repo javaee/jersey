@@ -66,7 +66,10 @@
             <groupId>org.glassfish.jersey.ext</groupId>
             <artifactId>jersey-wadl-doclet</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+        </dependency>
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>

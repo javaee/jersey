@@ -37,8 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.integration.servlet_25_init_1;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -56,7 +59,7 @@ public class Servlet25init1 extends Application {
     @SuppressWarnings({"unchecked"})
     @Override
     public Set<Class<?>> getClasses() {
-        return Stream.of(HelloWorldResource.class, MultipleLinksResource.class, ClientUsingResource.class)
-                     .collect(Collectors.toSet());
+        return new HashSet<>(
+                Arrays.asList(HelloWorldResource.class, MultipleLinksResource.class, ClientUsingResource.class));
     }
 }

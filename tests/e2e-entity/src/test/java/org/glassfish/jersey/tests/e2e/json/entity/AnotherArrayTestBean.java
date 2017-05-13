@@ -43,6 +43,8 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 
+import javax.json.bind.annotation.JsonbTransient;
+import javax.json.bind.annotation.JsonbVisibility;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -51,6 +53,7 @@ import org.glassfish.jersey.tests.e2e.json.JsonTestHelper;
 
 @SuppressWarnings({"UnusedDeclaration", "SimplifiableIfStatement", "StringEquality"})
 @XmlRootElement()
+@JsonbVisibility(CustomJsonbVisibilityStrategy.class)
 public class AnotherArrayTestBean {
 
     public static Object createTestInstance() {
@@ -70,13 +73,14 @@ public class AnotherArrayTestBean {
     protected String prop;
 
     public AnotherArrayTestBean() {
-        this.cats = new ArrayList<AnotherCat>();
+        this.cats = new ArrayList<>();
     }
 
     public void setCats(List<AnotherCat> cats) {
         this.cats = cats;
     }
 
+    @JsonbTransient
     @XmlTransient
     public List<AnotherCat> getTheCats() {
         return this.cats;

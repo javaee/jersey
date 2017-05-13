@@ -45,15 +45,15 @@ import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import javax.inject.Inject;
+import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Bindings;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * Feature providing support for {@link org.glassfish.jersey.media.multipart.FormDataParam} parameter injection.
@@ -63,17 +63,23 @@ import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
 @ConstrainedTo(RuntimeType.SERVER)
 public final class FormDataParamInjectionFeature implements Feature {
 
-    @Inject
-    private InjectionManager injectionManager;
-
     @Override
-    public boolean configure(final FeatureContext context) {
-        FormDataParamValueSupplierProvider valueSupplier = new FormDataParamValueSupplierProvider(
-                () -> injectionManager.getInstance(MultivaluedParameterExtractorProvider.class),
-                () -> injectionManager.getInstance(ContainerRequest.class));
+    public boolean configure(FeatureContext context) {
+        context.register(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                Provider<MultivaluedParameterExtractorProvider> extractorProvider =
+                        createManagedInstanceProvider(MultivaluedParameterExtractorProvider.class);
+                Provider<ContainerRequest> requestProvider =
+                        createManagedInstanceProvider(ContainerRequest.class);
 
-        injectionManager.register(Bindings.injectionResolver(new ParamInjectionResolver<>(valueSupplier, FormDataParam.class)));
-        context.register(valueSupplier, ValueSupplierProvider.class);
+                FormDataParamValueParamProvider valueSupplier =
+                        new FormDataParamValueParamProvider(extractorProvider);
+                bind(Bindings.service(valueSupplier).to(ValueParamProvider.class));
+                bind(Bindings.injectionResolver(
+                        new ParamInjectionResolver<>(valueSupplier, FormDataParam.class, requestProvider)));
+            }
+        });
         return true;
     }
 }
