@@ -44,6 +44,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -100,14 +101,8 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
     @Inject
     private ServiceLocator serviceLocator;
 
-    private final Cache<Injectee, ActiveDescriptor<?>> descriptorCache
-            = new Cache<Injectee, ActiveDescriptor<?>>(new Function<Injectee, ActiveDescriptor<?>>() {
-
-                @Override
-                public ActiveDescriptor<?> apply(Injectee key) {
-                    return serviceLocator.getInjecteeDescriptor(key);
-                }
-            });
+    private final Cache<CacheKey, ActiveDescriptor<?>> descriptorCache
+            = new Cache<>(cacheKey -> serviceLocator.getInjecteeDescriptor(cacheKey.injectee));
 
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> root) {
@@ -118,10 +113,10 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
         if (isHk2Factory) {
             newInjectee = getFactoryInjectee(injectee, ReflectionHelper.getTypeArgument(requiredType, 0));
         } else {
-            newInjectee = foreignRequestScopedInjecteeCache.apply(injectee);
+            newInjectee = foreignRequestScopedInjecteeCache.apply(new CacheKey(injectee));
         }
 
-        ActiveDescriptor<?> ad = descriptorCache.apply(newInjectee);
+        ActiveDescriptor<?> ad = descriptorCache.apply(new CacheKey(newInjectee));
 
         if (ad != null) {
             final ServiceHandle handle = serviceLocator.getServiceHandle(ad, newInjectee);
@@ -144,6 +139,13 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
      */
     @Override
     public Object resolve(org.glassfish.jersey.internal.inject.Injectee injectee) {
+        InjecteeImpl hk2injectee = toInjecteeImpl(injectee);
+
+        // Delegate the call to HK2 Resolver, Service Handle is not need in the delegated processing.
+        return resolve(hk2injectee, null);
+    }
+
+    private static InjecteeImpl toInjecteeImpl(org.glassfish.jersey.internal.inject.Injectee injectee) {
         InjecteeImpl hk2injectee = new InjecteeImpl() {
             @Override
             public Class<?> getInjecteeClass() {
@@ -152,12 +154,11 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
         };
         hk2injectee.setRequiredType(injectee.getRequiredType());
         hk2injectee.setRequiredQualifiers(injectee.getRequiredQualifiers());
+        hk2injectee.setParent(injectee.getParent());
         if (injectee.getInjecteeDescriptor() != null) {
             hk2injectee.setInjecteeDescriptor((ActiveDescriptor<?>) injectee.getInjecteeDescriptor().get());
         }
-
-        // Delegate the call to HK2 Resolver, Service Handle is not need in the delegated processing.
-        return resolve(hk2injectee, null);
+        return hk2injectee;
     }
 
     private Factory asFactory(final ServiceHandle handle) {
@@ -206,9 +207,10 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
         return Context.class;
     }
 
-    private final Cache<Injectee, Injectee> foreignRequestScopedInjecteeCache = new Cache<>(new Function<Injectee, Injectee>() {
+    private final Cache<CacheKey, Injectee> foreignRequestScopedInjecteeCache = new Cache<>(new Function<CacheKey, Injectee>() {
         @Override
-        public Injectee apply(Injectee injectee) {
+        public Injectee apply(CacheKey cacheKey) {
+            Injectee injectee = cacheKey.getInjectee();
             if (injectee.getParent() != null) {
                 if (Field.class.isAssignableFrom(injectee.getParent().getClass())) {
                     Field f = (Field) injectee.getParent();
@@ -235,7 +237,7 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
 
     private Set<Class<?>> getForeignRequestScopedComponents() {
         final List<ForeignRequestScopeBridge> scopeBridges = serviceLocator.getAllServices(ForeignRequestScopeBridge.class);
-        final Set<Class<?>> result = new HashSet<Class<?>>();
+        final Set<Class<?>> result = new HashSet<>();
         for (ForeignRequestScopeBridge bridge : scopeBridges) {
             final Set<Class<?>> requestScopedComponents = bridge.getRequestScopedComponents();
             if (requestScopedComponents != null) {
@@ -243,5 +245,48 @@ public class ContextInjectionResolverImpl implements InjectionResolver<Context>,
             }
         }
         return result;
+    }
+
+    /**
+     * Key dedicated for internal cache mechanism because two different {@link Injectee} Hk2 implementations comes from
+     * Jersey side and HK2 side injection resolver.
+     */
+    private static class CacheKey {
+
+        private final Injectee injectee;
+
+        private final int hash;
+
+        private CacheKey(Injectee injectee) {
+            this.injectee = injectee;
+
+            this.hash = Objects.hash(injectee.getInjecteeClass(),
+                    injectee.getInjecteeDescriptor(),
+                    injectee.getParent(),
+                    injectee.getRequiredQualifiers(),
+                    injectee.getRequiredType(),
+                    injectee.getPosition());
+        }
+
+        private Injectee getInjectee() {
+            return injectee;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof CacheKey)) {
+                return false;
+            }
+            CacheKey cacheKey = (CacheKey) o;
+            return this.hash == cacheKey.hash;
+        }
+
+        @Override
+        public int hashCode() {
+            return hash;
+        }
     }
 }
