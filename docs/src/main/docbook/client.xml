@@ -481,7 +481,7 @@ System.out.println(response.readEntity(String.class));</programlisting>
 Hi World!</screen>
 
                 As we can see, the request was successfully processed (code 200) and returned an entity (representation) is
-                <literal>"Hi World!"</literal>. Note that since ve have configured a <literal>MyClientResponseFilter</literal>
+                <literal>"Hi World!"</literal>. Note that since we have configured a <literal>MyClientResponseFilter</literal>
                 in the resource target, when <literal>response.readEntity(String.class)</literal> gets called, the response
                 returned from the remote endpoint is passed through the response filter chain (including the
                 <literal>MyClientResponseFilter</literal>) and entity interceptor chain and at last a proper
