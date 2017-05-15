@@ -93,13 +93,13 @@
         <module>jaxb</module>
         <module>jaxrs-types-injection</module>
         <module>jersey-ejb</module>
+        <module>json-binding-webapp</module>
         <module>json-jackson</module>
         <module>json-jackson1</module>
         <module>json-jettison</module>
         <module>json-moxy</module>
         <module>json-processing-webapp</module>
         <module>json-with-padding</module>
-        <module>json-binding</module>
         <module>managed-beans-webapp</module>
         <module>managed-client</module>
         <module>managed-client-webapp</module>

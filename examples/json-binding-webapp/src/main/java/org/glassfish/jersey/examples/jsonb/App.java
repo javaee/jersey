@@ -49,17 +49,17 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.grizzly.http.server.HttpServer;
 
 /**
- * Jersey JSONB example standalone application.
+ * Jersey JSON-B example standalone application.
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public class App {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/jsonb/");
+    private static final URI BASE_URI = URI.create("http://localhost:8080/json-binding-webapp/");
 
     public static void main(String[] args) {
         try {
-            System.out.println("JAXB Jersey Example App");
+            System.out.println("JSON-B (json-binding) Jersey Example App");
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, new JsonbApplication(), false);
             Runtime.getRuntime().addShutdownHook(new Thread(server::shutdownNow));

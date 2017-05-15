@@ -41,8 +41,8 @@
 
 -->
 
-JAXB Example
-============
+JSONB Example
+=============
 
 This example demonstrates how to use JSONB with resource classes.
 
@@ -67,12 +67,12 @@ Run the example as follows:
 
 This deploys the example using [Grizzly](http://grizzly.java.net/) container. You can access the application at:
 
--   <http://localhost:8080/jsonb/cats/one>
--   <http://localhost:8080/jsonb/cats/all>
+-   <http://localhost:8080/json-binding-webapp/cats/one>
+-   <http://localhost:8080/json-binding-webapp/cats/all>
 
 or you can post an xml entity:
 
->    curl -v -X POST http://localhost:8080/jsonb/cats/add -H "Content-Type:application/json" -d '
->    {"name":"Darwin", domesticated:"true",color:"white",sort:"maine coon"}'
+>    curl -v -X POST http://localhost:8080/json-binding-webapp/cats/add -H "Content-Type:application/json" -d '
+>   {"color":"white","sort":"maine coon","catName":"Darwin", "domesticated":"true"}'
 
 You can also use the built war file to deploy the app to a container of your choice.

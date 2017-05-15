@@ -53,9 +53,9 @@ import org.glassfish.jersey.jsonb.JsonbFeature;
  * <p>
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
- * @see {@link JsonbFeature}
+ * @see JsonbFeature
  */
-@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY - 200)
 public class JsonbAutoDiscoverable implements ForcedAutoDiscoverable {
 
     @Override

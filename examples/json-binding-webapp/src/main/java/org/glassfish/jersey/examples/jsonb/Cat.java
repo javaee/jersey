@@ -39,12 +39,17 @@
  */
 package org.glassfish.jersey.examples.jsonb;
 
+import javax.json.bind.annotation.JsonbProperty;
+import javax.json.bind.annotation.JsonbPropertyOrder;
+
 /**
  * Example cat POJO for JSONB (un)marshalling.
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
+@JsonbPropertyOrder({"color", "sort", "name", "domesticated"})
 public class Cat {
+    @JsonbProperty("catName")
     private String name;
     private String sort;
     private String color;
@@ -71,6 +76,7 @@ public class Cat {
         return this;
     }
 
+    @JsonbProperty("catSort")
     public String getSort() {
         return sort;
     }

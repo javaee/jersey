@@ -48,11 +48,11 @@
         <version>2.26-SNAPSHOT</version>
     </parent>
 
-    <artifactId>json-binding</artifactId>
+    <artifactId>json-binding-webapp</artifactId>
     <packaging>war</packaging>
-    <name>jersey-examples-json-binding</name>
+    <name>jersey-examples-json-binding-webapp</name>
 
-    <description>Jersey JAXB example.</description>
+    <description>Jersey JSON Binding example.</description>
 
     <dependencies>
         <dependency>
