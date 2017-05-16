@@ -59,13 +59,13 @@
         production quality Reference Implementation for building RESTful Web services.
     </description>
 
-    <url>https://jersey.java.net/</url>
+    <url>https://jersey.github.io/</url>
 
     <!-- prerequisites -->
 
     <issueManagement>
         <system>JIRA</system>
-        <url>http://java.net/jira/browse/JERSEY/</url>
+        <url>https://github.com/jersey/jersey/issues</url>
     </issueManagement>
 
     <ciManagement>
@@ -77,29 +77,10 @@
 
     <mailingLists>
         <mailingList>
-            <name>Announcements</name>
-            <archive>http://java.net/projects/jersey/lists/announce/archive</archive>
-            <post>announce@jersey.java.net</post>
-        </mailingList>
-        <mailingList>
             <name>Users List</name>
-            <archive>http://java.net/projects/jersey/lists/users/archive</archive>
-            <post>users@jersey.java.net</post>
-        </mailingList>
-        <mailingList>
-            <name>Developers List</name>
-            <archive>http://java.net/projects/jersey/lists/dev/archive</archive>
-            <post>dev@jersey.java.net</post>
-        </mailingList>
-        <mailingList>
-            <name>Issues</name>
-            <archive>http://java.net/projects/jersey/lists/issues/archive</archive>
-            <post>issues@jersey.java.net</post>
-        </mailingList>
-        <mailingList>
-            <name>Commits</name>
-            <archive>http://java.net/projects/jersey/lists/commits/archive</archive>
-            <post>commits@jersey.java.net</post>
+            <subscribe>jersey+subscribe@javaee.groups.io</subscribe>
+            <unsubscribe>jersey+unsubscribe@javaee.groups.io</unsubscribe>
+            <post>jersey@javaee.groups.io</post>
         </mailingList>
     </mailingLists>
 
@@ -167,9 +148,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git://java.net/jersey~code</connection>
-        <developerConnection>scm:git:ssh://git.java.net/jersey~code</developerConnection>
-        <url>http://java.net/projects/jersey/sources/code/show</url>
+        <connection>scm:git:git@github.com:jersey/jersey.git</connection>
+        <developerConnection>scm:git:git@github.com:jersey/jersey.git</developerConnection>
+        <url>https://github.com/jersey/jersey</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -320,7 +301,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.9</version>
+                    <version>2.10.4</version>
                     <configuration>
                         <doctitle>Jersey ${jersey.version} API Documentation</doctitle>
                         <windowtitle>Jersey ${jersey.version} API</windowtitle>
@@ -1000,38 +981,6 @@
             </build>
         </profile>
         <profile>
-            <id>jdk1.8+</id>
-            <activation>
-                <jdk>[1.8,)</jdk>
-            </activation>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-javadoc-plugin</artifactId>
-                            <inherited>true</inherited>
-                            <configuration>
-                                <additionalparam>-Xdoclint:none</additionalparam>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-            <reporting>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <inherited>true</inherited>
-                        <configuration>
-                            <additionalparam>-Xdoclint:none</additionalparam>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </reporting>
-        </profile>
-        <profile>
             <id>sonar</id>
             <properties>
                 <!-- Sonar/Reporting settings (heavily inspired at http://www.aheritier.net/maven-failsafe-sonar-and-jacoco-are-in-a-boat/ -->
@@ -1206,7 +1155,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9</version>
+                <version>2.10.4</version>
                 <!-- Run this plugin report sets only in the main Jersey pom -->
                 <inherited>false</inherited>
                 <configuration>
@@ -1222,10 +1171,13 @@
                         com.sun.ws.rs.ext:*.examples.*:*.internal.*:*.tests.*
                     </excludePackageNames>
                     <links>
-                        <link>http://jersey.java.net/apidocs-javax.jax-rs/2.0.1</link>
+                        <link>http://jersey.github.io/apidocs-javax.jax-rs/2.0.1</link>
                         <link>http://hk2.java.net/${hk2.version}/apidocs</link>
                     </links>
                     <additionalparam>-Xdoclint:none</additionalparam>
+                    <sourceFileExcludes>
+                        <fileExclude>module-info.java</fileExclude>
+                    </sourceFileExcludes>
                 </configuration>
                 <reportSets>
                     <reportSet>
