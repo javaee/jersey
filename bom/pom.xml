@@ -268,11 +268,6 @@
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.media</groupId>
-                <artifactId>html-json</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.media</groupId>
                 <artifactId>jersey-media-json-jackson</artifactId>
                 <version>${project.version}</version>
             </dependency>
