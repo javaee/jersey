@@ -199,6 +199,7 @@ class Hk2Helper {
                 }
             });
             // Always call SupplierFactoryBridge.
+            supplierBuilder.setName(binding.getName());
             binding.getQualifiers().forEach(supplierBuilder::addQualifierAnnotation);
             binder.bind(supplierBuilder);
 
@@ -234,6 +235,7 @@ class Hk2Helper {
                 }
             });
             binding.getQualifiers().forEach(supplierBuilder::qualifiedBy);
+            supplierBuilder.named(binding.getName());
             supplierBuilder.in(transformScope(binding.getSupplierScope()));
             binder.bind(supplierBuilder);
 
@@ -245,7 +247,8 @@ class Hk2Helper {
                 contract = binding.getContracts().iterator().next();
             }
 
-            ServiceBindingBuilder<?> builder = binder.bindFactory(new SupplierFactoryBridge<>(locator, contract, disposable));
+            ServiceBindingBuilder<?> builder = binder.bindFactory(
+                    new SupplierFactoryBridge<>(locator, contract, binding.getName(), disposable));
             setupSupplierFactoryBridge(binding, builder);
             if (binding.getImplementationType() != null) {
                 builder.asType(binding.getImplementationType());

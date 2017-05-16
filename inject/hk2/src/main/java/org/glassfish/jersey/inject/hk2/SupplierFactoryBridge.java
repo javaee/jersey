@@ -67,7 +67,8 @@ import org.glassfish.hk2.utilities.reflection.ParameterizedTypeImpl;
 public class SupplierFactoryBridge<T> implements Factory<T> {
 
     private ServiceLocator locator;
-    private ParameterizedType type;
+    private ParameterizedType beanType;
+    private String beanName;
     private boolean disposable;
 
     // This bridge can create multiple instances using the method 'provide' therefore must map created suppliers because of
@@ -79,21 +80,23 @@ public class SupplierFactoryBridge<T> implements Factory<T> {
      * Constructor for a new bridge.
      *
      * @param locator    currently used locator, all factory invocations will be delegated to this locator.
-     * @param type       generic type of a {@link Supplier} which is looked for in locator and on which the creation of
+     * @param beanType   generic type of a {@link Supplier} which is looked for in locator and on which the creation of
      *                   the new instance is delegated.
+     * @param beanName   name of the bean that is provided by supplier.
      * @param disposable flag whether the bridge is set up for disposing the created object.
      */
-    SupplierFactoryBridge(ServiceLocator locator, Type type, boolean disposable) {
+    SupplierFactoryBridge(ServiceLocator locator, Type beanType, String beanName, boolean disposable) {
         this.locator = locator;
-        this.type = new ParameterizedTypeImpl(Supplier.class, type);
+        this.beanType = new ParameterizedTypeImpl(Supplier.class, beanType);
+        this.beanName = beanName;
         this.disposable = disposable;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public T provide() {
-        if (type != null) {
-            Supplier<T> supplier = locator.getService(type);
+        if (beanType != null) {
+            Supplier<T> supplier = locator.getService(beanType, beanName);
             T instance = supplier.get();
             if (disposable) {
                 disposableSuppliers.put(instance, (DisposableSupplier<T>) supplier);

@@ -172,4 +172,28 @@ public class SupplierClassBindingTest {
         assertSame(supplier1, supplier2);
         assertSame(supplier2, supplier3);
     }
+
+    @Test
+    public void testSupplierBeanNamed() {
+        BindingTestHelper.bind(injectionManager, binder -> {
+            binder.bindFactory(TestSuppliers.TestSupplier.class).named(TestSuppliers.TEST).to(String.class);
+            binder.bindFactory(TestSuppliers.OtherTestSupplier.class).named(TestSuppliers.OTHER_TEST).to(String.class);
+            binder.bindAsContract(TestSuppliers.TargetSupplierBean.class);
+        });
+
+        TestSuppliers.TargetSupplierBean instance = injectionManager.getInstance(TestSuppliers.TargetSupplierBean.class);
+        assertEquals(TestSuppliers.OTHER_TEST, instance.obj);
+    }
+
+    @Test
+    public void testSupplierNamed() {
+        BindingTestHelper.bind(injectionManager, binder -> {
+            binder.bindFactory(TestSuppliers.TestSupplier.class).named(TestSuppliers.TEST).to(String.class);
+            binder.bindFactory(TestSuppliers.OtherTestSupplier.class).named(TestSuppliers.OTHER_TEST).to(String.class);
+            binder.bindAsContract(TestSuppliers.TargetSupplier.class);
+        });
+
+        TestSuppliers.TargetSupplier instance = injectionManager.getInstance(TestSuppliers.TargetSupplier.class);
+        assertEquals(TestSuppliers.OTHER_TEST, instance.supplier.get());
+    }
 }
