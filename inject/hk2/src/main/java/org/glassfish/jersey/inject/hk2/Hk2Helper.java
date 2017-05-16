@@ -233,6 +233,7 @@ class Hk2Helper {
                     supplierBuilder.to(new ParameterizedTypeImpl(DisposableSupplier.class, contract));
                 }
             });
+            supplierBuilder.named(binding.getName());
             binding.getQualifiers().forEach(supplierBuilder::qualifiedBy);
             supplierBuilder.in(transformScope(binding.getSupplierScope()));
             binder.bind(supplierBuilder);
@@ -244,8 +245,10 @@ class Hk2Helper {
             if (binding.getContracts().iterator().hasNext()) {
                 contract = binding.getContracts().iterator().next();
             }
+            String name = binding.getName();
 
-            ServiceBindingBuilder<?> builder = binder.bindFactory(new SupplierFactoryBridge<>(locator, contract, disposable));
+            ServiceBindingBuilder<?> builder = binder
+                    .bindFactory(new SupplierFactoryBridge<>(locator, contract, name, disposable));
             setupSupplierFactoryBridge(binding, builder);
             if (binding.getImplementationType() != null) {
                 builder.asType(binding.getImplementationType());

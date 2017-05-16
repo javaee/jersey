@@ -68,6 +68,7 @@ public class SupplierFactoryBridge<T> implements Factory<T> {
 
     private ServiceLocator locator;
     private ParameterizedType type;
+    private String name;
     private boolean disposable;
 
     // This bridge can create multiple instances using the method 'provide' therefore must map created suppliers because of
@@ -83,17 +84,17 @@ public class SupplierFactoryBridge<T> implements Factory<T> {
      *                   the new instance is delegated.
      * @param disposable flag whether the bridge is set up for disposing the created object.
      */
-    SupplierFactoryBridge(ServiceLocator locator, Type type, boolean disposable) {
+    SupplierFactoryBridge(ServiceLocator locator, Type type, String name, boolean disposable) {
         this.locator = locator;
         this.type = new ParameterizedTypeImpl(Supplier.class, type);
+        this.name = name;
         this.disposable = disposable;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public T provide() {
         if (type != null) {
-            Supplier<T> supplier = locator.getService(type);
+            Supplier<T> supplier = locator.getService(type, name);
             T instance = supplier.get();
             if (disposable) {
                 disposableSuppliers.put(instance, (DisposableSupplier<T>) supplier);
