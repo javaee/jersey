@@ -124,7 +124,7 @@ public class ClientExecutorTest extends JerseyTest {
 
         latch.await(3, TimeUnit.SECONDS);
         assertNotNull(threadName);
-        assertThat(threadName, containsString("ForkJoinPool.commonPool"));
+        assertThat(threadName, containsString("jersey-client-async-executor"));
     }
 
     @Test
@@ -138,7 +138,7 @@ public class ClientExecutorTest extends JerseyTest {
 
         latch.await(3, TimeUnit.SECONDS);
         assertNotNull(threadName);
-        assertThat(threadName, containsString("ForkJoinPool.commonPool"));
+        assertThat(threadName, containsString("jersey-client-async-executor"));
     }
 
     @Test

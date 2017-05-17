@@ -48,7 +48,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -302,10 +301,6 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
                 shutdownHook.onShutdown();
             }
         }
-    }
-
-    private ExecutorService getDefaultExecutorService() {
-        return ForkJoinPool.commonPool();
     }
 
     private ScheduledExecutorService getDefaultScheduledExecutorService() {

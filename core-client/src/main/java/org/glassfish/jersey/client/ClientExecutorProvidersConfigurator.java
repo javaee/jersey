@@ -44,7 +44,6 @@ import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,6 +70,7 @@ import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
 class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfigurator {
 
     private static final Logger LOGGER = Logger.getLogger(ClientExecutorProvidersConfigurator.class.getName());
+    private static final ExecutorService MANAGED_EXECUTOR_SERVICE = lookupManagedExecutorService();
 
     private final ComponentBag componentBag;
     private final JerseyClient client;
@@ -92,10 +92,10 @@ class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfi
 
         // if there is a users provided executor service, use it
         if (clientExecutorService != null) {
-            defaultAsyncExecutorProvider = new ClientExecutorServiceProvider(Values.<ExecutorService>of(clientExecutorService));
+            defaultAsyncExecutorProvider = new ClientExecutorServiceProvider(clientExecutorService);
         // otherwise, check for ClientProperties.ASYNC_THREADPOOL_SIZE - if that is set, Jersey will create the
         // ExecutorService to be used. If not and running on Java EE container, ManagedExecutorService will be used.
-        // Final fallback is ForkJoinPool.commonPool()).
+        // Final fallback is DefaultClientAsyncExecutorProvider with defined default.
         } else {
 
             // Default async request executors support
@@ -112,13 +112,11 @@ class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfi
 
                 defaultAsyncExecutorProvider = new DefaultClientAsyncExecutorProvider(asyncThreadPoolSize);
             } else {
-                defaultAsyncExecutorProvider = new ClientExecutorServiceProvider(Values.lazy(new Value<ExecutorService>() {
-                    @Override
-                    public ExecutorService get() {
-                        ExecutorService executorService = lookupManagedExecutorService();
-                        return executorService == null ? ForkJoinPool.commonPool() : executorService;
-                    }
-                }));
+                if (MANAGED_EXECUTOR_SERVICE != null) {
+                    defaultAsyncExecutorProvider = new ClientExecutorServiceProvider(MANAGED_EXECUTOR_SERVICE);
+                } else {
+                    defaultAsyncExecutorProvider = new DefaultClientAsyncExecutorProvider(0);
+                }
             }
         }
 
@@ -152,7 +150,7 @@ class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfi
         registerExecutors(injectionManager, componentBag, defaultAsyncExecutorProvider, defaultScheduledExecutorProvider);
     }
 
-    private ExecutorService lookupManagedExecutorService() {
+    private static ExecutorService lookupManagedExecutorService() {
         // Get the default ManagedExecutorService, if available
         try {
             // Android and some other environments don't have InitialContext class available.
@@ -200,15 +198,15 @@ class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfi
     @ClientAsyncExecutor
     public static class ClientExecutorServiceProvider implements ExecutorServiceProvider {
 
-        private final Value<ExecutorService> executorService;
+        private final ExecutorService executorService;
 
-        ClientExecutorServiceProvider(Value<ExecutorService> executorService) {
+        ClientExecutorServiceProvider(ExecutorService executorService) {
             this.executorService = executorService;
         }
 
         @Override
         public ExecutorService getExecutorService() {
-            return executorService.get();
+            return executorService;
         }
 
         @Override

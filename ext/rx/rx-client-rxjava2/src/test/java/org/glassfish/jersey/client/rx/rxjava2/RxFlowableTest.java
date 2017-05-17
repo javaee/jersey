@@ -212,7 +212,7 @@ public class RxFlowableTest {
 
         // Executor.
         assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread
-                ? containsString("jersey-rx-client-test") : containsString("ForkJoinPool.commonPool"));
+                ? containsString("jersey-rx-client-test") : containsString("jersey-client-async-executor"));
 
         // Properties.
         assertThat(response.getHeaderString("Test-Uri"), is("http://jersey.java.net"));
