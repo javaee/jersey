@@ -60,6 +60,7 @@ import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.inject.ParamConverterConfigurator;
 import org.glassfish.jersey.server.internal.inject.ParamExtractorConfigurator;
 import org.glassfish.jersey.server.internal.inject.ValueParamProviderConfigurator;
+import org.glassfish.jersey.server.internal.process.RequestProcessingConfigurator;
 import org.glassfish.jersey.server.model.internal.ResourceMethodInvokerConfigurator;
 
 /**
@@ -116,6 +117,7 @@ public final class TestInjectionManagerFactory {
         bootstrapBag.setManagedObjectsFinalizer(managedObjectsFinalizer);
 
         List<BootstrapConfigurator> bootstrapConfigurators = Arrays.asList(
+                new RequestProcessingConfigurator(),
                 new RequestScope.RequestScopeConfigurator(),
                 new ParamConverterConfigurator(),
                 new ParamExtractorConfigurator(),

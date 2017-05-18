@@ -209,8 +209,6 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
             if (o instanceof Response) {
                 return Response.class.cast(o);
-//            } else if (o instanceof JResponse) {
-//                context.getResponseContext().setResponse(((JResponse)o).toResponse());
             } else if (o != null) {
                 return Response.ok().entity(o).build();
             } else {
@@ -236,12 +234,10 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         protected Response doDispatch(final Object resource, final ContainerRequest containerRequest) throws ProcessingException {
             final Object o = invoke(containerRequest, resource, getParamValues(containerRequest));
             if (o != null) {
-
-                Response response = Response.ok().entity(o).build();
-                // TODO set the method return Java type to the proper context.
-//                Response r = new ResponseBuilderImpl().
-//                        entityWithType(o, t).status(200).build();
-                return response;
+                if (o instanceof Response) {
+                    return Response.class.cast(o);
+                }
+                return Response.ok().entity(o).build();
             } else {
                 return Response.noContent().build();
             }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedAction;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
@@ -141,7 +144,26 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
                     final long timestamp = tracingLogger.timestamp(ServerTraceEvent.METHOD_INVOKE);
                     try {
 
-                        return methodHandler.invoke(resource, method, args);
+                        Object result = methodHandler.invoke(resource, method, args);
+
+                        // if a response is a CompletionStage and is done, we don't need to suspend and resume
+                        if (result instanceof CompletionStage) {
+                            CompletableFuture resultFuture = ((CompletionStage) result).toCompletableFuture();
+
+                            if (resultFuture.isDone()) {
+                                if (resultFuture.isCancelled()) {
+                                    return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
+                                } else {
+                                    try {
+                                        return resultFuture.get();
+                                    } catch (ExecutionException e) {
+                                        throw new InvocationTargetException(e.getCause());
+                                    }
+                                }
+                            }
+                        }
+
+                        return result;
 
                     } catch (IllegalAccessException | IllegalArgumentException | UndeclaredThrowableException ex) {
                         throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);

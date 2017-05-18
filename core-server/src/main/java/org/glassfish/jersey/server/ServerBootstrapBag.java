@@ -47,9 +47,11 @@ import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.internal.BootstrapBag;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.ResourceModel;
@@ -171,6 +173,7 @@ public class ServerBootstrapBag extends BootstrapBag {
     }
 
     public ResourceModel getResourceModel() {
+        requireNonNull(resourceModel, ResourceModel.class);
         return resourceModel;
     }
 

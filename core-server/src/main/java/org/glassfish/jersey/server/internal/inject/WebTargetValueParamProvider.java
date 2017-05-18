@@ -49,6 +49,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.ProcessingException;
@@ -63,7 +64,6 @@ import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ClientBinding;
@@ -82,7 +82,7 @@ import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 final class WebTargetValueParamProvider extends AbstractValueParamProvider {
 
     private final Function<Class<? extends Configuration>, Configuration> clientConfigProvider;
-    private final LazyValue<Configuration> serverConfig;
+    private final Supplier<Configuration> serverConfig;
     private final ConcurrentMap<BindingModel, Value<ManagedClient>> managedClients;
 
     private static class ManagedClient {
@@ -276,7 +276,7 @@ final class WebTargetValueParamProvider extends AbstractValueParamProvider {
      * @param serverConfig        server-side serverConfig.
      * @param clientConfigProvider function which get or create a new client serverConfig according to provided class.
      */
-    public WebTargetValueParamProvider(LazyValue<Configuration> serverConfig,
+    public WebTargetValueParamProvider(Supplier<Configuration> serverConfig,
             Function<Class<? extends Configuration>, Configuration> clientConfigProvider) {
         super(null, Parameter.Source.URI);
         this.clientConfigProvider = clientConfigProvider;

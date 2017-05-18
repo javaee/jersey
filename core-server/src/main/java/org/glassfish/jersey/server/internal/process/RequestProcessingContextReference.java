@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,58 +37,31 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.inject;
 
-import java.util.function.Supplier;
-
-import javax.inject.Provider;
+package org.glassfish.jersey.server.internal.process;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.process.internal.RequestScoped;
 
 /**
- * An abstract injection factory that provides injection of an instance of target type {@code T}
- * by {@link org.glassfish.jersey.internal.inject.ReferenceTransformingFactory.Transformer transforming}
- * a value of injected source reference {@link org.glassfish.jersey.internal.util.collection.Ref Ref&lt;S&gt;}.
+ * Wrapper that holds the reference of the {@link RequestProcessingContext}. This class helps to get the current request scoped
+ * object without wrapping using the proxy. Outer wrapper can be proxied but inner reference object still remains the direct
+ * reference.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
- *
- * @param <S> the type of the injected source type {@link Ref reference}.
- * @param <T> the type of provided entity.
+ * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public abstract class ReferenceTransformingFactory<S, T> implements Supplier<T> {
-    /**
-     * Transforming function responsible for transforming an instance of source type {@code S} into an instance of
-     * target type {@code T}.
-     *
-     * @param <S> source type.
-     * @param <T> target type.
-     */
-    public interface Transformer<S, T> {
-        /**
-         * Transform an instance of source type into an instance of target type.
-         *
-         * @param value instance of source type.
-         * @return instance of target type.
-         */
-        T transform(S value);
-    }
+@RequestScoped
+public class RequestProcessingContextReference implements Ref<RequestProcessingContext> {
 
-    private final Provider<Ref<S>> refProvider;
-    private final Transformer<S, T> transformer;
+    private RequestProcessingContext processingContext;
 
-    /**
-     * Initialize reference transforming factory.
-     *
-     * @param refProvider source type reference provider.
-     * @param transformer source to target type transforming function.
-     */
-    protected ReferenceTransformingFactory(final Provider<Ref<S>> refProvider, final Transformer<S, T> transformer) {
-        this.refProvider = refProvider;
-        this.transformer = transformer;
+    @Override
+    public void set(RequestProcessingContext processingContext) {
+        this.processingContext = processingContext;
     }
 
     @Override
-    public T get() {
-        return transformer.transform(refProvider.get().get());
+    public RequestProcessingContext get() {
+        return processingContext;
     }
 }

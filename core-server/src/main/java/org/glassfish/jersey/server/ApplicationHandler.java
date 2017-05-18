@@ -63,7 +63,6 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -85,7 +84,6 @@ import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
@@ -108,7 +106,9 @@ import org.glassfish.jersey.server.internal.monitoring.ApplicationEventImpl;
 import org.glassfish.jersey.server.internal.monitoring.CompositeApplicationEventListener;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
 import org.glassfish.jersey.server.internal.process.ReferencesInitializer;
+import org.glassfish.jersey.server.internal.process.RequestProcessingConfigurator;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContextReference;
 import org.glassfish.jersey.server.internal.routing.Routing;
 import org.glassfish.jersey.server.model.ComponentModelValidator;
 import org.glassfish.jersey.server.model.ModelProcessor;
@@ -292,6 +292,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         ServerBootstrapBag bootstrapBag = new ServerBootstrapBag();
         bootstrapBag.setManagedObjectsFinalizer(managedObjectsFinalizer);
         List<BootstrapConfigurator> bootstrapConfigurators = Arrays.asList(
+                new RequestProcessingConfigurator(),
                 new RequestScope.RequestScopeConfigurator(),
                 new ParamConverterConfigurator(),
                 new ParamExtractorConfigurator(),
@@ -425,9 +426,8 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
         final ContainerFilteringStage resourceFilteringStage =
                 new ContainerFilteringStage(processingProviders.getGlobalRequestFilters(), null);
 
-        GenericType<Ref<RequestProcessingContext>> requestProcessingType = new GenericType<Ref<RequestProcessingContext>>() {};
-        ReferencesInitializer referencesInitializer = new ReferencesInitializer(injectionManager,
-                () -> injectionManager.getInstance(requestProcessingType.getType()));
+        final ReferencesInitializer referencesInitializer = new ReferencesInitializer(injectionManager,
+                () -> injectionManager.getInstance(RequestProcessingContextReference.class));
 
         final Stage<RequestProcessingContext> rootStage = Stages
                 .chain(referencesInitializer)

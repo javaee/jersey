@@ -49,7 +49,6 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
-import org.glassfish.jersey.server.internal.process.ServerProcessingBinder;
 
 /**
  * Server injection binder.
@@ -61,8 +60,7 @@ class ServerBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        install(new ServerProcessingBinder(),
-                new MappableExceptionWrapperInterceptor.Binder(),
+        install(new MappableExceptionWrapperInterceptor.Binder(),
                 new MonitoringContainerListener.Binder());
 
         //ChunkedResponseWriter
