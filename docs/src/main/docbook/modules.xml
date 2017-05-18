@@ -255,6 +255,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-media-json-binding/dependencies.html">
+    jersey-media-json-binding
+</link>
+</entry>
+<entry>Jersey JSON-B support module.</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-media-json-jackson/dependencies.html">
     jersey-media-json-jackson
 </link>
@@ -1109,6 +1117,14 @@
 </link>
 </entry>
 <entry>Jersey Web Application (Servlet) examples parent POM.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/json-binding-webapp/dependencies.html">
+    json-binding-webapp
+</link>
+</entry>
+<entry>Jersey JSON Binding example.</entry>
 </row>
 <row>
 <entry>
