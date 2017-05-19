@@ -77,7 +77,7 @@
 <!ENTITY jaxb.release.uri "http://jaxb.java.net/nonav/&jaxb-api-jar.version;">
 <!ENTITY jaxb.javadoc.uri "&jaxb.release.uri;/docs/api/javax/xml/bind">
 <!ENTITY jaxrs.release.uri "http://jax-rs-spec.java.net/nonav/&jax-rs.version;">
-<!ENTITY jaxrs.javadoc.uri "https://jersey.java.net/apidocs-javax.jax-rs/&jax-rs.version;/javax/ws/rs">
+<!ENTITY jaxrs.javadoc.uri "https://jersey.github.io/apidocs-javax.jax-rs/&jax-rs.version;/javax/ws/rs">
 <!ENTITY jaxrs21.javadoc.uri "#/javax/ws/rs">   <!-- TODO - once we have published javadocs to link here -->
 
 <!ENTITY jersey.ext.bean-validation.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
@@ -98,14 +98,14 @@
 <!ENTITY jersey.ext.mvc-jsp.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-mvc-jsp/dependencies.html'>jersey-mvc-jsp</link>" >
 <!ENTITY jersey.ext.mvc-mustache.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-mvc-mustache/dependencies.html'>jersey-mvc-mustache</link>" >
 <!ENTITY jersey.ext.spring4.deps.link "<link xlink:href='&jersey.project-info.uri.prefix;/jersey-spring4/dependencies.html'>jersey-spring4</link>" >
-<!ENTITY jersey.docs.root.uri "https://jersey.java.net/documentation/&docs.version;">
+<!ENTITY jersey.docs.root.uri "https://jersey.github.io/documentation/&docs.version;">
 <!ENTITY jersey.docs.index.uri "&jersey.docs.root.uri;/index.html">
 <!ENTITY jersey.github.examples.uri "&jersey.github.release.uri;/examples">
 <!ENTITY jersey.github.base.uri "https://github.com/jersey/jersey/tree">
 <!ENTITY jersey.github.release.uri "&jersey.github.base.uri;/&src.branch;">
-<!ENTITY jersey.javadoc.root.uri "https://jersey.java.net/apidocs/&apidocs.version;/jersey">
+<!ENTITY jersey.javadoc.root.uri "https://jersey.github.io/apidocs/&apidocs.version;/jersey">
 <!ENTITY jersey.javadoc.uri.prefix "&jersey.javadoc.root.uri;/org/glassfish/jersey">
-<!ENTITY jersey.project-info.uri.prefix "https://jersey.java.net/project-info/&version;/jersey/project">
+<!ENTITY jersey.project-info.uri.prefix "https://jersey.github.io/project-info/&version;/jersey/project">
 <!ENTITY jee.javadoc.uri "http://docs.oracle.com/javaee/7/api">
 <!ENTITY jdk6.javadoc.uri "http://docs.oracle.com/javase/6/docs/api">
 <!ENTITY jdk7.javadoc.uri "http://docs.oracle.com/javase/7/docs/api">
