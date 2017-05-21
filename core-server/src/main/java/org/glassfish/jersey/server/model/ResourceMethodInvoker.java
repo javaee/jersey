@@ -426,9 +426,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     }
 
                     // wait for a response
-                    completableFuture.whenCompleteAsync(
-                            whenComplete(processingContext),
-                            command -> processingContext.asyncContext().invokeManaged(command));
+                    completableFuture.whenComplete(whenComplete(processingContext));
 
                     return null; // return null on the current thread
                 }

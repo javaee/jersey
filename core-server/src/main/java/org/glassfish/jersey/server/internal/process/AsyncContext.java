@@ -97,11 +97,4 @@ public interface AsyncContext extends AsyncResponse {
      * @param producer response producer.
      */
     public void invokeManaged(Producer<Response> producer);
-
-    /**
-     * Invoke the provided runnable in a Jersey-managed asynchronous thread.
-     *
-     * @param runnable to be invoked.
-     */
-    public void invokeManaged(Runnable runnable);
 }
