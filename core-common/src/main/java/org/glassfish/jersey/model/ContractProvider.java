@@ -236,7 +236,7 @@ public final class ContractProvider implements Scoped, NameBound {
             }
 
             final Map<Class<?>, Integer> _contracts = (contracts.isEmpty())
-                    ? Collections.<Class<?>, Integer>emptyMap()
+                    ? Collections.emptyMap()
                     : contracts.entrySet()
                                .stream()
                                .collect(Collectors.toMap((Function<Map.Entry<Class<?>, Integer>, Class<?>>) Map.Entry::getKey,
@@ -246,7 +246,7 @@ public final class ContractProvider implements Scoped, NameBound {
                                                          }));
 
             final Set<Class<? extends Annotation>> bindings = (nameBindings.isEmpty())
-                    ? Collections.<Class<? extends Annotation>>emptySet() : Collections.unmodifiableSet(nameBindings);
+                    ? Collections.emptySet() : Collections.unmodifiableSet(nameBindings);
 
             if (implementationClass == null && scope == Singleton.class && _contracts.isEmpty() && defaultPriority == NO_PRIORITY
                     && bindings.isEmpty()) {

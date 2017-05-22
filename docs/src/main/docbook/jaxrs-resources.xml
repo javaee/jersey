@@ -1110,7 +1110,7 @@ public static class SubResource {
         <title>Programmatic resource model</title>
 
         <para>Resources can be constructed from classes or instances but also can be constructed from a programmatic resource
-            model. Every resource created from from resource classes can also
+            model. Every resource created from resource classes can also
             be constructed using the programmatic resource builder api. See <link
                     linkend="resource-builder">resource builder section</link> for more information.
         </para>

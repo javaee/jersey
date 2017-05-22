@@ -884,13 +884,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             final List<? extends AbstractEntityProviderModel<T>> set,
             final Map<MediaType, List<T>> subSet) {
 
-        final List<T> providers = new ArrayList<>();
-
-        for (final AbstractEntityProviderModel<T> model : set) {
-            if (model.declaredTypes().contains(mediaType)) {
-                providers.add(model.provider());
-            }
-        }
+        final List<T> providers = set.stream()
+                                     .filter(model -> model.declaredTypes().contains(mediaType))
+                                     .map(AbstractEntityProviderModel::provider)
+                                     .collect(Collectors.toList());
 
         if (!providers.isEmpty()) {
             subSet.put(mediaType, Collections.unmodifiableList(providers));
@@ -927,7 +924,6 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private static final Function<WriterModel, MessageBodyWriter> MODEL_TO_WRITER = AbstractEntityProviderModel::provider;
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<MessageBodyWriter> getMessageBodyWritersForType(final Class<?> type) {
         return getWritersModelsForType(type).stream().map(MODEL_TO_WRITER).collect(Collectors.toList());
     }
@@ -1001,7 +997,6 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private static final Function<ReaderModel, MessageBodyReader> MODEL_TO_READER = AbstractEntityProviderModel::provider;
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<MessageBodyReader> getMessageBodyReadersForType(final Class<?> type) {
         return getReaderModelsForType(type).stream().map(MODEL_TO_READER).collect(Collectors.toList());
     }

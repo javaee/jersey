@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.examples.bookmark_em.entity;
 
 import java.io.Serializable;
@@ -287,6 +288,4 @@ public class BookmarkEntity implements Serializable {
                + "bookmarkEntityPK=" + bookmarkEntityPK
                + '}';
     }
-
-
 }

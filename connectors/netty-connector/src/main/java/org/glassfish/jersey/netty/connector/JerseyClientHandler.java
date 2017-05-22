@@ -116,7 +116,7 @@ class JerseyClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
             // request entity handling.
             if ((response.headers().contains(HttpHeaderNames.CONTENT_LENGTH) && HttpUtil.getContentLength(response) > 0)
-                || HttpUtil.isTransferEncodingChunked(response)) {
+                    || HttpUtil.isTransferEncodingChunked(response)) {
 
                 ctx.channel().closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
                     @Override

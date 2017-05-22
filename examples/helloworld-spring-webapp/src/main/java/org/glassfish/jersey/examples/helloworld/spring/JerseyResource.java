@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,17 +39,18 @@
  */
 package org.glassfish.jersey.examples.helloworld.spring;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.logging.Logger;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.logging.Logger;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Jersey2 Spring integration example.
+ * Jersey Spring integration example.
  * Demonstrate how to inject a Spring bean into a Jersey managed JAX-RS resource class.
  *
  * @author Marko Asplund (marko.asplund at gmail.com)
@@ -61,7 +62,6 @@ public class JerseyResource {
     @Autowired
     private GreetingService greetingService;
 
-//    @Autowired
     @Inject
     private DateTimeService timeService;
 

@@ -548,7 +548,14 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
-            <artifactId>server-sent-events</artifactId>
+            <artifactId>server-sent-events-jersey</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>server-sent-events-jaxrs</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>
             <type>zip</type>
@@ -597,14 +604,28 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
-            <artifactId>sse-item-store-webapp</artifactId>
+            <artifactId>sse-item-store-jersey-webapp</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>
             <type>zip</type>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
-            <artifactId>sse-item-store-webapp</artifactId>
+            <artifactId>sse-item-store-jaxrs-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>sse-item-store-jersey-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>sse-item-store-jaxrs-webapp</artifactId>
             <version>${project.version}</version>
             <classifier>gf-project-src</classifier>
             <type>zip</type>

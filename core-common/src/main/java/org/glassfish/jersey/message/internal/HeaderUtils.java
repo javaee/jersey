@@ -197,9 +197,9 @@ public final class HeaderUtils {
         final RuntimeDelegate rd = RuntimeDelegate.getInstance();
 
         return Collections.unmodifiableMap(headers.entrySet().stream()
-                                                  .collect(Collectors.toMap(
-                                                          Map.Entry::getKey,
-                                                          entry -> asHeaderString(entry.getValue(), rd))));
+                                           .collect(Collectors.toMap(
+                                                   Map.Entry::getKey,
+                                                   entry -> asHeaderString(entry.getValue(), rd))));
     }
 
     /**

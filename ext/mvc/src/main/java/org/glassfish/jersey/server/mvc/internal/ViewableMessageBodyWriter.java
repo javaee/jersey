@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ProcessingException;
@@ -62,8 +63,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-
-import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;

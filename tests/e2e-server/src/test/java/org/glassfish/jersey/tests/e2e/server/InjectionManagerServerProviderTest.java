@@ -61,6 +61,8 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import javax.inject.Inject;
+
 import org.glassfish.jersey.InjectionManagerProvider;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -154,9 +156,7 @@ public class InjectionManagerServerProviderTest extends JerseyTest {
 
         @Override
         public boolean configure(FeatureContext context) {
-            final InjectionManager serviceLocator = InjectionManagerProvider.getInjectionManager(context);
-            final MyInjectedService service = serviceLocator.getInstance(MyInjectedService.class);
-            context.register(new MyFeatureInterceptor(service.getName()));
+            context.register(MyFeatureInterceptor.class);
             return true;
         }
 
@@ -165,8 +165,9 @@ public class InjectionManagerServerProviderTest extends JerseyTest {
         public static class MyFeatureInterceptor implements WriterInterceptor {
             private final String name;
 
-            public MyFeatureInterceptor(String name) {
-                this.name = name;
+            @Inject
+            public MyFeatureInterceptor(MyInjectedService injectedService) {
+                this.name = injectedService.getName();
             }
 
             @Override

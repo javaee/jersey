@@ -44,8 +44,8 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -108,9 +108,9 @@ public class OAuthClientServerTest extends JerseyTest {
         };
 
         oAuthProvider.addAccessToken(PROMETHEUS_TOKEN, PROMETHEUS_SECRET, CONSUMER_KEY,
-                                     "http://callback.url", prometheusPrincipal,
-                                     new HashSet<>(Arrays.asList("admin", "user")),
-                                     new MultivaluedHashMap<String, String>());
+                "http://callback.url", prometheusPrincipal,
+                Arrays.asList("admin", "user").stream().collect(Collectors.toSet()),
+                new MultivaluedHashMap<String, String>());
         final OAuth1ServerFeature oAuth1ServerFeature = new OAuth1ServerFeature(oAuthProvider,
                 "requestTokenSpecialUri", "accessTokenSpecialUri");
         final ResourceConfig resourceConfig = new ResourceConfig();

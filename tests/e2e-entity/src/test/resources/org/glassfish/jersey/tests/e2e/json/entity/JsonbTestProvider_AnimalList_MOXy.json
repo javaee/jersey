@@ -1,0 +1,1 @@
+{"animals":[{"className":"org.glassfish.jersey.tests.e2e.json.entity.Dog","instance":{"name":"Fifi"}},{"className":"org.glassfish.jersey.tests.e2e.json.entity.Cat","instance":{"name":"Daisy"}}]}

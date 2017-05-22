@@ -44,15 +44,10 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.MediaType;
 
-import javax.inject.Inject;
-
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.Property;
 import org.glassfish.jersey.media.sse.internal.SseBinder;
-import org.glassfish.jersey.media.sse.internal.SseEventSinkValueSupplierProvider;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.media.sse.internal.SseEventSinkValueParamProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 
 /**
@@ -61,9 +56,6 @@ import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class SseFeature implements Feature {
-
-    @Inject
-    private InjectionManager injectionManager;
 
     /**
      * {@link String} representation of Server sent events media type. ("{@value}").
@@ -152,12 +144,7 @@ public class SseFeature implements Feature {
             case SERVER:
                 context.register(OutboundEventWriter.class);
                 context.register(new SseBinder());
-
-                final SseEventSinkValueSupplierProvider eventSinkSupplier = new SseEventSinkValueSupplierProvider(
-                        () -> injectionManager.getInstance(MultivaluedParameterExtractorProvider.class),
-                        () -> injectionManager.getInstance(ContainerRequest.class));
-
-                context.register(eventSinkSupplier, ValueSupplierProvider.class);
+                context.register(SseEventSinkValueParamProvider.class, ValueParamProvider.class);
                 break;
         }
         return true;

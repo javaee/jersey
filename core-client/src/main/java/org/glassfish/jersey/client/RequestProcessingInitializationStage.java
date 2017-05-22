@@ -86,13 +86,13 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
         writerInterceptors = Collections.unmodifiableList(
                 StreamSupport.stream(
                         Providers.getAllProviders(injectionManager, WriterInterceptor.class,
-                                                  new RankedComparator<>()).spliterator(), false)
+                                new RankedComparator<>()).spliterator(), false)
                              .collect(Collectors.toList())
         );
         readerInterceptors = Collections.unmodifiableList(
                 StreamSupport.stream(
                         Providers.getAllProviders(injectionManager, ReaderInterceptor.class,
-                                                  new RankedComparator<>()).spliterator(), false)
+                                new RankedComparator<>()).spliterator(), false)
                              .collect(Collectors.toList())
         );
     }

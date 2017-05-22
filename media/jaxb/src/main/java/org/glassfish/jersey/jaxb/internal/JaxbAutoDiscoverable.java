@@ -43,9 +43,6 @@ package org.glassfish.jersey.jaxb.internal;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
 
-import javax.inject.Inject;
-
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
 
 /**
@@ -56,15 +53,12 @@ import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
  */
 public final class JaxbAutoDiscoverable implements ForcedAutoDiscoverable {
 
-    @Inject
-    private InjectionManager injectionManager;
-
     @Override
     public void configure(final FeatureContext context) {
-        injectionManager.register(new JaxbMessagingBinder());
+        context.register(new JaxbMessagingBinder());
 
         if (RuntimeType.SERVER == context.getConfiguration().getRuntimeType()) {
-            injectionManager.register(new JaxbParamConverterBinder());
+            context.register(new JaxbParamConverterBinder());
         }
     }
 }

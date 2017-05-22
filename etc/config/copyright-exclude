@@ -31,6 +31,7 @@ jaxb.index
 /MANIFEST.MF
 /META-INF/services/
 /README
+/GovernancePolicy.md
 /etc/jersey-1-migrated-tests
 /etc/config/copyright-exclude
 /etc/config/copyright.txt

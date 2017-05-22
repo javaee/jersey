@@ -40,41 +40,6 @@
 
 -->
 
-Managed Beans Example
-=====================
-
-This example demonstrates managed bean support in Jersey. JAX-RS root
-resource classes are annotated with @ManagedBean, which means EE-related
-resources may be injected into instances of those classes.
-
-Content
--------
-
-The example application includes two root resource classes that are
-treated as Java EE managed beans. One root resource class is managed in
-the default JAX-RS life-cycle (one instance per request) and the other
-is managed in the singleton life-cycle (one instance per web
-application).
-
-Two Java EE artifacts are injected into the singleton root resource. The
-first is a resource constant defined in the web.xml. The second is an
-entity manager factory to allow integration with JPA layer.
-
-Running the Example
--------------------
-
-This sample utilizes Java EE features in GlassFish application server.
-
-The easiest way to get the application running is to build it and deploy
-as follows:
-
-    mvn clean package
-    $AS_HOME/asadmin deploy target/managed-beans-webapp.war
-
-From a web browser, visit:
-
--   <http://localhost:8080/managed-beans-webapp>
-
 Managed Client Example
 ======================
 
@@ -94,7 +59,8 @@ URI path            | Resource class     | HTTP methods
 **_/internal/b_**   | InternalResource   | GET
 
 In the example, the requests to a *public resource* deployed on
-`/public/` path are forwarded to an *internal resource* (deployed on `/internal/` path) using injected
+`/public/` path are forwarded to an *internal resource* (deployed on
+`/internal/` path) using injected
 [javax.ws.rs.client.WebTarget](https://jax-rs-spec.java.net/nonav/2.0/apidocs/javax/ws/rs/client/WebTarget.html)
 instances produced using 2 separate managed clients each of the managed
 clients using it's own custom configuration.
@@ -115,17 +81,17 @@ Running the Example
 
 Run the example as follows:
 
->     mvn clean compile exec:java
+>     mvn clean package exec:java
 
 This deploys current example on the local host. You can then access WADL
 description of the deployed application at
-<http://localhost:8080/managedclient/application.wadl>.
+<http://localhost:8080/managed-client-webapp/application.wadl>.
 
 You can access public resource of this application using curl:
 
->     curl -v -H "Accept: text/plain" http://localhost:8080/managedclient/public/a
+>     curl -v -H "Accept: text/plain" http://localhost:8080/managed-client-webapp/public/a
 
->     curl -v -H "Accept: text/plain" http://localhost:8080/managedclient/public/b
+>     curl -v -H "Accept: text/plain" http://localhost:8080/managed-client-webapp/public/b
 
 In this example you should see the returned response message body
 contains "a" or "b" respectively upon successful invocation.
@@ -134,16 +100,16 @@ You may also verify that access to internal resource is not possible
 without including a proper header in the request. First try to access
 the internal resource without any custom header:
 
->     curl -v -H "Accept: text/plain" http://localhost:8080/managedclient/internal/a
+>     curl -v -H "Accept: text/plain" http://localhost:8080/managed-client-webapp/internal/a
 
->     curl -v -H "Accept: text/plain" http://localhost:8080/managedclient/internal/b
+>     curl -v -H "Accept: text/plain" http://localhost:8080/managed-client-webapp/internal/b
 
 In both cases a `HTTP 403 Forbidden.` response is returned. Now lets try
 to access the resource once again, but this time we'll include also the
 expected custom headers:
 
->     curl -v -H "Accept: text/plain" -H "custom-header:a" http://localhost:8080/managedclient/internal/a
+>     curl -v -H "Accept: text/plain" -H "custom-header:a" http://localhost:8080/managed-client-webapp/internal/a
 
->     curl -v -H "Accept: text/plain" -H "custom-header:b" http://localhost:8080/managedclient/internal/b
+>     curl -v -H "Accept: text/plain" -H "custom-header:b" http://localhost:8080/managed-client-webapp/internal/b
 
 Finally, you should see the invocation succeeded and the returned response message body contains "a" or "b" respectively.

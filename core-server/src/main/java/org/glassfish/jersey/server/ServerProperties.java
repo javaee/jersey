@@ -726,7 +726,7 @@ public final class ServerProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
-     * @since 2.23
+     * @since 2.22.1
      */
     public static final String LOCATION_HEADER_RELATIVE_URI_RESOLUTION_RFC7231 =
             "jersey.config.server.headers.location.relative.resolution.rfc7231";

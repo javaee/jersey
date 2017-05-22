@@ -45,13 +45,10 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
-import org.glassfish.jersey.server.internal.process.ServerProcessingBinder;
-import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
 
 /**
  * Server injection binder.
@@ -63,10 +60,7 @@ class ServerBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        install(new ServerProcessingBinder(),
-                new JaxrsProviders.Binder(),
-                new ResourceModelBinder(),
-                new MappableExceptionWrapperInterceptor.Binder(),
+        install(new MappableExceptionWrapperInterceptor.Binder(),
                 new MonitoringContainerListener.Binder());
 
         //ChunkedResponseWriter

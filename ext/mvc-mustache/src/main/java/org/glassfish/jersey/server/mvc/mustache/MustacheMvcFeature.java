@@ -46,10 +46,6 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import javax.inject.Inject;
-import javax.servlet.ServletContext;
-
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 
 /**
@@ -64,9 +60,6 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 public class MustacheMvcFeature implements Feature {
 
     private static final String SUFFIX = ".mustache";
-
-    @Inject
-    private InjectionManager injectionManager;
 
     /**
      * {@link String} property defining the base path to Mustache templates. If set, the value of the property is added in front
@@ -130,9 +123,7 @@ public class MustacheMvcFeature implements Feature {
 
         if (!config.isRegistered(MustacheTemplateProcessor.class)) {
             // Template Processor.
-            Configuration configuration = injectionManager.getInstance(Configuration.class);
-            ServletContext servletContext = injectionManager.getInstance(ServletContext.class);
-            context.register(new MustacheTemplateProcessor(configuration, servletContext, injectionManager::createAndInitialize));
+            context.register(MustacheTemplateProcessor.class);
 
             // MvcFeature.
             if (!config.isRegistered(MvcFeature.class)) {

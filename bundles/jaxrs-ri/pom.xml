@@ -76,6 +76,11 @@
 
         <!-- JAX-RS RI Binaries -->
         <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-common</artifactId>
             <version>${project.version}</version>
@@ -83,6 +88,11 @@
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-jaxb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-binding</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -112,6 +122,13 @@
         </dependency>
 
         <!-- JAX-RS RI Sources -->
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <version>${project.version}</version>
+            <classifier>sources</classifier>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-common</artifactId>
@@ -224,6 +241,9 @@
                     </compilerArguments>
                     <showWarnings>false</showWarnings>
                     <fork>false</fork>
+                    <excludes>
+                        <exclude>module-info.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
             <!-- producing single jar bundle -->
@@ -255,7 +275,7 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeGroupIds>javax.ws.rs,org.glassfish.jersey.core,org.glassfish.jersey.containers,org.glassfish.jersey.jaxb</includeGroupIds>
+                            <includeGroupIds>javax.ws.rs,org.glassfish.jersey.core,org.glassfish.jersey.containers,org.glassfish.jersey.jaxb,org.glassfish.jersey.inject</includeGroupIds>
                             <includeClassifiers>sources</includeClassifiers>
                             <outputDirectory>${generated.src.dir}</outputDirectory>
                         </configuration>

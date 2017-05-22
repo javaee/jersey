@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,8 +44,12 @@ import java.net.URI;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.inject.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.test.JerseyTest;
+
 import org.jboss.weld.environment.se.Weld;
+import org.junit.Assume;
+import org.junit.Before;
 
 /**
  * Test for CDI web application resources.
@@ -60,6 +64,11 @@ import org.jboss.weld.environment.se.Weld;
 public class CdiTest extends JerseyTest {
 
     Weld weld;
+
+    @Before
+    public void setup() {
+        Assume.assumeTrue(Hk2InjectionManagerFactory.isImmediateStrategy());
+    }
 
     @Override
     public void setUp() throws Exception {

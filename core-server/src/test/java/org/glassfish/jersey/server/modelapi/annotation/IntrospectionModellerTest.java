@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.modelapi.annotation;
 
 import java.util.Collection;
@@ -221,8 +222,8 @@ public class IntrospectionModellerTest {
 
     private void assertSources(Collection<Parameter> parameters, Parameter.Source... sources) {
         assertThat("Expected sources not found in the collection",
-                   parameters.stream().map(Parameter::getSource).collect(Collectors.toList()),
-                   Matchers.containsInAnyOrder(sources)
+                parameters.stream().map(Parameter::getSource).collect(Collectors.toList()),
+                Matchers.containsInAnyOrder(sources)
         );
     }
 }

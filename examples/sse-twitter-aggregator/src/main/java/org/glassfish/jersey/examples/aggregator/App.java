@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,7 +66,7 @@ import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.http.util.HttpStatus;
 
 /**
- * Jersey Balloons example application.
+ * Jersey Twitter Aggregator example application.
  */
 public class App {
 
@@ -75,26 +75,20 @@ public class App {
     private static final String TWITTER_USER_PASSWORD = "twitter.user.password";
     private static final String TWITTER_PROPERTIES_FILE_NAME = "twitter-api.properties";
 
-    public static final String APP_PATH = "/aggregator/";
-    public static final String API_PATH = "/aggregator-api/";
-    public static final String WEB_ROOT = "/webroot";
-    public static final int PORT = 8080;
+    private static final String APP_PATH = "/aggregator/";
+    private static final String API_PATH = "/aggregator-api/";
+    static final String WEB_ROOT = "/webroot";
+    private static final int PORT = 8080;
 
     /**
      * Starts Grizzly HTTP server exposing static content, JAX-RS resources
      * and web sockets defined in this application.
      *
      * @param webRootPath static content root path.
-     * @return Grizzly HTTP server.
      */
-    public static HttpServer startServer(String webRootPath) {
+    private static void startServer(String webRootPath) {
         final HttpServer server = new HttpServer();
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                server.shutdownNow();
-            }
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(server::shutdownNow));
 
         final NetworkListener listener = new NetworkListener("grizzly", "localhost", PORT);
 
@@ -115,8 +109,6 @@ public class App {
         } catch (Exception ex) {
             throw new ProcessingException("Exception thrown when trying to start grizzly server", ex);
         }
-
-        return server;
     }
 
     public static void main(String[] args) {
@@ -136,11 +128,11 @@ public class App {
         }
     }
 
-    public static String getApiUri() {
+    static String getApiUri() {
         return String.format("http://localhost:%s%s", PORT, API_PATH);
     }
 
-    public static String getAppUri() {
+    private static String getAppUri() {
         return String.format("http://localhost:%s%s", PORT, APP_PATH);
     }
 
@@ -149,9 +141,12 @@ public class App {
      *
      * @return Jersey server-side application configuration.
      */
-    public static ResourceConfig createResourceConfig() {
+    private static ResourceConfig createResourceConfig() {
         return new ResourceConfig()
-                .registerClasses(MessageStreamResource.class, SseFeature.class, MoxyJsonFeature.class);
+                .registerClasses(MessageStreamResourceJersey.class,
+                        MessageStreamResourceJaxRs.class,
+                        SseFeature.class,
+                        MoxyJsonFeature.class);
     }
 
     /**
@@ -159,7 +154,7 @@ public class App {
      *
      * @return configured twitter user name.
      */
-    public static String getTwitterUserName() {
+    static String getTwitterUserName() {
         return (String) TWITTER_PROPERTIES.get(TWITTER_USER_NAME);
     }
 
@@ -168,7 +163,7 @@ public class App {
      *
      * @return configured twitter user password.
      */
-    public static String getTwitterUserPassword() {
+    static String getTwitterUserPassword() {
         return (String) TWITTER_PROPERTIES.get(TWITTER_USER_PASSWORD);
     }
 
@@ -219,7 +214,7 @@ public class App {
         private static final HashMap<String, String> EXTENSION_TO_MEDIA_TYPE;
 
         static {
-            EXTENSION_TO_MEDIA_TYPE = new HashMap<String, String>();
+            EXTENSION_TO_MEDIA_TYPE = new HashMap<>();
 
             EXTENSION_TO_MEDIA_TYPE.put("html", "text/html");
             EXTENSION_TO_MEDIA_TYPE.put("js", "application/javascript");
@@ -248,6 +243,7 @@ public class App {
             }
 
             final String resourcesContextPath = request.getContextPath();
+            System.out.println("context: " + resourcesContextPath);
             if (resourcesContextPath != null && !resourcesContextPath.isEmpty()) {
                 if (!uri.startsWith(resourcesContextPath)) {
                     response.sendError(HttpStatus.NOT_FOUND_404.getStatusCode());
@@ -255,6 +251,7 @@ public class App {
                 }
 
                 uri = uri.substring(resourcesContextPath.length());
+                System.out.println("URI: " + uri);
             }
 
             InputStream fileStream;

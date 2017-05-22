@@ -40,16 +40,18 @@
 
 package org.glassfish.jersey.media.sse.internal;
 
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import javax.ws.rs.Flow;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.Sse;
 import javax.ws.rs.sse.SseBroadcaster;
+import javax.ws.rs.sse.SseEventSink;
 
+import org.glassfish.jersey.internal.jsr166.Flow;
 import org.glassfish.jersey.internal.util.JerseyPublisher;
 import org.glassfish.jersey.media.sse.LocalizationMessages;
 
@@ -65,12 +67,12 @@ class JerseySseBroadcaster extends JerseyPublisher<OutboundSseEvent> implements 
     /**
      * Callbacks notified when {@code SseBroadcaster} is being closed.
      */
-    private final CopyOnWriteArrayList<Consumer<Flow.Subscriber<? super OutboundSseEvent>>> onCloseListeners;
+    private final CopyOnWriteArrayList<Consumer<SseEventSink>> onCloseListeners;
 
     /**
      * Callbacks notified when error occurs.
      */
-    private final CopyOnWriteArrayList<BiConsumer<Flow.Subscriber<? super OutboundSseEvent>, Throwable>> onExceptionListeners;
+    private final CopyOnWriteArrayList<BiConsumer<SseEventSink, Throwable>> onExceptionListeners;
 
     /**
      * Package-private constructor.
@@ -97,64 +99,84 @@ class JerseySseBroadcaster extends JerseyPublisher<OutboundSseEvent> implements 
     }
 
     @Override
-    public void onError(final BiConsumer<Flow.Subscriber<? super OutboundSseEvent>, Throwable> onError) {
+    public void register(SseEventSink sseEventSink) {
+        super.subscribe(new SseEventSinkWrapper(sseEventSink));
+    }
+
+    @Override
+    public void onError(BiConsumer<SseEventSink, Throwable> onError) {
         if (onError == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("onError"));
         }
+
         onExceptionListeners.add(onError);
     }
 
     @Override
-    public void onClose(final Consumer<Flow.Subscriber<? super OutboundSseEvent>> onClose) {
+    public void onClose(Consumer<SseEventSink> onClose) {
         if (onClose == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("onClose"));
         }
+
         onCloseListeners.add(onClose);
     }
 
     @Override
-    public void broadcast(final OutboundSseEvent event) {
+    public CompletionStage<?> broadcast(final OutboundSseEvent event) {
         if (event == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("event"));
         }
         publish(event);
+
+        // TODO JAX-RS 2.1
+        return null;
     }
 
-    @Override
-    public void subscribe(final Flow.Subscriber<? super OutboundSseEvent> subscriber) {
-        final Flow.Subscriber<OutboundSseEvent> wrapped = new Flow.Subscriber<OutboundSseEvent>() {
-
-            @Override
-            public void onSubscribe(final Flow.Subscription subscription) {
-                subscriber.onSubscribe(subscription);
-            }
-
-            @Override
-            public void onNext(final OutboundSseEvent item) {
-                subscriber.onNext(item);
-            }
-
-            @Override
-            public void onError(final Throwable throwable) {
-                notifyOnErrorCallbacks(subscriber, throwable);
-                subscriber.onError(throwable);
-            }
-
-            @Override
-            public void onComplete() {
-                notifyOnCompleteHandlers(subscriber);
-                subscriber.onComplete();
-            }
-        };
-        super.subscribe(wrapped);
-    }
-
-    private void notifyOnCompleteHandlers(final Flow.Subscriber<? super OutboundSseEvent> subscriber) {
-        onCloseListeners.forEach((listener) -> listener.accept(subscriber));
+    private void notifyOnCompleteHandlers(Flow.Subscriber<? super OutboundSseEvent> subscriber) {
+        if (subscriber instanceof SseEventSinkWrapper) {
+            onCloseListeners.forEach((listener) -> listener.accept(((SseEventSinkWrapper) subscriber).sseEventSink));
+        }
     }
 
     private void notifyOnErrorCallbacks(final Flow.Subscriber<? super OutboundSseEvent> subscriber, final Throwable throwable) {
-        onExceptionListeners.forEach((listener) -> listener.accept(subscriber, throwable));
+        if (subscriber instanceof SseEventSinkWrapper) {
+            onExceptionListeners.forEach(
+                    (listener) -> listener.accept(((SseEventSinkWrapper) subscriber).sseEventSink, throwable));
+        }
     }
 
+    private class SseEventSinkWrapper implements Flow.Subscriber<OutboundSseEvent> {
+
+        private final SseEventSink sseEventSink;
+
+        SseEventSinkWrapper(SseEventSink sseEventSink) {
+            this.sseEventSink = sseEventSink;
+        }
+
+        @Override
+        public void onSubscribe(final Flow.Subscription subscription) {
+            // TODO JAX-RS 2.1
+            subscription.request(Long.MAX_VALUE);
+        }
+
+        @Override
+        public void onNext(final OutboundSseEvent item) {
+            sseEventSink.send(item);
+        }
+
+        @Override
+        public void onError(final Throwable throwable) {
+            // TODO JAX-RS 2.1
+            sseEventSink.close();
+            notifyOnErrorCallbacks(this, throwable);
+        }
+
+        @Override
+        public void onComplete() {
+            // TODO JAX-RS 2.1
+            sseEventSink.close();
+            notifyOnCompleteHandlers(this);
+
+        }
+    }
 }

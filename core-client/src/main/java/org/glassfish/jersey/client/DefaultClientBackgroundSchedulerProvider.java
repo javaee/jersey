@@ -40,8 +40,6 @@
 
 package org.glassfish.jersey.client;
 
-import javax.inject.Inject;
-
 import org.glassfish.jersey.spi.ScheduledThreadPoolExecutorProvider;
 
 /**
@@ -57,8 +55,7 @@ class DefaultClientBackgroundSchedulerProvider extends ScheduledThreadPoolExecut
     /**
      * Creates a new instance.
      */
-    @Inject
-    public DefaultClientBackgroundSchedulerProvider() {
+    DefaultClientBackgroundSchedulerProvider() {
         super("jersey-client-background-scheduler");
     }
 

@@ -71,7 +71,8 @@ public class ParamConverterFactory implements ParamConverterProvider {
 
     private final List<ParamConverterProvider> converterProviders;
 
-    public ParamConverterFactory(Set<ParamConverterProvider> providers, Set<ParamConverterProvider> customProviders) {
+    ParamConverterFactory(Set<ParamConverterProvider> providers, Set<ParamConverterProvider> customProviders) {
+
         Set<ParamConverterProvider> copyProviders = new HashSet<>(providers);
         converterProviders = new ArrayList<>();
         converterProviders.addAll(customProviders);

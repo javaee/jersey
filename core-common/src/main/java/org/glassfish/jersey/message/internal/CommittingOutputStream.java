@@ -43,6 +43,7 @@ package org.glassfish.jersey.message.internal;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -78,23 +79,18 @@ import org.glassfish.jersey.internal.guava.Preconditions;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Miroslav Fuksa
  */
-final class CommittingOutputStream extends OutputStream {
+public final class CommittingOutputStream extends OutputStream {
 
     private static final Logger LOGGER = Logger.getLogger(CommittingOutputStream.class.getName());
     /**
      * Null stream provider.
      */
     private static final OutboundMessageContext.StreamProvider NULL_STREAM_PROVIDER =
-            new OutboundMessageContext.StreamProvider() {
-                @Override
-                public OutputStream getOutputStream(int contentLength) throws IOException {
-                    return new NullOutputStream();
-                }
-            };
+            contentLength -> new NullOutputStream();
     /**
      * Default size of the buffer which will be used if no user defined size is specified.
      */
-    static final int DEFAULT_BUFFER_SIZE = 8192;
+    public static final int DEFAULT_BUFFER_SIZE = 8192;
     /**
      * Adapted output stream.
      */
@@ -145,7 +141,7 @@ final class CommittingOutputStream extends OutputStream {
         if (isClosed) {
             throw new IllegalStateException(LocalizationMessages.OUTPUT_STREAM_CLOSED());
         }
-        Preconditions.checkNotNull(streamProvider);
+        Objects.nonNull(streamProvider);
 
         if (this.streamProvider != null) {
             LOGGER.log(Level.WARNING, LocalizationMessages.COMMITTING_STREAM_ALREADY_INITIALIZED());
@@ -162,7 +158,7 @@ final class CommittingOutputStream extends OutputStream {
      */
     public void enableBuffering(int bufferSize) {
         Preconditions.checkState(!isCommitted && (this.buffer == null || this.buffer.size() == 0),
-                COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE);
+                                 COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE);
         this.bufferSize = bufferSize;
         if (bufferSize <= 0) {
             this.directWrite = true;
@@ -176,7 +172,7 @@ final class CommittingOutputStream extends OutputStream {
     /**
      * Enable buffering of the serialized entity with the {@link #DEFAULT_BUFFER_SIZE default buffer size }.
      */
-    public void enableBuffering() {
+    void enableBuffering() {
         enableBuffering(DEFAULT_BUFFER_SIZE);
     }
 
@@ -256,7 +252,7 @@ final class CommittingOutputStream extends OutputStream {
      *
      * @throws IOException when underlying stream returned from the callback method throws the io exception.
      */
-    void commit() throws IOException {
+    public void commit() throws IOException {
         flushBuffer(true);
         commitStream();
     }

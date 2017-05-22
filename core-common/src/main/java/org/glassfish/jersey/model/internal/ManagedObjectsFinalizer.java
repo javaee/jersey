@@ -44,7 +44,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.annotation.PreDestroy;
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -74,7 +73,6 @@ public class ManagedObjectsFinalizer {
      *
      * @param injectionManager injection manager call {@code preDestroy} on managed objects.
      */
-    @Inject
     public ManagedObjectsFinalizer(final InjectionManager injectionManager) {
         this.injectionManager = injectionManager;
     }

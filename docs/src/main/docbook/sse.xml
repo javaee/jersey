@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -151,177 +151,118 @@
             your RESTful Web application that defines the REST API of your application. The following chapters describes SSE
             support in Jersey in more details.
         </para>
-        <important>
-            <para>
-                Note, that while SSE in Jersey is supported with standard JAX-RS resources, Jersey SSE APIs are not part of
-                the JAX-RS specification. SSE support and related APIs are a Jersey specific feature that extends JAX-RS.
-            </para>
-        </important>
+
     </section>
 
-    <section xml:id="overview">
-        <title>Jersey Server-Sent Events API</title>
+    <section xml:id="jaxrs-sse-api-overview">
+        <title>Server-Sent Events API</title>
         <para>
-            This chapter briefly describes the Jersey support for SSE. Details and examples will be covered
-            in chapters below.
+            In previous JAX-RS versions, no standard API for server-sent events was defined. The SSE support bundled with
+            Jersey was Jersey-specific. With JAX-RS 2.1, situation changed and SSE API is well defined in the
+            <literal>javax.ws.rs.sse</literal>
+            package.
+        </para>
+        <para>Following chapters will describe the new SSE API. For backwards compatibility reasons, the original
+            Jersey-specific API remains valid and will be described in
+            <xref linkend="overview-jersey-specific"/>
         </para>
         <para>
             Jersey contains support for SSE for both - server and client. SSE in Jersey is implemented as an extension
-            supporting a new media type, which means that SSE really treated as just another media type that can be returned from
-            a resource method and processed by the client. There is only a minimal additional support for "chunked" messages
-            added to Jersey which could not be implemented as standard JAX-RS media type extension.
+            supporting a new media type using existing "chunked" messages support. However, in contrast to the original API,
+            the instances of SSE related classes are not to be obtained manually by invoking constructors, nor to be directly
+            returned from the resource methods.
+            Actually, the implementing classes in the <literal>jersey.media.sse.internal</literal> package should never be needed
+            to be imported. The only API to be used is directly in the JAX-RS package (<literal>javax.ws.rs.sse</literal>).
+            Only builders in the API along with dependency injection should be used and provides access to the entire
+            functionality.
         </para>
         <para>
-            Before you start working with Jersey SSE, in order to add support for SSE you need to include the dependency to the
-            <emphasis>SSE media type module</emphasis>:
-            <example xml:id="sse.dependency">
-                <title>Add <literal>jersey-media-sse</literal> dependency.</title>
+            In order to take advantage of the SSE support, the <literal>jersey-media-sse</literal> module has to be on classpath.
+            In maven, this can be achieved by adding the dependency to the <emphasis>SSE media type module</emphasis>:
+            <example xml:id="sse-dependency-jaxrs">
+                <title>Adding the SSE dependency</title>
                 <programlisting language="xml" linenumbering="numbered"><![CDATA[<dependency>
     <groupId>org.glassfish.jersey.media</groupId>
     <artifactId>jersey-media-sse</artifactId>
 </dependency>]]></programlisting>
             </example>
-            <note>
-                <para>
-                    Prior to Jersey 2.8, you had to manually register &jersey.sse.SseFeature; in your application.
-                    (The &lit.jersey.sse.SseFeature; is a feature that can be registered for both, the client and the server.)
-                    Since Jersey 2.8, the feature gets automatically discovered and registered when Jersey SSE module is
-                    put on the application's classpath. The automatic discovery and registration of SSE feature can be suppressed
-                    by setting &jersey.sse.SseFeature.DISABLE_SSE; property to <literal>true</literal>.
-                    The behavior can also be selectively suppressed in either client or server runtime by setting
-                    &jersey.sse.SseFeature.DISABLE_SSE_CLIENT; or &jersey.sse.SseFeature.DISABLE_SSE_SERVER; property
-                    respectively.
-                </para>
-            </note>
-        </para>
-        <para>
-            &lit.jersey.sse.SseFeature; adds new supported entity (representation) Java types, namely &jersey.sse.OutboundEvent;
-            for the outbound server events and &jersey.sse.InboundEvent; for inbound client events. These types are serialized by
-            &lit.jersey.sse.OutboundEventWriter; and de-serialized by &lit.jersey.sse.InboundEventReader;.
-            There is no restriction for a media type used in individual event messages; however the media type used for a SSE
-            stream as whole is <emphasis>"text/event-stream"</emphasis> and this media type should be set on messages that
-            are used to serve SSE events (for example on the server side using &jaxrs.Produces; on the method that returns an
-            &lit.jersey.sse.EventOutput; - see below).
-            The &lit.jersey.sse.InboundEvent; and &lit.jersey.sse.OutboundEvent; contain all the fields needed for composing
-            and processing individual SSE events. These entities represent the <emphasis>chunks</emphasis> sent or received over
-            an open server-to-client connection that is represented by an &jersey.server.ChunkedOutput; on the servers side and
-            &jersey.client.ChunkedInput; on the client side (if you are not familiar with
-            &lit.jersey.server.ChunkedOutput; and &lit.jersey.client.ChunkedInput;, see the
-            <link linkend="async">Async chapter</link> first for more details). In other words, our resource method that is used
-            to open a SSE connection to a client does not return individual &lit.jersey.sse.OutboundEvent;s. Instead, a new
-            instance of &jersey.sse.EventOutput; is returned. &lit.jersey.sse.EventOutput; is a typed extension of
-            <literal>ChunkedOutput&lt;OutboundEvent&gt;</literal>. Similarly, to receive &lit.jersey.sse.InboundEvent;s on a
-            client side, Jersey SSE API provides a &lit.jersey.sse.EventInput; that represents a typed extension of
-            <literal>ChunkedInput&lt;InboundEvent&gt;</literal>.
-        </para>
-        <para>
-            The Jersey server SSE API also contains a &jersey.sse.SseBroadcaster; utility, that provides a convenient way of
-            grouping multiple &lit.jersey.sse.EventOutput; instances that represent individual client connections into a
-            group, and exposes methods for broadcasting new events to all the client connections grouped in the broadcaster.
-            The &lit.jersey.sse.SseBroadcaster; inherits from &jersey.server.Broadcaster; which is the generic broadcaster
-            implementation of the Jersey chunked message processing facility.
-            On the client side, the Jersey SSE API contains additional &jersey.sse.EventSource; and &jersey.sse.EventListener;
-            classes that further improve convenience of processing new inbound SSE events.
+            The &lit.jaxrs.core.Feature; defined in the module is (forced) auto-discoverable, which means having the module on
+            classpath is sufficient, no need to further register it in the code.
         </para>
     </section>
-
     <section>
-        <title>Implementing SSE support in a JAX-RS resource</title>
+        <title>Implementing SSE support in a JAX-RS resource (with JAX-RS SSE API)</title>
         <section>
             <title>Simple SSE resource method</title>
-            <para>
-                Firstly you need to add a <link linkend="sse.dependency">Jersey SSE module dependency</link> to your project
-                as shown in the earlier section and register the &jersey.sse.SseFeature; from this module in your
-                &jaxrs.core.Application; or &jersey.server.ResourceConfig;. Once done, you are ready to add SSE support
-                to your resource:
-
-                <example xml:id="example-simple-sse">
-                    <title>Simple SSE resource method</title>
-                    <programlisting language="java" linenumbering="numbered">...
-import org.glassfish.jersey.media.sse.EventOutput;
-import org.glassfish.jersey.media.sse.OutboundEvent;
-import org.glassfish.jersey.media.sse.SseFeature;
+            <example xml:id="example-simple-sse-jaxrs">
+                <title>Simple SSE resource method</title>
+                As mentioned above, the SSE related are not instantiated directly. In this case, Jersey takes care of the
+                dependencies and injects the &jaxrs21.sse.SseEventSink; (represents the output) and &jaxrs21.sse.Sse; (provides
+                factory methods for other SSE related types, in this case it is used to retrieve the event builder).
+                <programlisting language="java" linenumbering="numbered">...
+import javax.ws.rs.sse.Sse;
+import javax.ws.rs.sse.SseEventSink;
+import javax.ws.rs.sse.OutboundSseEvent;
 ...
 
 @Path("events")
 public static class SseResource {
 
     @GET
-    @Produces(SseFeature.SERVER_SENT_EVENTS)
-    public EventOutput getServerSentEvents() {
-        final EventOutput eventOutput = new EventOutput();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    for (int i = 0; i &lt; 10; i++) {
-                        // ... code that waits 1 second
-                        final OutboundEvent.Builder eventBuilder
-                        = new OutboundEvent.Builder();
-                        eventBuilder.name("message-to-client");
-                        eventBuilder.data(String.class,
-                            "Hello world " + i + "!");
-                        final OutboundEvent event = eventBuilder.build();
-                        eventOutput.write(event);
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(
-                        "Error when writing the event.", e);
-                } finally {
-                    try {
-                        eventOutput.close();
-                    } catch (IOException ioClose) {
-                        throw new RuntimeException(
-                            "Error when closing the event output.", ioClose);
-                    }
-                }
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    public void getServerSentEvents(@Context SseEventSink eventSink, @Context Sse sse) {
+        new Thread(() -&gt; {
+            for (int i = 0; i &lt; 10; i++) {
+                // ... code that waits 1 second
+                final OutboundSseEvent event = sse.newEventBuilder()
+                    .name("message-to-client")
+                    .data(String.class, "Hello world " + i + "!")
+                    .build();
+                eventSink.onNext(event);
             }
         }).start();
-        return eventOutput;
     }
-}</programlisting>
-                </example>
-
-                The code above defines the resource deployed on URI <literal>"/events"</literal>. This resource has a single
-                &jaxrs.GET; resource method which returns as an entity &jersey.sse.EventOutput; - an extension of generic Jersey
-                &jersey.server.ChunkedOutput; API for output chunked message processing.
-                <note>
-                    <para>
-                        If you are not familiar with
-                        &lit.jersey.server.ChunkedOutput; and &lit.jersey.client.ChunkedInput;, see the
-                        <link linkend="async">Async chapter</link> first for more details.
-                    </para>
-                </note>
-                After the <literal>eventOutput</literal> is returned from the method, the Jersey runtime recognizes that this is
-                a &lit.jersey.server.ChunkedOutput; extension and does not close the client connection immediately. Instead, it
-                writes the HTTP headers to the response stream and waits for more chunks (SSE events) to be sent. At this point
-                the client can read headers and starts listening for individual events.
-                <note>
-                    <para>
-                        Since Jersey runtime does not implicitly close the connection to the client (similarly to asynchronous
-                        processing), closing the connection is a responsibility of the resource method or the client listening
-                        on the open connection for new events (see following example).
-                    </para>
-                </note>
+}
+                </programlisting>
+            </example>
+            <para>
+                The code above defines the resource deployed on URI "/events". This resource has a single
+                <literal>@GET</literal>
+                resource method which <emphasis>returns void</emphasis>. This is an imported difference
+                against the original API. It is Jersey's responsibility to bind the injected <literal>SseEventSink</literal> to
+                the output chain.
             </para>
             <para>
-                In the <xref linkend="example-simple-sse" />, the resource method creates a new thread that sends a sequence of
-                10 events. There is a 1 second delay between two subsequent events as indicated in a comment. Each event is
-                represented by &lit.jersey.sse.OutboundEvent; type and is built with a helpf of an outbound event
-                <literal>Builder</literal>. The &lit.jersey.sse.OutboundEvent; reflects the standardized format of SSE messages
-                and contains properties that represent <literal>name</literal> (for named
-                events), <literal>comment</literal>, <literal>data</literal> or <literal>id</literal>. The code also sets the
+                After the <literal>SseEventInput</literal> is "returned" from the method, the Jersey runtime recognizes that this
+                is a &lit.jersey.server.ChunkedOutput; extension and does not close the client connection immediately. Instead, it
+                writes the HTTP headers to the response stream and waits for more chunks (SSE events) to be sent. At this point
+                the client can read headers and starts listening for individual events.
+            </para>
+            <para>
+                In the<xref linkend="example-simple-sse-jaxrs"/>, the resource method creates a new thread that sends a
+                sequence of 10 events. There is a 1 second delay between two subsequent events as indicated in a comment. Each
+                event is represented by <literal>javax.ws.rs.sse.OutboundSseEvent</literal> type and is built with a help of a
+                provided <literal>Builder</literal>. The <literal>Builder</literal> is obtain via the injected instance
+                (actually, it is a singleton) of <literal>javax.ws.rs.sse.Sse</literal> (the
+                <literal>newEventBuilder()</literal>
+                method. The <literal>OutboundSseEvent</literal> implementation reflects the standardized format of
+                SSE messages and contains properties that represent <literal>name</literal> (for named events),
+                <literal>comment</literal>, <literal>data</literal> or <literal>id</literal>. The code also sets the
                 event data media type using the <literal>mediaType(MediaType)</literal> method on the
                 <literal>eventBuilder</literal>. The media type, together with the data type set by the
-                <literal>data(Class, Object></literal> method (in our case <literal>String.class</literal>), is used
+                <literal>data(Class, Object></literal>
+                method (in our case <literal>String.class</literal>), is used
                 for serialization of the event data. Note that the event data media type will not be written to any headers as
                 the response <literal>Content-type</literal> header is already defined by the &lit.jaxrs.Produces; and set to
-                <literal>"text/event-stream"</literal> using constant from the &lit.jersey.sse.SseFeature;.
+                <literal>"text/event-stream"</literal>
+                using constant from the &lit.jaxrs.core.MediaType;.
                 The event media type is used for serialization of event <literal>data</literal>. Event data media type and Java
                 type are used to select the proper &jaxrs.ext.MessageBodyWriter; for event data serialization and are passed
                 to the selected writer that serializes the event <literal>data</literal> content. In our case the string
-                <literal>"Hello world " + i + "!"</literal> is serialized as <literal>"text/plain"</literal>. In event
-                <literal>data</literal> you can send any Java entity and associate it with any media type that you would be able
+                <literal>"Hello world " + i + "!"</literal>
+                is serialized as <literal>"text/plain"</literal>. In event
+                <literal>data</literal>
+                you can send any Java entity and associate it with any media type that you would be able
                 to serialize with an available &lit.jaxrs.ext.MessageBodyWriter;. Typically, you may want to send e.g. JSON data,
                 so you would fill the <literal>data</literal> with a JAXB annotated bean instance and define media type to JSON.
                 <note>
@@ -332,7 +273,7 @@ public static class SseResource {
                 </note>
             </para>
             <para>
-                Once an outbound event is ready, it can be written to the <literal>eventOutput</literal>. At that point the event
+                Once an outbound event is ready, it can be written to the <literal>EventSink</literal>. At that point the event
                 is serialized by internal &lit.jersey.sse.OutboundEventWriter; which uses an appropriate
                 &lit.jaxrs.ext.MessageBodyWriter; to serialize the <literal>"Hello world " + i + "!"</literal> string. You can
                 send as many messages as you like. At the end of the thread execution the response is closed which also closes
@@ -371,11 +312,11 @@ event: message-to-client
 data: Hello world 8!
 
 event: message-to-client
-data: Hello world 9!</screen>
+data: Hello world 9!
+                </screen>
 
                 Each message is received with a delay of one second.
             </para>
-
             <note>
                 <para>
                     If you have worked with streams in JAX-RS, you may wonder what is the difference between
@@ -392,23 +333,494 @@ data: Hello world 9!</screen>
                 <para>
                     &lit.jaxrs.core.StreamingOutput; is, on the other hand, a low level JAX-RS API that works with bytes
                     directly. You have to implement &lit.jaxrs.core.StreamingOutput; interface yourself. Also, its
-                    <literal>write(OutputStream)</literal> method will be invoked by JAX-RS runtime only once per response
+                    <literal>write(OutputStream)</literal>
+                    method will be invoked by JAX-RS runtime only once per response
                     and the call to this method is blocking, i.e. the method is expected to write the entire entity body
                     before returning.
                 </para>
             </note>
         </section>
-
         <section>
             <title>Broadcasting with Jersey SSE</title>
 
             <para>
-                Jersey SSE server API defines &jersey.sse.SseBroadcaster; which allows to broadcast individual events to multiple
+                JAX-RS SSE API defines &jersey.sse.SseBroadcaster; which allows to broadcast individual events to multiple
                 clients. A simple broadcasting implementation is shown in the following example:
 
                 <example>
-                    <title>Broadcasting SSE messages</title>
+                    <title>Broadcasting SSE messages (with JAX-RS 2.1 API)</title>
                     <programlisting language="java" linenumbering="numbered">...
+import javax.ws.rs.sse.Sse;
+import javax.ws.rs.sse.SseEventSink;
+import javax.ws.rs.sse.SseBroadcaster;
+...
+
+@Singleton
+@Path("broadcast")
+public static class BroadcasterResource {
+    private Sse sse;
+    private SseBroadcaster broadcaster;
+
+    public BroadcasterResource(@Context final Sse sse) {
+        this.sse = sse;
+        this.broadcaster = sse.newBroadcaster();
+    }
+
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.TEXT_PLAIN)
+    public String broadcastMessage(String message) {
+        final OutboundSseEvent event = sse.newEventBuilder()
+            .name("message")
+            .mediaType(MediaType.TEXT_PLAIN_TYPE)
+            .data(String.class, message)
+            .build();
+
+        broadcaster.broadcast(event);
+
+        return "Message '" + message + "' has been broadcast.";
+    }
+
+    @GET
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    public void listenToBroadcast(@Context SseEventSink eventSink) {
+        this.broadcaster.subscribe(eventSink);
+    }
+}
+                    </programlisting>
+                </example>
+                Let's explore the example together. The <literal>BroadcasterResource</literal> resource class is annotated with
+                &jee6.inject.Singleton; annotation which tells Jersey runtime that only a single instance of the resource
+                class should be used to serve all the incoming requests to <literal>/broadcast</literal> path. This is needed as
+                we want to keep an application-wide single reference to the private <literal>broadcaster</literal> field so that
+                we can use the same instance for all requests. Clients that want to listen to SSE events first send a
+                &lit.http.GET; request to the <literal>BroadcasterResource</literal>, that is handled by the
+                <literal>listenToBroadcast()</literal>
+                resource method.
+                The method is injected with a new <literal>SseEventSink</literal> representing the connection to the
+                requesting client and registers this <literal>eventSink</literal> instance with the singleton
+                <literal>broadcaster</literal>
+                by calling its <literal>subscribe()</literal> method.
+                The method then, as already explained returns <literal>void</literal> and Jersey runtime is responsible for
+                binding the injected <literal>EventSink</literal> instance so as it would have been returned from the resource
+                method (note that really returning the <literal>EventSink</literal> from the resource method will cause
+                failure) and to bind the <literal>eventSink</literal> instance with the requesting client and send the
+                response HTTP headers to the client. The client connection remains open and the client is now waiting ready to
+                receive new SSE events. All the events are written to the <literal>eventSink</literal> by
+                <literal>broadcaster</literal>
+                later on. This way developers can conveniently handle sending new events to
+                all the clients that subscribe to them.
+            </para>
+            <para>
+                When a client wants to broadcast new message to all the clients listening on their SSE connections,
+                it sends a &lit.http.POST; request to <literal>BroadcasterResource</literal> resource with the message content.
+                The method <literal>broadcastMessage(String)</literal> is invoked on
+                <literal>BroadcasterResource</literal>
+                resource with the message content as an input parameter. A new SSE outbound event is built in the standard way
+                and passed to the broadcaster. The broadcaster internally invokes <literal>write(OutboundEvent)</literal> on all
+                registered <literal>EventSink</literal>s. After that the method just returns a standard text response
+                to the &lit.http.POST;ing client to inform the client that the message was successfully broadcast. As you can see,
+                the <literal>broadcastMessage(String)</literal> resource method is just a simple JAX-RS resource method.
+            </para>
+            <!-- TODO continue here -->
+            <para>
+                In order to implement such a scenario, you may have noticed, that the
+                <literal>SseBroadcaster</literal>
+                is not mandatory to complete the use case. Individual <literal>EventSink</literal>s can be just stored in
+                a collection and iterated over in the <literal>broadcastMessage</literal> method. However, the
+                <literal>SseBroadcaster</literal>
+                internally identifies and handles also client disconnects. When a client
+                closes the connection, the broadcaster detects this and removes the stale connection from the internal collection
+                of the registered <literal>EventSink</literal>s as well as it frees all the server-side resources associated with
+                the stale connection.
+                Additionally, the <literal>SseBroadcaster</literal> is implemented to be thread-safe, so that clients can connect
+                and disconnect in any time and <literal>SseBroadcaster</literal> will always broadcast messages to the most recent
+                collection of registered and active set of clients.
+            </para>
+        </section>
+    </section>
+    <section xml:id="sse-client-jaxrs">
+        <title>Consuming SSE events within Jersey clients</title>
+        <para>
+            On the client side, push programming model is used (event consumer / client) gets asynchronously notified about
+            incoming events by subscribing custom listener to <literal>javax.ws.rs.sse.SseEventSource</literal>. This happens by
+            invoking one of its <literal>subscribe()</literal> methods.
+        </para>
+        <para>
+            The usage of <literal>SseEventSource</literal> is shown in the following example.
+            <example xml:id="sse-event-source-example">
+                <title>Consuming SSE events with SseEventSource</title>
+                <programlisting language="java" linenumbering="numbered">import javax.ws.rs.sse.SseEventSource;
+...
+Client client = ClientBuilder.newBuilder().build();
+WebTarget target = client.target("http://example.com/events");
+SseEventSource sseEventSource = SseEventSource.target(target).build();
+sseEventSource.subscribe((event) -> System.out.println(event.getName() + "; "
+    + event.readData(String.class)));
+sseEventSource.open();
+
+// do other stuff, block here and continue when done
+
+sseEventSource.close();
+                </programlisting>
+            </example>
+            In this example, the client code connects to the server where the <literal>SseResource</literal> from the
+            <xref linkend="example-simple-sse-jaxrs"/>
+            is deployed. The &jaxrs.client.Client; instance
+            is created (and initialized with &jersey.sse.SseFeature; automatically). Then the &jaxrs.client.WebTarget; is built.
+            In this case a request to the web target is not made directly in the code, instead, the web target instance
+            is used to initialize a new &javax.ws.rs.sse.SseEventSource.Builder; instance that is used to build a new
+            &javax.ws.rs.sse.SseEventSource;. The choice of <literal>build()</literal> method is important, as it tells
+            the <literal>SseEventSource.Builder</literal> to create a new <literal>SseEventSource</literal> that is not
+            automatically connected to the <literal>target</literal>. The connection is established only later by manually
+            invoking the <literal>sseEventSource.open()</literal> method. A custom
+            <literal>java.util.function.Consumer&lt;InboundSseEvent&gt;</literal>
+            implementation is used to listen to and
+            process incoming SSE events. The method readData(Class) says that the
+            event data should be de-serialized from a received &javax.ws.rs.sse.InboundSseEvent; instance into a
+            <literal>String</literal>
+            Java type. This method call internally executes &jaxrs.ext.MessageBodyReader; which
+            de-serializes the event data. This is similar to reading an entity from the &jaxrs.core.Response; by
+            <literal>readEntity(Class)</literal>. The method <literal>readData</literal> can throw a
+            &jaxrs.ProcessingException;.
+        </para>
+        <para>
+            After a connection to the server is opened by calling the <literal>open()</literal> method on the event source,
+            the <literal>eventSource</literal> starts listening to events. When an event comes, the listener will be executed
+            by the event source. Once the client is done with processing and does not want to receive events the connection by
+            calling the <literal>close()</literal> method on the event source.
+        </para>
+        <para>
+            The listener from the example above will print the following output:
+            <screen language="text" linenumbering="unnumbered">message-to-client; Hello world 0!
+message-to-client; Hello world 1!
+message-to-client; Hello world 2!
+message-to-client; Hello world 3!
+message-to-client; Hello world 4!
+message-to-client; Hello world 5!
+message-to-client; Hello world 6!
+message-to-client; Hello world 7!
+message-to-client; Hello world 8!
+message-to-client; Hello world 9!
+            </screen>
+        </para>
+        <para>
+            There are other events than the incoming data that also may occur. The <literal>SseEventSource</literal> for
+            instance always signals, that it has finished processing events, or there might also be an error while processing the
+            messages. <literal>SseEventSource</literal>. There are total of four overloaded
+            <literal>subscribe()</literal>
+            methods defined in the API.
+        </para>
+        <para>
+            <example xml:id="sse-event-source-subscribe-methods">
+                <title>SseEventSource subscribe() methods</title>
+                <programlisting language="java" linenumbering="numbered">// 1. basic one - the one we used in the example
+void subscribe(Consumer&lt;InboundSseEvent&gt; onEvent);
+
+// 2. with an error callback
+void subscribe(Consumer&lt;InboundSseEvent&gt; onEvent, Consumer&lt;Throwable&gt; onError);
+
+// 3. with an error callback and completion callback
+void subscribe(Consumer&lt;InboundSseEvent&gt; onEvent, Consumer&lt;Throwable&gt; onError, Runnable onComplete)
+
+// 4. complete one - with error callback, completion callback an onSubscribe callback
+void subscribe(Consumer&lt;SseSubscription&gt; onSubscribe, Consumer&lt;InboundSseEvent&gt; onEvent, Consumer&lt;Throwable&gt;
+onError,
+Runnable
+onComplete);
+                </programlisting>
+            </example>
+            <para>
+                Few notes to the <literal>subscribe()</literal> methods:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            All the overloaded methods have the <literal>onEvent</literal> handler. As shown in the example,
+                            this parameter is used to consume the SSE events with data.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Except the basic one-arg method, all the others contain an <literal>onError</literal> handler. In
+                            case of error, the <literal>SseEventSource</literal> invokes the <literal>onError</literal> method
+                            of all its subscribers, that registered the handler. This makes it possible to react to the error
+                            conditions in a custom manner.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Another possible argument is the <literal>onComplete</literal> handler. If registered (used an
+                            appropriate <literal>subscribe()</literal> method, that has the
+                            <literal>onComplete</literal>
+                            argument), it is invoked (for all the subscribers) every time when the
+                            <literal>SseEventSource</literal>
+                            terminates normally. Either <literal>onComplete</literal> or
+                            <literal>onError</literal>
+                            should be called every time.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            The complete <literal>subscribe()</literal> method adds the <literal>onSubscribe()</literal> callback.
+                            This gives the subscriber a tool to manage the load and do a back-pressure by incrementaly
+                            requesting only certain amount of items. When <literal>SseEventSource</literal> registers a new
+                            subscriber, it calls its <literal>onSubscribe</literal> handler and hands over the
+                            <literal>javax.ws.rs.sse.SseSubscription</literal>
+                            instance. This class only has two methods -
+                            <literal>request(long)</literal>
+                            for asking for a certain amount of events (often used as
+                            <literal>request(Long.MAX_VALUE)</literal>
+                            when no back-pressure is needed) and
+                            <literal>cancel()</literal>
+                            to stop receiving further events.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            When using the full-arg version of <literal>subscribe()</literal>, it is the caller's
+                            responsibility to manage the amount of data it can handle. The
+                            <literal>sseSubscription.request()</literal>
+                            method <emphasis>MUST</emphasis> be called, otherwise
+                            the subscriber will not receive ANY data. Furthermore, in the current
+                            <literal>SseEventSource</literal>
+                            implementation, such a subscriber will block a threadm and will
+                            occasionally lead to overflow of an internal buffer in <literal>SseEventSource</literal>. As
+                            mentioned, calling <literal>subscription.request(Long.MAX_VALUE)</literal>, e.g. in the registered
+                            <literal>onSubscribe</literal>
+                            handler is sufficient (and is also a default behaviour for all the
+                            other overloaded methods).
+                        </para>
+                    </listitem>
+                </itemizedlist>
+
+            </para>
+
+        </para>
+        <section xml:id="sse-event-source-reconnect">
+            <title>
+                <literal>SseEventSource</literal>
+                reconnect support
+            </title>
+            <para>
+                The &javax.ws.rs.sse.SseEventSource; implementation supports automated recuperation
+                from a connection loss, including negotiation of delivery of any missed events based on the last received
+                SSE event <literal>id</literal> field value, provided this field is set by the server and the negotiation
+                facility is supported by the server. In case of a connection loss, the last received SSE event
+                <literal>id</literal>
+                field value is sent in the <literal>Last-Event-ID</literal> HTTP request
+                header as part of a new connection request sent to the SSE endpoint. Upon a receipt of such reconnect request,
+                the SSE endpoint that supports this negotiation facility is expected to replay all missed events.
+            </para>
+            <note>
+                <para>
+                    Note, that SSE lost event negotiation facility is a best-effort mechanism which does not provide
+                    any guarantee that all events would be delivered without a loss. You should therefore not
+                    rely on receiving every single event and design your client application code accordingly.
+                </para>
+            </note>
+            <para>
+                By default, when a connection the the SSE endpoint is lost, the event source will use a default delay
+                before attempting to reconnect to the SSE endpoint. The SSE endpoint can however control the client-side
+                retry delay by including a special <literal>retry</literal> field value in any event sent to the client.
+                Jersey &javax.ws.rs.sse.SseEventSource; implementation automatically tracks any received SSE event
+                <literal>retry</literal>
+                field values set by the endpoint and adjusts the reconnect delay accordingly,
+                using the last received <literal>retry</literal> field value as the new reconnect delay.
+            </para>
+            <para>
+                In addition to handling the standard connection losses, Jersey &javax.ws.rs.sse.SseEventSource; automatically
+                deals with any <literal>HTTP 503 Service Unavailable</literal> responses received from the SSE endpoint,
+                that include a <literal>Retry-After</literal> HTTP header with a valid value. The
+                <literal>HTTP 503 + Retry-After</literal>
+                technique is often used by HTTP endpoints as a means of
+                connection and traffic throttling. In case a <literal>HTTP 503 + Retry-After</literal> response is received
+                in return to a connection request from SSE endpoint, Jersey <literal>SseEventSource</literal> will automatically
+                schedule a reconnect attempt and use the received <literal>Retry-After</literal> HTTP header value as a
+                one-time override of the reconnect delay.
+            </para>
+
+        </section>
+    </section>
+
+    <!--TODO - describes the Jersey-specific legacy API, change and only mention the differences -->
+
+
+    <section xml:id="overview-jersey-specific">
+        <title>Jersey-specific Server-Sent Events API</title>
+        <important>
+            <para>
+                Prior to JAX-RS 2.1, server-sent events was not standardized and was optional and implementation-specific.
+                Jersey provided its own, specific version of SSE implementation, that remains valid and functional to achieve
+                backwards compatibility. This implementation is a Jersey-specific extension of JAX-RS (2.0) standard. It works
+                with common JAX-RS resources the same way as the JAX-RS 2.1 based implementation does.
+            </para>
+            <para>
+                Both implementations are compatible, which means client based on Jersey-specific SSE implementation can "talk"
+                to server resource implemetned using JAX-RS 2.1 based implementation and vice versa.
+            </para>
+        </important>
+        <para>
+            This chapter briefly describes the Jersey-specific support for SSE, focusing on the differences against the new SSE
+            implementation described in
+            <xref linkend="overview-jaxrs"/>
+        </para>
+        <para>
+            The API contains support SSE support for both - server and client. To use the Jersey-specific SSE API, you need to
+            add the dependency to the
+        </para>
+        <para>
+            In order to add support for this SSE implementation, you also need to include the dependency to the
+            <emphasis>SSE media type module</emphasis>
+            the same way as for the JAX-RS SSE implementation.
+            <example xml:id="sse.dependency">
+                <title>Add <literal>jersey-media-sse</literal> dependency.
+                </title>
+                <programlisting language="xml" linenumbering="numbered"><![CDATA[<dependency>
+    <groupId>org.glassfish.jersey.media</groupId>
+    <artifactId>jersey-media-sse</artifactId>
+</dependency>]]></programlisting>
+            </example>
+            <note>
+                <para>
+                    Prior to Jersey 2.8, you had to manually register &jersey.sse.SseFeature; in your application.
+                    (The &lit.jersey.sse.SseFeature; is a feature that can be registered for both, the client and the server.)
+                    Since Jersey 2.8, the feature gets automatically discovered and registered when Jersey SSE module is
+                    put on the application's classpath. The automatic discovery and registration of SSE feature can be suppressed
+                    by setting &jersey.sse.SseFeature.DISABLE_SSE; property to <literal>true</literal>.
+                    The behavior can also be selectively suppressed in either client or server runtime by setting
+                    &jersey.sse.SseFeature.DISABLE_SSE_CLIENT; or &jersey.sse.SseFeature.DISABLE_SSE_SERVER; property
+                    respectively.
+                </para>
+            </note>
+        </para>
+
+        <section>
+            <title>Implementing SSE support in a JAX-RS resource</title>
+            <section>
+                <title>Simple SSE resource method</title>
+                <para>
+                    <example xml:id="example-simple-sse">
+                        <title>Simple SSE resource method</title>
+                        <programlisting language="java" linenumbering="numbered">...
+import org.glassfish.jersey.media.sse.EventOutput;
+import org.glassfish.jersey.media.sse.OutboundEvent;
+import org.glassfish.jersey.media.sse.SseFeature;
+...
+
+@Path("events")
+public static class SseResource {
+
+    @GET
+    @Produces(SseFeature.SERVER_SENT_EVENTS)
+    public EventOutput getServerSentEvents() {
+        final EventOutput eventOutput = new EventOutput();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    for (int i = 0; i &lt; 10; i++) {
+                        // ... code that waits 1 second
+                        final OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
+                        eventBuilder.name("message-to-client");
+                        eventBuilder.data(String.class, "Hello world " + i + "!");
+                        final OutboundEvent event = eventBuilder.build();
+                        eventOutput.write(event);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException("Error when writing the event.", e);
+                } finally {
+                    try {
+                        eventOutput.close();
+                    } catch (IOException ioClose) {
+                        throw new RuntimeException("Error when closing the event output.", ioClose);
+                    }
+                }
+            }
+        }).start();
+        return eventOutput;
+    }
+}
+                        </programlisting>
+                    </example>
+
+                    The code above defines the resource deployed on URI <literal>"/events"</literal>. This resource has a single
+                    &jaxrs.GET; resource method which returns as an entity &jersey.sse.EventOutput; - an extension of generic
+                    Jersey
+                    &jersey.server.ChunkedOutput; API for output chunked message processing.
+                </para>
+                <para>
+                    In the<xref linkend="example-simple-sse"/>, the resource method creates a new thread that sends a sequence of
+                    10 events. There is a 1 second delay between two subsequent events as indicated in a comment. Each event is
+                    represented by &lit.jersey.sse.OutboundEvent; type and is built with a help of an outbound event
+                    <literal>Builder</literal>. The &lit.jersey.sse.OutboundEvent; reflects the standardized format of SSE
+                    messages
+                    and contains properties that represent <literal>name</literal> (for named
+                    events), <literal>comment</literal>, <literal>data</literal> or <literal>id</literal>. The code also sets the
+                    event data media type using the <literal>mediaType(MediaType)</literal> method on the
+                    <literal>eventBuilder</literal>. The media type, together with the data type set by the
+                    <literal>data(Class, Object></literal>
+                    method (in our case <literal>String.class</literal>), is used
+                    for serialization of the event data. Note that the event data media type will not be written to any headers as
+                    the response <literal>Content-type</literal> header is already defined by the &lit.jaxrs.Produces; and set to
+                    <literal>"text/event-stream"</literal>
+                    using constant from the &lit.jersey.sse.SseFeature;.
+                    The event media type is used for serialization of event <literal>data</literal>. Event data media type and
+                    Java
+                    type are used to select the proper &jaxrs.ext.MessageBodyWriter; for event data serialization and are passed
+                    to the selected writer that serializes the event <literal>data</literal> content. In our case the string
+                    <literal>"Hello world " + i + "!"</literal>
+                    is serialized as <literal>"text/plain"</literal>. In event
+                    <literal>data</literal>
+                    you can send any Java entity and associate it with any media type that you would be able
+                    to serialize with an available &lit.jaxrs.ext.MessageBodyWriter;. Typically, you may want to send e.g. JSON
+                    data,
+                    so you would fill the <literal>data</literal> with a JAXB annotated bean instance and define media type to
+                    JSON.
+                    <note>
+                        <para>
+                            If the event media type is not set explicitly, the <literal>"text/plain"</literal> media type is used
+                            by default.
+                        </para>
+                    </note>
+                </para>
+                <para>
+                    Once an outbound event is ready, it can be written to the <literal>eventOutput</literal>. At that point the
+                    event
+                    is serialized by internal &lit.jersey.sse.OutboundEventWriter; which uses an appropriate
+                    &lit.jaxrs.ext.MessageBodyWriter; to serialize the <literal>"Hello world " + i + "!"</literal> string. You can
+                    send as many messages as you like. At the end of the thread execution the response is closed which also closes
+                    the connection to the client. After that, no more messages can be sent to the client on this connection. If
+                    the
+                    client would like to receive more messages, it would have to send a new request to the server to initiate a
+                    new SSE streaming connection.
+                </para>
+                <para>
+                    A client connecting to our SSE-enabled resource will receive the exact same output as in the corresponding
+                    example
+                    in the JAX-RS implementation example.
+
+                    <screen language="text" linenumbering="unnumbered">event: message-to-client
+data: Hello world 0!
+
+event: message-to-client
+data: Hello world 1!
+
+...
+                    </screen>
+                </para>
+            </section>
+
+            <section>
+                <title>Broadcasting</title>
+
+                <para>
+                    Jersey SSE server API defines &jersey.sse.SseBroadcaster; which allows to broadcast individual events to
+                    multiple
+                    clients. A simple broadcasting implementation is shown in the following example:
+
+                    <example>
+                        <title>Broadcasting SSE messages</title>
+                        <programlisting language="java" linenumbering="numbered">...
 import org.glassfish.jersey.media.sse.SseBroadcaster;
 ...
 
@@ -429,7 +841,6 @@ public static class BroadcasterResource {
             .build();
 
         broadcaster.broadcast(event);
-
         return "Message '" + message + "' has been broadcast.";
     }
 
@@ -440,68 +851,59 @@ public static class BroadcasterResource {
         this.broadcaster.add(eventOutput);
         return eventOutput;
     }
-}</programlisting>
-                </example>
-
-                Let's explore the example together. The <literal>BroadcasterResource</literal> resource class is annotated with
-                &jee6.inject.Singleton; annotation which tells Jersey runtime that only a single instance of the resource
-                class should be used to serve all the incoming requests to <literal>/broadcast</literal> path. This is needed as
-                we want to keep an application-wide single reference to the private <literal>broadcaster</literal> field so that
-                we can use the same instance for all requests. Clients that want to listen to SSE events first send a
-                &lit.http.GET; request to the <literal>BroadcasterResource</literal>, that is handled by the
-                <literal>listenToBroadcast()</literal> resource method.
-                The method creates a new &lit.jersey.sse.EventOutput; representing the connection to the requesting client
-                and registers this <literal>eventOutput</literal> instance with the singleton <literal>broadcaster</literal>,
-                using its <literal>add(EventOutput)</literal> method. The method then returns the <literal>eventOutput</literal>
-                which causes Jersey to bind the <literal>eventOutput</literal> instance with the requesting client and send the
-                response HTTP headers to the client. The client connection remains open and the client is now waiting ready to
-                receive new SSE events. All the events are written to the <literal>eventOutput</literal> by
-                <literal>broadcaster</literal> later on. This way developers can conveniently handle sending new events to
-                all the clients that subscribe to them.
-            </para>
-            <para>
-                When a client wants to broadcast new message to all the clients listening on their SSE connections,
-                it sends a &lit.http.POST; request to <literal>BroadcasterResource</literal> resource with the message content.
-                The method <literal>broadcastMessage(String)</literal> is invoked on <literal>BroadcasterResource</literal>
-                resource with the message content as an input parameter. A new SSE outbound event is built in the standard way
-                and passed to the broadcaster. The broadcaster internally invokes <literal>write(OutboundEvent)</literal> on all
-                registered &lit.jersey.sse.EventOutput;s. After that the method just return a standard text response
-                to the &lit.http.POST;ing client to inform the client that the message was successfully broadcast. As you can see,
-                the <literal>broadcastMessage(String)</literal> resource method is just a simple JAX-RS resource method.
-            </para>
-            <para>
-                In order to implement such a scenario, you may have noticed, that the Jersey  &lit.jersey.sse.SseBroadcaster;
-                is not mandatory to complete the use case. individual &jersey.sse.EventOutput;s can be just stored in a collection
-                and iterated over in the <literal>broadcastMessage</literal> method. However, the &lit.jersey.sse.SseBroadcaster;
-                internally identifies and handles also client disconnects. When a client closes the connection the broadcaster
-                detects this and removes the stale connection from the internal collection of the registered
-                &jersey.sse.EventOutput;s as well as it frees all the server-side resources associated with the stale connection.
-                Additionally, the &lit.jersey.sse.SseBroadcaster; is implemented to be thread-safe, so that clients can connect
-                and disconnect in any time and &lit.jersey.sse.SseBroadcaster; will always broadcast messages to the most recent
-                collection of registered and active set of clients.
-            </para>
+}
+                        </programlisting>
+                    </example>
+                    The example is similar to its relevant JAX-RS counterpart. The <literal>listenToBroadcast()</literal> resource
+                    method creates a new &lit.jersey.sse.EventOutput; representing the connection to the requesting client
+                    and registers this <literal>eventOutput</literal> instance with the singleton <literal>broadcaster</literal>,
+                    using its <literal>add(EventOutput)</literal> method. The method then returns the
+                    <literal>eventOutput</literal>
+                    which causes Jersey to bind the <literal>eventOutput</literal> instance with the requesting client and send
+                    the
+                    response HTTP headers to the client. The client connection remains open and the client is now waiting ready to
+                    receive new SSE events. All the events are written to the <literal>eventOutput</literal> by
+                    <literal>broadcaster</literal>
+                    later on.
+                </para>
+                <para>
+                    When a client wants to broadcast new message to all the clients listening on their SSE connections,
+                    it sends a &lit.http.POST; request to <literal>BroadcasterResource</literal> resource with the message
+                    content.
+                    The method <literal>broadcastMessage(String)</literal> is invoked on
+                    <literal>BroadcasterResource</literal>
+                    resource with the message content as an input parameter. A new SSE outbound event is built in the standard way
+                    and passed to the broadcaster. The broadcaster internally invokes <literal>write(OutboundEvent)</literal> on
+                    all
+                    registered &lit.jersey.sse.EventOutput;s. After that the method just return a standard text response
+                    to the &lit.http.POST;ing client to inform the client that the message was successfully broadcast.
+                </para>
+            </section>
         </section>
-    </section>
 
-    <section>
-        <title>Consuming SSE events with Jersey clients</title>
-
-        <para>
-            On the client side, Jersey exposes APIs that support receiving and processing SSE events using two programming models:
-
-            <simplelist>
-                <member>Pull model - pulling events from a &jersey.sse.EventInput;, or</member>
-                <member>Push model - listening for asynchronous notifications of &lit.jersey.sse.EventSource;</member>
-            </simplelist>
-
-            Both models will be described.
-        </para>
         <section>
-            <title>Reading SSE events with &lit.jersey.sse.EventInput;</title>
-            <para>
-                The events can be read on the client side from a &jersey.sse.EventInput;. See the following code:
+            <title>Consuming SSE events with Jersey clients</title>
 
-                <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newBuilder()
+            <para>
+                On the client side, Jersey exposes APIs that support receiving and processing SSE events using two programming
+                models:
+
+                <simplelist>
+                    <member>Pull model - pulling events from a &jersey.sse.EventInput;, or
+                    </member>
+                    <member>Push model - listening for asynchronous notifications of &lit.jersey.sse.EventSource;
+                    </member>
+                </simplelist>
+                The push model is similar to what is implemented in the JAX-RS SSE API. The pull model does not have a direct
+                counterpart in the JAX-RS API and has to be implemented by the developer, if required.
+            </para>
+            <section>
+                <title>Reading SSE events with &lit.jersey.sse.EventInput;
+                </title>
+                <para>
+                    The events can be read on the client side from a &jersey.sse.EventInput;. See the following code:
+
+                    <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newBuilder()
         .register(SseFeature.class).build();
 WebTarget target = client.target("http://localhost:9998/events");
 
@@ -512,31 +914,39 @@ while (!eventInput.isClosed()) {
         // connection has been closed
         break;
     }
-    System.out.println(inboundEvent.getName() + "; "
-        + inboundEvent.readData(String.class));
-}</programlisting>
+    System.out.println(inboundEvent.getName() + "; " + inboundEvent.readData(String.class));
+}
+                    </programlisting>
 
-                In this example, a client connects to the server where the <literal>SseResource</literal> from the
-                <xref linkend="example-simple-sse" /> is deployed. At first, a new JAX-RS/Jersey <literal>client</literal>
-                instance is created with a &lit.jersey.sse.SseFeature; registered. Then a &jaxrs.client.WebTarget; instance is
-                retrieved from the <literal>client</literal> and is used to invoke a HTTP request. The returned response entity
-                is directly read as a &lit.jersey.sse.EventInput; Java type, which is an extension of Jersey
-                &lit.jersey.client.ChunkedInput; that provides generic support for consuming chunked message payloads. The
-                code in the example then process starts a loop to process the inbound SSE events read from the
-                <literal>eventInput</literal> response stream. Each chunk read from the input is a &lit.jersey.sse.InboundEvent;.
-                The method <literal>InboundEvent.readData(Class)</literal> provides a way for the client to indicate what Java type
-                should be used for the event data de-serialization. In our example, individual events are de-serialized as
-                 <literal>String</literal> Java type instances. This method internally finds and executes a proper
-                &jaxrs.ext.MessageBodyReader; which is the used to do the actual de-serialization. This is similar to reading an
-                entity from the &jaxrs.core.Response; by <literal>readEntity(Class)</literal>. The method
-                <literal>readData</literal> can also throw a &jaxrs.ProcessingException;.
-            </para>
-            <para>
-                The &lit.null; check on <literal>inboundEvent</literal> is necessary to make sure that the chunk was properly
-                read and connection has not been closed by the server. Once the connection is closed, the loop terminates and
-                the program completes execution. The client code produces the following console output:
+                    In this example, a client connects to the server where the <literal>SseResource</literal> from the
+                    <xref linkend="example-simple-sse"/>
+                    is deployed. At first, a new JAX-RS/Jersey
+                    <literal>client</literal>
+                    instance is created with a &lit.jersey.sse.SseFeature; registered. Then a &jaxrs.client.WebTarget; instance is
+                    retrieved from the <literal>client</literal> and is used to invoke a HTTP request. The returned response
+                    entity
+                    is directly read as a &lit.jersey.sse.EventInput; Java type, which is an extension of Jersey
+                    &lit.jersey.client.ChunkedInput; that provides generic support for consuming chunked message payloads. The
+                    code in the example then process starts a loop to process the inbound SSE events read from the
+                    <literal>eventInput</literal>
+                    response stream. Each chunk read from the input is a &lit.jersey.sse.InboundEvent;.
+                    The method <literal>InboundEvent.readData(Class)</literal> provides a way for the client to indicate what Java
+                    type
+                    should be used for the event data de-serialization. In our example, individual events are de-serialized as
+                    <literal>String</literal>
+                    Java type instances. This method internally finds and executes a proper
+                    &jaxrs.ext.MessageBodyReader; which is the used to do the actual de-serialization. This is similar to reading
+                    an
+                    entity from the &jaxrs.core.Response; by <literal>readEntity(Class)</literal>. The method
+                    <literal>readData</literal>
+                    can also throw a &jaxrs.ProcessingException;.
+                </para>
+                <para>
+                    The &lit.null; check on <literal>inboundEvent</literal> is necessary to make sure that the chunk was properly
+                    read and connection has not been closed by the server. Once the connection is closed, the loop terminates and
+                    the program completes execution. The client code produces the following console output:
 
-                <screen language="text" linenumbering="unnumbered">message-to-client; Hello world 0!
+                    <screen language="text" linenumbering="unnumbered">message-to-client; Hello world 0!
 message-to-client; Hello world 1!
 message-to-client; Hello world 2!
 message-to-client; Hello world 3!
@@ -545,77 +955,88 @@ message-to-client; Hello world 5!
 message-to-client; Hello world 6!
 message-to-client; Hello world 7!
 message-to-client; Hello world 8!
-message-to-client; Hello world 9!</screen>
-            </para>
-        </section>
+message-to-client; Hello world 9!
+                    </screen>
+                </para>
+            </section>
 
-        <section>
-            <title>Asynchronous SSE processing with &lit.jersey.sse.EventSource;</title>
+            <section>
+                <title>Asynchronous SSE processing with &lit.jersey.sse.EventSource;
+                </title>
 
-            <para>
-                The main Jersey SSE client API component used to read SSE events asynchronously is &jersey.sse.EventSource;.
-                The usage of the &lit.jersey.sse.EventSource; is shown on the following example.
-                <example xml:id="sse.ex.client.eventListener">
-                    <title>Registering &lit.jersey.sse.EventListener; with &lit.jersey.sse.EventSource;</title>
-                    <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newBuilder()
-                        .register(SseFeature.class).build();
+                <para>
+                    The main Jersey-specific SSE client API component used to read SSE events asynchronously is
+                    &jersey.sse.EventSource;. The usage of the &lit.jersey.sse.EventSource; is shown on the following example.
+                    <example xml:id="sse.ex.client.eventListener">
+                        <title>Registering &lit.jersey.sse.EventListener; with &lit.jersey.sse.EventSource;
+                        </title>
+                        <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newBuilder()
+        .register(SseFeature.class).build();
 WebTarget target = client.target("http://example.com/events");
 EventSource eventSource = EventSource.target(target).build();
 EventListener listener = new EventListener() {
-        @Override
-        public void onEvent(InboundEvent inboundEvent) {
-            System.out.println(inboundEvent.getName() + "; "
-                    + inboundEvent.readData(String.class));
-        }
-    };
+    @Override
+    public void onEvent(InboundEvent inboundEvent) {
+        System.out.println(inboundEvent.getName() + "; " + inboundEvent.readData(String.class));
+    }
+};
 eventSource.register(listener, "message-to-client");
 eventSource.open();
 ...
-eventSource.close();</programlisting>
-                </example>
+eventSource.close();
+                        </programlisting>
+                    </example>
 
-                In this example, the client code again connects to the server where the <literal>SseResource</literal> from the
-                <xref linkend="example-simple-sse" /> is deployed. The &jaxrs.client.Client; instance
-                is again created and initialized with &jersey.sse.SseFeature;. Then the &jaxrs.client.WebTarget; is built.
-                In this case a request to the web target is not made directly in the code, instead, the web target instance
-                is used to initialize a new &jersey.sse.EventSource.Builder; instance that is used to build a new
-                &lit.jersey.sse.EventSource;. The choice of <literal>build()</literal> method is important, as it tells
-                the &lit.jersey.sse.EventSource.Builder; to create a new &lit.jersey.sse.EventSource; that is not automatically
-                connected to the <literal>target</literal>. The connection is established only later by manually invoking
-                the <literal>eventSource.open()</literal> method. A custom &jersey.sse.EventListener;
-                implementation is used to listen to and process incoming SSE events. The method readData(Class) says that the
-                event data should be de-serialized from a received &jersey.sse.InboundEvent; instance into a
-                <literal>String</literal> Java type. This method call internally executes &jaxrs.ext.MessageBodyReader; which
-                de-serializes the event data. This is similar to reading an entity from the &jaxrs.core.Response; by
-                <literal>readEntity(Class)</literal>. The method <literal>readData</literal> can throw a
-                &jaxrs.ProcessingException;.
-            </para>
-            <para>
-                The custom event source listener is registered in the event source via
-                &lit.jersey.sse.EventSource;<literal>.register(EventListener, String)</literal> method. The next method
-                arguments define the names of the events to receive and can be omitted. If names are defined, the listener
-                will be associated with the named events and will only invoked for events with a name from the set of defined
-                event names. It will not be invoked for events with any other name or for events without a name.
+                    In this example, the client code again connects to the server where the <literal>SseResource</literal> from
+                    the
+                    <xref linkend="example-simple-sse"/>
+                    is deployed. The &jaxrs.client.Client; instance
+                    is again created and initialized with &jersey.sse.SseFeature;. Then the &jaxrs.client.WebTarget; is built.
+                    In this case a request to the web target is not made directly in the code, instead, the web target instance
+                    is used to initialize a new &jersey.sse.EventSource.Builder; instance that is used to build a new
+                    &lit.jersey.sse.EventSource;. The choice of <literal>build()</literal> method is important, as it tells
+                    the &lit.jersey.sse.EventSource.Builder; to create a new &lit.jersey.sse.EventSource; that is not
+                    automatically
+                    connected to the <literal>target</literal>. The connection is established only later by manually invoking
+                    the <literal>eventSource.open()</literal> method. A custom &jersey.sse.EventListener;
+                    implementation is used to listen to and process incoming SSE events. The method readData(Class) says that the
+                    event data should be de-serialized from a received &jersey.sse.InboundEvent; instance into a
+                    <literal>String</literal>
+                    Java type. This method call internally executes &jaxrs.ext.MessageBodyReader; which
+                    de-serializes the event data. This is similar to reading an entity from the &jaxrs.core.Response; by
+                    <literal>readEntity(Class)</literal>. The method <literal>readData</literal> can throw a
+                    &jaxrs.ProcessingException;.
+                </para>
+                <para>
+                    The custom event source listener is registered in the event source via
+                    &lit.jersey.sse.EventSource;<literal>.register(EventListener, String)</literal>
+                    method. The next method
+                    arguments define the names of the events to receive and can be omitted. If names are defined, the listener
+                    will be associated with the named events and will only invoked for events with a name from the set of defined
+                    event names. It will not be invoked for events with any other name or for events without a name.
 
-                <important>
-                    <para>
-                        It is a common mistake to think that unnamed events will be processed by listeners that are registered
-                        to process events from a particular name set. That is NOT the case! Unnamed events are only processed
-                        by listeners that are not name-bound. The same limitation applied to HTML5 Javascript SSE Client API
-                        supported by modern browsers.
-                    </para>
-                </important>
+                    <important>
+                        <para>
+                            It is a common mistake to think that unnamed events will be processed by listeners that are registered
+                            to process events from a particular name set. That is NOT the case! Unnamed events are only processed
+                            by listeners that are not name-bound. The same limitation applied to HTML5 Javascript SSE Client API
+                            supported by modern browsers.
+                        </para>
+                    </important>
 
-                After a connection to the server is opened by calling the <literal>open()</literal> method on the event source,
-                the <literal>eventSource</literal> starts listening to events. When an event named
-                <literal>"message-to-client"</literal> comes, the listener will be executed by the event source. If any other
-                event comes (with a name different from <literal>"message-to-client"</literal>), the registered listener is not
-                invoked. Once the client is done with processing and does not want to receive events anymore, it closes the
-                connection by calling the <literal>close()</literal> method on the event source.
-            </para>
-            <para>
-                The listener from the example above will print the following output:
-                <screen language="text" linenumbering="unnumbered">message-to-client; Hello world 0!
+                    After a connection to the server is opened by calling the <literal>open()</literal> method on the event
+                    source,
+                    the <literal>eventSource</literal> starts listening to events. When an event named
+                    <literal>"message-to-client"</literal>
+                    comes, the listener will be executed by the event source. If any other
+                    event comes (with a name different from <literal>"message-to-client"</literal>), the registered listener is
+                    not
+                    invoked. Once the client is done with processing and does not want to receive events anymore, it closes the
+                    connection by calling the <literal>close()</literal> method on the event source.
+                </para>
+                <para>
+                    The listener from the example above will print the following output:
+                    <screen language="text" linenumbering="unnumbered">message-to-client; Hello world 0!
 message-to-client; Hello world 1!
 message-to-client; Hello world 2!
 message-to-client; Hello world 3!
@@ -624,81 +1045,58 @@ message-to-client; Hello world 5!
 message-to-client; Hello world 6!
 message-to-client; Hello world 7!
 message-to-client; Hello world 8!
-message-to-client; Hello world 9!</screen>
-            </para>
-            <para>
-                When browsing through the Jersey SSE API documentation, you may have noticed that the &jersey.sse.EventSource;
-                implements &jersey.sse.EventListener; and provides an empty implementation for the
-                <literal>onEvent(InboundEvent inboundEvent)</literal> listener method. This adds more flexibility to the
-                Jersey client-side SSE API. Instead of defining and registering a separate event listener, in simple scenarios
-                you can also choose to derive directly from the &lit.jersey.sse.EventSource; and override the empty listener
-                method to handle the incoming events. This programming model is shown in the following example:
+message-to-client; Hello world 9!
+                    </screen>
+                </para>
+                <para>
+                    When browsing through the Jersey SSE API documentation, you may have noticed that the &jersey.sse.EventSource;
+                    implements &jersey.sse.EventListener; and provides an empty implementation for the
+                    <literal>onEvent(InboundEvent inboundEvent)</literal>
+                    listener method. This adds more flexibility to the
+                    Jersey client-side SSE API. Instead of defining and registering a separate event listener, in simple scenarios
+                    you can also choose to derive directly from the &lit.jersey.sse.EventSource; and override the empty listener
+                    method to handle the incoming events. This programming model is shown in the following example:
 
-                <example>
-                    <title>Overriding <literal>EventSource.onEvent(InboundEvent)</literal> method</title>
-                    <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newBuilder()
-                        .register(SseFeature.class).build();
+                    <example>
+                        <title>Overriding <literal>EventSource.onEvent(InboundEvent)</literal> method
+                        </title>
+                        <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newBuilder()
+        .register(SseFeature.class).build();
 WebTarget target = client.target("http://example.com/events");
 EventSource eventSource = new EventSource(target) {
     @Override
     public void onEvent(InboundEvent inboundEvent) {
         if ("message-to-client".equals(inboundEvent.getName())) {
-            System.out.println(inboundEvent.getName() + "; "
-                    + inboundEvent.readData(String.class));
+            System.out.println(inboundEvent.getName() + "; " + inboundEvent.readData(String.class));
         }
     }
 };
 ...
-eventSource.close();</programlisting>
-                </example>
+eventSource.close();
+                        </programlisting>
+                    </example>
 
-                The code above is very similar to the code in <xref linkend="sse.ex.client.eventListener" />. In this example
-                however, the &lit.jersey.sse.EventSource; is constructed directly using a single-parameter constructor.
-                This way, the connection to the SSE endpoint is by default automatically opened at the event source
-                creation. The implementation of the &lit.jersey.sse.EventListener; has been moved into the overridden
-                <literal>EventSource.onEvent(...)</literal> method. However, this time, the listener method will be executed for
-                all events - unnamed as well as with any <literal>name</literal>. Therefore the code checks the name whether it is
-                an event with the name "message-to-client" that we want to handle. Note that you can still register
-                additional &lit.jersey.sse.EventListener;s later on. The overridden method on the event source allows you to
-                handle messages even when no additional listeners are registered yet.
-            </para>
-
-            <section>
-                <title>&lit.jersey.sse.EventSource; reconnect support</title>
-                <para>
-                    Starting in Jersey 2.3, the &lit.jersey.sse.EventSource; implementation supports automated recuperation
-                    from a connection loss, including negotiation of delivery of any missed events based on the last received
-                    SSE event <literal>id</literal> field value, provided this field is set by the server and the negotiation
-                    facility is supported by the server. In case of a connection loss, the last received SSE event
-                    <literal>id</literal> field value is send in the <literal>Last-Event-ID</literal> HTTP request
-                    header as part of a new connection request sent to the SSE endpoint. Upon a receipt of such reconnect request,
-                    the SSE endpoint that supports this negotiation facility is expected to replay all missed events.
+                    The code above is very similar to the code in<xref linkend="sse.ex.client.eventListener"/>. In this example
+                    however, the &lit.jersey.sse.EventSource; is constructed directly using a single-parameter constructor.
+                    This way, the connection to the SSE endpoint is by default automatically opened at the event source
+                    creation. The implementation of the &lit.jersey.sse.EventListener; has been moved into the overridden
+                    <literal>EventSource.onEvent(...)</literal>
+                    method. However, this time, the listener method will be executed for
+                    all events - unnamed as well as with any <literal>name</literal>. Therefore the code checks the name whether
+                    it is
+                    an event with the name "message-to-client" that we want to handle. Note that you can still register
+                    additional &lit.jersey.sse.EventListener;s later on. The overridden method on the event source allows you to
+                    handle messages even when no additional listeners are registered yet.
                 </para>
-                <note>
+
+                <section>
+                    <title>&lit.jersey.sse.EventSource; reconnect support
+                    </title>
                     <para>
-                        Note, that SSE lost event negotiation facility is a best-effort mechanism which does not provide
-                        any guaranty that all events would be delivered without a loss. You should therefore not
-                        rely on receiving every single event and design your client application code accordingly.
+                        Reconnect support in Jersey-specific &lit.jersey.sse.EventSource; works the same way as in the
+                        implementation of the JAX-RS &javax.ws.rs.sse.SseEventSource;.
                     </para>
-                </note>
-                <para>
-                    By default, when a connection the the SSE endpoint is lost, the event source will use a default delay
-                    before attempting to reconnect to the SSE endpoint. The SSE endpoint can however control the client-side
-                    retry delay by including a special <literal>retry</literal> field value in any event sent to the client.
-                    Jersey &lit.jersey.sse.EventSource; implementation automatically tracks any received SSE event
-                    <literal>retry</literal> field values set by the endpoint and adjusts the reconnect delay accordingly,
-                    using the last received <literal>retry</literal> field value as the new reconnect delay.
-                </para>
-                <para>
-                    In addition to handling the standard connection losses, Jersey &lit.jersey.sse.EventSource; automatically
-                    deals with any <literal>HTTP 503 Service Unavailable</literal> responses received from the SSE endpoint,
-                    that include a <literal>Retry-After</literal> HTTP header with a valid value. The
-                    <literal>HTTP 503 + Retry-After</literal> technique is often used by HTTP endpoints as a means of
-                    connection and traffic throttling. In case a <literal>HTTP 503 + Retry-After</literal> response is received
-                    in return to a connection request from SSE endpoint, Jersey <literal>EventSource</literal> will automatically
-                    schedule a reconnect attempt  and use the received <literal>Retry-After</literal> HTTP header value as a
-                    one-time override of the reconnect delay.
-                </para>
+                </section>
             </section>
         </section>
     </section>

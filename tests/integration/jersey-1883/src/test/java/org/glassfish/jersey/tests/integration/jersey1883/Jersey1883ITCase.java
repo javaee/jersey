@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@ package org.glassfish.jersey.tests.integration.jersey1883;
 
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.inject.hk2.Hk2InjectionManagerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -48,8 +49,9 @@ import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -57,6 +59,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class Jersey1883ITCase extends JerseyTest {
+
+    @Before
+    public void setup() {
+        Assume.assumeTrue(Hk2InjectionManagerFactory.isImmediateStrategy());
+    }
 
     @Override
     protected ResourceConfig configure() {

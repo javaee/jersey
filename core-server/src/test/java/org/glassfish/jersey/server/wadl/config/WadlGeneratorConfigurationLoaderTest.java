@@ -82,7 +82,7 @@ public class WadlGeneratorConfigurationLoaderTest {
                 MyWadlGeneratorConfig.class.getName());
 
         TestInjectionManagerFactory.BootstrapResult result =
-                TestInjectionManagerFactory.createInjectionManager(resourceConfig.getProperties());
+                TestInjectionManagerFactory.createInjectionManager(resourceConfig);
         final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
                 .createWadlGenerator(result.injectionManager);
         Assert.assertEquals(MyWadlGenerator.class, wadlGenerator.getClass());
@@ -96,7 +96,7 @@ public class WadlGeneratorConfigurationLoaderTest {
         final ResourceConfig resourceConfig = new ResourceConfig();
         resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG, config);
         TestInjectionManagerFactory.BootstrapResult result =
-                TestInjectionManagerFactory.createInjectionManager(resourceConfig.getProperties());
+                TestInjectionManagerFactory.createInjectionManager(resourceConfig);
         final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
                 .createWadlGenerator(result.injectionManager);
         Assert.assertTrue(wadlGenerator instanceof MyWadlGenerator);

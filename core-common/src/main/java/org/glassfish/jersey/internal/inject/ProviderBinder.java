@@ -356,10 +356,10 @@ public class ProviderBinder {
     }
 
     private Class<? extends Annotation> getProviderScope(final Class<?> clazz) {
-        Class<? extends Annotation> hk2Scope = Singleton.class;
+        Class<? extends Annotation> scope = Singleton.class;
         if (clazz.isAnnotationPresent(PerLookup.class)) {
-            hk2Scope = PerLookup.class;
+            scope = PerLookup.class;
         }
-        return hk2Scope;
+        return scope;
     }
 }

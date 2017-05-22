@@ -43,6 +43,7 @@ package org.glassfish.jersey.tests.e2e.json.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.json.bind.annotation.JsonbVisibility;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -60,6 +61,7 @@ import javax.xml.bind.annotation.XmlType;
         "weight", "color", "name"
 })
 @XmlRootElement()
+@JsonbVisibility(CustomJsonbVisibilityStrategy.class)
 public class FakeArrayBean {
 
     protected List<String> weight;
@@ -70,7 +72,7 @@ public class FakeArrayBean {
 
     public List<String> getWeight() {
         if (weight == null) {
-            weight = new ArrayList<String>();
+            weight = new ArrayList<>();
         }
         return this.weight;
     }

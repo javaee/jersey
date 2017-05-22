@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.util.collection;
 
 /**
@@ -57,7 +58,7 @@ public final class Refs {
 
         private final T reference;
 
-        public ImmutableRefImpl(final T value) {
+        ImmutableRefImpl(final T value) {
             this.reference = value;
         }
 
@@ -74,8 +75,8 @@ public final class Refs {
         @Override
         public String toString() {
             return "ImmutableRefImpl{"
-                   + "reference=" + reference
-                   + '}';
+                    + "reference=" + reference
+                    + '}';
         }
 
         @Override
@@ -106,11 +107,11 @@ public final class Refs {
 
         private T reference;
 
-        public DefaultRefImpl() {
+        DefaultRefImpl() {
             this.reference = null;
         }
 
-        public DefaultRefImpl(final T value) {
+        DefaultRefImpl(final T value) {
             this.reference = value;
         }
 
@@ -160,11 +161,11 @@ public final class Refs {
 
         private volatile T reference;
 
-        public ThreadSafeRefImpl() {
+        ThreadSafeRefImpl() {
             this.reference = null;
         }
 
-        public ThreadSafeRefImpl(final T value) {
+        ThreadSafeRefImpl(final T value) {
             this.reference = value;
         }
 

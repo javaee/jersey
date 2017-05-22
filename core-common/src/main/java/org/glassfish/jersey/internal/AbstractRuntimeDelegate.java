@@ -56,8 +56,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.JerseyLink;
 import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
@@ -79,27 +77,23 @@ public abstract class AbstractRuntimeDelegate extends RuntimeDelegate {
     /**
      * Initialization constructor. The injection manager will be shut down.
      *
-     * @param injectionManager injection manager.
+     * @param hps all {@link HeaderDelegateProvider} instances registered internally.
      */
-    protected AbstractRuntimeDelegate(final InjectionManager injectionManager) {
-        try {
-            hps = Providers.getProviders(injectionManager, HeaderDelegateProvider.class);
+    protected AbstractRuntimeDelegate(Set<HeaderDelegateProvider> hps) {
+        this.hps = hps;
 
-            /**
-             * Construct a map for quick look up of known header classes
-             */
-            map = new WeakHashMap<>();
-            map.put(EntityTag.class, _createHeaderDelegate(EntityTag.class));
-            map.put(MediaType.class, _createHeaderDelegate(MediaType.class));
-            map.put(CacheControl.class, _createHeaderDelegate(CacheControl.class));
-            map.put(NewCookie.class, _createHeaderDelegate(NewCookie.class));
-            map.put(Cookie.class, _createHeaderDelegate(Cookie.class));
-            map.put(URI.class, _createHeaderDelegate(URI.class));
-            map.put(Date.class, _createHeaderDelegate(Date.class));
-            map.put(String.class, _createHeaderDelegate(String.class));
-        } finally {
-            injectionManager.shutdown();
-        }
+        /*
+         * Construct a map for quick look up of known header classes
+         */
+        map = new WeakHashMap<>();
+        map.put(EntityTag.class, _createHeaderDelegate(EntityTag.class));
+        map.put(MediaType.class, _createHeaderDelegate(MediaType.class));
+        map.put(CacheControl.class, _createHeaderDelegate(CacheControl.class));
+        map.put(NewCookie.class, _createHeaderDelegate(NewCookie.class));
+        map.put(Cookie.class, _createHeaderDelegate(Cookie.class));
+        map.put(URI.class, _createHeaderDelegate(URI.class));
+        map.put(Date.class, _createHeaderDelegate(Date.class));
+        map.put(String.class, _createHeaderDelegate(String.class));
     }
 
     @Override

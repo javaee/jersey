@@ -54,7 +54,6 @@ import org.glassfish.jersey.test.netty.NettyTestContainerFactory;
 import org.glassfish.jersey.test.simple.SimpleTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 

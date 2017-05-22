@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.tests.e2e.json.entity;
 
+import javax.json.bind.annotation.JsonbVisibility;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -49,6 +50,7 @@ import org.glassfish.jersey.tests.e2e.json.JsonTestHelper;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @XmlRootElement
+@JsonbVisibility(CustomJsonbVisibilityStrategy.class)
 public class ComplexBeanWithAttributes3 {
 
     @XmlElement

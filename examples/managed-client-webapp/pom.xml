@@ -62,6 +62,11 @@
             <artifactId>jersey-grizzly-connector</artifactId>
             <scope>test</scope>
         </dependency-->
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

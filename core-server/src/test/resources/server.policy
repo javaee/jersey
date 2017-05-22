@@ -52,6 +52,11 @@ grant codebase "file:${basedir}/../media/jaxb/-" {
   permission java.security.AllPermission;
 };
 
+// in case jersey-hk2 jar is referenced directly from reactor
+grant codebase "file:${basedir}/../inject/hk2/-" {
+  permission java.security.AllPermission;
+};
+
 // in case jersey-core jar is referenced directly from reactor
 grant codebase "file:${basedir}/../core-common/-" {
   permission java.security.AllPermission;

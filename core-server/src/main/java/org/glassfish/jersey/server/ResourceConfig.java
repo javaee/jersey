@@ -64,12 +64,14 @@ import javax.ws.rs.core.Feature;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
+import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -289,12 +291,13 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         @Override
-        public void configureAutoDiscoverableProviders(final InjectionManager injectionManager, final boolean forcedOnly) {
+        public void configureAutoDiscoverableProviders(final InjectionManager injectionManager,
+                final Collection<AutoDiscoverable> autoDiscoverables, final boolean forcedOnly) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public void configureMetaProviders(final InjectionManager injectionManager) {
+        public void configureMetaProviders(final InjectionManager injectionManager, final ManagedObjectsFinalizer finalizer) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
     }
@@ -799,10 +802,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
     /**
      * Configure auto-discoverables.
      *
-     * @param injectionManager injection manager to obtain auto-discoverables from.
+     * @param injectionManager  injection manager to obtain auto-discoverables from.
+     * @param autoDiscoverables list of registered auto discoverable components.
      */
-    final void configureAutoDiscoverableProviders(final InjectionManager injectionManager) {
-        state.configureAutoDiscoverableProviders(injectionManager, false);
+    final void configureAutoDiscoverableProviders(InjectionManager injectionManager,
+            Collection<AutoDiscoverable> autoDiscoverables) {
+        state.configureAutoDiscoverableProviders(injectionManager, autoDiscoverables, false);
     }
 
     /**
@@ -810,12 +815,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
      *
      * @param injectionManager injection manager to obtain auto-discoverables from.
      */
-    final void configureForcedAutoDiscoverableProviders(final InjectionManager injectionManager) {
-        state.configureAutoDiscoverableProviders(injectionManager, true);
+    final void configureForcedAutoDiscoverableProviders(InjectionManager injectionManager) {
+        state.configureAutoDiscoverableProviders(injectionManager, Collections.emptyList(), true);
     }
 
-    final void configureMetaProviders(InjectionManager injectionManager) {
-        state.configureMetaProviders(injectionManager);
+    final void configureMetaProviders(InjectionManager injectionManager, ManagedObjectsFinalizer finalizer) {
+        state.configureMetaProviders(injectionManager, finalizer);
     }
 
     @Override
@@ -1187,6 +1192,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
                     original.getSingletons().stream()
                             .filter(external -> !originalRegistrations.contains(external.getClass()))
                             .collect(Collectors.toSet());
+
             registerInstances(externalInstances);
 
             // Register externally provided classes.

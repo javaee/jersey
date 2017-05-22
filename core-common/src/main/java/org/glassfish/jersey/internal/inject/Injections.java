@@ -41,11 +41,11 @@
 package org.glassfish.jersey.internal.inject;
 
 import java.util.Iterator;
-import java.util.ServiceLoader;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.ServiceFinder;
 
 /**
  * Injection binding utility methods.
@@ -71,7 +71,10 @@ public class Injections {
      * @return a injection manager with all the bindings.
      */
     public static InjectionManager createInjectionManager(Binder binder) {
-        return lookupInjectionManagerFactory().create(binder);
+        InjectionManagerFactory injectionManagerFactory = lookupInjectionManagerFactory();
+        InjectionManager injectionManager = injectionManagerFactory.create();
+        injectionManager.register(binder);
+        return injectionManager;
     }
 
     /**
@@ -87,12 +90,11 @@ public class Injections {
     }
 
     private static InjectionManagerFactory lookupInjectionManagerFactory() {
-        Iterator<InjectionManagerFactory> iterator = ServiceLoader.load(InjectionManagerFactory.class).iterator();
+        Iterator<InjectionManagerFactory> iterator = ServiceFinder.find(InjectionManagerFactory.class).iterator();
         if (iterator.hasNext()) {
             return iterator.next();
         } else {
-            // TODO: Log that there is no explicitly configured InjectionManager, default is used.
-            return new Hk2InjectionManagerFactory();
+            throw new IllegalStateException(LocalizationMessages.INJECTION_MANAGER_FACTORY_NOT_FOUND());
         }
     }
 

@@ -169,8 +169,8 @@ public class ClientDestroyTest extends JerseyTest {
     }
 
     public static class FooListener implements ClientRequestFilter, ClientLifecycleListener {
-        public static boolean INITIALIZED = false;
-        public static boolean CLOSED = false;
+        public static volatile boolean INITIALIZED = false;
+        public static volatile boolean CLOSED = false;
 
         @Override
         public void filter(final ClientRequestContext requestContext) throws IOException { /* do nothing */ }
@@ -196,8 +196,8 @@ public class ClientDestroyTest extends JerseyTest {
     }
 
     public static class BarListener implements ClientRequestFilter, ClientLifecycleListener {
-        protected boolean closed = false;
-        protected boolean initialized = false;
+        protected volatile boolean closed = false;
+        protected volatile boolean initialized = false;
 
         @Override
         public void filter(final ClientRequestContext requestContext) throws IOException { /* do nothing */ }

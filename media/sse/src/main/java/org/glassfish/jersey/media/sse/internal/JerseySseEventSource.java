@@ -47,34 +47,32 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.Flow;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.sse.InboundSseEvent;
 import javax.ws.rs.sse.SseEventSource;
-import javax.ws.rs.sse.SseSubscription;
 
 import org.glassfish.jersey.client.ClientExecutor;
 import org.glassfish.jersey.client.JerseyWebTarget;
+import org.glassfish.jersey.internal.jsr166.Flow;
 import org.glassfish.jersey.internal.util.JerseyPublisher;
 import org.glassfish.jersey.media.sse.EventInput;
 import org.glassfish.jersey.media.sse.EventListener;
-import org.glassfish.jersey.media.sse.EventSource;
-import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.LocalizationMessages;
 
 
 /**
  * {@code SseEventSource} implementation.
  */
-public class JerseySseEventSource implements SseEventSource, EventListener {
+public class JerseySseEventSource implements SseEventSource, SseEventListener<InboundSseEvent> {
 
+    private static final long DEFAULT_RECONNECT_DELAY = 500;
     private static final Level CONNECTION_ERROR_LEVEL = Level.FINE;
     private static final Logger LOGGER = Logger.getLogger(JerseySseEventSource.class.getName());
 
-    private static final Consumer<SseSubscription> DEFAULT_SUBSCRIPTION_HANDLER =
+    private static final Consumer<Flow.Subscription> DEFAULT_SUBSCRIPTION_HANDLER =
             sseSubscription -> sseSubscription.request(Long.MAX_VALUE);
 
     private static final Consumer<Throwable> DEFAULT_ERROR_HANDLER =
@@ -135,25 +133,19 @@ public class JerseySseEventSource implements SseEventSource, EventListener {
     }
 
     @Override
-    public void onEvent(final InboundEvent inboundEvent) {
+    public void onEvent(final InboundSseEvent inboundEvent) {
         publisher.publish(inboundEvent);
     }
 
     public static class Builder extends javax.ws.rs.sse.SseEventSource.Builder {
 
         private WebTarget endpoint;
-        private long reconnectDelay;
-        private TimeUnit reconnectTimeUnit;
+        private long reconnectDelay = DEFAULT_RECONNECT_DELAY;
+        private TimeUnit reconnectTimeUnit = TimeUnit.MILLISECONDS;
 
         @Override
         protected Builder target(final WebTarget endpoint) {
             this.endpoint = endpoint;
-            return this;
-        }
-
-        @Override
-        public Builder named(final String name) {
-            // NO-OP - not supported now
             return this;
         }
 
@@ -175,24 +167,23 @@ public class JerseySseEventSource implements SseEventSource, EventListener {
     }
 
     @Override
-    public void subscribe(final Consumer<InboundSseEvent> onEvent) {
+    public void register(final Consumer<InboundSseEvent> onEvent) {
         this.subscribe(DEFAULT_SUBSCRIPTION_HANDLER, onEvent, DEFAULT_ERROR_HANDLER, () -> {
         });
     }
 
     @Override
-    public void subscribe(final Consumer<InboundSseEvent> onEvent, final Consumer<Throwable> onError) {
+    public void register(final Consumer<InboundSseEvent> onEvent, final Consumer<Throwable> onError) {
         this.subscribe(DEFAULT_SUBSCRIPTION_HANDLER, onEvent, onError, () -> {
         });
     }
 
     @Override
-    public void subscribe(final Consumer<InboundSseEvent> onEvent, final Consumer<Throwable> onError, final Runnable onComplete) {
+    public void register(final Consumer<InboundSseEvent> onEvent, final Consumer<Throwable> onError, final Runnable onComplete) {
         this.subscribe(DEFAULT_SUBSCRIPTION_HANDLER, onEvent, onError, onComplete);
     }
 
-    @Override
-    public void subscribe(final Consumer<SseSubscription> onSubscribe,
+    public void subscribe(final Consumer<Flow.Subscription> onSubscribe,
                           final Consumer<InboundSseEvent> onEvent,
                           final Consumer<Throwable> onError,
                           final Runnable onComplete) {
@@ -203,7 +194,7 @@ public class JerseySseEventSource implements SseEventSource, EventListener {
         publisher.subscribe(new Flow.Subscriber<InboundSseEvent>() {
             @Override
             public void onSubscribe(final Flow.Subscription subscription) {
-                onSubscribe.accept(new SseSubscription() {
+                onSubscribe.accept(new Flow.Subscription() {
                     @Override
                     public void request(final long n) {
                         subscription.request(n);
@@ -268,7 +259,7 @@ public class JerseySseEventSource implements SseEventSource, EventListener {
      * Private event processor task responsible for connecting to the SSE stream and processing
      * incoming SSE events as well as handling any connection issues.
      */
-    private class EventProcessor implements Runnable, EventListener {
+    private class EventProcessor implements Runnable, SseEventListener<InboundSseEvent> {
 
         /**
          * Open connection response arrival synchronization latch.
@@ -368,7 +359,7 @@ public class JerseySseEventSource implements SseEventSource, EventListener {
          * The {@code reconnectDelay} and {@code lastEventId} field values are propagated into the newly
          * scheduled task.
          * <p>
-         * The method will silently abort in case the event source is not {@link EventSource#isOpen() open}.
+         * The method will silently abort in case the event source is not {@link SseEventSource#isOpen() open}.
          * </p>
          *
          * @param reconnectDelay    specifies the amount of time in [reconnectTimeUnits] to wait before attempting a reconnect.
@@ -403,13 +394,13 @@ public class JerseySseEventSource implements SseEventSource, EventListener {
         /**
          * Called by the event source when an inbound event is received.
          * <p>
-         * This listener aggregator method is responsible for invoking {@link EventSource#onEvent(InboundEvent)}
+         * This listener aggregator method is responsible for invoking {@link JerseySseEventSource#onEvent(InboundSseEvent)}
          * method on the owning event source as well as for notifying all registered {@link EventListener event listeners}.
          *
-         * @param inboundEvent incoming {@link InboundEvent inbound event}.
+         * @param inboundEvent incoming {@link InboundSseEvent inbound event}.
          */
         @Override
-        public void onEvent(final InboundEvent inboundEvent) {
+        public void onEvent(final InboundSseEvent inboundEvent) {
             if (inboundEvent == null) {
                 return;
             }
@@ -442,5 +433,6 @@ public class JerseySseEventSource implements SseEventSource, EventListener {
             }
         }
     }
+
 
 }

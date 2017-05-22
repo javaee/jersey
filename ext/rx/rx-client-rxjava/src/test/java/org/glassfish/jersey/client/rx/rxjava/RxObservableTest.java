@@ -70,6 +70,7 @@ import rx.Subscriber;
 public class RxObservableTest {
 
     private Client client;
+    private Client clientWithExecutor;
     private ExecutorService executor;
 
     @Before
@@ -80,6 +81,10 @@ public class RxObservableTest {
                 .setNameFormat("jersey-rx-client-test-%d")
                 .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
                 .build());
+
+        clientWithExecutor = ClientBuilder.newBuilder().executorService(executor).build();
+        clientWithExecutor.register(TerminalClientRequestFilter.class);
+        clientWithExecutor.register(RxObservableInvokerProvider.class);
     }
 
     @After
@@ -102,10 +107,10 @@ public class RxObservableTest {
 
     @Test
     public void testNotFoundWithCustomExecutor() throws Exception {
-        final RxObservableInvoker invoker = client.target("http://jersey.java.net")
-                                                  .request()
-                                                  .header("Response-Status", 404)
-                                                  .rx(RxObservableInvoker.class, executor);
+        final RxObservableInvoker invoker = clientWithExecutor.target("http://jersey.java.net")
+                                                              .request()
+                                                              .header("Response-Status", 404)
+                                                              .rx(RxObservableInvoker.class);
 
         testInvoker(invoker, 404, true);
     }
@@ -218,7 +223,7 @@ public class RxObservableTest {
 
         // Executor.
         assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread
-                ? containsString("jersey-rx-client-test") : containsString("RxIoScheduler"));
+                ? containsString("jersey-rx-client-test") : containsString("jersey-client-async-executor"));
 
         // Properties.
         assertThat(response.getHeaderString("Test-Uri"), is("http://jersey.java.net"));

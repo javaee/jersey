@@ -57,6 +57,9 @@ import javax.ws.rs.core.FeatureContext;
  *  then the request is repeated with authentication information. This mode has negative impact on the performance.
  *  The advantage is that it does not send credentials when they are not needed. This mode must
  *  be combined with usage of SSL/TLS as the password is send only BASE64 encoded.
+ *  <p/>
+ *  Please note that when you use non-preemptive authentication, Jersey client will make 2 requests to a resource,
+ *  which also means that all registered filters will be invoked twice.
  *  </li>
  *  <li><b>DIGEST:</b> Http digest authentication. Does not require usage of SSL/TLS.</li>
  *  <li><b>UNIVERSAL:</b> Combination of basic and digest authentication. The feature works in non-preemptive
