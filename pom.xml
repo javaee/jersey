@@ -1796,7 +1796,6 @@
             <id>java.net-releases</id>
             <url>https://maven.java.net/content/repositories/releases</url>
         </repository>
-
         <repository>
             <id>yasson-releases</id>
             <name>Yasson Releases repository</name>
@@ -1883,8 +1882,8 @@
         <jetty.servlet.api.25.version>6.1.14</jetty.servlet.api.25.version>
         <jmh.version>1.10.2</jmh.version>
         <jmockit.version>1.18</jmockit.version>
-        <jsonp.ri.version>1.0.4</jsonp.ri.version>
-        <jsonp.jaxrs.version>1.0</jsonp.jaxrs.version>
+        <jsonp.ri.version>1.1</jsonp.ri.version>
+        <jsonp.jaxrs.version>1.1.1</jsonp.jaxrs.version>
         <jsp.version>2.0</jsp.version>
         <jstl.version>1.2</jstl.version>
         <jta.api.version>1.2</jta.api.version>

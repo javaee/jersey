@@ -53,8 +53,11 @@ import javax.ws.rs.core.Response;
 
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
+import javax.json.JsonString;
 import javax.json.JsonStructure;
+import javax.json.JsonValue;
 
 import org.glassfish.jersey.jsonp.JsonProcessingFeature;
 import org.glassfish.jersey.server.JSONP;
@@ -62,10 +65,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -73,16 +74,25 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Michal Gajdos
  */
-@RunWith(ConcurrentRunner.class)
+// @RunWith(ConcurrentRunner.class)
 public class JsonProcessingTest extends JerseyTest {
 
-    private static final String JSON_OBJECT_STR = "{\"foo\":\"bar\"}";
-    private static final String JSON_ARRAY_STR = "[" + JSON_OBJECT_STR + "," + JSON_OBJECT_STR + "]";
+    private static final String JSON_OBJECT_STR1 = "{\"foo\":\"bar\"}";
+    private static final String JSON_OBJECT_STR2 = "{\"foo\": 12345}";
+    private static final String JSON_ARRAY_STR1 = "[" + JSON_OBJECT_STR1 + "," + JSON_OBJECT_STR1 + "]";
+    private static final String JSON_ARRAY_STR2 = "[" + JSON_OBJECT_STR2 + "," + JSON_OBJECT_STR2 + "]";
     private static final String JSON_ARRAY_VALUE_STR = "[null]";
 
-    private static final JsonObject JSON_OBJECT = Json.createReader(new StringReader(JSON_OBJECT_STR)).readObject();
-    private static final JsonArray JSON_ARRAY = Json.createReader(new StringReader(JSON_ARRAY_STR)).readArray();
-    private static final JsonArray JSON_ARRAY_VALUE = Json.createReader(new StringReader(JSON_ARRAY_VALUE_STR)).readArray();
+    private static final JsonObject JSON_OBJECT = Json.createReader(new StringReader(JSON_OBJECT_STR1)).readObject();
+    private static final JsonArray JSON_ARRAY = Json.createReader(new StringReader(JSON_ARRAY_STR1)).readArray();
+    private static final JsonArray JSON_ARRAY_VALUE = Json.createReader(new StringReader(JSON_ARRAY_VALUE_STR))
+                                                          .readArray();
+
+    private static final JsonValue JSON_VALUE_BOOL = JsonValue.TRUE;
+    private static final JsonString JSON_VALUE_STRING = Json.createReader(
+            new StringReader(JSON_ARRAY_STR1)).readArray().getJsonObject(0).getJsonString("foo");
+    private static final JsonNumber JSON_VALUE_NUMBER = Json.createReader(
+            new StringReader(JSON_ARRAY_STR2)).readArray().getJsonObject(0).getJsonNumber("foo");
 
     @Path("/")
     public static class Resource {
@@ -103,6 +113,24 @@ public class JsonProcessingTest extends JerseyTest {
         @Path("jsonArray")
         public JsonArray postJsonArray(final JsonArray jsonArray) {
             return jsonArray;
+        }
+
+        @POST
+        @Path("jsonValue")
+        public JsonValue postJsonValue(final JsonValue jsonValue) {
+            return jsonValue;
+        }
+
+        @POST
+        @Path("jsonString")
+        public JsonString postJsonString(final JsonString jsonString) {
+            return jsonString;
+        }
+
+        @POST
+        @Path("jsonNumber")
+        public JsonValue postJsonNumber(final JsonNumber jsonNumber) {
+            return jsonNumber;
         }
 
         @GET
@@ -134,7 +162,8 @@ public class JsonProcessingTest extends JerseyTest {
 
     @Test
     public void testJsonObjectAsString() throws Exception {
-        final Response response = target("jsonObject").request(MediaType.APPLICATION_JSON).post(Entity.json(JSON_OBJECT_STR));
+        final Response response = target("jsonObject").request(MediaType.APPLICATION_JSON)
+                                                      .post(Entity.json(JSON_OBJECT_STR1));
 
         assertEquals(JSON_OBJECT, response.readEntity(JsonObject.class));
     }
@@ -148,7 +177,8 @@ public class JsonProcessingTest extends JerseyTest {
 
     @Test
     public void testJsonObjectAsStringPlus() throws Exception {
-        final Response response = target("jsonObject").request("application/foo+json").post(Entity.json(JSON_OBJECT_STR));
+        final Response response = target("jsonObject").request("application/foo+json")
+                                                      .post(Entity.json(JSON_OBJECT_STR1));
 
         assertEquals(JSON_OBJECT, response.readEntity(JsonObject.class));
     }
@@ -162,7 +192,8 @@ public class JsonProcessingTest extends JerseyTest {
 
     @Test
     public void testJsonObjectAsStringWrongTarget() throws Exception {
-        final Response response = target("jsonArray").request(MediaType.APPLICATION_JSON).post(Entity.json(JSON_OBJECT_STR));
+        final Response response = target("jsonArray").request(MediaType.APPLICATION_JSON)
+                                                     .post(Entity.json(JSON_OBJECT_STR1));
 
         assertEquals(500, response.getStatus());
     }
@@ -176,7 +207,8 @@ public class JsonProcessingTest extends JerseyTest {
 
     @Test
     public void testJsonObjectAsStringWrongEntity() throws Exception {
-        final Response response = target("jsonObject").request(MediaType.APPLICATION_JSON).post(Entity.json(JSON_ARRAY_STR));
+        final Response response = target("jsonObject").request(MediaType.APPLICATION_JSON)
+                                                      .post(Entity.json(JSON_ARRAY_STR1));
 
         assertEquals(500, response.getStatus());
     }
@@ -191,7 +223,7 @@ public class JsonProcessingTest extends JerseyTest {
     @Test
     public void testJsonObjectAsStringWrongMediaType() throws Exception {
         final Response response = target("jsonObject").request(MediaType.APPLICATION_OCTET_STREAM)
-                .post(Entity.json(JSON_OBJECT_STR));
+                                                      .post(Entity.json(JSON_OBJECT_STR1));
 
         assertEquals(500, response.getStatus());
     }
@@ -205,7 +237,8 @@ public class JsonProcessingTest extends JerseyTest {
 
     @Test
     public void testJsonArrayAsString() throws Exception {
-        final Response response = target("jsonArray").request(MediaType.APPLICATION_JSON).post(Entity.json(JSON_ARRAY_STR));
+        final Response response = target("jsonArray").request(MediaType.APPLICATION_JSON)
+                                                     .post(Entity.json(JSON_ARRAY_STR1));
 
         assertEquals(JSON_ARRAY, response.readEntity(JsonArray.class));
     }
@@ -219,7 +252,8 @@ public class JsonProcessingTest extends JerseyTest {
 
     @Test
     public void testJsonArrayAsStringPlus() throws Exception {
-        final Response response = target("jsonArray").request("application/foo+json").post(Entity.json(JSON_ARRAY_STR));
+        final Response response = target("jsonArray").request("application/foo+json")
+                                                     .post(Entity.json(JSON_ARRAY_STR1));
 
         assertEquals(JSON_ARRAY, response.readEntity(JsonArray.class));
     }
@@ -233,7 +267,8 @@ public class JsonProcessingTest extends JerseyTest {
 
     @Test
     public void testJsonArrayAsStringWrongTarget() throws Exception {
-        final Response response = target("jsonObject").request(MediaType.APPLICATION_JSON).post(Entity.json(JSON_ARRAY_STR));
+        final Response response = target("jsonObject").request(MediaType.APPLICATION_JSON)
+                                                      .post(Entity.json(JSON_ARRAY_STR1));
 
         assertEquals(500, response.getStatus());
     }
@@ -247,7 +282,8 @@ public class JsonProcessingTest extends JerseyTest {
 
     @Test
     public void testJsonArrayAsStringWrongEntity() throws Exception {
-        final Response response = target("jsonArray").request(MediaType.APPLICATION_JSON).post(Entity.json(JSON_OBJECT_STR));
+        final Response response = target("jsonArray").request(MediaType.APPLICATION_JSON)
+                                                     .post(Entity.json(JSON_OBJECT_STR1));
 
         assertEquals(500, response.getStatus());
     }
@@ -262,7 +298,7 @@ public class JsonProcessingTest extends JerseyTest {
     @Test
     public void testJsonArraytAsStringWrongMediaType() throws Exception {
         final Response response = target("jsonArray").request(MediaType.APPLICATION_OCTET_STREAM)
-                .post(Entity.json(JSON_ARRAY_STR));
+                                                     .post(Entity.json(JSON_ARRAY_STR1));
 
         assertEquals(500, response.getStatus());
     }
@@ -289,10 +325,58 @@ public class JsonProcessingTest extends JerseyTest {
     }
 
     @Test
+    public void testJsonValueBool() throws Exception {
+        final Response response = target("jsonValue").request(MediaType.APPLICATION_JSON)
+                                                     .post(Entity.json(JSON_VALUE_BOOL));
+
+        assertEquals(JSON_VALUE_BOOL, response.readEntity(JsonValue.class));
+    }
+
+    @Test
+    public void testJsonValueString() throws Exception {
+        final Response response = target("jsonString").request(MediaType.APPLICATION_JSON)
+                                                      .post(Entity.json(JSON_VALUE_STRING));
+
+        assertEquals(JSON_VALUE_STRING, response.readEntity(JsonString.class));
+    }
+
+    @Test
+    public void testJsonValueStringAsValue() throws Exception {
+        final Response response = target("jsonValue").request(MediaType.APPLICATION_JSON)
+                                                     .post(Entity.json(JSON_VALUE_STRING));
+
+        assertEquals(JSON_VALUE_STRING, response.readEntity(JsonString.class));
+    }
+
+    @Test
+    public void testJsonValueStringAsString() throws Exception {
+        final Response response = target("jsonValue").request(MediaType.APPLICATION_JSON)
+                                                     .post(Entity.json("\"Red 5\""));
+
+        assertEquals("Red 5", response.readEntity(JsonString.class).getString());
+    }
+
+    @Test
+    public void testJsonValueNumber() throws Exception {
+        final Response response = target("jsonNumber").request(MediaType.APPLICATION_JSON)
+                                                      .post(Entity.json(JSON_VALUE_NUMBER));
+
+        assertEquals(JSON_VALUE_NUMBER, response.readEntity(JsonNumber.class));
+    }
+
+    @Test
+    public void testJsonValueNumberAsValue() throws Exception {
+        final Response response = target("jsonValue").request(MediaType.APPLICATION_JSON)
+                                                     .post(Entity.json(JSON_VALUE_NUMBER));
+
+        assertEquals(JSON_VALUE_NUMBER, response.readEntity(JsonNumber.class));
+    }
+
+    @Test
     public void testJsonObjectWithPadding() throws Exception {
         final Response response = target("jsonObjectWithPadding").request("application/javascript").get();
 
         assertThat(response.getStatus(), is(200));
-        assertThat(response.readEntity(String.class), is(JSONP.DEFAULT_CALLBACK + "(" + JSON_OBJECT_STR + ")"));
+        assertThat(response.readEntity(String.class), is(JSONP.DEFAULT_CALLBACK + "(" + JSON_OBJECT_STR1 + ")"));
     }
 }
