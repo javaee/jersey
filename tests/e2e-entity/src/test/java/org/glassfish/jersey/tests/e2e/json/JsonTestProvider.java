@@ -57,7 +57,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.jackson1.Jackson1Feature;
 import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonFeature;
-import org.glassfish.jersey.jsonb.JsonbFeature;
+import org.glassfish.jersey.jsonb.JsonBindingFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
@@ -168,7 +168,7 @@ public abstract class JsonTestProvider {
 
     public static class JsonbTestProvider extends JsonTestProvider {
         public JsonbTestProvider() {
-            setFeature(new JsonbFeature());
+            setFeature(new JsonBindingFeature());
             getProviders().add(new JsonbContextResolver());
         }
     }

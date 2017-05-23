@@ -46,22 +46,22 @@ import javax.annotation.Priority;
 
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
-import org.glassfish.jersey.jsonb.JsonbFeature;
+import org.glassfish.jersey.jsonb.JsonBindingFeature;
 
 /**
- * {@link ForcedAutoDiscoverable} registering {@link JsonbFeature} if the feature is not already registered.
+ * {@link ForcedAutoDiscoverable} registering {@link JsonBindingFeature} if the feature is not already registered.
  * <p>
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
- * @see JsonbFeature
+ * @see JsonBindingFeature
  */
 @Priority(AutoDiscoverable.DEFAULT_PRIORITY - 200)
-public class JsonbAutoDiscoverable implements ForcedAutoDiscoverable {
+public class JsonBindingAutoDiscoverable implements ForcedAutoDiscoverable {
 
     @Override
     public void configure(final FeatureContext context) {
-        if (!context.getConfiguration().isRegistered(JsonbFeature.class)) {
-            context.register(JsonbFeature.class);
+        if (!context.getConfiguration().isRegistered(JsonBindingFeature.class)) {
+            context.register(JsonBindingFeature.class);
         }
     }
 }

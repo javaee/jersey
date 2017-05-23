@@ -45,12 +45,15 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.Providers;
 
 import javax.json.bind.Jsonb;
@@ -62,18 +65,26 @@ import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider
 
 /**
  * Entity provider (reader and writer) for JSONB.
+ *
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public class JsonbProvider extends AbstractMessageReaderWriterProvider<Object> {
+@Provider
+@Produces({"application/json", "text/json", "*/*"})
+@Consumes({"application/json", "text/json", "*/*"})
+public class JsonBindingProvider extends AbstractMessageReaderWriterProvider<Object> {
+
+    private static final String JSON = "json";
+    private static final String PLUS_JSON = "+json";
 
     private Providers providers;
 
-    public JsonbProvider(@Context Providers providers) {
+    public JsonBindingProvider(@Context Providers providers) {
         this.providers = providers;
     }
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return MediaType.APPLICATION_JSON_TYPE.isCompatible(mediaType);
+        return supportsMediaType(mediaType);
     }
 
     @Override
@@ -92,7 +103,7 @@ public class JsonbProvider extends AbstractMessageReaderWriterProvider<Object> {
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return MediaType.APPLICATION_JSON_TYPE.isCompatible(mediaType);
+        return supportsMediaType(mediaType);
     }
 
     @Override
@@ -118,6 +129,14 @@ public class JsonbProvider extends AbstractMessageReaderWriterProvider<Object> {
         } else {
             return JsonbSingleton.INSTANCE.getInstance();
         }
+    }
+
+    /**
+     * @return true for all media types of the pattern *&#47;json and
+     * *&#47;*+json.
+     */
+    private static boolean supportsMediaType(final MediaType mediaType) {
+        return mediaType.getSubtype().equals(JSON) || mediaType.getSubtype().endsWith(PLUS_JSON);
     }
 
     private enum JsonbSingleton {

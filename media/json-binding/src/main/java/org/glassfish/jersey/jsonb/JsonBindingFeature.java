@@ -46,12 +46,13 @@ import javax.ws.rs.core.FeatureContext;
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.InternalProperties;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.jsonb.internal.JsonbProvider;
+import org.glassfish.jersey.jsonb.internal.JsonBindingAutoDiscoverable;
+import org.glassfish.jersey.jsonb.internal.JsonBindingProvider;
 
 /**
  * Feature used to register Jackson JSON providers.
  * <p>
- * The Feature is automatically enabled when {@link org.glassfish.jersey.jsonb.internal.JsonbAutoDiscoverable} is on classpath.
+ * The Feature is automatically enabled when {@link JsonBindingAutoDiscoverable} is on classpath.
  * Default JSON-B configuration obtained by calling {@code JsonbBuilder.create()} is used.
  * <p>
  * Custom configuration, if required, can be achieved by implementing custom {@link javax.ws.rs.ext.ContextResolver} and
@@ -70,9 +71,9 @@ import org.glassfish.jersey.jsonb.internal.JsonbProvider;
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public class JsonbFeature implements Feature {
+public class JsonBindingFeature implements Feature {
 
-    private static final String JSON_FEATURE = JsonbFeature.class.getSimpleName();
+    private static final String JSON_FEATURE = JsonBindingFeature.class.getSimpleName();
 
     @Override
     public boolean configure(final FeatureContext context) {
@@ -92,8 +93,7 @@ public class JsonbFeature implements Feature {
         context.property(PropertiesHelper.getPropertyNameForRuntime(
                 InternalProperties.JSON_FEATURE, config.getRuntimeType()), JSON_FEATURE);
 
-        context.register(JsonbProvider.class);
-
+        context.register(JsonBindingProvider.class);
 
         return true;
     }
