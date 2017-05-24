@@ -48,6 +48,7 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.container.ConnectionCallback;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.ext.WriterInterceptor;
@@ -62,6 +63,30 @@ import org.glassfish.jersey.server.internal.process.MappableException;
  * Used for sending messages in "typed" chunks. Useful for long running processes,
  * which needs to produce partial responses.
  *
+ * Every call to {@link #write(Object)} causes the chunk to be serialized  in the request scope,
+ * which (usually, but depends on the underpinning writer) flushes the content of the chunk to
+ * the client.
+ *
+ * Flushing multiple chunks shortly after one another can be expensive. In this case, chunks can be
+ * batched using {@link #batch()}. Chunks are batched using {@link ChunkedOutput.Batch#add(Object)}
+ * and written out when {@link Batch#close()} is invoked. The {@link ChunkedOutput.Batch} instance
+ * is designed to run in a try-with-resources constructs. For example:
+ *
+ * <pre>
+ * ChunkedOutput<MyObject> output = ...
+ *
+ * try (final Batch batch = output.batch()) {
+ *   batch.add(new MyObject()); // ob1
+ *   output.write(new MyObject()); // ob2 is written out immediately
+ *   batch.add(new MyObject()); // ob3
+ * } // <-- both batched chunks are outputted; overall resulting order: ob2, ob1, ob3
+ * </pre>
+ *
+ * The chunks are outputted in the order they are batched.
+ *
+ * <b>IMPORTANT:</b> It is possible that, when writing chunks to a {@link ChunkedOutput} in
+ * parallel, single writes and closing batches can interleave the respective chunks.
+ *
  * @param <T> chunk type.
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula
@@ -69,9 +94,11 @@ import org.glassfish.jersey.server.internal.process.MappableException;
  */
 // TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
 public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
+
     private static final byte[] ZERO_LENGTH_DELIMITER = new byte[0];
 
-    private final BlockingDeque<T> queue = new LinkedBlockingDeque<>();
+    // Visible for tests
+    /* package */ final BlockingDeque<T> queue = new LinkedBlockingDeque<>();
     private final byte[] chunkDelimiter;
 
     private volatile boolean closed = false;
@@ -163,6 +190,62 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     }
 
     /**
+     * Creates a batch that allows to add chunks to the {@link ChunkedOutput} without each chunk
+     * been immediately flushed to the client.
+     *
+     * Chunks are added to the batch using {@link Batch#add(Object)} and are written out when
+     * {@link Batch#close()} is invoked. Chunks added to the batch are queued in a dedicated,
+     * queue that is merged into the "main" {@link ChunkedOutput} queue upon the invocation of this
+     * batch's {@link #close()}. Adding chunks to a batch will not interfere with invocations of
+     * {@link ChunkedOutput#write(Object)} or with invocations on other batches.
+     *
+     * <b>IMPORTANT:</b> Creating and populating multiple batches in parallel is supported, although
+     * care must be applied upon closing them. The closing of a batch and the writing of its chunks
+     * is not synchronized with the closing of other batches or invocations of
+     * {@link ChunkedOutput#write(Object)}. Thus, using batches in a multi-threaded fashion may lead
+     * to interleaving of chunks from the batches as well as of single chunks written using
+     * {@link ChunkedOutput#write(Object)}.
+     */
+    public Batch<T> batch() {
+        return new Batch<T>() {
+            private final AtomicBoolean closed = new AtomicBoolean(false);
+            private final BlockingDeque<T> batchedChunks = new LinkedBlockingDeque<T>();
+
+            @Override
+            public Batch add(T chunk) {
+                if (closed.get()) {
+                    throw new IllegalStateException(LocalizationMessages.CHUNKED_OUTPUT_BATCH_CLOSED());
+                }
+
+                if (chunk != null) {
+                    batchedChunks.add(chunk);
+                }
+
+                return this;
+            }
+
+            @Override
+            public boolean isClosed() {
+                return closed.get();
+            }
+
+            @Override
+            public void close() throws IOException {
+                if (!closed.compareAndSet(false, true)) {
+                    throw new IOException(LocalizationMessages.CHUNKED_OUTPUT_BATCH_CLOSED());
+                }
+
+                if (ChunkedOutput.this.closed) {
+                    throw new IOException(LocalizationMessages.CHUNKED_OUTPUT_CLOSED());
+                }
+
+                batchedChunks.drainTo(queue);
+                flushQueue();
+            }
+        };
+    }
+
+    /**
      * Write a chunk.
      *
      * @param chunk a chunk instance to be written.
@@ -180,7 +263,8 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
         flushQueue();
     }
 
-    private void flushQueue() throws IOException {
+    // Visible for tests
+    /*package */ void flushQueue() throws IOException {
         if (requestScopeInstance == null || requestContext == null || responseContext == null) {
             return;
         }
@@ -371,4 +455,32 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
         this.asyncContext = asyncContext;
         flushQueue();
     }
+
+    public interface Batch<T> extends Closeable {
+        /**
+         * Adds a chunk to this batch.
+         *
+         * @param chunk         Chunk to be added to the batch
+         * @throws IllegalArgumentException  If {@link #close()} has already been invoked on this batch
+         */
+        Batch add(T chunk);
+
+        /**
+         * Writes the accumulated chunks to the underpinning {@link ChunkedOutput}.
+         * After closing the batch, no more chunks can be added to it via {@link #add(Object)}.
+         * (Although, new batches can be created from the underpinning {@link ChunkedOutput}.)
+         *
+         * @throws IOException  If this batch or the underpinning {@link ChunkedOutput} have already
+         *                      been closed.
+         */
+        void close() throws IOException;
+
+        /**
+         * Get state information.
+         *
+         * @return true when closed, false otherwise.
+         */
+        boolean isClosed();
+    }
+
 }

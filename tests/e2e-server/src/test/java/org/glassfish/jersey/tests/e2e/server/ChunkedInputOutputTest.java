@@ -45,6 +45,9 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -99,6 +102,37 @@ public class ChunkedInputOutputTest extends JerseyTest {
                         output.write("test");
                         output.write("test");
                         output.write("test");
+                    } catch (final IOException e) {
+                        LOGGER.log(Level.SEVERE, "Error writing chunk.", e);
+                    } finally {
+                        try {
+                            output.close();
+                        } catch (final IOException e) {
+                            LOGGER.log(Level.INFO, "Error closing chunked output.", e);
+                        }
+                    }
+                }
+            }.start();
+
+            return output;
+        }
+
+        @GET
+        @Path("batch")
+        public ChunkedOutput<String> getBatch() {
+            final ChunkedOutput<String> output = new ChunkedOutput<>(String.class, "\r\n");
+
+            new Thread() {
+                @Override
+                public void run() {
+                    try (final ChunkedOutput.Batch batch_1 = output.batch();
+                         final ChunkedOutput.Batch batch_2 = output.batch()) {
+                        batch_1.add("batch_1");
+                        batch_2.add("batch_2");
+                        output.write("chunk_1");
+                        batch_1.add("batch_1");
+                        batch_2.add("batch_2");
+                        output.write("chunk_2");
                     } catch (final IOException e) {
                         LOGGER.log(Level.SEVERE, "Error writing chunk.", e);
                     } finally {
@@ -203,6 +237,25 @@ public class ChunkedInputOutputTest extends JerseyTest {
 
         assertEquals("Unexpected value of chunked response unmarshalled as a single string.",
                 "test\r\ntest\r\ntest\r\n", response);
+    }
+
+    /**
+     * Test retrieving chunked response stream composed of two interleaving batches and
+     * single writes.
+     *
+     * Expectation: single writes, although "queued" later, get written our first (as batches
+     * were not closed yet). Batches are not interleaved with one another, and since both are
+     * declared and closed within a try-with-resource statement, the chunks added to the second
+     * batch are printed out before the first.
+     *
+     * @throws Exception in case of a failure during the test execution.
+     */
+    @Test
+    public void testChunkedBatchedOutputToSingleString() throws Exception {
+        final String response = target().path("test/batch").request().get(String.class);
+
+        assertEquals("Unexpected value of chunked response unmarshalled as a single string.",
+            "chunk_1\r\nchunk_2\r\nbatch_2\r\nbatch_2\r\nbatch_1\r\nbatch_1\r\n", response);
     }
 
     /**
