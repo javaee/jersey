@@ -49,9 +49,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseContext;
@@ -65,8 +65,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
-import javax.annotation.Priority;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
@@ -222,15 +220,21 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
         Type result = null; // which authentication is requested: BASIC or DIGEST
         boolean authenticate;
 
+        // If the server requests both BASIC and DIGEST, prefer DIGEST since it's stronger
+        // (see https://tools.ietf.org/html/rfc2617#section-4.6)
         if (response.getStatus() == Response.Status.UNAUTHORIZED.getStatusCode()) {
-            String authString = response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE);
-            if (authString != null) {
-                final String upperCaseAuth = authString.trim().toUpperCase();
-                if (upperCaseAuth.startsWith("BASIC")) {
-                    result = Type.BASIC;
-                } else if (upperCaseAuth.startsWith("DIGEST")) {
-                    result = Type.DIGEST;
-                } else {
+            List<String> authStrings = response.getHeaders().get(HttpHeaders.WWW_AUTHENTICATE);
+            if (authStrings != null) {
+                for (String authString : authStrings) {
+                    final String upperCaseAuth = authString.trim().toUpperCase();
+                    if (result == null && upperCaseAuth.startsWith("BASIC")) {
+                        result = Type.BASIC;
+                    } else if (upperCaseAuth.startsWith("DIGEST")) {
+                        result = Type.DIGEST;
+                    }
+                }
+
+                if (result == null) {
                     // unknown authentication -> this filter cannot authenticate with this method
                     return;
                 }
