@@ -41,6 +41,7 @@
 package org.glassfish.jersey.client.authentication;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -149,7 +150,9 @@ final class DigestAuthenticator {
             final HttpAuthenticationFilter.Credentials cred = HttpAuthenticationFilter.getCredentials(request,
                     this.credentials, HttpAuthenticationFilter.Type.DIGEST);
             if (cred == null) {
-
+                if (response.hasEntity()) {
+                    discardInputAndClose(response.getEntityStream());
+                }
                 throw new ResponseAuthenticationException(null, LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_DIGEST());
             }
 
@@ -372,6 +375,25 @@ final class DigestAuthenticator {
         randomGenerator.nextBytes(bytes);
         return bytesToHex(bytes);
     }
+
+    private static void discardInputAndClose(InputStream is) {
+      byte[] buf = new byte[4096];
+      try {
+          while (true) {
+              if (is.read(buf) <= 0) {
+                  break;
+              }
+          }
+      } catch (IOException ex) {
+          // ignore
+      } finally {
+          try {
+              is.close();
+          } catch (IOException ex) {
+              // ignore
+          }
+      }
+   }
 
     private enum QOP {
 
