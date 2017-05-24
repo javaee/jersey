@@ -46,7 +46,6 @@ import java.io.StringWriter;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.inject.LocalizationMessages;
 
 import org.glassfish.hk2.api.ErrorInformation;
 import org.glassfish.hk2.api.ErrorService;

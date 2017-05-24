@@ -42,6 +42,8 @@ package org.glassfish.jersey.inject.hk2;
 
 import java.security.AccessController;
 
+import javax.annotation.Priority;
+
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerFactory;
@@ -51,6 +53,7 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
  * Factory which is able to create {@link InjectionManager} instance using service loading and automatically initialize injection
  * manager using {@code parent} or immediately registers binder.
  */
+@Priority(10)
 public class Hk2InjectionManagerFactory implements InjectionManagerFactory {
 
     /**

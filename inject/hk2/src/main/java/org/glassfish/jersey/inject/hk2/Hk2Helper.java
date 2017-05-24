@@ -386,7 +386,7 @@ class Hk2Helper {
     private static org.glassfish.hk2.utilities.AliasDescriptor<?> createAlias(ServiceLocator locator,
             ActiveDescriptor<?> descriptor, AliasBinding alias) {
         org.glassfish.hk2.utilities.AliasDescriptor<?> hk2Alias = new org.glassfish.hk2.utilities.AliasDescriptor<>(locator,
-                descriptor, alias.getContract(), null);
+                descriptor, alias.getContract().getName(), null);
         alias.getQualifiers().forEach(hk2Alias::addQualifierAnnotation);
         alias.getScope().ifPresent(hk2Alias::setScope);
         alias.getRank().ifPresent(hk2Alias::setRanking);

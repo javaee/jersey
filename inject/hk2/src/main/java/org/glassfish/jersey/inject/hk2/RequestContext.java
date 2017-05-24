@@ -76,7 +76,7 @@ public class RequestContext implements Context<RequestScoped> {
 
     @Override
     public <U> U findOrCreate(ActiveDescriptor<U> activeDescriptor, ServiceHandle<?> root) {
-        final RequestScope.Instance instance = requestScope.current();
+        Hk2RequestScope.Instance instance = (Hk2RequestScope.Instance) requestScope.current();
 
         U retVal = instance.get(ForeignDescriptor.wrap(activeDescriptor));
         if (retVal == null) {
@@ -88,7 +88,7 @@ public class RequestContext implements Context<RequestScoped> {
 
     @Override
     public boolean containsKey(ActiveDescriptor<?> descriptor) {
-        RequestScope.Instance instance = requestScope.current();
+        Hk2RequestScope.Instance instance = (Hk2RequestScope.Instance) requestScope.current();
         return instance.contains(ForeignDescriptor.wrap(descriptor));
     }
 
@@ -104,7 +104,7 @@ public class RequestContext implements Context<RequestScoped> {
 
     @Override
     public void destroyOne(ActiveDescriptor<?> descriptor) {
-        RequestScope.Instance instance = requestScope.current();
+        Hk2RequestScope.Instance instance = (Hk2RequestScope.Instance) requestScope.current();
         instance.remove(ForeignDescriptor.wrap(descriptor));
     }
 

@@ -91,6 +91,7 @@ import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundExceptio
 import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.TracingLogger;
+import org.glassfish.jersey.process.internal.RequestContext;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
@@ -246,7 +247,7 @@ public class ServerRuntime {
 
         request.checkState();
         final Responder responder = new Responder(context, ServerRuntime.this);
-        final RequestScope.Instance requestScopeInstance = requestScope.createInstance();
+        final RequestContext requestScopeInstance = requestScope.createContext();
 
         final AsyncResponderHolder asyncResponderHolder =
                 new AsyncResponderHolder(responder, externalRequestScope,
@@ -327,24 +328,24 @@ public class ServerRuntime {
 
         private final Responder responder;
         private final ExternalRequestScope externalScope;
-        private final RequestScope.Instance scopeInstance;
+        private final RequestContext requestContext;
         private final ExternalRequestContext<?> externalContext;
 
         private volatile AsyncResponder asyncResponder;
 
         private AsyncResponderHolder(final Responder responder,
                                      final ExternalRequestScope externalRequestScope,
-                                     final RequestScope.Instance scopeInstance,
+                                     final RequestContext requestContext,
                                      final ExternalRequestContext<?> externalContext) {
             this.responder = responder;
             this.externalScope = externalRequestScope;
-            this.scopeInstance = scopeInstance;
+            this.requestContext = requestContext;
             this.externalContext = externalContext;
         }
 
         @Override
         public AsyncContext get() {
-            final AsyncResponder ar = new AsyncResponder(responder, scopeInstance, externalScope, externalContext);
+            final AsyncResponder ar = new AsyncResponder(responder, requestContext, externalScope, externalContext);
             asyncResponder = ar;
             return ar;
         }
@@ -356,7 +357,7 @@ public class ServerRuntime {
 
         public void release() {
             if (asyncResponder == null) {
-                scopeInstance.release();
+                requestContext.release();
             }
         }
     }
@@ -787,7 +788,7 @@ public class ServerRuntime {
 
         private final Responder responder;
         // TODO this instance should be released once async invocation is finished.
-        private final RequestScope.Instance scopeInstance;
+        private final RequestContext requestContext;
         private final ExternalRequestContext<?> foreignScopeInstance;
         private final ExternalRequestScope requestScopeListener;
 
@@ -796,11 +797,11 @@ public class ServerRuntime {
         private final List<AbstractCallbackRunner<?>> callbackRunners;
 
         public AsyncResponder(final Responder responder,
-                              final RequestScope.Instance scopeInstance,
+                              final RequestContext requestContext,
                               final ExternalRequestScope requestScopeListener,
                               final ExternalRequestContext<?> foreignScopeInstance) {
             this.responder = responder;
-            this.scopeInstance = scopeInstance;
+            this.requestContext = requestContext;
             this.foreignScopeInstance = foreignScopeInstance;
             this.requestScopeListener = requestScopeListener;
 
@@ -836,7 +837,7 @@ public class ServerRuntime {
             responder.runtime.managedAsyncExecutor.get().submit(new Runnable() {
                 @Override
                 public void run() {
-                    responder.runtime.requestScope.runInScope(scopeInstance, new Runnable() {
+                    responder.runtime.requestScope.runInScope(requestContext, new Runnable() {
                         @Override
                         public void run() {
                             try {
@@ -914,9 +915,9 @@ public class ServerRuntime {
             }
 
             try {
-                responder.runtime.requestScope.runInScope(scopeInstance, handler);
+                responder.runtime.requestScope.runInScope(requestContext, handler);
             } finally {
-                scopeInstance.release();
+                requestContext.release();
             }
 
             return true;
@@ -971,7 +972,7 @@ public class ServerRuntime {
                 cancelled = true;
             }
 
-            responder.runtime.requestScope.runInScope(scopeInstance, new Runnable() {
+            responder.runtime.requestScope.runInScope(requestContext, new Runnable() {
                 @Override
                 public void run() {
                     try {

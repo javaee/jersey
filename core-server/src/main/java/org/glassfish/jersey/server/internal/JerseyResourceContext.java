@@ -193,7 +193,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
             binding = Bindings.service(resource).to(resourceClass);
 
             for (Class contract : Providers.getProviderContracts(resourceClass)) {
-                binding.addAlias(contract.getName())
+                binding.addAlias(contract)
                         .in(scope.getName())
                         .qualifiedBy(CustomAnnotationLiteral.INSTANCE);
             }
@@ -233,7 +233,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
             descriptor = Bindings.serviceAsContract(resourceClass).in(scope);
 
             for (Class contract : providerModel.getContracts()) {
-                descriptor.addAlias(contract.getName())
+                descriptor.addAlias(contract)
                         .in(scope.getName())
                         .ranked(providerModel.getPriority(contract))
                         .qualifiedBy(CustomAnnotationLiteral.INSTANCE);

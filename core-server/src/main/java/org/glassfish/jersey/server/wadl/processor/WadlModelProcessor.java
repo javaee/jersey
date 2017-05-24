@@ -131,8 +131,7 @@ public class WadlModelProcessor implements ModelProcessor {
         private Provider<ExtendedUriInfo> extendedUriInfo;
 
         @Context
-        private Provider<WadlApplicationContext> wadlApplicationContext;
-
+        private WadlApplicationContext wadlApplicationContext;
 
         @Override
         public Response apply(ContainerRequestContext containerRequestContext) {
@@ -141,7 +140,7 @@ public class WadlModelProcessor implements ModelProcessor {
             // TODO: support multiple resources, see ignored tests in WadlResourceTest.Wadl8Test
             final UriInfo uriInfo = containerRequestContext.getUriInfo();
 
-            final Application wadlApplication = wadlApplicationContext.get().getApplication(uriInfo,
+            final Application wadlApplication = wadlApplicationContext.getApplication(uriInfo,
                     resource.getResources().get(0), WadlUtils.isDetailedWadlRequested(uriInfo));
 
             if (wadlApplication == null) {
@@ -153,7 +152,7 @@ public class WadlModelProcessor implements ModelProcessor {
 
             byte[] bytes;
             try {
-                final Marshaller marshaller = wadlApplicationContext.get().getJAXBContext().createMarshaller();
+                final Marshaller marshaller = wadlApplicationContext.getJAXBContext().createMarshaller();
                 marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
                 final ByteArrayOutputStream os = new ByteArrayOutputStream();
                 marshaller.marshal(wadlApplication, os);

@@ -105,7 +105,8 @@ public final class Bindings {
      */
     @SuppressWarnings("unchecked")
     public static <T> ClassBinding<T> service(GenericType<T> serviceType) {
-        return (ClassBinding<T>) new ClassBinding<>(serviceType.getRawType()).asType(serviceType.getType());
+        return (ClassBinding<T>) new ClassBinding<>(serviceType.getRawType())
+                .asType((Class<T>) serviceType.getType());
     }
 
     /**
@@ -120,7 +121,7 @@ public final class Bindings {
     @SuppressWarnings("unchecked")
     public static <T> ClassBinding<T> serviceAsContract(GenericType<T> serviceType) {
         return (ClassBinding<T>) new ClassBinding<>(serviceType.getRawType())
-                .asType(serviceType.getType())
+                .asType((Class<T>) serviceType.getType())
                 .to(serviceType.getType());
     }
 
@@ -136,7 +137,7 @@ public final class Bindings {
     @SuppressWarnings("unchecked")
     public static <T> ClassBinding<T> serviceAsContract(Type serviceType) {
         return new ClassBinding<>((Class<T>) ReflectionHelper.getRawClass(serviceType))
-                .asType(serviceType)
+                .asType((Class<T>) serviceType)
                 .to(serviceType);
     }
 

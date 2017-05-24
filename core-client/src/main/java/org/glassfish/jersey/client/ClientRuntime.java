@@ -72,6 +72,7 @@ import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.internal.ChainableStage;
+import org.glassfish.jersey.process.internal.RequestContext;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
@@ -111,7 +112,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
     public ClientRuntime(final ClientConfig config, final Connector connector, final InjectionManager injectionManager,
             final BootstrapBag bootstrapBag) {
         Provider<Ref<ClientRequest>> clientRequest =
-                injectionManager.getInstance(new GenericType<Provider<Ref<ClientRequest>>>() {}.getType());
+                () -> injectionManager.getInstance(new GenericType<Ref<ClientRequest>>() {}.getType());
 
         RequestProcessingInitializationStage requestProcessingInitializationStage =
                 new RequestProcessingInitializationStage(clientRequest, bootstrapBag.getMessageBodyWorkers(), injectionManager);
@@ -257,7 +258,7 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
      * <p>
      * NOTE: the method does not explicitly start a new request scope context. Instead
      * it is assumed that the method is invoked from within a context of a proper, running
-     * {@link RequestScope.Instance request scope instance}. A caller may use the
+     * {@link RequestContext request context}. A caller may use the
      * {@link #getRequestScope()} method to retrieve the request scope instance and use it to
      * initialize the proper request scope context prior the method invocation.
      * </p>

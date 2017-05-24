@@ -41,11 +41,10 @@
 package org.glassfish.jersey.tests.e2e.common.process.internal;
 
 import java.lang.reflect.Type;
-import java.util.concurrent.Callable;
 
+import org.glassfish.jersey.inject.hk2.Hk2RequestScope;
 import org.glassfish.jersey.internal.inject.ForeignDescriptor;
 import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.RequestScope.Instance;
 
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
@@ -64,40 +63,32 @@ public class RequestScopeTest {
 
     @Test
     public void testScopeWithCreatedInstance() {
-        final RequestScope requestScope = new RequestScope();
+        final RequestScope requestScope = new Hk2RequestScope();
         assertNull(requestScope.suspendCurrent());
-        final Instance instance = requestScope.createInstance();
+        final Hk2RequestScope.Instance context = (Hk2RequestScope.Instance) requestScope.createContext();
         ForeignDescriptor inhab = ForeignDescriptor.wrap(new TestProvider("a"));
-        instance.put(inhab, "1");
-        requestScope.runInScope(instance, new Runnable() {
-
-            @Override
-            public void run() {
-                assertEquals("1", instance.get(inhab));
-                instance.release();
-                assertEquals("1", instance.get(inhab));
-            }
+        context.put(inhab, "1");
+        requestScope.runInScope(context, () -> {
+            assertEquals("1", context.get(inhab));
+            context.release();
+            assertEquals("1", context.get(inhab));
         });
-        assertNull(instance.get(inhab));
+        assertNull(context.get(inhab));
     }
 
     @Test
     public void testScopeReleaseInsideScope() {
-        final RequestScope requestScope = new RequestScope();
+        final RequestScope requestScope = new Hk2RequestScope();
         assertNull(requestScope.suspendCurrent());
-        final Instance instance = requestScope.createInstance();
+        final Hk2RequestScope.Instance instance = (Hk2RequestScope.Instance) requestScope.createContext();
         ForeignDescriptor inhab = ForeignDescriptor.wrap(new TestProvider("a"));
         instance.put(inhab, "1");
-        requestScope.runInScope(instance, new Runnable() {
-
-            @Override
-            public void run() {
-                final Instance internalInstance = requestScope.suspendCurrent();
-                assertEquals(internalInstance, instance);
-                assertEquals("1", instance.get(inhab));
-                instance.release();
-                assertEquals("1", instance.get(inhab));
-            }
+        requestScope.runInScope(instance, () -> {
+            final Hk2RequestScope.Instance internalInstance = (Hk2RequestScope.Instance) requestScope.suspendCurrent();
+            assertEquals(internalInstance, instance);
+            assertEquals("1", instance.get(inhab));
+            instance.release();
+            assertEquals("1", instance.get(inhab));
         });
         assertEquals("1", instance.get(inhab));
         instance.release();
@@ -106,19 +97,15 @@ public class RequestScopeTest {
 
     @Test
     public void testScopeWithImplicitInstance() throws Exception {
-        final RequestScope requestScope = new RequestScope();
+        final RequestScope requestScope = new Hk2RequestScope();
         assertNull(requestScope.suspendCurrent());
         ForeignDescriptor inhab = ForeignDescriptor.wrap(new TestProvider("a"));
-        final Instance instance = requestScope.runInScope(new Callable<Instance>() {
-
-            @Override
-            public Instance call() throws Exception {
-                final Instance internalInstance = requestScope.suspendCurrent();
-                assertNull(internalInstance.get(inhab));
-                internalInstance.put(inhab, "1");
-                assertEquals("1", internalInstance.get(inhab));
-                return internalInstance;
-            }
+        final Hk2RequestScope.Instance instance = requestScope.runInScope(() -> {
+            final Hk2RequestScope.Instance internalInstance = (Hk2RequestScope.Instance) requestScope.suspendCurrent();
+            assertNull(internalInstance.get(inhab));
+            internalInstance.put(inhab, "1");
+            assertEquals("1", internalInstance.get(inhab));
+            return internalInstance;
         });
         assertEquals("1", instance.get(inhab));
         instance.release();
@@ -127,32 +114,24 @@ public class RequestScopeTest {
 
     @Test
     public void testScopeWithTwoInternalTasks() throws Exception {
-        final RequestScope requestScope = new RequestScope();
+        final RequestScope requestScope = new Hk2RequestScope();
         assertNull(requestScope.suspendCurrent());
         ForeignDescriptor inhab = ForeignDescriptor.wrap(new TestProvider("a"));
-        final Instance instance = requestScope.runInScope(new Callable<Instance>() {
+        final Hk2RequestScope.Instance instance = requestScope.runInScope(() -> {
+            final Hk2RequestScope.Instance internalInstance = (Hk2RequestScope.Instance) requestScope.suspendCurrent();
 
-            @Override
-            public Instance call() throws Exception {
-                final Instance internalInstance = requestScope.suspendCurrent();
+            final Hk2RequestScope.Instance anotherInstance = requestScope.runInScope(() -> {
+                final Hk2RequestScope.Instance currentInstance = (Hk2RequestScope.Instance) requestScope.suspendCurrent();
+                assertTrue(!currentInstance.equals(internalInstance));
+                currentInstance.put(inhab, "1");
+                return currentInstance;
+            });
+            assertTrue(!anotherInstance.equals(internalInstance));
+            assertEquals("1", anotherInstance.get(inhab));
+            anotherInstance.release();
+            assertNull(anotherInstance.get(inhab));
 
-                final Instance anotherInstance = requestScope.runInScope(new Callable<Instance>() {
-
-                    @Override
-                    public Instance call() throws Exception {
-                        final Instance currentInstance = requestScope.suspendCurrent();
-                        assertTrue(!currentInstance.equals(internalInstance));
-                        currentInstance.put(inhab, "1");
-                        return currentInstance;
-                    }
-                });
-                assertTrue(!anotherInstance.equals(internalInstance));
-                assertEquals("1", anotherInstance.get(inhab));
-                anotherInstance.release();
-                assertNull(anotherInstance.get(inhab));
-
-                return internalInstance;
-            }
+            return internalInstance;
         });
         instance.release();
         assertNull(instance.get(inhab));
@@ -160,21 +139,17 @@ public class RequestScopeTest {
 
     @Test
     public void testMultipleGetInstanceCalls() throws Exception {
-        final RequestScope requestScope = new RequestScope();
+        final RequestScope requestScope = new Hk2RequestScope();
         assertNull(requestScope.suspendCurrent());
         ForeignDescriptor inhab = ForeignDescriptor.wrap(new TestProvider("a"));
-        final Instance instance = requestScope.runInScope(new Callable<Instance>() {
-
-            @Override
-            public Instance call() throws Exception {
-                final Instance internalInstance = requestScope.suspendCurrent();
-                internalInstance.put(inhab, "1");
-                requestScope.suspendCurrent();
-                requestScope.suspendCurrent();
-                requestScope.suspendCurrent();
-                requestScope.suspendCurrent();
-                return internalInstance;
-            }
+        final Hk2RequestScope.Instance instance = requestScope.runInScope(() -> {
+            final Hk2RequestScope.Instance internalInstance = (Hk2RequestScope.Instance) requestScope.suspendCurrent();
+            internalInstance.put(inhab, "1");
+            requestScope.suspendCurrent();
+            requestScope.suspendCurrent();
+            requestScope.suspendCurrent();
+            requestScope.suspendCurrent();
+            return internalInstance;
         });
         assertEquals("1", instance.get(inhab));
         instance.release();

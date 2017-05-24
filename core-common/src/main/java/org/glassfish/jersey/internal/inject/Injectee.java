@@ -110,9 +110,23 @@ public interface Injectee {
     ForeignDescriptor getInjecteeDescriptor();
 
     /**
-     * This method returns {@code true} if the injectee value is provided using factory class.
+     * This method returns scope in which the parent class is registered.
+     *
+     * @return scope annotation.
+     */
+    Class<? extends Annotation> getParentClassScope();
+
+    /**
+     * This method returns {@code true} if the injectee value is provided using {@link java.util.function.Supplier}.
      *
      * @return {@code true} if the injectee is a factory.
      */
     boolean isFactory();
+
+    /**
+     * This method returns {@code true} if the injectee value is provided using {@link javax.inject.Provider}.
+     *
+     * @return {@code true} if the injectee is a provider.
+     */
+    boolean isProvider();
 }

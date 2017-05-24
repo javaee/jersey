@@ -72,6 +72,7 @@ public class InstanceBinding<T> extends Binding<T, InstanceBinding<T>> {
         if (contractType != null) {
             this.to(contractType);
         }
+        asType(service.getClass());
     }
 
     /**

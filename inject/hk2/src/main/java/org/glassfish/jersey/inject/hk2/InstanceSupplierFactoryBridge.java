@@ -73,7 +73,6 @@ public class InstanceSupplierFactoryBridge<T> implements Factory<T> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public T provide() {
         return supplier.get();
     }

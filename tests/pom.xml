@@ -64,6 +64,7 @@
         <module>e2e-client</module>
         <module>e2e-core-common</module>
         <module>e2e-entity</module>
+        <module>e2e-inject</module>
         <module>e2e-server</module>
         <module>e2e-testng</module>
         <module>integration</module>

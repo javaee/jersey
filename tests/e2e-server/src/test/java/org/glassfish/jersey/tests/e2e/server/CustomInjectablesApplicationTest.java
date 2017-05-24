@@ -58,6 +58,7 @@ import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.inject.hk2.Hk2InjectionManagerFactory;
+import org.glassfish.jersey.inject.hk2.Hk2RequestScope;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 import org.glassfish.jersey.internal.inject.Binder;
@@ -219,7 +220,7 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
                 new AbstractBinder() {
                     @Override
                     protected void configure() {
-                        bind(new RequestScope()).to(RequestScope.class);
+                        bind(Hk2RequestScope.class).to(RequestScope.class).in(Singleton.class);
                         bindAsContract(MyInjectablePerRequest.class).in(RequestScoped.class);
                         bindAsContract(MyInjectableSingleton.class).in(Singleton.class);
                     }
@@ -256,7 +257,9 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
         Binder binder = new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(new RequestScope()).to(RequestScope.class);
+                bind(Hk2RequestScope.class)
+                        .to(RequestScope.class)
+                        .in(Singleton.class);
 
                 bindAsContract(MyInjectablePerRequest.class)
                         .in(RequestScoped.class);

@@ -43,6 +43,7 @@ package org.glassfish.jersey.internal.util.collection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collector;
@@ -74,6 +75,19 @@ public class ImmutableCollectors {
      */
     public static <T> Collector<T, Set<T>, Set<T>> toImmutableSet() {
         return Collector.of(HashSet::new, Set::add, (left, right) -> {
+            left.addAll(right);
+            return left;
+        }, Collections::unmodifiableSet);
+    }
+
+    /**
+     * Creates a {@link Collector} of an immutable Set for {@link java.util.stream.Stream#collect(Collector)}.
+     *
+     * @param <T> type of the immutable linked hash set.
+     * @return collector for immutable linked hash set.
+     */
+    public static <T> Collector<T, Set<T>, Set<T>> toImmutableLinkedSet() {
+        return Collector.of(LinkedHashSet::new, Set::add, (left, right) -> {
             left.addAll(right);
             return left;
         }, Collections::unmodifiableSet);

@@ -48,7 +48,7 @@ import java.util.function.Supplier;
  * @param <T> type of the bean described by this injection binding descriptor.
  * @author Petr Bouda (petr.bouda at oracle.com)
  */
-public class SupplierInstanceBinding<T> extends Binding<T, SupplierInstanceBinding<T>> {
+public class SupplierInstanceBinding<T> extends Binding<Supplier<T>, SupplierInstanceBinding<T>> {
 
     private final Supplier<T> supplier;
 

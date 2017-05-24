@@ -93,7 +93,6 @@ public class SupplierFactoryBridge<T> implements Factory<T> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public T provide() {
         if (beanType != null) {
             Supplier<T> supplier = locator.getService(beanType, beanName);

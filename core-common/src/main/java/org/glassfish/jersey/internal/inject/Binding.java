@@ -65,7 +65,7 @@ public abstract class Binding<T, D extends Binding> {
     private final Set<AliasBinding> aliases = new HashSet<>();
     private Class<? extends Annotation> scope = null;
     private String name = null;
-    private Type implementationType = null;
+    private Class<T> implementationType = null;
     private String analyzer = null;
     private Boolean proxiable = null;
     private Boolean proxyForSameScope = null;
@@ -139,7 +139,7 @@ public abstract class Binding<T, D extends Binding> {
      *
      * @return service's type.
      */
-    public Type getImplementationType() {
+    public Class<T> getImplementationType() {
         return implementationType;
     }
 
@@ -166,6 +166,7 @@ public abstract class Binding<T, D extends Binding> {
      *
      * @return current instance.
      */
+    // TODO: Candidate to remove, used only in legacy CDI integration.
     public D analyzeWith(String analyzer) {
         this.analyzer = analyzer;
         return (D) this;
@@ -252,10 +253,9 @@ public abstract class Binding<T, D extends Binding> {
      * @param contract contract of the alias.
      * @return instance of a new alias for this binding descriptor that can be further specified.
      */
-    public AliasBinding addAlias(String contract) {
+    public AliasBinding addAlias(Class<?> contract) {
         AliasBinding alias = new AliasBinding(contract);
         aliases.add(alias);
-
         return alias;
     }
 
@@ -293,8 +293,8 @@ public abstract class Binding<T, D extends Binding> {
      *
      * @return current instance.
      */
-    D asType(Type t) {
-        this.implementationType = t;
+    D asType(Class type) {
+        this.implementationType = type;
         return (D) this;
     }
 }

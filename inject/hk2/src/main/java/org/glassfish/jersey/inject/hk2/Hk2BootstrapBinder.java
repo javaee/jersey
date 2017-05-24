@@ -40,6 +40,10 @@
 
 package org.glassfish.jersey.inject.hk2;
 
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.process.internal.RequestScope;
+
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
@@ -72,5 +76,8 @@ public class Hk2BootstrapBinder extends AbstractBinder {
                 new ContextInjectionResolverImpl.Binder(),
                 // Improved HK2 Error reporting.
                 new JerseyErrorService.Binder());
+
+        // Register Request scope with HK2 instance.
+        bind(Hk2RequestScope.class).to(RequestScope.class).in(Singleton.class);
     }
 }

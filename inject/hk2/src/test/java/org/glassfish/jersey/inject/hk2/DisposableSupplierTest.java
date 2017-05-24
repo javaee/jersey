@@ -272,7 +272,7 @@ public class DisposableSupplierTest {
                             .to(String.class)
                             .in(RequestScoped.class);
 
-                    binder.bind(new RequestScope())
+                    binder.bind(Hk2RequestScope.class)
                             .to(RequestScope.class);
                 });
 
@@ -305,7 +305,7 @@ public class DisposableSupplierTest {
                             .to(String.class)
                             .in(RequestScoped.class);
 
-                    binder.bind(new RequestScope())
+                    binder.bind(Hk2RequestScope.class)
                             .to(RequestScope.class);
                 });
 
@@ -338,7 +338,7 @@ public class DisposableSupplierTest {
                             .to(String.class)
                             .in(RequestScoped.class);
 
-                    binder.bind(new RequestScope())
+                    binder.bind(Hk2RequestScope.class)
                             .to(RequestScope.class);
                 });
 
@@ -385,7 +385,7 @@ public class DisposableSupplierTest {
                     binder.bindAsContract(ComposedObject.class)
                             .in(RequestScoped.class);
 
-                    binder.bind(new RequestScope())
+                    binder.bind(Hk2RequestScope.class)
                             .to(RequestScope.class);
                 });
 

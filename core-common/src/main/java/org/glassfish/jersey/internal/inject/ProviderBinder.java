@@ -338,7 +338,7 @@ public class ProviderBinder {
                     ClassBinding<T> descriptor = bindAsContract(clazz).in(scope);
 
                     for (Class contract : Providers.getProviderContracts(clazz)) {
-                        descriptor.addAlias(contract.getName())
+                        descriptor.addAlias(contract)
                                 .in(scope.getName())
                                 .qualifiedBy(CustomAnnotationLiteral.INSTANCE);
                     }

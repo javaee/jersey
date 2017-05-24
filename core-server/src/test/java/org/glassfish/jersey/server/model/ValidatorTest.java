@@ -1229,6 +1229,7 @@ public class ValidatorTest {
         InjectionManager injectionManager = Injections.createInjectionManager();
         ServerBootstrapBag bootstrapBag = new ServerBootstrapBag();
         bootstrapConfigurators.forEach(configurer -> configurer.init(injectionManager, bootstrapBag));
+        injectionManager.completeRegistration();
         bootstrapConfigurators.forEach(configurer -> configurer.postInit(injectionManager, bootstrapBag));
         return bootstrapBag;
     }

@@ -78,6 +78,7 @@
         <module>groovy</module>
         <module>helloworld</module>
         <module>helloworld-benchmark</module>
+        <module>helloworld-cdi2-se</module>
         <module>helloworld-netty</module>
         <module>helloworld-programmatic</module>
         <module>helloworld-pure-jax-rs</module>
