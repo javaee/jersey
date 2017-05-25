@@ -53,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -418,7 +417,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             if (response.hasEntity()) {
                 Object entityFuture = response.getEntity();
                 if (entityFuture instanceof CompletionStage) {
-                    CompletableFuture completableFuture = ((CompletionStage) entityFuture).toCompletableFuture();
+                    CompletionStage completionStage = ((CompletionStage) entityFuture);
 
                     // suspend - we know that this feature is not done, see AbstractJavaResourceMethodDispatcher#invoke
                     if (!processingContext.asyncContext().suspend()) {
@@ -426,7 +425,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     }
 
                     // wait for a response
-                    completableFuture.whenComplete(whenComplete(processingContext));
+                    completionStage.whenComplete(whenComplete(processingContext));
 
                     return null; // return null on the current thread
                 }

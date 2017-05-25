@@ -148,9 +148,16 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
 
                         // if a response is a CompletionStage and is done, we don't need to suspend and resume
                         if (result instanceof CompletionStage) {
-                            CompletableFuture resultFuture = ((CompletionStage) result).toCompletableFuture();
+                            CompletableFuture resultFuture;
+                            try {
+                                resultFuture = ((CompletionStage) result).toCompletableFuture();
+                            } catch (UnsupportedOperationException e) {
+                                // CompletionStage is not required to implement "toCompletableFuture". If it doesn't
+                                // we treat it as "uncompleted" future.
+                                return result;
+                            }
 
-                            if (resultFuture.isDone()) {
+                            if (resultFuture != null && resultFuture.isDone()) {
                                 if (resultFuture.isCancelled()) {
                                     return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
                                 } else {

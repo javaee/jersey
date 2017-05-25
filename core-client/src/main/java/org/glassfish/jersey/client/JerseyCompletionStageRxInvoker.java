@@ -57,7 +57,7 @@ import javax.ws.rs.core.GenericType;
  */
 public class JerseyCompletionStageRxInvoker extends AbstractRxInvoker<CompletionStage> implements CompletionStageRxInvoker {
 
-    public JerseyCompletionStageRxInvoker(Invocation.Builder builder, ExecutorService executor) {
+    JerseyCompletionStageRxInvoker(Invocation.Builder builder, ExecutorService executor) {
         super(builder, executor);
     }
 
