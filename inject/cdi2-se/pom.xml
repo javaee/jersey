@@ -107,7 +107,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.glassfish.jersey.*;version=${project.version}
+                            org.glassfish.jersey.inject.cdi.se.*;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             sun.misc.*;resolution:=optional, *
