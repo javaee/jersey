@@ -87,4 +87,13 @@ public class JerseyEventSinkTest {
         thrown.expect(IllegalStateException.class);
         eventSink.onComplete();
     }
+
+    @Test
+    public void test() throws Exception {
+        JerseyEventSink eventSink = new JerseyEventSink();
+
+        eventSink.close();
+        thrown.expect(IllegalStateException.class);
+        eventSink.send(null);
+    }
 }

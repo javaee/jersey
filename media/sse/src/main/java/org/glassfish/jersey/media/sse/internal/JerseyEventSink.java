@@ -114,6 +114,7 @@ class JerseyEventSink extends ChunkedOutput<OutboundSseEvent> implements SseEven
 
     @Override
     public CompletionStage<?> send(OutboundSseEvent event) {
+        checkClosed();
         try {
             this.write(event);
             return CompletableFuture.completedFuture(null);
