@@ -76,7 +76,7 @@ public class JsonProcessingResourceTest extends JerseyTest {
     static {
         documents.add(Json.createObjectBuilder()
                         .add("name", "Jersey")
-                        .add("site", "http://jersey.java.net")
+                        .add("site", "http://jersey.github.io")
                         .build()
         );
         documents.add(Json.createObjectBuilder()
@@ -87,7 +87,7 @@ public class JsonProcessingResourceTest extends JerseyTest {
         );
         documents.add(Json.createObjectBuilder()
                         .add("name", "JSON-P")
-                        .add("site", "http://jsonp.java.net")
+                        .add("site", "https://javaee.github.io/jsonp/")
                         .build()
         );
     }
