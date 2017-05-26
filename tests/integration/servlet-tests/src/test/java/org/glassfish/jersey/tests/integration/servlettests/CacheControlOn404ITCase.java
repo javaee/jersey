@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,6 +50,7 @@ import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -64,7 +65,7 @@ public class CacheControlOn404ITCase extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig(CacheControlOn404ITCase.class);
+        return new ResourceConfig(CacheControlOn404Resource.class);
     }
 
     @Override
@@ -88,7 +89,10 @@ public class CacheControlOn404ITCase extends JerseyTest {
                 .request().get();
         assertEquals(404, r.getStatus());
         assertEquals("404 Not Found", r.readEntity(String.class));
-        assertEquals("no-transform, max-age=10", r.getHeaderString(HttpHeaders.CACHE_CONTROL));
+        final String[] values = r.getHeaderString(HttpHeaders.CACHE_CONTROL).split(",");
+        assertEquals(2, values.length);
+        assertEquals("no-transform", values[0].trim());
+        assertEquals("max-age=10", values[1].trim());
     }
 
 }

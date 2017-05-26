@@ -52,6 +52,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -76,6 +77,7 @@ import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -252,6 +254,7 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
         }
     }
 
+    @Produces({"text/plain", "*/*"})
     public static class TestMBW implements MessageBodyWriter<String> {
 
         @Override
@@ -504,8 +507,13 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
     }
 
     private void _test(Class<?> exceptionClass, Class<?> providerClass, String path) {
+        // NOTE: HttpUrlConnector sends several accepted types by default when not explicitly set by the caller.
+        // In such case, the .accept("text/html") call is not necessary. However, other connectors act in a different way and
+        // this leads in different behaviour when selecting the MessageBodyWriter. Leaving the definition explicit for broader
+        // compatibility.
         final Response response = target(path).request()
                 .header(EXCEPTION_TYPE, exceptionClass.getSimpleName()).header(PROVIDER, providerClass.getSimpleName())
+                .accept(MediaType.TEXT_PLAIN_TYPE)
                 .post(Entity.entity("post", MediaType.TEXT_PLAIN_TYPE));
         assertEquals(200, response.getStatus());
         assertEquals(exceptionClass.getSimpleName() + MAPPED + providerClass.getSimpleName(), response.readEntity(String.class));
@@ -519,8 +527,14 @@ public class ExceptionMapperPropagationTest extends JerseyTest {
 
     private void _testWae(Class<?> providerClass, String path) {
         final Class<?> exceptionClass = TestWebAppException.class;
+
+        // NOTE: HttpUrlConnector sends several accepted types by default when not explicitly set by the caller.
+        // In such case, the .accept("text/html") call is not necessary. However, other connectors act in a different way and
+        // this leads in different behaviour when selecting the MessageBodyWriter. Leaving the definition explicit for broader
+        // compatibility.
         final Response response = target(path).request()
                 .header(EXCEPTION_TYPE, exceptionClass.getSimpleName()).header(PROVIDER, providerClass.getSimpleName())
+                .accept(MediaType.TEXT_PLAIN_TYPE)
                 .post(Entity.entity("post", MediaType.TEXT_PLAIN_TYPE));
         assertEquals(200, response.getStatus());
         assertEquals(exceptionClass.getSimpleName() + MAPPED_WAE + providerClass.getSimpleName(),

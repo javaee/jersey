@@ -64,6 +64,7 @@ import org.glassfish.jersey.test.util.runner.RunSeparately;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 

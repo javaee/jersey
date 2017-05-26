@@ -104,6 +104,9 @@ public class ClientCloseTest extends JerseyTest {
         // that the client is gone.
         assertEquals("OK", target("sse/send").request().get().readEntity(String.class));
         assertEquals("OK", target("sse/send").request().get().readEntity(String.class));
+        for (int i = 0; i < 10; i++) {
+            System.out.println(i + ": " + target("sse/send").request().get().readEntity(String.class));
+        }
         // Now the grizzly should notice that the SSE connection is finally dead and sending events from the server will fail.
         assertEquals("NOK", target("sse/send").request().get().readEntity(String.class));
     }

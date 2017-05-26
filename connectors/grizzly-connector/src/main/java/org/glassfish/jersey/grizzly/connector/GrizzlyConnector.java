@@ -122,10 +122,10 @@ class GrizzlyConnector implements Connector {
             builder = builder.setExecutorService(executorService);
 
             builder.setConnectTimeout(ClientProperties.getValue(config.getProperties(),
-                                                                ClientProperties.CONNECT_TIMEOUT, 0));
+                                                                ClientProperties.CONNECT_TIMEOUT, 10000));
 
             builder.setRequestTimeout(ClientProperties.getValue(config.getProperties(),
-                                                                ClientProperties.READ_TIMEOUT, 0));
+                                                                ClientProperties.READ_TIMEOUT, 10000));
 
             Object proxyUri;
             proxyUri = config.getProperty(ClientProperties.PROXY_URI);
