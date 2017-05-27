@@ -478,7 +478,7 @@ class ApacheConnector implements Connector {
             }
 
             try {
-                responseContext.setEntityStream(new HttpClientResponseInputStream(getInputStream(response)));
+                responseContext.setEntityStream(getInputStream(response));
             } catch (final IOException e) {
                 LOGGER.log(Level.SEVERE, null, e);
             }
@@ -617,18 +617,6 @@ class ApacheConnector implements Connector {
         return stringHeaders;
     }
 
-    private static final class HttpClientResponseInputStream extends FilterInputStream {
-
-        HttpClientResponseInputStream(final InputStream inputStream) throws IOException {
-            super(inputStream);
-        }
-
-        @Override
-        public void close() throws IOException {
-            super.close();
-        }
-    }
-
     private static InputStream getInputStream(final CloseableHttpResponse response) throws IOException {
 
         final InputStream inputStream;
@@ -648,7 +636,6 @@ class ApacheConnector implements Connector {
             @Override
             public void close() throws IOException {
                 response.close();
-                super.close();
             }
         };
     }
