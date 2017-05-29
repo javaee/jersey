@@ -304,6 +304,15 @@ class ApacheConnector implements Connector {
             this.cookieStore = null;
         }
         clientBuilder.setDefaultRequestConfig(requestConfig);
+
+
+        final boolean disableAutomaticRetries = PropertiesHelper.isProperty(config.getProperties(),
+                ApacheClientProperties.DISABLE_AUTOMATIC_RETRIES);
+
+        if (disableAutomaticRetries) {
+            clientBuilder.disableAutomaticRetries();
+        }
+
         this.client = clientBuilder.build();
     }
 
