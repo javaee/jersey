@@ -446,7 +446,7 @@ class ApacheConnector implements Connector {
                     ? Statuses.from(response.getStatusLine().getStatusCode())
                     : Statuses.from(response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase());
 
-            final ClientResponse responseContext = new ClientResponse(status, clientRequest);
+            final ClientResponse responseContext = new ApacheConnectorClientResponse(status, clientRequest, response);
             final List<URI> redirectLocations = context.getRedirectLocations();
             if (redirectLocations != null && !redirectLocations.isEmpty()) {
                 responseContext.setResolvedRequestUri(redirectLocations.get(redirectLocations.size() - 1));
