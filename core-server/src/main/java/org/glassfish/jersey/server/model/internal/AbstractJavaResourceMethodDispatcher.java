@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server.model.internal;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -48,6 +49,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
+import javax.validation.ConstraintViolationException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -134,7 +136,25 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
         try {
             // Validate resource class & method input parameters.
             if (validator != null) {
-                validator.validateResourceAndInputParams(resource, resourceMethod, args);
+                try {
+                    validator.validateResourceAndInputParams(resource, resourceMethod, args);
+                } catch (ConstraintViolationException e) {
+                    // First check for a property
+                    if (ValidationResultUtil.hasValidationResultProperty(resource)) {
+                        final Method validationResultGetter = ValidationResultUtil.getValidationResultGetter(resource);
+                        ValidationResultUtil.updateValidationResultProperty(resource, validationResultGetter,
+                                e.getConstraintViolations());
+                    } else {
+                        // Then check for a field
+                        final Field validationResult = ValidationResultUtil.getValidationResultField(resource);
+                        if (validationResult != null) {
+                            ValidationResultUtil.updateValidationResultField(resource, validationResult,
+                                    e.getConstraintViolations());
+                        } else {
+                            throw e;
+                        }
+                    }
+                }
             }
 
             final PrivilegedAction invokeMethodAction = new PrivilegedAction() {
