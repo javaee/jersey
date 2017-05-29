@@ -767,7 +767,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     @Override
-    public final Set<Class<?>> getClasses() {
+    public Set<Class<?>> getClasses() {
         if (cachedClassesView == null) {
             cachedClasses = _getClasses();
             cachedClassesView = Collections.unmodifiableSet(cachedClasses);
