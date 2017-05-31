@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -852,8 +852,8 @@ public class ItemResource {
                         <entry><emphasis>Default lifecycle </emphasis> (applied when no annotation is present). In this scope
                             the resource instance is created for each new request and used for processing of this request. If the
                             resource is used more than one time in the request processing, always the same instance will be used.
-                            This can happen when a resource is a sub resource is returned more times during the matching. In this
-                            situation only on instance will server the requests.</entry></row>
+                            This can happen when a resource is a sub resource and is returned more times during the matching. In this
+                            situation only one instance will serve the requests.</entry></row>
                     <row><entry>Per-lookup scope</entry><entry>@PerLookup</entry>
                         <entry>org.glassfish.hk2.api.PerLookup</entry>
                         <entry>In this scope
