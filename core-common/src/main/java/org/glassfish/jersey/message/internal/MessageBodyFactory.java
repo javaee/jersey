@@ -435,17 +435,28 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             final ArrayList<Class<?>> classes = new ArrayList<>();
             final LinkedList<Class<?>> unprocessed = new LinkedList<>();
 
+            // Object is special - needs to be always the furthest type.
+            boolean objectFound = false;
+
             unprocessed.add(classParam);
             while (!unprocessed.isEmpty()) {
                 final Class<?> clazz = unprocessed.removeFirst();
 
-                classes.add(clazz);
+                if (Object.class.equals(clazz)) {
+                    objectFound = true;
+                } else {
+                    classes.add(clazz);
+                }
                 unprocessed.addAll(Arrays.asList(clazz.getInterfaces()));
 
                 final Class<?> superclazz = clazz.getSuperclass();
                 if (superclazz != null) {
                     unprocessed.add(superclazz);
                 }
+            }
+
+            if (objectFound) {
+                classes.add(Object.class);
             }
 
             return classes.iterator();
