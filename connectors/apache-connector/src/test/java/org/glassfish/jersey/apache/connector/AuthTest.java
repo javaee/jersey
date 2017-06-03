@@ -249,6 +249,23 @@ public class AuthTest extends JerseyTest {
     }
 
     @Test
+    public void testAuthGetWithRequestCredentialsProvider() {
+        CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
+        credentialsProvider.setCredentials(
+                AuthScope.ANY,
+                new UsernamePasswordCredentials("name", "password")
+        );
+
+        ClientConfig cc = new ClientConfig();
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
+        WebTarget r = client.target(getBaseUri()).path("test");
+
+        assertEquals("GET", r.request().property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider)
+            .get(String.class));
+    }
+
+    @Test
     public void testAuthGetWithClientFilter() {
         ClientConfig cc = new ClientConfig();
         cc.connectorProvider(new ApacheConnectorProvider());
