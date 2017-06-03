@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -246,6 +246,25 @@ public class AuthTest extends JerseyTest {
         WebTarget r = client.target(getBaseUri()).path("test");
 
         assertEquals("GET", r.request().get(String.class));
+    }
+
+    @Test
+    public void testAuthGetWithRequestCredentialsProvider() {
+        CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
+        credentialsProvider.setCredentials(
+                AuthScope.ANY,
+                new UsernamePasswordCredentials("name", "password")
+        );
+
+        ClientConfig cc = new ClientConfig();
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
+        WebTarget r = client.target(getBaseUri()).path("test");
+
+        assertEquals("GET",
+                     r.request()
+                      .property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider)
+                      .get(String.class));
     }
 
     @Test
