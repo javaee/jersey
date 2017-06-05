@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.Response.StatusType;
 
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
@@ -55,6 +56,7 @@ import static org.junit.Assert.assertSame;
  */
 public class ResponseTest {
 
+    @Test
     public void testDeclaredStatusCodes() {
         for (Status s : Status.values()) {
             StatusType _s = Response.status(s.getStatusCode()).build().getStatusInfo();
@@ -62,6 +64,7 @@ public class ResponseTest {
         }
     }
 
+    @Test
     public void testUndeclaredStatusCodes() {
         StatusType st = Response.status(199).build().getStatusInfo();
         assertNotNull(st);
@@ -92,5 +95,14 @@ public class ResponseTest {
         assertEquals(599, st.getStatusCode());
         assertEquals("", st.getReasonPhrase());
         assertEquals(Family.SERVER_ERROR, st.getFamily());
+    }
+
+    @Test
+    public void reasonPhraseTest() {
+        Response response = Response.status(123, "test").build();
+
+        assertNotNull(response);
+        assertEquals(123, response.getStatus());
+        assertEquals("test", response.getStatusInfo().getReasonPhrase());
     }
 }

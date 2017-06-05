@@ -1872,7 +1872,7 @@
         <jsonb.api.version>1.0.0-M2</jsonb.api.version>
         <jsonb.ri.version>1.0.0-M2</jsonb.ri.version>
         <jaxrs.api.spec.version>2.1</jaxrs.api.spec.version>
-        <jaxrs.api.impl.version>2.1-m07</jaxrs.api.impl.version>
+        <jaxrs.api.impl.version>2.1-m08</jaxrs.api.impl.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jersey1.version>1.19.3</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>

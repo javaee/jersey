@@ -407,6 +407,34 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
         }
 
         @Override
+        public ResponseBuilder status(int status, final String reasonPhrase) {
+            if (status < 100 || status > 599) {
+                throw new IllegalArgumentException("Response status must not be less than '100' or greater than '599'");
+            }
+
+            final Status.Family family = Status.Family.familyOf(status);
+
+            this.status = new StatusType() {
+                @Override
+                public int getStatusCode() {
+                    return status;
+                }
+
+                @Override
+                public Status.Family getFamily() {
+                    return family;
+                }
+
+                @Override
+                public String getReasonPhrase() {
+                    return reasonPhrase;
+                }
+            };
+
+            return this;
+        }
+
+        @Override
         public javax.ws.rs.core.Response.ResponseBuilder status(int code) {
             this.status = Statuses.from(code);
             return this;

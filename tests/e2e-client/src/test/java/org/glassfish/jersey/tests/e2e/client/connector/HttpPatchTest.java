@@ -115,7 +115,7 @@ public class HttpPatchTest extends JerseyTest {
 
     @Test
     public void testPatchResponse() throws Exception {
-        Response response = target().request().patch(Entity.text("patch"));
+        Response response = target().request().method("PATCH", Entity.text("patch"));
 
         assertEquals(200, response.getStatus());
         assertEquals("patch", response.readEntity(String.class));
@@ -123,14 +123,14 @@ public class HttpPatchTest extends JerseyTest {
 
     @Test
     public void testPatchEntity() throws Exception {
-        String response = target().request().patch(Entity.text("patch"), String.class);
+        String response = target().request().method("PATCH", Entity.text("patch"), String.class);
 
         assertEquals("patch", response);
     }
 
     @Test
     public void testPatchGenericType() throws Exception {
-        String response = target().request().patch(Entity.text("patch"), new GenericType<String>() {
+        String response = target().request().method("PATCH", Entity.text("patch"), new GenericType<String>() {
         });
 
         assertEquals("patch", response);
@@ -138,7 +138,7 @@ public class HttpPatchTest extends JerseyTest {
 
     @Test
     public void testAsyncPatchResponse() throws Exception {
-        Future<Response> response = target().request().async().patch(Entity.text("patch"));
+        Future<Response> response = target().request().async().method("PATCH", Entity.text("patch"));
 
         assertEquals(200, response.get().getStatus());
         assertEquals("patch", response.get().readEntity(String.class));
@@ -146,14 +146,14 @@ public class HttpPatchTest extends JerseyTest {
 
     @Test
     public void testAsyncPatchEntity() throws Exception {
-        Future<String> response = target().request().async().patch(Entity.text("patch"), String.class);
+        Future<String> response = target().request().async().method("PATCH", Entity.text("patch"), String.class);
 
         assertEquals("patch", response.get());
     }
 
     @Test
     public void testAsyncPatchGenericType() throws Exception {
-        Future<String> response = target().request().async().patch(Entity.text("patch"), new GenericType<String>() {
+        Future<String> response = target().request().async().method("PATCH", Entity.text("patch"), new GenericType<String>() {
         });
 
         assertEquals("patch", response.get());
@@ -161,7 +161,7 @@ public class HttpPatchTest extends JerseyTest {
 
     @Test
     public void testRxPatchResponse() throws Exception {
-        CompletionStage<Response> response = target().request().rx().patch(Entity.text("patch"));
+        CompletionStage<Response> response = target().request().rx().method("PATCH", Entity.text("patch"));
 
         assertEquals(200, response.toCompletableFuture().get().getStatus());
         assertEquals("patch", response.toCompletableFuture().get().readEntity(String.class));
@@ -169,7 +169,7 @@ public class HttpPatchTest extends JerseyTest {
 
     @Test
     public void testRxPatchEntity() throws Exception {
-        CompletionStage<String> response = target().request().rx().patch(Entity.text("patch"), String.class);
+        CompletionStage<String> response = target().request().rx().method("PATCH", Entity.text("patch"), String.class);
 
         assertEquals("patch", response.toCompletableFuture().get());
     }
@@ -177,7 +177,7 @@ public class HttpPatchTest extends JerseyTest {
     @Test
     public void testRxPatchGenericType() throws Exception {
         CompletionStage<String> response = target().request().rx()
-                                                   .patch(Entity.text("patch"), new GenericType<String>() {
+                                                   .method("PATCH", Entity.text("patch"), new GenericType<String>() {
                                                    });
 
         assertEquals("patch", response.toCompletableFuture().get());

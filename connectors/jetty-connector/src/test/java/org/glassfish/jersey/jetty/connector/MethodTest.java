@@ -164,7 +164,7 @@ public class MethodTest extends JerseyTest {
 
     @Test
     public void testPatch() {
-        Response response = target(PATH).request().patch(Entity.entity("PATCH", MediaType.TEXT_PLAIN));
+        Response response = target(PATH).request().method("PATCH", Entity.entity("PATCH", MediaType.TEXT_PLAIN));
         assertEquals("PATCH", response.readEntity(String.class));
     }
 }
