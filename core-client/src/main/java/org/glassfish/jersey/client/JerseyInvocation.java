@@ -413,21 +413,6 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Response patch(final Entity<?> entity) {
-            return method("PATCH", entity);
-        }
-
-        @Override
-        public <T> T patch(final Entity<?> entity, Class<T> responseType) {
-            return method("PATCH", entity, responseType);
-        }
-
-        @Override
-        public <T> T patch(final Entity<?> entity, GenericType<T> responseType) {
-            return method("PATCH", entity, responseType);
-        }
-
-        @Override
         public Response method(final String name) throws ProcessingException {
             requestContext.setMethod(name);
             return new JerseyInvocation(this).invoke();
@@ -688,27 +673,6 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         @Override
         public <T> Future<T> trace(final InvocationCallback<T> callback) {
             return method("TRACE", callback);
-        }
-
-        @Override
-        public Future<Response> patch(final Entity<?> entity) {
-            return method("PATCH", entity);
-        }
-
-        @Override
-        public <T> Future<T> patch(final Entity<?> entity, Class<T> responseType) {
-            return method("PATCH", entity, responseType);
-
-        }
-
-        @Override
-        public <T> Future<T> patch(final Entity<?> entity, GenericType<T> responseType) {
-            return method("PATCH", entity, responseType);
-        }
-
-        @Override
-        public <T> Future<T> patch(final Entity<?> entity, InvocationCallback<T> callback) {
-            return method("PATCH", entity, callback);
         }
 
         @Override

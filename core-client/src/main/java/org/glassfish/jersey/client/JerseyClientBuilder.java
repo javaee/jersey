@@ -43,6 +43,7 @@ import java.security.KeyStore;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
@@ -153,6 +154,26 @@ public class JerseyClientBuilder extends ClientBuilder {
     @Override
     public ClientBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
         this.scheduledExecutorService = scheduledExecutorService;
+        return this;
+    }
+
+    @Override
+    public ClientBuilder connectTimeout(long timeout, TimeUnit unit) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Negative timeout.");
+        }
+
+        this.property(ClientProperties.CONNECT_TIMEOUT, Math.toIntExact(unit.toMillis(timeout)));
+        return this;
+    }
+
+    @Override
+    public ClientBuilder readTimeout(long timeout, TimeUnit unit) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Negative timeout.");
+        }
+
+        this.property(ClientProperties.READ_TIMEOUT, Math.toIntExact(unit.toMillis(timeout)));
         return this;
     }
 
