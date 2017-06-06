@@ -678,6 +678,11 @@ webTarget.request().post(Entity.entity(f, MediaType.TEXT_PLAIN_TYPE));
                             <entry>&jersey.netty.NettyConnectorProvider;</entry>
                             <entry><literal>org.glassfish.jersey.connectors:jersey-netty-connector</literal></entry>
                         </row>
+                        <row>
+                            <entry>JDK NIO client</entry>
+                            <entry>&jersey.jdk.JdkConnectorProvider;</entry>
+                            <entry><literal>org.glassfish.jersey.connectors:jersey-jdk-connector</literal></entry>
+                        </row>
                     </tbody>
                 </tgroup>
             </table>

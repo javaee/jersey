@@ -474,6 +474,8 @@
 <!ENTITY jersey.message.filtering.SecurityEntityFilteringFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/message/filtering/SecurityEntityFilteringFeature.html'>SecurityEntityFilteringFeature</link>">
 <!ENTITY jersey.message.filtering.SelectableEntityFilteringFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/message/filtering/SelectableEntityFilteringFeature.html'>SelectableEntityFilteringFeature</link>">
 <!ENTITY jersey.netty.NettyConnectorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/netty/connector/NettyConnectorProvider.html'>NettyConnectorProvider</link>">
+<!ENTITY jersey.jdk.JdkConnectorProvider
+        "<link xlink:href='&jersey.javadoc.uri.prefix;/jdk/connector/JdkConnectorProvider.html'>JdkConnectorProvider</link>">
 <!ENTITY jersey.server.ApplicationHandler "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ApplicationHandler.html'>ApplicationHandler</link>">
 <!ENTITY jersey.server.BackgroundScheduler "<link xlink:href='&jersey.javadoc.uri.prefix;/server/BackgroundScheduler.html'>@BackgroundScheduler</link>">
 <!ENTITY jersey.server.BackgroundSchedulerLiteral "<link xlink:href='&jersey.javadoc.uri.prefix;/server/BackgroundSchedulerLiteral.html'>BackgroundSchedulerLiteral</link>">
