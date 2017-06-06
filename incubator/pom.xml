@@ -63,7 +63,6 @@
         <module>gae-integration</module>
         <!--<module>html-json</module>-->
         <module>kryo</module>
-        <module>jdk-connector</module>
     </modules>
 
     <dependencies>

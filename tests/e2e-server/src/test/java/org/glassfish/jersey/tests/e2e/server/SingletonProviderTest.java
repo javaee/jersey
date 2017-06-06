@@ -69,6 +69,7 @@ import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -86,21 +87,27 @@ public class SingletonProviderTest extends JerseyTest {
 
     @Test
     public void filterTest() {
+        // NOTE: Explicit acceptedMedia type definition is not needed for HttpUrlConnector, as it sends several "default" types
+        // when not set directly. For (some) other connectors (namely JdkConnector), this is required, as the inferred accepted
+        // media type is */*, which would match the provider, that produces text/test, which is what we don't want in this case.
         String str;
-        str = target().path("resource/filter").request().get().readEntity(String.class);
+        str = target().path("resource/filter").request("text/plain").get().readEntity(String.class);
         assertEquals("filter:1", str);
 
-        str = target().path("resource/filter").request().get().readEntity(String.class);
+        str = target().path("resource/filter").request("text/plain").get().readEntity(String.class);
         assertEquals("filter:2", str);
     }
 
 
     @Test
     public void exceptionMapperTest() {
+        // NOTE: Explicit acceptedMedia type definition is not needed for HttpUrlConnector, as it sends several "default" types
+        // when not set directly. For (some) other connectors (namely JdkConnector), this is required, as the inferred accepted
+        // media type is */*, which would match the provider, that produces text/test, which is what we don't want in this case.
         String str;
-        str = target().path("resource/exception").request().get().readEntity(String.class);
+        str = target().path("resource/exception").request("text/plain").get().readEntity(String.class);
         assertEquals("mapper:1", str);
-        str = target().path("resource/exception").request().get().readEntity(String.class);
+        str = target().path("resource/exception").request("text/plain").get().readEntity(String.class);
         assertEquals("mapper:2", str);
 
     }

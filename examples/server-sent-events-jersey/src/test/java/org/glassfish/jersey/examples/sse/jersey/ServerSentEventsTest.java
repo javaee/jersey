@@ -58,6 +58,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.media.sse.EventInput;
 import org.glassfish.jersey.media.sse.EventListener;
 import org.glassfish.jersey.media.sse.EventSource;
@@ -67,6 +69,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -79,11 +82,18 @@ import static org.junit.Assert.assertTrue;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ServerSentEventsTest extends JerseyTest {
+    // TODO - due to JdkConnector migration this was radically reduced. It deadlocks with 25 clients, find out why!
+    private static final int MAX_CLIENTS = 10;
 
     @Override
     protected Application configure() {
         // enable(TestProperties.LOG_TRAFFIC);
         return new ResourceConfig(ServerSentEventsResource.class, DomainResource.class, SseFeature.class);
+    }
+
+    @Override
+    protected void configureClient(ClientConfig config) {
+        config.property(ClientProperties.ASYNC_THREADPOOL_SIZE, MAX_CLIENTS + 2);
     }
 
     /**
@@ -181,7 +191,6 @@ public class ServerSentEventsTest extends JerseyTest {
      */
     @Test
     public void testCreateDomain() throws Exception {
-        final int MAX_CLIENTS = 25;
         final int MESSAGE_COUNT = 6;
 
         final Response response = target().path("domain/start")

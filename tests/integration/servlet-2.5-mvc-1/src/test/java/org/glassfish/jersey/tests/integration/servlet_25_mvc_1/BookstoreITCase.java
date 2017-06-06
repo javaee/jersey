@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 package org.glassfish.jersey.tests.integration.servlet_25_mvc_1;
 
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.tests.integration.servlet_25_mvc_1.resource.Bookstore;
@@ -53,7 +54,11 @@ public class BookstoreITCase extends TestSupport {
 
     @Test
     public void testResourceAsHtml() throws Exception {
-        assertBookstoreHtmlResponse(target().request().get(String.class));
+        // NOTE: HttpUrlConnector sends several accepted types by default when not explicitly set by the caller.
+        // In such case, the .accept("text/html") call is not necessary. However, other connectors act in a different way and
+        // this leads in different behaviour when selecting the MessageBodyWriter. Leaving the definition explicit for broader
+        // compatibility.
+        assertBookstoreHtmlResponse(target().request(MediaType.TEXT_HTML_TYPE).get(String.class));
     }
 
     @Test

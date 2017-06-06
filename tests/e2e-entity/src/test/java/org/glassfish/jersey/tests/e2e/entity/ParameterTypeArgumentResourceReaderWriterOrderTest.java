@@ -60,8 +60,12 @@ public class ParameterTypeArgumentResourceReaderWriterOrderTest extends Abstract
 
     @Test
     public void testClassResource() {
-        assertEquals("AA", target().path("a").request().get(String.class));
-        assertEquals("BB", target().path("b").request().get(String.class));
-        assertEquals("CC", target().path("c").request().get(String.class));
+        // NOTE: HttpUrlConnector sends several accepted types by default when not explicitly set by the caller.
+        // In such case, the .accept("text/html") call is not necessary. However, other connectors act in a different way and
+        // this leads in different behaviour when selecting the MessageBodyWriter. Leaving the definition explicit for broader
+        // compatibility.
+        assertEquals("AA", target().path("a").request("text/html").get(String.class));
+        assertEquals("BB", target().path("b").request("text/html").get(String.class));
+        assertEquals("CC", target().path("c").request("text/html").get(String.class));
     }
 }

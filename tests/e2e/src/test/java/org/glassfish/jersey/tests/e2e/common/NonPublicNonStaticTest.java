@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,6 +63,7 @@ import org.glassfish.jersey.test.TestProperties;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -517,7 +518,11 @@ public class NonPublicNonStaticTest {
 
         @Test
         public void testNonPublicProvider() throws IOException {
-            final String s = target().path("provider-resource").request().get(String.class);
+            // NOTE: HttpUrlConnector sends several accepted types by default when not explicitly set by the caller.
+            // In such case, the .accept("text/html") call is not necessary. However, other connectors act in a different way and
+            // this leads in different behaviour when selecting the MessageBodyWriter. Leaving the definition explicit for broader
+            // compatibility.
+            final String s = target().path("provider-resource").request("text/html").get(String.class);
             assertEquals(">> Hi! <<", s);
         }
     }

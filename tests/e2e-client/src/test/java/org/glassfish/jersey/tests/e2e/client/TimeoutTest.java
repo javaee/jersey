@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.tests.e2e.client;
 
-import java.net.SocketTimeoutException;
+import java.io.IOException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -54,6 +54,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -103,7 +104,7 @@ public class TimeoutTest extends JerseyTest {
             target("test/timeout").request().get();
             fail("Timeout expected.");
         } catch (ProcessingException e) {
-            if (!(e.getCause() instanceof SocketTimeoutException)) {
+            if (!(e.getCause() instanceof IOException)) {
                 e.printStackTrace();
                 fail();
             }

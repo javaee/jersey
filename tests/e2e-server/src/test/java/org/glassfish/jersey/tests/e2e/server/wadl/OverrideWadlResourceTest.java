@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.e2e.server.wadl;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 
@@ -49,6 +50,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -57,6 +59,10 @@ import static org.junit.Assert.assertEquals;
  */
 public class OverrideWadlResourceTest extends JerseyTest {
 
+    // The explicit @Produces definition improves the compatibility of the test case with other connectors.
+    // Unlike HttpUrlConnector, others might not be sending default accepted media types ((namely the JdkConnector)
+    // and the resource would not be matched.
+    @Produces("text/plain")
     @Path("application.wadl")
     public static class OverrideWadlApplicationResource {
         @GET

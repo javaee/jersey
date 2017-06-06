@@ -68,6 +68,7 @@ import org.glassfish.jersey.spi.ExecutorServiceProvider;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertNotNull;
