@@ -101,21 +101,21 @@ public class SseEventSinkToEventSourceTest extends JerseyTest {
             executor.submit(() -> {
                 int i = 0;
                 while (transmitLatch.getCount() > 0) {
-                    eventSink.onNext(sse.newEventBuilder()
+                    eventSink.send(sse.newEventBuilder()
                             .name(INTEGER_SSE_NAME)
                             .mediaType(MediaType.TEXT_PLAIN_TYPE)
                             .data(Integer.class, i)
                             .build());
 
                     // send another event with name "foo" -> should be ignored by the client
-                    eventSink.onNext(sse.newEventBuilder()
+                    eventSink.send(sse.newEventBuilder()
                             .name("foo")
                             .mediaType(MediaType.TEXT_PLAIN_TYPE)
                             .data(String.class, "bar")
                             .build());
 
                     // send another unnamed event -> should be ignored by the client
-                    eventSink.onNext(sse.newEventBuilder()
+                    eventSink.send(sse.newEventBuilder()
                             .mediaType(MediaType.TEXT_PLAIN_TYPE)
                             .data(String.class, "baz")
                             .build());
@@ -133,7 +133,7 @@ public class SseEventSinkToEventSourceTest extends JerseyTest {
         final List<InboundSseEvent> results = new ArrayList<>();
         try (final SseEventSource eventSource = SseEventSource.target(endpoint).build()) {
             final CountDownLatch receivedLatch = new CountDownLatch(3 * MSG_COUNT);
-            eventSource.subscribe((event) -> {
+            eventSource.register((event) -> {
                 results.add(event);
                 receivedLatch.countDown();
             });
@@ -178,13 +178,13 @@ public class SseEventSinkToEventSourceTest extends JerseyTest {
     public void testWithEventSource() throws InterruptedException {
         transmitLatch = new CountDownLatch(2 * MSG_COUNT);
         final WebTarget endpoint = target().path("events");
-        final SseEventSource eventSource = SseEventSource.target(endpoint).named("my-sse-eventsource1").build();
+        final SseEventSource eventSource = SseEventSource.target(endpoint).build();
 
         final CountDownLatch count1 = new CountDownLatch(3 * MSG_COUNT);
         final CountDownLatch count2 = new CountDownLatch(3 * MSG_COUNT);
 
-        eventSource.subscribe(new InboundHandler("consumer1", count1));
-        eventSource.subscribe(new InboundHandler("consumer2", count2));
+        eventSource.register(new InboundHandler("consumer1", count1));
+        eventSource.register(new InboundHandler("consumer2", count2));
 
         eventSource.open();
         final boolean sent = transmitLatch.await(5 * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS);

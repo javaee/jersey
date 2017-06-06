@@ -51,7 +51,7 @@
 
     <artifactId>e2e-entity</artifactId>
     <packaging>jar</packaging>
-    <name>jersey-tests-e2e-server</name>
+    <name>jersey-tests-e2e-entity</name>
 
     <description>Jersey E2E Entity tests</description>
 
@@ -119,6 +119,11 @@
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-processing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-binding</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -89,7 +89,7 @@ import org.glassfish.jersey.server.ServerBootstrapBag;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.TestConfigConfigurator;
 import org.glassfish.jersey.server.internal.inject.ParamExtractorConfigurator;
-import org.glassfish.jersey.server.internal.inject.ValueSupplierProviderConfigurator;
+import org.glassfish.jersey.server.internal.inject.ValueParamProviderConfigurator;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 
 import org.junit.Ignore;
@@ -134,7 +134,7 @@ public class ValidatorTest {
         Resource resource = Resource.builder(TestRootResourceNonAmbigCtors.class).build();
         ServerBootstrapBag serverBag = initializeApplication();
         ComponentModelValidator validator = new ComponentModelValidator(
-                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.getIssueList().isEmpty());
     }
@@ -361,7 +361,7 @@ public class ValidatorTest {
                 ResourceModel model = new ResourceModel.Builder(resources, false).build();
                 ServerBootstrapBag serverBag = initializeApplication();
                 ComponentModelValidator validator = new ComponentModelValidator(
-                        serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                        serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
                 validator.validate(model);
                 return ModelErrors.getErrorsAsResourceModelIssues();
             }
@@ -485,7 +485,7 @@ public class ValidatorTest {
         Resource resource = Resource.builder(TestSRLReturningVoid.class).build();
         ServerBootstrapBag serverBag = initializeApplication();
         ComponentModelValidator validator = new ComponentModelValidator(
-                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -563,7 +563,7 @@ public class ValidatorTest {
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsRM.class).build();
         ServerBootstrapBag serverBag = initializeApplication();
         ComponentModelValidator validator = new ComponentModelValidator(
-                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -586,7 +586,7 @@ public class ValidatorTest {
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsSRM.class).build();
         ServerBootstrapBag serverBag = initializeApplication();
         ComponentModelValidator validator = new ComponentModelValidator(
-                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -606,7 +606,7 @@ public class ValidatorTest {
         Resource resource = Resource.builder(TestEntityParamOnSRL.class).build();
         ServerBootstrapBag serverBag = initializeApplication();
         ComponentModelValidator validator = new ComponentModelValidator(
-                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -687,7 +687,7 @@ public class ValidatorTest {
                 Resource resource = Resource.builder(TestAmbiguousParams.class).build();
                 ServerBootstrapBag serverBag = initializeApplication();
                 ComponentModelValidator validator = new ComponentModelValidator(
-                        serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                        serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
                 validator.validate(resource);
 
                 assertTrue(!validator.fatalIssuesFound());
@@ -713,7 +713,7 @@ public class ValidatorTest {
         Resource resource = Resource.builder(TestEmptyPathSegment.class).build();
         ServerBootstrapBag serverBag = initializeApplication();
         ComponentModelValidator validator = new ComponentModelValidator(
-                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -758,7 +758,7 @@ public class ValidatorTest {
                 Resource resource = Resource.builder(TypeVariableResource.class).build();
                 ServerBootstrapBag serverBag = initializeApplication();
                 ComponentModelValidator validator = new ComponentModelValidator(
-                        serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                        serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
                 validator.validate(resource);
 
                 assertTrue(!validator.fatalIssuesFound());
@@ -805,7 +805,7 @@ public class ValidatorTest {
         Resource resource = Resource.builder(ConcreteParameterizedTypeResource.class).build();
         ServerBootstrapBag serverBag = initializeApplication();
         ComponentModelValidator validator = new ComponentModelValidator(
-                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -844,7 +844,7 @@ public class ValidatorTest {
         Resource resource = Resource.builder(ConcreteGenericArrayResource.class).build();
         ServerBootstrapBag serverBag = initializeApplication();
         ComponentModelValidator validator = new ComponentModelValidator(
-                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -911,7 +911,7 @@ public class ValidatorTest {
         Resource resource = Resource.builder(AmbiguousParameterResource.class).build();
         ServerBootstrapBag serverBag = initializeApplication();
         ComponentModelValidator validator = new ComponentModelValidator(
-                serverBag.getValueSupplierProviders(), serverBag.getMessageBodyWorkers());
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         final List<ResourceModelIssue> errorMessages = validator.getIssueList();
@@ -1223,12 +1223,13 @@ public class ValidatorTest {
         List<BootstrapConfigurator> bootstrapConfigurators = Collections.unmodifiableList(Arrays.asList(
                 new TestConfigConfigurator(),
                 new ParamExtractorConfigurator(),
-                new ValueSupplierProviderConfigurator(),
+                new ValueParamProviderConfigurator(),
                 new MessageBodyFactory.MessageBodyWorkersConfigurator()));
 
         InjectionManager injectionManager = Injections.createInjectionManager();
         ServerBootstrapBag bootstrapBag = new ServerBootstrapBag();
         bootstrapConfigurators.forEach(configurer -> configurer.init(injectionManager, bootstrapBag));
+        injectionManager.completeRegistration();
         bootstrapConfigurators.forEach(configurer -> configurer.postInit(injectionManager, bootstrapBag));
         return bootstrapBag;
     }

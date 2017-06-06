@@ -66,7 +66,7 @@ class EntityDescriptor {
 
     private static final Map<Class<?>, EntityDescriptor> descriptors = new HashMap<>();
 
-    public static synchronized EntityDescriptor getInstance(Class<?> entityClass) {
+    static synchronized EntityDescriptor getInstance(Class<?> entityClass) {
         if (descriptors.containsKey(entityClass)) {
             return descriptors.get(entityClass);
         } else {
@@ -100,15 +100,15 @@ class EntityDescriptor {
         this.linkFields = Collections.unmodifiableMap(this.linkFields);
     }
 
-    public Collection<FieldDescriptor> getLinkFields() {
+    Collection<FieldDescriptor> getLinkFields() {
         return linkFields.values();
     }
 
-    public Collection<FieldDescriptor> getNonLinkFields() {
+    Collection<FieldDescriptor> getNonLinkFields() {
         return nonLinkFields.values();
     }
 
-    public List<LinkHeaderDescriptor> getLinkHeaders() {
+    List<LinkHeaderDescriptor> getLinkHeaders() {
         return linkHeaders;
     }
 

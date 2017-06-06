@@ -47,6 +47,7 @@
         <artifactId>project</artifactId>
         <version>2.26-SNAPSHOT</version>
     </parent>
+    <packaging>maven-archetype</packaging>
 
     <artifactId>jersey-heroku-webapp</artifactId>
     <name>jersey-archetype-heroku-webapp</name>

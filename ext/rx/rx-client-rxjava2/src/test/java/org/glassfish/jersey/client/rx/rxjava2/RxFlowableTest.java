@@ -69,6 +69,7 @@ import static org.hamcrest.core.Is.is;
 public class RxFlowableTest {
 
     private Client client;
+    private Client clientWithExecutor;
     private ExecutorService executor;
 
     @Before
@@ -79,6 +80,10 @@ public class RxFlowableTest {
                 .setNameFormat("jersey-rx-client-test-%d")
                 .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
                 .build());
+
+        clientWithExecutor = ClientBuilder.newBuilder().executorService(executor).build();
+        clientWithExecutor.register(TerminalClientRequestFilter.class);
+        clientWithExecutor.register(RxFlowableInvokerProvider.class);
     }
 
     @After
@@ -101,10 +106,10 @@ public class RxFlowableTest {
 
     @Test
     public void testNotFoundWithCustomExecutor() throws Exception {
-        final RxFlowableInvoker invoker = client.target("http://jersey.java.net")
-                                                .request()
-                                                .header("Response-Status", 404)
-                                                .rx(RxFlowableInvoker.class, executor);
+        final RxFlowableInvoker invoker = clientWithExecutor.target("http://jersey.java.net")
+                                                            .request()
+                                                            .header("Response-Status", 404)
+                                                            .rx(RxFlowableInvoker.class);
 
         testInvoker(invoker, 404, true);
     }
@@ -207,7 +212,7 @@ public class RxFlowableTest {
 
         // Executor.
         assertThat(response.getHeaderString("Test-Thread"), testDedicatedThread
-                ? containsString("jersey-rx-client-test") : containsString("RxCachedThreadScheduler"));
+                ? containsString("jersey-rx-client-test") : containsString("jersey-client-async-executor"));
 
         // Properties.
         assertThat(response.getHeaderString("Test-Uri"), is("http://jersey.java.net"));

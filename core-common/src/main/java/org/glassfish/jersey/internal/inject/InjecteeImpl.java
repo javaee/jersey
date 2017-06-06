@@ -47,7 +47,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
+
+import org.glassfish.jersey.internal.util.Pretty;
 
 /**
  * An Injectee represents the point of injection. It can be used by injection resolvers to discover all of the information
@@ -57,11 +60,13 @@ public class InjecteeImpl implements Injectee {
 
     private Type requiredType;
     private Set<Annotation> qualifiers;
+    private Class<? extends Annotation> parentClassScope;
     private int position = -1;
     private Class<?> injecteeClass;
     private AnnotatedElement parent;
     private boolean isOptional = false;
     private boolean isFactory = false;
+    private boolean isProvider = false;
     private ForeignDescriptor injecteeDescriptor;
 
     @Override
@@ -97,6 +102,21 @@ public class InjecteeImpl implements Injectee {
     }
 
     @Override
+    public Class<? extends Annotation> getParentClassScope() {
+        return parentClassScope;
+    }
+
+
+    /**
+     * Sets the scope in which the parent class is registered.
+     *
+     * @return parent class scope.
+     */
+    public void setParentClassScope(Class<? extends Annotation> parentClassScope) {
+        this.parentClassScope = parentClassScope;
+    }
+
+    @Override
     public boolean isFactory() {
         return isFactory;
     }
@@ -108,6 +128,20 @@ public class InjecteeImpl implements Injectee {
      */
     public void setFactory(boolean factory) {
         isFactory = factory;
+    }
+
+    @Override
+    public boolean isProvider() {
+        return isProvider;
+    }
+
+    /**
+     * Sets a flag whether the injectee is a provider.
+     *
+     * @param provider {@code true} flag whether the injectee is provider.
+     */
+    public void setProvider(boolean provider) {
+        isProvider = provider;
     }
 
     @Override
@@ -187,5 +221,41 @@ public class InjecteeImpl implements Injectee {
      */
     public void setInjecteeDescriptor(ForeignDescriptor injecteeDescriptor) {
         this.injecteeDescriptor = injecteeDescriptor;
+    }
+
+    @Override
+    public String toString() {
+        return "InjecteeImpl(requiredType=" + Pretty.type(requiredType)
+                + ",parent=" + Pretty.clazz(parent.getClass())
+                + ",qualifiers=" + Pretty.collection(qualifiers)
+                + ",position=" + position
+                + ",factory=" + isFactory
+                + ",provider=" + isProvider
+                + ",optional=" + isOptional
+                + "," + System.identityHashCode(this) + ")";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof InjecteeImpl)) {
+            return false;
+        }
+        InjecteeImpl injectee = (InjecteeImpl) o;
+        return position == injectee.position
+                && isOptional == injectee.isOptional
+                && isFactory == injectee.isFactory
+                && isProvider == injectee.isProvider
+                && Objects.equals(requiredType, injectee.requiredType)
+                && Objects.equals(qualifiers, injectee.qualifiers)
+                && Objects.equals(injecteeClass, injectee.injecteeClass)
+                && Objects.equals(parent, injectee.parent);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(requiredType, qualifiers, position, injecteeClass, parent, isOptional, isFactory);
     }
 }

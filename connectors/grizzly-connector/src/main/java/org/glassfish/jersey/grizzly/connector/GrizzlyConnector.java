@@ -287,7 +287,7 @@ class GrizzlyConnector implements Connector {
                     }
 
                     HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, request.getHeaders(),
-                                                   GrizzlyConnector.this.getClass().getName());
+                            GrizzlyConnector.this.getClass().getName());
                     // hand-off to grizzly's application thread pool for response processing
                     processResponse(new Runnable() {
                         @Override

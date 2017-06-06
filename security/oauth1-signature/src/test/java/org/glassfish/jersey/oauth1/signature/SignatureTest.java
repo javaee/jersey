@@ -232,8 +232,9 @@ public class SignatureTest {
     }
 
     private OAuth1Signature getoAuthSignature() {
-        InjectionManager serviceLocator = Injections.createInjectionManager(new OAuth1SignatureFeature.Binder());
-        return serviceLocator.getInstance(OAuth1Signature.class);
+        InjectionManager injectionManager = Injections.createInjectionManager(new OAuth1SignatureFeature.Binder());
+        injectionManager.completeRegistration();
+        return injectionManager.getInstance(OAuth1Signature.class);
     }
 
     @Test

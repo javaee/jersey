@@ -160,7 +160,9 @@ public class SaxParserFactoryInjectionProviderTest {
             }
         };
         System.arraycopy(customBinders, 0, binders, 2, customBinders.length);
-        return Injections.createInjectionManager(CompositeBinder.wrap(binders));
+        InjectionManager injectionManager = Injections.createInjectionManager(CompositeBinder.wrap(binders));
+        injectionManager.completeRegistration();
+        return injectionManager;
     }
 
     @Test

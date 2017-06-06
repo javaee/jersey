@@ -68,10 +68,10 @@ import javax.ws.rs.client.CompletionStageRxInvoker;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
-import javax.ws.rs.client.NioInvoker;
 import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.client.RxInvokerProvider;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
@@ -87,6 +87,7 @@ import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.spi.ExecutorServiceProvider;
 
 /**
  * Jersey implementation of {@link javax.ws.rs.client.Invocation JAX-RS client-side
@@ -122,12 +123,13 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     private static final Map<String, EntityPresence> METHODS = initializeMap();
 
     private static Map<String, EntityPresence> initializeMap() {
-        final Map<String, EntityPresence> map = new HashMap<String, EntityPresence>();
+        final Map<String, EntityPresence> map = new HashMap<>();
 
         map.put("DELETE", EntityPresence.MUST_BE_NULL);
         map.put("GET", EntityPresence.MUST_BE_NULL);
         map.put("HEAD", EntityPresence.MUST_BE_NULL);
         map.put("OPTIONS", EntityPresence.MUST_BE_NULL);
+        map.put("PATCH", EntityPresence.MUST_BE_PRESENT);
         map.put("POST", EntityPresence.OPTIONAL); // we allow to post null instead of entity
         map.put("PUT", EntityPresence.MUST_BE_PRESENT);
         map.put("TRACE", EntityPresence.MUST_BE_NULL);
@@ -472,21 +474,21 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         @Override
         public CompletionStageRxInvoker rx() {
-            return new JerseyCompletionStageRxInvoker(this, null);
-        }
+            ExecutorServiceProvider instance = this.requestContext.getInjectionManager()
+                                                                  .getInstance(ExecutorServiceProvider.class);
 
-        @Override
-        public CompletionStageRxInvoker rx(ExecutorService executorService) {
-            return new JerseyCompletionStageRxInvoker(this, executorService);
+            return new JerseyCompletionStageRxInvoker(this, instance.getExecutorService());
         }
 
         @Override
         public <T extends RxInvoker> T rx(Class<T> clazz) {
-            return createRxInvoker(clazz, null);
+            ExecutorServiceProvider instance = this.requestContext.getInjectionManager()
+                                                                  .getInstance(ExecutorServiceProvider.class);
+
+            return createRxInvoker(clazz, instance.getExecutorService());
         }
 
-        @Override
-        public <T extends RxInvoker> T rx(Class<T> clazz, ExecutorService executorService) {
+        private <T extends RxInvoker> T rx(Class<T> clazz, ExecutorService executorService) {
             if (executorService == null) {
                 throw new IllegalArgumentException(LocalizationMessages.NULL_INPUT_PARAMETER("executorService"));
             }
@@ -498,7 +500,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
          * Create {@link RxInvoker} from provided {@code RxInvoker} subclass.
          * <p>
          * The method does a lookup for {@link RxInvokerProvider}, which provides given {@code RxInvoker} subclass
-         * and if found, calls {@link RxInvokerProvider#getRxInvoker(javax.ws.rs.client.SyncInvoker, ExecutorService)}.
+         * and if found, calls {@link RxInvokerProvider#getRxInvoker(SyncInvoker, ExecutorService)}
          *
          * @param clazz           {@code RxInvoker} subclass to be created.
          * @param executorService to be passed to the factory method invocation.
@@ -531,12 +533,6 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
             throw new IllegalStateException(
                     LocalizationMessages.CLIENT_RX_PROVIDER_NOT_REGISTERED(clazz.getSimpleName()));
-        }
-
-        @Override
-        public NioInvoker nio() {
-            // TODO JAX-RS 2.1: to be implemented
-            throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
         }
     }
 
@@ -752,12 +748,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     public Response invoke() throws ProcessingException, WebApplicationException {
         final ClientRuntime runtime = request().getClientRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
-        return requestScope.runInScope(new Producer<Response>() {
-            @Override
-            public Response call() throws ProcessingException {
-                return new InboundJaxrsResponse(runtime.invoke(requestForCall(requestContext)), requestScope);
-            }
-        });
+        return requestScope.runInScope(
+                (Producer<Response>) () -> new InboundJaxrsResponse(runtime.invoke(requestForCall(requestContext)),
+                                                                    requestScope));
     }
 
     @Override
@@ -768,17 +761,14 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         final ClientRuntime runtime = request().getClientRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
         //noinspection Duplicates
-        return requestScope.runInScope(new Producer<T>() {
-            @Override
-            public T call() throws ProcessingException {
-                try {
-                    return translate(runtime.invoke(requestForCall(requestContext)), requestScope, responseType);
-                } catch (final ProcessingException ex) {
-                    if (ex.getCause() instanceof WebApplicationException) {
-                        throw (WebApplicationException) ex.getCause();
-                    }
-                    throw ex;
+        return requestScope.runInScope(() -> {
+            try {
+                return translate(runtime.invoke(requestForCall(requestContext)), requestScope, responseType);
+            } catch (final ProcessingException ex) {
+                if (ex.getCause() instanceof WebApplicationException) {
+                    throw (WebApplicationException) ex.getCause();
                 }
+                throw ex;
             }
         });
     }
@@ -791,17 +781,14 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         final ClientRuntime runtime = request().getClientRuntime();
         final RequestScope requestScope = runtime.getRequestScope();
         //noinspection Duplicates
-        return requestScope.runInScope(new Producer<T>() {
-            @Override
-            public T call() throws ProcessingException {
-                try {
-                    return translate(runtime.invoke(requestForCall(requestContext)), requestScope, responseType);
-                } catch (final ProcessingException ex) {
-                    if (ex.getCause() instanceof WebApplicationException) {
-                        throw (WebApplicationException) ex.getCause();
-                    }
-                    throw ex;
+        return requestScope.runInScope(() -> {
+            try {
+                return translate(runtime.invoke(requestForCall(requestContext)), requestScope, responseType);
+            } catch (final ProcessingException ex) {
+                if (ex.getCause() instanceof WebApplicationException) {
+                    throw (WebApplicationException) ex.getCause();
                 }
+                throw ex;
             }
         });
     }

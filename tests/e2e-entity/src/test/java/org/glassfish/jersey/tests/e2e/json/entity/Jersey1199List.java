@@ -43,7 +43,10 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Formatter;
 
+import javax.json.bind.annotation.JsonbTypeAdapter;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.glassfish.jersey.tests.e2e.json.Jersey1199Test;
 
 /**
  * @author Michal Gajdos
@@ -86,6 +89,8 @@ public class Jersey1199List {
     @com.fasterxml.jackson.annotation.JsonSubTypes({
             @com.fasterxml.jackson.annotation.JsonSubTypes.Type(value = ColorHolder.class)
     })
+    // JSON-B
+    @JsonbTypeAdapter(Jersey1199Test.JsonbObjectToColorHolderAdapter.class)
     public Object[] getObjects() {
         return objects;
     }

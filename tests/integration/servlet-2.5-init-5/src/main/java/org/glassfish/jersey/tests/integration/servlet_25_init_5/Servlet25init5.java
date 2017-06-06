@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.integration.servlet_25_init_5;
 
 import java.util.Collections;
@@ -50,7 +51,7 @@ import javax.ws.rs.core.Application;
  */
 @ApplicationPath("application_path")
 public class Servlet25init5 extends Application{
-    @SuppressWarnings({"unchecked"})
+
     @Override
     public Set<Class<?>> getClasses() {
         return Collections.singleton(HelloWorldResource.class);

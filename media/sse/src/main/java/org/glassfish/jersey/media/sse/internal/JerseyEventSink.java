@@ -42,13 +42,15 @@ package org.glassfish.jersey.media.sse.internal;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.Flow;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.SseEventSink;
 
+import org.glassfish.jersey.internal.jsr166.Flow;
 import org.glassfish.jersey.media.sse.LocalizationMessages;
 import org.glassfish.jersey.server.ChunkedOutput;
 
@@ -59,7 +61,7 @@ import org.glassfish.jersey.server.ChunkedOutput;
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)]
  */
-class JerseyEventSink extends ChunkedOutput<OutboundSseEvent> implements SseEventSink {
+class JerseyEventSink extends ChunkedOutput<OutboundSseEvent> implements SseEventSink, Flow.Subscriber<OutboundSseEvent> {
     private static final Logger LOGGER = Logger.getLogger(JerseyEventSink.class.getName());
     private static final byte[] SSE_EVENT_DELIMITER = "\n".getBytes(Charset.forName("UTF-8"));
     private Flow.Subscription subscription = null;
@@ -111,6 +113,16 @@ class JerseyEventSink extends ChunkedOutput<OutboundSseEvent> implements SseEven
     }
 
     @Override
+    public CompletionStage<?> send(OutboundSseEvent event) {
+        checkClosed();
+        try {
+            this.write(event);
+            return CompletableFuture.completedFuture(null);
+        } catch (IOException e) {
+            return CompletableFuture.completedFuture(e);
+        }
+    }
+
     public void onComplete() {
         checkClosed();
         subscription.cancel();

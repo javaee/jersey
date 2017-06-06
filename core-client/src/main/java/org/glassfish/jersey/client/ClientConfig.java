@@ -42,6 +42,7 @@ package org.glassfish.jersey.client;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -57,22 +58,25 @@ import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
+import org.glassfish.jersey.internal.AutoDiscoverableConfigurator;
 import org.glassfish.jersey.internal.BootstrapBag;
 import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
+import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
-import org.glassfish.jersey.process.internal.ExecutorProviders;
+import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
 import org.glassfish.jersey.process.internal.RequestScope;
 
 /**
@@ -362,16 +366,17 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             return commonConfig.getConfiguration().getInstances();
         }
 
-        public void configureAutoDiscoverableProviders(InjectionManager injectionManager) {
-            commonConfig.configureAutoDiscoverableProviders(injectionManager, false);
+        public void configureAutoDiscoverableProviders(InjectionManager injectionManager,
+                List<AutoDiscoverable> autoDiscoverables) {
+            commonConfig.configureAutoDiscoverableProviders(injectionManager, autoDiscoverables, false);
         }
 
         public void configureForcedAutoDiscoverableProviders(InjectionManager injectionManager) {
-            commonConfig.configureAutoDiscoverableProviders(injectionManager, true);
+            commonConfig.configureAutoDiscoverableProviders(injectionManager, Collections.emptyList(), true);
         }
 
-        public void configureMetaProviders(InjectionManager injectionManager) {
-            commonConfig.configureMetaProviders(injectionManager);
+        public void configureMetaProviders(InjectionManager injectionManager, ManagedObjectsFinalizer finalizer) {
+            commonConfig.configureMetaProviders(injectionManager, finalizer);
         }
 
         public ComponentBag getComponentBag() {
@@ -396,34 +401,38 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             injectionManager.register(new ClientBinder(runtimeCfgState.getProperties()));
 
             BootstrapBag bootstrapBag = new BootstrapBag();
+            bootstrapBag.setManagedObjectsFinalizer(new ManagedObjectsFinalizer(injectionManager));
             List<BootstrapConfigurator> bootstrapConfigurators = Arrays.asList(
                     new RequestScope.RequestScopeConfigurator(),
                     new RuntimeConfigConfigurator(runtimeCfgState),
                     new ContextResolverFactory.ContextResolversConfigurator(),
                     new MessageBodyFactory.MessageBodyWorkersConfigurator(),
-                    new ExceptionMapperFactory.ExceptionMappersConfigurator());
+                    new ExceptionMapperFactory.ExceptionMappersConfigurator(),
+                    new JaxrsProviders.ProvidersConfigurator(),
+                    new AutoDiscoverableConfigurator(RuntimeType.CLIENT));
             bootstrapConfigurators.forEach(configurator -> configurator.init(injectionManager, bootstrapBag));
 
             // AutoDiscoverable.
             if (!CommonProperties.getValue(runtimeCfgState.getProperties(), RuntimeType.CLIENT,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
-                runtimeCfgState.configureAutoDiscoverableProviders(injectionManager);
+                runtimeCfgState.configureAutoDiscoverableProviders(injectionManager, bootstrapBag.getAutoDiscoverables());
             } else {
                 runtimeCfgState.configureForcedAutoDiscoverableProviders(injectionManager);
             }
 
             // Configure binders and features.
-            runtimeCfgState.configureMetaProviders(injectionManager);
+            runtimeCfgState.configureMetaProviders(injectionManager, bootstrapBag.getManagedObjectsFinalizer());
 
             // Bind providers.
             ProviderBinder.bindProviders(runtimeCfgState.getComponentBag(), RuntimeType.CLIENT, null, injectionManager);
 
+            ClientExecutorProvidersConfigurator executorProvidersConfigurator =
+                    new ClientExecutorProvidersConfigurator(runtimeCfgState.getComponentBag(), runtimeCfgState.client);
+            executorProvidersConfigurator.init(injectionManager, bootstrapBag);
+
             injectionManager.completeRegistration();
 
             bootstrapConfigurators.forEach(configurator -> configurator.postInit(injectionManager, bootstrapBag));
-
-            // Bind executors.
-            ExecutorProviders.createInjectionBindings(injectionManager);
 
             final ClientConfig configuration = new ClientConfig(runtimeCfgState);
             final Connector connector = connectorProvider.getConnector(client, configuration);

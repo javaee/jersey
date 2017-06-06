@@ -61,7 +61,7 @@ class FieldDescriptor {
         this.field = f;
     }
 
-    public Object getFieldValue(Object instance) {
+    Object getFieldValue(Object instance) {
         setAccessibleField(field);
         Object value = null;
         try {
@@ -76,7 +76,7 @@ class FieldDescriptor {
         return field.getName();
     }
 
-    protected static void setAccessibleField(final Field f) {
+    static void setAccessibleField(final Field f) {
         if (Modifier.isPublic(f.getModifiers())) {
             return;
         }

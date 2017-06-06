@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,6 +49,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.sse.OutboundSseEvent;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -57,12 +58,12 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageUtils;
 
 /**
- * Writer for {@link OutboundEvent}.
+ * Writer for {@link OutboundSseEvent}.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
+class OutboundEventWriter implements MessageBodyWriter<OutboundSseEvent> {
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
@@ -80,11 +81,11 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
     @Override
     public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
                                final MediaType mediaType) {
-        return type.equals(OutboundEvent.class) && SseFeature.SERVER_SENT_EVENTS_TYPE.isCompatible(mediaType);
+        return OutboundSseEvent.class.isAssignableFrom(type) && SseFeature.SERVER_SENT_EVENTS_TYPE.isCompatible(mediaType);
     }
 
     @Override
-    public long getSize(final OutboundEvent incomingEvent,
+    public long getSize(final OutboundSseEvent incomingEvent,
                         final Class<?> type,
                         final Type genericType,
                         final Annotation[] annotations,
@@ -94,7 +95,7 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void writeTo(final OutboundEvent outboundEvent,
+    public void writeTo(final OutboundSseEvent outboundEvent,
                         final Class<?> type,
                         final Type genericType,
                         final Annotation[] annotations,

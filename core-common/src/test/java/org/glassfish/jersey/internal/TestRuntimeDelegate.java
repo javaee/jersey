@@ -49,7 +49,6 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.RuntimeDelegate;
 
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 
 import org.junit.Assert;
@@ -62,7 +61,7 @@ import org.junit.Assert;
 public class TestRuntimeDelegate extends AbstractRuntimeDelegate {
 
     public TestRuntimeDelegate() {
-        super(Injections.createInjectionManager(new MessagingBinders.HeaderDelegateProviders()));
+        super(new MessagingBinders.HeaderDelegateProviders().getHeaderDelegateProviders());
     }
 
     @Override

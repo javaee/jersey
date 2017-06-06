@@ -74,7 +74,7 @@ public class ResourceMethodDispatcherFactoryTest {
 
         List<ResourceMethodDispatcher.Provider> providers = Arrays.asList(
                 new VoidVoidDispatcherProvider(result.bootstrapBag.getResourceContext()),
-                new JavaResourceMethodDispatcherProvider(result.bootstrapBag.getValueSupplierProviders()));
+                new JavaResourceMethodDispatcherProvider(result.bootstrapBag.getValueParamProviders()));
 
         rmdf = new ResourceMethodDispatcherFactory(providers);
         rmihf = new ResourceMethodInvocationHandlerFactory(result.injectionManager);

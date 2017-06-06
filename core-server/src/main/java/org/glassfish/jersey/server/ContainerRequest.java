@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server;
 
 import java.io.InputStream;
@@ -62,9 +63,6 @@ import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.NioCompletionHandler;
-import javax.ws.rs.core.NioErrorHandler;
-import javax.ws.rs.core.NioReaderHandler;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -353,30 +351,6 @@ public class ContainerRequest extends InboundMessageContext
         return inflector instanceof ResourceMethodInvoker
                 ? ((ResourceMethodInvoker) inflector).getReaderInterceptors()
                 : processingProviders.getSortedGlobalReaderInterceptors();
-    }
-
-    @Override
-    public void entity(NioReaderHandler reader) {
-        // TODO JAX-RS 2.1: to be implemented
-        throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
-    }
-
-    @Override
-    public void entity(NioReaderHandler reader, NioCompletionHandler completion) {
-        // TODO JAX-RS 2.1: to be implemented
-        throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
-    }
-
-    @Override
-    public void entity(NioReaderHandler reader, NioErrorHandler error) {
-        // TODO JAX-RS 2.1: to be implemented
-        throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
-    }
-
-    @Override
-    public void entity(NioReaderHandler reader, NioCompletionHandler completion, NioErrorHandler error) {
-        // TODO JAX-RS 2.1: to be implemented
-        throw new UnsupportedOperationException("TODO JAX-RS 2.1: to be implemented");
     }
 
     /**

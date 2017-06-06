@@ -50,7 +50,6 @@
     </parent>
 
     <artifactId>server-async-standalone</artifactId>
-    <version>2.26-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>jersey-examples-server-async-standalone</name>
 

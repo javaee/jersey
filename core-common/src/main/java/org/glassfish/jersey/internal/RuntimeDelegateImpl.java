@@ -42,7 +42,6 @@ package org.glassfish.jersey.internal;
 
 import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 
 /**
@@ -60,7 +59,7 @@ import org.glassfish.jersey.message.internal.MessagingBinders;
 public class RuntimeDelegateImpl extends AbstractRuntimeDelegate {
 
     public RuntimeDelegateImpl() {
-        super(Injections.createInjectionManager(new MessagingBinders.HeaderDelegateProviders()));
+        super(new MessagingBinders.HeaderDelegateProviders().getHeaderDelegateProviders());
     }
 
     @Override

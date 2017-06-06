@@ -52,6 +52,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletionStage;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -114,7 +117,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
     /**
      * Resource method invoker helper.
-     *
+     * <p>
      * The builder API provides means for constructing a properly initialized
      * {@link ResourceMethodInvoker resource method invoker} instances.
      */
@@ -409,8 +412,42 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             return null; // return null on current thread
         } else {
             // TODO replace with processing context factory method.
-            return new ContainerResponse(request, invoke(processingContext, resource));
+            Response response = invoke(processingContext, resource);
+
+            if (response.hasEntity()) {
+                Object entityFuture = response.getEntity();
+                if (entityFuture instanceof CompletionStage) {
+                    CompletionStage completionStage = ((CompletionStage) entityFuture);
+
+                    // suspend - we know that this feature is not done, see AbstractJavaResourceMethodDispatcher#invoke
+                    if (!processingContext.asyncContext().suspend()) {
+                        throw new ProcessingException(LocalizationMessages.ERROR_SUSPENDING_ASYNC_REQUEST());
+                    }
+
+                    // wait for a response
+                    completionStage.whenComplete(whenComplete(processingContext));
+
+                    return null; // return null on the current thread
+                }
+            }
+
+            return new ContainerResponse(request, response);
         }
+    }
+
+    private BiConsumer whenComplete(RequestProcessingContext processingContext) {
+        return (entity, exception) -> {
+
+            if (exception != null) {
+                if (exception instanceof CancellationException) {
+                    processingContext.asyncContext().resume(Response.status(Response.Status.SERVICE_UNAVAILABLE).build());
+                } else {
+                    processingContext.asyncContext().resume(((Throwable) exception));
+                }
+            } else {
+                processingContext.asyncContext().resume(entity);
+            }
+        };
     }
 
     private Response invoke(final RequestProcessingContext context, final Object resource) {

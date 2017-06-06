@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,9 @@ package org.glassfish.jersey.client;
 
 import java.security.KeyStore;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Configuration;
@@ -64,6 +67,8 @@ public class JerseyClientBuilder extends ClientBuilder {
     private HostnameVerifier hostnameVerifier;
     private SslConfigurator sslConfigurator;
     private SSLContext sslContext;
+    private ExecutorService executorService;
+    private ScheduledExecutorService scheduledExecutorService;
 
     /**
      * Create a new custom-configured {@link JerseyClient} instance.
@@ -141,9 +146,42 @@ public class JerseyClientBuilder extends ClientBuilder {
     }
 
     @Override
+    public ClientBuilder executorService(ExecutorService executorService) {
+        this.executorService = executorService;
+        return this;
+    }
+
+    @Override
+    public ClientBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
+        this.scheduledExecutorService = scheduledExecutorService;
+        return this;
+    }
+
+    @Override
+    public ClientBuilder connectTimeout(long timeout, TimeUnit unit) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Negative timeout.");
+        }
+
+        this.property(ClientProperties.CONNECT_TIMEOUT, Math.toIntExact(unit.toMillis(timeout)));
+        return this;
+    }
+
+    @Override
+    public ClientBuilder readTimeout(long timeout, TimeUnit unit) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Negative timeout.");
+        }
+
+        this.property(ClientProperties.READ_TIMEOUT, Math.toIntExact(unit.toMillis(timeout)));
+        return this;
+    }
+
+    @Override
     public JerseyClient build() {
         if (sslContext != null) {
-            return new JerseyClient(config, sslContext, hostnameVerifier);
+            return new JerseyClient(config, sslContext, hostnameVerifier, null, executorService,
+                                    scheduledExecutorService);
         } else if (sslConfigurator != null) {
             final SslConfigurator sslConfiguratorCopy = sslConfigurator.copy();
             return new JerseyClient(
@@ -154,9 +192,10 @@ public class JerseyClientBuilder extends ClientBuilder {
                             return sslConfiguratorCopy.createSSLContext();
                         }
                     }),
-                    hostnameVerifier);
+                    hostnameVerifier, executorService, scheduledExecutorService);
         } else {
-            return new JerseyClient(config, (UnsafeValue<SSLContext, IllegalStateException>) null, hostnameVerifier);
+            return new JerseyClient(config, (UnsafeValue<SSLContext, IllegalStateException>) null, hostnameVerifier,
+                                    executorService, scheduledExecutorService);
         }
     }
 

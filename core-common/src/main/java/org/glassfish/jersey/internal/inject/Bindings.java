@@ -42,6 +42,7 @@ package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.function.Supplier;
 
 import javax.ws.rs.core.GenericType;
@@ -57,6 +58,14 @@ public final class Bindings {
 
     private Bindings() {
         throw new AssertionError("Utility class instantiation forbidden.");
+    }
+
+    public static Collection<Binding> getBindings(InjectionManager injectionManager, Binder binder) {
+        if (binder instanceof AbstractBinder) {
+            ((AbstractBinder) binder).setInjectionManager(injectionManager);
+        }
+
+        return binder.getBindings();
     }
 
     /**
@@ -96,7 +105,8 @@ public final class Bindings {
      */
     @SuppressWarnings("unchecked")
     public static <T> ClassBinding<T> service(GenericType<T> serviceType) {
-        return (ClassBinding<T>) new ClassBinding<>(serviceType.getRawType()).asType(serviceType.getType());
+        return (ClassBinding<T>) new ClassBinding<>(serviceType.getRawType())
+                .asType((Class<T>) serviceType.getType());
     }
 
     /**
@@ -111,7 +121,7 @@ public final class Bindings {
     @SuppressWarnings("unchecked")
     public static <T> ClassBinding<T> serviceAsContract(GenericType<T> serviceType) {
         return (ClassBinding<T>) new ClassBinding<>(serviceType.getRawType())
-                .asType(serviceType.getType())
+                .asType((Class<T>) serviceType.getType())
                 .to(serviceType.getType());
     }
 
@@ -127,7 +137,7 @@ public final class Bindings {
     @SuppressWarnings("unchecked")
     public static <T> ClassBinding<T> serviceAsContract(Type serviceType) {
         return new ClassBinding<>((Class<T>) ReflectionHelper.getRawClass(serviceType))
-                .asType(serviceType)
+                .asType((Class<T>) serviceType)
                 .to(serviceType);
     }
 

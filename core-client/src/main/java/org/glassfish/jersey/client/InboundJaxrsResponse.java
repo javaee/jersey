@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.lang.annotation.Annotation;
@@ -56,6 +57,7 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.util.Producer;
+import org.glassfish.jersey.process.internal.RequestContext;
 import org.glassfish.jersey.process.internal.RequestScope;
 
 /**
@@ -72,7 +74,7 @@ class InboundJaxrsResponse extends Response {
 
     private final ClientResponse context;
     private final RequestScope scope;
-    private final RequestScope.Instance scopeInstance;
+    private final RequestContext requestContext;
 
     /**
      * Create new scoped client response.
@@ -84,9 +86,9 @@ class InboundJaxrsResponse extends Response {
         this.context = context;
         this.scope = scope;
         if (this.scope != null) {
-            this.scopeInstance = scope.referenceCurrent();
+            this.requestContext = scope.referenceCurrent();
         } else {
-            this.scopeInstance = null;
+            this.requestContext = null;
         }
     }
 
@@ -164,8 +166,8 @@ class InboundJaxrsResponse extends Response {
         try {
             context.close();
         } finally {
-            if (scopeInstance != null) {
-                scopeInstance.release();
+            if (requestContext != null) {
+                requestContext.release();
             }
         }
     }
@@ -258,8 +260,8 @@ class InboundJaxrsResponse extends Response {
     }
 
     private <T> T runInScopeIfPossible(Producer<T> producer) {
-        if (scope != null && scopeInstance != null) {
-            return scope.runInScope(scopeInstance, producer);
+        if (scope != null && requestContext != null) {
+            return scope.runInScope(requestContext, producer);
         } else {
             return producer.call();
         }

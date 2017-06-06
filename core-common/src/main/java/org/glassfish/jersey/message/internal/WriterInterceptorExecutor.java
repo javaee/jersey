@@ -141,7 +141,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
      *
      * @return Next interceptor.
      */
-    public WriterInterceptor getNextInterceptor() {
+    private WriterInterceptor getNextInterceptor() {
         if (!iterator.hasNext()) {
             return null;
         }
@@ -218,7 +218,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
     private class TerminalWriterInterceptor implements WriterInterceptor {
         private final MessageBodyWorkers workers;
 
-        public TerminalWriterInterceptor(final MessageBodyWorkers workers) {
+        TerminalWriterInterceptor(final MessageBodyWorkers workers) {
             super();
             this.workers = workers;
         }

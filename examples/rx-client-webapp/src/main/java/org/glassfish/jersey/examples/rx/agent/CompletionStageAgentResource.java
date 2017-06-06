@@ -116,7 +116,7 @@ public class CompletionStageAgentResource {
                 // Identify the user.
                 .header("Rx-User", "CompletionStage")
                 // Reactive invoker.
-                .rx(executor)
+                .rx()
                 // Return a list of destinations.
                 .get(new GenericType<List<Destination>>() {})
                 .exceptionally(throwable -> {
@@ -134,7 +134,7 @@ public class CompletionStageAgentResource {
                 // Identify the user.
                 .header("Rx-User", "CompletionStage")
                 // Reactive invoker.
-                .rx(executor)
+                .rx()
                 // Return a list of destinations.
                 .get(new GenericType<List<Destination>>() {})
                 .exceptionally(throwable -> {
@@ -150,7 +150,7 @@ public class CompletionStageAgentResource {
                 // For each destination, obtain a weather forecast ...
                 final CompletionStage<Forecast> forecast =
                         finalForecast.resolveTemplate("destination", destination.getDestination())
-                                     .request().rx(executor).get(Forecast.class)
+                                     .request().rx().get(Forecast.class)
                                      .exceptionally(throwable -> {
                                          errors.offer("Forecast: " + throwable.getMessage());
                                          return new Forecast(destination.getDestination(), "N/A");
@@ -158,7 +158,7 @@ public class CompletionStageAgentResource {
                 // ... and a price calculation
                 final CompletionStage<Calculation> calculation = finalCalculation.resolveTemplate("from", "Moon")
                         .resolveTemplate("to", destination.getDestination())
-                        .request().rx(executor).get(Calculation.class)
+                        .request().rx().get(Calculation.class)
                         .exceptionally(throwable -> {
                             errors.offer("Calculation: " + throwable.getMessage());
                             return new Calculation("Moon", destination.getDestination(), -1);

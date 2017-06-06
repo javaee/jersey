@@ -45,15 +45,16 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.function.Function;
 
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.ServletContext;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
 import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
@@ -78,14 +79,15 @@ final class MustacheTemplateProcessor extends AbstractTemplateProcessor<Mustache
      * Create an instance of this processor with injected {@link Configuration config} and (nullable)
      * {@link ServletContext servlet context}.
      *
-     * @param config         configuration to configure this processor from.
-     * @param servletContext servlet context to obtain template resources from.
-     * @param createInstance function that delegates a creation and an initialization to injection manager.
+     * @param config           configuration to configure this processor from.
+     * @param injectionManager injection manager.
      */
-    public MustacheTemplateProcessor(Configuration config, ServletContext servletContext, Function<Class<?>, ?> createInstance) {
-        super(config, servletContext, "mustache", "mustache");
+    @Inject
+    public MustacheTemplateProcessor(Configuration config, InjectionManager injectionManager) {
+        super(config, injectionManager.getInstance(ServletContext.class), "mustache", "mustache");
 
-        this.factory = getTemplateObjectFactory(createInstance, MustacheFactory.class, DefaultMustacheFactory::new);
+        this.factory = getTemplateObjectFactory(injectionManager::createAndInitialize, MustacheFactory.class,
+                DefaultMustacheFactory::new);
     }
 
     @Override

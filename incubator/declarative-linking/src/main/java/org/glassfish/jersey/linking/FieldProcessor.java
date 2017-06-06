@@ -53,6 +53,7 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.glassfish.jersey.linking.contributing.ResourceLinkContributionContext;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
 /**
@@ -67,7 +68,7 @@ class FieldProcessor<T> {
     private EntityDescriptor instanceDescriptor;
     private static final Logger log = Logger.getLogger(FieldProcessor.class.getName());
 
-    public FieldProcessor(Class<T> c) {
+    FieldProcessor(Class<T> c) {
         instanceDescriptor = EntityDescriptor.getInstance(c);
     }
 
@@ -76,24 +77,28 @@ class FieldProcessor<T> {
      * recursively process its fields.
      * @param entity the entity object returned by the resource method
      * @param uriInfo the uriInfo for the request
+     * @param rmc the ResourceMappingContext used for building URIs
+     * @param rlcc the ResourceLinkContributionContext used to find link contributors
      */
-    public void processLinks(T entity, UriInfo uriInfo, ResourceMappingContext rmc) {
+    void processLinks(T entity, UriInfo uriInfo, ResourceMappingContext rmc, ResourceLinkContributionContext rlcc) {
         Set<Object> processed = new HashSet<Object>();
         Object resource = uriInfo.getMatchedResources().get(0);
-        processLinks(entity, resource, entity, processed, uriInfo, rmc);
+        processLinks(entity, resource, entity, processed, uriInfo, rmc, rlcc);
     }
 
     /**
      * Inject any {@link org.glassfish.jersey.linking.InjectLink} annotated fields in the supplied instance. Called
      * once for the entity and then recursively for each member and field.
-     * @param entity
+     * @param entity the entity object returned by the resource method
      * @param processed a list of already processed objects, used to break
      * recursion when processing circular references.
-     * @param uriInfo
+     * @param uriInfo the uriInfo for the request
+     * @param rmc the ResourceMappingContext used for building URIs
+     * @param rlcc the ResourceLinkContributionContext used to find link contributors
      */
     private void processLinks(Object entity, Object resource, Object instance,
-                              Set<Object> processed, UriInfo uriInfo,
-                              ResourceMappingContext rmc) {
+            Set<Object> processed, UriInfo uriInfo,
+            ResourceMappingContext rmc, ResourceLinkContributionContext rlcc) {
 
         try {
             if (instance == null || processed.contains(instance)) {
@@ -121,12 +126,21 @@ class FieldProcessor<T> {
             } else if (field instanceof InjectLinksFieldDescriptor) {
 
                 InjectLinksFieldDescriptor linksField = (InjectLinksFieldDescriptor) field;
-                List<Link> list = new ArrayList<Link>();
+                List<Link> list = new ArrayList<>();
                 for (InjectLinkFieldDescriptor linkField : linksField.getLinksToInject()) {
                     if (ELLinkBuilder.evaluateCondition(linkField.getCondition(), entity, resource, instance)) {
                        URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo, rmc);
                        Link link = linkField.getLink(uri);
                        list.add(link);
+                    }
+                }
+                List<ProvideLinkDescriptor> linkContributors = rlcc.getContributorsFor(instance.getClass());
+                for (ProvideLinkDescriptor linkContributor : linkContributors) {
+                    if (ELLinkBuilder.evaluateCondition(linkContributor.getCondition(),
+                            entity, linkContributor.getResource(), instance)) {
+                        URI uri = ELLinkBuilder.buildURI(linkContributor, entity, resource, instance, uriInfo, rmc);
+                        Link link = linkContributor.getLink(uri);
+                        list.add(link);
                     }
                 }
 
@@ -139,17 +153,17 @@ class FieldProcessor<T> {
         if (instanceClass.isArray() && Object[].class.isAssignableFrom(instanceClass)) {
             Object array[] = (Object[]) instance;
             for (Object member : array) {
-                processMember(entity, resource, member, processed, uriInfo, rmc);
+                processMember(entity, resource, member, processed, uriInfo, rmc, rlcc);
             }
         } else if (instance instanceof Iterable) {
             Iterable iterable = (Iterable) instance;
             for (Object member : iterable) {
-                processMember(entity, resource, member, processed, uriInfo, rmc);
+                processMember(entity, resource, member, processed, uriInfo, rmc, rlcc);
             }
         } else if (instance instanceof Map) {
             Map map = (Map) instance;
             for (Object member : map.entrySet()) {
-                processMember(entity, resource, member, processed, uriInfo, rmc);
+                processMember(entity, resource, member, processed, uriInfo, rmc, rlcc);
             }
         }
 
@@ -157,7 +171,7 @@ class FieldProcessor<T> {
         for (FieldDescriptor member : instanceDescriptor.getNonLinkFields()) {
 
             if (fieldSuitableForIntrospection(member)) {
-                processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo, rmc);
+                processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo, rmc, rlcc);
             }
         }
 
@@ -174,10 +188,10 @@ class FieldProcessor<T> {
     }
 
     private void processMember(Object entity, Object resource, Object member, Set<Object> processed, UriInfo uriInfo,
-      ResourceMappingContext rmc) {
+            ResourceMappingContext rmc, ResourceLinkContributionContext rlcc) {
         if (member != null) {
-            FieldProcessor proc = new FieldProcessor(member.getClass());
-            proc.processLinks(entity, resource, member, processed, uriInfo, rmc);
+            FieldProcessor<?> proc = new FieldProcessor(member.getClass());
+            proc.processLinks(entity, resource, member, processed, uriInfo, rmc, rlcc);
         }
     }
 

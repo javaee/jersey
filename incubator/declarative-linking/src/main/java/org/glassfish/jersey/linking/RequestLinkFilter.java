@@ -66,7 +66,6 @@ import org.glassfish.jersey.server.ExtendedUriInfo;
  * @author Gerard Davison (gerard.davison at oracle.com)
  * @see Link
  */
-
 class RequestLinkFilter implements ContainerRequestFilter {
 
     @Context

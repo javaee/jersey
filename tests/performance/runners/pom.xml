@@ -59,6 +59,6 @@
     </description>
 
     <modules>
-        <module>jersey2-grizzly-runner</module>
+        <module>jersey-grizzly-runner</module>
     </modules>
 </project>

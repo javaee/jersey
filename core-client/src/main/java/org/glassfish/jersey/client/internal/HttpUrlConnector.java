@@ -37,12 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client.internal;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
@@ -83,7 +83,6 @@ import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
-import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
 
 /**
@@ -111,7 +110,7 @@ public class HttpUrlConnector implements Connector {
             "Via"
     };
 
-    private static final Set<String> restrictedHeaderSet = new HashSet<String>(restrictedHeaders.length);
+    private static final Set<String> restrictedHeaderSet = new HashSet<>(restrictedHeaders.length);
 
     static {
         for (String headerName : restrictedHeaders) {
@@ -199,7 +198,7 @@ public class HttpUrlConnector implements Connector {
              * IOException} which might be questionable. Nevertheless, our contract is {@link InputStream} and as such, the
              * stream we're offering must comply with it.
              *
-             * @throws IOException
+             * @throws IOException when the stream is closed.
              */
             private void throwIOExceptionIfClosed() throws IOException {
                 if (closed) {
@@ -378,13 +377,9 @@ public class HttpUrlConnector implements Connector {
                 }
             }
 
-            request.setStreamProvider(new OutboundMessageContext.StreamProvider() {
-
-                @Override
-                public OutputStream getOutputStream(int contentLength) throws IOException {
-                    setOutboundHeaders(request.getStringHeaders(), uc);
-                    return uc.getOutputStream();
-                }
+            request.setStreamProvider(contentLength -> {
+                setOutboundHeaders(request.getStringHeaders(), uc);
+                return uc.getOutputStream();
             });
             request.writeEntity();
 

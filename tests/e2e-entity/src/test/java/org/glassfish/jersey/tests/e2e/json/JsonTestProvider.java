@@ -49,10 +49,15 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbConfig;
+
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.jackson1.Jackson1Feature;
 import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonFeature;
+import org.glassfish.jersey.jsonb.JsonBindingFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
@@ -69,6 +74,7 @@ public abstract class JsonTestProvider {
         add(new JettisonMappedJsonTestProvider());
         add(new JettisonBadgerfishJsonTestProvider());
         add(new MoxyJsonTestProvider());
+        add(new JsonbTestProvider());
     }};
 
     //  TODO add MoxyJsonTestProvider once MOXy supports POJO
@@ -136,6 +142,16 @@ public abstract class JsonTestProvider {
         }
     }
 
+    @Provider
+    protected static final class JsonbContextResolver implements ContextResolver<Jsonb> {
+
+        @Override
+        public Jsonb getContext(Class<?> type) {
+            JsonbConfig config = new JsonbConfig().withAdapters(new CustomJsonbAdapter());
+            return JsonbBuilder.create(config);
+        }
+    }
+
     public static class JacksonJsonTestProvider extends JsonTestProvider {
 
         public JacksonJsonTestProvider() {
@@ -145,11 +161,16 @@ public abstract class JsonTestProvider {
     }
 
     public static class Jackson1JsonTestProvider extends JsonTestProvider {
-
         public Jackson1JsonTestProvider() {
             setFeature(new Jackson1Feature());
         }
+    }
 
+    public static class JsonbTestProvider extends JsonTestProvider {
+        public JsonbTestProvider() {
+            setFeature(new JsonBindingFeature());
+            getProviders().add(new JsonbContextResolver());
+        }
     }
 
     public JettisonConfig getConfiguration() {
@@ -171,4 +192,5 @@ public abstract class JsonTestProvider {
     public Set<Object> getProviders() {
         return providers;
     }
+
 }

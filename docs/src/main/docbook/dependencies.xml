@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -56,11 +56,23 @@
         <title>Java SE Compatibility</title>
 
         <para>
-            Until version 2.6, Jersey was compiled with Java SE 6. This has changes in Jersey 2.7.
-            Now almost all Jersey components are compiled with Java SE 7 target. It means, that you will need at least Java
-            SE 7 to be able to compile and run your application that is using latest Jersey.
-            Only <literal>core-common</literal> and <literal>core-client</literal> modules are still compiled with Java class
-            version runnable with Java SE 6.
+            <emphasis>2.x branch: </emphasis>
+            <itemizedlist>
+                <listitem>
+                    <para>Until version 2.6, Jersey was compiled with Java SE 6. This has changed in Jersey 2.7.</para>
+                </listitem>
+                <listitem>
+                    <para>Up to version 2.25.x almost all Jersey components are compiled with Java SE 7 target.
+                    It means, that you will need at least Java
+                    SE 7 to be able to compile and run your application that is using latest Jersey.
+                    Only <literal>core-common</literal> and <literal>core-client</literal> modules are still compiled with Java class
+                    version runnable with Java SE 6.</para>
+                </listitem>
+                <listitem>
+                    <para>Since Jersey 2.26, all modules are build using Java SE 8 and there is no support for running it
+                    on older Java SE distributions.</para>
+                </listitem>
+            </itemizedlist>
         </para>
     </section>
     <section>

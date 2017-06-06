@@ -60,7 +60,7 @@ import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-import org.glassfish.jersey.server.spi.internal.ValueSupplierProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * A resource model validator that checks the given resource model.
@@ -92,11 +92,11 @@ public final class ComponentModelValidator {
 
     private final List<ResourceModelIssue> issueList = new LinkedList<>();
 
-    public ComponentModelValidator(Collection<ValueSupplierProvider> valueSupplierProviders, MessageBodyWorkers msgBodyWorkers) {
+    public ComponentModelValidator(Collection<ValueParamProvider> valueParamProviders, MessageBodyWorkers msgBodyWorkers) {
         validators = new ArrayList<>();
         validators.add(new ResourceValidator());
         validators.add(new RuntimeResourceModelValidator(msgBodyWorkers));
-        validators.add(new ResourceMethodValidator(valueSupplierProviders));
+        validators.add(new ResourceMethodValidator(valueParamProviders));
         validators.add(new InvocableValidator());
     }
 

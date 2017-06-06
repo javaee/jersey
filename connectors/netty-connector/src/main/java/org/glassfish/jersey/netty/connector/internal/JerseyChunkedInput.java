@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,47 +63,59 @@ import io.netty.handler.stream.ChunkedInput;
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class JerseyChunkedInput extends OutputStream implements ChunkedInput<ByteBuf> {
+public class JerseyChunkedInput extends OutputStream implements ChunkedInput<ByteBuf>, ChannelFutureListener {
 
     private static final ByteBuffer VOID = ByteBuffer.allocate(0);
     private static final int CAPACITY = 8;
-    private static final int WRITE_TIMEOUT = 1000;
-    private static final int READ_TIMEOUT = 1000;
+    // TODO this needs to be configurable, see JERSEY-3228
+    private static final int WRITE_TIMEOUT = 10000;
+    private static final int READ_TIMEOUT = 10000;
 
     private final LinkedBlockingDeque<ByteBuffer> queue = new LinkedBlockingDeque<>(CAPACITY);
     private final Channel ctx;
+    private final ChannelFuture future;
 
     private volatile boolean open = true;
     private volatile long offset = 0;
 
     public JerseyChunkedInput(Channel ctx) {
         this.ctx = ctx;
-        ctx.closeFuture().addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                // forcibly closed connection.
-                open = false;
-                queue.clear();
-                JerseyChunkedInput.this.close();
-            }
-        });
+        this.future = ctx.closeFuture();
+        this.future.addListener(this);
     }
 
     @Override
     public boolean isEndOfInput() throws Exception {
-
         if (!open) {
             return true;
         }
 
         ByteBuffer peek = queue.peek();
+
         if ((peek != null && peek == VOID)) {
             queue.remove(); // VOID from the top.
             open = false;
+            removeCloseListener();
             return true;
         }
 
         return false;
+    }
+
+    @Override
+    public void operationComplete(ChannelFuture f) throws Exception {
+        // forcibly closed connection.
+        open = false;
+        queue.clear();
+
+        close();
+        removeCloseListener();
+    }
+
+    private void removeCloseListener() {
+        if (future != null) {
+            future.removeListener(this);
+        }
     }
 
     @Override

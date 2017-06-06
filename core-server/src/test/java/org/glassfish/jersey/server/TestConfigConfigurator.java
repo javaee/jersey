@@ -51,9 +51,27 @@ import org.glassfish.jersey.internal.inject.InjectionManager;
  */
 public class TestConfigConfigurator implements BootstrapConfigurator {
 
+    private final ResourceConfig runtimeConfig;
+
+    /**
+     * Create test runtime config configurator with dummy resource config.
+     */
+    public TestConfigConfigurator() {
+        this(new ResourceConfig());
+    }
+
+    /**
+     * Create test runtime config configurator with dummy resource config.
+     *
+     * @param runtimeConfig dummy resource config.
+     */
+    public TestConfigConfigurator(ResourceConfig runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
     @Override
     public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
-        bootstrapBag.setConfiguration(new ResourceConfig());
+        bootstrapBag.setConfiguration(runtimeConfig);
     }
 
     @Override

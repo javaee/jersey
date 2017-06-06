@@ -63,6 +63,10 @@
             <artifactId>jersey-mvc-bean-validation</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
             <artifactId>jersey-mvc-mustache</artifactId>
         </dependency>

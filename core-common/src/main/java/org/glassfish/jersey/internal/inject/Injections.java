@@ -40,12 +40,16 @@
 
 package org.glassfish.jersey.internal.inject;
 
-import java.util.Iterator;
-import java.util.ServiceLoader;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.glassfish.jersey.hk2.Hk2InjectionManagerFactory;
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.model.internal.RankedComparator;
+import org.glassfish.jersey.model.internal.RankedProvider;
 
 /**
  * Injection binding utility methods.
@@ -71,15 +75,18 @@ public class Injections {
      * @return a injection manager with all the bindings.
      */
     public static InjectionManager createInjectionManager(Binder binder) {
-        return lookupInjectionManagerFactory().create(binder);
+        InjectionManagerFactory injectionManagerFactory = lookupInjectionManagerFactory();
+        InjectionManager injectionManager = injectionManagerFactory.create();
+        injectionManager.register(binder);
+        return injectionManager;
     }
 
     /**
      * Creates an unnamed, parented {@link InjectionManager}. In case the {@code parent} injection manager is not specified, the
      * locator will not be parented.
      *
-     * @param parent  The parent of this injection manager. Services can be found in the parent (and all grand-parents). May be
-     *                {@code null}. An underlying DI provider checks whether the parent is in a proper type.
+     * @param parent The parent of this injection manager. Services can be found in the parent (and all grand-parents). May be
+     *               {@code null}. An underlying DI provider checks whether the parent is in a proper type.
      * @return an injection manager with all the bindings.
      */
     public static InjectionManager createInjectionManager(Object parent) {
@@ -87,13 +94,26 @@ public class Injections {
     }
 
     private static InjectionManagerFactory lookupInjectionManagerFactory() {
-        Iterator<InjectionManagerFactory> iterator = ServiceLoader.load(InjectionManagerFactory.class).iterator();
-        if (iterator.hasNext()) {
-            return iterator.next();
-        } else {
-            // TODO: Log that there is no explicitly configured InjectionManager, default is used.
-            return new Hk2InjectionManagerFactory();
+        return lookupService(InjectionManagerFactory.class)
+                .orElseThrow(() -> new IllegalStateException(LocalizationMessages.INJECTION_MANAGER_FACTORY_NOT_FOUND()));
+    }
+
+    /**
+     * Look for a service of given type. If more then one service is found the method sorts them are returns the one with highest
+     * priority.
+     *
+     * @param clazz type of service to look for.
+     * @param <T>   type of service to look for.
+     * @return instance of service with highest priority or {@code null} if service of given type cannot be found.
+     * @see javax.annotation.Priority
+     */
+    private static <T> Optional<T> lookupService(final Class<T> clazz) {
+        List<RankedProvider<T>> providers = new LinkedList<>();
+        for (T provider : ServiceFinder.find(clazz)) {
+            providers.add(new RankedProvider<>(provider));
         }
+        providers.sort(new RankedComparator<>(RankedComparator.Order.DESCENDING));
+        return providers.isEmpty() ? Optional.empty() : Optional.ofNullable(providers.get(0).getProvider());
     }
 
     /**

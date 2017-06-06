@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.integration.servlet_25_mvc_2.resource;
 
 import javax.ws.rs.GET;
@@ -83,8 +84,8 @@ public class Item {
     @Override
     public String toString() {
         return "Item{"
-               + "title='" + title + '\''
-               + ", author='" + author + '\''
-               + '}';
+                + "title='" + title + '\''
+                + ", author='" + author + '\''
+                + '}';
     }
 }

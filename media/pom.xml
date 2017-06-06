@@ -60,6 +60,7 @@
 
     <modules>
         <module>jaxb</module>
+        <module>json-binding</module>
         <module>json-jackson</module>
         <module>json-jackson1</module>
         <module>json-jettison</module>
@@ -68,4 +69,13 @@
         <module>multipart</module>
         <module>sse</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

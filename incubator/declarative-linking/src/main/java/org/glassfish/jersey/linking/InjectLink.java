@@ -65,7 +65,7 @@ public @interface InjectLink {
     /**
      * Styles of URI supported
      */
-    public enum Style {
+    enum Style {
 
         /**
          * An absolute URI. The URI template will be prefixed with the absolute
@@ -198,7 +198,7 @@ public @interface InjectLink {
 
     @Target({ElementType.TYPE, ElementType.FIELD})
     @Retention(RetentionPolicy.RUNTIME)
-    public @interface Extension {
+    @interface Extension {
 
         /**
          * Specifies the name of the extension parameter
@@ -211,30 +211,30 @@ public @interface InjectLink {
         String value();
     }
 
-    public static class Util {
+    class Util {
 
         public static Link buildLinkFromUri(URI uri, InjectLink link) {
 
             javax.ws.rs.core.Link.Builder builder = javax.ws.rs.core.Link.fromUri(uri);
-            if (link.rel().length() != 0) {
+            if (!link.rel().isEmpty()) {
                 builder = builder.rel(link.rel());
             }
-            if (link.rev().length() != 0) {
+            if (!link.rev().isEmpty()) {
                 builder = builder.param("rev", link.rev());
             }
-            if (link.type().length() != 0) {
+            if (!link.type().isEmpty()) {
                 builder = builder.type(link.type());
             }
-            if (link.title().length() != 0) {
+            if (!link.title().isEmpty()) {
                 builder = builder.param("title", link.title());
             }
-            if (link.anchor().length() != 0) {
+            if (!link.anchor().isEmpty()) {
                 builder = builder.param("anchor", link.anchor());
             }
-            if (link.media().length() != 0) {
+            if (!link.media().isEmpty()) {
                 builder = builder.param("media", link.media());
             }
-            if (link.hreflang().length() != 0) {
+            if (!link.hreflang().isEmpty()) {
                 builder = builder.param("hreflang", link.hreflang());
             }
             for (InjectLink.Extension ext : link.extensions()) {

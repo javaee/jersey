@@ -48,7 +48,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.ws.rs.Flow;
+import org.glassfish.jersey.internal.jsr166.Flow;
 
 import org.junit.Test;
 
@@ -57,7 +57,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test Jersey {@link javax.ws.rs.Flow.Publisher} implementation, {@link JerseyPublisher}.
+ * Test Jersey {@link Flow.Publisher} implementation, {@link JerseyPublisher}.
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
@@ -158,13 +158,16 @@ public class JerseyPublisherTest {
         activeSubscriber.receive(1000);
 
         AtomicInteger counter = new AtomicInteger(0);
-        final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
-        scheduledExecutorService.scheduleAtFixedRate(() -> {
+        final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService.scheduleWithFixedDelay(() -> {
             int i = counter.getAndIncrement();
-            publisher.publish("MSG-" + i);
-            if (i > MSG_COUNT - 1) {
+
+            if (i >= MSG_COUNT) {
                 scheduledExecutorService.shutdown();
+                return;
             }
+
+            publisher.publish("MSG-" + i);
         }, 0, 10, TimeUnit.MILLISECONDS);
 
         assertTrue(writeLatch.await(6000, TimeUnit.MILLISECONDS));
@@ -248,11 +251,11 @@ public class JerseyPublisherTest {
             return this.data;
         }
 
-        public boolean hasError() {
+        boolean hasError() {
             return hasError;
         }
 
-        public boolean isCompleted() {
+        boolean isCompleted() {
             return completed;
         }
     }

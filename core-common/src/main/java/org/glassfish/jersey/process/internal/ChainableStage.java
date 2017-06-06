@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,10 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.process.internal;
+
+import java.util.function.Function;
 
 /**
  * Linear acceptor that can be composed into a chain.
@@ -47,7 +50,7 @@ package org.glassfish.jersey.process.internal;
  * should be returned from the chain by default.
  * <p>
  * The typical use case for implementing the acceptor is a logic that usually
- * needs to perform some logic, but unlike an {@link Stage.Builder#to(jersey.repackaged.com.google.common.base.Function)
+ * needs to perform some logic, but unlike an {@link Stage.Builder#to(Function)}
  * acceptor created from a function} it also needs to be able to decide to override
  * the default next acceptor and return a different acceptor, effectively branching
  * away from the original linear acceptor chain. This technique can be e.g. used

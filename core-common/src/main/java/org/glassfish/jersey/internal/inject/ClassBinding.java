@@ -57,6 +57,7 @@ public class ClassBinding<T> extends Binding<T, ClassBinding<T>> {
      */
     ClassBinding(Class<T> service) {
         this.service = service;
+        asType(service);
     }
 
     /**

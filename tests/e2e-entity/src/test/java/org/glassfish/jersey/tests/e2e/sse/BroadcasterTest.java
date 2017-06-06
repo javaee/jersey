@@ -93,10 +93,10 @@ public class BroadcasterTest extends JerseyTest {
         @Path("events")
         public void getServerSentEvents(@Context final SseEventSink eventSink, @Context final Sse sse) {
             isSingleton = this.sse == sse;
-            eventSink.onNext(sse.newEventBuilder().data("Event1").build());
-            eventSink.onNext(sse.newEventBuilder().data("Event2").build());
-            eventSink.onNext(sse.newEventBuilder().data("Event3").build());
-            broadcaster.subscribe(eventSink);
+            eventSink.send(sse.newEventBuilder().data("Event1").build());
+            eventSink.send(sse.newEventBuilder().data("Event2").build());
+            eventSink.send(sse.newEventBuilder().data("Event3").build());
+            broadcaster.register(eventSink);
             broadcaster.onClose((subscriber) -> {
                 if (subscriber == eventSink) {
                     closeLatch.countDown();
@@ -135,11 +135,11 @@ public class BroadcasterTest extends JerseyTest {
         List<String> resultsA2 = new ArrayList<>();
         CountDownLatch a1Latch = new CountDownLatch(5);
         CountDownLatch a2Latch = new CountDownLatch(5);
-        eventSourceA.subscribe((event) -> {
+        eventSourceA.register((event) -> {
             resultsA1.add(event.readData());
             a1Latch.countDown();
         });
-        eventSourceA.subscribe((event) -> {
+        eventSourceA.register((event) -> {
             resultsA2.add(event.readData());
             a2Latch.countDown();
         });
@@ -153,11 +153,11 @@ public class BroadcasterTest extends JerseyTest {
         List<String> resultsB2 = new ArrayList<>();
         CountDownLatch b1Latch = new CountDownLatch(4);
         CountDownLatch b2Latch = new CountDownLatch(4);
-        eventSourceB.subscribe((event) -> {
+        eventSourceB.register((event) -> {
             resultsB1.add(event.readData());
             b1Latch.countDown();
         });
-        eventSourceB.subscribe((event) -> {
+        eventSourceB.register((event) -> {
             resultsB2.add(event.readData());
             b2Latch.countDown();
         });

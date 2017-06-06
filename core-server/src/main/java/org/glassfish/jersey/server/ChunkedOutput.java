@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,6 +53,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.process.internal.RequestContext;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
@@ -77,7 +78,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     private volatile boolean closed = false;
     private boolean flushing = false;
     private volatile RequestScope requestScope;
-    private volatile RequestScope.Instance requestScopeInstance;
+    private volatile RequestContext requestScopeContext;
     private volatile ContainerRequest requestContext;
     private volatile ContainerResponse responseContext;
     private volatile ConnectionCallback connectionCallback;
@@ -181,13 +182,13 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     }
 
     private void flushQueue() throws IOException {
-        if (requestScopeInstance == null || requestContext == null || responseContext == null) {
+        if (requestScopeContext == null || requestContext == null || responseContext == null) {
             return;
         }
 
         Exception ex = null;
         try {
-            requestScope.runInScope(requestScopeInstance, new Callable<Void>() {
+            requestScope.runInScope(requestScopeContext, new Callable<Void>() {
                 @Override
                 public Void call() throws IOException {
                     boolean shouldClose;
@@ -292,7 +293,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                     ex = ex == null ? e : ex;
                 }
 
-                requestScopeInstance.release();
+                requestScopeContext.release();
 
                 // rethrow remembered exception (if any)
                 if (ex instanceof IOException) {
@@ -350,7 +351,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * Set context used for writing chunks.
      *
      * @param requestScope             request scope.
-     * @param requestScopeInstance     current request scope instance.
+     * @param requestScopeContext      current request context instance.
      * @param requestContext           request context.
      * @param responseContext          response context.
      * @param connectionCallbackRunner connection callback.
@@ -358,13 +359,13 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */
     void setContext(final RequestScope requestScope,
-                    final RequestScope.Instance requestScopeInstance,
+                    final RequestContext requestScopeContext,
                     final ContainerRequest requestContext,
                     final ContainerResponse responseContext,
                     final ConnectionCallback connectionCallbackRunner,
                     final Value<AsyncContext> asyncContext) throws IOException {
         this.requestScope = requestScope;
-        this.requestScopeInstance = requestScopeInstance;
+        this.requestScopeContext = requestScopeContext;
         this.requestContext = requestContext;
         this.responseContext = responseContext;
         this.connectionCallback = connectionCallbackRunner;

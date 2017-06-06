@@ -117,11 +117,13 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
         this.suffix = '.' + propertySuffix;
 
         this.servletContext = servletContext;
-        this.supportedExtensions = Arrays.stream(supportedExtensions)
-                .map(extension -> {
-                    String ext = extension.toLowerCase();
-                    return ext.startsWith(".") ? ext : "." + ext;
-                }).collect(Collectors.toSet());
+        this.supportedExtensions =
+                Arrays.stream(supportedExtensions)
+                      .map(input -> {
+                          input = input.toLowerCase();
+                          return input.startsWith(".") ? input : "." + input;
+                      })
+                      .collect(Collectors.toSet());
 
         // Resolve property values.
         final Map<String, Object> properties = config.getProperties();
@@ -253,9 +255,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
             }
         }
 
-        return supportedExtensions.stream()
-                .map(extensiont -> templatePath + extensiont)
-                .collect(Collectors.toSet());
+        return supportedExtensions.stream().map(input -> templatePath + input).collect(Collectors.toSet());
     }
 
     /**

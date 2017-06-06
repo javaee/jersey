@@ -56,6 +56,10 @@
             <artifactId>jersey-container-servlet-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <finalName>monitoring-webapp</finalName>

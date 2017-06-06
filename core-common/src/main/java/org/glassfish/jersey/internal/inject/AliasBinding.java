@@ -53,7 +53,7 @@ import java.util.Set;
  */
 public class AliasBinding {
 
-    private final String contract;
+    private final Class<?> contract;
     private final Set<Annotation> qualifiers = new LinkedHashSet<>();
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private Optional<String> scope = Optional.empty();
@@ -65,7 +65,7 @@ public class AliasBinding {
      *
      * @param contract contract of the alias.
      */
-     /* package */ AliasBinding(String contract) {
+     /* package */ AliasBinding(Class<?> contract) {
         this.contract = contract;
     }
 
@@ -74,7 +74,7 @@ public class AliasBinding {
      *
      * @return binding's contract.
      */
-    public String getContract() {
+    public Class<?> getContract() {
         return contract;
     }
 

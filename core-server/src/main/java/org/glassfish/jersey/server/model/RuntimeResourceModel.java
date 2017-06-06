@@ -48,7 +48,6 @@ import java.util.Map;
 
 import org.glassfish.jersey.uri.PathTemplate;
 
-
 /**
  * Runtime Resource model contains structured information about runtime resources.
  *

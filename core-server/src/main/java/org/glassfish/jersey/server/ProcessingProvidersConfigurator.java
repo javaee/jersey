@@ -72,6 +72,14 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
 
 /**
  * Configurator which initializes and register {@link ProcessingProviders} instance into {@link BootstrapBag}.
+ * Instances of these interfaces are processed, configured and provided using this configurator:
+ * <ul>
+ * <li>{@link ContainerRequestFilter}</li>
+ * <li>{@link ContainerResponseFilter}</li>
+ * <li>{@link ReaderInterceptor}</li>
+ * <li>{@link WriterInterceptor}</li>
+ * <li>{@link DynamicFeature}</li>
+ * </ul>
  *
  * @author Petr Bouda (petr.bouda at oracle.com)
  */

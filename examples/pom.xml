@@ -78,6 +78,7 @@
         <module>groovy</module>
         <module>helloworld</module>
         <module>helloworld-benchmark</module>
+        <module>helloworld-cdi2-se</module>
         <module>helloworld-netty</module>
         <module>helloworld-programmatic</module>
         <module>helloworld-pure-jax-rs</module>
@@ -93,6 +94,7 @@
         <module>jaxb</module>
         <module>jaxrs-types-injection</module>
         <module>jersey-ejb</module>
+        <module>json-binding-webapp</module>
         <module>json-jackson</module>
         <module>json-jackson1</module>
         <module>json-jettison</module>
@@ -114,12 +116,14 @@
         <module>server-async</module>
         <module>server-async-managed</module>
         <module>server-async-standalone</module>
-        <module>server-sent-events</module>
+        <module>server-sent-events-jersey</module>
+        <module>server-sent-events-jaxrs</module>
         <module>servlet3-webapp</module>
         <module>simple-console</module>
         <module>shortener-webapp</module>
         <module>sparklines</module>
-        <module>sse-item-store-webapp</module>
+        <module>sse-item-store-jersey-webapp</module>
+        <module>sse-item-store-jaxrs-webapp</module>
         <module>sse-twitter-aggregator</module>
         <module>system-properties-example</module>
         <module>tone-generator</module>
