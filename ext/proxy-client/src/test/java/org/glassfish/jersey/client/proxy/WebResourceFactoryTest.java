@@ -40,6 +40,7 @@
 package org.glassfish.jersey.client.proxy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -326,6 +327,20 @@ public class WebResourceFactoryTest extends JerseyTest {
 
         final String result = resource.postByNameFormSortedSet(set);
         assertEquals("3:[a, bb, ccc]", result);
+    }
+
+    @Test
+    public void testPostBeanParam() {
+        MyBeanParam beanParam = new MyBeanParam();
+        beanParam.queryParam = "query";
+        beanParam.pathParam = "path";
+        beanParam.headerParam = "header";
+        beanParam.cookieParam = "cookie";
+        beanParam.matrixParam = new TreeSet(Arrays.asList("a", "bb", "ccc"));
+        beanParam.formParam = Arrays.asList("dddd", "eeeee", "ffffff");
+
+        String result = resource.postBeanParam(beanParam);
+        assertEquals(beanParam.toString(), result);
     }
 
     @Test

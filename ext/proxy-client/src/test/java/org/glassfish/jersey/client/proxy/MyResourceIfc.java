@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.FormParam;
@@ -181,6 +182,11 @@ public interface MyResourceIfc {
     @POST
     @Produces(MediaType.TEXT_PLAIN)
     String postByNameFormSortedSet(@FormParam("form-name-sorted") SortedSet<String> name);
+
+    @Path("request/{path-param}")
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    String postBeanParam(@BeanParam MyBeanParam name);
 
     @Path("subresource")
     MySubResourceIfc getSubResource();
