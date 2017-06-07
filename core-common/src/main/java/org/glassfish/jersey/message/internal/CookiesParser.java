@@ -170,8 +170,6 @@ public class CookiesParser {
                     cookie.secure = true;
                 } else if (param.startsWith("version")) {
                     cookie.version = Integer.parseInt(value);
-                } else if (param.startsWith("domain")) {
-                    cookie.domain = value;
                 } else if (param.startsWith("httponly")) {
                     cookie.httpOnly = true;
                 }  else if (param.startsWith("expires")) {
