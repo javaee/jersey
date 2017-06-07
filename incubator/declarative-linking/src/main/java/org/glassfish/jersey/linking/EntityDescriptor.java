@@ -81,6 +81,7 @@ class EntityDescriptor {
     private Map<String, FieldDescriptor> nonLinkFields;
     private Map<String, FieldDescriptor> linkFields;
     private List<LinkHeaderDescriptor> linkHeaders;
+    private Class<?> entityClass;
 
     /**
      * Construct an new descriptor by inspecting the supplied class.
@@ -98,6 +99,7 @@ class EntityDescriptor {
         findFields(entityClass);
         this.nonLinkFields = Collections.unmodifiableMap(this.nonLinkFields);
         this.linkFields = Collections.unmodifiableMap(this.linkFields);
+        this.entityClass = entityClass;
     }
 
     public Collection<FieldDescriptor> getLinkFields() {
@@ -110,6 +112,10 @@ class EntityDescriptor {
 
     public List<LinkHeaderDescriptor> getLinkHeaders() {
         return linkHeaders;
+    }
+
+    public Class<?> getEntityClass() {
+        return entityClass;
     }
 
     /**
