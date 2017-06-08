@@ -103,7 +103,7 @@ class UriParser {
         StringBuilder sb = new StringBuilder();
 
         boolean endOfInput = false;
-        Character c = ci.current();
+        char c = ci.current();
         while (!endOfInput) {
             if (c == '{') {
                 curlyBracketsCount++;
