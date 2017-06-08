@@ -38,6 +38,6 @@
  * holder.
  */
 /**
- * Jersey Jdk {@link org.glassfish.jersey.client.spi.Connector connector} internal classes.
+ * Jersey client {@link org.glassfish.jersey.client.spi.Connector connector} based on JDK NIO framework.
  */
-package org.glassfish.jersey.jdk.connector.internal;
+package org.glassfish.jersey.jdk.connector;
