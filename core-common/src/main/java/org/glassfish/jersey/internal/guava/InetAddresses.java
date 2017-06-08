@@ -281,11 +281,11 @@ public final class InetAddresses {
      * however, it requires that IPv6 addresses are surrounded by square brackets.
      *
      * @param hostAddr A RFC 3986 section 3.2.2 encoded IPv4 or IPv6 address
-     * @return an InetAddress representing the address in {@code hostAddr}
-     * @throws IllegalArgumentException if {@code hostAddr} is not a valid
-     *                                  IPv4 address, or IPv6 address surrounded by square brackets
+     * @return an InetAddress representing the address in {@code hostAddr};
+     *         otherwise null if {@code hostAddr} is not a valid IPv4 address,
+     *         or IPv6 address surrounded * by square brackets
      */
-    private static InetAddress forUriString(String hostAddr) {
+    private static InetAddress forUriStringNoThrow(String hostAddr) {
         Preconditions.checkNotNull(hostAddr);
 
         // Decide if this should be an IPv6 or IPv4 address.
@@ -302,8 +302,7 @@ public final class InetAddresses {
         // Parse the address, and make sure the length/version is correct.
         byte[] addr = ipStringToBytes(ipString);
         if (addr == null || addr.length != expectBytes) {
-            throw new IllegalArgumentException(
-                    String.format("Not a valid URI IP literal: '%s'", hostAddr));
+            return null;
         }
 
         return bytesToInetAddress(addr);
@@ -317,12 +316,7 @@ public final class InetAddresses {
      * @return {@code true} if the argument is a valid IP URI host
      */
     public static boolean isUriInetAddress(String ipString) {
-        try {
-            forUriString(ipString);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
+        return forUriStringNoThrow(ipString) != null;
     }
 
     /**
