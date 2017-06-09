@@ -52,11 +52,11 @@ import javax.ws.rs.container.ConnectionCallback;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.glassfish.jersey.internal.util.collection.Value;
+import javax.inject.Provider;
+
 import org.glassfish.jersey.process.internal.RequestContext;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.MappableException;
 
 /**
@@ -75,14 +75,19 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<>();
     private final byte[] chunkDelimiter;
 
-    private volatile boolean closed = false;
     private boolean flushing = false;
+
+    private volatile boolean closed = false;
+    private volatile boolean resumed = false;
+
+    private volatile AsyncContext asyncContext;
+
     private volatile RequestScope requestScope;
     private volatile RequestContext requestScopeContext;
     private volatile ContainerRequest requestContext;
     private volatile ContainerResponse responseContext;
     private volatile ConnectionCallback connectionCallback;
-    private volatile Value<AsyncContext> asyncContext;
+
 
     /**
      * Create new {@code ChunkedOutput}.
@@ -114,6 +119,23 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
         } else {
             this.chunkDelimiter = ZERO_LENGTH_DELIMITER;
         }
+    }
+
+    /**
+     * Create new {@code ChunkedOutput} with a custom chunk delimiter.
+     *
+     * @param chunkDelimiter custom chunk delimiter bytes. Must not be {code null}.
+     * @since 2.4.1
+     */
+    protected ChunkedOutput(final byte[] chunkDelimiter, Provider<AsyncContext> asyncContextProvider) {
+        if (chunkDelimiter.length > 0) {
+            this.chunkDelimiter = new byte[chunkDelimiter.length];
+            System.arraycopy(chunkDelimiter, 0, this.chunkDelimiter, 0, chunkDelimiter.length);
+        } else {
+            this.chunkDelimiter = ZERO_LENGTH_DELIMITER;
+        }
+
+        this.asyncContext = asyncContextProvider == null ? null : asyncContextProvider.get();
     }
 
     /**
@@ -181,7 +203,12 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
         flushQueue();
     }
 
-    private void flushQueue() throws IOException {
+    protected void flushQueue() throws IOException {
+        if (!resumed && asyncContext != null) {
+            resumed = true;
+            asyncContext.resume(this);
+        }
+
         if (requestScopeContext == null || requestContext == null || responseContext == null) {
             return;
         }
@@ -245,11 +272,11 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                                 responseContext.setEntityStream(writtenStream);
                             }
                         } catch (final IOException ioe) {
-                            connectionCallback.onDisconnect(asyncContext.get());
+                            connectionCallback.onDisconnect(asyncContext);
                             throw ioe;
                         } catch (final MappableException mpe) {
                             if (mpe.getCause() instanceof IOException) {
-                                connectionCallback.onDisconnect(asyncContext.get());
+                                connectionCallback.onDisconnect(asyncContext);
                             }
                             throw mpe;
                         }
@@ -355,21 +382,18 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * @param requestContext           request context.
      * @param responseContext          response context.
      * @param connectionCallbackRunner connection callback.
-     * @param asyncContext             async context value.
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */
     void setContext(final RequestScope requestScope,
                     final RequestContext requestScopeContext,
                     final ContainerRequest requestContext,
                     final ContainerResponse responseContext,
-                    final ConnectionCallback connectionCallbackRunner,
-                    final Value<AsyncContext> asyncContext) throws IOException {
+                    final ConnectionCallback connectionCallbackRunner) throws IOException {
         this.requestScope = requestScope;
         this.requestScopeContext = requestScopeContext;
         this.requestContext = requestContext;
         this.responseContext = responseContext;
         this.connectionCallback = connectionCallbackRunner;
-        this.asyncContext = asyncContext;
         flushQueue();
     }
 }

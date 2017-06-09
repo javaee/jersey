@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,6 +63,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.sse.SseEventSink;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.util.Producer;
@@ -310,8 +311,13 @@ final class IntrospectionModeller {
             for (Annotation annotation : annotations) {
                 if (annotation.annotationType() == Suspended.class) {
                     resourceMethodBuilder.suspended(AsyncResponse.NO_TIMEOUT, TimeUnit.MILLISECONDS);
-                    return;
                 }
+            }
+        }
+
+        for (Class<?> paramType : am.getParameterTypes()) {
+            if (SseEventSink.class.equals(paramType)) {
+                resourceMethodBuilder.sse();
             }
         }
     }

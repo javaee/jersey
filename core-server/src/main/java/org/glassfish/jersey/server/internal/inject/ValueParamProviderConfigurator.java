@@ -71,7 +71,7 @@ import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ServerBootstrapBag;
 import org.glassfish.jersey.server.Uri;
-import org.glassfish.jersey.server.internal.process.AsyncContext;
+import org.glassfish.jersey.server.AsyncContext;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContextReference;
 import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 

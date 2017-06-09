@@ -394,7 +394,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         final ContainerRequest request = processingContext.request();
         final Object resource = processingContext.routingContext().peekMatchedResource();
 
-        if (method.isSuspendDeclared() || method.isManagedAsyncDeclared()) {
+        if (method.isSuspendDeclared() || method.isManagedAsyncDeclared() || method.isSse()) {
             if (!processingContext.asyncContext().suspend()) {
                 throw new ProcessingException(LocalizationMessages.ERROR_SUSPENDING_ASYNC_REQUEST());
             }
@@ -413,6 +413,11 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         } else {
             // TODO replace with processing context factory method.
             Response response = invoke(processingContext, resource);
+
+            // we don't care about the response when SseEventSink is injected - it will be sent asynchronously.
+            if (method.isSse()) {
+                return null;
+            }
 
             if (response.hasEntity()) {
                 Object entityFuture = response.getEntity();

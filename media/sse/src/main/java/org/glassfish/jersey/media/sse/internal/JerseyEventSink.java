@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.media.sse.internal;
 
+import java.io.Flushable;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.concurrent.CompletableFuture;
@@ -50,8 +51,11 @@ import java.util.logging.Logger;
 import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.SseEventSink;
 
+import javax.inject.Provider;
+
 import org.glassfish.jersey.internal.jsr166.Flow;
 import org.glassfish.jersey.media.sse.LocalizationMessages;
+import org.glassfish.jersey.server.AsyncContext;
 import org.glassfish.jersey.server.ChunkedOutput;
 
 /**
@@ -61,13 +65,15 @@ import org.glassfish.jersey.server.ChunkedOutput;
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)]
  */
-class JerseyEventSink extends ChunkedOutput<OutboundSseEvent> implements SseEventSink, Flow.Subscriber<OutboundSseEvent> {
+class JerseyEventSink extends ChunkedOutput<OutboundSseEvent>
+        implements SseEventSink, Flushable, Flow.Subscriber<OutboundSseEvent> {
+
     private static final Logger LOGGER = Logger.getLogger(JerseyEventSink.class.getName());
     private static final byte[] SSE_EVENT_DELIMITER = "\n".getBytes(Charset.forName("UTF-8"));
     private Flow.Subscription subscription = null;
 
-    JerseyEventSink() {
-        super(SSE_EVENT_DELIMITER);
+    JerseyEventSink(Provider<AsyncContext> asyncContextProvider) {
+        super(SSE_EVENT_DELIMITER, asyncContextProvider);
     }
 
     @Override
@@ -121,6 +127,19 @@ class JerseyEventSink extends ChunkedOutput<OutboundSseEvent> implements SseEven
         } catch (IOException e) {
             return CompletableFuture.completedFuture(e);
         }
+    }
+
+    /**
+     * Flush the headers.
+     *
+     * When SseEventSink instance is returned from the resource method and there are no event written,
+     * http headers need to be "flushed" - sent to the client, which is waiting for response headers.
+     *
+     * @throws IOException when there is a I/O issue during response processing.
+     */
+    @Override
+    public void flush() throws IOException {
+        super.flushQueue();
     }
 
     public void onComplete() {

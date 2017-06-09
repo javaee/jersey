@@ -47,7 +47,7 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.internal.process.AsyncContext;
+import org.glassfish.jersey.server.AsyncContext;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 

@@ -41,10 +41,7 @@
 package org.glassfish.jersey.media.sse;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -52,8 +49,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.sse.OutboundSseEvent;
 import javax.ws.rs.sse.Sse;
 import javax.ws.rs.sse.SseEventSink;
 import javax.ws.rs.sse.SseEventSource;
@@ -64,39 +59,43 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test, that {@code SseEventSink} and the connection is closed eventually after closing {@code SseEventSource} on client side.
- *
- * @author Adam Lindenthal (adam.lindenthal at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class SseEventSinkCloseTest extends JerseyTest {
+public class SseEventSinkTest extends JerseyTest {
 
-    private static Logger LOGGER = Logger.getLogger(SseEventSinkCloseTest.class.getName());
+    private static final CountDownLatch CLIENT_RECEIVED_A_MESSAGE_LATCH = new CountDownLatch(1);
+    private static final CountDownLatch RESOURCE_METHOD_END_LATCH = new CountDownLatch(1);
+
     private static volatile SseEventSink output = null;
-    private static CountDownLatch openLatch = new CountDownLatch(1);
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(SseEndpoint.class);
+    }
 
     @Singleton
     @Path("sse")
     public static class SseEndpoint {
-        @GET
-        @Path("send")
-        public String sendEvent(@Context Sse sse) throws InterruptedException {
-            OutboundSseEvent event = sse.newEventBuilder().data("An event").build();
-            if (!output.isClosed()) {
-                output.send(event);
-                return "OK";
-            }
-            return "Closed";
-        }
 
         @GET
         @Produces(SseFeature.SERVER_SENT_EVENTS)
-        public void get(@Context SseEventSink output, @Context Sse sse) {
-            SseEventSinkCloseTest.output = output;
-            openLatch.countDown();
+        public void get(@Context SseEventSink output, @Context Sse sse) throws InterruptedException {
+            SseEventSinkTest.output = output;
+
+            System.out.println("### Server is about to send a message.");
+
+            output.send(sse.newEvent("How will this end?"));
+
+            System.out.println("### Server waiting for client to receive a message.");
+
+            CLIENT_RECEIVED_A_MESSAGE_LATCH.await();
+
+            System.out.println("### Server resource method invocation end.");
+
+            RESOURCE_METHOD_END_LATCH.countDown();
         }
     }
 
@@ -107,49 +106,18 @@ public class SseEventSinkCloseTest extends JerseyTest {
      * transport are used.
      */
     @Test
-    public void testClose() throws InterruptedException {
+    public void testBlockingResourceMethod() throws InterruptedException {
         WebTarget sseTarget = target("sse");
 
         final CountDownLatch eventLatch = new CountDownLatch(3);
         SseEventSource eventSource = SseEventSource.target(sseTarget).build();
-        eventSource.register((event) -> eventLatch.countDown());
+        eventSource.register((event) -> {
+            System.out.println("### Client received: " + event);
+            CLIENT_RECEIVED_A_MESSAGE_LATCH.countDown();
+        });
         eventSource.open();
-        openLatch.await();
 
-        // Tell server to send us 3 events
-        for (int i = 0; i < 3; i++) {
-            final String response = target("sse/send").request().get().readEntity(String.class);
-            assertEquals("OK", response);
-        }
-
-        // ... and wait for the events to be processed by the client side, then close the eventSource
-        assertTrue("EventLatch timed out.", eventLatch.await(5, TimeUnit.SECONDS));
-        eventSource.close();
-        assertEquals("SseEventSource should have been already closed", false, eventSource.isOpen());
-
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-
-        CountDownLatch closeLatch = new CountDownLatch(100);
-        executor.scheduleAtFixedRate(() -> {
-            if (output.isClosed()) {
-                // countdown to zero
-                while (closeLatch.getCount() > 0) {
-                    closeLatch.countDown();
-                    return;
-                }
-            }
-            final Response response = target("sse/send").request().get();
-            LOGGER.info(200 == response.getStatus() ? "Still alive" : "Error received");
-            closeLatch.countDown();
-        }, 0, 100, TimeUnit.MILLISECONDS);
-
-        assertTrue(closeLatch.await(10000, TimeUnit.MILLISECONDS));
-        executor.shutdown();
-        assertTrue("SseEventOutput should have been already closed.", output.isClosed());
-    }
-
-    @Override
-    protected Application configure() {
-        return new ResourceConfig(SseEndpoint.class);
+        // client waiting for confirmation that resource method ended.
+        assertTrue(RESOURCE_METHOD_END_LATCH.await(10000, TimeUnit.MILLISECONDS));
     }
 }
