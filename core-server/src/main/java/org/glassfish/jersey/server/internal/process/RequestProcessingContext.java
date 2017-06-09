@@ -49,6 +49,7 @@ import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.server.AsyncContext;
 import org.glassfish.jersey.server.CloseableService;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
@@ -155,7 +156,7 @@ public final class RequestProcessingContext implements RespondingContext {
 
 
     /**
-     * Lazily initialize {@link org.glassfish.jersey.server.internal.process.AsyncContext} for this
+     * Lazily initialize {@link AsyncContext} for this
      * request processing context.
      * <p>
      * The {@code lazyContextValue} will be only invoked once during the first call to {@link #asyncContext()}.

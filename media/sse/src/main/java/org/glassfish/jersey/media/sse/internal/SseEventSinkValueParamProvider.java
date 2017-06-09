@@ -47,6 +47,7 @@ import javax.ws.rs.sse.SseEventSink;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.server.AsyncContext;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.AbstractValueParamProvider;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
@@ -60,14 +61,18 @@ import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
  */
 public class SseEventSinkValueParamProvider extends AbstractValueParamProvider {
 
+    private final Provider<AsyncContext> asyncContextSupplier;
+
     /**
      * Constructor.
      *
      * @param mpep multivalued map parameter extractor provider.
      */
     @Inject
-    public SseEventSinkValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep) {
+    public SseEventSinkValueParamProvider(Provider<MultivaluedParameterExtractorProvider> mpep,
+                                          Provider<AsyncContext> asyncContextSupplier) {
         super(mpep, Parameter.Source.CONTEXT);
+        this.asyncContextSupplier = asyncContextSupplier;
     }
 
     @Override
@@ -78,16 +83,22 @@ public class SseEventSinkValueParamProvider extends AbstractValueParamProvider {
 
         final Class<?> rawParameterType = parameter.getRawType();
         if (rawParameterType == SseEventSink.class && parameter.isAnnotationPresent(Context.class)) {
-            return new SseEventSinkValueSupplier();
+            return new SseEventSinkValueSupplier(asyncContextSupplier);
         }
         return null;
     }
 
     private static final class SseEventSinkValueSupplier implements Function<ContainerRequest, SseEventSink> {
 
+        private final Provider<AsyncContext> asyncContextSupplier;
+
+        public SseEventSinkValueSupplier(Provider<AsyncContext> asyncContextSupplier) {
+            this.asyncContextSupplier = asyncContextSupplier;
+        }
+
         @Override
         public SseEventSink apply(ContainerRequest containerRequest) {
-            return new JerseyEventSink();
+            return new JerseyEventSink(asyncContextSupplier);
         }
     }
 }

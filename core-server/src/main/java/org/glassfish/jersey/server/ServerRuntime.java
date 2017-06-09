@@ -101,7 +101,6 @@ import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.internal.monitoring.EmptyRequestEventBuilder;
 import org.glassfish.jersey.server.internal.monitoring.RequestEventBuilder;
 import org.glassfish.jersey.server.internal.monitoring.RequestEventImpl;
-import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
@@ -115,10 +114,10 @@ import org.glassfish.jersey.server.spi.ExternalRequestScope;
 import org.glassfish.jersey.server.spi.ResponseErrorMapper;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
-import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
-import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
-import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
-import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
+import static org.glassfish.jersey.server.AsyncContext.State.COMPLETED;
+import static org.glassfish.jersey.server.AsyncContext.State.RESUMED;
+import static org.glassfish.jersey.server.AsyncContext.State.RUNNING;
+import static org.glassfish.jersey.server.AsyncContext.State.SUSPENDED;
 
 /**
  * Server-side request processing runtime.
@@ -714,8 +713,7 @@ public class ServerRuntime {
                                     runtime.requestScope.referenceCurrent(),
                                     request,
                                     response,
-                                    connectionCallbackRunner,
-                                    processingContext.asyncContextValue());
+                                    connectionCallbackRunner);
                         } catch (final IOException ex) {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
                             close = true;

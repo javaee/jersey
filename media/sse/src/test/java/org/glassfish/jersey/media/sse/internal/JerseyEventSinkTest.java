@@ -54,7 +54,7 @@ public class JerseyEventSinkTest {
 
     @Test
     public void onSubscribe() throws Exception {
-        JerseyEventSink eventSink = new JerseyEventSink();
+        JerseyEventSink eventSink = new JerseyEventSink(null);
 
         eventSink.close();
         thrown.expect(IllegalStateException.class);
@@ -63,7 +63,7 @@ public class JerseyEventSinkTest {
 
     @Test
     public void onNext() throws Exception {
-        JerseyEventSink eventSink = new JerseyEventSink();
+        JerseyEventSink eventSink = new JerseyEventSink(null);
 
         eventSink.close();
         thrown.expect(IllegalStateException.class);
@@ -72,7 +72,7 @@ public class JerseyEventSinkTest {
 
     @Test
     public void onError() throws Exception {
-        JerseyEventSink eventSink = new JerseyEventSink();
+        JerseyEventSink eventSink = new JerseyEventSink(null);
 
         eventSink.close();
         thrown.expect(IllegalStateException.class);
@@ -81,7 +81,7 @@ public class JerseyEventSinkTest {
 
     @Test
     public void onComplete() throws Exception {
-        JerseyEventSink eventSink = new JerseyEventSink();
+        JerseyEventSink eventSink = new JerseyEventSink(null);
 
         eventSink.close();
         thrown.expect(IllegalStateException.class);
@@ -90,7 +90,7 @@ public class JerseyEventSinkTest {
 
     @Test
     public void test() throws Exception {
-        JerseyEventSink eventSink = new JerseyEventSink();
+        JerseyEventSink eventSink = new JerseyEventSink(null);
 
         eventSink.close();
         thrown.expect(IllegalStateException.class);

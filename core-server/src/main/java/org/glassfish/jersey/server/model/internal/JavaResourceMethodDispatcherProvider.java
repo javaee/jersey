@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.server.model.internal;
 
+import java.io.Flushable;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -155,6 +157,12 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
 
             if (eventSink == null) {
                 throw new IllegalArgumentException("SseEventSink parameter detected, but not found.");
+            } else if (eventSink instanceof Flushable) {
+                try {
+                    ((Flushable) eventSink).flush();
+                } catch (IOException e) {
+                    // ignore.
+                }
             }
             return Response.ok().entity(eventSink).build();
         }

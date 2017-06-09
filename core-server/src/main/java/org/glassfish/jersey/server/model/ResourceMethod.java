@@ -148,6 +148,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         private final Set<MediaType> producedTypes;
         // Suspendable
         private boolean managedAsync;
+        private boolean sse;
         private boolean suspended;
         private long suspendTimeout;
         private TimeUnit suspendTimeoutUnit;
@@ -368,6 +369,17 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         }
 
         /**
+         * Set the SSE flag on the method model to {@code true}.
+         *
+         * @return updated builder object.
+         */
+        public Builder sse() {
+            sse = true;
+
+            return this;
+        }
+
+        /**
          * Set the managed async required flag on the method model to {@code true}.
          *
          * @return updated builder object.
@@ -527,6 +539,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
                     producedTypes,
                     managedAsync,
                     suspended,
+                    sse,
                     suspendTimeout,
                     suspendTimeoutUnit,
                     createInvocable(),
@@ -567,6 +580,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         // SuspendableComponent
         private final boolean managedAsync;
         private final boolean suspended;
+        private final boolean sse;
         private final long suspendTimeout;
         private final TimeUnit suspendTimeoutUnit;
         // Invocable
@@ -579,7 +593,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         private Data(final String httpMethod,
                      final Collection<MediaType> consumedTypes,
                      final Collection<MediaType> producedTypes,
-                     boolean managedAsync, final boolean suspended,
+                     boolean managedAsync, final boolean suspended, boolean sse,
                      final long suspendTimeout,
                      final TimeUnit suspendTimeoutUnit,
                      final Invocable invocable,
@@ -594,6 +608,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
             this.producedTypes = Collections.unmodifiableList(new ArrayList<>(producedTypes));
             this.invocable = invocable;
             this.suspended = suspended;
+            this.sse = sse;
             this.suspendTimeout = suspendTimeout;
             this.suspendTimeoutUnit = suspendTimeoutUnit;
 
@@ -658,6 +673,15 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          */
         /* package */ boolean isSuspended() {
             return suspended;
+        }
+
+        /**
+         * Flag indicating whether the method requires injection of Sse Event Sink.
+         *
+         * @return {@code true} if the method requires injection of Sse Event Sink, {@code false} otherwise.
+         */
+        /* package */ boolean isSse() {
+            return sse;
         }
 
         /**
@@ -848,6 +872,15 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
     @Override
     public boolean isSuspendDeclared() {
         return data.isSuspended();
+    }
+
+    /**
+     * Check whether the resource method will be producing Server-sent event stream.
+     *
+     * @return {@code true} if the resource method produces Server-sent event stream, {@code false} otherwise.
+     */
+    public boolean isSse() {
+        return data.isSse();
     }
 
     @Override

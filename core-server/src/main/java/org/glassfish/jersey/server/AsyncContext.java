@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.process;
+package org.glassfish.jersey.server;
 
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.core.Response;
