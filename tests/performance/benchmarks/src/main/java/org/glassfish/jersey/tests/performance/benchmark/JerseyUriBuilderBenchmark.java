@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,35 +42,54 @@ package org.glassfish.jersey.tests.performance.benchmark;
 
 import java.util.concurrent.TimeUnit;
 
+import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import org.openjdk.jmh.runner.options.TimeValue;
 
 /**
- * @author Michal Gajdos
+ * {@link JerseyUriBuilder} benchmark for parsing templates.
+ *
+ * @author David Schlosnagle
  */
-public class AllBenchmarks {
+@BenchmarkMode(Mode.Throughput)
+@OutputTimeUnit(TimeUnit.SECONDS)
+@Warmup(iterations = 16, time = 2500, timeUnit = TimeUnit.MILLISECONDS)
+@Measurement(iterations = 16, time = 2500, timeUnit = TimeUnit.MILLISECONDS)
+@Fork(1)
+@State(Scope.Benchmark)
+public class JerseyUriBuilderBenchmark {
+
+    @Param(value = {"http://localhost:8080/a/b/c", "https://localhost:443/{a}/{b}/{c:.+}"})
+    private String uriTemplate;
+
+    private volatile JerseyUriBuilder uriBuilder;
+
+    @Setup
+    public void start() throws Exception {
+        uriBuilder = new JerseyUriBuilder();
+    }
+
+    @Benchmark
+    public JerseyUriBuilder uri() throws Exception {
+        return uriBuilder.uri(uriTemplate);
+    }
 
     public static void main(final String[] args) throws Exception {
         final Options opt = new OptionsBuilder()
                 // Register our benchmarks.
-                .include(ClientBenchmark.class.getSimpleName())
-                .include(JacksonBenchmark.class.getSimpleName())
-                .include(LocatorBenchmark.class.getSimpleName())
                 .include(JerseyUriBuilderBenchmark.class.getSimpleName())
-                // Measure throughput in seconds (ops/s).
-                .mode(Mode.Throughput)
-                .timeUnit(TimeUnit.SECONDS)
-                // Warm-up setup.
-                .warmupIterations(16)
-                .warmupTime(TimeValue.milliseconds(2500))
-                // Measurement setup.
-                .measurementIterations(16)
-                .measurementTime(TimeValue.milliseconds(2500))
-                // Fork! (Invoke benchmarks in separate JVM)
-                .forks(1)
                 .build();
 
         new Runner(opt).run();
