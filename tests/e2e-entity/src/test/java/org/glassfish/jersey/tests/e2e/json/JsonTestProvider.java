@@ -147,7 +147,7 @@ public abstract class JsonTestProvider {
 
         @Override
         public Jsonb getContext(Class<?> type) {
-            JsonbConfig config = new JsonbConfig().withAdapters(new CustomJsonbAdapter());
+            JsonbConfig config = new JsonbConfig();
             return JsonbBuilder.create(config);
         }
     }

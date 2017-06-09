@@ -1869,8 +1869,8 @@
         <javax.validation.api.version>1.1.0.Final</javax.validation.api.version>
         <jaxb.api.version>2.2.7</jaxb.api.version>
         <jaxb.ri.version>2.2.7</jaxb.ri.version>
-        <jsonb.api.version>1.0.0-M2</jsonb.api.version>
-        <jsonb.ri.version>1.0.0-M2</jsonb.ri.version>
+        <jsonb.api.version>1.0.0-RC2</jsonb.api.version>
+        <jsonb.ri.version>1.0.0-RC1</jsonb.ri.version>
         <jaxrs.api.spec.version>2.1</jaxrs.api.spec.version>
         <jaxrs.api.impl.version>2.1-m08</jaxrs.api.impl.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>

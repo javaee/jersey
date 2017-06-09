@@ -63,7 +63,10 @@ public class InheritanceTest extends AbstractJsonTest {
         final Class<?>[] classes = {AnimalList.class, Animal.class, Dog.class, Cat.class};
 
         for (final JsonTestProvider jsonProvider : JsonTestProvider.JAXB_PROVIDERS) {
-            jsonTestSetups.add(new JsonTestSetup[]{new JsonTestSetup(classes, jsonProvider)});
+            // TODO - remove the condition after jsonb polymorphic adapter is implemented
+            if (!(jsonProvider instanceof JsonTestProvider.JsonbTestProvider)) {
+                jsonTestSetups.add(new JsonTestSetup[]{new JsonTestSetup(classes, jsonProvider)});
+            }
         }
 
         return jsonTestSetups;
