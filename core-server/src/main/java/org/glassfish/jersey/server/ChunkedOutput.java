@@ -47,6 +47,7 @@ import java.util.Collections;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.container.ConnectionCallback;
 import javax.ws.rs.core.GenericType;
@@ -74,11 +75,11 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
 
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<>();
     private final byte[] chunkDelimiter;
+    private final AtomicBoolean resumed = new AtomicBoolean(false);
 
     private boolean flushing = false;
 
     private volatile boolean closed = false;
-    private volatile boolean resumed = false;
 
     private volatile AsyncContext asyncContext;
 
@@ -204,8 +205,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     }
 
     protected void flushQueue() throws IOException {
-        if (!resumed && asyncContext != null) {
-            resumed = true;
+        if (resumed.compareAndSet(false, true) && asyncContext != null) {
             asyncContext.resume(this);
         }
 
