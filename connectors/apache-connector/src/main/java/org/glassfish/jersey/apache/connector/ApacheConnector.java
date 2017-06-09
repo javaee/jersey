@@ -439,6 +439,14 @@ class ApacheConnector implements Connector {
                 authCache.put(getHost(request), basicScheme);
                 context.setAuthCache(authCache);
             }
+
+            // If a request-specific CredentialsProvider exists, use it instead of the default one
+            CredentialsProvider credentialsProvider = clientRequest.resolveProperty(ApacheClientProperties.CREDENTIALS_PROVIDER,
+                CredentialsProvider.class);
+            if (credentialsProvider != null) {
+                context.setCredentialsProvider(credentialsProvider);
+            }
+
             response = client.execute(getHost(request), request, context);
             HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, clientRequest.getHeaders(), this.getClass().getName());
 
