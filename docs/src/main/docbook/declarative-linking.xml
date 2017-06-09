@@ -76,7 +76,7 @@
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-            Additionaly you will need to add the following dependencies, if you are not deploying
+            Additionally you will need to add the following dependencies, if you are not deploying
             into a container that is already including them:
 
             <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
@@ -137,6 +137,45 @@ public class Widgets {
             want to reuse. If there's no such template available then you can use a literal value
             instead of a reference. E.g. the following is equivalent to the earlier example:
             <literal>@InjectLink(value="widgets", style=ABSOLUTE)</literal>.
+        </para>
+    </section>
+
+    <section>
+        <title>List of Link Injection</title>
+        <para>
+            You can inject multiple links into an array or a List collection type. E.g.:
+            <programlisting language="java">@InjectLinks({@InjectLink(resource=WidgetsResource.class, rel = "self")})
+List&lt;Link&gt; links</programlisting>
+
+            The field doesn't need to be initialized. However, if it already contains a collection with manually created links,
+            then it will merge those with the generated links into a new collection which then replaces the field value.
+        </para>
+    </section>
+
+    <section>
+        <title>Links from Resources</title>
+
+        <para>
+            As an alternative to defining the links in the entity class, they can also be defined in the resource classes by
+            annotating the resource methods with <literal>@ProvideLink</literal>. This has the benefit, that the target
+            method is already known and doesn't need to be referenced. Other than that it has the same parameters and behaviors
+            as <literal>@InjectLink</literal>. The entity classes need to have a field annotated with
+            <literal>@InjectLinks</literal>, which can be empty.
+        </para>
+
+        <para>
+            The <literal>@ProvideLink</literal> annotation can be repeated to add links to different entities using different
+            options. Entities are defined via the <literal>value</literal> property. If the entities are similar in structure they
+            can also declared as an array. <literal>@ProvideLink</literal> also works with class hierarchies, e.g., contributions
+            defined for a superclass will also be injected into the derived classes (interfaces are not supported).
+
+            <programlisting language="java">@ProvideLink(value = Order.class,rel = "self",
+     bindings = @Binding(name = "orderId", value = "${instance.id}"))
+@ProvideLink(value = PaymentConfirmation.class, rel = "order",
+     bindings = @Binding(name = "orderId", value = "${instance.orderId}"))
+@GET
+@Path("/{orderId}")
+public Response get(@PathParam("orderId") String orderId)</programlisting>
         </para>
     </section>
 
@@ -230,15 +269,6 @@ URI offers;</programlisting>
     </section>
 
     <section>
-        <title>List of Link Injection</title>
-        <para>
-            You can inject multiple links into an array of a List collection type. E.g.:
-            <programlisting language="java">@InjectLinks({@InjectLink(resource=WidgetsResource.class, rel = "self")})
-List&lt;Link&gt; links</programlisting>
-        </para>
-    </section>
-
-    <section>
         <title>Link Headers</title>
         <para>
             <link xlink:href="http://tools.ietf.org/html/rfc5988#section-5">HTTP Link headers</link> can also be added
@@ -246,7 +276,7 @@ List&lt;Link&gt; links</programlisting>
             <literal>@InjectLink</literal>, you instead annotate the entity class itself with
             <literal>@InjectLinks</literal>. E.g.:
             <programlisting language="java">@InjectLinks(
-                @InjectLink(value="widgets/${resource.nextId}", rel="next")
+    @InjectLink(value="widgets/${resource.nextId}", rel="next")
 )</programlisting>
         </para>
 
@@ -261,23 +291,94 @@ List&lt;Link&gt; links</programlisting>
             Multiple link headers can be added by use of the <literal>@InjectLinks</literal> annotation
             which can contain multiple <literal>@InjectLink</literal> annotations.
         </para>
-      </section>
+
+        <para>
+            Resource links via <literal>@ProvideLink</literal> are currently not supported for link headers.
+        </para>
+    </section>
 
     <section>
         <title>Prevent Recursive Injection</title>
         <para>
             By default, Jersey will try to recursively find all <literal>@InjectionLink</literal> annotations in
-          	the members of your object unless this member is annotated with <literal>@XmlTransient</literal>.
+            the members of your object unless this member is annotated with <literal>@XmlTransient</literal>.
 
-          	But in some cases, you might want to control which member will be introspected regardless of the
+            But in some cases, you might want to control which member will be introspected regardless of the
             <literal>@XmlTransient</literal> annotation.
 
-          	You can prevent Jersey to look into an object by adding <literal>@InjectLinkNoFollow</literal> to a field.
+            You can prevent Jersey to look into an object by adding <literal>@InjectLinkNoFollow</literal> to a field.
 
-			<programlisting language="java">
-				@InjectLinkNoFollow
-				Context context;
-			</programlisting>
+            <programlisting language="java">@InjectLinkNoFollow
+Context context;</programlisting>
+        </para>
+    </section>
+
+
+    <section>
+        <title>Meta-annotation support</title>
+        <para>
+            The <literal>@ProvideLink</literal> annotation can be used as a meta-annotation, i.e., annotating your own annotation.
+            This enables you to create custom annotations to reuse <literal>@ProvideLink</literal> configurations instead of
+            copy pasting them on each method. There is a special marker class <literal>ProvideLink.InheritFromAnnotation</literal>
+            that can be used in place of the actual entity class, this indicates that the <literal>Class&lt;?> value()</literal>
+            from the custom annotation should be used instead.
+
+            Repeated annotations are currently unsupported for this feature. Also the  <literal>Class&lt;?> value()</literal>
+            method must return a single class and not an array of classes.
+        </para>
+
+        <para>
+
+            Here is an example (getter/setter omitted for brevity) of how a meta annotation can be used.
+            The example app uses a <literal>Page</literal> class as a base class for all entities that contain paged data.
+
+            <programlisting language="java">public class Page {
+    private int number;
+
+    private int size;
+
+    private boolean isPreviousPageAvailable;
+
+    private boolean isNextPageAvailable;
+
+    @InjectLinks
+    private List&lt;Link> links;
+}</programlisting>
+
+            Instead of duplicating the <literal>@ProvideLink</literal> annotations for the  next and previous links on every
+            method, we create the following <literal>@PageLinks</literal> annotation.
+
+            <programlisting language="java">@ProvideLink(value = ProvideLink.InheritFromAnnotation.class, rel = "next",
+    bindings = {
+        @Binding(name = "page", value = "${instance.number + 1}"),
+        @Binding(name = "size", value = "${instance.size}"),
+    }, condition = "${instance.nextPageAvailable}")
+@ProvideLink(value = ProvideLink.InheritFromAnnotation.class, rel = "prev",
+    bindings = {
+        @Binding(name = "page", value = "${instance.number - 1}"),
+        @Binding(name = "size", value = "${instance.size}"),
+    }, condition = "${instance.previousPageAvailable}")
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface PageLinks {
+  Class&lt;?> value();
+}</programlisting>
+
+            The annotation can the then be used on the resource methods with the actual entity class as <literal>value</literal>.
+
+            <programlisting language="java">@PageLinks(OrderPage.class)
+@GET
+public Response list(@QueryParam("page") @DefaultValue("0") int page,
+                     @QueryParam("size") @DefaultValue("20") int size)</programlisting>
+
+            The entity just extends from <literal>Page</literal> and declares its content. It is necessary to use distinct classes
+            instead of just a generic page to have a unique target for <literal>@ProvideLink</literal>, otherwise every method
+            annotated with <literal>@ProvideLink(value=Page.class)</literal> would contribute to the entity.
+
+            <programlisting language="java">public class OrderPage extends Page {
+    private List&lt;Order> orders;
+}</programlisting>
         </para>
     </section>
 
