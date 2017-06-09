@@ -217,6 +217,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.github.io/project-info/&version;/jersey/project/jersey-jdk-connector/dependencies.html">
+    jersey-jdk-connector
+</link>
+</entry>
+<entry>Jersey Client Transport via JDK connector</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.github.io/project-info/&version;/jersey/project/jersey-jetty-connector/dependencies.html">
     jersey-jetty-connector
 </link>
@@ -995,6 +1003,14 @@
 </link>
 </entry>
 <entry>Jersey "Hello World" benchmark example.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.github.io/project-info/&version;/jersey/project/helloworld-cdi2-se/dependencies.html">
+    helloworld-cdi2-se
+</link>
+</entry>
+<entry>Jersey "Hello world" example with CDI 2 SE.</entry>
 </row>
 <row>
 <entry>
