@@ -56,7 +56,7 @@ import static org.junit.Assert.assertSame;
 /**
  * Tests that {@link java.util.function.Supplier} can contain multiple contracts.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class SupplierContractsTest {
 

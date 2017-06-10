@@ -43,7 +43,7 @@ package org.glassfish.jersey.inject.hk2;
 import java.util.function.Supplier;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class SupplierGreeting implements Supplier<Greeting> {
 

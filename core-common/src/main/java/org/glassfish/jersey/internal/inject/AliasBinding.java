@@ -49,7 +49,7 @@ import java.util.Set;
 /**
  * Injection binding description used to describe the aliases to main {@link Binding}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class AliasBinding {
 

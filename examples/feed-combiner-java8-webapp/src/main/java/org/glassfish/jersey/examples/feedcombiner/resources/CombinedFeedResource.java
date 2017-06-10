@@ -72,7 +72,7 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 /**
  * Expose REST API for manipulating with Feeds
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Path("feeds")
 public class CombinedFeedResource {

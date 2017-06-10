@@ -45,7 +45,7 @@ import javax.enterprise.context.ApplicationScoped;
 /**
  * Application-scoped service returning "hello" sentence.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @ApplicationScoped
 public class HelloBean {

@@ -41,7 +41,7 @@
 package org.glassfish.jersey.examples.feedcombiner.generator;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public interface IdGenerator {
 

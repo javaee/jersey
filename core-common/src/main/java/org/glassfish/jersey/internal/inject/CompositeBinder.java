@@ -49,7 +49,7 @@ import java.util.Collection;
  * <p>
  * {@code Binder} is able to recursively register all injection binding descriptions in all installed binders.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class CompositeBinder extends AbstractBinder {
 

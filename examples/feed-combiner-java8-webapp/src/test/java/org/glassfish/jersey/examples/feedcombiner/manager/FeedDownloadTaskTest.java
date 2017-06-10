@@ -70,7 +70,7 @@ import com.sun.syndication.feed.synd.SyndEntryImpl;
 import static java.util.Collections.singletonList;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class FeedDownloadTaskTest extends EasyMockSupport {
 

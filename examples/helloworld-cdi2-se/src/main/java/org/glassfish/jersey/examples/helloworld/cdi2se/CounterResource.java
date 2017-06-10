@@ -48,7 +48,7 @@ import javax.inject.Inject;
 /**
  * Request-scoped resource counter.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Path("counter")
 public class CounterResource {

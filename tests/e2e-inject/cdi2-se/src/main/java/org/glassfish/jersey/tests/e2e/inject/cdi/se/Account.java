@@ -46,7 +46,7 @@ import javax.enterprise.event.Observes;
 /**
  * Keeps current state of money.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @ApplicationScoped
 public class Account {

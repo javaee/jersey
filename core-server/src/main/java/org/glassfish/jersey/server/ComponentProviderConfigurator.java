@@ -60,7 +60,7 @@ import org.glassfish.jersey.server.spi.ComponentProvider;
 /**
  * Configurator which initializes and register {@link ComponentProvider} instances into {@link BootstrapBag}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ComponentProviderConfigurator implements BootstrapConfigurator {
 

@@ -62,7 +62,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)

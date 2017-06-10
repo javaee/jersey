@@ -47,7 +47,7 @@ import java.util.function.Supplier;
  * to make some cleaning code regarding the instance and the specific {@link Supplier} instance.
  *
  * @param <T> type which is created by {@link DisposableSupplier}.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public interface DisposableSupplier<T> extends Supplier<T> {
 

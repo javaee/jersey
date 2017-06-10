@@ -58,7 +58,7 @@ import org.glassfish.jersey.server.spi.ComponentProvider;
  * Configurator which initializes and register {@link Application} instance into {@link InjectionManager} and
  * {@link BootstrapBag}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ApplicationConfigurator implements BootstrapConfigurator {
 

@@ -58,7 +58,7 @@ import static junit.framework.TestCase.assertEquals;
  * in case of multiple slashes server does not match the processing handler and
  * therefore Jersey Request cannot be created and processed.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class JdkSlashesWithContextPathTest extends AbstractSlashesWithContextPathTest {
 

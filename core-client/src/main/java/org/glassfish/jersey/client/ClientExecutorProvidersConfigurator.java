@@ -65,7 +65,7 @@ import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
  * Configurator which initializes and register {@link ExecutorServiceProvider} and
  * {@link ScheduledExecutorServiceProvider}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfigurator {
 

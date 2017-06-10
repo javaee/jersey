@@ -56,7 +56,7 @@ import org.glassfish.jersey.spi.ThreadPoolExecutorProvider;
  * Configurator which initializes and register {@link org.glassfish.jersey.spi.ExecutorServiceProvider} and
  * {@link org.glassfish.jersey.spi.ScheduledExecutorServiceProvider}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ServerExecutorProvidersConfigurator extends AbstractExecutorProvidersConfigurator {
 

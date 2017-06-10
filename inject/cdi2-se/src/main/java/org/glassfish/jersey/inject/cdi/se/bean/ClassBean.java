@@ -85,7 +85,7 @@ import org.glassfish.jersey.internal.inject.ClassBinding;
  *  }
  * </pre>
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ClassBean<T> extends JerseyBean<T> {
 

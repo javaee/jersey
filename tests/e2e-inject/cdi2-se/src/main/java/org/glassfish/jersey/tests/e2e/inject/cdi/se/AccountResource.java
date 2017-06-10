@@ -52,7 +52,7 @@ import javax.inject.Inject;
 /**
  * Testing resource for CDI events.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Path("account")
 public class AccountResource {

@@ -41,7 +41,7 @@
 package org.glassfish.jersey.inject.hk2;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @FunctionalInterface
 public interface Greeting {

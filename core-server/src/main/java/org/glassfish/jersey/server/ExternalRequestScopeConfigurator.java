@@ -57,7 +57,7 @@ import org.glassfish.jersey.server.spi.ExternalRequestScope;
 /**
  * Configurator which initializes and register {@link ExternalRequestScope} instance into {@link InjectionManager}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ExternalRequestScopeConfigurator implements BootstrapConfigurator {
 

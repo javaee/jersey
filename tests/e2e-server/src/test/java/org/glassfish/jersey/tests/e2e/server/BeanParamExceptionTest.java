@@ -69,7 +69,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
  * Tests the ability to catch WebApplicationException thrown in ParamConverter
  * used along with BeanParam annotation.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  **/
 public class BeanParamExceptionTest extends JerseyTest {
 

@@ -65,7 +65,7 @@ import org.glassfish.jersey.internal.util.collection.ImmutableCollectors;
  * Utility class for getting the information from class using Reflection API.
  *
  * @author John Wells (john.wells at oracle.com)
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ReflectionUtils {
 

@@ -86,7 +86,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
      * Configurator which initializes and register {@link ExceptionMappers} instance into {@link InjectionManager} and
      * {@link BootstrapBag}.
      *
-     * @author Petr Bouda (petr.bouda at oracle.com)
+     * @author Petr Bouda
      */
     public static class ExceptionMappersConfigurator implements BootstrapConfigurator {
 

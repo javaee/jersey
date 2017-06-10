@@ -47,7 +47,7 @@ import org.glassfish.jersey.examples.feedcombiner.model.CombinedFeed;
 import org.glassfish.jersey.examples.feedcombiner.model.FeedEntry;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class CombinedFeedTestHelper {
 

@@ -63,7 +63,7 @@ import com.sun.syndication.feed.synd.SyndEntry;
  * These entries are added into the combined feed and stored in the database again
  * (storing means rewrite previous combined feed by a new version with added entries).
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class FeedDownloadTask implements Runnable {
 
@@ -108,7 +108,7 @@ public class FeedDownloadTask implements Runnable {
      * The mapper which is used for transform {@link SyndEntry synd entry} to
      * this application-friendly version {@link FeedEntry feed entry}.
      *
-     * @author Petr Bouda (petr.bouda at oracle.com)
+     * @author Petr Bouda
      **/
     private static class FeedEntryMapper implements Function<SyndEntry, FeedEntry> {
 

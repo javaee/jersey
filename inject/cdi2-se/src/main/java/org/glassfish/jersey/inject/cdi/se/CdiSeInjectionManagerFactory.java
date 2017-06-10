@@ -48,7 +48,7 @@ import org.glassfish.jersey.internal.inject.InjectionManagerFactory;
 /**
  * SPI implementation of {@link InjectionManagerFactory} which provides a new instance of CDI {@link InjectionManager}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Priority(20)
 public class CdiSeInjectionManagerFactory implements InjectionManagerFactory {

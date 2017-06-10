@@ -48,7 +48,7 @@ import javax.ws.rs.core.Response;
 import javax.annotation.security.RolesAllowed;
 
 /**
- * @author Petr Bouda (petr.boduda at oracle.com)
+ * @author Petr Bouda
  */
 @Path("admin")
 public class SecuredResource {

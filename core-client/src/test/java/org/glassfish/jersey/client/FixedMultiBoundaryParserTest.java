@@ -50,7 +50,7 @@ import static org.junit.Assert.assertNull;
 /**
  * Tests several parsing use-cases of ChunkedInput
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  **/
 public class FixedMultiBoundaryParserTest {
 

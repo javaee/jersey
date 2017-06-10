@@ -50,7 +50,7 @@ import javax.ws.rs.core.MultivaluedMap;
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values which can contain {@code null} values
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class NullableMultivaluedHashMap<K, V> extends MultivaluedHashMap<K, V> {
 

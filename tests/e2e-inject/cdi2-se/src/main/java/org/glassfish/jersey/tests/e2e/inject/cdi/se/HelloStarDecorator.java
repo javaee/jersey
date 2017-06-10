@@ -48,7 +48,7 @@ import javax.inject.Inject;
 /**
  * Decorator wraps the hello resource by stars.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Decorator
 public class HelloStarDecorator implements Hello {

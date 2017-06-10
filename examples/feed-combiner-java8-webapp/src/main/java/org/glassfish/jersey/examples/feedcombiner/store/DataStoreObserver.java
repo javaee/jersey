@@ -47,7 +47,7 @@ import java.util.Collection;
  * Instances of this interface are able to receive the notification from
  * {@link ObservableDataStore}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public interface DataStoreObserver {
 

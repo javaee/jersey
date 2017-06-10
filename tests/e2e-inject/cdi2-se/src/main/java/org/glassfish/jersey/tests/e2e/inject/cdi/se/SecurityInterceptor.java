@@ -51,7 +51,7 @@ import javax.interceptor.InvocationContext;
 /**
  * Interceptor checking James as a user in query params.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Secured
 @Interceptor

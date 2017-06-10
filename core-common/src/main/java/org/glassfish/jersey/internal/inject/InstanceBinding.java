@@ -46,7 +46,7 @@ import java.lang.reflect.Type;
  * Injection binding description of a bean bound directly as a specific instance.
  *
  * @param <T> type of the bean described by this injection binding.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class InstanceBinding<T> extends Binding<T, InstanceBinding<T>> {
 

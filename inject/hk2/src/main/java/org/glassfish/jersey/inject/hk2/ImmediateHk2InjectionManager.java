@@ -49,7 +49,7 @@ import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 /**
  * Implementation of {@link org.glassfish.jersey.internal.inject.InjectionManager} that is able to register and inject services.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class ImmediateHk2InjectionManager extends AbstractHk2InjectionManager {
 

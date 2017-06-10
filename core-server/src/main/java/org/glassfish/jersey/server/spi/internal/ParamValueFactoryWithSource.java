@@ -50,7 +50,7 @@ import org.glassfish.jersey.server.model.Parameter;
  * {@link org.glassfish.jersey.server.model.Parameter.Source} information.
  *
  * @param <T> This must be the type of entity for which this is a factory.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public final class ParamValueFactoryWithSource<T> implements Function<ContainerRequest, T> {
 

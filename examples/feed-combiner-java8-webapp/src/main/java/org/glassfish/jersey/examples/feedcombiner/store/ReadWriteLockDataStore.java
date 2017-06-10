@@ -70,7 +70,7 @@ import static java.util.Objects.requireNonNull;
  * The data store provides the capability of an adding {@link DataStoreObserver observers} which
  * are able to listen any changes in the data store.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class ReadWriteLockDataStore implements InMemoryDataStore, ObservableDataStore {
 

@@ -54,7 +54,7 @@ import org.glassfish.jersey.server.spi.ContainerProvider;
  * Configurator which initializes and register {@link ContainerProvider} instances into {@link InjectionManager} and
  * {@link BootstrapBag}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ContainerProviderConfigurator extends AbstractServiceFinderConfigurator<ContainerProvider> {
 

@@ -75,7 +75,7 @@ import com.sun.syndication.io.SyndFeedOutput;
 /**
  * Provides functionality to convert java object to ATOM representation.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Provider
 @Produces(MediaType.APPLICATION_ATOM_XML)

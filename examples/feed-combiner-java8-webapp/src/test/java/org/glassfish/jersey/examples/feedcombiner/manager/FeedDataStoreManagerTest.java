@@ -57,7 +57,7 @@ import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class FeedDataStoreManagerTest extends EasyMockSupport {
 

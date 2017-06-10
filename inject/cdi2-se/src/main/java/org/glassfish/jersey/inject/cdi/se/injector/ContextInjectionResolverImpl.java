@@ -63,7 +63,7 @@ import org.glassfish.jersey.internal.util.collection.Cache;
 /**
  * Injection resolver for {@link Context @Context} injection annotation.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class ContextInjectionResolverImpl implements InjectionResolver<Context>, ContextInjectionResolver {
 

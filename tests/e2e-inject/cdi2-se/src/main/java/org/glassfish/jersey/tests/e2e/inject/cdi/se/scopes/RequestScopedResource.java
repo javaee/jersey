@@ -53,7 +53,7 @@ import org.glassfish.jersey.process.internal.RequestScoped;
 /**
  * Request scoped resource.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @RequestScoped
 @Path("request")

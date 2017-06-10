@@ -45,7 +45,7 @@ import java.util.Collection;
 /**
  * Interface dedicated to keep some level of code compatibility between previous HK2 implementation and new DI SPI.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public interface Binder {
 

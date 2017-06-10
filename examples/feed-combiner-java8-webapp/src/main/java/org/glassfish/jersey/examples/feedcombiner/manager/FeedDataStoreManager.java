@@ -59,7 +59,7 @@ import org.glassfish.jersey.examples.feedcombiner.store.InMemoryDataStore;
  * its {@link CombinedFeed#getRefreshPeriod()} property is able to give an entity
  * into the queue for another processing which is dedicated to consumers.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class FeedDataStoreManager implements DataStoreObserver {
 

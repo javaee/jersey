@@ -49,7 +49,7 @@ import org.glassfish.jersey.internal.inject.Injections;
 /**
  * Helper class to minimize the code in tested classes.
  *
- * @author Petr Bouda (petr.bouda at oracle.com).
+ * @author Petr Bouda
  */
 class BindingTestHelper {
 

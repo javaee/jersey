@@ -50,7 +50,7 @@ import org.glassfish.jersey.server.model.Resource;
 /**
  * Configurator which initializes and register {@link ResourceBag} instance into {@link BootstrapBag}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ResourceBagConfigurator implements BootstrapConfigurator {
 

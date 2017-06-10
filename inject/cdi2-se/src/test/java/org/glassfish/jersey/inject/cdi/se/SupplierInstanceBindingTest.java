@@ -60,7 +60,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Tests that {@link Supplier} can be registered as a instance-factory.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Vetoed
 public class SupplierInstanceBindingTest {

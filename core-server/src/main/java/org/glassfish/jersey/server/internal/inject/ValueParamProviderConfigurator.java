@@ -79,7 +79,7 @@ import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
  * Configurator which initializes and register {@link ValueParamProvider} instances into {@link InjectionManager} and
  * {@link BootstrapBag}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class ValueParamProviderConfigurator implements BootstrapConfigurator {
 

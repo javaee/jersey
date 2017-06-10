@@ -59,7 +59,7 @@ import org.glassfish.jersey.internal.util.collection.Values;
  * An implementation of {@link InjectionTarget} that just wraps the provided {@code InjectionTarget} because of additional
  * features in an injection phase.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class WrappingJerseyInjectionTarget<T> extends AbstractInjectionTarget<T> {
 

@@ -50,7 +50,7 @@ import javax.inject.Singleton;
 /**
  * Singleton-scoped resource.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Singleton
 @Path("helloworld")

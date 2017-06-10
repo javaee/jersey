@@ -56,7 +56,7 @@ import static org.junit.Assert.assertSame;
 /**
  * Tests that {@link java.util.function.Supplier} can be registered as a class-factory.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class SupplierClassBindingTest {
 

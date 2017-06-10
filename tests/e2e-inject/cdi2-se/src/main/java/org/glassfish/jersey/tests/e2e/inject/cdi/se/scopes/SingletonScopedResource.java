@@ -52,7 +52,7 @@ import javax.inject.Singleton;
 /**
  * Singleton Resource.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Singleton
 @Path("singleton")

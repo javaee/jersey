@@ -87,7 +87,7 @@ import org.jboss.weld.util.reflection.Formats;
  * Implementation is also able create with custom {@code jerseyConstructor} if it is provided. This functionality allows override
  * default instantiator and use the Jersey-specific one.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class JerseyInjectionTarget<T> extends BasicInjectionTarget<T> {
 

@@ -82,7 +82,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_ATOM_XML_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class CombinedFeedResourceTest extends JerseyTest {
 

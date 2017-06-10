@@ -74,7 +74,7 @@ import org.glassfish.jersey.internal.inject.InstanceBinding;
  *  }
  * </pre>
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class InstanceBean<T> extends JerseyBean<T> {
 

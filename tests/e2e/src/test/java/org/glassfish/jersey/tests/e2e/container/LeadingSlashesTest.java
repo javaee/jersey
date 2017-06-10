@@ -65,7 +65,7 @@ import static junit.framework.TestCase.assertEquals;
  * slashes in URL are part of Resource address and couldn't
  * be deleted.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class LeadingSlashesTest extends JerseyContainerTest {
 

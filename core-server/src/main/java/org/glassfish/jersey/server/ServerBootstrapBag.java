@@ -63,7 +63,7 @@ import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
  * <p>
  * This bootstrap bag is specialized for server part of Jersey.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class ServerBootstrapBag extends BootstrapBag {
 

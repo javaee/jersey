@@ -74,7 +74,7 @@ import org.glassfish.jersey.internal.inject.ServiceHolderImpl;
  * Implementation of {@link InjectionManager} that starts CDI SE container, scans all users bean according to beans.xml file and
  * register Jersey's internal beans using {@link SeBeanRegisterExtension} extension.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class CdiSeInjectionManager implements InjectionManager {
 

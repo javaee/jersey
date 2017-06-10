@@ -47,7 +47,7 @@ import javax.ws.rs.FormParam;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public final class FeedRequestBean {
 

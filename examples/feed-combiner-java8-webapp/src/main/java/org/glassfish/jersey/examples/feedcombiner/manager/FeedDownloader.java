@@ -61,7 +61,7 @@ import com.sun.syndication.io.XmlReader;
  * {@link SyndFeed}
  * </p>
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class FeedDownloader implements Function<URL, List<SyndEntry>> {
 

@@ -43,7 +43,7 @@ package org.glassfish.jersey.tests.e2e.inject.cdi.se;
 /**
  * Interface used to activate decorator.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public interface Hello {
 
