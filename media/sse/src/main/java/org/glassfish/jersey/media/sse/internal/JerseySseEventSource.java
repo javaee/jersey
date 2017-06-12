@@ -39,18 +39,13 @@
  */
 package org.glassfish.jersey.media.sse.internal;
 
-import java.util.Date;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.ServiceUnavailableException;
-import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.sse.InboundSseEvent;
 import javax.ws.rs.sse.SseEventSource;
 
@@ -58,18 +53,14 @@ import org.glassfish.jersey.client.ClientExecutor;
 import org.glassfish.jersey.client.JerseyWebTarget;
 import org.glassfish.jersey.internal.jsr166.Flow;
 import org.glassfish.jersey.internal.util.JerseyPublisher;
-import org.glassfish.jersey.media.sse.EventInput;
-import org.glassfish.jersey.media.sse.EventListener;
 import org.glassfish.jersey.media.sse.LocalizationMessages;
-
 
 /**
  * {@code SseEventSource} implementation.
  */
-public class JerseySseEventSource implements SseEventSource, SseEventListener<InboundSseEvent> {
+public class JerseySseEventSource implements SseEventSource {
 
     private static final long DEFAULT_RECONNECT_DELAY = 500;
-    private static final Level CONNECTION_ERROR_LEVEL = Level.FINE;
     private static final Logger LOGGER = Logger.getLogger(JerseySseEventSource.class.getName());
 
     private static final Consumer<Flow.Subscription> DEFAULT_SUBSCRIPTION_HANDLER =
@@ -81,17 +72,12 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
                     LocalizationMessages.EVENT_SOURCE_DEFAULT_ONERROR(),
                     throwable);
 
-    /**
-     * {@code Last-Event-ID} header name constant.
-     */
-    private static final String LAST_EVENT_ID_HEADER = "Last-Event-ID";
-
     private JerseyPublisher<InboundSseEvent> publisher;
 
     /**
      * SseEventSource internal state.
      */
-    private final AtomicReference<State> state = new AtomicReference<>(State.READY);
+    private final AtomicReference<EventProcessor.State> state = new AtomicReference<>(EventProcessor.State.READY);
     /**
      * SSE streaming resource target.
      */
@@ -104,15 +90,10 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
      * Reconnect delay time unit.
      */
     private final TimeUnit reconnectTimeUnit;
-
-    private final ClientExecutor clientExecutor;
-
     /**
-     * Possible internal {@code SseEventSource} states.
+     * Client provided executor facade.
      */
-    private enum State {
-        READY, OPEN, CLOSED
-    }
+    private final ClientExecutor clientExecutor;
 
     /**
      * Private constructor.
@@ -132,38 +113,13 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
         this.publisher = new JerseyPublisher<>(clientExecutor::submit, JerseyPublisher.PublisherStrategy.BLOCKING);
     }
 
-    @Override
+    /**
+     * On event callback, invoked whenever an event is received.
+     *
+     * @param inboundEvent received event.
+     */
     public void onEvent(final InboundSseEvent inboundEvent) {
         publisher.publish(inboundEvent);
-    }
-
-    public static class Builder extends javax.ws.rs.sse.SseEventSource.Builder {
-
-        private WebTarget endpoint;
-        private long reconnectDelay = DEFAULT_RECONNECT_DELAY;
-        private TimeUnit reconnectTimeUnit = TimeUnit.MILLISECONDS;
-
-        @Override
-        protected Builder target(final WebTarget endpoint) {
-            this.endpoint = endpoint;
-            return this;
-        }
-
-        @Override
-        public Builder reconnectingEvery(final long delay, final TimeUnit unit) {
-            this.reconnectDelay = delay;
-            this.reconnectTimeUnit = unit;
-            return this;
-        }
-
-        @Override
-        public JerseySseEventSource build() {
-            if (endpoint instanceof JerseyWebTarget) {
-                return new JerseySseEventSource((JerseyWebTarget) endpoint, reconnectDelay, reconnectTimeUnit);
-            } else {
-                throw new IllegalArgumentException(LocalizationMessages.UNSUPPORTED_WEBTARGET_TYPE(endpoint));
-            }
-        }
     }
 
     @Override
@@ -183,10 +139,10 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
         this.subscribe(DEFAULT_SUBSCRIPTION_HANDLER, onEvent, onError, onComplete);
     }
 
-    public void subscribe(final Consumer<Flow.Subscription> onSubscribe,
-                          final Consumer<InboundSseEvent> onEvent,
-                          final Consumer<Throwable> onError,
-                          final Runnable onComplete) {
+    private void subscribe(final Consumer<Flow.Subscription> onSubscribe,
+                           final Consumer<InboundSseEvent> onEvent,
+                           final Consumer<Throwable> onError,
+                           final Runnable onComplete) {
         if (onSubscribe == null || onEvent == null || onError == null || onComplete == null) {
             throw new IllegalStateException(LocalizationMessages.PARAMS_NULL());
         }
@@ -226,7 +182,7 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
 
     @Override
     public void open() {
-        if (!state.compareAndSet(State.READY, State.OPEN)) {
+        if (!state.compareAndSet(EventProcessor.State.READY, EventProcessor.State.OPEN)) {
             switch (state.get()) {
                 case CLOSED:
                     throw new IllegalStateException(LocalizationMessages.EVENT_SOURCE_ALREADY_CLOSED());
@@ -235,7 +191,11 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
             }
         }
 
-        final EventProcessor processor = new EventProcessor(reconnectDelay, reconnectTimeUnit, null);
+
+        EventProcessor processor = EventProcessor
+                .builder(endpoint, state, clientExecutor, this::onEvent, this::close)
+                .reconnectDelay(reconnectDelay, reconnectTimeUnit)
+                .build();
         clientExecutor.submit(processor);
 
         // return only after the first request to the SSE endpoint has been made
@@ -244,195 +204,46 @@ public class JerseySseEventSource implements SseEventSource, SseEventListener<In
 
     @Override
     public boolean isOpen() {
-        return state.get() == State.OPEN;
+        return state.get() == EventProcessor.State.OPEN;
     }
 
     @Override
     public boolean close(final long timeout, final TimeUnit unit) {
-        if (state.getAndSet(State.CLOSED) != State.CLOSED) {
+        if (state.getAndSet(EventProcessor.State.CLOSED) != EventProcessor.State.CLOSED) {
             publisher.close();
         }
         return true;
     }
 
     /**
-     * Private event processor task responsible for connecting to the SSE stream and processing
-     * incoming SSE events as well as handling any connection issues.
+     * {@link SseEventSource.Builder} implementation.
      */
-    private class EventProcessor implements Runnable, SseEventListener<InboundSseEvent> {
+    public static class Builder extends javax.ws.rs.sse.SseEventSource.Builder {
 
-        /**
-         * Open connection response arrival synchronization latch.
-         */
-        private final CountDownLatch firstContactSignal;
-        /**
-         * Last event id.
-         */
-        private String lastEventId;
-        /**
-         * Reconnect delay amount.
-         */
-        private long reconnectDelay;
-        /**
-         * Reconnect delay time unit.
-         */
-        private final TimeUnit reconnectTimeUnit;
+        private WebTarget endpoint;
+        private long reconnectDelay = DEFAULT_RECONNECT_DELAY;
+        private TimeUnit reconnectTimeUnit = TimeUnit.MILLISECONDS;
 
-        EventProcessor(final long reconnectDelay, final TimeUnit reconnectTimeUnit, final String lastEventId) {
-            this.firstContactSignal = new CountDownLatch(1);
-
-            this.reconnectDelay = reconnectDelay;
-            this.reconnectTimeUnit = reconnectTimeUnit;
-            this.lastEventId = lastEventId;
-        }
-
-        private EventProcessor(final EventProcessor that) {
-            this.firstContactSignal = null;
-
-            this.reconnectDelay = that.reconnectDelay;
-            this.reconnectTimeUnit = that.reconnectTimeUnit;
-            this.lastEventId = that.lastEventId;
+        @Override
+        protected Builder target(final WebTarget endpoint) {
+            this.endpoint = endpoint;
+            return this;
         }
 
         @Override
-        public void run() {
-            LOGGER.fine("Listener task started");
-
-            EventInput eventInput = null;
-            try {
-                try {
-                    final Invocation.Builder request = prepareHandshakeRequest();
-                    if (state.get() == State.OPEN) {
-                        eventInput = request.get(EventInput.class);
-                    }
-                } finally {
-                    if (firstContactSignal != null) {
-                        firstContactSignal.countDown();
-                    }
-                }
-
-                final Thread execThread = Thread.currentThread();
-
-                while (state.get() == State.OPEN && !execThread.isInterrupted()) {
-                    if (eventInput == null || eventInput.isClosed()) {
-                        LOGGER.fine(String.format("Connection lost - scheduling reconnect in %s %s",
-                                reconnectDelay, reconnectTimeUnit));
-                        scheduleReconnect(reconnectDelay, reconnectTimeUnit);
-                        break;
-                    } else {
-                        this.onEvent(eventInput.read());
-                    }
-                }
-            } catch (final ServiceUnavailableException ex) {
-                LOGGER.fine("Received HTTP 503");
-                long delay = reconnectDelay;
-                TimeUnit timeUnit = reconnectTimeUnit;
-                if (ex.hasRetryAfter()) {
-                    LOGGER.fine("Recovering from HTTP 503 using HTTP Retry-After header value as a reconnect delay.");
-                    final Date requestTime = new Date();
-                    delay = ex.getRetryTime(requestTime).getTime() - requestTime.getTime();
-                    delay = (delay > 0) ? delay : 0;
-                    timeUnit = TimeUnit.MILLISECONDS;
-                }
-
-                LOGGER.fine(String.format("Recovering from HTTP 503 - scheduling to reconnect in %s %s", delay, timeUnit));
-                scheduleReconnect(delay, timeUnit);
-            } catch (final Exception ex) {
-                if (LOGGER.isLoggable(CONNECTION_ERROR_LEVEL)) {
-                    LOGGER.log(CONNECTION_ERROR_LEVEL, String.format("Unable to connect - closing the event source to %s.",
-                            endpoint.getUri().toASCIIString()), ex);
-                }
-                // if we're here, an unrecoverable error has occurred - just turn off the lights...
-                close();
-            } finally {
-                if (eventInput != null && !eventInput.isClosed()) {
-                    eventInput.close();
-                }
-                LOGGER.fine("Listener task finished.");
-            }
+        public Builder reconnectingEvery(final long delay, final TimeUnit unit) {
+            this.reconnectDelay = delay;
+            this.reconnectTimeUnit = unit;
+            return this;
         }
 
-        /**
-         * Schedule a new event processor task to reconnect after the specified {@code delay} [milliseconds].
-         * <p>
-         * If the {@code delay} is zero or negative, the new reconnect task will be scheduled immediately.
-         * The {@code reconnectDelay} and {@code lastEventId} field values are propagated into the newly
-         * scheduled task.
-         * <p>
-         * The method will silently abort in case the event source is not {@link SseEventSource#isOpen() open}.
-         * </p>
-         *
-         * @param reconnectDelay    specifies the amount of time in [reconnectTimeUnits] to wait before attempting a reconnect.
-         *                          If zero or negative, the new reconnect task will be scheduled immediately.
-         * @param reconnectTimeUnit specifies the time unit for the {@code reconnectDelay} parameter
-         */
-        private void scheduleReconnect(final long reconnectDelay, final TimeUnit reconnectTimeUnit) {
-            final State s = state.get();
-            if (s != State.OPEN) {
-                LOGGER.fine(String.format("Aborting reconnect of event source in %s state", state));
-                return;
-            }
-
-            final EventProcessor processor = new EventProcessor(this);
-            if (reconnectDelay > 0) {
-                clientExecutor.schedule(processor, reconnectDelay, reconnectTimeUnit);
+        @Override
+        public JerseySseEventSource build() {
+            if (endpoint instanceof JerseyWebTarget) {
+                return new JerseySseEventSource((JerseyWebTarget) endpoint, reconnectDelay, reconnectTimeUnit);
             } else {
-                clientExecutor.submit(processor);
-            }
-        }
-
-        private Invocation.Builder prepareHandshakeRequest() {
-            final Invocation.Builder request = endpoint.request(MediaType.SERVER_SENT_EVENTS);
-            if (lastEventId != null && !lastEventId.isEmpty()) {
-                request.header(LAST_EVENT_ID_HEADER, lastEventId);
-            }
-            request.header("Connection", "close");
-            return request;
-        }
-
-
-        /**
-         * Called by the event source when an inbound event is received.
-         * <p>
-         * This listener aggregator method is responsible for invoking {@link JerseySseEventSource#onEvent(InboundSseEvent)}
-         * method on the owning event source as well as for notifying all registered {@link EventListener event listeners}.
-         *
-         * @param inboundEvent incoming {@link InboundSseEvent inbound event}.
-         */
-        @Override
-        public void onEvent(final InboundSseEvent inboundEvent) {
-            if (inboundEvent == null) {
-                return;
-            }
-            LOGGER.fine("New event received: " + inboundEvent);
-
-            if (inboundEvent.getId() != null) {
-                lastEventId = inboundEvent.getId();
-            }
-            if (inboundEvent.isReconnectDelaySet()) {
-                reconnectDelay = inboundEvent.getReconnectDelay();
-            }
-            publisher.publish(inboundEvent);
-        }
-
-        void awaitFirstContact() {
-            LOGGER.fine("Awaiting first contact signal.");
-            try {
-                if (firstContactSignal == null) {
-                    return;
-                }
-
-                try {
-                    firstContactSignal.await();
-                } catch (final InterruptedException ex) {
-                    LOGGER.log(CONNECTION_ERROR_LEVEL, LocalizationMessages.EVENT_SOURCE_OPEN_CONNECTION_INTERRUPTED(), ex);
-                    Thread.currentThread().interrupt();
-                }
-            } finally {
-                LOGGER.fine("First contact signal released.");
+                throw new IllegalArgumentException(LocalizationMessages.UNSUPPORTED_WEBTARGET_TYPE(endpoint));
             }
         }
     }
-
-
 }
