@@ -40,27 +40,28 @@
 
 package org.glassfish.jersey.media.sse;
 
-import java.util.Collection;
+import java.io.Closeable;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.ServiceUnavailableException;
-import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 
+import org.glassfish.jersey.client.ClientExecutor;
 import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
+import org.glassfish.jersey.media.sse.internal.EventProcessor;
 
 /**
  * Client for reading and processing {@link InboundEvent incoming Server-Sent Events}.
@@ -140,10 +141,6 @@ public class EventSource implements EventListener {
      */
     public static final long RECONNECT_DEFAULT = 500;
 
-    private enum State {
-        READY, OPEN, CLOSED
-    }
-
     private static final Level CONNECTION_ERROR_LEVEL = Level.FINE;
     private static final ExtendedLogger LOGGER = new ExtendedLogger(Logger.getLogger(EventSource.class.getName()), Level.FINEST);
 
@@ -162,11 +159,11 @@ public class EventSource implements EventListener {
     /**
      * Incoming SSE event processing task executor.
      */
-    private final ScheduledExecutorService executor;
+    private final CloseableClientExecutor executor;
     /**
      * Event source internal state.
      */
-    private final AtomicReference<State> state = new AtomicReference<>(State.READY);
+    private final AtomicReference<EventProcessor.State> state = new AtomicReference<>(EventProcessor.State.READY);
     /**
      * List of all listeners not bound to receive only events of a particular name.
      */
@@ -175,6 +172,336 @@ public class EventSource implements EventListener {
      * A map of listeners bound to receive only events of a particular name.
      */
     private final ConcurrentMap<String, List<EventListener>> boundListeners = new ConcurrentHashMap<>();
+
+    /**
+     * Shutdown callback.
+     * <p>
+     * Invoked when event processing reaches terminal stage.
+     */
+    private final EventProcessor.ShutdownHandler shutdownHandler = EventSource.this::shutdown;
+
+    /**
+     * Create a new {@link EventSource.Builder event source builder} that provides convenient way how to
+     * configure and fine-tune various aspects of a newly prepared event source instance.
+     *
+     * @param endpoint SSE streaming endpoint. Must not be {@code null}.
+     * @return a builder of a new event source instance pointing at the specified SSE streaming endpoint.
+     * @throws NullPointerException in case the supplied web target is {@code null}.
+     * @since 2.3
+     */
+    public static Builder target(WebTarget endpoint) {
+        return new Builder(endpoint);
+    }
+
+    /**
+     * Create new SSE event source and open a connection it to the supplied SSE streaming {@link WebTarget web target}.
+     *
+     * This constructor is performs the same series of actions as a call to:
+     * <pre>EventSource.target(endpoint).open()</pre>
+     * <p>
+     * The created event source instance automatically {@link #open opens a connection} to the supplied SSE streaming
+     * web target and starts processing incoming {@link InboundEvent events}.
+     * </p>
+     * <p>
+     * The incoming events are processed by the event source in an asynchronous task that runs in an
+     * internal single-threaded {@link ScheduledExecutorService scheduled executor service}.
+     * </p>
+     *
+     * @param endpoint SSE streaming endpoint. Must not be {@code null}.
+     * @throws NullPointerException in case the supplied web target is {@code null}.
+     */
+    public EventSource(final WebTarget endpoint) {
+        this(endpoint, true);
+    }
+
+    /**
+     * Create new SSE event source pointing at a SSE streaming {@link WebTarget web target}.
+     *
+     * This constructor is performs the same series of actions as a call to:
+     * <pre>
+     * if (open) {
+     *     EventSource.target(endpoint).open();
+     * } else {
+     *     EventSource.target(endpoint).build();
+     * }</pre>
+     * <p>
+     * If the supplied {@code open} flag is {@code true}, the created event source instance automatically
+     * {@link #open opens a connection} to the supplied SSE streaming web target and starts processing incoming
+     * {@link InboundEvent events}.
+     * Otherwise, if the {@code open} flag is set to {@code false}, the created event source instance
+     * is not automatically connected to the web target. In this case it is expected that the user who
+     * created the event source will manually invoke its {@link #open()} method.
+     * </p>
+     * <p>
+     * Once the event source is open, the incoming events are processed by the event source in an
+     * asynchronous task that runs in an internal single-threaded {@link ScheduledExecutorService
+     * scheduled executor service}.
+     * </p>
+     *
+     * @param endpoint SSE streaming endpoint. Must not be {@code null}.
+     * @param open     if {@code true}, the event source will immediately connect to the SSE endpoint,
+     *                 if {@code false}, the connection will not be established until {@link #open()} method is
+     *                 called explicitly on the event stream.
+     * @throws NullPointerException in case the supplied web target is {@code null}.
+     */
+    public EventSource(final WebTarget endpoint, final boolean open) {
+        this(endpoint, null, RECONNECT_DEFAULT, true, open);
+    }
+
+    private EventSource(final WebTarget target,
+                        final String name,
+                        final long reconnectDelay,
+                        final boolean disableKeepAlive,
+                        final boolean open) {
+        if (target == null) {
+            throw new NullPointerException("Web target is 'null'.");
+        }
+        this.target = SseFeature.register(target);
+        this.reconnectDelay = reconnectDelay;
+        this.disableKeepAlive = disableKeepAlive;
+
+        final String esName = (name == null) ? createDefaultName(target) : name;
+
+        this.executor = new CloseableClientExecutor(Executors.newSingleThreadScheduledExecutor(
+                new ThreadFactoryBuilder().setNameFormat(esName + "-%d")
+                                          .setDaemon(true)
+                                          .build()));
+
+        if (open) {
+            open();
+        }
+    }
+
+    private static String createDefaultName(WebTarget target) {
+        return String.format("jersey-sse-event-source-[%s]", target.getUri().toASCIIString());
+    }
+
+    /**
+     * Open the connection to the supplied SSE underlying {@link WebTarget web target} and start processing incoming
+     * {@link InboundEvent events}.
+     *
+     * @throws IllegalStateException in case the event source has already been opened earlier.
+     */
+    public void open() {
+        if (!state.compareAndSet(EventProcessor.State.READY, EventProcessor.State.OPEN)) {
+            switch (state.get()) {
+                case OPEN:
+                    throw new IllegalStateException(LocalizationMessages.EVENT_SOURCE_ALREADY_CONNECTED());
+                case CLOSED:
+                    throw new IllegalStateException(LocalizationMessages.EVENT_SOURCE_ALREADY_CLOSED());
+            }
+        }
+
+        EventProcessor.Builder builder =
+                EventProcessor.builder(target, state, executor, this, shutdownHandler)
+                              .boundListeners(boundListeners)
+                              .unboundListeners(unboundListeners)
+                              .reconnectDelay(reconnectDelay, TimeUnit.MILLISECONDS);
+
+        if (disableKeepAlive) {
+            builder.disableKeepAlive();
+        }
+
+        EventProcessor processor = builder.build();
+
+        executor.submit(processor);
+
+        // return only after the first request to the SSE endpoint has been made
+        processor.awaitFirstContact();
+    }
+
+    /**
+     * Check if this event source instance has already been {@link #open() opened}.
+     *
+     * @return {@code true} if this event source is open, {@code false} otherwise.
+     */
+    public boolean isOpen() {
+        return state.get() == EventProcessor.State.OPEN;
+    }
+
+    /**
+     * Register new {@link EventListener event listener} to receive all streamed {@link InboundEvent SSE events}.
+     *
+     * @param listener event listener to be registered with the event source.
+     * @see #register(EventListener, String, String...)
+     */
+    public void register(final EventListener listener) {
+        register(listener, null);
+    }
+
+    /**
+     * Add name-bound {@link EventListener event listener} which will be called only for incoming SSE
+     * {@link InboundEvent events} whose {@link InboundEvent#getName() name} is equal to the specified
+     * name(s).
+     *
+     * @param listener   event listener to register with this event source.
+     * @param eventName  inbound event name.
+     * @param eventNames additional event names.
+     * @see #register(EventListener)
+     */
+    public void register(final EventListener listener, final String eventName, final String... eventNames) {
+        if (eventName == null) {
+            unboundListeners.add(listener);
+        } else {
+            addBoundListener(eventName, listener);
+
+            if (eventNames != null) {
+                for (String name : eventNames) {
+                    addBoundListener(name, listener);
+                }
+            }
+        }
+    }
+
+    private void addBoundListener(final String name, final EventListener listener) {
+        List<EventListener> listeners = boundListeners.putIfAbsent(name,
+                new CopyOnWriteArrayList<>(Collections.singleton(listener)));
+        if (listeners != null) {
+            // alas, new listener collection registration conflict:
+            // need to add the new listener to the existing listener collection
+            listeners.add(listener);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The default {@code EventSource} implementation is empty, users can override this method to handle
+     * incoming {@link InboundEvent}s.
+     * </p>
+     * <p>
+     * Note that overriding this method may be necessary to make sure no {@code InboundEvent incoming events}
+     * are lost in case the event source is constructed using {@link #EventSource(javax.ws.rs.client.WebTarget)}
+     * constructor or in case a {@code true} flag is passed to the {@link #EventSource(javax.ws.rs.client.WebTarget, boolean)}
+     * constructor, since the connection is opened as as part of the constructor call and the event processing starts
+     * immediately. Therefore any {@link EventListener}s registered later after the event source has been constructed
+     * may miss the notifications about the one or more events that arrive immediately after the connection to the
+     * event source is established.
+     * </p>
+     *
+     * @param inboundEvent received inbound event.
+     */
+    @Override
+    public void onEvent(final InboundEvent inboundEvent) {
+        // do nothing
+    }
+
+    /**
+     * Close this event source.
+     *
+     * The method will wait up to 5 seconds for the internal event processing task to complete.
+     */
+    public void close() {
+        close(5, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Close this event source and wait for the internal event processing task to complete
+     * for up to the specified amount of wait time.
+     * <p>
+     * The method blocks until the event processing task has completed execution after a shutdown
+     * request, or until the timeout occurs, or the current thread is interrupted, whichever happens
+     * first.
+     * </p>
+     * <p>
+     * In case the waiting for the event processing task has been interrupted, this method restores
+     * the {@link Thread#interrupted() interrupt} flag on the thread before returning {@code false}.
+     * </p>
+     *
+     * @param timeout the maximum time to wait.
+     * @param unit    the time unit of the timeout argument.
+     * @return {@code true} if this executor terminated and {@code false} if the timeout elapsed
+     * before termination or the termination was interrupted.
+     */
+    public boolean close(final long timeout, final TimeUnit unit) {
+        shutdown();
+        try {
+            if (!executor.awaitTermination(timeout, unit)) {
+                LOGGER.log(CONNECTION_ERROR_LEVEL,
+                        LocalizationMessages.EVENT_SOURCE_SHUTDOWN_TIMEOUT(target.getUri().toString()));
+                return false;
+            }
+        } catch (InterruptedException e) {
+            LOGGER.log(CONNECTION_ERROR_LEVEL,
+                    LocalizationMessages.EVENT_SOURCE_SHUTDOWN_INTERRUPTED(target.getUri().toString()));
+            Thread.currentThread().interrupt();
+            return false;
+        }
+        return true;
+    }
+
+    private void shutdown() {
+        if (state.getAndSet(EventProcessor.State.CLOSED) != EventProcessor.State.CLOSED) {
+            // shut down only if has not been shut down before
+            LOGGER.debugLog("Shutting down event processing.");
+            executor.close();
+        }
+    }
+
+    /**
+     * Closeable client executor.
+     * <p>
+     * Provides all {@link ClientExecutor} methods as well as {@link Closeable} and {@link #awaitTermination(long, TimeUnit)}.
+     */
+    private static class CloseableClientExecutor implements ClientExecutor, Closeable {
+
+        private final ScheduledExecutorService scheduledExecutorService;
+
+        /**
+         * Create new Closeable Client executor with provided backing scheduled executor service.
+         *
+         * @param scheduledExecutorService backing scheduled executor service.
+         */
+        public CloseableClientExecutor(ScheduledExecutorService scheduledExecutorService) {
+            this.scheduledExecutorService = scheduledExecutorService;
+        }
+
+        @Override
+        public <T> Future<T> submit(Callable<T> task) {
+            return scheduledExecutorService.submit(task);
+        }
+
+        @Override
+        public Future<?> submit(Runnable task) {
+            return scheduledExecutorService.submit(task);
+        }
+
+        @Override
+        public <T> Future<T> submit(Runnable task, T result) {
+            return scheduledExecutorService.submit(task, result);
+        }
+
+        @Override
+        public <T> ScheduledFuture<T> schedule(Callable<T> callable, long delay, TimeUnit unit) {
+            return scheduledExecutorService.schedule(callable, delay, unit);
+        }
+
+        @Override
+        public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+            return scheduledExecutorService.schedule(command, delay, unit);
+        }
+
+        @Override
+        public void close() {
+            scheduledExecutorService.shutdownNow();
+        }
+
+        /**
+         * Blocks until all tasks have completed execution after a shutdown
+         * request, or the timeout occurs, or the current thread is
+         * interrupted, whichever happens first.
+         *
+         * @param timeout the maximum time to wait
+         * @param unit the time unit of the timeout argument
+         * @return {@code true} if this executor terminated and
+         *         {@code false} if the timeout elapsed before termination
+         * @throws InterruptedException if interrupted while waiting
+         */
+        boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+            return scheduledExecutorService.awaitTermination(timeout, unit);
+        }
+    }
+
 
     /**
      * Jersey {@link EventSource} builder class.
@@ -299,459 +626,6 @@ public class EventSource implements EventListener {
             final EventSource source = new EventSource(endpoint, name, reconnect, disableKeepAlive, false);
             source.open();
             return source;
-        }
-    }
-
-    /**
-     * Create a new {@link EventSource.Builder event source builder} that provides convenient way how to
-     * configure and fine-tune various aspects of a newly prepared event source instance.
-     *
-     * @param endpoint SSE streaming endpoint. Must not be {@code null}.
-     * @return a builder of a new event source instance pointing at the specified SSE streaming endpoint.
-     * @throws NullPointerException in case the supplied web target is {@code null}.
-     * @since 2.3
-     */
-    public static Builder target(WebTarget endpoint) {
-        return new Builder(endpoint);
-    }
-
-    /**
-     * Create new SSE event source and open a connection it to the supplied SSE streaming {@link WebTarget web target}.
-     *
-     * This constructor is performs the same series of actions as a call to:
-     * <pre>EventSource.target(endpoint).open()</pre>
-     * <p>
-     * The created event source instance automatically {@link #open opens a connection} to the supplied SSE streaming
-     * web target and starts processing incoming {@link InboundEvent events}.
-     * </p>
-     * <p>
-     * The incoming events are processed by the event source in an asynchronous task that runs in an
-     * internal single-threaded {@link ScheduledExecutorService scheduled executor service}.
-     * </p>
-     *
-     * @param endpoint SSE streaming endpoint. Must not be {@code null}.
-     * @throws NullPointerException in case the supplied web target is {@code null}.
-     */
-    public EventSource(final WebTarget endpoint) {
-        this(endpoint, true);
-    }
-
-    /**
-     * Create new SSE event source pointing at a SSE streaming {@link WebTarget web target}.
-     *
-     * This constructor is performs the same series of actions as a call to:
-     * <pre>
-     * if (open) {
-     *     EventSource.target(endpoint).open();
-     * } else {
-     *     EventSource.target(endpoint).build();
-     * }</pre>
-     * <p>
-     * If the supplied {@code open} flag is {@code true}, the created event source instance automatically
-     * {@link #open opens a connection} to the supplied SSE streaming web target and starts processing incoming
-     * {@link InboundEvent events}.
-     * Otherwise, if the {@code open} flag is set to {@code false}, the created event source instance
-     * is not automatically connected to the web target. In this case it is expected that the user who
-     * created the event source will manually invoke its {@link #open()} method.
-     * </p>
-     * <p>
-     * Once the event source is open, the incoming events are processed by the event source in an
-     * asynchronous task that runs in an internal single-threaded {@link ScheduledExecutorService
-     * scheduled executor service}.
-     * </p>
-     *
-     * @param endpoint SSE streaming endpoint. Must not be {@code null}.
-     * @param open     if {@code true}, the event source will immediately connect to the SSE endpoint,
-     *                 if {@code false}, the connection will not be established until {@link #open()} method is
-     *                 called explicitly on the event stream.
-     * @throws NullPointerException in case the supplied web target is {@code null}.
-     */
-    public EventSource(final WebTarget endpoint, final boolean open) {
-        this(endpoint, null, RECONNECT_DEFAULT, true, open);
-    }
-
-    private EventSource(final WebTarget target,
-                        final String name,
-                        final long reconnectDelay,
-                        final boolean disableKeepAlive,
-                        final boolean open) {
-        if (target == null) {
-            throw new NullPointerException("Web target is 'null'.");
-        }
-        this.target = SseFeature.register(target);
-        this.reconnectDelay = reconnectDelay;
-        this.disableKeepAlive = disableKeepAlive;
-
-        final String esName = (name == null) ? createDefaultName(target) : name;
-        this.executor = Executors.newSingleThreadScheduledExecutor(
-                new ThreadFactoryBuilder().setNameFormat(esName + "-%d").setDaemon(true).build());
-
-        if (open) {
-            open();
-        }
-    }
-
-    private static String createDefaultName(WebTarget target) {
-        return String.format("jersey-sse-event-source-[%s]", target.getUri().toASCIIString());
-    }
-
-    /**
-     * Open the connection to the supplied SSE underlying {@link WebTarget web target} and start processing incoming
-     * {@link InboundEvent events}.
-     *
-     * @throws IllegalStateException in case the event source has already been opened earlier.
-     */
-    public void open() {
-        if (!state.compareAndSet(State.READY, State.OPEN)) {
-            switch (state.get()) {
-                case OPEN:
-                    throw new IllegalStateException(LocalizationMessages.EVENT_SOURCE_ALREADY_CONNECTED());
-                case CLOSED:
-                    throw new IllegalStateException(LocalizationMessages.EVENT_SOURCE_ALREADY_CLOSED());
-            }
-        }
-
-        EventProcessor processor = new EventProcessor(reconnectDelay, null);
-        executor.submit(processor);
-
-        // return only after the first request to the SSE endpoint has been made
-        processor.awaitFirstContact();
-    }
-
-    /**
-     * Check if this event source instance has already been {@link #open() opened}.
-     *
-     * @return {@code true} if this event source is open, {@code false} otherwise.
-     */
-    public boolean isOpen() {
-        return state.get() == State.OPEN;
-    }
-
-    /**
-     * Register new {@link EventListener event listener} to receive all streamed {@link InboundEvent SSE events}.
-     *
-     * @param listener event listener to be registered with the event source.
-     * @see #register(EventListener, String, String...)
-     */
-    public void register(final EventListener listener) {
-        register(listener, null);
-    }
-
-    /**
-     * Add name-bound {@link EventListener event listener} which will be called only for incoming SSE
-     * {@link InboundEvent events} whose {@link InboundEvent#getName() name} is equal to the specified
-     * name(s).
-     *
-     * @param listener   event listener to register with this event source.
-     * @param eventName  inbound event name.
-     * @param eventNames additional event names.
-     * @see #register(EventListener)
-     */
-    public void register(final EventListener listener, final String eventName, final String... eventNames) {
-        if (eventName == null) {
-            unboundListeners.add(listener);
-        } else {
-            addBoundListener(eventName, listener);
-
-            if (eventNames != null) {
-                for (String name : eventNames) {
-                    addBoundListener(name, listener);
-                }
-            }
-        }
-    }
-
-    private void addBoundListener(final String name, final EventListener listener) {
-        List<EventListener> listeners = boundListeners.putIfAbsent(name,
-                new CopyOnWriteArrayList<>(Collections.singleton(listener)));
-        if (listeners != null) {
-            // alas, new listener collection registration conflict:
-            // need to add the new listener to the existing listener collection
-            listeners.add(listener);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * The default {@code EventSource} implementation is empty, users can override this method to handle
-     * incoming {@link InboundEvent}s.
-     * </p>
-     * <p>
-     * Note that overriding this method may be necessary to make sure no {@code InboundEvent incoming events}
-     * are lost in case the event source is constructed using {@link #EventSource(javax.ws.rs.client.WebTarget)}
-     * constructor or in case a {@code true} flag is passed to the {@link #EventSource(javax.ws.rs.client.WebTarget, boolean)}
-     * constructor, since the connection is opened as as part of the constructor call and the event processing starts
-     * immediately. Therefore any {@link EventListener}s registered later after the event source has been constructed
-     * may miss the notifications about the one or more events that arrive immediately after the connection to the
-     * event source is established.
-     * </p>
-     *
-     * @param inboundEvent received inbound event.
-     */
-    @Override
-    public void onEvent(final InboundEvent inboundEvent) {
-        // do nothing
-    }
-
-    /**
-     * Close this event source.
-     *
-     * The method will wait up to 5 seconds for the internal event processing task to complete.
-     */
-    public void close() {
-        close(5, TimeUnit.SECONDS);
-    }
-
-    /**
-     * Close this event source and wait for the internal event processing task to complete
-     * for up to the specified amount of wait time.
-     * <p>
-     * The method blocks until the event processing task has completed execution after a shutdown
-     * request, or until the timeout occurs, or the current thread is interrupted, whichever happens
-     * first.
-     * </p>
-     * <p>
-     * In case the waiting for the event processing task has been interrupted, this method restores
-     * the {@link Thread#interrupted() interrupt} flag on the thread before returning {@code false}.
-     * </p>
-     *
-     * @param timeout the maximum time to wait.
-     * @param unit    the time unit of the timeout argument.
-     * @return {@code true} if this executor terminated and {@code false} if the timeout elapsed
-     * before termination or the termination was interrupted.
-     */
-    public boolean close(final long timeout, final TimeUnit unit) {
-        shutdown();
-        try {
-            if (!executor.awaitTermination(timeout, unit)) {
-                LOGGER.log(CONNECTION_ERROR_LEVEL,
-                        LocalizationMessages.EVENT_SOURCE_SHUTDOWN_TIMEOUT(target.getUri().toString()));
-                return false;
-            }
-        } catch (InterruptedException e) {
-            LOGGER.log(CONNECTION_ERROR_LEVEL,
-                    LocalizationMessages.EVENT_SOURCE_SHUTDOWN_INTERRUPTED(target.getUri().toString()));
-            Thread.currentThread().interrupt();
-            return false;
-        }
-        return true;
-    }
-
-    private void shutdown() {
-        if (state.getAndSet(State.CLOSED) != State.CLOSED) {
-            // shut down only if has not been shut down before
-            LOGGER.debugLog("Shutting down event processing.");
-            executor.shutdownNow();
-        }
-    }
-
-    /**
-     * Private event processor task responsible for connecting to the SSE stream and processing
-     * incoming SSE events as well as handling any connection issues.
-     */
-    private class EventProcessor implements Runnable, EventListener {
-
-        /**
-         * Open connection response arrival synchronization latch.
-         */
-        private final CountDownLatch firstContactSignal;
-        /**
-         * Last received event id.
-         */
-        private String lastEventId;
-        /**
-         * Re-connect delay.
-         */
-        private long reconnectDelay;
-
-        public EventProcessor(final long reconnectDelay, final String lastEventId) {
-            /**
-             * Synchronization barrier used to signal that the initial contact with SSE endpoint
-             * has been made.
-             */
-            this.firstContactSignal = new CountDownLatch(1);
-
-            this.reconnectDelay = reconnectDelay;
-            this.lastEventId = lastEventId;
-        }
-
-        private EventProcessor(final EventProcessor that) {
-            this.firstContactSignal = null;
-
-            this.reconnectDelay = that.reconnectDelay;
-            this.lastEventId = that.lastEventId;
-        }
-
-        @Override
-        public void run() {
-            LOGGER.debugLog("Listener task started.");
-
-            EventInput eventInput = null;
-            try {
-                try {
-                    final Invocation.Builder request = prepareHandshakeRequest();
-                    if (state.get() == State.OPEN) { // attempt to connect only if even source is open
-                        LOGGER.debugLog("Connecting...");
-                        eventInput = request.get(EventInput.class);
-                        LOGGER.debugLog("Connected!");
-                    }
-                } finally {
-                    if (firstContactSignal != null) {
-                        // release the signal regardless of event source state or connection request outcome
-                        firstContactSignal.countDown();
-                    }
-                }
-
-                final Thread execThread = Thread.currentThread();
-
-                while (state.get() == State.OPEN && !execThread.isInterrupted()) {
-                    if (eventInput == null || eventInput.isClosed()) {
-                        LOGGER.debugLog("Connection lost - scheduling reconnect in {0} ms", reconnectDelay);
-                        scheduleReconnect(reconnectDelay);
-                        break;
-                    } else {
-                        this.onEvent(eventInput.read());
-                    }
-                }
-            } catch (ServiceUnavailableException ex) {
-                LOGGER.debugLog("Received HTTP 503");
-                long delay = reconnectDelay;
-                if (ex.hasRetryAfter()) {
-                    LOGGER.debugLog("Recovering from HTTP 503 using HTTP Retry-After header value as a reconnect delay");
-                    final Date requestTime = new Date();
-                    delay = ex.getRetryTime(requestTime).getTime() - requestTime.getTime();
-                    delay = (delay > 0) ? delay : 0;
-                }
-
-                LOGGER.debugLog("Recovering from HTTP 503 - scheduling to reconnect in {0} ms", delay);
-                scheduleReconnect(delay);
-            } catch (Exception ex) {
-                if (LOGGER.isLoggable(CONNECTION_ERROR_LEVEL)) {
-                    LOGGER.log(CONNECTION_ERROR_LEVEL, String.format("Unable to connect - closing the event source to %s.",
-                            target.getUri().toASCIIString()), ex);
-                }
-                // if we're here, an unrecoverable error has occurred - just turn off the lights...
-                EventSource.this.shutdown();
-            } finally {
-                if (eventInput != null && !eventInput.isClosed()) {
-                    eventInput.close();
-                }
-                LOGGER.debugLog("Listener task finished.");
-            }
-        }
-
-        /**
-         * Called by the event source when an inbound event is received.
-         *
-         * This listener aggregator method is responsible for invoking {@link EventSource#onEvent(InboundEvent)}
-         * method on the owning event source as well as for notifying all registered {@link EventListener event listeners}.
-         *
-         * @param event incoming {@link InboundEvent inbound event}.
-         */
-        @Override
-        public void onEvent(final InboundEvent event) {
-            if (event == null) {
-                return;
-            }
-
-            LOGGER.debugLog("New event received.");
-
-            if (event.getId() != null) {
-                lastEventId = event.getId();
-            }
-            if (event.isReconnectDelaySet()) {
-                reconnectDelay = event.getReconnectDelay();
-            }
-
-            notify(EventSource.this, event);
-            notify(unboundListeners, event);
-
-            final String eventName = event.getName();
-            if (eventName != null) {
-                final List<EventListener> eventListeners = boundListeners.get(eventName);
-                if (eventListeners != null) {
-                    notify(eventListeners, event);
-                }
-            }
-        }
-
-        private void notify(final Collection<EventListener> listeners, final InboundEvent event) {
-            for (EventListener listener : listeners) {
-                notify(listener, event);
-            }
-        }
-
-        private void notify(final EventListener listener, final InboundEvent event) {
-            try {
-                listener.onEvent(event);
-            } catch (Exception ex) {
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.log(Level.FINE, String.format("Event notification in a listener of %s class failed.",
-                            listener.getClass().getName()), ex);
-                }
-            }
-        }
-
-        /**
-         * Schedule a new event processor task to reconnect after the specified {@code delay} [milliseconds].
-         *
-         * If the {@code delay} is zero or negative, the new reconnect task will be scheduled immediately.
-         * The {@code reconnectDelay} and {@code lastEventId} field values are propagated into the newly
-         * scheduled task.
-         * <p>
-         * The method will silently abort in case the event source is not {@link EventSource#isOpen() open}.
-         * </p>
-         *
-         * @param delay specifies the amount of time [milliseconds] to wait before attempting a reconnect.
-         *              If zero or negative, the new reconnect task will be scheduled immediately.
-         */
-        private void scheduleReconnect(final long delay) {
-            final State s = state.get();
-            if (s != State.OPEN) {
-                LOGGER.debugLog("Aborting reconnect of event source in {0} state", state);
-                return;
-            }
-
-            // propagate the current reconnectDelay, but schedule based on the delay parameter
-            final EventProcessor processor = new EventProcessor(this);
-            if (delay > 0) {
-                executor.schedule(processor, delay, TimeUnit.MILLISECONDS);
-            } else {
-                executor.submit(processor);
-            }
-        }
-
-        private Invocation.Builder prepareHandshakeRequest() {
-            final Invocation.Builder request = target.request(SseFeature.SERVER_SENT_EVENTS_TYPE);
-            if (lastEventId != null && !lastEventId.isEmpty()) {
-                request.header(SseFeature.LAST_EVENT_ID_HEADER, lastEventId);
-            }
-            if (disableKeepAlive) {
-                request.header("Connection", "close");
-            }
-            return request;
-        }
-
-        /**
-         * Await the initial contact with the SSE endpoint.
-         */
-        public void awaitFirstContact() {
-            LOGGER.debugLog("Awaiting first contact signal.");
-            try {
-                if (firstContactSignal == null) {
-                    return;
-                }
-
-                try {
-                    firstContactSignal.await();
-                } catch (InterruptedException ex) {
-                    LOGGER.log(CONNECTION_ERROR_LEVEL, LocalizationMessages.EVENT_SOURCE_OPEN_CONNECTION_INTERRUPTED(), ex);
-                    Thread.currentThread().interrupt();
-                }
-            } finally {
-                LOGGER.debugLog("First contact signal released.");
-            }
         }
     }
 }

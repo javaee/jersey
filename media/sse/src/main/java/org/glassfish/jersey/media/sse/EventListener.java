@@ -39,14 +39,18 @@
  */
 package org.glassfish.jersey.media.sse;
 
-import org.glassfish.jersey.media.sse.internal.SseEventListener;
-
 /**
  * {@link EventSource} listener that can be registered to listen for
  * newly received {@link InboundEvent} notifications.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public interface EventListener extends SseEventListener<InboundEvent> {
+public interface EventListener {
+
+    /**
+     * Invoked when an event is received.
+     *
+     * @param inboundEvent received event.
+     */
     void onEvent(InboundEvent inboundEvent);
 }
