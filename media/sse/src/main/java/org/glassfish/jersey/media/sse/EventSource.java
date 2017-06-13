@@ -273,7 +273,7 @@ public class EventSource implements EventListener {
     }
 
     private static String createDefaultName(WebTarget target) {
-        return String.format("jersey-sse-event-source-[%s]", target.getUri().toASCIIString());
+        return String.format("jersey-sse-event-source-[%s]", target.getUri().toASCIIString().replace("%", "%%"));
     }
 
     /**
