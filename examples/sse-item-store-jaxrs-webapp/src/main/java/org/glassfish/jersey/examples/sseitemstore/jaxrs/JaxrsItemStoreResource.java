@@ -79,11 +79,8 @@ public class JaxrsItemStoreResource {
 
     private static final AtomicReference<SseBroadcaster> BROADCASTER = new AtomicReference<>(null);
 
-    private final Sse sse;
-
-    public JaxrsItemStoreResource(@Context final Sse sse) {
-        this.sse = sse;
-    }
+    @Context
+    private Sse sse;
 
     private static volatile long reconnectDelay = 0;
 

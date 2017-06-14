@@ -119,7 +119,6 @@ public class JsonBindingProvider extends AbstractMessageReaderWriterProvider<Obj
         } catch (IOException e) {
             throw new ProcessingException(LocalizationMessages.ERROR_JSONB_SERIALIZATION(), e);
         }
-
     }
 
     private Jsonb getJsonb(Class<?> type) {
