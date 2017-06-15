@@ -43,7 +43,7 @@ package org.glassfish.jersey.examples.feedcombiner;
 /**
  * Application configuration properties
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public final class ApplicationProperties {
 

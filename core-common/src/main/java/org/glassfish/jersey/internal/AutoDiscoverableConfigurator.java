@@ -54,7 +54,7 @@ import org.glassfish.jersey.internal.spi.AutoDiscoverable;
  * Configurator which initializes and register {@link AutoDiscoverable} instances into {@link InjectionManager} and
  * {@link BootstrapBag}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class AutoDiscoverableConfigurator extends AbstractServiceFinderConfigurator<AutoDiscoverable> {
 

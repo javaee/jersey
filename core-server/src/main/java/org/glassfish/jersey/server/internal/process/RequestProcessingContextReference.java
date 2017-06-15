@@ -48,7 +48,7 @@ import org.glassfish.jersey.process.internal.RequestScoped;
  * object without wrapping using the proxy. Outer wrapper can be proxied but inner reference object still remains the direct
  * reference.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @RequestScoped
 public class RequestProcessingContextReference implements Ref<RequestProcessingContext> {

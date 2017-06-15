@@ -47,7 +47,7 @@ import java.util.function.Supplier;
  * Injection binding description of a bean bound indirectly via a supplier class producing instances of the bound type.
  *
  * @param <T> type of the bean described by this injection binding descriptor.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class SupplierClassBinding<T> extends Binding<Supplier<T>, SupplierClassBinding<T>> {
 

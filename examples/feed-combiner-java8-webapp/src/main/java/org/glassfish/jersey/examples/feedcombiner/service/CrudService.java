@@ -49,7 +49,7 @@ import org.glassfish.jersey.examples.feedcombiner.store.InMemoryDataStore;
  * Instances of this interface have CRUD operation for saving generic entities
  * into the {@link InMemoryDataStore}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  * @see InMemoryDataStore
  */
 public interface CrudService<T extends Serializable> {

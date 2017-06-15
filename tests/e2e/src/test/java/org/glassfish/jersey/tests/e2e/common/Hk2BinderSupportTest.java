@@ -58,7 +58,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests that HK2Binder and Jersey Binder work together.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class Hk2BinderSupportTest extends JerseyTest {
 

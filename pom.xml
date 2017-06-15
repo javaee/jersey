@@ -122,11 +122,6 @@
             <organizationUrl>http://www.oracle.com</organizationUrl>
         </developer>
         <developer>
-            <name>Petr Bouda</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
-        </developer>
-        <developer>
             <name>Petr Janouch</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com</organizationUrl>
@@ -136,6 +131,9 @@
     <contributors>
         <contributor>
             <name>Michal Gajdos</name>
+        </contributor>
+        <contributor>
+            <name>Petr Bouda</name>
         </contributor>
     </contributors>
 

@@ -51,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests that {@link java.util.function.Supplier} can contain proxies.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class SupplierProxyTest {
 

@@ -57,7 +57,7 @@ import static junit.framework.TestCase.assertEquals;
  * Slashes before a context path can be omitted depending on
  * the given property.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class GrizzlySlashesWithContextPathTest extends AbstractSlashesWithContextPathTest {
 

@@ -422,7 +422,7 @@ public abstract class RequestScope {
      * Configurator which initializes and register {@link RequestScope} instance int {@link InjectionManager} and
      * {@link BootstrapBag}.
      *
-     * @author Petr Bouda (petr.bouda at oracle.com)
+     * @author Petr Bouda
      */
     public static class RequestScopeConfigurator implements BootstrapConfigurator {
 

@@ -58,7 +58,7 @@ import static org.glassfish.jersey.examples.feedcombiner.ApplicationProperties.D
 import static org.glassfish.jersey.examples.feedcombiner.model.CombinedFeed.CombinedFeedBuilder.of;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class CombinedFeedService implements CrudService<CombinedFeed> {
 

@@ -50,7 +50,7 @@ import java.io.Serializable;
  * <p/>
  * All instances of this interface and their methods are thread-safe.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public interface InMemoryDataStore {
 

@@ -44,7 +44,7 @@ import javax.ws.rs.ProcessingException;
 /**
  * Exception thrown by security request authentication.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class RequestAuthenticationException extends ProcessingException {
 

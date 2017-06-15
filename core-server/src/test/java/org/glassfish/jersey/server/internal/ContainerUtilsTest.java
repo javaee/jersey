@@ -49,7 +49,7 @@ import static junit.framework.TestCase.assertEquals;
 /**
  * Tests container-oriented utilities functions.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class ContainerUtilsTest {
 

@@ -59,7 +59,7 @@ import static org.junit.Assert.assertEquals;
  * Tests that the MultivaluedMap injection does not close the request buffer and allows
  * to proceed other FormParam injections.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class FormParamMultivaluedInjectionTest extends JerseyTest {
 

@@ -65,7 +65,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test custom socket factory in HttpUrlConnection using SSL
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class SslHttpUrlConnectorTest extends AbstractConnectorServerTest {
 

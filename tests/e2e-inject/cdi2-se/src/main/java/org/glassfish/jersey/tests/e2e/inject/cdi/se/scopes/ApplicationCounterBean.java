@@ -47,7 +47,7 @@ import javax.enterprise.context.ApplicationScoped;
 /**
  * Request counter.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @ApplicationScoped
 public class ApplicationCounterBean {

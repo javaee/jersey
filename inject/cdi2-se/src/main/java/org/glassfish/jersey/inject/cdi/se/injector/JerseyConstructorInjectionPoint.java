@@ -67,7 +67,7 @@ import org.jboss.weld.manager.BeanManagerImpl;
 /**
  * Class that creates a new instance using the provided constructor, selects and injects the values.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class JerseyConstructorInjectionPoint<T> extends ConstructorInjectionPoint<T> {
 

@@ -43,7 +43,7 @@ package org.glassfish.jersey.inject.cdi.se;
 import javax.enterprise.inject.Vetoed;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Vetoed
 public class EnglishGreeting implements Greeting, Printable {

@@ -69,7 +69,7 @@ import static org.junit.Assert.assertSame;
 /**
  * Tests that {@link DisposableSupplier} is properly processed by {@link BeanHelper}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Vetoed
 public class DisposableSupplierTest {

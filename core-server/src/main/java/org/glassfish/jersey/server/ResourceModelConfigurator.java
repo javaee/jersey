@@ -68,7 +68,7 @@ import org.glassfish.jersey.server.spi.ComponentProvider;
 /**
  * Configurator which binds providers and resources into {@link InjectionManager}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class ResourceModelConfigurator implements BootstrapConfigurator {
 

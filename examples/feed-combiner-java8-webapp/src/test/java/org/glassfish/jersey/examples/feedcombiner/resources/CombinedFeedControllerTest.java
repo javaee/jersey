@@ -81,7 +81,7 @@ import static org.junit.Assert.assertTrue;
 import static javax.ws.rs.core.MediaType.TEXT_HTML_TYPE;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class CombinedFeedControllerTest extends JerseyTest {
 

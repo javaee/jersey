@@ -62,7 +62,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  * <p>
  * Currently, there are supported only bind method and more complicated method where HK2 interfaces are required were omitted.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public abstract class AbstractBinder implements Binder {
 

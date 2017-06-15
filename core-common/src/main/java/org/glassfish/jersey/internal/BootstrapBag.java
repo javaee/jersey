@@ -58,7 +58,7 @@ import org.glassfish.jersey.spi.ExceptionMappers;
  * bootstrap. This works as a replacement of an injection framework during a bootstrap and intentionally keeps all needed types in
  * separate fields to make strong type nature and to preserve a clear view which types are needed to inject to other services.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class BootstrapBag {
 

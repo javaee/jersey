@@ -49,7 +49,7 @@ package org.glassfish.jersey.examples.feedcombiner.store;
  * observers is not specified.
  * </p>
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public interface ObservableDataStore extends InMemoryDataStore {
 

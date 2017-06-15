@@ -55,7 +55,7 @@ import javax.inject.Named;
  *
  * @param <T> type of the bean described by this injection binding.
  * @param <D> concrete injection binding implementation type.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @SuppressWarnings("unchecked")
 public abstract class Binding<T, D extends Binding> {

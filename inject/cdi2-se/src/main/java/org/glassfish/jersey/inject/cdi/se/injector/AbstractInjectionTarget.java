@@ -51,7 +51,7 @@ import javax.enterprise.inject.spi.InjectionTarget;
  * Useful super class to extend and override only the needed method.
  *
  * @param <T> type of the injection target.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 abstract class AbstractInjectionTarget<T> implements InjectionTarget<T> {
 

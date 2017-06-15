@@ -62,7 +62,7 @@ import org.glassfish.jersey.process.internal.RequestScope;
 /**
  * CDI Class Bean represents {@link CdiRequestScope}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class RequestScopeBean implements Bean<CdiRequestScope> {
 

@@ -46,7 +46,7 @@ import javax.enterprise.inject.Vetoed;
 import javax.inject.Inject;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Vetoed
 class CzechConversation {

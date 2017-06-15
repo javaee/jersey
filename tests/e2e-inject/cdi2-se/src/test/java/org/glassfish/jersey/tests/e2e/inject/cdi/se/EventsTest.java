@@ -53,7 +53,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests that the resource can fire an event.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class EventsTest extends JerseyTest{
 

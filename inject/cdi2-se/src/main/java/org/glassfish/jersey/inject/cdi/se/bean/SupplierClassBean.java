@@ -84,7 +84,7 @@ import org.glassfish.jersey.internal.inject.SupplierClassBinding;
  *  }
  * </pre>
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class SupplierClassBean<T> extends JerseyBean<Supplier<T>> {
 

@@ -58,7 +58,7 @@ import org.glassfish.jersey.server.internal.JerseyResourceContext;
  * Configurator which initializes and register {@link JerseyResourceContext} instance into {@link InjectionManager} and
  * {@link BootstrapBag}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class JerseyResourceContextConfigurator implements BootstrapConfigurator {
 

@@ -44,7 +44,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class InputStreamStub extends ByteArrayInputStream {
 

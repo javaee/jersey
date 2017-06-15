@@ -58,7 +58,7 @@ import static junit.framework.Assert.assertNull;
 /**
  * {@link FormProvider} unit tests
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class FormMultivaluedMapProviderTest {
 

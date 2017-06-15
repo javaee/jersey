@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p/>
  * New IDs are generated in order and every returned ID is unique for the instance of generater in which was created.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public final class SequenceIdGenerator implements IdGenerator {
 

@@ -73,7 +73,7 @@ import org.glassfish.jersey.internal.util.collection.ImmutableCollectors;
 /**
  * Utility class for processing of an injection.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class InjectionUtils {
 

@@ -43,7 +43,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class OutputStreamStub extends OutputStream {
 

@@ -73,7 +73,7 @@ import org.glassfish.jersey.server.mvc.Viewable;
 /**
  * Expose operations for a web access to feed entries
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Path("/")
 @ErrorTemplate(name = "/error.ftl")

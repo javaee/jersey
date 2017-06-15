@@ -41,7 +41,7 @@
 package org.glassfish.jersey.inject.cdi.se;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @FunctionalInterface
 public interface Greeting {

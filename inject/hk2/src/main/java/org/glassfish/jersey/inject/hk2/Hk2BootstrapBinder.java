@@ -50,7 +50,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 /**
  * {@link AbstractBinder} that registers all components needed for a proper bootstrap of Jersey based on HK2 framework.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class Hk2BootstrapBinder extends AbstractBinder {
 

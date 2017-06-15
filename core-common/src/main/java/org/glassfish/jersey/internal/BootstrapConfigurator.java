@@ -52,7 +52,7 @@ import org.glassfish.jersey.internal.inject.InjectionManager;
  * the instance can be used internally without the injection, then extend {@link BootstrapBag} and propagate the instance to
  * correct services using constructors or methods in a phase of Jersey initialization.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public interface BootstrapConfigurator {
 

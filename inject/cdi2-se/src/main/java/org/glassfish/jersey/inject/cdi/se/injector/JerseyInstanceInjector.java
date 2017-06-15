@@ -53,7 +53,7 @@ import org.glassfish.jersey.internal.inject.InjectionResolver;
  * Class that accepts all registered {@link InjectionResolver} and inject all possible values annotated by JAX-RS annotations
  * into provided instance in {@link #inject(Object)}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class JerseyInstanceInjector<T> {
 
