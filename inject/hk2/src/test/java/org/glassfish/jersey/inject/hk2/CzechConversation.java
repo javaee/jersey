@@ -45,7 +45,7 @@ import java.util.function.Supplier;
 import javax.inject.Inject;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class CzechConversation {
 

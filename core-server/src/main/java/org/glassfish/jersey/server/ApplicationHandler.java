@@ -194,7 +194,7 @@ public final class ApplicationHandler implements ContainerLifecycleListener {
      * Configurator which initializes and register {@link ApplicationHandler} and {@link Configuration} instances into
      * {@link InjectionManager} and {@link BootstrapBag}.
      *
-     * @author Petr Bouda (petr.bouda at oracle.com)
+     * @author Petr Bouda
      */
     private class RuntimeConfigConfigurator implements BootstrapConfigurator {
 

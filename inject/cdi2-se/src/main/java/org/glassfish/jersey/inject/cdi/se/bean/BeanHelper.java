@@ -82,7 +82,7 @@ import org.jboss.weld.resources.ClassTransformer;
 /**
  * Helper class to register a {@link Bean} into CDI {@link BeanManager}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class BeanHelper {
 

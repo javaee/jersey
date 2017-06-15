@@ -54,7 +54,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Event qualifier.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Qualifier
 @Target({METHOD, FIELD, PARAMETER, TYPE})

@@ -68,7 +68,7 @@ import org.jboss.weld.environment.se.contexts.ThreadScoped;
  * Jersey-specific abstract class which implements {@link Bean} interface. Class particularly contains default implementations
  * of {@link Bean} interface.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public abstract class JerseyBean<T> implements Bean<T>, PassivationCapable {
 

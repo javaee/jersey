@@ -53,7 +53,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Security annotation bound to {@link SecurityInterceptor}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Inherited
 @InterceptorBinding

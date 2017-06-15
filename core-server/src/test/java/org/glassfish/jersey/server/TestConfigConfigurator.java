@@ -47,7 +47,7 @@ import org.glassfish.jersey.internal.inject.InjectionManager;
 /**
  * Configurator which initializes and register configuration.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class TestConfigConfigurator implements BootstrapConfigurator {
 

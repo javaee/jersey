@@ -48,7 +48,7 @@ import javax.inject.Inject;
 /**
  * Intercepted and decorated resource.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @Secured
 @Path("intercepted")

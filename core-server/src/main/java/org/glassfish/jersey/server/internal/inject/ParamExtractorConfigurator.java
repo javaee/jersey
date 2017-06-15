@@ -56,7 +56,7 @@ import org.glassfish.jersey.server.ServerBootstrapBag;
  * Configurator which initializes and register {@link MultivaluedParameterExtractorProvider} instance into
  * {@link InjectionManager}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class ParamExtractorConfigurator implements BootstrapConfigurator {
 

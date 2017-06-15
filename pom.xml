@@ -92,11 +92,6 @@
             <url>https://blogs.oracle.com/PavelBucek</url>
         </developer>
         <developer>
-            <name>Jakub Podlesak</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com/</organizationUrl>
-        </developer>
-        <developer>
             <name>Santiago Pericas-Geertsen</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com/</organizationUrl>
@@ -121,21 +116,22 @@
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com</organizationUrl>
         </developer>
-        <developer>
-            <name>Petr Bouda</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
-        </developer>
-        <developer>
-            <name>Petr Janouch</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
-        </developer>
     </developers>
 
     <contributors>
         <contributor>
+            <name>Jakub Podlesak</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </contributor>
+        <contributor>
             <name>Michal Gajdos</name>
+        </contributor>
+        <contributor>
+            <name>Petr Bouda</name>
+        </contributor>
+        <contributor>
+            <name>Petr Janouch</name>
         </contributor>
     </contributors>
 

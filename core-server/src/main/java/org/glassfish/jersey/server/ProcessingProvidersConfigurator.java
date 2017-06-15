@@ -81,7 +81,7 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
  * <li>{@link DynamicFeature}</li>
  * </ul>
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ProcessingProvidersConfigurator implements BootstrapConfigurator {
 

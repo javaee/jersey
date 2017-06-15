@@ -44,7 +44,7 @@ package org.glassfish.jersey.internal.inject;
  * Injection binding description of a bean bound via its a Java class.
  *
  * @param <T> type of the bean described by this injection binding.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class ClassBinding<T> extends Binding<T, ClassBinding<T>> {
 

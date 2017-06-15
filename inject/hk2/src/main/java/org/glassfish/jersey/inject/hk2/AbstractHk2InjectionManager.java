@@ -66,7 +66,7 @@ import org.jvnet.hk2.external.runtime.ServiceLocatorRuntimeBean;
 /**
  * Abstract class dedicated to implementations of {@link InjectionManager} providing several convenient methods.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 abstract class AbstractHk2InjectionManager implements InjectionManager {
 

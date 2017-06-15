@@ -62,7 +62,7 @@ import com.google.common.io.ByteStreams;
 /**
  * SSL connector hostname verification tests.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @RunWith(Parameterized.class)
 public abstract class AbstractConnectorServerTest {

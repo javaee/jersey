@@ -59,7 +59,7 @@ import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
  * and injection to {@link #completeRegistration()} phase. During the Jersey bootstrap just keep the bindings and other
  * operation for a later use.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class DelayedHk2InjectionManager extends AbstractHk2InjectionManager {
 

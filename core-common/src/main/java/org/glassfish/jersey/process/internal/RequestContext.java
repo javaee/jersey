@@ -43,7 +43,7 @@ package org.glassfish.jersey.process.internal;
 /**
  * Wrapper for externally provided request context data.
   *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public interface RequestContext {
 

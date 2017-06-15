@@ -67,7 +67,7 @@ import org.glassfish.jersey.internal.inject.InjectionResolver;
  * <p>
  * Processed JAX-RS interfaces:
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  * @see javax.ws.rs.core.UriInfo
  * @see javax.ws.rs.core.Request
  * @see javax.ws.rs.core.HttpHeaders

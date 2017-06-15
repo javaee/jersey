@@ -57,7 +57,7 @@ import java.util.List;
  * components are bound to injection manager and ready for getting.
  * In turn, {@link #shutdown()} method stops the possibility to use these methods and closes {@code InjectionManager}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public interface InjectionManager {
 

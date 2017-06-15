@@ -48,7 +48,7 @@ import javax.enterprise.context.ApplicationScoped;
 /**
  * Holder for JAX-RS information to inject them into interceptor. JAX-RS does not work in interceptor.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @ApplicationScoped
 public class JaxrsService {

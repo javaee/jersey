@@ -67,7 +67,7 @@ import static org.junit.Assert.assertSame;
 /**
  * Tests that {@link org.glassfish.jersey.internal.inject.DisposableSupplier} is properly processed by {@link Hk2Helper}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class DisposableSupplierTest {
 

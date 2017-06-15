@@ -52,7 +52,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 /**
  * Utility class to create a new injection binding descriptions for arbitrary Java beans.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public final class Bindings {
 

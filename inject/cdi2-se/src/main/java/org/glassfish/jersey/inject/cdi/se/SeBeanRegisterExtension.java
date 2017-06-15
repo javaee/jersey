@@ -74,7 +74,7 @@ import org.jboss.weld.injection.producer.BasicInjectionTarget;
  * CDI extension that handles CDI bootstrap events and registers Jersey's internally used components and components registered
  * using {@link Application}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class SeBeanRegisterExtension implements Extension {
 

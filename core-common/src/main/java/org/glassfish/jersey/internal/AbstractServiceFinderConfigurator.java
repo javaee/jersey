@@ -58,7 +58,7 @@ import org.glassfish.jersey.internal.inject.InjectionManager;
  * {@link InjectionManager}.
  *
  * @param <T> contract type.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public abstract class AbstractServiceFinderConfigurator<T> implements BootstrapConfigurator {
 

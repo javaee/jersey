@@ -45,7 +45,7 @@ import javax.enterprise.context.ApplicationScoped;
 /**
  * Service returning the name.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 @ApplicationScoped
 public class NameService {

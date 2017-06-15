@@ -52,7 +52,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests that the resource can be intercepted and decorated.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class InterceptorDecoratorTest extends JerseyTest {
 

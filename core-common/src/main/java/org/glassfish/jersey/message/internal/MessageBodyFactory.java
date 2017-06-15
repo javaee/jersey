@@ -116,7 +116,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
      * Configurator which initializes and register {@link MessageBodyWorkers} instance into {@link InjectionManager} and
      * {@link BootstrapBag}.
      *
-     * @author Petr Bouda (petr.bouda at oracle.com)
+     * @author Petr Bouda
      */
     public static class MessageBodyWorkersConfigurator implements BootstrapConfigurator {
 

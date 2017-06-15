@@ -59,7 +59,7 @@ import org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor;
 /**
  * Configurator which initializes and register {@link ModelProcessor} instances into {@link BootstrapBag}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 class ModelProcessorConfigurator implements BootstrapConfigurator {
 

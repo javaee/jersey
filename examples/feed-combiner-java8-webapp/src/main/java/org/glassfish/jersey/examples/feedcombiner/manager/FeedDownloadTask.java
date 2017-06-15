@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,7 +63,7 @@ import com.sun.syndication.feed.synd.SyndEntry;
  * These entries are added into the combined feed and stored in the database again
  * (storing means rewrite previous combined feed by a new version with added entries).
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class FeedDownloadTask implements Runnable {
 
@@ -108,7 +108,7 @@ public class FeedDownloadTask implements Runnable {
      * The mapper which is used for transform {@link SyndEntry synd entry} to
      * this application-friendly version {@link FeedEntry feed entry}.
      *
-     * @author Petr Bouda (petr.bouda at oracle.com)
+     * @author Petr Bouda
      **/
     private static class FeedEntryMapper implements Function<SyndEntry, FeedEntry> {
 
