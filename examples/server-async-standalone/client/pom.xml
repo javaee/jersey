@@ -46,7 +46,7 @@
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
         <artifactId>server-async-standalone</artifactId>
-        <version>2.26-SNAPSHOT</version>
+        <version>2.26-b06</version>
     </parent>
 
     <artifactId>server-async-standalone-client</artifactId>
