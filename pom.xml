@@ -1778,7 +1778,7 @@
             <dependency>
                 <groupId>org.eclipse</groupId>
                 <artifactId>yasson</artifactId>
-                <version>${jsonb.ri.version}</version>
+                <version>${yasson.version}</version>
             </dependency>
 
 
@@ -1866,7 +1866,6 @@
         <jaxb.api.version>2.2.7</jaxb.api.version>
         <jaxb.ri.version>2.2.7</jaxb.ri.version>
         <jsonb.api.version>1.0.0-RC2</jsonb.api.version>
-        <jsonb.ri.version>1.0.0-RC1</jsonb.ri.version>
         <jaxrs.api.spec.version>2.1</jaxrs.api.spec.version>
         <jaxrs.api.impl.version>2.1-m09</jaxrs.api.impl.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
@@ -1909,6 +1908,6 @@
         <weld3.version>3.0.0.Final</weld3.version>
         <xerces.version>2.11.0</xerces.version>
         <xmlunit.version>1.6</xmlunit.version>
-        <mockito.version>1.10.19</mockito.version>
+        <yasson.version>1.0.0-RC2</yasson.version>
     </properties>
 </project>
