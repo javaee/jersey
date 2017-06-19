@@ -34,7 +34,7 @@
         <!-- uncomment this to get JSON support
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-moxy</artifactId>
+            <artifactId>jersey-media-json-binding</artifactId>
         </dependency> -->
 
         <dependency>
