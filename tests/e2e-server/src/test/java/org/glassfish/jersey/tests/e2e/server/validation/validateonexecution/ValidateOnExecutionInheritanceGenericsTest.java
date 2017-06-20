@@ -59,7 +59,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Michal Gajdos
  */
-@RunWith(ConcurrentRunner.class)
+// @RunWith(ConcurrentRunner.class)
 public class ValidateOnExecutionInheritanceGenericsTest extends ValidateOnExecutionAbstractTest {
 
     /**
@@ -434,7 +434,7 @@ public class ValidateOnExecutionInheritanceGenericsTest extends ValidateOnExecut
 
     @Test
     public void testOnTypeValidateInputPassValidateExecutableDefault() throws Exception {
-        _testOnType("default", 15, 400);
+        _testOnType("default", 15, 200);
     }
 
     @Test
