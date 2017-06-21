@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,16 +39,15 @@
  */
 package org.glassfish.jersey.tests.cdi.bv;
 
-import javax.enterprise.inject.Vetoed;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
+
+import javax.enterprise.inject.Vetoed;
+import javax.validation.constraints.NotNull;
 
 /**
- * This HK2 managed resource should get validated and validation
- * result injected via resource method parameter.
+ * This HK2 managed resource should get validated.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
