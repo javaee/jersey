@@ -1787,6 +1787,17 @@
                 <version>${yasson.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>io.opentracing</groupId>
+                <artifactId>opentracing-api</artifactId>
+                <version>${opentracing.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.opentracing</groupId>
+                <artifactId>opentracing-util</artifactId>
+                <version>${opentracing.version}</version>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -1893,9 +1904,11 @@
         <mimepull.version>1.9.6</mimepull.version>
         <mockito.version>1.10.19</mockito.version>
         <moxy.version>2.6.4</moxy.version>
+        <mockito.version>1.10.19</mockito.version>
         <mustache.version>0.8.17</mustache.version>
         <netty.version>4.1.5.Final</netty.version>
         <nexus-staging.mvn.plugin.version>1.6.7</nexus-staging.mvn.plugin.version>
+        <opentracing.version>0.30.0</opentracing.version>
         <osgi.version>4.2.0</osgi.version>
         <pax.exam.version>4.9.1</pax.exam.version>
         <pax.web.version>0.7.4</pax.web.version><!-- TODO: UPGRADE! -->
