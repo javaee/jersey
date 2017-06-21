@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,8 +41,8 @@
 package org.glassfish.jersey.model.internal;
 
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.Set;
+
 import javax.ws.rs.Priorities;
 
 import javax.annotation.Priority;
@@ -100,8 +100,16 @@ public class RankedProvider<T> {
         if (rank > 0) {
             return rank;
         } else {
-            if (provider.getClass().isAnnotationPresent(Priority.class)) {
-                return provider.getClass().getAnnotation(Priority.class).value();
+            Class<?> clazz = provider.getClass();
+
+            // when provided instance is a proxy (from weld), we need to get the right class to check for
+            // @Priority annotation - proxy doesn't propagate isAnnotationPresent to the parent class.
+            while (clazz.isSynthetic()) {
+                clazz = clazz.getSuperclass();
+            }
+
+            if (clazz.isAnnotationPresent(Priority.class)) {
+                return clazz.getAnnotation(Priority.class).value();
             } else {
                 return Priorities.USER;
             }
