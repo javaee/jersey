@@ -58,6 +58,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("myresource")
 public interface MyResourceIfc {
@@ -194,4 +195,10 @@ public interface MyResourceIfc {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     String putIt(MyBean dummyBean);
+
+    @Path("postEntityWithContextParam")
+    @POST
+    @Consumes({MediaType.APPLICATION_XML})
+    @Produces({MediaType.APPLICATION_XML})
+    MyBean postEntityWithContextParam(@Valid MyBean entity, @Context SecurityContext securityContext);
 }
