@@ -1092,8 +1092,8 @@ public static class SubResource {
     <section>
         <title>Use of @Context</title>
 
-        <para>Previous sections have introduced the use of &jaxrs.core.Context;. Chapter 5
-            of the JAX-RS specification presents all the standard JAX-RS Java types that may be used with &jaxrs.core.Context;.
+        <para>Previous sections have introduced the use of &jaxrs.core.Context;. Chapter "Context" in the JAX-RS
+            specification presents all the standard JAX-RS Java types that may be used with &jaxrs.core.Context;.
         </para>
 
         <para>When deploying a JAX-RS application using servlet then
