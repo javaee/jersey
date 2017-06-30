@@ -40,33 +40,35 @@
 
 package org.glassfish.jersey.media.sse;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.TestCase.assertTrue;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
-
-import javax.inject.Singleton;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-
 import org.junit.Test;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.TestCase.assertTrue;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class EventSourceTest extends JerseyTest {
+
+    private static String testHeader;
 
     private static final String QUERY = "!@#$%^&()";
 
@@ -98,13 +100,40 @@ public class EventSourceTest extends JerseyTest {
         assertEquals("OK", target("sse/send").request().get().readEntity(String.class));
         assertTrue(eventLatch.await(5, TimeUnit.SECONDS));
 
-        // After receiving the 3 events, we try to close.
+        // After receiving the event, we try to close.
+        eventSource.close();
+    }
+
+    @Test
+    public void testCorrectLastEventId() throws InterruptedException {
+        WebTarget sseTarget = target("sse").queryParam("test", QUERY);
+        testHeader = "";
+        CountDownLatch eventLatch = new CountDownLatch(1);
+        EventSource eventSource = new EventSource(sseTarget, false) {
+            @Override
+            public void onEvent(final InboundEvent inboundEvent) {
+                String name = Thread.currentThread().getName();
+                try {
+                    if (name.contains(URLEncoder.encode(QUERY, "ASCII"))) {
+                        eventLatch.countDown();
+                    }
+                } catch (UnsupportedEncodingException e) {
+                    // ignore.
+                }
+            }
+        };
+        eventSource.open("1");
+        assertEquals("OK", target("sse/send").request().get().readEntity(String.class));
+        assertTrue(eventLatch.await(5, TimeUnit.SECONDS));
+        assertEquals("1", testHeader);
+
+        // After receiving the event, we try to close.
         eventSource.close();
     }
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(ClientCloseTest.SseEndpoint.class);
+        return new ResourceConfig(EventSourceTest.SseEndpoint.class);
     }
 
     @Override
@@ -137,7 +166,8 @@ public class EventSourceTest extends JerseyTest {
 
         @GET
         @Produces(SseFeature.SERVER_SENT_EVENTS)
-        public EventOutput get() {
+        public EventOutput get(@Context HttpHeaders httpHeaders) {
+            testHeader = httpHeaders.getHeaderString(SseFeature.LAST_EVENT_ID_HEADER);
             return eventOutput;
         }
     }
