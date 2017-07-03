@@ -138,8 +138,13 @@
 
     <licenses>
         <license>
-            <name>CDDL+GPL License</name>
-            <url>http://glassfish.java.net/public/CDDL+GPL_1_1.html</url>
+            <name>CDDL 1.1</name>
+            <url>https://oss.oracle.com/licenses/CDDL+GPL-1.1</url>
+            <distribution>repo</distribution>
+        </license>
+        <license>
+            <name>GPL2 w/ CPE</name>
+            <url>https://oss.oracle.com/licenses/CDDL+GPL-1.1</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
