@@ -114,8 +114,11 @@ public class NaiveResourceLinkContributionContext implements ResourceLinkContrib
     private List<ProvideLinkDescriptor> collectContributors(Class<?> entityClass, List<ProvideLinkDescriptor> contributors) {
         contributors.addAll(mappings.getOrDefault(entityClass, Collections.emptyList()));
         Class<?> sc = entityClass.getSuperclass();
-        if (sc != null && sc != Object.class) {
+        if ((sc != null) && (sc != Object.class)) {
             collectContributors(sc, contributors);
+        }
+        for (Class<?> ic : entityClass.getInterfaces()) {
+            collectContributors(ic, contributors);
         }
         return contributors;
     }

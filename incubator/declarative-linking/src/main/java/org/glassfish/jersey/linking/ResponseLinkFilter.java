@@ -76,7 +76,7 @@ class ResponseLinkFilter implements ContainerResponseFilter {
         if (entity != null && !uriInfo.getMatchedResources().isEmpty()) {
             Class<?> entityClass = entity.getClass();
             HeaderProcessor lhp = new HeaderProcessor(entityClass);
-            lhp.processLinkHeaders(entity, uriInfo, rmc, response.getHeaders());
+            lhp.processLinkHeaders(entity, uriInfo, rmc, rlcc, response.getHeaders());
             FieldProcessor lp = new FieldProcessor(entityClass);
             lp.processLinks(entity, uriInfo, rmc, rlcc);
         }
