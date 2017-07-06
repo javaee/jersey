@@ -47,6 +47,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.examples.linking.resources.ItemsResource;
 import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
+import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -66,7 +67,7 @@ public class LinkWebAppTest extends JerseyTest {
     protected ResourceConfig configure() {
         enable(TestProperties.LOG_TRAFFIC);
         final ResourceConfig rc = new ResourceConfig(ItemsResource.class);
-        rc.register(DeclarativeLinkingFeature.class);
+        rc.register(new DeclarativeLinkingFeature(InjectLink.Style.ABSOLUTE));
         return rc;
     }
 

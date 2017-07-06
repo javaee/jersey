@@ -74,6 +74,7 @@ import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.uri.UriTemplate;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -245,6 +246,11 @@ public class FieldProcessorTest {
         public ResourceMappingContext.Mapping getMapping(Class<?> resource) {
             return null;
         }
+
+        @Override
+        public InjectLink.Style getLinkStyle() {
+            return InjectLink.Style.DEFAULT;
+        }
     };
 
     protected final ResourceLinkContributionContext mockRlcc = new ResourceLinkContributionContext() {
@@ -406,6 +412,34 @@ public class FieldProcessorTest {
         assertEquals("/application/resources/widgets/10", testClass.absolutePath);
         assertEquals("/application/resources/widgets/10", testClass.defaultStyle);
         assertEquals("http://example.com/application/resources/widgets/10", testClass.absolute);
+    }
+
+    @Test
+    public void testDefaultLinkStylesCanBeOverridden() {
+        LOG.info("Link styles default");
+        FieldProcessor<TestClassG> instance = new FieldProcessor(TestClassG.class);
+        ResourceMappingContext resourceMappingContext = Mockito.mock(ResourceMappingContext.class);
+        for (InjectLink.Style style : Arrays.asList(InjectLink.Style.values())) {
+            Mockito.when(resourceMappingContext.getLinkStyle()).thenReturn(style);
+            TestClassG testClass = new TestClassG("10");
+            instance.processLinks(testClass, mockUriInfo, resourceMappingContext, mockRlcc);
+            assertEquals("widgets/10", testClass.relativePath);
+            assertEquals("/application/resources/widgets/10", testClass.absolutePath);
+            assertEquals("http://example.com/application/resources/widgets/10", testClass.absolute);
+            switch (style) {
+            case ABSOLUTE:
+                assertEquals("http://example.com/application/resources/widgets/10", testClass.defaultStyle);
+                break;
+            case DEFAULT:
+            case ABSOLUTE_PATH:
+                assertEquals("/application/resources/widgets/10", testClass.defaultStyle);
+                break;
+            case RELATIVE_PATH:
+                assertEquals("widgets/10", testClass.defaultStyle);
+                break;
+            }
+
+        }
     }
 
     public static class TestClassH {

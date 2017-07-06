@@ -81,14 +81,20 @@ public @interface InjectLink {
          * A relative path. The URI template will be converted to a relative
          * path with no prefix.
          */
-        RELATIVE_PATH
+        RELATIVE_PATH,
+
+        /**
+         * Default style which can be configured for all links by {@link DeclarativeLinkingFeature#DEFAULT_LINK_STYLE}.
+         * If both are {@code DEFAULT} then it will use the {@link #ABSOLUTE_PATH} style.
+         */
+        DEFAULT
 
     }
 
     /**
      * The style of URI to inject
      */
-    Style style() default Style.ABSOLUTE_PATH;
+    Style style() default Style.DEFAULT;
 
     /**
      * Specifies a URI template that will be used to build the injected URI. The

@@ -223,6 +223,11 @@ public class HeaderProcessorTest {
         public ResourceMappingContext.Mapping getMapping(Class<?> resource) {
             return null;
         }
+
+        @Override
+        public InjectLink.Style getLinkStyle() {
+            return InjectLink.Style.DEFAULT;
+        }
     };
 
     @InjectLink(value = "A")

@@ -46,9 +46,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 
+import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
+import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.model.HandlerConstructor;
@@ -76,14 +78,22 @@ public class NaiveResourceMappingContext implements ResourceMappingContext {
 
     private Map<Class<?>, ResourceMappingContext.Mapping> mappings;
 
-    public NaiveResourceMappingContext(@Context final ExtendedResourceContext erc) {
+    private final InjectLink.Style linkStyle;
+
+    public NaiveResourceMappingContext(@Context final ExtendedResourceContext erc, @Context Configuration configuration) {
         this.erc = erc;
+        this.linkStyle = (InjectLink.Style) configuration.getProperty(DeclarativeLinkingFeature.DEFAULT_LINK_STYLE);
     }
 
     @Override
     public Mapping getMapping(final Class<?> resource) {
         buildMappings();
         return mappings.get(resource);
+    }
+
+    @Override
+    public InjectLink.Style getLinkStyle() {
+        return linkStyle;
     }
 
     private void buildMappings() {

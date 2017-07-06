@@ -396,6 +396,58 @@ final Application application = new ResourceConfig()
         .packages("org.glassfish.jersey.examples.linking")
         .register(DeclarativeLinkingFeature.class);</programlisting>
             </example>
+
+            You can also change the default linking style for the whole application. Either by using the constructor of
+            <literal>DeclarativeLinkingFeature</literal>, or by setting the config value for
+            <literal>DeclarativeLinkingFeature.DEFAULT_LINK_STYLE</literal>.
+
+            <example>
+            <title>Creating JAX-RS application with Declarative Linking and default link style set to ABSOLUTE.</title>
+
+            <programlisting language="java">// Create JAX-RS application.
+final Application application = new ResourceConfig()
+        .packages("org.glassfish.jersey.examples.linking")
+        .register(new DeclarativeLinkingFeature(InjectLink.Style.ABSOLUTE));</programlisting>
+            </example>
+
+            The default value will be overridden if it is defined on the annotation
+            <literal>@InjectLink</literal>/<literal>@ProvideLink</literal>.
+
+        </para>
+
+        <para>
+            Possible values are:
+            <variablelist>
+                <varlistentry>
+                    <term>
+                        <literal>ABSOLUTE</literal>
+                    </term>
+                    <listitem>
+                        <para>
+                            An absolute URI. The URI template will be prefixed with the absolute base URI of the application.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>
+                        <literal>ABSOLUTE_PATH</literal>
+                    </term>
+                    <listitem>
+                        <para>
+                            An absolute path. The URI template will be prefixed with the absolute base path of the application.
+                            This is also the <literal>DEFAULT</literal> behavior if nothing else is set.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>
+                        <literal>RELATIVE_PATH</literal>
+                    </term>
+                    <listitem>
+                        <para>A relative path. The URI template will be converted to a relative path with no prefix.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
         </para>
     </section>
 </chapter>

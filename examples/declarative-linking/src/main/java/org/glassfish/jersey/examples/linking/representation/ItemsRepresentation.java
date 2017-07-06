@@ -56,7 +56,6 @@ import org.glassfish.jersey.examples.linking.model.ItemsModel;
 import org.glassfish.jersey.examples.linking.resources.ItemsResource;
 import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.InjectLink.Style;
 import org.glassfish.jersey.linking.InjectLinks;
 
 /**
@@ -70,7 +69,6 @@ import org.glassfish.jersey.linking.InjectLinks;
 @InjectLinks({
         @InjectLink(
                 resource = ItemsResource.class,
-                style = Style.ABSOLUTE,
                 method = "query",
                 condition = "${instance.offset + instance.limit < instance.modelLimit}",
                 bindings = {
@@ -81,7 +79,6 @@ import org.glassfish.jersey.linking.InjectLinks;
         ),
         @InjectLink(
                 resource = ItemsResource.class,
-                style = Style.ABSOLUTE,
                 method = "query",
                 condition = "${instance.offset - instance.limit >= 0}",
                 bindings = {
@@ -105,7 +102,6 @@ public class ItemsRepresentation {
     @InjectLink(
             resource = ItemsResource.class,
             method = "query",
-            style = Style.ABSOLUTE,
             bindings = {@Binding(name = "offset", value = "${instance.offset}"),
                     @Binding(name = "limit", value = "${instance.limit}")
             },
@@ -118,7 +114,6 @@ public class ItemsRepresentation {
     @InjectLinks({
             @InjectLink(
                     resource = ItemsResource.class,
-                    style = Style.ABSOLUTE,
                     method = "query",
                     condition = "${instance.offset + instance.limit < instance.modelLimit}",
                     bindings = {
@@ -129,7 +124,6 @@ public class ItemsRepresentation {
             ),
             @InjectLink(
                     resource = ItemsResource.class,
-                    style = Style.ABSOLUTE,
                     method = "query",
                     condition = "${instance.offset - instance.limit >= 0}",
                     bindings = {
