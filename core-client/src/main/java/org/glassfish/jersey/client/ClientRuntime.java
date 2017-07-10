@@ -130,10 +130,14 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
         this.config = config;
         this.connector = connector;
         this.requestScope = bootstrapBag.getRequestScope();
-        this.asyncRequestExecutor = Values.lazy((Value<ExecutorService>)
-                () -> injectionManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE));
-        this.backgroundScheduler = Values.lazy((Value<ScheduledExecutorService>) ()
-                -> injectionManager.getInstance(ScheduledExecutorService.class, ClientBackgroundSchedulerLiteral.INSTANCE));
+        this.asyncRequestExecutor = Values.lazy((Value<ExecutorService>) () ->
+                config.getExecutorService() == null
+                        ? injectionManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE)
+                        : config.getExecutorService());
+        this.backgroundScheduler = Values.lazy((Value<ScheduledExecutorService>) () ->
+                config.getScheduledExecutorService() == null
+                        ? injectionManager.getInstance(ScheduledExecutorService.class, ClientBackgroundSchedulerLiteral.INSTANCE)
+                        : config.getScheduledExecutorService());
 
         this.injectionManager = injectionManager;
         this.lifecycleListeners = Providers.getAllProviders(injectionManager, ClientLifecycleListener.class);
