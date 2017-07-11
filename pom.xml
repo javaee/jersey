@@ -1174,7 +1174,7 @@
                     </excludePackageNames>
                     <links>
                         <link>http://jersey.github.io/apidocs-javax.jax-rs/2.0.1</link>
-                        <link>http://hk2.java.net/${hk2.version}/apidocs</link>
+                        <link>https://javaee.github.io/hk2/apidocs/</link>
                     </links>
                     <additionalparam>-Xdoclint:none</additionalparam>
                     <sourceFileExcludes>
@@ -1868,11 +1868,11 @@
         <guava.version>18.0</guava.version>
         <hamcrest.version>1.3</hamcrest.version>
         <xmlunit.version>1.6</xmlunit.version>
-        <hk2.version>2.5.0-b36</hk2.version>
+        <hk2.version>2.5.0-b42</hk2.version>
         <httpclient.version>4.5</httpclient.version> <!-- TODO: 4.5.2 doesn't work; apache client connector tests -->
         <jackson.version>2.8.4</jackson.version>
         <jackson1.version>1.9.13</jackson1.version>
-        <javassist.version>3.20.0-GA</javassist.version>
+        <javassist.version>3.22.0-CR2</javassist.version>
         <javax.annotation.version>1.2</javax.annotation.version>
         <javax.annotation.bundle.version>1.2</javax.annotation.bundle.version>
         <javax.el.version>2.2.4</javax.el.version>

@@ -148,7 +148,9 @@
         <module>servlet-request-wrapper-binding</module>
         <module>servlet-tests</module>
         <module>sonar-test</module>
-        <module>spring4</module>
+        <!-- TODO: temporarily removing spring 4 integration test -->
+        <!-- TODO: conflict in ASM version (too old) of jetty plugin -->
+        <!--<module>spring4</module>-->
         <module>tracing-support</module>
     </modules>
 
