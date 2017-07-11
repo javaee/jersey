@@ -71,3 +71,4 @@ build.readme
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/UniformTimeSnapshot.java
 /core-server/src/main/java/org/glassfish/jersey/server/internal/monitoring/UniformTimeValuesSnapshot.java
 /core-server/src/main/java/jersey/repackaged
+/media/json-jackson/src/main/java/org/glassfish/jersey/jackson/internal/jackson
