@@ -46,7 +46,10 @@ import javax.enterprise.inject.Vetoed;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.process.internal.RequestScope;
+import org.glassfish.jersey.process.internal.RequestScoped;
 
+import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.StringStartsWith;
 import org.junit.After;
 import org.junit.Before;
@@ -175,5 +178,21 @@ public class SupplierClassBindingTest {
 
         assertSame(supplier1, supplier2);
         assertSame(supplier2, supplier3);
+    }
+
+    @Test
+    public void testProxySupplierPerLookupInstancePerRequest() {
+        BindingTestHelper.bind(injectionManager, binder -> {
+            binder.bindFactory(SupplierGreeting.class).proxy(true).proxyForSameScope(false).to(Greeting.class).in(RequestScoped.class);
+            binder.bindFactory(MySupplier.class).proxy(true).proxyForSameScope(false).to(Number.class).in(RequestScoped.class);
+        });
+
+        final RequestScope request = injectionManager.getInstance(RequestScope.class);
+        request.runInScope(() -> {
+            final Number n = injectionManager.getInstance(Number.class);
+            assertThat(n.intValue(), IsEqual.equalTo(1));
+            final Greeting greeting1 = injectionManager.getInstance(Greeting.class);
+            assertThat(greeting1.getGreeting(), StringStartsWith.startsWith(CzechGreeting.GREETING));
+        });
     }
 }

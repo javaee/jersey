@@ -163,6 +163,15 @@ class SupplierBeanBridge extends JerseyBean<Object> {
     }
 
     @Override
+    public Class<?> getBeanClass() {
+        final Type type = this.type.getActualTypeArguments()[0];
+        if(type instanceof Class<?>) {
+            return (Class<?>) type;
+        }
+        return super.getBeanClass();
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public Class<? extends Annotation> getScope() {
         return binding.getScope() == null ? Dependent.class : transformScope(binding.getScope());
