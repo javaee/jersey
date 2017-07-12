@@ -1265,6 +1265,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.github.io/project-info/&version;/jersey/project/open-tracing/dependencies.html">
+    open-tracing
+</link>
+</entry>
+<entry>Jersey OpenTracing example</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.github.io/project-info/&version;/jersey/project/osgi-helloworld-webapp/dependencies.html">
     osgi-helloworld-webapp
 </link>
