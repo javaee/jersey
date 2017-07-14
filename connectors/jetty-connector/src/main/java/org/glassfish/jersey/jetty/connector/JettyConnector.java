@@ -63,6 +63,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 import javax.net.ssl.SSLContext;
@@ -311,7 +312,11 @@ class JettyConnector implements Connector {
     }
 
     private static Map<String, String> writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final Request request) {
-        final Map<String, String> stringHeaders = HeaderUtils.asStringHeadersSingleValue(headers);
+        final MultivaluedMap<String, Object> copy = new MultivaluedHashMap<>();
+        headers.forEach(copy::addAll);
+        request.getHeaders().stream().forEach(h -> copy.addAll(h.getName(), h.getValues()));
+        request.getHeaders().clear();
+        final Map<String, String> stringHeaders = HeaderUtils.asStringHeadersSingleValue(copy);
 
         for (final Map.Entry<String, String> e : stringHeaders.entrySet()) {
             request.getHeaders().add(e.getKey(), e.getValue());

@@ -40,14 +40,21 @@
 
 package org.glassfish.jersey.jetty.connector;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.eclipse.jetty.http.HttpFields;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -56,6 +63,7 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -78,6 +86,11 @@ public class HttpHeadersTest extends JerseyTest {
             assertEquals("client", xClient);
             return "POST";
         }
+
+        @GET
+        public String get(Request request) {
+            return "GET";
+        }
     }
 
     @Override
@@ -98,5 +111,30 @@ public class HttpHeadersTest extends JerseyTest {
 
         assertEquals(200, response.getStatus());
         assertTrue(response.hasEntity());
+    }
+
+    /**
+     * Verifier of JERSEY-3609 fix.
+     */
+    @Test
+    public void testUniqueHeaderName() {
+        final List<org.eclipse.jetty.client.api.Request.Listener> requestListeners =
+            JettyConnectorProvider.getHttpClient(getClient()).getRequestListeners();
+        final AtomicReference<org.eclipse.jetty.client.api.Request> request = new AtomicReference<>();
+        requestListeners.add(new org.eclipse.jetty.client.api.Request.Listener.Adapter() {
+            @Override
+            public void onHeaders(org.eclipse.jetty.client.api.Request r) {
+                request.set(r);
+            }
+        });
+
+        target().path("test").request().get();
+
+        final Set<String> fieldNames = new HashSet<>();
+        final HttpFields headers = request.get().getHeaders();
+        headers.stream()
+               .filter(h -> !fieldNames.add(h.getName()))
+               .findAny()
+               .ifPresent(h -> fail("Duplicate header found " + h.getName() + headers.getValuesList(h.getName())));
     }
 }
