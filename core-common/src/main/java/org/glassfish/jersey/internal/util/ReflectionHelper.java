@@ -963,9 +963,13 @@ public final class ReflectionHelper {
         final int offset = methodName.startsWith("is") ? 2 : 3;
 
         final char[] chars = methodName.toCharArray();
-        chars[offset] = Character.toLowerCase(chars[offset]);
 
-        return new String(chars, offset, chars.length - offset);
+        if (offset < chars.length) {
+            chars[offset] = Character.toLowerCase(chars[offset]);
+            return new String(chars, offset, chars.length - offset);
+        } else {
+            return "";
+        }
     }
 
     /**
