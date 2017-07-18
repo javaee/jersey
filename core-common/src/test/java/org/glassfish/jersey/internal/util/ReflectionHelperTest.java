@@ -44,9 +44,7 @@ import java.security.AccessControlException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -101,8 +99,7 @@ public class ReflectionHelperTest {
         final ClassLoader loader = ReflectionHelper.class.getClassLoader();
 
         ReflectionHelper.setContextClassLoaderPA(loader).run();
-        fail("It should not be possible to set context class loader from unprivileged block even via Jersey "
-                     + "ReflectionHelper");
+        fail("It should not be possible to set context class loader from unprivileged block even via Jersey ReflectionHelper");
     }
 
     @Test(expected = AccessControlException.class)
@@ -110,8 +107,7 @@ public class ReflectionHelperTest {
         final ClassLoader loader = ReflectionHelper.class.getClassLoader();
 
         AccessController.doPrivileged(ReflectionHelper.setContextClassLoaderPA(loader));
-        fail("It should not be possible to set context class loader even from privileged block via Jersey "
-                     + "ReflectionHelper "
+        fail("It should not be possible to set context class loader even from privileged block via Jersey ReflectionHelper "
                      + "utility");
     }
 
@@ -165,8 +161,7 @@ public class ReflectionHelperTest {
      */
     @Test
     public void testGetValueOfStringMethodNegative() throws Exception {
-        final PrivilegedAction<Method> methodPA = ReflectionHelper.getValueOfStringMethodPA(
-                InvalidFromStringClass.class);
+        final PrivilegedAction<Method> methodPA = ReflectionHelper.getValueOfStringMethodPA(InvalidFromStringClass.class);
 
         assertThat("Invalid valueOf method found.", methodPA.run(), nullValue());
     }
@@ -187,8 +182,7 @@ public class ReflectionHelperTest {
      */
     @Test
     public void testGetFromStringStringMethodNegative() throws Exception {
-        final PrivilegedAction<Method> methodPA = ReflectionHelper.getFromStringStringMethodPA(
-                InvalidFromStringClass.class);
+        final PrivilegedAction<Method> methodPA = ReflectionHelper.getFromStringStringMethodPA(InvalidFromStringClass.class);
 
         assertThat("Invalid valueOf method found.", methodPA.run(), nullValue());
     }
