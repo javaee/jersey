@@ -301,9 +301,9 @@
                             jersey.repackaged.org.objectweb.asm.*;version=${project.version}
                         </Export-Package>
                         <Import-Package><![CDATA[
-                            javax.servlet.annotation.*;resolution:=optional;version="$<range;[==,+);${servlet3.version}>",
-                            javax.servlet.descriptor.*;resolution:=optional;version="$<range;[==,+);${servlet3.version}>",
-                            javax.servlet.*;version="[2.4,4.0)",
+                            javax.servlet.annotation.*;resolution:=optional;version="[2.4,5.0)",
+                            javax.servlet.descriptor.*;resolution:=optional;version="[2.4,5.0)",
+                            javax.servlet.*;version="[2.4,5.0)",
                             javax.persistence.*;resolution:=optional,
                             javax.validation.*;resolution:=optional;version="${range;[==,3);${javax.validation.api.version}}",
                             sun.misc.*;resolution:=optional,

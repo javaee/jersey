@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -90,7 +90,7 @@ public class PackageScanningTest {
 
                 mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-sse").versionAsInProject(),
 
-                mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").version("3.1.0"),
+                mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-servlet").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core")
                         .versionAsInProject(),
