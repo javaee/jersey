@@ -40,72 +40,27 @@
 
 package org.glassfish.jersey.client.oauth2;
 
-import javax.ws.rs.client.Client;
-
 /**
- * Abstract implementation of {@link OAuth2CodeGrantFlow.Builder}.
+ * Defines interface for a client credentials store (persistent such as database or
+ * in memory) that can be used to store and retrieve client credentials
+ * provided to clients(consumers) of {@link org.glassfish.jersey.client.oauth2.workflows.OAuth2Workflow}
  *
- * @author Miroslav Fuksa
- * @since 2.3
+ * @see InMemoryClientCredentialsStore which provides in-memory storage of credentials
+ *
+ * @author Deepak Pol on 3/10/16.
  */
-class AbstractAuthorizationCodeGrantBuilder<T extends OAuth2CodeGrantFlow.Builder> implements OAuth2CodeGrantFlow.Builder<T> {
+public interface ClientCredentialsStore {
 
-    private final OAuth2CodeGrantFlow.Builder<T> delegate;
+    /**
+     * Get client credentials from the store by client Id
+     * @param clientId client key provided by authorization server
+     * @return client identifier (key and secret)
+     */
+    ClientIdentifier getClientCredentials(String clientId);
 
-    public AbstractAuthorizationCodeGrantBuilder(OAuth2CodeGrantFlow.Builder<T> delegate) {
-        this.delegate = delegate;
-    }
-
-    @Override
-    public T accessTokenUri(String accessTokenUri) {
-        delegate.accessTokenUri(accessTokenUri);
-        return (T) this;
-    }
-
-    @Override
-    public T authorizationUri(String authorizationUri) {
-        delegate.authorizationUri(authorizationUri);
-        return (T) this;
-    }
-
-    @Override
-    public T redirectUri(String redirectUri) {
-        delegate.redirectUri(redirectUri);
-        return (T) this;
-    }
-
-    @Override
-    public T clientIdentifier(ClientIdentifier consumerCredentials) {
-        delegate.clientIdentifier(consumerCredentials);
-        return (T) this;
-    }
-
-    @Override
-    public T scope(String scope) {
-        delegate.scope(scope);
-        return (T) this;
-    }
-
-    @Override
-    public T client(Client client) {
-        delegate.client(client);
-        return (T) this;
-    }
-
-    @Override
-    public T refreshTokenUri(String refreshTokenUri) {
-        delegate.refreshTokenUri(refreshTokenUri);
-        return (T) this;
-    }
-
-    @Override
-    public T property(OAuth2CodeGrantFlow.Phase phase, String key, String value) {
-        delegate.property(phase, key, value);
-        return (T) this;
-    }
-
-    @Override
-    public OAuth2CodeGrantFlow build() {
-        return delegate.build();
-    }
+    /**
+     * Store a new set of client credentials
+     * @param clientIdentifier client identifier (key and secret)
+     */
+    void addClient(ClientIdentifier clientIdentifier);
 }

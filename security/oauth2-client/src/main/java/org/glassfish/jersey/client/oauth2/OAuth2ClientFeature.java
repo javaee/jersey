@@ -45,7 +45,7 @@ import javax.ws.rs.core.FeatureContext;
 
 /**
  * OAuth2 client filter feature registers the support for performing authenticated requests to the
- * Service Provider. The feature does not perform Authorization Flow (see {@link OAuth2CodeGrantFlow}
+ * Service Provider. The feature does not perform Authorization Flow (see {@link org.glassfish.jersey.client.oauth2.workflows.OAuth2InteractiveWorkflow}
  * for details how to use Authorization Flow and retrieve Access Token). The feature uses access to initialize
  * the internal {@link javax.ws.rs.container.ContainerRequestFilter filter}
  * which will add {@code Authorization} http header containing OAuth 2 authorization information including (based

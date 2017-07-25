@@ -66,10 +66,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.client.oauth2.ClientIdentifier;
+import org.glassfish.jersey.client.oauth2.InMemoryClientCredentialsStore;
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
-import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2InteractiveWorkflow;
 import org.glassfish.jersey.client.oauth2.OAuth2Parameters;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2Workflow;
 import org.glassfish.jersey.client.oauth2.TokenResult;
+import org.glassfish.jersey.client.oauth2.workflows.AuthorizationCodeFlow;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -91,6 +94,7 @@ public class OAuth2Test extends JerseyTest {
     private static final String STATE = "4564dsf54654fsda654af";
     private static final String CODE = "code-xyz";
     private static final String CLIENT_PUBLIC = "clientPublic";
+    private static final String CLIENT_INTERNAL = "clientInternal";
     private static final String CLIENT_SECRET = "clientSecret";
 
     @Override
@@ -110,10 +114,15 @@ public class OAuth2Test extends JerseyTest {
                                             @FormParam("redirect_uri") String redirectUri,
                                             @FormParam("client_id") String clientId) {
             try {
-                assertEquals("authorization_code", grantType);
+                if (CLIENT_INTERNAL.equals(clientId)) {
+                    assertEquals("client_credentials", grantType);
+                    assertEquals(CLIENT_INTERNAL, clientId);
+                } else if (CLIENT_PUBLIC.equals(clientId)){
+                    assertEquals("authorization_code", grantType);
+                    assertEquals(CLIENT_PUBLIC, clientId);
+                    assertEquals(CODE, code);
+                }
                 assertEquals("urn:ietf:wg:oauth:2.0:oob", redirectUri);
-                assertEquals(CODE, code);
-                assertEquals(CLIENT_PUBLIC, clientId);
             } catch (AssertionError e) {
                 e.printStackTrace();
                 throw new BadRequestException(Response.status(400).entity(e.getMessage()).build());
@@ -168,16 +177,16 @@ public class OAuth2Test extends JerseyTest {
     }
 
     @Test
-    public void testFlow() {
-        testFlow(false);
+    public void testAuthorizationCodeGrantFlow() {
+        testCodeGrantFlow(false);
     }
 
     @Test
-    public void testFlowWithArrayInResponse() {
-        testFlow(true);
+    public void testCodeGrantFlowWithArrayInResponse() {
+        testCodeGrantFlow(true);
     }
 
-    private void testFlow(final boolean isArray) {
+    private void testCodeGrantFlow(final boolean isArray) {
         ClientIdentifier clientId = new ClientIdentifier(CLIENT_PUBLIC, CLIENT_SECRET);
         final String authUri = UriBuilder.fromUri(getBaseUri()).path("oauth").path("authorization").build().toString();
         final String accessTokenUri = UriBuilder.fromUri(getBaseUri()).path("oauth").path("access-token").build().toString();
@@ -194,29 +203,96 @@ public class OAuth2Test extends JerseyTest {
             });
         }
 
-        final OAuth2CodeGrantFlow.Builder builder =
-                OAuth2ClientSupport.authorizationCodeGrantFlowBuilder(clientId, authUri, accessTokenUri);
-        final OAuth2CodeGrantFlow flow = builder
-                .client(client)
-                .refreshTokenUri(refreshTokenUri)
-                .property(OAuth2CodeGrantFlow.Phase.AUTHORIZATION, "readOnly", "true")
-                .property(OAuth2CodeGrantFlow.Phase.AUTHORIZATION, OAuth2Parameters.STATE, state)
-                .scope("contact")
-                .build();
-        final String finalAuthorizationUri = flow.start();
+        OAuth2InteractiveWorkflow.Builder<AuthorizationCodeFlow.Builder> builder
+                = OAuth2ClientSupport.authorizationCodeGrantFlowBuilder(clientId, authUri, accessTokenUri, null);
+        OAuth2InteractiveWorkflow flow =
+                builder
+                        .client(client)
+                        .refreshTokenUri(refreshTokenUri)
+                        .property(OAuth2Workflow.Phase.AUTHORIZATION, "readOnly", "true")
+                        .property(OAuth2Workflow.Phase.AUTHORIZATION, OAuth2Parameters.STATE, state)
+                        .scope("contact")
+                        .build();
 
-        final Response response = ClientBuilder.newClient().target(finalAuthorizationUri).request().get();
+
+        flow = flow.execute();
+
+        final Response response = ClientBuilder.newClient()
+                .target(flow.getAuthorizationRequestUri()).request().get();
         assertEquals(200, response.getStatus());
 
         final String code = response.readEntity(String.class);
         assertEquals(CODE, code);
 
-        final TokenResult result = flow.finish(code, state);
+        flow.resume(code, state);
+        TokenResult result = flow.getTokenResult();
         assertEquals("access-token-aab999f", result.getAccessToken());
         assertEquals(new Long(3600), result.getExpiresIn());
         assertEquals("access-token", result.getTokenType());
 
-        final TokenResult refreshResult = flow.refreshAccessToken(result.getRefreshToken());
+        flow.refreshAccessToken();
+        final TokenResult refreshResult = flow.getTokenResult();
+        assertEquals("access-token-new", refreshResult.getAccessToken());
+        assertEquals(new Long(3600), refreshResult.getExpiresIn());
+        assertEquals("access-token", refreshResult.getTokenType());
+
+        if (isArray) {
+            final Collection<String> array = (Collection<String>) refreshResult.getAllProperties().get("access_token");
+
+            assertThat(array.size(), is(1));
+            assertThat(array, hasItem("access-token-new"));
+        }
+    }
+
+    @Test
+    public void testClientCredentialsFlow(){
+        testClientCredentialsFlow(false);
+    }
+
+    @Test
+    public void testClientCredentialsFlowWithArrayInResponse(){
+        testClientCredentialsFlow(true);
+    }
+
+    public void testClientCredentialsFlow(boolean isArray) {
+        ClientIdentifier clientId = new ClientIdentifier(CLIENT_INTERNAL, CLIENT_SECRET);
+        final String accessTokenUri = UriBuilder.fromUri(getBaseUri()).path("oauth").path("access-token").build().toString();
+        final String refreshTokenUri = UriBuilder.fromUri(getBaseUri()).path("oauth").path("refresh-token").build().toString();
+        final String state = STATE;
+
+        final Client client = ClientBuilder.newClient();
+        if (isArray) {
+            client.register(new ClientRequestFilter() {
+                @Override
+                public void filter(final ClientRequestContext requestContext) throws IOException {
+                    requestContext.getHeaders().putSingle("isArray", true);
+                }
+            });
+        }
+
+        //TODO: Just keep this in doc usage
+        InMemoryClientCredentialsStore clientCredentialsStore = new InMemoryClientCredentialsStore();
+        clientCredentialsStore.addClient(clientId);
+
+        OAuth2Workflow.Builder builder
+                = OAuth2ClientSupport.clientCredentialsFlowBuilder(clientId, accessTokenUri, null);
+        OAuth2Workflow flow =
+                builder
+                        .client(client)
+                        .refreshTokenUri(refreshTokenUri)
+                        .scope("contact")
+                        .build();
+
+
+        flow = flow.execute();
+
+        TokenResult result = flow.getTokenResult();
+        assertEquals("access-token-aab999f", result.getAccessToken());
+        assertEquals(new Long(3600), result.getExpiresIn());
+        assertEquals("access-token", result.getTokenType());
+
+        flow.refreshAccessToken();
+        final TokenResult refreshResult = flow.getTokenResult();
         assertEquals("access-token-new", refreshResult.getAccessToken());
         assertEquals(new Long(3600), refreshResult.getExpiresIn());
         assertEquals("access-token", refreshResult.getTokenType());

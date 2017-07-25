@@ -50,8 +50,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
 import org.glassfish.jersey.client.oauth2.TokenResult;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2InteractiveWorkflow;
 import org.glassfish.jersey.examples.oauth2.googleclient.SimpleOAuthService;
 
 /**
@@ -67,9 +67,10 @@ public class AuthorizationResource {
     @GET
     @Path("authorize")
     public Response authorize(@QueryParam("code") String code, @QueryParam("state") String state) {
-        final OAuth2CodeGrantFlow flow = SimpleOAuthService.getFlow();
+        final OAuth2InteractiveWorkflow flow = SimpleOAuthService.getFlow();
 
-        final TokenResult tokenResult = flow.finish(code, state);
+        flow.resume(code, state);
+        final TokenResult tokenResult = flow.getTokenResult();
 
         SimpleOAuthService.setAccessToken(tokenResult.getAccessToken());
 

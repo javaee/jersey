@@ -40,60 +40,26 @@
 
 package org.glassfish.jersey.client.oauth2;
 
-import java.io.IOException;
-
-import javax.ws.rs.Priorities;
-import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.core.HttpHeaders;
-
-import javax.annotation.Priority;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Client filter that adds access token to the {@code Authorization} http header. The filter uses {@code bearer}
- * token specification.
+ * Created by deepakpol on 3/12/16.
  *
- * @author Miroslav Fuksa
- * @since 2.3
+ * In memory implementation of {@code ClientCredentialsStore}
  */
-@Priority(Priorities.AUTHENTICATION)
-public class OAuth2ClientFilter implements ClientRequestFilter {
+public class InMemoryClientCredentialsStore implements ClientCredentialsStore {
 
-    private final String accessToken;
+    private Map<String, ClientIdentifier> clientIdentifierMap =
+            new HashMap<>();
 
-    /**
-     * Create a new filter with predefined access token.
-     *
-     * @param accessToken Access token.
-     */
-    public OAuth2ClientFilter(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    /**
-     * Create a new filter with no default access token. The token must be specified with
-     * each request using {@link OAuth2ClientSupport#OAUTH2_PROPERTY_ACCESS_TOKEN}.
-     */
-    public OAuth2ClientFilter() {
-        this.accessToken = null;
+    @Override
+    public ClientIdentifier getClientCredentials(String clientId) {
+        return clientIdentifierMap.get(clientId);
     }
 
     @Override
-    public void filter(ClientRequestContext request) throws IOException {
-        String token = this.accessToken;
-        final String propertyToken = (String) request.getProperty(OAuth2ClientSupport.OAUTH2_PROPERTY_ACCESS_TOKEN);
-        if (propertyToken != null) {
-            token = propertyToken;
-        }
-        request.removeProperty(OAuth2ClientSupport.OAUTH2_PROPERTY_ACCESS_TOKEN);
-        if (token == null) {
-            return;
-        }
-        String authentication = "Bearer " + token;
-
-        if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-            request.getHeaders().add(HttpHeaders.AUTHORIZATION, authentication);
-        }
-
+    public void addClient(ClientIdentifier clientIdentifier){
+        clientIdentifierMap.put(clientIdentifier.getClientId(), clientIdentifier);
     }
 }

@@ -40,6 +40,11 @@
 
 package org.glassfish.jersey.client.oauth2;
 
+import org.glassfish.jersey.client.oauth2.workflows.AuthorizationCodeFlow;
+import org.glassfish.jersey.client.oauth2.workflows.ClientCredentialsFlow;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2InteractiveWorkflow;
+import org.glassfish.jersey.client.oauth2.workflows.OAuth2Workflow;
+
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Feature;
 
@@ -47,7 +52,7 @@ import javax.ws.rs.core.Feature;
  * Main class to build the Authorization Flow instances and {@link javax.ws.rs.core.Feature client filter feature} that
  * can supports performing of authenticated OAuth requests.
  * <p><b>Authorization flow</b></p>
- * For more information about authorization flow, see {@link OAuth2CodeGrantFlow}.
+ * For more information about authorization flow, see {@link OAuth2InteractiveWorkflow}.
  * <p><b>Client feature</b></p>
  * <p>
  * Use method {@link #feature(String)} to build the feature. OAuth2 client filter feature registers
@@ -110,21 +115,34 @@ public final class OAuth2ClientSupport {
     }
 
     /**
-     * Get the builder of the {@link OAuth2CodeGrantFlow Authorization Code Grant Flow}.
+     * Get the builder of the {@link OAuth2InteractiveWorkflow Authorization Code Grant Flow}.
      *
-     * @param clientIdentifier Client identifier (id of application that wants to be approved). Issued by the
+     * @param clientIdentifier Client identifier store (id of application that wants to be approved). Issued by the
      *                         Service Provider.
      * @param authorizationUri The URI to which the user should be redirected to authorize our application.
      *                         The URI points to the
      *                          authorization server and is defined by the Service Provider.
      * @param accessTokenUri The access token URI on which the access token can be requested. The URI points to the
      *                          authorization server and is defined by the Service Provider.
-     * @return builder of the {@link OAuth2CodeGrantFlow Authorization Code Grant Flow}.
+     * @return builder of the {@link OAuth2InteractiveWorkflow Authorization Code Grant Flow}.
      */
-    public static OAuth2CodeGrantFlow.Builder authorizationCodeGrantFlowBuilder(ClientIdentifier clientIdentifier,
-                                                                                String authorizationUri,
-                                                                                String accessTokenUri) {
-        return new AuthCodeGrantImpl.Builder(clientIdentifier, authorizationUri, accessTokenUri);
+    public static OAuth2InteractiveWorkflow.Builder<AuthorizationCodeFlow.Builder> authorizationCodeGrantFlowBuilder(
+            ClientIdentifier clientIdentifier,
+            String authorizationUri,
+            String accessTokenUri,
+            String redirectUri) {
+        return new AuthorizationCodeFlow.Builder(
+                clientIdentifier, authorizationUri, accessTokenUri, redirectUri
+        );
+    }
+
+    public static OAuth2Workflow.Builder<ClientCredentialsFlow.Builder> clientCredentialsFlowBuilder(
+            ClientIdentifier clientIdentifier,
+            String accessTokenUri,
+            String redirectUri) {
+        return new ClientCredentialsFlow.Builder(
+                clientIdentifier, accessTokenUri, redirectUri
+        );
     }
 
     /**
@@ -162,8 +180,8 @@ public final class OAuth2ClientSupport {
      * </p>
      * @return Builder instance.
      */
-    public static OAuth2CodeGrantFlow.Builder facebookFlowBuilder(ClientIdentifier clientIdentifier,
-                                                                  String redirectURI) {
+    public static OAuth2InteractiveWorkflow.Builder facebookFlowBuilder(ClientIdentifier clientIdentifier,
+                                                                        String redirectURI) {
         return OAuth2FlowFacebookBuilder.getFacebookAuthorizationBuilder(clientIdentifier, redirectURI,
                 ClientBuilder.newClient());
     }

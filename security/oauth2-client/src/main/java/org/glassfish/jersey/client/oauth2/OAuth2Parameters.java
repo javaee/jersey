@@ -92,6 +92,7 @@ public final class OAuth2Parameters {
      */
     public static final String CODE = "code";
     public static final String REDIRECT_URI_UNDEFINED = "urn:ietf:wg:oauth:2.0:oob";
+    public static final String AUTHORIZATION_REQUEST_URI = "authorization_request_uri";
 
     /**
      *  Parameter {@code grant_type} used in the access token request.
