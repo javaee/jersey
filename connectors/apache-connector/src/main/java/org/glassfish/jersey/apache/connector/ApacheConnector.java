@@ -44,7 +44,6 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -64,7 +63,7 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
+import javax.ws.rs.core.Response.StatusType;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -100,6 +99,7 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.ConnectionReleaseTrigger;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.ManagedHttpClientConnection;
 import org.apache.http.conn.routing.HttpRoute;
@@ -430,8 +430,8 @@ class ApacheConnector implements Connector {
         final HttpUriRequest request = getUriHttpRequest(clientRequest);
         final Map<String, String> clientHeadersSnapshot = writeOutBoundHeaders(clientRequest.getHeaders(), request);
 
+        CloseableHttpResponse response = null;
         try {
-            final CloseableHttpResponse response;
             final HttpClientContext context = HttpClientContext.create();
             if (preemptiveBasicAuth) {
                 final AuthCache authCache = new BasicAuthCache();
@@ -450,11 +450,14 @@ class ApacheConnector implements Connector {
             response = client.execute(getHost(request), request, context);
             HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, clientRequest.getHeaders(), this.getClass().getName());
 
+            final HttpEntity entity = response.getEntity();
+            final InputStream entityContent = entity != null ? entity.getContent() : null;
+
             final Response.StatusType status = response.getStatusLine().getReasonPhrase() == null
                     ? Statuses.from(response.getStatusLine().getStatusCode())
                     : Statuses.from(response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase());
 
-            final ClientResponse responseContext = new ClientResponse(status, clientRequest);
+            final ClientResponse responseContext = new ApacheClientResponse(status, clientRequest, response, entityContent);
             final List<URI> redirectLocations = context.getRedirectLocations();
             if (redirectLocations != null && !redirectLocations.isEmpty()) {
                 responseContext.setResolvedRequestUri(redirectLocations.get(redirectLocations.size() - 1));
@@ -472,8 +475,6 @@ class ApacheConnector implements Connector {
                 headers.put(headerName, list);
             }
 
-            final HttpEntity entity = response.getEntity();
-
             if (entity != null) {
                 if (headers.get(HttpHeaders.CONTENT_LENGTH) == null) {
                     headers.add(HttpHeaders.CONTENT_LENGTH, String.valueOf(entity.getContentLength()));
@@ -485,15 +486,18 @@ class ApacheConnector implements Connector {
                 }
             }
 
-            try {
-                responseContext.setEntityStream(new HttpClientResponseInputStream(getInputStream(response)));
-            } catch (final IOException e) {
-                LOGGER.log(Level.SEVERE, null, e);
-            }
+            responseContext.setEntityStream(bufferedStream(entityContent));
+
+            // prevent response-close on correct return
+            response = null;
 
             return responseContext;
         } catch (final Exception e) {
             throw new ProcessingException(e);
+        } finally {
+            if (response != null) {
+                ReaderWriter.safelyClose(response);
+            }
         }
     }
 
@@ -625,40 +629,60 @@ class ApacheConnector implements Connector {
         return stringHeaders;
     }
 
-    private static final class HttpClientResponseInputStream extends FilterInputStream {
+    /**
+     * Overrides Response-close() to release the connection without consuming it.
+     *
+     * From <a href="http://hc.apache.org/httpcomponents-client-4.5.x/tutorial/html/fundamentals.html#d5e145">Apache HttpClient
+     * documentation</a>:
+     *
+     * <q>The difference between closing the content stream and closing the response is that the former will attempt to keep
+     * the underlying connection alive by consuming the entity content while the latter immediately shuts down and discards
+     * the connection.</q>
+     *
+     * JAX-RS spec is silent whether closing the content stream consumes the response or closes the connection. This
+     * ApacheConnector follows apache-behaviour.
+     */
+    private static final class ApacheClientResponse extends ClientResponse {
 
-        HttpClientResponseInputStream(final InputStream inputStream) throws IOException {
-            super(inputStream);
+        private final CloseableHttpResponse httpResponse;
+
+        private final InputStream entityContent;
+
+        public ApacheClientResponse(StatusType status, ClientRequest requestContext, CloseableHttpResponse httpResponse,
+            InputStream entityContent) {
+            super(status, requestContext);
+            this.httpResponse = httpResponse;
+            this.entityContent = entityContent;
         }
 
         @Override
-        public void close() throws IOException {
-            super.close();
+        public void close() {
+            try {
+                if (entityContent instanceof ConnectionReleaseTrigger) {
+                    // necessary to prevent an exception during stream-close in apache httpclient 4.5.1+
+                    ((ConnectionReleaseTrigger) entityContent).abortConnection();
+                }
+                httpResponse.close();
+            } catch (IOException e) {
+                // Cannot happen according to ConnectionHolder#releaseConnection
+                throw new ProcessingException(e);
+            } finally {
+                super.close();
+            }
         }
     }
 
-    private static InputStream getInputStream(final CloseableHttpResponse response) throws IOException {
+    private static InputStream bufferedStream(final InputStream entityContent) {
 
         final InputStream inputStream;
 
-        if (response.getEntity() == null) {
+        if (entityContent == null) {
             inputStream = new ByteArrayInputStream(new byte[0]);
         } else {
-            final InputStream i = response.getEntity().getContent();
-            if (i.markSupported()) {
-                inputStream = i;
-            } else {
-                inputStream = new BufferedInputStream(i, ReaderWriter.BUFFER_SIZE);
-            }
+            inputStream = new BufferedInputStream(entityContent, ReaderWriter.BUFFER_SIZE);
         }
 
-        return new FilterInputStream(inputStream) {
-            @Override
-            public void close() throws IOException {
-                response.close();
-                super.close();
-            }
-        };
+        return inputStream;
     }
 
     private static class ConnectionFactory extends ManagedHttpClientConnectionFactory {
