@@ -196,7 +196,7 @@ public class ComponentBag {
      * Contract provider model enhancer that builds a model as is, without any
      * modifications.
      */
-    static final Inflector<ContractProvider.Builder, ContractProvider> AS_IS = ContractProvider.Builder::build;
+    public static final Inflector<ContractProvider.Builder, ContractProvider> AS_IS = ContractProvider.Builder::build;
 
     /**
      * Contract provider model registration strategy.

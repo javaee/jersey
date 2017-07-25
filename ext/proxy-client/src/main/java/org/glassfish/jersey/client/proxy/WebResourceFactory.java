@@ -48,25 +48,13 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.security.AccessController;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.HttpMethod;
-import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
@@ -99,8 +87,6 @@ public final class WebResourceFactory implements InvocationHandler {
 
     private static final MultivaluedMap<String, Object> EMPTY_HEADERS = new MultivaluedHashMap<>();
     private static final Form EMPTY_FORM = new Form();
-    private static final List<Class> PARAM_ANNOTATION_CLASSES = Arrays.<Class>asList(PathParam.class, QueryParam.class,
-            HeaderParam.class, CookieParam.class, MatrixParam.class, FormParam.class);
 
     /**
      * Creates a new client-side representation of a resource described by
@@ -157,7 +143,6 @@ public final class WebResourceFactory implements InvocationHandler {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
         if (args == null && method.getName().equals("toString")) {
             return toString();
@@ -180,15 +165,7 @@ public final class WebResourceFactory implements InvocationHandler {
         final Class<?> responseType = method.getReturnType();
 
         // determine method name
-        String httpMethod = getHttpMethodName(method);
-        if (httpMethod == null) {
-            for (final Annotation ann : method.getAnnotations()) {
-                httpMethod = getHttpMethodName(ann.annotationType());
-                if (httpMethod != null) {
-                    break;
-                }
-            }
-        }
+        String httpMethod = determineHttpMethod(method);
 
         // create a new UriBuilder appending the @Path attached to the method
         WebTarget newTarget = addPathFromAnnotation(method, target);
@@ -204,105 +181,88 @@ public final class WebResourceFactory implements InvocationHandler {
             }
         }
 
-        // process method params (build maps of (Path|Form|Cookie|Matrix|Header..)Params
-        // and extract entity type
-        final MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<String, Object>(this.headers);
-        final LinkedList<Cookie> cookies = new LinkedList<>(this.cookies);
-        final Form form = new Form();
-        form.asMap().putAll(this.form.asMap());
-        final Annotation[][] paramAnns = method.getParameterAnnotations();
-        Object entity = null;
-        Type entityType = null;
-        for (int i = 0; i < paramAnns.length; i++) {
-            final Map<Class, Annotation> anns = new HashMap<>();
-            for (final Annotation ann : paramAnns[i]) {
-                anns.put(ann.annotationType(), ann);
-            }
-            Annotation ann;
-            Object value = args[i];
-            if (!hasAnyParamAnnotation(anns)) {
-                entityType = method.getGenericParameterTypes()[i];
-                entity = value;
-            } else {
-                if (value == null && (ann = anns.get(DefaultValue.class)) != null) {
-                    value = ((DefaultValue) ann).value();
-                }
+        ProxyInvocationContext context = new ProxyInvocationContext(method, args, headers, cookies, form, newTarget);
+        context.convertParameters();
+        Object entity = context.getEntity();
+        Type entityType = context.getEntityType();
+        newTarget = context.getTarget();
 
-                if (value != null) {
-                    if ((ann = anns.get(PathParam.class)) != null) {
-                        newTarget = newTarget.resolveTemplate(((PathParam) ann).value(), value);
-                    } else if ((ann = anns.get((QueryParam.class))) != null) {
-                        if (value instanceof Collection) {
-                            newTarget = newTarget.queryParam(((QueryParam) ann).value(), convert((Collection) value));
-                        } else {
-                            newTarget = newTarget.queryParam(((QueryParam) ann).value(), value);
-                        }
-                    } else if ((ann = anns.get((HeaderParam.class))) != null) {
-                        if (value instanceof Collection) {
-                            headers.addAll(((HeaderParam) ann).value(), convert((Collection) value));
-                        } else {
-                            headers.addAll(((HeaderParam) ann).value(), value);
-                        }
-
-                    } else if ((ann = anns.get((CookieParam.class))) != null) {
-                        final String name = ((CookieParam) ann).value();
-                        Cookie c;
-                        if (value instanceof Collection) {
-                            for (final Object v : ((Collection) value)) {
-                                if (!(v instanceof Cookie)) {
-                                    c = new Cookie(name, v.toString());
-                                } else {
-                                    c = (Cookie) v;
-                                    if (!name.equals(((Cookie) v).getName())) {
-                                        // is this the right thing to do? or should I fail? or ignore the difference?
-                                        c = new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion());
-                                    }
-                                }
-                                cookies.add(c);
-                            }
-                        } else {
-                            if (!(value instanceof Cookie)) {
-                                cookies.add(new Cookie(name, value.toString()));
-                            } else {
-                                c = (Cookie) value;
-                                if (!name.equals(((Cookie) value).getName())) {
-                                    // is this the right thing to do? or should I fail? or ignore the difference?
-                                    cookies.add(new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion()));
-                                }
-                            }
-                        }
-                    } else if ((ann = anns.get((MatrixParam.class))) != null) {
-                        if (value instanceof Collection) {
-                            newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), convert((Collection) value));
-                        } else {
-                            newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), value);
-                        }
-                    } else if ((ann = anns.get((FormParam.class))) != null) {
-                        if (value instanceof Collection) {
-                            for (final Object v : ((Collection) value)) {
-                                form.param(((FormParam) ann).value(), v.toString());
-                            }
-                        } else {
-                            form.param(((FormParam) ann).value(), value.toString());
-                        }
-                    }
-                }
-            }
-        }
 
         if (httpMethod == null) {
             // the method is a subresource locator
-            return WebResourceFactory.newResource(responseType, newTarget, true, headers, cookies, form);
+            return WebResourceFactory.newResource(responseType, newTarget, true,
+                context.getHeaders(), context.getCookies(), context.getForm());
         }
 
+        final String[] accepts = determineAccepts(method, proxyIfc);
+
+        // determine content type
+        String contentType = determineContentType(method, proxyIfc, context.getHeaders(), entity);
+
+        Invocation.Builder builder = newTarget.request()
+                .headers(context.getHeaders()) // this resets all headers so do this first
+                .accept(accepts); // if @Produces is defined, propagate values into Accept header; empty array is NO-OP
+
+        for (final Cookie c : context.getCookies()) {
+            builder = builder.cookie(c);
+        }
+
+        final Object result;
+
+        if (entity == null && !context.getForm().asMap().isEmpty()) {
+            entity = context.getForm();
+            contentType = MediaType.APPLICATION_FORM_URLENCODED;
+        } else {
+            if (contentType == null) {
+                contentType = MediaType.APPLICATION_OCTET_STREAM;
+            }
+            if (!context.getForm().asMap().isEmpty()) {
+                if (entity instanceof Form) {
+                    ((Form) entity).asMap().putAll(context.getForm().asMap());
+                } else {
+                    // TODO: should at least log some warning here
+                }
+            }
+        }
+
+        final GenericType<?> responseGenericType = new GenericType<>(method.getGenericReturnType());
+        if (entity != null) {
+            if (entityType instanceof ParameterizedType) {
+                entity = new GenericEntity<>(entity, entityType);
+            }
+            result = builder.method(httpMethod, Entity.entity(entity, contentType), responseGenericType);
+        } else {
+            result = builder.method(httpMethod, responseGenericType);
+        }
+
+        return result;
+    }
+
+    private String determineHttpMethod(final Method method) {
+        String httpMethod = getHttpMethodName(method);
+        if (httpMethod == null) {
+            for (final Annotation ann : method.getAnnotations()) {
+                httpMethod = getHttpMethodName(ann.annotationType());
+                if (httpMethod != null) {
+                    break;
+                }
+            }
+        }
+        return httpMethod;
+    }
+
+    private String[] determineAccepts(final Method method, final Class<?> proxyIfc) {
         // accepted media types
         Produces produces = method.getAnnotation(Produces.class);
         if (produces == null) {
             produces = proxyIfc.getAnnotation(Produces.class);
         }
         final String[] accepts = (produces == null) ? EMPTY : produces.value();
+        return accepts;
+    }
 
-        // determine content type
+    private String determineContentType(final Method method, final Class<?> proxyIfc,
+        final MultivaluedMap<String, Object> headers, Object entity) {
         String contentType = null;
         if (entity != null) {
             final List<Object> contentTypeEntries = headers.get(HttpHeaders.CONTENT_TYPE);
@@ -318,57 +278,7 @@ public final class WebResourceFactory implements InvocationHandler {
                 }
             }
         }
-
-        Invocation.Builder builder = newTarget.request()
-                .headers(headers) // this resets all headers so do this first
-                .accept(accepts); // if @Produces is defined, propagate values into Accept header; empty array is NO-OP
-
-        for (final Cookie c : cookies) {
-            builder = builder.cookie(c);
-        }
-
-        final Object result;
-
-        if (entity == null && !form.asMap().isEmpty()) {
-            entity = form;
-            contentType = MediaType.APPLICATION_FORM_URLENCODED;
-        } else {
-            if (contentType == null) {
-                contentType = MediaType.APPLICATION_OCTET_STREAM;
-            }
-            if (!form.asMap().isEmpty()) {
-                if (entity instanceof Form) {
-                    ((Form) entity).asMap().putAll(form.asMap());
-                } else {
-                    // TODO: should at least log some warning here
-                }
-            }
-        }
-
-        final GenericType responseGenericType = new GenericType(method.getGenericReturnType());
-        if (entity != null) {
-            if (entityType instanceof ParameterizedType) {
-                entity = new GenericEntity(entity, entityType);
-            }
-            result = builder.method(httpMethod, Entity.entity(entity, contentType), responseGenericType);
-        } else {
-            result = builder.method(httpMethod, responseGenericType);
-        }
-
-        return result;
-    }
-
-    private boolean hasAnyParamAnnotation(final Map<Class, Annotation> anns) {
-        for (final Class paramAnnotationClass : PARAM_ANNOTATION_CLASSES) {
-            if (anns.containsKey(paramAnnotationClass)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private Object[] convert(final Collection value) {
-        return value.toArray();
+        return contentType;
     }
 
     private static WebTarget addPathFromAnnotation(final AnnotatedElement ae, WebTarget target) {
