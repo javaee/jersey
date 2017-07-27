@@ -76,7 +76,7 @@ public class MediaTypeProvider implements HeaderDelegateProvider<MediaType> {
         StringBuilder b = new StringBuilder();
         b.append(header.getType()).append('/').append(header.getSubtype());
         for (Map.Entry<String, String> e : header.getParameters().entrySet()) {
-            b.append(";").append(e.getKey()).append('=');
+            b.append("; ").append(e.getKey()).append('=');
             StringBuilderUtils.appendQuotedIfNonToken(b, e.getValue());
         }
         return b.toString();
