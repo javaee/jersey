@@ -386,8 +386,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
     /**
      * Add properties to {@code ResourceConfig}.
      * <p/>
-     * If any of the added properties exists already, he values of the existing
-     * properties will be replaced with new values.
+     * If any of the added properties exists already, old values of existing
+     * properties will be replaced by new values.
      *
      * @param properties properties to add.
      * @return updated resource configuration instance.
