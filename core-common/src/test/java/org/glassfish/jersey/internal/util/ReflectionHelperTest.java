@@ -46,6 +46,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 import org.junit.Test;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -186,5 +187,48 @@ public class ReflectionHelperTest {
         final PrivilegedAction<Method> methodPA = ReflectionHelper.getFromStringStringMethodPA(InvalidFromStringClass.class);
 
         assertThat("Invalid valueOf method found.", methodPA.run(), nullValue());
+    }
+
+    public static class IsGetterTester {
+
+        public int get() {
+            return 0;
+        }
+
+        public boolean is() {
+            return true;
+        }
+
+        public int getSomething() {
+            return 0;
+        }
+
+        public boolean isSomething() {
+            return true;
+        }
+    }
+
+    @Test
+    public void testIsGetterWithGetOnlyNegative() throws Exception {
+        assertThat("isGetter should have returned false for method named 'get'",
+                ReflectionHelper.isGetter(IsGetterTester.class.getMethod("get")), is(false));
+    }
+
+    @Test
+    public void testIsGetterWithIsOnlyNegative() throws Exception {
+        assertThat("isGetter should have returned false for method named 'is'",
+                ReflectionHelper.isGetter(IsGetterTester.class.getMethod("is")), is(false));
+    }
+
+    @Test
+    public void testIsGetterWithRealGetterPositive() throws Exception {
+        assertThat("isGetter should have returned true for method named 'getSomething'",
+                ReflectionHelper.isGetter(IsGetterTester.class.getMethod("getSomething")), is(true));
+    }
+
+    @Test
+    public void testIsGetterWithRealIsPositive() throws Exception {
+        assertThat("isGetter should have returned true for method named 'isSomething'",
+                ReflectionHelper.isGetter(IsGetterTester.class.getMethod("isSomething")), is(true));
     }
 }
