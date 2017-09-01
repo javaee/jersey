@@ -193,9 +193,12 @@ class NettyConnector implements Connector {
                          final String password = ClientProperties.getValue(
                                  config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
 
-                         p.addLast(new HttpProxyHandler(new InetSocketAddress(u.getHost(),
-                                                                              u.getPort() == -1 ? 8080 : u.getPort()),
-                                                        userName, password));
+                         InetSocketAddress proxyAddress = new InetSocketAddress(u.getHost(), u.getPort() == -1 ? 8080 : u.getPort());
+
+                         HttpProxyHandler httpProxyHandler = ((userName == null) || (password == null)) ?
+                                 new HttpProxyHandler(proxyAddress) :
+                                 new HttpProxyHandler(proxyAddress, userName, password);
+                         p.addLast(httpProxyHandler);
                      }
 
                      p.addLast(new HttpClientCodec());
