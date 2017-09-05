@@ -56,7 +56,7 @@
     <version>2.26-SNAPSHOT</version>
     <name>jersey</name>
     <description>
-        Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339)
+        Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.1 (JSR 370)
         production quality Reference Implementation for building RESTful Web services.
     </description>
 
@@ -315,7 +315,7 @@
                                 All Rights Reserved. Use is subject to license terms.]]>
                         </bottom>
                         <links>
-                            <link>http://jersey.java.net/apidocs-javax.jax-rs/2.0.1</link>
+                            <link>https://jax-rs.github.io/apidocs/2.1/</link>
                             <link>http://hk2.java.net/nonav/hk2-api/apidocs</link>
                         </links>
                         <excludePackageNames>
@@ -1174,7 +1174,7 @@
                         com.sun.ws.rs.ext:*.examples.*:*.internal.*:*.tests.*
                     </excludePackageNames>
                     <links>
-                        <link>http://jersey.github.io/apidocs-javax.jax-rs/2.0.1</link>
+                        <link>https://jax-rs.github.io/apidocs/2.1</link>
                         <link>https://javaee.github.io/hk2/apidocs/</link>
                     </links>
                     <additionalparam>-Xdoclint:none</additionalparam>
