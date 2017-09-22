@@ -60,7 +60,7 @@ import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
- * Abstract base class for resolving JAX-RS {@code &#64;XxxParam} injection.
+ * Generic class for resolving JAX-RS {@code &#64;XxxParam} injection.
  *
  * @param <A> supported parameter injection annotation.
  * @author Marek Potociar (marek.potociar at oracle.com)
