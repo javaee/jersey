@@ -109,7 +109,7 @@ public class ReflectionHelperTest {
 
         AccessController.doPrivileged(ReflectionHelper.setContextClassLoaderPA(loader));
         fail("It should not be possible to set context class loader even from privileged block via Jersey ReflectionHelper "
-                + "utility");
+                     + "utility");
     }
 
     public static class FromStringClass {
@@ -186,5 +186,29 @@ public class ReflectionHelperTest {
         final PrivilegedAction<Method> methodPA = ReflectionHelper.getFromStringStringMethodPA(InvalidFromStringClass.class);
 
         assertThat("Invalid valueOf method found.", methodPA.run(), nullValue());
+    }
+
+    @Test
+    public void testForPropertyNameNormalGetter() throws Exception {
+        class TestGet {
+            public int getProp() {
+                return 1;
+            }
+        }
+        Method method = TestGet.class.getMethod("getProp");
+        final String propertyName = ReflectionHelper.getPropertyName(method);
+        assertThat("getPropertyName should extract the correct property", propertyName, is("prop"));
+    }
+
+    @Test
+    public void testForPropertyNameOfGetMethod() throws Exception {
+        class TestGet {
+            public int get() {
+                return 0;
+            }
+        }
+        Method method = TestGet.class.getMethod("get");
+        String propertyName = ReflectionHelper.getPropertyName(method);
+        assertThat("get method should not have a property name", propertyName, is(""));
     }
 }
