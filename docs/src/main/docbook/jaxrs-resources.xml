@@ -563,7 +563,7 @@ public void post(@BeanParam MyBeanParam beanParam, String entity) {
             directly. Injecting the bean parameter into @Singleton resource class fields is not allowed (injections into method
             parameter must be used instead).
         </para>
-        <para>&jaxrs.BeanParam; can contain all parameters injections injections
+        <para>&jaxrs.BeanParam; can contain all parameters injections
             (&jaxrs.PathParam;, &jaxrs.QueryParam;, &jaxrs.MatrixParam;, &jaxrs.HeaderParam;,
             &jaxrs.CookieParam;, &jaxrs.FormParam;). More
             beans can be injected into one resource or method parameters even if they inject the same request values. For example
