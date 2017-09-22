@@ -75,7 +75,7 @@ public class BeanParamTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resouce.class,
+        return new ResourceConfig(Resource.class,
                 ResourceInitializedBySetter.class);
     }
 
@@ -156,7 +156,7 @@ public class BeanParamTest extends JerseyTest {
     }
 
     @Path("resource")
-    public static class Resouce {
+    public static class Resource {
 
         @POST
         @Path("singleBean/{path}")
