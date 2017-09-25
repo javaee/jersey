@@ -52,12 +52,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import javax.annotation.Priority;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.RuntimeType;
@@ -65,13 +67,10 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import javax.annotation.Priority;
-
 import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.Binder;
-import org.glassfish.jersey.internal.inject.CompositeBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
@@ -625,45 +624,52 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
      */
     public void configureMetaProviders(InjectionManager injectionManager, ManagedObjectsFinalizer finalizer) {
         // First, configure existing binders
-        Set<Binder> configuredBinders = configureBinders(injectionManager, Collections.emptySet());
+        Set<Binder> registeredBinders = registerBinders(injectionManager, Collections.emptySet());
 
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
             // Register external meta objects
-            configureExternalObjects(injectionManager);
+            Set<Object> registeredExternalObjects = registerExternalObjects(injectionManager, Collections.emptySet());
             // Next, configure all features
             configureFeatures(injectionManager, new HashSet<>(), resetRegistrations(), finalizer);
-            // At last, configure any new binders added by features
-            configureBinders(injectionManager, configuredBinders);
+            // At last, configure any new binders and external meta objects added by features
+            registerBinders(injectionManager, registeredBinders);
+            registerExternalObjects(injectionManager, registeredExternalObjects);
         }
     }
 
-    private Set<Binder> configureBinders(InjectionManager injectionManager, Set<Binder> configured) {
-        Set<Binder> allConfigured = Collections.newSetFromMap(new IdentityHashMap<>());
-        allConfigured.addAll(configured);
-
-        Collection<Binder> binders = getBinder(configured);
-        if (!binders.isEmpty()) {
-            injectionManager.register(CompositeBinder.wrap(binders));
-            allConfigured.addAll(binders);
-        }
-
-        return allConfigured;
+    private Set<Binder> registerBinders(InjectionManager injectionManager, Set<Binder> registeredBinders) {
+        return register(injectionManager::register, registeredBinders, getBinders());
     }
 
-    private Collection<Binder> getBinder(Set<Binder> configured) {
+    private Set<Object> registerExternalObjects(InjectionManager injectionManager, Set<Object> registeredExternalObjects) {
+        return register(injectionManager::register, registeredExternalObjects, getExternalObjects(injectionManager));
+    }
+
+    private Collection<Binder> getBinders() {
         return componentBag.getInstances(ComponentBag.BINDERS_ONLY)
                 .stream()
                 .map(CAST_TO_BINDER)
-                .filter(binder -> !configured.contains(binder))
                 .collect(Collectors.toList());
     }
 
-    private void configureExternalObjects(InjectionManager injectionManager) {
-          componentBag.getInstances(model -> ComponentBag.EXTERNAL_ONLY.test(model, injectionManager))
-                  .forEach(injectionManager::register);
-          componentBag.getClasses(model -> ComponentBag.EXTERNAL_ONLY.test(model, injectionManager))
-                  .forEach(injectionManager::register);
+    private Collection<Object> getExternalObjects(InjectionManager injectionManager) {
+        List<Object> externalObjects = new ArrayList<>();
+        externalObjects.addAll(componentBag.getClasses(model -> ComponentBag.EXTERNAL_ONLY.test(model, injectionManager)));
+        externalObjects.addAll(componentBag.getInstances(model -> ComponentBag.EXTERNAL_ONLY.test(model, injectionManager)));
+        return externalObjects;
+    }
+
+    private <T> Set<T> register(Consumer<T> register, Set<T> registered, Collection<T> registrables) {
+
+        registrables.stream()
+                .filter(registrable -> !registered.contains(registrable))
+                .forEach(register);
+
+        Set<T> newRegistered = Collections.newSetFromMap(new IdentityHashMap<>());
+        newRegistered.addAll(registered);
+        newRegistered.addAll(registrables);
+        return newRegistered;
     }
 
     private void configureFeatures(InjectionManager injectionManager,
