@@ -62,7 +62,7 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>${servlet3.version}</version>
+            <version>${servlet4.version}</version>
         </dependency>
 
         <dependency>
