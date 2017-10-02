@@ -561,7 +561,7 @@ public final class SslConfigurator {
      * @return updated SSL configurator instance.
      */
     public SslConfigurator trustManagerFactoryProvider(String provider) {
-        this.trustManagerFactoryAlgorithm = provider;
+        this.trustManagerFactoryProvider = provider;
         return this;
     }
 
@@ -572,7 +572,7 @@ public final class SslConfigurator {
      * @return updated SSL configurator instance.
      */
     public SslConfigurator keyManagerFactoryProvider(String provider) {
-        this.keyManagerFactoryAlgorithm = provider;
+        this.keyManagerFactoryProvider = provider;
         return this;
     }
 
