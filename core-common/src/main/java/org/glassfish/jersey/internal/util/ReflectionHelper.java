@@ -905,9 +905,9 @@ public final class ReflectionHelper {
                 && Modifier.isPublic(method.getModifiers())) {
             final String methodName = method.getName();
 
-            if (methodName.startsWith("get")) {
+            if (methodName.startsWith("get") && methodName.length() > 3) {
                 return !void.class.equals(method.getReturnType());
-            } else if (methodName.startsWith("is")) {
+            } else if (methodName.startsWith("is") && methodName.length() > 2) {
                 return boolean.class.equals(method.getReturnType()) || Boolean.class.equals(method.getReturnType());
             }
         }
