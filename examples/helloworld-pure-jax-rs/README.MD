@@ -64,4 +64,4 @@ Run the example as follows:
 
 This deploys the example using [Grizzly](http://grizzly.java.net/) container. You can access the application at:
 
--   <http://localhost:8080/base/helloworld>
+-   <http://localhost:8080/helloworld>
