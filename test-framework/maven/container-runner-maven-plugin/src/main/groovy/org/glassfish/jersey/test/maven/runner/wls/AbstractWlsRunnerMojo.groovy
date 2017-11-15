@@ -43,7 +43,7 @@ package org.glassfish.jersey.test.maven.runner.wls
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Parameter
-import org.codehaus.gmaven.mojo.GroovyMojo
+import org.codehaus.gmavenplus.mojo.AbstractGroovyMojo
 import org.glassfish.jersey.test.maven.runner.RunnerMojo
 
 import java.nio.file.Paths
@@ -53,7 +53,7 @@ import java.nio.file.Paths
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
-abstract class AbstractWlsRunnerMojo extends GroovyMojo implements RunnerMojo {
+abstract class AbstractWlsRunnerMojo extends AbstractGroovyMojo implements RunnerMojo {
 
     /**
      * The value of {@code MW_HOME} directory

@@ -43,17 +43,16 @@ package org.glassfish.jersey.test.maven.runner.gf4
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Parameter
-import org.codehaus.gmaven.mojo.GroovyMojo
+import org.codehaus.gmavenplus.mojo.AbstractGroovyMojo
 import org.glassfish.jersey.test.maven.runner.RunnerMojo
 
 import java.nio.file.Paths
-
 /**
  * Abstract class for all Glassfish4 related mojos.
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
-abstract class AbstractGlassfishRunnerMojo extends GroovyMojo implements RunnerMojo {
+abstract class AbstractGlassfishRunnerMojo extends AbstractGroovyMojo implements RunnerMojo {
 
     /**
      * The {@code AS_HOME} environment variable value. If relative directory is specified (which is the default), it is derived

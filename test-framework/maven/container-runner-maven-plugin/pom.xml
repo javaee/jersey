@@ -120,15 +120,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.codehaus.gmaven</groupId>
-            <artifactId>gmaven-mojo-support</artifactId>
-            <version>1.5</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.codehaus.groovy</groupId>
-                    <artifactId>groovy-all-minimal</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.codehaus.gmavenplus</groupId>
+            <artifactId>gmavenplus-plugin</artifactId>
+            <version>1.6</version>
         </dependency>
 
         <dependency>

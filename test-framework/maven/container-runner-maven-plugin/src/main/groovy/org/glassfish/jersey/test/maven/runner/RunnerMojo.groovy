@@ -58,12 +58,6 @@ import java.util.regex.Pattern
 trait RunnerMojo implements SuperRunnerMojo {
 
     /**
-     * The Maven project to analyze.
-     */
-    @Parameter(defaultValue = "\${project}", readonly = true, name = "project")
-    MavenProject project
-
-    /**
      * The port where the container will listen for requests.
      */
     @Parameter(defaultValue = "18080", name = "port")

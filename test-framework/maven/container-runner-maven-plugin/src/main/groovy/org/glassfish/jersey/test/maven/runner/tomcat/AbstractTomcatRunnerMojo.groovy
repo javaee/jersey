@@ -43,18 +43,17 @@ package org.glassfish.jersey.test.maven.runner.tomcat
 import org.apache.maven.plugin.MojoExecutionException
 import org.apache.maven.plugin.MojoFailureException
 import org.apache.maven.plugins.annotations.Parameter
-import org.codehaus.gmaven.mojo.GroovyMojo
+import org.codehaus.gmavenplus.mojo.AbstractGroovyMojo
 import org.glassfish.jersey.test.maven.runner.RunnerMojo
 
 import java.nio.file.Paths
-
 /**
  * Abstract class for all Tomcat related mojos.
  *
  * @author Stepan Vavra (stepan.vavra at oracle.com)
  */
 
-abstract class AbstractTomcatRunnerMojo extends GroovyMojo implements RunnerMojo {
+abstract class AbstractTomcatRunnerMojo extends AbstractGroovyMojo implements RunnerMojo {
 
     /**
      * {@code CATALINA_HOME} environmental variable. If relative path specified, then it is appended to

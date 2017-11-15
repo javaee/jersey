@@ -57,4 +57,5 @@ class RedeployGlassfishMojo extends AbstractGlassfishRunnerMojo implements Commo
         redeployAndSendRequest("/runner/gf4/redeploy.sh", "/runner/gf4/stop.sh")
     }
 
+
 }
