@@ -1,4 +1,5 @@
-import io.undertow.Undertow;
+package org.glassfish.jersey.undertow;
+
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
@@ -9,11 +10,16 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 
+import javax.ws.rs.core.Application;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class UndertowHttpContainer implements HttpHandler, Container {
     private volatile ApplicationHandler appHandler;
+
+    UndertowHttpContainer(final Application application) {
+        this.appHandler = new ApplicationHandler(application);
+    }
 
     @Override
     public ApplicationHandler getApplicationHandler() {
@@ -41,10 +47,6 @@ public class UndertowHttpContainer implements HttpHandler, Container {
 
     @Override
     public void handleRequest(final HttpServerExchange exchange) throws Exception {
-        // FIXME: base path is basically the mount point. How do we handle this with undertow?
-        // FIXME: possibilities: get it at creation time (is this part of the xml), or use the exchange
-        // FIXME: might be servlet only though?
-
         // If we ware on the IO thread (where the raw HTTP request is processed),
         // we want to dispatch to a worker. This is the preferred approach.
         if (exchange.isInIoThread()) {
@@ -68,6 +70,7 @@ public class UndertowHttpContainer implements HttpHandler, Container {
         appHandler.handle(request);
     }
 
+    // TODO: No easy way to get the mount point without using Undertow servlets library
     private URI getBaseUri(final HttpServerExchange exchange) {
         try {
             return new URI(exchange.getRequestScheme(), null, exchange.getHostName(),
@@ -98,14 +101,5 @@ public class UndertowHttpContainer implements HttpHandler, Container {
         }
 
         return serverAddress;
-    }
-
-    public static void main(String[] args) {
-        Undertow server = Undertow.builder()
-                .addHttpListener(8080, "localhost")
-                .setHandler(new UndertowHttpContainer())
-                .build();
-
-        server.start();
     }
 }

@@ -1,3 +1,5 @@
+package org.glassfish.jersey.undertow;
+
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HttpString;
 import io.undertow.util.StatusCodes;

@@ -1,3 +1,5 @@
+package org.glassfish.jersey.undertow;
+
 import io.undertow.security.idm.Account;
 import io.undertow.server.HttpServerExchange;
 
