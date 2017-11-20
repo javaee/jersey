@@ -1,7 +1,7 @@
 import io.undertow.Undertow;
-import io.undertow.security.idm.Account;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.util.HeaderValues;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -9,10 +9,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 
-import javax.ws.rs.core.SecurityContext;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.Principal;
 
 public class UndertowHttpContainer implements HttpHandler, Container {
     private volatile ApplicationHandler appHandler;
@@ -33,7 +31,7 @@ public class UndertowHttpContainer implements HttpHandler, Container {
     }
 
     @Override
-    public void reload(ResourceConfig configuration) {
+    public void reload(final ResourceConfig configuration) {
         appHandler.onShutdown(this);
 
         appHandler = new ApplicationHandler(configuration);
@@ -42,19 +40,35 @@ public class UndertowHttpContainer implements HttpHandler, Container {
     }
 
     @Override
-    public void handleRequest(HttpServerExchange exchange) throws Exception {
+    public void handleRequest(final HttpServerExchange exchange) throws Exception {
         // FIXME: base path is basically the mount point. How do we handle this with undertow?
         // FIXME: possibilities: get it at creation time (is this part of the xml), or use the exchange
         // FIXME: might be servlet only though?
 
-        // TODO: include the host header
+        // If we ware on the IO thread (where the raw HTTP request is processed),
+        // we want to dispatch to a worker. This is the preferred approach.
+        if (exchange.isInIoThread()) {
+            exchange.dispatch(this);
+            return;
+        }
+
+        exchange.startBlocking();
         URI baseUri = getBaseUri(exchange);
         ContainerRequest request = new ContainerRequest(baseUri, getRequestUri(exchange, baseUri),
                 exchange.getRequestMethod().toString(), new UndertowSecurityContext(exchange),
                 new MapPropertiesDelegate());
+
+        request.setEntityStream(exchange.getInputStream());
+        request.setWriter(new UndertowResponseWriter(exchange));
+        for (HeaderValues values : exchange.getRequestHeaders()) {
+            String name = values.getHeaderName().toString();
+            request.headers(name, values.iterator());
+        }
+
+        appHandler.handle(request);
     }
 
-    private URI getBaseUri(HttpServerExchange exchange) {
+    private URI getBaseUri(final HttpServerExchange exchange) {
         try {
             return new URI(exchange.getRequestScheme(), null, exchange.getHostName(),
                     exchange.getHostPort(), "/", null, null);
@@ -63,7 +77,7 @@ public class UndertowHttpContainer implements HttpHandler, Container {
         }
     }
 
-    private URI getRequestUri(HttpServerExchange exchange, URI baseUri) {
+    private URI getRequestUri(final HttpServerExchange exchange, final URI baseUri) {
         String uri = getServerAddress(baseUri) + exchange.getRequestURI();
         String query = exchange.getQueryString();
         if (query != null && !query.isEmpty()) {
@@ -77,55 +91,13 @@ public class UndertowHttpContainer implements HttpHandler, Container {
         }
     }
 
-    private String getServerAddress(URI baseUri) {
+    private String getServerAddress(final URI baseUri) {
         String serverAddress = baseUri.toString();
         if (serverAddress.charAt(serverAddress.length() - 1) == '/') {
             return serverAddress.substring(0, serverAddress.length() - 1);
         }
 
         return serverAddress;
-    }
-
-    private static final class UndertowSecurityContext implements SecurityContext {
-        private HttpServerExchange exchange;
-
-        UndertowSecurityContext(HttpServerExchange exchange) {
-            this.exchange = exchange;
-        }
-
-        @Override
-        public Principal getUserPrincipal() {
-            Account account = getAccount();
-            if (account != null) {
-                return account.getPrincipal();
-            }
-
-            return null;
-        }
-
-        @Override
-        public boolean isUserInRole(String role) {
-            Account account = getAccount();
-            return account != null && account.getRoles().contains(role);
-        }
-
-        @Override
-        public boolean isSecure() {
-            return exchange.isSecure();
-        }
-
-        @Override
-        public String getAuthenticationScheme() {
-            return exchange.getSecurityContext().getMechanismName();
-        }
-
-        private Account getAccount() {
-            if (exchange.getSecurityContext() != null) {
-                return exchange.getSecurityContext().getAuthenticatedAccount();
-            }
-
-            return null;
-        }
     }
 
     public static void main(String[] args) {
