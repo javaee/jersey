@@ -45,59 +45,55 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.glassfish.jersey</groupId>
+        <groupId>org.glassfish.jersey.containers</groupId>
         <artifactId>project</artifactId>
         <version>2.26</version>
     </parent>
 
-    <groupId>org.glassfish.jersey.containers</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-containers</name>
+    <artifactId>jersey-container-undertow-http</artifactId>
+    <packaging>jar</packaging>
+    <name>jersey-container-undertow-http</name>
 
-    <description>Jersey container providers umbrella project module</description>
-
-    <modules>
-        <module>glassfish</module>
-        <module>grizzly2-http</module>
-        <module>grizzly2-servlet</module>
-        <module>jdk-http</module>
-        <module>jersey-servlet-core</module>
-        <module>jersey-servlet</module>
-        <module>jetty-http</module>
-        <module>jetty-servlet</module>
-        <module>netty-http</module>
-        <module>simple-http</module>
-        <module>undertow-http</module>
-    </modules>
+    <description>Undertow Http Container</description>
 
     <dependencies>
         <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-server</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.inject</groupId>
-            <artifactId>jersey-hk2</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
+            <groupId>io.undertow</groupId>
+            <artifactId>undertow-core</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.sun.istack</groupId>
+                <artifactId>maven-istack-commons-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
+        </plugins>
+
+        <resources>
+            <resource>
+                <directory>${basedir}/src/main/java</directory>
+                <includes>
+                    <include>META-INF/**/*</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>${basedir}/src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
+
 </project>
