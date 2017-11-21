@@ -20,7 +20,10 @@ class UndertowResponseWriter implements ContainerResponseWriter {
     }
 
     @Override
-    public OutputStream writeResponseStatusAndHeaders(final long contentLength, final ContainerResponse context) throws ContainerException {
+    public OutputStream writeResponseStatusAndHeaders(
+            final long contentLength,
+            final ContainerResponse context) throws ContainerException {
+
         exchange.setStatusCode(context.getStatus());
 
         Map<String, List<String>> headers = context.getStringHeaders();

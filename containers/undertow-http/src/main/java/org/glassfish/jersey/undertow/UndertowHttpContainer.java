@@ -64,7 +64,9 @@ public class UndertowHttpContainer implements HttpHandler, Container {
         request.setWriter(new UndertowResponseWriter(exchange));
         for (HeaderValues values : exchange.getRequestHeaders()) {
             String name = values.getHeaderName().toString();
-            request.headers(name, values.iterator());
+            for (String value : values) {
+                request.header(name, value);
+            }
         }
 
         appHandler.handle(request);
