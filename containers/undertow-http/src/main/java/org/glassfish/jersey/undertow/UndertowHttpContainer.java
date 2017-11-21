@@ -14,6 +14,11 @@ import javax.ws.rs.core.Application;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+/**
+ * Undertow {@code Container} implementation based on Undertow's {@link io.undertow.server.HttpHandler}.
+ *
+ * @author Jonathan Como (jonathan.como at gmail.com)
+ */
 public class UndertowHttpContainer implements HttpHandler, Container {
     private volatile ApplicationHandler appHandler;
 

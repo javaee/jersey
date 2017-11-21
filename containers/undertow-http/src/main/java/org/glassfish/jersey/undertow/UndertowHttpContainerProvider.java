@@ -6,6 +6,11 @@ import org.glassfish.jersey.server.spi.ContainerProvider;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Application;
 
+/**
+ * Container provider for containers based on Undertow Server {@link io.undertow.Undertow}.
+ *
+ * @author Jonathan Como (jonathan.como at gmail.com)
+ */
 public final class UndertowHttpContainerProvider implements ContainerProvider {
 
     @Override
