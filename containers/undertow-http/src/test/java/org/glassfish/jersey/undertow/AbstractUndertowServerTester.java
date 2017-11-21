@@ -54,13 +54,13 @@ public abstract class AbstractUndertowServerTester {
         config.register(new LoggingFeature(LOGGER, LoggingFeature.Verbosity.PAYLOAD_ANY));
         final URI baseUri = getBaseUri();
         server = UndertowHttpContainerFactory.createServer(baseUri, config);
-        LOGGER.log(Level.INFO, "Jetty-http server started on base uri: " + baseUri);
+        LOGGER.log(Level.INFO, "Undertow-http server started on base uri: " + baseUri);
     }
 
     void startServer(ResourceConfig config) {
         final URI baseUri = getBaseUri();
         server = UndertowHttpContainerFactory.createServer(baseUri, config);
-        LOGGER.log(Level.INFO, "Jetty-http server started on base uri: " + baseUri);
+        LOGGER.log(Level.INFO, "Undertow-http server started on base uri: " + baseUri);
     }
 
     private URI getBaseUri() {
@@ -71,7 +71,7 @@ public abstract class AbstractUndertowServerTester {
         try {
             server.stop();
             server = null;
-            LOGGER.log(Level.INFO, "Jetty-http server stopped.");
+            LOGGER.log(Level.INFO, "Undertow-http server stopped.");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
