@@ -18,7 +18,11 @@ public class UndertowHttpContainer implements HttpHandler, Container {
     private volatile ApplicationHandler appHandler;
 
     UndertowHttpContainer(final Application application) {
-        this.appHandler = new ApplicationHandler(application);
+        appHandler = new ApplicationHandler(application);
+
+        // No lifecycle hooks for Undertow's server, so we do this for
+        // completeness but not accuracy.
+        appHandler.onStartup(this);
     }
 
     @Override
