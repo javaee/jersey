@@ -1876,7 +1876,7 @@
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>
         <jettison.version>1.3.7</jettison.version> <!-- TODO: 1.3.8 doesn't work; AbstractJsonTest complexBeanWithAttributes -->
         <jetty.plugin.version>6.1.26</jetty.plugin.version>
-        <jetty.version>9.4.3.v20170317</jetty.version>
+        <jetty.version>9.4.7.v20170914</jetty.version>
         <jetty.servlet.api.25.version>6.1.14</jetty.servlet.api.25.version>
         <jmh.version>1.10.2</jmh.version>
         <jmockit.version>1.18</jmockit.version>
