@@ -87,10 +87,29 @@
 
     <developers>
         <developer>
-            <name>Pavel Bucek</name>
+            <name>Roman Grigoriadi</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com/</organizationUrl>
-            <url>https://blogs.oracle.com/PavelBucek</url>
+        </developer>
+        <developer>
+            <name>Lukas Jungmann</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Dmitry Kornilov</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Tomas Kraus</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Tomas Langer</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
         <developer>
             <name>Santiago Pericas-Geertsen</name>
@@ -98,42 +117,44 @@
             <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
         <developer>
-            <name>Marek Potociar</name>
+            <name>Jan Supol</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com/</organizationUrl>
-        </developer>
-        <developer>
-            <name>Libor Kramolis</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
-        </developer>
-        <developer>
-            <name>Adam Lindenthal</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
-        </developer>
-        <developer>
-            <name>Stepan Vavra</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
         </developer>
     </developers>
 
     <contributors>
         <contributor>
-            <name>Jakub Podlesak</name>
+            <name>Petr Bouda</name>
+        </contributor>
+        <contributor>
+            <name>Pavel Bucek</name>
             <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com/</organizationUrl>
+            <url>https://blogs.oracle.com/PavelBucek</url>
         </contributor>
         <contributor>
             <name>Michal Gajdos</name>
             <url>http://blog.dejavu.sk</url>
         </contributor>
         <contributor>
-            <name>Petr Bouda</name>
+            <name>Petr Janouch</name>
         </contributor>
         <contributor>
-            <name>Petr Janouch</name>
+            <name>Libor Kramolis</name>
+        </contributor>
+        <contributor>
+            <name>Adam Lindenthal</name>
+        </contributor>
+        <contributor>
+            <name>Jakub Podlesak</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </contributor>
+        <contributor>
+            <name>Marek Potociar</name>
+        </contributor>
+        <contributor>
+            <name>Stepan Vavra</name>
         </contributor>
     </contributors>
 
