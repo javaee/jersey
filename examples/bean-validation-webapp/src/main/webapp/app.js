@@ -42,13 +42,13 @@
 
 /* App Module */
 
-var contact = angular.module('contact', ['contactServices', 'ngResource']).
+var contact = angular.module('contact', ['contactServices', 'ngRoute']).
     config(
-        ['$routeProvider', function($routeProvider) {
+         function($routeProvider) {
             $routeProvider.
                 when('/contact', {templateUrl: 'contact.html', controller: ContactController}).
                 /*when('/contact/:contactId', {templateUrl: 'contact-detail.html', controller: ContactController}).*/
 
                 otherwise({redirectTo: '/contact'});
-        }]
+        }
     );

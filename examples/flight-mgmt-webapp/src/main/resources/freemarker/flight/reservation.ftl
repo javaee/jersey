@@ -89,8 +89,8 @@
         </div>
     </div>
 </div>
-<script src="/js/bootstrap.min.js"></script>
-<script src="/js/jquery-1.3.2.min.js"></script>
+<script src="/js/bootstrap.js"></script>
+<script src="/js/jquery-1.12.4.min.js"></script>
 <script src="/js/jquery.barcode.0.3.js"></script>
 <script>
     $(document).ready(function () {

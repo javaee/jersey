@@ -128,6 +128,5 @@ This examples is using following (3-rd party) front-end frameworks:
 -   [Developer guide](http://docs.angularjs.org/guide)
 
 **Bootstrap** by Twitter - front-end HTML/CSS/JS framework
--   [Homepage](http://twitter.github.com/bootstrap)
--   [Getting
-    started](http://twitter.github.com/bootstrap/getting-started.html)
+-   [Homepage](https://getbootstrap.com/)
+-   [Getting started](https://getbootstrap.com/docs/4.0/getting-started/introduction/)

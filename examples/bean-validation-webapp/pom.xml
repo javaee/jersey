@@ -78,7 +78,23 @@
             <!-- Run the application using "mvn jetty:run" -->
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
-                <artifactId>maven-jetty-plugin</artifactId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <configuration>
+                    <scanIntervalSeconds>5</scanIntervalSeconds>
+                    <stopPort>9999</stopPort>
+                    <stopKey>STOP</stopKey>
+                    <webApp>
+                        <contextPath>/bean-validation-webapp</contextPath>
+                        <webInfIncludeJarPattern>.*/.*jersey-[^/]\.jar$</webInfIncludeJarPattern>
+                    </webApp>
+                    <war>${project.build.directory}/${project.build.finalName}.war</war>
+                    <connectors>
+                        <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+                            <port>8080</port>
+                            <maxIdleTime>60000</maxIdleTime>
+                        </connector>
+                    </connectors>
+                </configuration>
             </plugin>
         </plugins>
     </build>

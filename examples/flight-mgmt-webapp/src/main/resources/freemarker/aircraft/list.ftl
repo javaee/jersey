@@ -99,6 +99,6 @@
         </div>
     </div>
 </div>
-<script src="/js/bootstrap.min.js"></script>
+<script src="/js/bootstrap.js"></script>
 </body>
 </html>
