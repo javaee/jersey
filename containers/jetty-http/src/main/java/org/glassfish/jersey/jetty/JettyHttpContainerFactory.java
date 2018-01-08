@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,13 +45,12 @@ import java.util.concurrent.ThreadFactory;
 
 import javax.ws.rs.ProcessingException;
 
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.jetty.internal.LocalizationMessages;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -62,8 +61,6 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
-
-import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 
 /**
  * Factory for creating and starting Jetty server handlers. This returns
@@ -173,8 +170,7 @@ public final class JettyHttpContainerFactory {
      *                      are ignored If the URI port is not present then port 143 will be
      *                      used. The URI path, query and fragment components are ignored.
      * @param config        the resource configuration.
-     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
-     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param parentContext DI provider specific context with application's registered bindings.
      * @param start         if set to false, server will not get started, this allows end users to set
      *                      additional properties on the underlying listener.
      * @return newly created {@link Server}.
@@ -182,12 +178,11 @@ public final class JettyHttpContainerFactory {
      * @throws ProcessingException      in case of any failure when creating a new Jetty {@code Server} instance.
      * @throws IllegalArgumentException if {@code uri} is {@code null}.
      * @see JettyHttpContainer
-     * @see org.glassfish.hk2.api.ServiceLocator
      * @since 2.12
      */
     public static Server createServer(final URI uri, final ResourceConfig config, final boolean start,
-                                      final ServiceLocator parentLocator) {
-        return createServer(uri, null, new JettyHttpContainer(config, parentLocator), start);
+                                      final Object parentContext) {
+        return createServer(uri, null, new JettyHttpContainer(config, parentContext), start);
     }
 
 
@@ -201,18 +196,16 @@ public final class JettyHttpContainerFactory {
      *                      are ignored If the URI port is not present then port 143 will be
      *                      used. The URI path, query and fragment components are ignored.
      * @param config        the resource configuration.
-     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
-     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param parentContext DI provider specific context with application's registered bindings.
      * @return newly created {@link Server}.
      *
      * @throws ProcessingException      in case of any failure when creating a new Jetty {@code Server} instance.
      * @throws IllegalArgumentException if {@code uri} is {@code null}.
      * @see JettyHttpContainer
-     * @see org.glassfish.hk2.api.ServiceLocator
      * @since 2.12
      */
-    public static Server createServer(final URI uri, final ResourceConfig config, final ServiceLocator parentLocator) {
-        return createServer(uri, null, new JettyHttpContainer(config, parentLocator), true);
+    public static Server createServer(final URI uri, final ResourceConfig config, final Object parentContext) {
+        return createServer(uri, null, new JettyHttpContainer(config, parentContext), true);
     }
 
     /**

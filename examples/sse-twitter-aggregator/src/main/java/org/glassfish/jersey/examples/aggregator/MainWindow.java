@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -105,7 +105,8 @@ public class MainWindow extends javax.swing.JFrame {
             dataAggregators.add(new TwitterAggregator(colorToString(twitterColorLabel.getBackground())));
         }
         if (testCheckbox.isSelected()) {
-            dataAggregators.add(new TestAggregator(colorToString(testColorLabel.getBackground())));
+            dataAggregators.add(new TestAggregatorJersey(colorToString(testColorLabel.getBackground())));
+            dataAggregators.add(new TestAggregatorJaxRs(colorToString(testColorLabel.getBackground())));
         }
     }
 
@@ -167,46 +168,28 @@ public class MainWindow extends javax.swing.JFrame {
             start(keywordsBuilder.toString(), new DataListener() {
                 @Override
                 public void onStart() {
-                    EventQueue.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            connectionStatusLabel.setText("Connected.");
-                        }
-                    });
+                    EventQueue.invokeLater(() -> connectionStatusLabel.setText("Connected."));
                 }
 
                 @Override
                 public void onMessage(final Message message) {
-                    EventQueue.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            messagesArea.append(message.getText() + "\n\n");
-                        }
-                    });
+                    EventQueue.invokeLater(() -> messagesArea.append(message.getText() + "\n\n"));
                 }
 
                 @Override
                 public void onError() {
-                    EventQueue.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            connectionStatusLabel.setText("Connection Error!");
-                            receiveMessages.set(false);
-                            startStopButton.setText("Start");
-                            newKeywordField.setEnabled(true);
-                            addButton.setEnabled(true);
-                        }
+                    EventQueue.invokeLater(() -> {
+                        connectionStatusLabel.setText("Connection Error!");
+                        receiveMessages.set(false);
+                        startStopButton.setText("Start");
+                        newKeywordField.setEnabled(true);
+                        addButton.setEnabled(true);
                     });
                 }
 
                 @Override
                 public void onComplete() {
-                    EventQueue.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            connectionStatusLabel.setText("Disconnected.");
-                        }
-                    });
+                    EventQueue.invokeLater(() -> connectionStatusLabel.setText("Disconnected."));
                 }
             });
         }
@@ -232,41 +215,11 @@ public class MainWindow extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-         */
-        //        try {
-        //            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-        //                if ("Nimbus".equals(info.getName())) {
-        //                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-        //                    break;
-        //                }
-        //            }
-        //        } catch (ClassNotFoundException ex) {
-        //            java.util.logging.Logger.getLogger(MessageAggregator.class.getName()).log(java.util.logging.Level.SEVERE,
-        // null, ex);
-        //        } catch (InstantiationException ex) {
-        //            java.util.logging.Logger.getLogger(MessageAggregator.class.getName()).log(java.util.logging.Level.SEVERE,
-        // null, ex);
-        //        } catch (IllegalAccessException ex) {
-        //            java.util.logging.Logger.getLogger(MessageAggregator.class.getName()).log(java.util.logging.Level.SEVERE,
-        // null, ex);
-        //        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-        //            java.util.logging.Logger.getLogger(MessageAggregator.class.getName()).log(java.util.logging.Level.SEVERE,
-        // null, ex);
-        //        }
-        //</editor-fold>
-
         /* Create and display the form */
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                final MainWindow messageAggregator = new MainWindow();
-                messageAggregator.setLocationRelativeTo(null);
-                messageAggregator.setVisible(true);
-            }
+        EventQueue.invokeLater(() -> {
+            final MainWindow messageAggregator = new MainWindow();
+            messageAggregator.setLocationRelativeTo(null);
+            messageAggregator.setVisible(true);
         });
     }
 

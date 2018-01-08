@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,8 +67,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-
-import org.glassfish.hk2.api.Factory;
 
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -158,9 +156,9 @@ public final class SourceProvider {
     @Singleton
     public static final class DomSourceReader implements MessageBodyReader<DOMSource> {
 
-        private final Factory<DocumentBuilderFactory> dbf;
+        private final Provider<DocumentBuilderFactory> dbf;
 
-        public DomSourceReader(@Context Factory<DocumentBuilderFactory> dbf) {
+        public DomSourceReader(@Context Provider<DocumentBuilderFactory> dbf) {
             this.dbf = dbf;
         }
 
@@ -178,7 +176,7 @@ public final class SourceProvider {
                 MultivaluedMap<String, String> httpHeaders,
                 InputStream entityStream) throws IOException {
             try {
-                Document d = dbf.provide().newDocumentBuilder().parse(entityStream);
+                Document d = dbf.get().newDocumentBuilder().parse(entityStream);
                 return new DOMSource(d);
             } catch (SAXParseException ex) {
                 throw new BadRequestException(ex);
@@ -198,11 +196,11 @@ public final class SourceProvider {
     @Singleton
     public static final class SourceWriter implements MessageBodyWriter<Source> {
 
-        private final Factory<SAXParserFactory> saxParserFactory;
-        private final Factory<TransformerFactory> transformerFactory;
+        private final Provider<SAXParserFactory> saxParserFactory;
+        private final Provider<TransformerFactory> transformerFactory;
 
-        public SourceWriter(@Context Factory<SAXParserFactory> spf,
-                @Context Factory<TransformerFactory> tf) {
+        public SourceWriter(@Context Provider<SAXParserFactory> spf,
+                @Context Provider<TransformerFactory> tf) {
             this.saxParserFactory = spf;
             this.transformerFactory = tf;
         }
@@ -228,11 +226,11 @@ public final class SourceProvider {
                     inputStream.setCharacterStream(inputStream.getCharacterStream());
                     inputStream.setPublicId(stream.getPublicId());
                     inputStream.setSystemId(source.getSystemId());
-                    source = new SAXSource(saxParserFactory.provide().newSAXParser().getXMLReader(), inputStream);
+                    source = new SAXSource(saxParserFactory.get().newSAXParser().getXMLReader(), inputStream);
                 }
 
                 StreamResult sr = new StreamResult(entityStream);
-                transformerFactory.provide().newTransformer().transform(source, sr);
+                transformerFactory.get().newTransformer().transform(source, sr);
 
             } catch (SAXException ex) {
                 throw new InternalServerErrorException(ex);

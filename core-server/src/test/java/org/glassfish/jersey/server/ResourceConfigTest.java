@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server;
 
 import java.io.File;
@@ -50,14 +51,13 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.server.config.innerstatic.InnerStaticClass;
 import org.glassfish.jersey.server.config.toplevel.PublicRootResourceClass;
 import org.glassfish.jersey.server.config.toplevelinnerstatic.PublicRootResourceInnerStaticClass;
 import org.glassfish.jersey.server.internal.scanning.PackageNamesScanner;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Test;
 import static org.glassfish.jersey.server.JarUtils.createJarFile;
@@ -122,7 +122,7 @@ public class ResourceConfigTest {
         final ResourceConfig resourceConfig = new MyResourceConfig2(rcId);
         final ApplicationHandler handler = new ApplicationHandler(resourceConfig);
 
-        assertSame(resourceConfig, handler.getServiceLocator().getService(Application.class));
+        assertSame(resourceConfig, handler.getInjectionManager().getInstance(Application.class));
 
         final ContainerResponse r = handler.apply(RequestContextBuilder.from("/", "/resource?id=" + rcId, "GET").build()).get();
         assertEquals(200, r.getStatus());

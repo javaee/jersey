@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,30 +50,25 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.CompositeBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
-
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerThread;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.Binder;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.internal.inject.PerThread;
 
 import org.junit.Before;
 import org.junit.Test;
-
 import org.xml.sax.InputSource;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
@@ -82,7 +77,7 @@ import static org.junit.Assert.assertSame;
  * @author Martin Matula
  */
 public class SaxParserFactoryInjectionProviderTest {
-    private ServiceLocator locator;
+    private InjectionManager injectionManager;
     private SAXParserFactory f1;
     private SAXParserFactory f2;
     private SAXParserFactory ff1;
@@ -90,7 +85,7 @@ public class SaxParserFactoryInjectionProviderTest {
 
     @Before
     public void setUp() {
-        locator = createServiceLocator();
+        injectionManager = createInjectionManager();
     }
 
     private static final Configuration EMPTY_CONFIG = new Configuration() {
@@ -151,33 +146,23 @@ public class SaxParserFactoryInjectionProviderTest {
         }
     };
 
-    public static ServiceLocator createServiceLocator(Binder... customBinders) {
+    public static InjectionManager createInjectionManager(Binder... customBinders) {
         Binder[] binders = new Binder[customBinders.length + 2];
 
         binders[0] = new AbstractBinder() {
             @Override
             protected void configure() {
-                bindFactory(new Factory<Configuration>() {
-                    @Override
-                    public Configuration provide() {
-                        return EMPTY_CONFIG;
-                    }
-
-                    @Override
-                    public void dispose(Configuration instance) {
-                        //not used
-                    }
-                }).to(Configuration.class);
-
+                bindFactory(() -> EMPTY_CONFIG).to(Configuration.class);
                 bindFactory(SaxParserFactoryInjectionProvider.class, Singleton.class)
                         .to(SAXParserFactory.class)
                         .in(PerThread.class);
                 bindAsContract(MySPFProvider.class).in(Singleton.class);
             }
         };
-        binders[1] = new ContextInjectionResolver.Binder();
         System.arraycopy(customBinders, 0, binders, 2, customBinders.length);
-        return Injections.createLocator(binders);
+        InjectionManager injectionManager = Injections.createInjectionManager(CompositeBinder.wrap(binders));
+        injectionManager.completeRegistration();
+        return injectionManager;
     }
 
     @Test
@@ -245,11 +230,11 @@ public class SaxParserFactoryInjectionProviderTest {
     }
 
     private SAXParserFactory getSPF() {
-        return locator.getService(SAXParserFactory.class);
+        return injectionManager.getInstance(SAXParserFactory.class);
     }
 
     private SAXParserFactory getSPFViaProvider() {
-        return locator.<MySPFProvider>getService(MySPFProvider.class).getSPF();
+        return injectionManager.<MySPFProvider>getInstance(MySPFProvider.class).getSPF();
     }
 
     /**

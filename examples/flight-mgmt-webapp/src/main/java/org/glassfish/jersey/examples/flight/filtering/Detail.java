@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,9 +45,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.glassfish.jersey.internal.inject.AnnotationLiteral;
 import org.glassfish.jersey.message.filtering.EntityFiltering;
-
-import org.glassfish.hk2.api.AnnotationLiteral;
 
 /**
  * Entity filtering annotation to specify the detailed view scope.
@@ -63,7 +62,7 @@ public @interface Detail {
     /**
      * Factory class for creating instances of {@code Detail} annotation.
      */
-    public static class Factory extends AnnotationLiteral<Detail> implements Detail {
+    class Factory extends AnnotationLiteral<Detail> implements Detail {
 
         private Factory() {
         }

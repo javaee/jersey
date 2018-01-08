@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,8 +43,7 @@ import javax.annotation.PostConstruct;
 import javax.interceptor.InvocationContext;
 
 import org.glassfish.jersey.ext.cdi1x.internal.CdiComponentProvider;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * EJB interceptor to inject Jersey specific stuff into EJB beans.
@@ -53,22 +52,22 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 public final class EjbComponentInterceptor {
 
-    private final ServiceLocator locator;
+    private final InjectionManager injectionManager;
 
     /**
-     * Create new EJB component locator.
+     * Create new EJB component injection manager.
      *
-     * @param locator HK2 service locator.
+     * @param injectionManager injection manager.
      */
-    public EjbComponentInterceptor(final ServiceLocator locator) {
-        this.locator = locator;
+    public EjbComponentInterceptor(final InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
     }
 
     @PostConstruct
     private void inject(final InvocationContext context) throws Exception {
 
         final Object beanInstance = context.getTarget();
-        locator.inject(beanInstance, CdiComponentProvider.CDI_CLASS_ANALYZER);
+        injectionManager.inject(beanInstance, CdiComponentProvider.CDI_CLASS_ANALYZER);
 
         // Invoke next interceptor in chain
         context.proceed();

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.ext.cdi1x.internal;
 
 import java.lang.annotation.Annotation;
@@ -52,7 +53,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Qualifier;
 
 import org.glassfish.jersey.ext.cdi1x.internal.spi.BeanManagerProvider;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
@@ -106,14 +107,14 @@ public final class CdiUtil {
     }
 
     /**
-     * Create new instance of {@link org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager}. Method first tries to lookup
+     * Create new instance of {@link InjectionManagerStore}. Method first tries to lookup
      * available manager via {@code META-INF/services} and if not found a new instance of default one is returned.
      *
-     * @return an instance of locator manager.
+     * @return an instance of injection manager store.
      */
-    static Hk2LocatorManager createHk2LocatorManager() {
-        final Hk2LocatorManager manager = lookupService(Hk2LocatorManager.class);
-        return manager != null ? manager : new SingleHk2LocatorManager();
+    static InjectionManagerStore createHk2InjectionManagerStore() {
+        final InjectionManagerStore manager = lookupService(InjectionManagerStore.class);
+        return manager != null ? manager : new SingleInjectionManagerStore();
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,11 +40,6 @@
 
 package org.glassfish.jersey.gf.ejb.internal;
 
-import com.sun.ejb.containers.BaseContainer;
-import com.sun.ejb.containers.EjbContainerUtil;
-import com.sun.ejb.containers.EjbContainerUtilImpl;
-import com.sun.enterprise.config.serverbeans.Application;
-import com.sun.enterprise.config.serverbeans.Applications;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -62,29 +57,40 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.ext.ExceptionMapper;
+
 import javax.annotation.Priority;
 import javax.ejb.Local;
 import javax.ejb.Remote;
 import javax.inject.Singleton;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.ws.rs.ext.ExceptionMapper;
-import org.glassfish.ejb.deployment.descriptor.EjbBundleDescriptorImpl;
-import org.glassfish.ejb.deployment.descriptor.EjbDescriptor;
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
-import org.glassfish.internal.data.ApplicationInfo;
-import org.glassfish.internal.data.ApplicationRegistry;
-import org.glassfish.internal.data.ModuleInfo;
-import org.glassfish.jersey.internal.inject.Injections;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
+
+import org.glassfish.ejb.deployment.descriptor.EjbBundleDescriptorImpl;
+import org.glassfish.ejb.deployment.descriptor.EjbDescriptor;
+import org.glassfish.internal.data.ApplicationInfo;
+import org.glassfish.internal.data.ApplicationRegistry;
+import org.glassfish.internal.data.ModuleInfo;
+
+import com.sun.ejb.containers.BaseContainer;
+import com.sun.ejb.containers.EjbContainerUtil;
+import com.sun.ejb.containers.EjbContainerUtilImpl;
+import com.sun.enterprise.config.serverbeans.Application;
+import com.sun.enterprise.config.serverbeans.Applications;
 
 /**
  * EJB component provider.
@@ -106,7 +112,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
     /**
      * HK2 factory to provide EJB components obtained via JNDI lookup.
      */
-    private static class EjbFactory<T> implements Factory<T> {
+    private static class EjbFactory<T> implements Supplier<T> {
 
         final InitialContext ctx;
         final Class<T> clazz;
@@ -114,18 +120,13 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
         @SuppressWarnings("unchecked")
         @Override
-        public T provide() {
+        public T get() {
             try {
                 return (T) lookup(ctx, clazz, clazz.getSimpleName(), ejbProvider);
             } catch (NamingException ex) {
                 Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
-        }
-
-        @Override
-        public void dispose(T instance) {
-            // do nothing
         }
 
         public EjbFactory(Class<T> rawType, InitialContext ctx, EjbComponentProvider ejbProvider) {
@@ -144,15 +145,16 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
         add("javax.ejb.Singleton");
     }});
 
-    private ServiceLocator locator = null;
+    private InjectionManager injectionManager = null;
 
     // ComponentProvider
     @Override
-    public void initialize(final ServiceLocator locator) {
-        this.locator = locator;
-        final DynamicConfiguration configuration = Injections.getConfiguration(locator);
-        Injections.addBinding(Injections.newBinder(this).to(ResourceMethodInvocationHandlerProvider.class), configuration);
-        configuration.commit();
+    public void initialize(final InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
+
+        InstanceBinding<EjbComponentProvider> descriptor = Bindings.service(EjbComponentProvider.this)
+                .to(ResourceMethodInvocationHandlerProvider.class);
+        this.injectionManager.register(descriptor);
     }
 
     private ApplicationInfo getApplicationInfo(EjbContainerUtil ejbUtil) throws NamingException {
@@ -190,7 +192,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
     private void registerEjbInterceptor() {
         try {
-            final Object interceptor = new EjbComponentInterceptor(locator);
+            final Object interceptor = new EjbComponentInterceptor(injectionManager);
             initialContext = getInitialContext();
             final EjbContainerUtil ejbUtil = EjbContainerUtilImpl.getInstance();
             final ApplicationInfo appInfo = getApplicationInfo(ejbUtil);
@@ -270,7 +272,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             LOGGER.fine(LocalizationMessages.EJB_CLASS_BEING_CHECKED(component));
         }
 
-        if (locator == null) {
+        if (injectionManager == null) {
             throw new IllegalStateException(LocalizationMessages.EJB_COMPONENT_PROVIDER_NOT_INITIALIZED_PROPERLY());
         }
 
@@ -282,18 +284,10 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             registerEjbInterceptor();
         }
 
-        DynamicConfiguration dc = Injections.getConfiguration(locator);
-
-        final ServiceBindingBuilder bindingBuilder = Injections.newFactoryBinder(new EjbFactory(component, initialContext, this));
-
-        bindingBuilder.to(component);
-        for (Class contract : providerContracts) {
-            bindingBuilder.to(contract);
-        }
-
-        Injections.addBinding(bindingBuilder, dc);
-
-        dc.commit();
+        Binding binding = Bindings.supplier(new EjbFactory(component, initialContext, EjbComponentProvider.this))
+                .to(component)
+                .to(providerContracts);
+        injectionManager.register(binding);
 
         if (LOGGER.isLoggable(Level.CONFIG)) {
             LOGGER.config(LocalizationMessages.EJB_CLASS_BOUND_WITH_CDI(component));
@@ -308,9 +302,12 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
     }
 
     private void registerEjbExceptionMapper() {
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        Injections.addBinding(Injections.newBinder(EjbExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class), dc);
-        dc.commit();
+        injectionManager.register(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(EjbExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class);
+            }
+        });
     }
 
     private boolean isEjbComponent(Class<?> component) {

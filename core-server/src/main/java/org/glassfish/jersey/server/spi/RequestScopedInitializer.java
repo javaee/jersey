@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,10 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.spi;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * Custom initialization provider that is guaranteed to be run from within an active
@@ -54,8 +55,8 @@ public interface RequestScopedInitializer {
     /**
      * Perform request-scoped initialization.
      *
-     * @param locator current HK2 service locator instance configured in the
+     * @param injectionManager current injection manager instance configured in the
      *                 {@link org.glassfish.jersey.server.ApplicationHandler}.
      */
-    public void initialize(ServiceLocator locator);
+    public void initialize(InjectionManager injectionManager);
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,8 +46,8 @@ import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.CommonProperties;
 
-import org.glassfish.json.jaxrs.JsonStructureBodyReader;
-import org.glassfish.json.jaxrs.JsonStructureBodyWriter;
+import org.glassfish.json.jaxrs.JsonValueBodyReader;
+import org.glassfish.json.jaxrs.JsonValueBodyWriter;
 
 /**
  * {@link Feature} used to register JSON-P providers.
@@ -65,8 +65,8 @@ public class JsonProcessingFeature implements Feature {
 
         // Make sure JSON-P workers have higher priority than other Json providers (in case there is a need to use JSON-P and some
         // other provider in an application).
-        context.register(JsonStructureBodyReader.class, Priorities.USER + 1000);
-        context.register(JsonStructureBodyWriter.class, Priorities.USER + 1000);
+        context.register(JsonValueBodyReader.class, Priorities.USER + 1000);
+        context.register(JsonValueBodyWriter.class, Priorities.USER + 1000);
 
         return true;
     }

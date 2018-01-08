@@ -42,7 +42,7 @@ import static org.junit.Assert.fail;
 /**
  * JERSEY-2988 reproducer and JERSEY-2990 (duplicate of the previous one)
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class Jersey2988ITCase extends JerseyTest {
 

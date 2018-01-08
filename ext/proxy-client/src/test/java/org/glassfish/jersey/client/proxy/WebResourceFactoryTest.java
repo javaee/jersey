@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,6 +61,8 @@ import org.glassfish.jersey.test.TestProperties;
 import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -69,6 +71,7 @@ import static org.junit.Assert.assertTrue;
 public class WebResourceFactoryTest extends JerseyTest {
 
     private MyResourceIfc resource;
+    private MyResourceIfc resource2;
     private MyResourceIfc resourceWithXML;
 
     @Override
@@ -86,6 +89,7 @@ public class WebResourceFactoryTest extends JerseyTest {
     public void setUp() throws Exception {
         super.setUp();
         resource = WebResourceFactory.newResource(MyResourceIfc.class, target());
+        resource2 = WebResourceFactory.newResource(MyResourceIfc.class, target());
 
         final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>(1);
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML);
@@ -341,5 +345,17 @@ public class WebResourceFactoryTest extends JerseyTest {
         final String expected = target().path("myresource").toString();
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testHashCode() throws Exception {
+        int h1 = resource.hashCode();
+        int h2 = resource2.hashCode();
+        assertNotEquals("The hash codes should not match", h1, h2);
+    }
+
+    @Test
+    public void testEquals() {
+        assertFalse("The two resource instances should not be considered equals as they are unique", resource.equals(resource2));
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.ext.cdi1x.internal;
 
 import java.lang.annotation.Annotation;
@@ -56,8 +57,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
 
 import javax.annotation.ManagedBean;
 import javax.annotation.Priority;
@@ -84,29 +90,27 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Qualifier;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
 
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2InjectedTarget;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerInjectedTarget;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionTargetListener;
 import org.glassfish.jersey.ext.cdi1x.spi.Hk2CustomBoundTypesProvider;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.ForeignRequestScopeBridge;
-import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.SupplierInstanceBinding;
+import org.glassfish.jersey.internal.util.collection.Cache;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
-import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
-import org.glassfish.hk2.utilities.cache.Cache;
-import org.glassfish.hk2.utilities.cache.Computable;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -138,7 +142,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             }};
 
     /**
-     * Name to be used when binding CDI injectee skipping class analyzer to HK2 service locator.
+     * Name to be used when binding CDI injectee skipping class analyzer to HK2 service injection manager.
      */
     public static final String CDI_CLASS_ANALYZER = "CdiInjecteeSkippingClassAnalyzer";
 
@@ -155,39 +159,34 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     private final Set<Class<?>> requestScopedComponents = new HashSet<>();
 
 
-    private final Cache<Class<?>, Boolean> jaxRsComponentCache = new Cache<>(new Computable<Class<?>, Boolean>() {
+    private final Cache<Class<?>, Boolean> jaxRsComponentCache = new Cache<>(new Function<Class<?>, Boolean>() {
         @Override
-        public Boolean compute(final Class<?> clazz) {
+        public Boolean apply(final Class<?> clazz) {
             return Application.class.isAssignableFrom(clazz)
                     || Providers.isJaxRsProvider(clazz)
-                    || jaxRsResourceCache.compute(clazz);
+                    || jaxRsResourceCache.apply(clazz);
         }
     });
 
-    private final Cache<Class<?>, Boolean> jaxRsResourceCache = new Cache<>(new Computable<Class<?>, Boolean>() {
-        @Override
-        public Boolean compute(final Class<?> clazz) {
-            return Resource.from(clazz) != null;
-        }
-    });
+    private final Cache<Class<?>, Boolean> jaxRsResourceCache = new Cache<>(clazz -> Resource.from(clazz) != null);
 
     private final Hk2CustomBoundTypesProvider customHk2TypesProvider;
-    private final Hk2LocatorManager locatorManager;
+    private final InjectionManagerStore injectionManagerStore;
 
-    private volatile ServiceLocator locator;
-    private volatile BeanManager beanManager;
+    private volatile InjectionManager injectionManager;
+    private volatile javax.enterprise.inject.spi.BeanManager beanManager;
 
     private volatile Map<Class<?>, Set<Method>> methodsToSkip = new HashMap<>();
     private volatile Map<Class<?>, Set<Field>> fieldsToSkip = new HashMap<>();
 
     public CdiComponentProvider() {
         customHk2TypesProvider = CdiUtil.lookupService(Hk2CustomBoundTypesProvider.class);
-        locatorManager = CdiUtil.createHk2LocatorManager();
+        injectionManagerStore = CdiUtil.createHk2InjectionManagerStore();
     }
 
     @Override
-    public void initialize(final ServiceLocator locator) {
-        this.locator = locator;
+    public void initialize(final InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
         this.beanManager = CdiUtil.getBeanManager();
 
         if (beanManager != null) {
@@ -195,7 +194,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             final CdiComponentProvider extension = beanManager.getExtension(CdiComponentProvider.class);
 
             if (extension != null) {
-                extension.addLocator(this.locator);
+                extension.addInjectionManager(this.injectionManager);
 
                 this.fieldsToSkip = extension.getFieldsToSkip();
                 this.methodsToSkip = extension.getMethodsToSkip();
@@ -240,30 +239,26 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         /**
          * Internal cache to store CDI {@link InjectionPoint} to Jersey {@link Parameter} mapping.
          */
-        final Cache<InjectionPoint, Parameter> parameterCache = new Cache<>(new Computable<InjectionPoint, Parameter>() {
+        final Cache<InjectionPoint, Parameter> parameterCache = new Cache<>(injectionPoint -> {
+            final Annotated annotated = injectionPoint.getAnnotated();
+            final Class<?> clazz = injectionPoint.getMember().getDeclaringClass();
 
-            @Override
-            public Parameter compute(final InjectionPoint injectionPoint) {
-                final Annotated annotated = injectionPoint.getAnnotated();
-                final Class<?> clazz = injectionPoint.getMember().getDeclaringClass();
+            if (annotated instanceof AnnotatedParameter) {
 
-                if (annotated instanceof AnnotatedParameter) {
+                final AnnotatedParameter annotatedParameter = (AnnotatedParameter) annotated;
+                final AnnotatedCallable callable = annotatedParameter.getDeclaringCallable();
 
-                    final AnnotatedParameter annotatedParameter = (AnnotatedParameter) annotated;
-                    final AnnotatedCallable callable = annotatedParameter.getDeclaringCallable();
+                if (callable instanceof AnnotatedConstructor) {
 
-                    if (callable instanceof AnnotatedConstructor) {
+                    final AnnotatedConstructor ac = (AnnotatedConstructor) callable;
+                    final int position = annotatedParameter.getPosition();
+                    final List<Parameter> parameters = Parameter.create(clazz, clazz, ac.getJavaMember(), false);
 
-                        final AnnotatedConstructor ac = (AnnotatedConstructor) callable;
-                        final int position = annotatedParameter.getPosition();
-                        final List<Parameter> parameters = Parameter.create(clazz, clazz, ac.getJavaMember(), false);
-
-                        return parameters.get(position);
-                    }
+                    return parameters.get(position);
                 }
-
-                return null;
             }
+
+            return null;
         });
 
         /**
@@ -277,16 +272,18 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         @javax.enterprise.inject.Produces
         @JaxRsParamQualifier
         public String getParameterValue(final InjectionPoint injectionPoint, final BeanManager beanManager) {
-            final Parameter parameter = parameterCache.compute(injectionPoint);
+            final Parameter parameter = parameterCache.apply(injectionPoint);
 
             if (parameter != null) {
-                final ServiceLocator locator = beanManager.getExtension(CdiComponentProvider.class).getEffectiveLocator();
-                final Set<ValueFactoryProvider> providers = Providers.getProviders(locator, ValueFactoryProvider.class);
+                InjectionManager injectionManager =
+                        beanManager.getExtension(CdiComponentProvider.class).getEffectiveInjectionManager();
 
-                for (final ValueFactoryProvider vfp : providers) {
-                    final Factory<?> valueFactory = vfp.getValueFactory(parameter);
-                    if (valueFactory != null) {
-                        return (String) valueFactory.provide();
+                Set<ValueParamProvider> providers = Providers.getProviders(injectionManager, ValueParamProvider.class);
+                ContainerRequest containerRequest = injectionManager.getInstance(ContainerRequest.class);
+                for (ValueParamProvider vfp : providers) {
+                    Function<ContainerRequest, ?> paramValueSupplier = vfp.getValueProvider(parameter);
+                    if (paramValueSupplier != null) {
+                        return (String) paramValueSupplier.apply(containerRequest);
                     }
                 }
             }
@@ -317,29 +314,21 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             return false;
         }
 
-        final boolean isJaxRsResource = jaxRsResourceCache.compute(clazz);
-
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
+        final boolean isJaxRsResource = jaxRsResourceCache.apply(clazz);
 
         final Class<? extends Annotation> beanScopeAnnotation = CdiUtil.getBeanScope(clazz, beanManager);
         final boolean isRequestScoped = beanScopeAnnotation == RequestScoped.class
                                         || (beanScopeAnnotation == Dependent.class && isJaxRsResource);
 
-        Factory beanFactory = isRequestScoped
-                ? new RequestScopedCdiBeanHk2Factory(clazz, locator, beanManager, isCdiManaged)
-                : new GenericCdiBeanHk2Factory(clazz, locator, beanManager, isCdiManaged);
+        Supplier<AbstractCdiBeanSupplier> beanFactory = isRequestScoped
+                ? new RequestScopedCdiBeanSupplier(clazz, injectionManager, beanManager, isCdiManaged)
+                : new GenericCdiBeanSupplier(clazz, injectionManager, beanManager, isCdiManaged);
 
-        final ServiceBindingBuilder bindingBuilder =
-                    Injections.newFactoryBinder(beanFactory);
-
-        bindingBuilder.to(clazz);
+        SupplierInstanceBinding<AbstractCdiBeanSupplier> builder = Bindings.supplier(beanFactory).to(clazz);
         for (final Class contract : providerContracts) {
-            bindingBuilder.to(contract);
+            builder.to(contract);
         }
-
-        Injections.addBinding(bindingBuilder, dc);
-
-        dc.commit();
+        injectionManager.register(builder);
 
         if (isRequestScoped) {
             requestScopedComponents.add(clazz);
@@ -355,14 +344,12 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @Override
     public void done() {
         if (requestScopedComponents.size() > 0) {
-            final DynamicConfiguration dc = Injections.getConfiguration(locator);
-            Injections.addBinding(Injections.newBinder(new ForeignRequestScopeBridge() {
-                @Override
-                public Set<Class<?>> getRequestScopedComponents() {
-                    return requestScopedComponents;
-                }
-            }).to(ForeignRequestScopeBridge.class), dc);
-            dc.commit();
+            InstanceBinding<ForeignRequestScopeBridge> descriptor = Bindings
+                    .service((ForeignRequestScopeBridge) () -> requestScopedComponents)
+                    .to(ForeignRequestScopeBridge.class);
+
+            injectionManager.register(descriptor);
+
             if (LOGGER.isLoggable(Level.CONFIG)) {
                 LOGGER.config(LocalizationMessages.CDI_REQUEST_SCOPED_COMPONENTS_RECOGNIZED(
                         listElements(new StringBuilder().append("\n"), requestScopedComponents).toString()));
@@ -626,7 +613,8 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     @SuppressWarnings("unused")
-    private void beforeBeanDiscovery(@Observes final BeforeBeanDiscovery beforeBeanDiscovery, final BeanManager beanManager) {
+    private void beforeBeanDiscovery(@Observes final BeforeBeanDiscovery beforeBeanDiscovery,
+            final javax.enterprise.inject.spi.BeanManager beanManager) {
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(JaxRsParamProducer.class));
     }
 
@@ -646,9 +634,9 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             }
         }
 
-        Hk2InjectedCdiTarget target = null;
+        InjectionManagerInjectedCdiTarget target = null;
         if (isJerseyOrDependencyType(componentClass)) {
-            target = new Hk2InjectedCdiTarget(it) {
+            target = new InjectionManagerInjectedCdiTarget(it) {
 
                 @Override
                 public Set<InjectionPoint> getInjectionPoints() {
@@ -659,7 +647,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             };
         } else if (isJaxRsComponentType(componentClass)
                 || jaxrsInjectableTypes.contains(event.getAnnotatedType().getBaseType())) {
-            target = new Hk2InjectedCdiTarget(it) {
+            target = new InjectionManagerInjectedCdiTarget(it) {
 
                 @Override
                 public Set<InjectionPoint> getInjectionPoints() {
@@ -769,38 +757,38 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     /**
-     * Gets you effective locator.
+     * Gets you effective injection manager.
      * <p/>
      * Note: Do NOT lower the visibility of this method. CDI proxies need at least this visibility.
      *
-     * @return HK2 locator
+     * @return HK2 injection manager.
      */
-    /* package */ ServiceLocator getEffectiveLocator() {
-        return locatorManager.getEffectiveLocator();
+    /* package */ InjectionManager getEffectiveInjectionManager() {
+        return injectionManagerStore.getEffectiveInjectionManager();
     }
 
     /**
-     * Add HK2 {@link org.glassfish.hk2.api.ServiceLocator locator} (to a proxied instance).
+     * Add HK2 {@link InjectionManager injection manager} (to a proxied instance).
      * <p/>
      * Note: Do NOT lower the visibility of this method. CDI proxies need at least this visibility.
      *
-     * @param locator HK2 locator
+     * @param injectionManager injection manager.
      */
-    /* package */ void addLocator(final ServiceLocator locator) {
-        locatorManager.registerLocator(locator);
+    /* package */ void addInjectionManager(final InjectionManager injectionManager) {
+        injectionManagerStore.registerInjectionManager(injectionManager);
     }
 
     /**
      * Notifies the {@code InjectionTargetListener injection target listener} about new
-     * {@link org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2InjectedTarget injected target}.
+     * {@link InjectionManagerInjectedTarget injected target}.
      * <p/>
      * Note: Do NOT lower the visibility of this method. CDI proxies need at least this visibility.
      *
      * @param target new injected target.
      */
-    /* package */ void notify(final Hk2InjectedTarget target) {
-        if (locatorManager instanceof InjectionTargetListener) {
-            ((InjectionTargetListener) locatorManager).notify(target);
+    /* package */ void notify(final InjectionManagerInjectedTarget target) {
+        if (injectionManagerStore instanceof InjectionTargetListener) {
+            ((InjectionTargetListener) injectionManagerStore).notify(target);
         }
     }
 
@@ -811,7 +799,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
      * @return true if the type represents a JAX-RS component type.
      */
     /* package */ boolean isJaxRsComponentType(final Class<?> clazz) {
-        return jaxRsComponentCache.compute(clazz);
+        return jaxRsComponentCache.apply(clazz);
     }
 
     private static boolean isJerseyOrDependencyType(final Class<?> clazz) {
@@ -839,27 +827,25 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     private void bindHk2ClassAnalyzer() {
-        final ClassAnalyzer defaultClassAnalyzer =
-                locator.getService(ClassAnalyzer.class, ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME);
+        ClassAnalyzer defaultClassAnalyzer =
+          injectionManager.getInstance(ClassAnalyzer.class, ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME);
 
-        final int skippedElements = methodsToSkip.size() + fieldsToSkip.size();
+        int skippedElements = methodsToSkip.size() + fieldsToSkip.size();
 
-        final ClassAnalyzer customizedClassAnalyzer = skippedElements > 0
+        ClassAnalyzer customizedClassAnalyzer = skippedElements > 0
                 ? new InjecteeSkippingAnalyzer(defaultClassAnalyzer, methodsToSkip, fieldsToSkip)
                 : defaultClassAnalyzer;
 
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
-
-        final ScopedBindingBuilder bindingBuilder =
-                Injections.newBinder(customizedClassAnalyzer);
-
-        bindingBuilder.analyzeWith(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME)
-                .to(ClassAnalyzer.class)
-                .named(CDI_CLASS_ANALYZER);
-
-        Injections.addBinding(bindingBuilder, dc);
-
-        dc.commit();
+        Binder binder = new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(customizedClassAnalyzer)
+                        .analyzeWith(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME)
+                        .to(ClassAnalyzer.class)
+                        .named(CDI_CLASS_ANALYZER);
+            }
+        };
+        injectionManager.register(binder);
     }
 
     private StringBuilder listElements(final StringBuilder logMsgBuilder, final Collection<? extends Object> elements) {
@@ -870,12 +856,12 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     @SuppressWarnings("unchecked")
-    private abstract class Hk2InjectedCdiTarget implements Hk2InjectedTarget {
+    private abstract class InjectionManagerInjectedCdiTarget implements InjectionManagerInjectedTarget {
 
         private final InjectionTarget delegate;
-        private volatile ServiceLocator effectiveLocator;
+        private volatile InjectionManager effectiveInjectionManager;
 
-        public Hk2InjectedCdiTarget(InjectionTarget delegate) {
+        public InjectionManagerInjectedCdiTarget(InjectionTarget delegate) {
             this.delegate = delegate;
         }
 
@@ -886,13 +872,13 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         public void inject(final Object t, final CreationalContext cc) {
             delegate.inject(t, cc);
 
-            ServiceLocator injectingLocator = getEffectiveLocator();
-            if (injectingLocator == null) {
-                injectingLocator = effectiveLocator;
+            InjectionManager injectingManager = getEffectiveInjectionManager();
+            if (injectingManager == null) {
+                injectingManager = effectiveInjectionManager;
             }
 
-            if (injectingLocator != null) {
-                injectingLocator.inject(t, CdiComponentProvider.CDI_CLASS_ANALYZER);
+            if (injectingManager != null) {
+                injectingManager.inject(t, CdiComponentProvider.CDI_CLASS_ANALYZER);
             }
         }
 
@@ -917,8 +903,8 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
 
         @Override
-        public void setLocator(final ServiceLocator effectiveLocator) {
-            this.effectiveLocator = effectiveLocator;
+        public void setInjectionManager(final InjectionManager injectionManager) {
+            this.effectiveInjectionManager = injectionManager;
         }
     }
 
@@ -947,7 +933,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         @Override
         public Object create(final CreationalContext creationalContext) {
-            return getEffectiveLocator().getService(t);
+            return getEffectiveInjectionManager().getInstance(t);
         }
 
         @Override

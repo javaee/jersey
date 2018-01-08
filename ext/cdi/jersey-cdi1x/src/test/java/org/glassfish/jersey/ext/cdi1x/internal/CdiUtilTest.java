@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,12 +44,10 @@ import javax.annotation.Priority;
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.glassfish.jersey.ext.cdi1x.internal.spi.BeanManagerProvider;
-import org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2LocatorManager;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.ext.cdi1x.internal.spi.InjectionManagerStore;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
@@ -124,21 +122,21 @@ public class CdiUtilTest {
         assertThat(CdiUtil.lookupService(CdiUtil.class), nullValue());
     }
 
-    public static class TestHk2LocatorManager implements Hk2LocatorManager {
+    public static class TestInjectionManagerStore implements InjectionManagerStore {
 
         @Override
-        public void registerLocator(final ServiceLocator locator) {
+        public void registerInjectionManager(final InjectionManager injectionManager) {
         }
 
         @Override
-        public ServiceLocator getEffectiveLocator() {
+        public InjectionManager getEffectiveInjectionManager() {
             return null;
         }
     }
 
     @Test
     public void createHk2LocatorManagerCustom() throws Exception {
-        assertThat(CdiUtil.createHk2LocatorManager(), instanceOf(TestHk2LocatorManager.class));
+        assertThat(CdiUtil.createHk2InjectionManagerStore(), instanceOf(TestInjectionManagerStore.class));
     }
 
     @Test
@@ -151,6 +149,6 @@ public class CdiUtilTest {
             }
         };
 
-        assertThat(CdiUtil.createHk2LocatorManager(), instanceOf(SingleHk2LocatorManager.class));
+        assertThat(CdiUtil.createHk2InjectionManagerStore(), instanceOf(SingleInjectionManagerStore.class));
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,7 +51,6 @@ import javax.el.VariableMapper;
  * An ELContext that encapsulates the response information for use by the
  * expression evaluator.
  *
- *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
@@ -64,12 +63,12 @@ class LinkELContext extends ELContext {
     /**
      * Convenience constructor for the common case where a context where
      * the entity and instance are the same. Equivalent to
-     * <code>LinkELContext(entity, resource, entity)</code>
+     * {@link #LinkELContext(Object, Object, Object)}.
      *
      * @param entity
      * @param resource
      */
-    public LinkELContext(Object entity, Object resource) {
+    LinkELContext(Object entity, Object resource) {
         this.entity = entity;
         this.resource = resource;
         this.instance = entity;
@@ -82,7 +81,7 @@ class LinkELContext extends ELContext {
      * @param instance the instance that contains the entity, e.g. the value of
      * a field within an entity class.
      */
-    public LinkELContext(Object entity, Object resource, Object instance) {
+    LinkELContext(Object entity, Object resource, Object instance) {
         this.entity = entity;
         this.resource = resource;
         this.instance = instance;

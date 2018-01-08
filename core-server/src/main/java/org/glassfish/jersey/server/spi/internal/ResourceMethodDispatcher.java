@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,20 +37,20 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.spi.internal;
 
 import java.lang.reflect.InvocationHandler;
-import java.util.List;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Invocable;
-import org.glassfish.jersey.server.spi.ValidationInterceptor;
 
 /**
  * A resource method dispatcher responsible for consuming a JAX-RS {@link Request request}
@@ -77,7 +77,7 @@ public interface ResourceMethodDispatcher {
      * </p>
      * <p>
      * Resource method dispatcher provider implementations can be registered in Jersey application
-     * by supplying a custom HK2 {@link org.glassfish.hk2.utilities.Binder} that binds the
+     * by supplying a custom HK2 {@link Binder} that binds the
      * custom service implementation(s) to the {@code ResourceMethodDispatcher.Provider} contract.
      * </p>
      *

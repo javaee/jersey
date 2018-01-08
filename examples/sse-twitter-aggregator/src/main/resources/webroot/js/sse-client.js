@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,8 +42,9 @@
 function receiveMessages() {
     if (typeof(EventSource) !== "undefined") {
         // Yes! Server-sent events support!
-        var source = new EventSource('/aggregator-api/message/stream');
-        source.onmessage = function (event) {
+        var sourceJersey = new EventSource('/aggregator-api/message/stream/jersey');
+        var sourceJaxRs = new EventSource('/aggregator-api/message/stream/jaxrs');
+        var eventHandler =function (event) {
             var data = JSON.parse(event.data);
             console.log(data);
 
@@ -55,15 +56,26 @@ function receiveMessages() {
 
             document.body.innerHTML = newEntry + document.body.innerHTML;
         };
+        sourceJersey.onmessage = eventHandler;
+        sourceJaxRs.onmessage = eventHandler;
 
-        source.onopen = function (event) {
+        sourceJersey.onopen = function (event) {
             // Connection was opened.
-            console.log('opened')
+            console.log('Jresey stream opened.')
         };
 
-        source.onclose = function (event) {
+        sourceJaxRs.onopen = function (event) {
+            console.log('JAX-RS stream opened.')
+        }
+
+        sourceJersey.onclose = function (event) {
             // Connection was closed.
-            console.log('connection closed')
+            console.log('Jersey connection closed')
+        };
+
+        sourceJaxRs.onclose = function (event) {
+            // Connection was closed.
+            console.log('JAX-RS connection closed')
         };
     } else {
         // Sorry! No server-sent events support..

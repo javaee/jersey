@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -56,12 +56,18 @@
                              http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
          xml:id="rx-client">
 
-    <title>Reactive Jersey Client API</title>
+    <title>Reactive JAX-RS Client API</title>
+
+    <warning>
+        <para>
+            Jersey 2.26 (JAX-RS 2.1 implementation) dropped Jersey-proprietary API in favor of JAX-RS 2.1 Reactive Client API.
+        </para>
+    </warning>
 
     <para>
-        Reactive Jersey Client API is quite a generic API allowing end users to utilize the popular reactive programming model
-        when using Jersey Client. Several extensions come out of the box with Jersey that bring support for several existing
-        3rd party libraries for reactive programming. Along with describing the API itself, this section also covers
+        Reactive client extension is quite a generic API allowing end users to utilize the popular reactive programming model
+        when using JAX-RS Client. The API is designed to be extensible, so any existing reactive framework can integrate with
+        it and there is build in support for CompletionStage. Along with describing the API itself, this section also covers
         existing extension modules and provides hints to implement a custom extension if needed.
     </para>
 
@@ -69,6 +75,8 @@
         If you are not familiar with the JAX-RS Client API, it is recommended that you see <xref linkend="client"/>
         where the basics of JAX-RS Client API along with some advanced techniques are described.
     </para>
+
+
 
     <section>
         <title>Motivation for Reactive Client Extension</title>
@@ -357,34 +365,43 @@ destination.path("recommended").request()
 final WebTarget forecast = ...;
 
 // Recommended places.
-final Observable&lt;Destination&gt; recommended = RxObservable.from(destination).path("recommended").request()
-        // Identify the user.
-        .header("Rx-User", "RxJava")
-        // Reactive invoker.
-        .rx()
-        // Return a list of destinations.
-        .get(new GenericType&lt;List&lt;Destination&gt;&gt;() {})
-        // Handle Errors.
-        .onErrorReturn(throwable -&gt; {
-            errors.offer("Recommended: " + throwable.getMessage());
-            return Collections.emptyList();
-        })
-        // Emit destinations one-by-one.
-        .flatMap(Observable::from)
-        // Remember emitted items for dependant requests.
-        .cache();
+CompletionStage&lt;List&lt;Destination&gt;&gt; recommended =
+        destination.path("recommended")
+                   .request()
+                   // Identify the user.
+                   .header("Rx-User", "CompletionStage")
+                   // Reactive invoker.
+                   .rx()
+                   // Return a list of destinations.
+                   .get(new GenericType&lt;List&lt;Destination&gt;&gt;() {})
+                   .exceptionally(throwable -&gt; {
+                       errors.offer("Recommended: " + throwable.getMessage());
+                       return Collections.emptyList();
+                   });
 
-// Forecasts. (depend on recommended destinations)
-final RxWebTarget&lt;RxObservableInvoker&gt; rxForecast = RxObservable.from(forecast);
-final Observable&lt;Forecast&gt; forecasts = recommended.flatMap(destination -&gt;
-        rxForecast
-                .resolveTemplate("destination", destination.getDestination()).request().rx().get(Forecast.class)
-                .onErrorReturn(throwable -&gt; {
-                    errors.offer("Forecast: " + throwable.getMessage());
-                    return new Forecast(destination.getDestination(), "N/A");
-                }));
+// get Forecast for recommended destinations.
+return recommended.thenCompose(destinations -&gt; {
 
-final Observable&lt;Recommendation&gt; recommendations = Observable.zip(recommended, forecasts, Recommendation::new);</programlisting>
+    List&lt;CompletionStage&lt;Recommendation&gt;&gt; recommendations = destinations.stream().map(destination -&gt; {
+    // For each destination, obtain a weather forecast ...
+    final CompletionStage&lt;Forecast&gt; forecastResult =
+            forecast.resolveTemplate("destination", destination.getDestination())
+                    .request().rx().get(Forecast.class)
+                    .exceptionally(throwable -&gt; {
+                        errors.offer("Forecast: " + throwable.getMessage());
+                        return new Forecast(destination.getDestination(), "N/A");
+                    });
+
+                    //noinspection unchecked
+                    return CompletableFuture.completedFuture(new Recommendation(destination))
+                                            // Set forecast for recommended destination.
+                                            .thenCombine(forecastResult, Recommendation::forecast)
+                    }).collect(Collectors.toList());
+
+                    // Transform List&lt;CompletionStage&lt;Recommendation&gt;&gt; to CompletionStage&lt;List&lt;Recommendation&gt;&gt;
+                    return sequence(recommendations);
+    });</programlisting>
+
                 </example>
             </para>
             <para>
@@ -403,8 +420,7 @@ final Observable&lt;Recommendation&gt; recommendations = Observable.zip(recommen
         <title>Usage and Extension Modules</title>
 
         <para>
-            Reactive Jersey Client API tries to bring a similar experience you have with the existing JAX-RS Client API. It builds on it with
-            extending these JAX-RS APIs with a few new methods.
+            Reactive Client API is part of the JAX-RS specification since version 2.1. 
         </para>
 
         <para>
@@ -443,7 +459,7 @@ final Observable&lt;Recommendation&gt; recommendations = Observable.zip(recommen
             <example xml:id="rx.client.reactive">
                 <title>Reactive invocation of HTTP requests</title>
 
-                <programlisting language="java" linenumbering="numbered">Observable&lt;Response&gt; response = Rx.newClient(RxObservableInvoker.class)
+                <programlisting language="java" linenumbering="numbered">CompletionStage&lt;Response&gt; response = ClientBuilder.newClient()
         .target("http://example.com/resource")
         .request()
         .rx()
@@ -451,105 +467,63 @@ final Observable&lt;Recommendation&gt; recommendations = Observable.zip(recommen
             </example>
         </para>
         <para>
-            To achieve this a few new interfaces had to be introduced in the Reactive Jersey Client API. The first new interface is
-            &jersey.ext.rx.client.RxInvoker; which is very similar to &jaxrs.client.SyncInvoker; and &jaxrs.client.AsyncInvoker;.
-            It contains all methods present in the two latter JAX-RS interfaces but the &lit.jersey.ext.rx.client.RxInvoker; interface is more generic,
-            so that it can be extended and used in particular implementations taking advantage of various reactive libraries. Extending this new interface
+            The first reactive interface in the invocation chain is &jaxrs.client.RxInvoker; which is very similar to
+            &jaxrs.client.SyncInvoker; and &jaxrs.client.AsyncInvoker;. It contains all methods present in the two latter
+            JAX-RS interfaces but the &lit.jaxrs.client.RxInvoker; interface is more generic, so that it can be extended
+            and used in particular implementations taking advantage of various reactive libraries. Extending this new interface
             in a particular implementation also preserves type safety which means that you're not loosing type information when a HTTP
             method call returns an object that you want to process further.
         </para>
         <para>
-            As a user of the Reactive Jersey Client API you only need to keep in mind that you won't be working with
-            &lit.jersey.ext.rx.client.RxInvoker; directly. You'd rather be working with an extension of this interface created for
+            The method "rx()" in the example above is perfect example of that principle. It returns &jaxrs.client.CompletionStageRxInvoker;,
+            which extends &jaxrs.client.RxInvoker;.
+        </para>
+        <para>
+            As a user of the Reactive Client API you only need to keep in mind that you won't be working with
+            &lit.jaxrs.client.RxInvoker; directly. You'd rather be working with an extension of this interface created for
             a particular implementation and you don't need to be bothered much with why are things designed the way they are.
 
             <note>
                 <para>
-                    To see how the &lit.jersey.ext.rx.client.RxInvoker; should be extended, refer to
+                    To see how the &lit.jaxrs.client.RxInvoker; should be extended, refer to
                     <xref linkend="rx.client.spi" />.
                 </para>
             </note>
 
-            The important thing to notice here is that an extension of &lit.jersey.ext.rx.client.RxInvoker; holds the type
-            information and the Reactive Jersey Client needs to know about this type to properly propagate it among the method
+            The important thing to notice here is that an extension of &lit.jaxrs.client.RxInvoker; holds the type
+            information and the Reactive Client needs to know about this type to properly propagate it among the method
             calls you'll be making. This is the reason why other interfaces (described bellow) are parametrized with this type.
         </para>
         <para>
-            In addition to having a concrete &lit.jersey.ext.rx.client.RxInvoker; implementation ready there is also a need
-            to have an implementation of new reactive methods, <literal>rx()</literal> and <literal>rx(ExecutorService)</literal>.
-            They're defined in &jersey.ext.rx.client.RxInvocationBuilder; which extends the &jaxrs.client.Invocation.Builder; from JAX-RS.
-            Using the first method you can simply access the reactive request invocation interface to invoke the built request and
-            the second allows you to specify the executor service to execute the current reactive request (and only this one).
+            In order to extend the API to be used with other reactive frameworks, &jaxrs.client.RxInvokerProvider; needs to be
+            registered into the Client runtime:
         </para>
-        <para>
-            To access the &lit.jersey.ext.rx.client.RxInvocationBuilder; we needed to also extend JAX-RS &lit.jaxrs.client.Client;
-            (&jersey.ext.rx.client.RxClient;) and &lit.jaxrs.client.WebTarget; (&jersey.ext.rx.client.RxWebTarget;) to preserve
-            the fluent Client API introduced in JAX-RS.
-        </para>
-        <para>
-            With all these interfaces ready the only question left behind is the way how to create an instance of Reactive Jersey
-            Client. This functionality is beyond the actual JAX-RS API. It is not possible to create such a client via the standard
-            &lit.jaxrs.client.ClientBuilder; entry point. To resolve this, we introduced a new helper class, &jersey.ext.rx.client.Rx;,
-            which does the job. This class contains factory methods to create a new (reactive) client from scratch
+        <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newClient();
+client.register(RxFlowableInvokerProvider.class);
 
-            <itemizedlist>
-                <listitem>
-                    <para>&jersey.ext.rx.client.Rx.newClient;</para>
-                </listitem>
-                <listitem>
-                    <para>&jersey.ext.rx.client.Rx.newClientExecutor;</para>
-                </listitem>
-            </itemizedlist>
+Flowable&lt;String&gt; responseFlowable =
+        client.target("http://jersey.java.net")
+              .request()
+              .rx(RxFlowableInvoker.class)
+              .get(String.class);
 
-            and it also contains methods to enhance an existing JAX-RS &lit.jaxrs.client.Client; and &lit.jaxrs.client.WebTarget;
-
-            <itemizedlist>
-                <listitem>
-                    <para>&jersey.ext.rx.client.Rx.fromClient;</para>
-                </listitem>
-                <listitem>
-                    <para>&jersey.ext.rx.client.Rx.fromClientExecutor;</para>
-                </listitem>
-                <listitem>
-                    <para>&jersey.ext.rx.client.Rx.fromWebTarget;</para>
-                </listitem>
-                <listitem>
-                    <para>&jersey.ext.rx.client.Rx.fromWebTargetExecutor;</para>
-                </listitem>
-            </itemizedlist>
-
-            It's possible to provide an &jdk6.ExecutorService; instance to tell the reactive client that all requests should be invoked using this
-            particular executor. This behaviour can be suppressed by providing another &lit.jdk6.ExecutorService; instance for a particular
-            request.
-        </para>
-        <para>
-            Similarly to the &lit.jersey.ext.rx.client.RxInvoker; interface the &lit.jersey.ext.rx.client.Rx; class is general and does not stick to
-            any conrete implementation (to see a list of supported reactive libraries, refer to <xref linkend="rx.client.supported" />).
-            When Reactive Clients are created using &lit.jersey.ext.rx.client.Rx; factory methods, the actual invoker type parameter has to be
-            provided (this is not the case with similar helper classes created for particular reactive libraries).
-        </para>
+String responseString = responseFlowable.blockingFirst();</programlisting>        
 
         <simplesect>
                 <title>Dependencies</title>
 
                 <para>
-                    The Reactive Jersey Client is implemented as an extension module in Jersey. For Maven users, simply add the
-                    following dependency to your &lit.pom.xml;:
-
-                    <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
-    &lt;groupId&gt;org.glassfish.jersey.ext.rx&lt;/groupId&gt;
-    &lt;artifactId&gt;jersey-rx-client&lt;/artifactId&gt;
-    &lt;version&gt;&version;&lt;/version&gt;
-&lt;/dependency&gt;</programlisting>
-
-                    With this dependency only the basic classes would be added to your class-path without any support for any
-                    reactive library. To add support for a particular library, see the <xref linkend="rx.client.supported" />.
+                    JAX-RS mandates support for CompletionStage, which doesn't required any other dependency and can be
+                    used out of the box.
+                </para>
+                <para>
+                    To add support for a particular library, see the <xref linkend="rx.client.supported" />.
                 </para>
 
                 <note>
                     <para>
                         If you're not using Maven (or other dependency management tool) make sure to add also all the transitive
-                        dependencies of this extension module (see &jersey.ext.rx-client.deps.link;) on the class-path.
+                        dependencies of Jersey client module and any other extensions (when used) on the class-path.
                     </para>
                 </note>
             </simplesect>
@@ -567,13 +541,10 @@ final Observable&lt;Recommendation&gt; recommendations = Observable.zip(recommen
                     <para><xref linkend="rx-client.rxjava" endterm="rx-client.rxjava.title" /></para>
                 </listitem>
                 <listitem>
-                    <para><xref linkend="rx-client.java8" endterm="rx-client.java8.title" /></para>
+                    <para><xref linkend="rx-client.rxjava2" endterm="rx-client.rxjava2.title" /></para>
                 </listitem>
                 <listitem>
                     <para><xref linkend="rx-client.guava" endterm="rx-client.guava.title" /></para>
-                </listitem>
-                <listitem>
-                    <para><xref linkend="rx-client.jsr166e" endterm="rx-client.jsr166e.title" /></para>
                 </listitem>
             </itemizedlist>
         </para>
@@ -587,7 +558,7 @@ final Observable&lt;Recommendation&gt; recommendations = Observable.zip(recommen
                 used for composing asynchronous and event-based programs by using observable sequences. It uses the
                 <link xlink:href="&wikipedia.uri;Observer_pattern">observer pattern</link> to support these sequences of data/events
                 via it's &rxjava.Observable; entry point class which implements the Reactive Pattern. &lit.rxjava.Observable; is
-                actually the parameter type in the RxJava's extension of &lit.jersey.ext.rx.client.RxInvoker;, called
+                actually the parameter type in the RxJava's extension of &jaxrs.client.RxInvoker;, called
                 &jersey.ext.rx.client.rxjava.RxObservableInvoker;. This means that the return type of HTTP method calls is
                 &lit.rxjava.Observable; in this case (accordingly parametrized).
             </para>
@@ -595,58 +566,23 @@ final Observable&lt;Recommendation&gt; recommendations = Observable.zip(recommen
                 Requests are by default invoked at the moment when a subscriber is subscribed to an observable (it's a cold
                 &lit.rxjava.Observable;). If not said otherwise a separate thread (JAX-RS Async Client requests) is used to
                 obtain data. This behavior can be overridden by providing an &jdk6.ExecutorService; when a reactive
-                &lit.jaxrs.client.Client; or &lit.jaxrs.client.WebTarget; is created or when a particular requests is about to
-                be invoked.
+                &lit.jaxrs.client.Client; is created.
             </para>
 
             <simplesect>
                 <title>Usage</title>
 
                 <para>
-                    A JAX-RS &lit.jaxrs.client.Client; or &lit.jaxrs.client.WebTarget; aware of reactive HTTP calls, Jersey's
-                    &jersey.ext.rx.client.RxClient; or &jersey.ext.rx.client.RxWebTarget; parametrized by
-                    &lit.jersey.ext.rx.client.rxjava.RxObservableInvoker;, can be created either via the generic
-                    &jersey.ext.rx.client.Rx; entry point or the customized &jersey.ext.rx.client.rxjava.RxObservable; one.
-                </para>
-                <para>
-                    When using the generic entry point you need to specify the &lit.jersey.ext.rx.client.rxjava.RxObservableInvoker;
-                    invoker type to obtain an appropriate instance of the client or the web target.
+                    The extensibility is built-in JAX-RS Client API, so there are no special dependencies on Jersey Client
+                    API other than the extension itself.
 
                     <example xml:id="rx.client.rxjava.rx">
-                        <title>Creating Jersey/RxJava Client and WebTarget – Using Rx</title>
+                        <title>Creating JAX-RS Client with RxJava reactive extension</title>
 
                         <programlisting language="java" linenumbering="numbered">// New Client
-RxClient&lt;RxObservableInvoker&gt; newRxClient = Rx.newClient(RxObservableInvoker.class);
-
-// From existing Client
-RxClient&lt;RxObservableInvoker&gt; rxClient = Rx.from(client, RxObservableInvoker.class);
-
-// From existing WebTarget
-RxTarget&lt;RxObservableInvoker&gt; rxWebTarget = Rx.from(target, RxObservableInvoker.class);</programlisting>
+Client client = ClientBuilder.newClient();
+client.register(RxObservableInvokerProvider.class);</programlisting>
                     </example>
-                </para>
-                <para>
-                    You can skip specifying the invoker type when you use &lit.jersey.ext.rx.client.rxjava.RxObservable; entry
-                    point.
-
-                    <example xml:id="rx.client.rxjava.rxobservable">
-                        <title>Creating Jersey/RxJava Client and WebTarget – Using RxObservable</title>
-
-                        <programlisting language="java" linenumbering="numbered">// New Client
-RxClient&lt;RxObservableInvoker&gt; newRxClient = RxObservable.newClient();
-
-// From existing Client
-RxClient&lt;RxObservableInvoker&gt; rxClient = RxObservable.from(client);
-
-// From existing WebTarget
-RxTarget&lt;RxObservableInvoker&gt; rxWebTarget = RxObservable.from(target);</programlisting>
-                    </example>
-                </para>
-                <para>
-                    In addition to specifying the invoker type and client/web-target instances, when using the factory methods in
-                    the entry points mentioned above, an &lit.jdk6.ExecutorService; can be specified that will be used to execute requests on separate
-                    threads. In the case of RxJava the executor service is utilized to create a &rxjava.Scheduler; that is later
-                    leveraged in both &rxjava.Observable.onserveOn; and &rxjava.Observable.subscribeOn;.
                 </para>
                 <para>
                     An example of obtaining &lit.rxjava.Observable; with JAX-RS &lit.jaxrs.core.Response; from a remote service
@@ -656,11 +592,10 @@ RxTarget&lt;RxObservableInvoker&gt; rxWebTarget = RxObservable.from(target);</pr
                         <title>Obtaining Observable&lt;Response&gt; from Jersey/RxJava Client</title>
 
                         <programlisting language="java" linenumbering="numbered">Observable&lt;Response&gt; observable = RxObservable.newClient()
-        .target("http://example.com/resource")
-        .request()
-        .rx()
-        .get();
-</programlisting>
+                                                    .target("http://example.com/resource")
+                                                    .request()
+                                                    .rx(RxObservableInvoker.class)
+                                                    .get();</programlisting>
                     </example>
                 </para>
             </simplesect>
@@ -669,7 +604,7 @@ RxTarget&lt;RxObservableInvoker&gt; rxWebTarget = RxObservable.from(target);</pr
                 <title>Dependencies</title>
 
                 <para>
-                    The Reactive Jersey Client with RxJava support is available as an extension module in Jersey. For Maven users,
+                    The RxJava support is available as an extension module in Jersey. For Maven users,
                     simply add the following dependency to your &lit.pom.xml;:
 
                     <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
@@ -679,8 +614,7 @@ RxTarget&lt;RxObservableInvoker&gt; rxWebTarget = RxObservable.from(target);</pr
 &lt;/dependency&gt;</programlisting>
 
                     After this step you can use the extended client right away. The dependency transitively adds the following
-                    dependencies to your class-path as well: <literal>org.glassfish.jersey.ext.rx:jersey-rx-client</literal> and
-                    <literal>io.reactivex:rxjava</literal>.
+                    dependencies to your class-path as well: <literal>io.reactivex:rxjava</literal>.
                 </para>
 
                 <note>
@@ -692,86 +626,54 @@ RxTarget&lt;RxObservableInvoker&gt; rxWebTarget = RxObservable.from(target);</pr
             </simplesect>
         </section>
 
-        <section xml:id="rx-client.java8">
-            <title>Java 8 – CompletionStage and CompletableFuture</title>
-            <titleabbrev xml:id="rx-client.java8.title">Java 8 (CompletionStage and CompletableFuture)</titleabbrev>
+        <section xml:id="rx-client.rxjava2">
+            <title>RxJava – Flowable</title>
+            <titleabbrev xml:id="rx-client.rxjava2.title">RxJava (Flowable)</titleabbrev>
 
             <para>
-                Java 8 natively contains asynchronous/event-based completion aware types, &jdk8.CompletionStage; and
-                &jdk8.CompletableFuture;. These types can be then combined with &jdk8.Stream;s to achieve similar functionality
-                as provided by RxJava (see <xref linkend="rx-client.rxjava" /> for more information). &lit.jdk8.CompletionStage;
-                is the parameter type in the Java 8 extension of &lit.jersey.ext.rx.client.RxInvoker;, called
-                &jersey.ext.rx.client.java8.RxCompletionStageInvoker;. This means that the return type of HTTP method calls is
-                &lit.jdk8.CompletionStage; in this case (accordingly parametrized).
+                &rxjava.link;, contributed by Netflix, is probably the most advanced reactive library for Java at the moment. It's
+                used for composing asynchronous and event-based programs by using observable sequences. It uses the
+                <link xlink:href="&wikipedia.uri;Observer_pattern">observer pattern</link> to support these sequences of data/events
+                via it's &rxjava2.Flowable; entry point class which implements the Reactive Pattern. &lit.rxjava2.Flowable; is
+                actually the parameter type in the RxJava's extension of &jaxrs.client.RxInvoker;, called
+                &jersey.ext.rx.client.rxjava2.RxFlowableInvoker;. This means that the return type of HTTP method calls is
+                &lit.rxjava2.Flowable; in this case (accordingly parametrized).
             </para>
             <para>
-                Requests are by default invoked immediately. If not said otherwise the &jdk8.ForkJoinPool.commonPool; pool
-                is used to obtain a thread which processed the request. This behavior can be overridden by providing an
-                &jdk6.ExecutorService; when a reactive &lit.jaxrs.client.Client; or &lit.jaxrs.client.WebTarget; is created or
-                when a particular request is about to be invoked.
+                Requests are by default invoked at the moment when a subscriber is subscribed to a flowable (it's a cold
+                &lit.rxjava2.Flowable;). If not said otherwise a separate thread (JAX-RS Async Client requests) is used to
+                obtain data. This behavior can be overridden by providing an &jdk6.ExecutorService; when a reactive
+                &lit.jaxrs.client.Client; is created.
             </para>
 
             <simplesect>
                 <title>Usage</title>
 
                 <para>
-                    A JAX-RS &lit.jaxrs.client.Client; or &lit.jaxrs.client.WebTarget; aware of reactive HTTP calls, Jersey's
-                    &jersey.ext.rx.client.RxClient; or &jersey.ext.rx.client.RxWebTarget; parametrized by
-                    &lit.jersey.ext.rx.client.java8.RxCompletionStageInvoker;, can be created either via the generic
-                    &jersey.ext.rx.client.Rx; entry point or the customized &jersey.ext.rx.client.java8.RxCompletionStage; one.
-                </para>
-                <para>
-                    When using the generic entry point you need to specify the &lit.jersey.ext.rx.client.java8.RxCompletionStage;
-                    invoker type to obtain an appropriate instance of the client or the web target.
+                    The extensibility is built-in JAX-RS Client API, so there are no special dependencies on Jersey Client
+                    API other than the extension itself.
 
-                    <example xml:id="rx.client.java8.rx">
-                        <title>Creating Jersey/Java8 Client and WebTarget – Using Rx</title>
+                    <example xml:id="rx.client.rxjava2.rx">
+                        <title>Creating JAX-RS Client with RxJava2 reactive extension</title>
 
                         <programlisting language="java" linenumbering="numbered">// New Client
-RxClient&lt;RxCompletionStageInvoker&gt; newRxClient = Rx.newClient(RxCompletionStageInvoker.class);
-
-// From existing Client
-RxClient&lt;RxCompletionStageInvoker&gt; rxClient = Rx.from(client, RxCompletionStageInvoker.class);
-
-// From existing WebTarget
-RxTarget&lt;RxCompletionStageInvoker&gt; rxWebTarget = Rx.from(target, RxCompletionStageInvoker.class);</programlisting>
+Client client = ClientBuilder.newClient();
+client.register(RxFlowableInvokerProvider.class);</programlisting>
                     </example>
                 </para>
                 <para>
-                    You can skip specifying the invoker type when you use the &lit.jersey.ext.rx.client.java8.RxCompletionStage; entry
-                    point.
+                    An example of obtaining &lit.rxjava2.Flowable; with JAX-RS &lit.jaxrs.core.Response; from a remote service
+                    can be seen in <xref linkend="rx.client.rxjava.usage" />.
 
-                    <example xml:id="rx.client.java8.rxcompletionstage">
-                        <title>Creating Jersey/Java 8 Client and WebTarget – Using RxCompletionStage</title>
+                    <example xml:id="rx.client.rxjava2.usage">
+                        <title>Obtaining Flowable&lt;Response&gt; from Jersey/RxJava Client</title>
 
-                        <programlisting language="java" linenumbering="numbered">// New Client
-RxClient&lt;RxCompletionStageInvoker&gt; newRxClient = RxCompletionStage.newClient();
-
-// From existing Client
-RxClient&lt;RxCompletionStageInvoker&gt; rxClient = RxCompletionStage.from(client);
-
-// From existing WebTarget
-RxTarget&lt;RxCompletionStageInvoker&gt; rxWebTarget = RxCompletionStage.from(target);</programlisting>
-                    </example>
-                </para>
-                <para>
-                    In addition to specifying the invoker type and client/web-target instances, when using the factory methods in
-                    the entry points mentioned above, an &lit.jdk6.ExecutorService; instance could be specifies that should be used
-                    to execute requests on a separate thread.
-                </para>
-                <para>
-                    An example of obtaining &lit.jdk8.CompletionStage; with JAX-RS &lit.jaxrs.core.Response; from a remote service
-                    can be seen in <xref linkend="rx.client.java8.usage" />.
-
-                    <example xml:id="rx.client.java8.usage">
-                        <title>Obtaining CompletionStage&lt;Response&gt; from Jersey/Java 8 Client</title>
-
-                        <programlisting language="java" linenumbering="numbered">CompletionStage&lt;Response&gt; stage = RxCompletionStage.newClient()
-        .target("http://example.com/resource")
-        .request()
-        .rx()
-        .get();
-</programlisting>
+                        <programlisting language="java" linenumbering="numbered">Flowable&lt;Response&gt; observable = RxObservable.newClient()
+                            .target("http://example.com/resource")
+                            .request()
+                            .rx(RxFlowableInvoker.class)
+                            .get();
+                        </programlisting>
                     </example>
                 </para>
             </simplesect>
@@ -780,23 +682,23 @@ RxTarget&lt;RxCompletionStageInvoker&gt; rxWebTarget = RxCompletionStage.from(ta
                 <title>Dependencies</title>
 
                 <para>
-                    The Reactive Jersey Client is available as an extension module in Jersey. For Maven users,
+                    The RxJava support is available as an extension module in Jersey. For Maven users,
                     simply add the following dependency to your &lit.pom.xml;:
 
                     <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.ext.rx&lt;/groupId&gt;
-    &lt;artifactId&gt;jersey-rx-client-java8&lt;/artifactId&gt;
+    &lt;artifactId&gt;jersey-rx-client-rxjava2&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
                     After this step you can use the extended client right away. The dependency transitively adds the following
-                    dependency to your class-path as well: <literal>org.glassfish.jersey.ext.rx:jersey-rx-client</literal>.
+                    dependencies to your class-path as well: <literal>io.reactivex:rxjava2</literal>.
                 </para>
 
                 <note>
                     <para>
                         If you're not using Maven (or other dependency management tool) make sure to add also all the transitive
-                        dependencies of this extension module (see &jersey.ext.rx-client.java8.deps.link;) on the class-path.
+                        dependencies of this extension module (see &jersey.ext.rx-client.rxjava2.deps.link;) on the class-path.
                     </para>
                 </note>
             </simplesect>
@@ -810,64 +712,30 @@ RxTarget&lt;RxCompletionStageInvoker&gt; rxWebTarget = RxCompletionStage.from(ta
                 &guava.link;, contributed by Google, also contains a type, &guava.ListenableFuture;, which can be decorated with
                 listeners that are notified when the future completes. The &lit.guava.ListenableFuture; can be combined with
                 &guava.Futures; to achieve asynchronous/event-based completion aware processing. &lit.guava.ListenableFuture;
-                is the parameter type in the Guava's extension of &lit.jersey.ext.rx.client.RxInvoker;, called
+                is the parameter type in the Guava's extension of &lit.jaxrs.client.RxInvoker;, called
                 &jersey.ext.rx.client.guava.RxListenableFutureInvoker;. This means that the return type of HTTP method calls is
                 &lit.guava.ListenableFuture; in this case (accordingly parametrized).
             </para>
             <para>
                 Requests are by default invoked immediately. If not said otherwise the &jdk8.Executors.newCachedThreadPool; pool
                 is used to obtain a thread which processed the request. This behavior can be overridden by providing a
-                &jdk6.ExecutorService; when a reactive &lit.jaxrs.client.Client; or &lit.jaxrs.client.WebTarget; is created or
-                when a particular requests is about to be invoked.
+                &jdk6.ExecutorService; when a &lit.jaxrs.client.Client; is created.
             </para>
 
             <simplesect>
                 <title>Usage</title>
 
                 <para>
-                    A JAX-RS &lit.jaxrs.client.Client; or &lit.jaxrs.client.WebTarget; aware of reactive HTTP calls, Jersey's
-                    &jersey.ext.rx.client.RxClient; or &jersey.ext.rx.client.RxWebTarget; parametrized by
-                    &lit.jersey.ext.rx.client.guava.RxListenableFutureInvoker;, can be created either via the generic
-                    &jersey.ext.rx.client.Rx; entry point or the customized &jersey.ext.rx.client.guava.RxListenableFuture; one.
-                </para>
-                <para>
-                    When using the generic entry point you need to specify the &lit.jersey.ext.rx.client.guava.RxListenableFutureInvoker;
-                    invoker type to obtain an appropriate instance of the client or the web target.
+                    The extensibility is built-in JAX-RS Client API, so there are no special dependencies on Jersey Client
+                    API other than the extension itself.
 
                     <example xml:id="rx.client.guava.rx">
-                        <title>Creating Jersey/Guava Client and WebTarget – Using Rx</title>
+                        <title>Creating Jersey/Guava Client</title>
 
                         <programlisting language="java" linenumbering="numbered">// New Client
-RxClient&lt;RxListenableFutureInvoker&gt; newRxClient = Rx.newClient(RxListenableFutureInvoker.class);
-
-// From existing Client
-RxClient&lt;RxListenableFutureInvoker&gt; rxClient = Rx.from(client, RxListenableFutureInvoker.class);
-
-// From existing WebTarget
-RxTarget&lt;RxListenableFutureInvoker&gt; rxWebTarget = Rx.from(target, RxListenableFutureInvoker.class);</programlisting>
+Client client = ClientBuilder.newClient();
+client.register(RxListenableFutureInvokerProvider.class);</programlisting>
                     </example>
-                </para>
-                <para>
-                    You can skip specifying the invoker type when you use &lit.jersey.ext.rx.client.guava.RxListenableFuture;
-                    entry point.
-
-                    <example xml:id="rx.client.guava.rxlistenablefuture">
-                        <title>Creating Jersey/Guava Client and WebTarget – Using RxListenableFuture</title>
-
-                        <programlisting language="java" linenumbering="numbered">// New Client
-RxClient&lt;RxListenableFutureInvoker&gt; newRxClient = RxListenableFuture.newClient();
-
-// From existing Client
-RxClient&lt;RxListenableFutureInvoker&gt; rxClient = RxListenableFuture.from(client);
-
-// From existing WebTarget
-RxTarget&lt;RxListenableFutureInvoker&gt; rxWebTarget = RxListenableFuture.from(target);</programlisting>
-                    </example>
-                </para>
-                <para>
-                    In addition to specifying the invoker type and client/web-target instances, when using the factory methods in
-                    the entry points mentioned above, an &lit.jdk6.ExecutorService; can be specified that will be used to execute requests on a separate
-                    thread.
                 </para>
                 <para>
                     An example of obtaining &lit.guava.ListenableFuture; with JAX-RS &lit.jaxrs.core.Response; from a remote
@@ -876,11 +744,11 @@ RxTarget&lt;RxListenableFutureInvoker&gt; rxWebTarget = RxListenableFuture.from(
                     <example xml:id="rx.client.guava.usage">
                         <title>Obtaining ListenableFuture&lt;Response&gt; from Jersey/Guava Client</title>
 
-                        <programlisting language="java" linenumbering="numbered">ListenableFuture&lt;Response&gt; stage = RxListenableFuture.newClient()
-        .target("http://example.com/resource")
-        .request()
-        .rx()
-        .get();
+                        <programlisting language="java" linenumbering="numbered">
+ListenableFuture&lt;Response&gt; response = client.target("http://jersey.java.net")
+                                            .request()
+                                            .rx(RxListenableFutureInvoker.class)
+                                            .get();
 </programlisting>
                     </example>
                 </para>
@@ -900,8 +768,7 @@ RxTarget&lt;RxListenableFutureInvoker&gt; rxWebTarget = RxListenableFuture.from(
 &lt;/dependency&gt;</programlisting>
 
                     After this step you can use the extended client right away. The dependency transitively adds the following
-                    dependencies to your class-path as well: <literal>org.glassfish.jersey.ext.rx:jersey-rx-client</literal> and
-                    <literal>com.google.guava:guava</literal>.
+                    dependencies to your class-path as well: <literal>com.google.guava:guava</literal>.
                 </para>
 
                 <note>
@@ -920,136 +787,76 @@ RxTarget&lt;RxListenableFutureInvoker&gt; rxWebTarget = RxListenableFuture.from(
 
         <para>
             In case you want to bring support for some other library providing Reactive Programming Model into your application
-            you can extend functionality of Reactive Jersey Client by implementing SPI available in &lit.jersey-rx-client;
-            module. Steps to do such a thing are as follows.
+            you can extend functionality of Reactive JAX-RS Client by implementing &jaxrs.client.RxInvokerProvider;, registering
+            that implementation into the client runtime and then using rx(Class&lt;T&gt;) in your code.
         </para>
 
         <simplesect>
-            <title>Extend RxInvoker interface</title>
+            <title>Implement RxInvoker and RxInvokerProvider interfaces</title>
 
             <para>
-                Even though not entirely intuitive this step is required when a support for a custom reactive library is needed.
-                As mentioned above few JAX-RS Client interfaces had to be modified in order to make possible to invoke HTTP calls
-                in a reactive way. All of them except the &jersey.ext.rx.client.RxInvoker; extend the original interfaces from
-                JAX-RS (e.g. &lit.jaxrs.client.Client;). &lit.jersey.ext.rx.client.RxInvoker; is a brand new interface (very
-                similar to &lit.jaxrs.client.SyncInvoker; and &lit.jaxrs.client.AsyncInvoker;) that actually lets you to invoke HTTP
-                methods in the reactive way.
+                The first step when implementing support for another reactive library is to implement &jaxrs.client.RxInvoker;.
+                JAX-RS API itself contains one implementation, which will be used as an example: &jaxrs.client.CompletionStageRxInvoker;.
 
                 <example xml:id="rx.client.rxinvoker">
-                    <title>RxInvoker snippet</title>
+                    <title>Extending RxIvoker</title>
 
-                    <programlisting language="java" linenumbering="numbered">public interface RxInvoker&lt;T&gt; {
+                    <programlisting language="java" linenumbering="numbered">public interface CompletionStageRxInvoker extends RxInvoker&lt;CompletionStage&gt; {
+    @Override
+    public CompletionStage&lt;Response&gt; get();
 
-    public &lt;T&gt; get();
-
-    public &lt;R&gt; &lt;T&gt; get(Class&lt;R&gt; responseType);
+    @Override
+    public &lt;T&gt; CompletionStage&lt;T&gt; get(Class&lt;T&gt; responseType);
 
     // ...
-
 }</programlisting>
                 </example>
             </para>
             <para>
-                As you can notice it's too generic as it's designed to support various reactive libraries without bringing any
-                additional abstractions and restrictions. The first type parameter, <literal>T</literal>, is the
-                asynchronous/event-based completion aware type (e.g. &lit.rxjava.Observable;). The given type should be
-                parametrized with the actual response type. And since it's not possible to parametrize type parameter it's an
-                obligation of the extension of &lit.jersey.ext.rx.client.RxInvoker; to do that. That applies to simpler methods,
-                such as <literal>get()</literal>, as well as to more advanced methods, for example <literal>get(Class)</literal>.
+                The important fact to notice is that the generic parameter of &jaxrs.client.RxInvoker; is &jdk8.CompletionStage;
+                and also that the return type is overriden to be always &jdk8.CompletionStage; with some generic param (&jaxrs.core.Response;;
+                or T).
             </para>
             <para>
-                In the first case it's enough to parametrize the needed type with &lit.jaxrs.core.Response;, e.g.
-                <literal>Observable&lt;Response&gt; get()</literal>. The second case uses the type parameter from the parameter of
-                the method. To accordingly extend the <literal>get(Class&lt;R&gt;)</literal> method you need to parametrize the
-                needed type with <literal>R</literal> type parameter, e.g.
-                <literal>&lt;T&gt; Observable&lt;T&gt; get(Class&lt;T&gt; responseType)</literal>.
+                After having the extended RxInvoker interface, the implementor has to provide &jaxrs.client.RxInvokerProvider;,
+                which will be registered as an provider to a client instance.
             </para>
-            <para>
-                To summarize the requirements above and illustrate them in one code snippet the
-                <xref linkend="rx.client.extend.rxinvoker"/> is an excerpt from &lit.jersey.ext.rx.client.rxjava.RxObservableInvoker;
-                that works with RxJava's &lit.rxjava.Observable;.
+            <example xml:id="rx.client.extend.rxinvoker">
+            <title>Extending RxInvokerProvider</title>
 
-                <example xml:id="rx.client.extend.rxinvoker">
-                    <title>Extending RxInvoker - RxObservableInvoker</title>
-
-                    <programlisting language="java" linenumbering="numbered">public interface RxObservableInvoker extends RxInvoker&lt;Observable&gt; {
-
+            <programlisting language="java" linenumbering="numbered">public static class CompletionStageRxInvokerProvider implements RxInvokerProvider&lt;CompletionStageRxInvoker&gt; {
     @Override
-    public Observable&lt;Response&gt; get();
-
-    @Override
-    public &lt;T&gt; Observable&lt;T&gt; get(Class&lt;T&gt; responseType);
-
-    // ...
-
-}</programlisting>
-                </example>
-            </para>
-        </simplesect>
-        <simplesect>
-            <title>Implement the extended interface</title>
-
-            <para>
-                Either you can implement the extension of &lit.jersey.ext.rx.client.RxInvoker; from scratch or it's possible to
-                extend from &jersey.ext.rx.client.AbstractRxInvoker; abstract class which serves as a default implementation of
-                the interface. In the later case only <literal>#method(...)</literal> methods are needed to be implemented as
-                the default implementation of other methods (HTTP calls) delegates to these methods.
-            </para>
-        </simplesect>
-        <simplesect>
-            <title>Implement and register RxInvokerProvider</title>
-
-            <para>
-                To create an instance of particular &lit.jersey.ext.rx.client.RxInvoker; an implementation of
-                &jersey.ext.rx.client.RxInvokerProvider; SPI interface is needed. When a concrete &lit.jersey.ext.rx.client.RxInvoker;
-                is requested the runtime goes through all available providers and finds one which supports the given invoker type.
-                It is expected that each provider supports mapping for distinct set of types and subtypes so that different
-                providers do not conflict with each other.
-
-                <example xml:id="rx.client.rxinvokerprovider">
-                    <title>Example of RxInvokerProvider - RxObservableInvokerProvider</title>
-
-                    <programlisting language="java" linenumbering="numbered">public final class RxObservableInvokerProvider implements RxInvokerProvider {
-
-    @Override
-    public &lt;T&gt; T getInvoker(final Class&lt;T&gt; invokerType, final Invocation.Builder builder, final ExecutorService executor) {
-        if (RxObservableInvoker.class.isAssignableFrom(invokerType)) {
-            return invokerType.cast(new JerseyRxObservableInvoker(builder, executor));
-        }
-        return null;
+    public boolean isProviderFor(Class&lt;?%gt; clazz) {
+        return CompletionStage.class.equals(clazz);
     }
-}</programlisting>
-                </example>
 
-                Reactive Jersey Client looks for all available &lit.jersey.ext.rx.client.RxInvokerProvider;s via the standard
-                <literal>META-INF/services</literal> mechanism. It's enough to bundle
-                <literal>org.glassfish.jersey.client.rx.spi.RxInvokerProvider</literal> file with your library and reference your
-                implementation (by fully qualified class name) from it.
-
-                <example xml:id="rx.client.register.rxinvokerprovider">
-                    <title>META-INF/services/org.glassfish.jersey.client.rx.spi.RxInvokerProvider</title>
-
-                    <programlisting language="text" linenumbering="unnumbered">org.glassfish.jersey.client.rx.rxjava.RxObservableInvokerProvider</programlisting>
-                </example>
-            </para>
+    @Override
+    public CompletionStageRxInvoker getRxInvoker(SyncInvoker syncInvoker, ExecutorService executorService) {
+        return new CompletionStageRxInvoker() {
+            // ...
+        };
+    }
+}</programlisting></example>
         </simplesect>
-    </section>
+        <simplesect>
+            <title>Example of using custom RxInvokerProvider</title>
 
-    <section>
-        <title>Examples</title>
+            <para>
+                Considering the work above was done and the implementation of custom &lit.jaxrs.client.RxInvoker; and
+                &lit.jaxrs.client.RxInvokerProvider; is available, the client code using those extensions will be:
+            </para>
+            <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newClient();
+// register custom RxInvokerProvider
+client.register(CompletionStageRxInvokerProvider.class);
 
-        <para>
-            To see a complete working examples of various approaches using JAX-RS Client API (Sync and Async) and Reactive Jersey
-            Client APIs feature refer to the:
+CompletionStage&lt;Response&gt; response =
+        client.target("http://jersey.java.net")
+              .request()
+              .rx(CompletionStageRxInvoker.class)
+              // Now we have an instance of CompletionStageRxInvoker returned from our registered RxInvokerProvider,
+              // which is CompletionStageRxInvokerProvider in this particular scenario.
+              .get();</programlisting>
 
-            <itemizedlist>
-                <listitem>
-                    <para>&jersey.github.rx.example.link;</para>
-                </listitem>
-                <listitem>
-                    <para>&jersey.github.rx.java8.example.link;</para>
-                </listitem>
-            </itemizedlist>
-        </para>
+        </simplesect>
     </section>
 </chapter>

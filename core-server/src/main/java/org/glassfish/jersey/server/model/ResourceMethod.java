@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -148,6 +148,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         private final Set<MediaType> producedTypes;
         // Suspendable
         private boolean managedAsync;
+        private boolean sse;
         private boolean suspended;
         private long suspendTimeout;
         private TimeUnit suspendTimeoutUnit;
@@ -190,7 +191,6 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
 
             this.consumedTypes = new LinkedHashSet<>();
             this.producedTypes = new LinkedHashSet<>();
-
             this.suspended = false;
             this.suspendTimeout = AsyncResponse.NO_TIMEOUT;
             this.suspendTimeoutUnit = TimeUnit.MILLISECONDS;
@@ -345,8 +345,8 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         public Builder nameBindings(final Annotation... nameBindings) {
             return nameBindings(
                     Arrays.stream(nameBindings)
-                            .map((Function<Annotation, Class<? extends Annotation>>) Annotation::annotationType)
-                            .collect(Collectors.toList())
+                          .map((Function<Annotation, Class<? extends Annotation>>) Annotation::annotationType)
+                          .collect(Collectors.toList())
             );
         }
 
@@ -364,6 +364,17 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
             suspended = true;
             suspendTimeout = timeout;
             suspendTimeoutUnit = unit;
+
+            return this;
+        }
+
+        /**
+         * Set the SSE flag on the method model to {@code true}.
+         *
+         * @return updated builder object.
+         */
+        public Builder sse() {
+            sse = true;
 
             return this;
         }
@@ -528,6 +539,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
                     producedTypes,
                     managedAsync,
                     suspended,
+                    sse,
                     suspendTimeout,
                     suspendTimeoutUnit,
                     createInvocable(),
@@ -568,6 +580,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         // SuspendableComponent
         private final boolean managedAsync;
         private final boolean suspended;
+        private final boolean sse;
         private final long suspendTimeout;
         private final TimeUnit suspendTimeoutUnit;
         // Invocable
@@ -580,7 +593,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         private Data(final String httpMethod,
                      final Collection<MediaType> consumedTypes,
                      final Collection<MediaType> producedTypes,
-                     boolean managedAsync, final boolean suspended,
+                     boolean managedAsync, final boolean suspended, boolean sse,
                      final long suspendTimeout,
                      final TimeUnit suspendTimeoutUnit,
                      final Invocable invocable,
@@ -595,6 +608,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
             this.producedTypes = Collections.unmodifiableList(new ArrayList<>(producedTypes));
             this.invocable = invocable;
             this.suspended = suspended;
+            this.sse = sse;
             this.suspendTimeout = suspendTimeout;
             this.suspendTimeoutUnit = suspendTimeoutUnit;
 
@@ -659,6 +673,15 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          */
         /* package */ boolean isSuspended() {
             return suspended;
+        }
+
+        /**
+         * Flag indicating whether the method requires injection of Sse Event Sink.
+         *
+         * @return {@code true} if the method requires injection of Sse Event Sink, {@code false} otherwise.
+         */
+        /* package */ boolean isSse() {
+            return sse;
         }
 
         /**
@@ -849,6 +872,15 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
     @Override
     public boolean isSuspendDeclared() {
         return data.isSuspended();
+    }
+
+    /**
+     * Check whether the resource method will be producing Server-sent event stream.
+     *
+     * @return {@code true} if the resource method produces Server-sent event stream, {@code false} otherwise.
+     */
+    public boolean isSse() {
+        return data.isSse();
     }
 
     @Override

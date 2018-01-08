@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,7 +64,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ExtendedUriInfo;
@@ -86,7 +86,7 @@ import org.glassfish.jersey.server.mvc.spi.ViewableContextException;
 final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
 
     @Inject
-    private ServiceLocator serviceLocator;
+    private InjectionManager injectionManager;
 
     @Context
     private javax.inject.Provider<ExtendedUriInfo> extendedUriInfoProvider;
@@ -208,8 +208,8 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
     private Set<TemplateProcessor> getTemplateProcessors() {
         final Set<TemplateProcessor> templateProcessors = new LinkedHashSet<>();
 
-        templateProcessors.addAll(Providers.getCustomProviders(serviceLocator, TemplateProcessor.class));
-        templateProcessors.addAll(Providers.getProviders(serviceLocator, TemplateProcessor.class));
+        templateProcessors.addAll(Providers.getCustomProviders(injectionManager, TemplateProcessor.class));
+        templateProcessors.addAll(Providers.getProviders(injectionManager, TemplateProcessor.class));
 
         return templateProcessors;
     }
@@ -221,10 +221,10 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
      * @return {@code non-null} viewable context.
      */
     private ViewableContext getViewableContext() {
-        final Set<ViewableContext> customProviders = Providers.getCustomProviders(serviceLocator, ViewableContext.class);
+        final Set<ViewableContext> customProviders = Providers.getCustomProviders(injectionManager, ViewableContext.class);
         if (!customProviders.isEmpty()) {
             return customProviders.iterator().next();
         }
-        return Providers.getProviders(serviceLocator, ViewableContext.class).iterator().next();
+        return Providers.getProviders(injectionManager, ViewableContext.class).iterator().next();
     }
 }

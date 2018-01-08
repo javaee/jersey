@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,38 +37,18 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server;
 
-import java.util.Map;
-
-import javax.ws.rs.RuntimeType;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.ContextResolverFactory;
-import org.glassfish.jersey.internal.ExceptionMapperFactory;
-import org.glassfish.jersey.internal.JaxrsProviders;
-import org.glassfish.jersey.internal.JerseyErrorService;
-import org.glassfish.jersey.internal.ServiceFinderBinder;
-import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
-import org.glassfish.jersey.message.internal.MessageBodyFactory;
-import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.server.internal.JerseyResourceContext;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor;
-import org.glassfish.jersey.server.internal.ProcessingProviders;
-import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
-import org.glassfish.jersey.server.internal.process.ServerProcessingBinder;
-import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
-import org.glassfish.jersey.server.spi.ContainerProvider;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Server injection binder.
@@ -78,36 +58,9 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  */
 class ServerBinder extends AbstractBinder {
 
-    private final Map<String, Object> applicationProperties;
-
-    /**
-     * Create new {@code ServerBinder} instance.
-     *
-     * @param applicationProperties map of application-specific properties.
-     */
-    public ServerBinder(final Map<String, Object> applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
-
     @Override
     protected void configure() {
-        install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
-                new JerseyErrorService.Binder(),
-                new ServerProcessingBinder(),
-                new ContextInjectionResolver.Binder(),
-                new ParameterInjectionBinder(),
-                new JerseyClassAnalyzer.Binder(),
-                new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.SERVER),
-                new MessageBodyFactory.Binder(),
-                new ExceptionMapperFactory.Binder(),
-                new ContextResolverFactory.Binder(),
-                new JaxrsProviders.Binder(),
-                new ProcessingProviders.Binder(),
-                new ResourceModelBinder(),
-                new ServiceFinderBinder<>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
-                new JerseyResourceContext.Binder(),
-                new ServiceFinderBinder<>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER),
-                new MappableExceptionWrapperInterceptor.Binder(),
+        install(new MappableExceptionWrapperInterceptor.Binder(),
                 new MonitoringContainerListener.Binder());
 
         //ChunkedResponseWriter

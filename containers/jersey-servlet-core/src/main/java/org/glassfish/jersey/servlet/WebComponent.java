@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.servlet;
 
 import java.io.IOException;
@@ -59,6 +60,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -68,18 +77,10 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
@@ -124,8 +125,8 @@ public class WebComponent {
 
     private static final Logger LOGGER = Logger.getLogger(WebComponent.class.getName());
 
-    private static final Type REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
-    private static final Type RESPONSE_TYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
+    private static final Type REQUEST_TYPE = (new GenericType<Ref<HttpServletRequest>>() {}).getType();
+    private static final Type RESPONSE_TYPE = (new GenericType<Ref<HttpServletResponse>>() {}).getType();
 
     private static final AsyncContextDelegate DEFAULT_ASYNC_DELEGATE = new AsyncContextDelegate() {
 
@@ -143,40 +144,26 @@ public class WebComponent {
     private final boolean requestResponseBindingExternalized;
 
     private static final RequestScopedInitializerProvider DEFAULT_REQUEST_SCOPE_INITIALIZER_PROVIDER =
-            new RequestScopedInitializerProvider() {
-                @Override
-                public RequestScopedInitializer get(final RequestContextProvider context) {
-                    return new RequestScopedInitializer() {
-                        @Override
-                        public void initialize(final ServiceLocator locator) {
-                            locator.<Ref<HttpServletRequest>>getService(REQUEST_TYPE).set(context.getHttpServletRequest());
-                            locator.<Ref<HttpServletResponse>>getService(RESPONSE_TYPE).set(context.getHttpServletResponse());
-                        }
-                    };
-                }
+            context -> (RequestScopedInitializer) injectionManager -> {
+                injectionManager.<Ref<HttpServletRequest>>getInstance(REQUEST_TYPE).set(context.getHttpServletRequest());
+                injectionManager.<Ref<HttpServletResponse>>getInstance(RESPONSE_TYPE).set(context.getHttpServletResponse());
             };
 
     /**
      * Return the first found {@link AsyncContextDelegateProvider}
-     * (via {@link Providers#getAllProviders(org.glassfish.hk2.api.ServiceLocator, Class)}) or {@code #DEFAULT_ASYNC_DELEGATE} if
+     * (via {@link Providers#getAllProviders(InjectionManager, Class)}) or {@code #DEFAULT_ASYNC_DELEGATE} if
      * other delegate cannot be found.
      *
      * @return a non-null AsyncContextDelegateProvider.
      */
     private AsyncContextDelegateProvider getAsyncExtensionDelegate() {
-        final Iterator<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getServiceLocator(),
+        final Iterator<AsyncContextDelegateProvider> providers = Providers.getAllProviders(appHandler.getInjectionManager(),
                 AsyncContextDelegateProvider.class).iterator();
         if (providers.hasNext()) {
             return providers.next();
         }
 
-        return new AsyncContextDelegateProvider() {
-
-            @Override
-            public AsyncContextDelegate createDelegate(final HttpServletRequest request, final HttpServletResponse response) {
-                return DEFAULT_ASYNC_DELEGATE;
-            }
-        };
+        return (request, response) -> DEFAULT_ASYNC_DELEGATE;
     }
 
     @SuppressWarnings("JavaDoc")
@@ -221,41 +208,21 @@ public class WebComponent {
                 bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class)
                         .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
 
-                bindFactory(ReferencingFactory.<HttpServletRequest>referenceFactory())
-                        .to(new TypeLiteral<Ref<HttpServletRequest>>() {}).in(RequestScoped.class);
+                bindFactory(ReferencingFactory.referenceFactory())
+                        .to(new GenericType<Ref<HttpServletRequest>>() {}).in(RequestScoped.class);
 
                 // response
                 bindFactory(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class)
                         .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-                bindFactory(ReferencingFactory.<HttpServletResponse>referenceFactory())
-                        .to(new TypeLiteral<Ref<HttpServletResponse>>() {}).in(RequestScoped.class);
+                bindFactory(ReferencingFactory.referenceFactory())
+                        .to(new GenericType<Ref<HttpServletResponse>>() {}).in(RequestScoped.class);
             }
 
-            bindFactory(new Factory<ServletContext>() {
-                @Override
-                public ServletContext provide() {
-                    return webConfig.getServletContext();
-                }
-
-                @Override
-                public void dispose(final ServletContext instance) {
-                    //not used
-                }
-            }).to(ServletContext.class).in(Singleton.class);
+            bindFactory(webConfig::getServletContext).to(ServletContext.class).in(Singleton.class);
 
             final ServletConfig servletConfig = webConfig.getServletConfig();
             if (webConfig.getConfigType() == WebConfig.ConfigType.ServletConfig) {
-                bindFactory(new Factory<ServletConfig>() {
-                    @Override
-                    public ServletConfig provide() {
-                        return servletConfig;
-                    }
-
-                    @Override
-                    public void dispose(final ServletConfig instance) {
-                        //not used
-                    }
-                }).to(ServletConfig.class).in(Singleton.class);
+                bindFactory(() -> servletConfig).to(ServletConfig.class).in(Singleton.class);
 
                 // @PersistenceUnit
                 final Enumeration initParams = servletConfig.getInitParameterNames();
@@ -263,35 +230,15 @@ public class WebComponent {
                     final String initParamName = (String) initParams.nextElement();
 
                     if (initParamName.startsWith(PersistenceUnitBinder.PERSISTENCE_UNIT_PREFIX)) {
-                        install(new PersistenceUnitBinder());
+                        install(new PersistenceUnitBinder(servletConfig));
                         break;
                     }
                 }
             } else {
-                bindFactory(new Factory<FilterConfig>() {
-                    @Override
-                    public FilterConfig provide() {
-                        return webConfig.getFilterConfig();
-                    }
-
-                    @Override
-                    public void dispose(final FilterConfig instance) {
-                        //not used
-                    }
-                }).to(FilterConfig.class).in(Singleton.class);
+                bindFactory(webConfig::getFilterConfig).to(FilterConfig.class).in(Singleton.class);
             }
 
-            bindFactory(new Factory<WebConfig>() {
-                @Override
-                public WebConfig provide() {
-                    return webConfig;
-                }
-
-                @Override
-                public void dispose(final WebConfig instance) {
-                    //not used
-                }
-            }).to(WebConfig.class).in(Singleton.class);
+            bindFactory(() -> webConfig).to(WebConfig.class).in(Singleton.class);
 
             install(new ServiceFinderBinder<>(AsyncContextDelegateProvider.class, applicationProperties, RuntimeType.SERVER));
             install(new ServiceFinderBinder<>(FilterUrlMappingsProvider.class, applicationProperties, RuntimeType.SERVER));
@@ -382,7 +329,7 @@ public class WebComponent {
         final AbstractBinder webComponentBinder = new WebComponentBinder(resourceConfig.getProperties());
         resourceConfig.register(webComponentBinder);
 
-        final ServiceLocator locator = (ServiceLocator) webConfig.getServletContext()
+        final Object locator = webConfig.getServletContext()
                 .getAttribute(ServletProperties.SERVICE_LOCATOR);
 
         this.appHandler = new ApplicationHandler(resourceConfig, webComponentBinder, locator);
@@ -393,8 +340,8 @@ public class WebComponent {
         this.queryParamsAsFormParams = !resourceConfig.isProperty(ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED);
         this.configSetStatusOverSendError = ServerProperties.getValue(resourceConfig.getProperties(),
                 ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, false, Boolean.class);
-        this.backgroundTaskScheduler = appHandler.getServiceLocator()
-                .getService(ScheduledExecutorService.class, BackgroundSchedulerLiteral.INSTANCE);
+        this.backgroundTaskScheduler = appHandler.getInjectionManager()
+                .getInstance(ScheduledExecutorService.class, BackgroundSchedulerLiteral.INSTANCE);
     }
 
     /**

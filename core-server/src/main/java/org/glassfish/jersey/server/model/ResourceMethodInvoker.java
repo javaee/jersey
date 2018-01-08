@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletionStage;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -68,11 +71,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
-
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.NameBound;
 import org.glassfish.jersey.model.internal.ComponentBag;
@@ -91,9 +93,6 @@ import org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandle
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Server-side request-response {@link Inflector inflector} for invoking methods
@@ -117,23 +116,74 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
     private final Iterable<WriterInterceptor> writerInterceptors;
 
     /**
-     * Resource method invoker "assisted" injection helper.
-     *
-     * The injectable builder API provides means for constructing a properly
-     * injected {@link ResourceMethodInvoker resource method invoker} instances.
+     * Resource method invoker helper.
+     * <p>
+     * The builder API provides means for constructing a properly initialized
+     * {@link ResourceMethodInvoker resource method invoker} instances.
      */
     public static class Builder {
 
-        @Inject
-        private ResourceMethodDispatcherFactory dispatcherProviderFactory;
-        @Inject
-        private ResourceMethodInvocationHandlerFactory invocationHandlerProviderFactory;
-        @Inject
-        private ServiceLocator locator;
-        @Inject
-        private Configuration globalConfig;
-        @Inject
-        private javax.inject.Provider<ConfiguredValidator> validatorProvider;
+        private ResourceMethodDispatcherFactory resourceMethodDispatcherFactory;
+        private ResourceMethodInvocationHandlerFactory resourceMethodInvocationHandlerFactory;
+        private InjectionManager injectionManager;
+        private Configuration configuration;
+        private Supplier<ConfiguredValidator> configurationValidator;
+
+        /**
+         * Set resource method dispatcher factory.
+         *
+         * @param resourceMethodDispatcherFactory resource method dispatcher factory.
+         * @return updated builder.
+         */
+        public Builder resourceMethodDispatcherFactory(ResourceMethodDispatcherFactory resourceMethodDispatcherFactory) {
+            this.resourceMethodDispatcherFactory = resourceMethodDispatcherFactory;
+            return this;
+        }
+
+        /**
+         * Set resource method invocation handler factory.
+         *
+         * @param resourceMethodInvocationHandlerFactory resource method invocation handler factory.
+         * @return updated builder.
+         */
+        public Builder resourceMethodInvocationHandlerFactory(
+                ResourceMethodInvocationHandlerFactory resourceMethodInvocationHandlerFactory) {
+            this.resourceMethodInvocationHandlerFactory = resourceMethodInvocationHandlerFactory;
+            return this;
+        }
+
+        /**
+         * Set runtime DI injection manager.
+         *
+         * @param injectionManager DI injection manager.
+         * @return updated builder.
+         */
+        public Builder injectionManager(InjectionManager injectionManager) {
+            this.injectionManager = injectionManager;
+            return this;
+        }
+
+        /**
+         * Set global configuration.
+         *
+         * @param configuration global configuration.
+         * @return updated builder.
+         */
+        public Builder configuration(Configuration configuration) {
+            this.configuration = configuration;
+            return this;
+        }
+
+        /**
+         * Set global configuration validator.
+         *
+         * @param configurationValidator configuration validator.
+         * @return updated builder.
+         */
+        public Builder configurationValidator(Supplier<ConfiguredValidator> configurationValidator) {
+            this.configurationValidator = configurationValidator;
+            return this;
+        }
 
         /**
          * Build a new resource method invoker instance.
@@ -142,18 +192,30 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
          * @param processingProviders Processing providers.
          * @return new resource method invoker instance.
          */
-        public ResourceMethodInvoker build(
-                final ResourceMethod method,
-                final ProcessingProviders processingProviders
-        ) {
+        public ResourceMethodInvoker build(ResourceMethod method, ProcessingProviders processingProviders) {
+            if (resourceMethodDispatcherFactory == null) {
+                throw new NullPointerException("ResourceMethodDispatcherFactory is not set.");
+            }
+            if (resourceMethodInvocationHandlerFactory == null) {
+                throw new NullPointerException("ResourceMethodInvocationHandlerFactory is not set.");
+            }
+            if (injectionManager == null) {
+                throw new NullPointerException("DI injection manager is not set.");
+            }
+            if (configuration == null) {
+                throw new NullPointerException("Configuration is not set.");
+            }
+            if (configurationValidator == null) {
+                throw new NullPointerException("Configuration validator is not set.");
+            }
+
             return new ResourceMethodInvoker(
-                    dispatcherProviderFactory,
-                    invocationHandlerProviderFactory,
+                    resourceMethodDispatcherFactory,
+                    resourceMethodInvocationHandlerFactory,
                     method,
-                    processingProviders,
-                    locator,
-                    globalConfig,
-                    validatorProvider.get());
+                    processingProviders, injectionManager,
+                    configuration,
+                    configurationValidator.get());
         }
     }
 
@@ -162,7 +224,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             final ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
             final ResourceMethod method,
             final ProcessingProviders processingProviders,
-            ServiceLocator locator,
+            InjectionManager injectionManager,
             final Configuration globalConfig,
             final ConfiguredValidator validator) {
 
@@ -182,12 +244,14 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         }
 
         final ComponentBag componentBag = config.getComponentBag();
-        final List<Object> providers = new ArrayList<>(componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS));
+        final List<Object> providers = new ArrayList<>(
+                componentBag.getInstances(ComponentBag.excludeMetaProviders(injectionManager)));
 
         // Get instances of providers.
-        final Set<Class<?>> providerClasses = componentBag.getClasses(ComponentBag.EXCLUDE_META_PROVIDERS);
+        final Set<Class<?>> providerClasses = componentBag.getClasses(ComponentBag.excludeMetaProviders(injectionManager));
         if (!providerClasses.isEmpty()) {
-            locator = Injections.createLocator(locator, new AbstractBinder() {
+            injectionManager = Injections.createInjectionManager(injectionManager);
+            injectionManager.register(new AbstractBinder() {
                 @Override
                 protected void configure() {
                     bind(config).to(Configuration.class);
@@ -195,7 +259,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             });
 
             for (final Class<?> providerClass : providerClasses) {
-                providers.add(locator.createAndInitialize(providerClass));
+                providers.add(injectionManager.createAndInitialize(providerClass));
             }
         }
 
@@ -330,29 +394,65 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         final ContainerRequest request = processingContext.request();
         final Object resource = processingContext.routingContext().peekMatchedResource();
 
-        if (method.isSuspendDeclared() || method.isManagedAsyncDeclared()) {
+        if (method.isSuspendDeclared() || method.isManagedAsyncDeclared() || method.isSse()) {
             if (!processingContext.asyncContext().suspend()) {
                 throw new ProcessingException(LocalizationMessages.ERROR_SUSPENDING_ASYNC_REQUEST());
             }
         }
 
         if (method.isManagedAsyncDeclared()) {
-            processingContext.asyncContext().invokeManaged(new Producer<Response>() {
-                @Override
-                public Response call() {
-                    final Response response = invoke(processingContext, resource);
-                    if (method.isSuspendDeclared()) {
-                        // we ignore any response returned from a method that injects AsyncResponse
-                        return null;
-                    }
-                    return response;
+            processingContext.asyncContext().invokeManaged(() -> {
+                final Response response = invoke(processingContext, resource);
+                if (method.isSuspendDeclared()) {
+                    // we ignore any response returned from a method that injects AsyncResponse
+                    return null;
                 }
+                return response;
             });
             return null; // return null on current thread
         } else {
             // TODO replace with processing context factory method.
-            return new ContainerResponse(request, invoke(processingContext, resource));
+            Response response = invoke(processingContext, resource);
+
+            // we don't care about the response when SseEventSink is injected - it will be sent asynchronously.
+            if (method.isSse()) {
+                return null;
+            }
+
+            if (response.hasEntity()) {
+                Object entityFuture = response.getEntity();
+                if (entityFuture instanceof CompletionStage) {
+                    CompletionStage completionStage = ((CompletionStage) entityFuture);
+
+                    // suspend - we know that this feature is not done, see AbstractJavaResourceMethodDispatcher#invoke
+                    if (!processingContext.asyncContext().suspend()) {
+                        throw new ProcessingException(LocalizationMessages.ERROR_SUSPENDING_ASYNC_REQUEST());
+                    }
+
+                    // wait for a response
+                    completionStage.whenComplete(whenComplete(processingContext));
+
+                    return null; // return null on the current thread
+                }
+            }
+
+            return new ContainerResponse(request, response);
         }
+    }
+
+    private BiConsumer whenComplete(RequestProcessingContext processingContext) {
+        return (entity, exception) -> {
+
+            if (exception != null) {
+                if (exception instanceof CancellationException) {
+                    processingContext.asyncContext().resume(Response.status(Response.Status.SERVICE_UNAVAILABLE).build());
+                } else {
+                    processingContext.asyncContext().resume(((Throwable) exception));
+                }
+            } else {
+                processingContext.asyncContext().resume(entity);
+            }
+        };
     }
 
     private Response invoke(final RequestProcessingContext context, final Object resource) {
@@ -360,36 +460,33 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         Response jaxrsResponse;
         context.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_START);
 
-        context.push(new Function<ContainerResponse, ContainerResponse>() {
-            @Override
-            public ContainerResponse apply(final ContainerResponse response) {
-                // Need to check whether the response is null or mapped from exception. In these cases we don't want to modify
-                // response with resource method metadata.
-                if (response == null
-                        || response.isMappedFromException()) {
-                    return response;
-                }
-
-                final Annotation[] entityAnn = response.getEntityAnnotations();
-                if (methodAnnotations.length > 0) {
-                    if (entityAnn.length == 0) {
-                        response.setEntityAnnotations(methodAnnotations);
-                    } else {
-                        final Annotation[] mergedAnn = Arrays.copyOf(methodAnnotations,
-                                methodAnnotations.length + entityAnn.length);
-                        System.arraycopy(entityAnn, 0, mergedAnn, methodAnnotations.length, entityAnn.length);
-                        response.setEntityAnnotations(mergedAnn);
-                    }
-                }
-
-                if (canUseInvocableResponseType
-                        && response.hasEntity()
-                        && !(response.getEntityType() instanceof ParameterizedType)) {
-                    response.setEntityType(invocableResponseType);
-                }
-
+        context.push(response -> {
+            // Need to check whether the response is null or mapped from exception. In these cases we don't want to modify
+            // response with resource method metadata.
+            if (response == null
+                    || response.isMappedFromException()) {
                 return response;
             }
+
+            final Annotation[] entityAnn = response.getEntityAnnotations();
+            if (methodAnnotations.length > 0) {
+                if (entityAnn.length == 0) {
+                    response.setEntityAnnotations(methodAnnotations);
+                } else {
+                    final Annotation[] mergedAnn = Arrays.copyOf(methodAnnotations,
+                            methodAnnotations.length + entityAnn.length);
+                    System.arraycopy(entityAnn, 0, mergedAnn, methodAnnotations.length, entityAnn.length);
+                    response.setEntityAnnotations(mergedAnn);
+                }
+            }
+
+            if (canUseInvocableResponseType
+                    && response.hasEntity()
+                    && !(response.getEntityType() instanceof ParameterizedType)) {
+                response.setEntityType(invocableResponseType);
+            }
+
+            return response;
         });
 
         try {

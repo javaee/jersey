@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,14 +40,13 @@
 
 package org.glassfish.jersey.jaxb.internal;
 
-import javax.inject.Singleton;
-
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
-
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 /**
  * Binder for JAXB parameter converter.

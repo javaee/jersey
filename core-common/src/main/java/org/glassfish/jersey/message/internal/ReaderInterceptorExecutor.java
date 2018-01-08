@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,10 +64,9 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Represents reader interceptor chain executor for both client and server side.
@@ -79,7 +78,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderInterceptor>
-        implements ReaderInterceptorContext, ServiceLocatorSupplier {
+        implements ReaderInterceptorContext, InjectionManagerSupplier {
 
     private static final Logger LOGGER = Logger.getLogger(ReaderInterceptorExecutor.class.getName());
 
@@ -88,7 +87,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
     private final MessageBodyWorkers workers;
     private final boolean translateNce;
 
-    private final ServiceLocator serviceLocator;
+    private final InjectionManager injectionManager;
 
     private InputStream inputStream;
     private int processedCount;
@@ -112,7 +111,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
      * @param translateNce       if {@code true}, the {@link javax.ws.rs.core.NoContentException} thrown by a selected message
      *                           body
      *                           reader will be translated into a {@link javax.ws.rs.BadRequestException} as required by
-     * @param serviceLocator Service locator.
+     * @param injectionManager   injection manager.
      */
     ReaderInterceptorExecutor(final Class<?> rawType, final Type type,
                               final Annotation[] annotations,
@@ -123,14 +122,14 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
                               final MessageBodyWorkers workers,
                               final Iterable<ReaderInterceptor> readerInterceptors,
                               final boolean translateNce,
-                              final ServiceLocator serviceLocator) {
+                              final InjectionManager injectionManager) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
         this.inputStream = inputStream;
         this.workers = workers;
         this.translateNce = translateNce;
-        this.serviceLocator = serviceLocator;
+        this.injectionManager = injectionManager;
 
         final List<ReaderInterceptor> effectiveInterceptors = StreamSupport.stream(readerInterceptors.spliterator(), false)
                                                                            .collect(Collectors.toList());
@@ -187,8 +186,8 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
     }
 
     @Override
-    public ServiceLocator getServiceLocator() {
-        return serviceLocator;
+    public InjectionManager getInjectionManager() {
+        return injectionManager;
     }
 
     /**
@@ -256,7 +255,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
 
             try {
                 return reader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
-                        context.getMediaType(), context.getHeaders(), stream);
+                                       context.getMediaType(), context.getHeaders(), stream);
             } catch (final NoContentException ex) {
                 if (translateNce) {
                     throw new BadRequestException(ex);

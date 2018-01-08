@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -403,6 +403,34 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
             }
 
             this.status = status;
+            return this;
+        }
+
+        @Override
+        public ResponseBuilder status(int status, final String reasonPhrase) {
+            if (status < 100 || status > 599) {
+                throw new IllegalArgumentException("Response status must not be less than '100' or greater than '599'");
+            }
+
+            final Status.Family family = Status.Family.familyOf(status);
+
+            this.status = new StatusType() {
+                @Override
+                public int getStatusCode() {
+                    return status;
+                }
+
+                @Override
+                public Status.Family getFamily() {
+                    return family;
+                }
+
+                @Override
+                public String getReasonPhrase() {
+                    return reasonPhrase;
+                }
+            };
+
             return this;
         }
 

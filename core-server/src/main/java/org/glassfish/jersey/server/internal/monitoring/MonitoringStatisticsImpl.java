@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -201,7 +201,7 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
 
             // Resource method stats.
             methodFactory.getOrCreate(resourceMethod)
-                    .addResourceMethodExecution(methodTime, methodDuration, requestTime, requestDuration);
+                         .addResourceMethodExecution(methodTime, methodDuration, requestTime, requestDuration);
         }
 
         /**

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,17 +39,19 @@
  */
 package org.glassfish.jersey.jaxb.internal;
 
+import java.util.function.Supplier;
+
 import javax.ws.rs.core.Configuration;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageProperties;
 
 /**
- * Gathers common functionality for {@link org.glassfish.hk2.api.Factory} instances handling XML data.
+ * Gathers common functionality for {@link Supplier} instances handling XML data.
  *
  * @author Michal Gajdos
  */
-abstract class AbstractXmlFactory {
+abstract class AbstractXmlFactory<T> implements Supplier<T> {
 
     private final Configuration config;
 

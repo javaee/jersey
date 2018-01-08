@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,23 +66,18 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import javax.annotation.Priority;
-import javax.inject.Singleton;
 
 import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.ServiceFinder;
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.CompositeBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
-
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.Binder;
-import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 
 /**
  * Common immutable {@link javax.ws.rs.core.Configuration} implementation for
@@ -212,13 +207,13 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     public CommonConfig(final RuntimeType type, final Predicate<ContractProvider> registrationStrategy) {
         this.type = type;
 
-        this.properties = new HashMap<String, Object>();
+        this.properties = new HashMap<>();
         this.immutablePropertiesView = Collections.unmodifiableMap(properties);
         this.immutablePropertyNames = Collections.unmodifiableCollection(properties.keySet());
 
         this.componentBag = ComponentBag.newInstance(registrationStrategy);
 
-        this.newFeatureRegistrations = new LinkedList<FeatureRegistration>();
+        this.newFeatureRegistrations = new LinkedList<>();
 
         this.enabledFeatureClasses = Collections.newSetFromMap(new IdentityHashMap<>());
         this.enabledFeatures = new HashSet<>();
@@ -234,7 +229,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     public CommonConfig(final CommonConfig config) {
         this.type = config.type;
 
-        this.properties = new HashMap<String, Object>(config.properties.size());
+        this.properties = new HashMap<>(config.properties.size());
         this.immutablePropertiesView = Collections.unmodifiableMap(this.properties);
         this.immutablePropertyNames = Collections.unmodifiableCollection(this.properties.keySet());
 
@@ -326,7 +321,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     @Override
     public Map<Class<?>, Integer> getContracts(final Class<?> componentClass) {
         final ContractProvider model = componentBag.getModel(componentClass);
-        return (model == null) ? Collections.<Class<?>, Integer>emptyMap() : model.getContractMap();
+        return (model == null) ? Collections.emptyMap() : model.getContractMap();
     }
 
     @Override
@@ -576,12 +571,14 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     /**
-     * Configure {@link AutoDiscoverable auto-discoverables} in the HK2 service locator.
+     * Configure {@link AutoDiscoverable auto-discoverables} in the injection manager.
      *
-     * @param locator locator in which the auto-discoverables should be configured.
-     * @param forcedOnly defines whether all or only forced auto-discoverables should be configured.
+     * @param injectionManager  injection manager in which the auto-discoverables should be configured.
+     * @param autoDiscoverables list of registered auto discoverable components.
+     * @param forcedOnly        defines whether all or only forced auto-discoverables should be configured.
      */
-    public void configureAutoDiscoverableProviders(final ServiceLocator locator, final boolean forcedOnly) {
+    public void configureAutoDiscoverableProviders(final InjectionManager injectionManager,
+            final Collection<AutoDiscoverable> autoDiscoverables, final boolean forcedOnly) {
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
             final Set<AutoDiscoverable> providers = new TreeSet<>((o1, o2) -> {
@@ -597,13 +594,13 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
             final List<ForcedAutoDiscoverable> forcedAutoDiscroverables = new LinkedList<>();
             for (Class<ForcedAutoDiscoverable> forcedADType : ServiceFinder.find(ForcedAutoDiscoverable.class, true)
                     .toClassArray()) {
-                forcedAutoDiscroverables.add(locator.createAndInitialize(forcedADType));
+                forcedAutoDiscroverables.add(injectionManager.createAndInitialize(forcedADType));
             }
             providers.addAll(forcedAutoDiscroverables);
 
             // Regular.
             if (!forcedOnly) {
-                providers.addAll(Providers.getProviders(locator, AutoDiscoverable.class));
+                providers.addAll(autoDiscoverables);
             }
 
             for (final AutoDiscoverable autoDiscoverable : providers) {
@@ -614,7 +611,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
                         autoDiscoverable.configure(this);
                     } catch (final Exception e) {
                         LOGGER.log(Level.FINE,
-                                LocalizationMessages.AUTODISCOVERABLE_CONFIGURATION_FAILED(autoDiscoverable.getClass()), e);
+                                   LocalizationMessages.AUTODISCOVERABLE_CONFIGURATION_FAILED(autoDiscoverable.getClass()), e);
                     }
                 }
             }
@@ -622,70 +619,57 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     /**
-     * Configure HK2 binders in the HK2 service locator and enable JAX-RS features.
+     * Configure binders in the injection manager and enable JAX-RS features.
      *
-     * @param locator locator in which the binders and features should be configured.
+     * @param injectionManager injection manager in which the binders and features should be configured.
      */
-    public void configureMetaProviders(final ServiceLocator locator) {
+    public void configureMetaProviders(InjectionManager injectionManager, ManagedObjectsFinalizer finalizer) {
         // First, configure existing binders
-        final Set<Binder> configuredBinders = configureBinders(locator, Collections.emptySet());
+        Set<Binder> configuredBinders = configureBinders(injectionManager, Collections.emptySet());
 
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
-
-            registerManagedObjectsFinalizer(locator);
+            // Register external meta objects
+            configureExternalObjects(injectionManager);
             // Next, configure all features
-            configureFeatures(
-                    locator,
-                    new HashSet<>(),
-                    resetRegistrations());
-
+            configureFeatures(injectionManager, new HashSet<>(), resetRegistrations(), finalizer);
             // At last, configure any new binders added by features
-            configureBinders(locator, configuredBinders);
+            configureBinders(injectionManager, configuredBinders);
         }
     }
 
-    private void registerManagedObjectsFinalizer(ServiceLocator locator) {
-        DynamicConfiguration dc = Injections.getConfiguration(locator);
-        ScopedBindingBuilder<ManagedObjectsFinalizer> binder = Injections.newBinder(ManagedObjectsFinalizer.class)
-                .to(ManagedObjectsFinalizer.class)
-                .in(Singleton.class);
-        Injections.addBinding(binder, dc);
-        dc.commit();
-    }
-
-    private Set<Binder> configureBinders(final ServiceLocator locator, final Set<Binder> configured) {
-        final Set<Binder> allConfigured = Collections.newSetFromMap(new IdentityHashMap<>());
+    private Set<Binder> configureBinders(InjectionManager injectionManager, Set<Binder> configured) {
+        Set<Binder> allConfigured = Collections.newSetFromMap(new IdentityHashMap<>());
         allConfigured.addAll(configured);
 
-        final Collection<Binder> binders = getBinders(configured);
+        Collection<Binder> binders = getBinder(configured);
         if (!binders.isEmpty()) {
-            final DynamicConfiguration dc = Injections.getConfiguration(locator);
-
-            for (final Binder binder : binders) {
-                binder.bind(dc);
-                allConfigured.add(binder);
-            }
-            dc.commit();
+            injectionManager.register(CompositeBinder.wrap(binders));
+            allConfigured.addAll(binders);
         }
 
         return allConfigured;
     }
 
-    private Collection<Binder> getBinders(final Set<Binder> configured) {
-
+    private Collection<Binder> getBinder(Set<Binder> configured) {
         return componentBag.getInstances(ComponentBag.BINDERS_ONLY)
-                           .stream()
-                           .map(CAST_TO_BINDER)
-                           .filter(binder -> !configured.contains(binder)).collect(Collectors.toList());
+                .stream()
+                .map(CAST_TO_BINDER)
+                .filter(binder -> !configured.contains(binder))
+                .collect(Collectors.toList());
     }
 
-    private void configureFeatures(final ServiceLocator locator,
-                                   final Set<FeatureRegistration> processed,
-                                   final List<FeatureRegistration> unprocessed) {
+    private void configureExternalObjects(InjectionManager injectionManager) {
+          componentBag.getInstances(model -> ComponentBag.EXTERNAL_ONLY.test(model, injectionManager))
+                  .forEach(injectionManager::register);
+          componentBag.getClasses(model -> ComponentBag.EXTERNAL_ONLY.test(model, injectionManager))
+                  .forEach(injectionManager::register);
+    }
 
-        ManagedObjectsFinalizer managedObjectsFinalizer = locator.getService(ManagedObjectsFinalizer.class);
-
+    private void configureFeatures(InjectionManager injectionManager,
+                                   Set<FeatureRegistration> processed,
+                                   List<FeatureRegistration> unprocessed,
+                                   ManagedObjectsFinalizer managedObjectsFinalizer) {
         FeatureContextWrapper featureContextWrapper = null;
         for (final FeatureRegistration registration : unprocessed) {
             if (processed.contains(registration)) {
@@ -695,13 +679,13 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
             Feature feature = registration.getFeature();
             if (feature == null) {
-                feature = locator.createAndInitialize(registration.getFeatureClass());
+                feature = injectionManager.createAndInitialize(registration.getFeatureClass());
                 managedObjectsFinalizer.registerForPreDestroyCall(feature);
             } else {
                 // Disable injection of Feature instances on the client-side. Instances may be registered into multiple
                 // web-targets which means that injecting anything into these instances is not safe.
                 if (!RuntimeType.CLIENT.equals(type)) {
-                    locator.inject(feature);
+                    injectionManager.inject(feature);
                 }
             }
 
@@ -712,15 +696,13 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
             if (featureContextWrapper == null) {
                 // init lazily
-                featureContextWrapper = new FeatureContextWrapper(this, locator);
+                featureContextWrapper = new FeatureContextWrapper(this, injectionManager);
             }
             final boolean success = feature.configure(featureContextWrapper);
 
             if (success) {
                 processed.add(registration);
-
-                configureFeatures(locator, processed, resetRegistrations());
-
+                configureFeatures(injectionManager, processed, resetRegistrations(), managedObjectsFinalizer);
                 enabledFeatureClasses.add(registration.getFeatureClass());
                 enabledFeatures.add(feature);
             }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,11 +44,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.CookieParam;
@@ -59,12 +61,13 @@ import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.sse.SseEventSink;
 
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * Validator checking resource methods and sub resource locators. The validator mainly checks the parameters of resource
@@ -74,15 +77,10 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 class ResourceMethodValidator extends AbstractResourceModelVisitor {
 
-    private final ServiceLocator locator;
+    private final Collection<ValueParamProvider> valueParamProviders;
 
-    /**
-     * Create new resource method validator.
-     *
-     * @param locator HK2 service locator.
-     */
-    public ResourceMethodValidator(ServiceLocator locator) {
-        this.locator = locator;
+    ResourceMethodValidator(Collection<ValueParamProvider> valueParamProviders) {
+        this.valueParamProviders = valueParamProviders;
     }
 
     @Override
@@ -109,8 +107,18 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
         checkParameters(method);
 
         if ("GET".equals(method.getHttpMethod())) {
+            final long eventSinkCount = invocable.getParameters()
+                    .stream()
+                    .filter(parameter -> SseEventSink.class.equals(parameter.getRawType()))
+                    .count();
+
+            final boolean isSse = eventSinkCount > 0;
+
+            if (eventSinkCount > 1) {
+                Errors.warning(method, LocalizationMessages.MULTIPLE_EVENT_SINK_INJECTION(invocable.getHandlingMethod()));
+            }
             // ensure GET returns non-void value if not suspendable
-            if (void.class == invocable.getHandlingMethod().getReturnType() && !method.isSuspendDeclared()) {
+            if (void.class == invocable.getHandlingMethod().getReturnType() && !method.isSuspendDeclared() && !isSse) {
                 Errors.hint(method, LocalizationMessages.GET_RETURNS_VOID(invocable.getHandlingMethod()));
             }
 
@@ -124,6 +132,10 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
                     Errors.fatal(method, LocalizationMessages.GET_CONSUMES_FORM_PARAM(invocable.getHandlingMethod()));
                     break;
                 }
+            }
+
+            if (isSse && void.class != invocable.getHandlingMethod().getReturnType()) {
+                Errors.fatal(method, LocalizationMessages.EVENT_SINK_RETURNS_TYPE(invocable.getHandlingMethod()));
             }
         }
 
@@ -162,7 +174,8 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
     }
 
     private void checkValueProviders(ResourceMethod method) {
-        final List<? extends Factory<?>> valueProviders = method.getInvocable().getValueProviders(locator);
+        List<? extends Function<ContainerRequest, ?>> valueProviders =
+                ParameterValueHelper.createValueProviders(valueParamProviders, method.getInvocable());
         if (valueProviders.contains(null)) {
             int index = valueProviders.indexOf(null);
             Errors.fatal(method, LocalizationMessages.ERROR_PARAMETER_MISSING_VALUE_PROVIDER(index, method.getInvocable()
@@ -199,6 +212,10 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
                 }
             }
         }
+    }
+
+    private boolean isSseInjected(final Invocable invocable) {
+        return invocable.getParameters().stream().anyMatch(parameter -> SseEventSink.class.equals(parameter.getRawType()));
     }
 
     private static final Set<Class> PARAM_ANNOTATION_SET = createParamAnnotationSet();

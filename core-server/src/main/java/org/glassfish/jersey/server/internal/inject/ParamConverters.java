@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
@@ -50,7 +51,6 @@ import java.util.Date;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
@@ -60,8 +60,6 @@ import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.HttpDateFormat;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Container of several different {@link ParamConverterProvider param converter providers}
@@ -283,19 +281,17 @@ class ParamConverters {
 
         /**
          * Create new aggregated {@link ParamConverterProvider param converter provider}.
-         *
-         * @param locator HK2 service locator.
          */
-        public AggregatedProvider(@Context final ServiceLocator locator) {
+        public AggregatedProvider() {
             providers = new ParamConverterProvider[] {
                     // ordering is important (e.g. Date provider must be executed before String Constructor
                     // as Date has a deprecated String constructor
-                    locator.createAndInitialize(DateProvider.class),
-                    locator.createAndInitialize(TypeFromStringEnum.class),
-                    locator.createAndInitialize(TypeValueOf.class),
-                    locator.createAndInitialize(CharacterProvider.class),
-                    locator.createAndInitialize(TypeFromString.class),
-                    locator.createAndInitialize(StringConstructor.class),
+                    new DateProvider(),
+                    new TypeFromStringEnum(),
+                    new TypeValueOf(),
+                    new CharacterProvider(),
+                    new TypeFromString(),
+                    new StringConstructor()
             };
         }
 

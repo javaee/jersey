@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,7 @@
     <parent>
         <groupId>org.glassfish.jersey</groupId>
         <artifactId>project</artifactId>
-        <version>3.0-SNAPSHOT</version>
+        <version>2.26-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.examples</groupId>
@@ -72,11 +72,13 @@
         <module>entity-filtering-security</module>
         <module>extended-wadl-webapp</module>
         <module>exception-mapping</module>
+        <module>feed-combiner-java8-webapp</module>
         <module>freemarker-webapp</module>
         <module>flight-mgmt-webapp</module>
         <module>groovy</module>
         <module>helloworld</module>
         <module>helloworld-benchmark</module>
+        <module>helloworld-cdi2-se</module>
         <module>helloworld-netty</module>
         <module>helloworld-programmatic</module>
         <module>helloworld-pure-jax-rs</module>
@@ -88,9 +90,11 @@
         <module>http-trace</module>
         <module>https-clientserver-grizzly</module>
         <module>https-server-glassfish</module>
+        <module>java8-webapp</module>
         <module>jaxb</module>
         <module>jaxrs-types-injection</module>
         <module>jersey-ejb</module>
+        <module>json-binding-webapp</module>
         <module>json-jackson</module>
         <module>json-jackson1</module>
         <module>json-jettison</module>
@@ -103,6 +107,7 @@
         <module>managed-client-simple-webapp</module>
         <module>monitoring-webapp</module>
         <module>multipart-webapp</module>
+        <module>open-tracing</module>
         <module>osgi-helloworld-webapp</module>
         <module>osgi-http-service</module>
         <module>oauth-client-twitter</module>
@@ -112,12 +117,14 @@
         <module>server-async</module>
         <module>server-async-managed</module>
         <module>server-async-standalone</module>
-        <module>server-sent-events</module>
+        <module>server-sent-events-jersey</module>
+        <module>server-sent-events-jaxrs</module>
         <module>servlet3-webapp</module>
         <module>simple-console</module>
         <module>shortener-webapp</module>
         <module>sparklines</module>
-        <module>sse-item-store-webapp</module>
+        <module>sse-item-store-jersey-webapp</module>
+        <module>sse-item-store-jaxrs-webapp</module>
         <module>sse-twitter-aggregator</module>
         <module>system-properties-example</module>
         <module>tone-generator</module>

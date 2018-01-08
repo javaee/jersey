@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -88,21 +88,27 @@ public class MultiThreadingAggregatedReservoirTest {
     private final long startTime = System.nanoTime();
     private final TimeUnit startUnitTime = TimeUnit.NANOSECONDS;
 
-    private final AggregatingTrimmer trimmer = new AggregatingTrimmer(startTime(), startUnitTime, 10, TimeUnit.MICROSECONDS);
-    private final SlidingWindowTimeReservoir time10usReservoir = new SlidingWindowTimeReservoir(10, TimeUnit.MICROSECONDS,
-            startTime(), startUnitTime, trimmer);
-    private final AggregatedSlidingWindowTimeReservoir time1DayAggregatedReservoir = new AggregatedSlidingWindowTimeReservoir(1,
-            TimeUnit.DAYS,
-            startTime(), startUnitTime, trimmer);
-    private final AggregatedSlidingWindowTimeReservoir time10DaysAggregatedReservoir = new AggregatedSlidingWindowTimeReservoir(
-            10, TimeUnit.DAYS,
-            startTime(), startUnitTime, trimmer);
-    private final List<AggregatedSlidingWindowTimeReservoir> aggregatedTimeReservoirs = new CopyOnWriteArrayList<>(
-            Arrays.asList(
-                    new AggregatedSlidingWindowTimeReservoir(1, TimeUnit.SECONDS, startTime(), startUnitTime, trimmer),
-                    time1DayAggregatedReservoir,
-                    time10DaysAggregatedReservoir
-            ));
+    private final AggregatingTrimmer trimmer =
+            new AggregatingTrimmer(startTime(), startUnitTime, 10, TimeUnit.MICROSECONDS);
+    private final SlidingWindowTimeReservoir time10usReservoir =
+            new SlidingWindowTimeReservoir(10, TimeUnit.MICROSECONDS,
+                                           startTime(), startUnitTime, trimmer);
+    private final AggregatedSlidingWindowTimeReservoir time1DayAggregatedReservoir =
+            new AggregatedSlidingWindowTimeReservoir(1,
+                                                     TimeUnit.DAYS,
+                                                     startTime(), startUnitTime, trimmer);
+    private final AggregatedSlidingWindowTimeReservoir time10DaysAggregatedReservoir =
+            new AggregatedSlidingWindowTimeReservoir(
+                    10, TimeUnit.DAYS,
+                    startTime(), startUnitTime, trimmer);
+    private final List<AggregatedSlidingWindowTimeReservoir> aggregatedTimeReservoirs =
+            new CopyOnWriteArrayList<>(
+                    Arrays.asList(
+                            new AggregatedSlidingWindowTimeReservoir(1, TimeUnit.SECONDS, startTime(),
+                                                                     startUnitTime, trimmer),
+                            time1DayAggregatedReservoir,
+                            time10DaysAggregatedReservoir
+                    ));
 
     /**
      * Determines the start time of the test.
@@ -135,7 +141,7 @@ public class MultiThreadingAggregatedReservoirTest {
                     while (!doShutdown && !Thread.currentThread().isInterrupted()) {
 
                         aggregatedTimeReservoirs.get(ThreadLocalRandom.current().nextInt(aggregatedTimeReservoirs.size()))
-                                .getSnapshot(System.nanoTime(), TimeUnit.NANOSECONDS);
+                                                .getSnapshot(System.nanoTime(), TimeUnit.NANOSECONDS);
                         Thread.sleep(100);
                     }
                 } catch (InterruptedException e) {
@@ -165,9 +171,9 @@ public class MultiThreadingAggregatedReservoirTest {
         producerExecutorService.shutdown();
         consumerExecutorService.shutdown();
         Assert.assertTrue("Consumer tasks didn't terminated peacefully, aborting this test.",
-                consumerExecutorService.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+                          consumerExecutorService.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS));
         Assert.assertTrue("Producer tasks didn't terminated peacefully, aborting this test.",
-                producerExecutorService.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+                          producerExecutorService.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
         final long snapshotTime = System.nanoTime();
         final long sum = (long) incrementer.get() * (incrementer.get() + 1) / 2;
@@ -175,9 +181,9 @@ public class MultiThreadingAggregatedReservoirTest {
         LOGGER.info("Integer reached: " + incrementer.get());
 
         checkInNanos(time1DayAggregatedReservoir, snapshotTime, incrementer.get(), 1, incrementer.get(),
-                (double) sum / incrementer.get(), snapshotTime - startTime());
+                     (double) sum / incrementer.get(), snapshotTime - startTime());
         checkInNanos(time10DaysAggregatedReservoir, snapshotTime, incrementer.get(), 1, incrementer.get(),
-                (double) sum / incrementer.get(), snapshotTime - startTime());
+                     (double) sum / incrementer.get(), snapshotTime - startTime());
     }
 
     private void executeInParallel(final Executor consumerExecutorService, final int count, final Runnable runnable) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,12 +45,11 @@ import java.net.URI;
 import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.grizzly2.httpserver.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpHandlerRegistration;
@@ -59,8 +58,6 @@ import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.utils.Charsets;
-
-import org.glassfish.jersey.internal.guava.ThreadFactoryBuilder;
 
 /**
  * Factory for creating Grizzly Http Server.
@@ -202,20 +199,19 @@ public final class GrizzlyHttpServerFactory {
      * @param config                web application configuration.
      * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
      * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
-     * @param parentLocator         {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
-     *                              {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param parentContext         DI provider specific context with application's registered bindings.
      * @return newly created {@code HttpServer}.
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      * @see GrizzlyHttpContainer
-     * @see org.glassfish.hk2.api.ServiceLocator
      * @since 2.12
      */
     public static HttpServer createHttpServer(final URI uri,
                                               final ResourceConfig config,
                                               final boolean secure,
                                               final SSLEngineConfigurator sslEngineConfigurator,
-                                              final ServiceLocator parentLocator) {
-        return createHttpServer(uri, new GrizzlyHttpContainer(config, parentLocator), secure, sslEngineConfigurator, true);
+                                              final Object parentContext) {
+        return createHttpServer(uri, new GrizzlyHttpContainer(config, parentContext), secure, sslEngineConfigurator,
+                true);
     }
 
     /**
@@ -224,18 +220,16 @@ public final class GrizzlyHttpServerFactory {
      * @param uri           uri on which the {@link ApplicationHandler} will be deployed. Only first path
      *                      segment will be used as context path, the rest will be ignored.
      * @param config        web application configuration.
-     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
-     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param parentContext DI provider specific context with application's registered bindings.
      * @return newly created {@code HttpServer}.
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      * @see GrizzlyHttpContainer
-     * @see org.glassfish.hk2.api.ServiceLocator
      * @since 2.12
      */
     public static HttpServer createHttpServer(final URI uri,
                                               final ResourceConfig config,
-                                              final ServiceLocator parentLocator) {
-        return createHttpServer(uri, new GrizzlyHttpContainer(config, parentLocator), false, null, true);
+                                              final Object parentContext) {
+        return createHttpServer(uri, new GrizzlyHttpContainer(config, parentContext), false, null, true);
     }
 
     /**

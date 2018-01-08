@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,14 +43,13 @@ package org.glassfish.jersey.jackson.internal;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.core.GenericType;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.message.filtering.spi.ObjectGraphTransformer;
 import org.glassfish.jersey.message.filtering.spi.ObjectProvider;
-
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 
@@ -78,9 +77,9 @@ public final class JacksonFilteringFeature implements Feature {
         protected void configure() {
             bindAsContract(JacksonObjectProvider.class)
                     // FilteringObjectProvider.
-                    .to(new TypeLiteral<ObjectProvider<FilterProvider>>() {})
+                    .to(new GenericType<ObjectProvider<FilterProvider>>() {})
                     // FilteringGraphTransformer.
-                    .to(new TypeLiteral<ObjectGraphTransformer<FilterProvider>>() {})
+                    .to(new GenericType<ObjectGraphTransformer<FilterProvider>>() {})
                     // Scope.
                     .in(Singleton.class);
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,37 +37,27 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.ext.MessageBodyReader;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.ContextResolverFactory;
-import org.glassfish.jersey.internal.JaxrsProviders;
-import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.ServiceFinderBinder;
-import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
-import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.spi.ExecutorServiceProvider;
-
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Registers all binders necessary for {@link Client} runtime.
@@ -88,7 +78,7 @@ class ClientBinder extends AbstractBinder {
         }
     }
 
-    private static class PropertiesDelegateFactory implements Factory<PropertiesDelegate> {
+    private static class PropertiesDelegateFactory implements Supplier<PropertiesDelegate> {
 
         private final Provider<ClientRequest> requestProvider;
 
@@ -98,13 +88,8 @@ class ClientBinder extends AbstractBinder {
         }
 
         @Override
-        public PropertiesDelegate provide() {
+        public PropertiesDelegate get() {
             return requestProvider.get().getPropertiesDelegate();
-        }
-
-        @Override
-        public void dispose(PropertiesDelegate instance) {
-            // do nothing
         }
     }
 
@@ -119,38 +104,22 @@ class ClientBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
-                new JerseyErrorService.Binder(),
-                new ContextInjectionResolver.Binder(),
-                new JerseyClassAnalyzer.Binder(),
-                new MessagingBinders.MessageBodyProviders(clientRuntimeProperties, RuntimeType.CLIENT),
-                new MessagingBinders.HeaderDelegateProviders(),
-                new MessageBodyFactory.Binder(),
-                new ContextResolverFactory.Binder(),
-                new JaxrsProviders.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, clientRuntimeProperties, RuntimeType.CLIENT));
+        install(new MessagingBinders.MessageBodyProviders(clientRuntimeProperties, RuntimeType.CLIENT),
+                new MessagingBinders.HeaderDelegateProviders());
 
-        bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {
+        bindFactory(ReferencingFactory.referenceFactory()).to(new GenericType<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);
 
         bindFactory(RequestContextInjectionFactory.class)
                 .to(ClientRequest.class)
                 .in(RequestScoped.class);
 
-        bindFactory(ReferencingFactory.<ClientRequest>referenceFactory()).to(new TypeLiteral<Ref<ClientRequest>>() {
+        bindFactory(ReferencingFactory.referenceFactory()).to(new GenericType<Ref<ClientRequest>>() {
         }).in(RequestScoped.class);
 
         bindFactory(PropertiesDelegateFactory.class, Singleton.class).to(PropertiesDelegate.class).in(RequestScoped.class);
 
         // ChunkedInput entity support
         bind(ChunkedInputReader.class).to(MessageBodyReader.class).in(Singleton.class);
-
-        // Default async request executors support
-        int asyncThreadPoolSize = ClientProperties.getValue(clientRuntimeProperties, ClientProperties.ASYNC_THREADPOOL_SIZE, 0);
-        asyncThreadPoolSize = (asyncThreadPoolSize < 0) ? 0 : asyncThreadPoolSize;
-        // a constructor parameter injected into DefaultClientAsyncExecutorProvider
-        bind(asyncThreadPoolSize).named("ClientAsyncThreadPoolSize");
-        // DefaultClientAsyncExecutorProvider must be singleton scoped, so that @PreDestroy, which closes the executor, is called
-        bind(DefaultClientAsyncExecutorProvider.class).to(ExecutorServiceProvider.class).in(Singleton.class);
     }
 }

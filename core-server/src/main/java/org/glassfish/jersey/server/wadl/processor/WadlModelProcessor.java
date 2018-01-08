@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,7 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.xml.bind.Marshaller;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -127,16 +128,15 @@ public class WadlModelProcessor implements ModelProcessor {
                 new SimpleDateFormat(WadlResource.HTTPDATEFORMAT).format(new Date());
 
         @Inject
-        private ExtendedUriInfo extendedUriInfo;
+        private Provider<ExtendedUriInfo> extendedUriInfo;
 
         @Context
         private WadlApplicationContext wadlApplicationContext;
 
-
         @Override
         public Response apply(ContainerRequestContext containerRequestContext) {
 
-            final RuntimeResource resource = extendedUriInfo.getMatchedRuntimeResources().get(0);
+            final RuntimeResource resource = extendedUriInfo.get().getMatchedRuntimeResources().get(0);
             // TODO: support multiple resources, see ignored tests in WadlResourceTest.Wadl8Test
             final UriInfo uriInfo = containerRequestContext.getUriInfo();
 

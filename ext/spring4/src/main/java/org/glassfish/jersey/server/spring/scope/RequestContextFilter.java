@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.spring.scope;
 
 import java.io.IOException;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -50,8 +49,9 @@ import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
@@ -94,11 +94,11 @@ public final class RequestContextFilter implements ContainerRequestFilter, Conta
     /**
      * Create a new request context filter instance.
      *
-     * @param locator HK2 service locator.
+     * @param injectionManager injection manager.
      */
     @Inject
-    public RequestContextFilter(final ServiceLocator locator) {
-        final ApplicationContext appCtx = locator.getService(ApplicationContext.class);
+    public RequestContextFilter(final InjectionManager injectionManager) {
+        final ApplicationContext appCtx = injectionManager.getInstance(ApplicationContext.class);
         final boolean isWebApp = appCtx instanceof WebApplicationContext;
 
         attributeController = appCtx != null ? new SpringAttributeController() {
@@ -107,7 +107,7 @@ public final class RequestContextFilter implements ContainerRequestFilter, Conta
             public void setAttributes(final ContainerRequestContext requestContext) {
                 final RequestAttributes attributes;
                 if (isWebApp) {
-                    final HttpServletRequest httpRequest = locator.getService(HttpServletRequest.class);
+                    final HttpServletRequest httpRequest = injectionManager.getInstance(HttpServletRequest.class);
                     attributes = new JaxrsServletRequestAttributes(httpRequest, requestContext);
                 } else {
                     attributes = new JaxrsRequestAttributes(requestContext);

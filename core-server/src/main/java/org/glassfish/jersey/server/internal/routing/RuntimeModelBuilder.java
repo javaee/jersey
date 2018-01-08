@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,11 +37,14 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.routing;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import javax.ws.rs.core.Configuration;
 
@@ -51,15 +54,15 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.process.Endpoint;
+import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.server.model.RuntimeResourceModel;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 import org.glassfish.jersey.uri.PathPattern;
 import org.glassfish.jersey.uri.UriTemplate;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * This is a common base for root resource and sub-resource runtime model
@@ -71,7 +74,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 final class RuntimeModelBuilder {
 
     private final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder;
-    private final MessageBodyWorkers workers;
+    private final MessageBodyWorkers messageBodyWorkers;
     private final ProcessingProviders processingProviders;
 
     // SubResourceLocator Model Builder.
@@ -80,31 +83,30 @@ final class RuntimeModelBuilder {
     /**
      * Create a new instance of the runtime model builder.
      *
-     * @param locator                      HK2 service locator.
      * @param resourceContext              Jersey resource context.
      * @param config                       configuration of the application.
-     * @param workers                      message body workers.
+     * @param messageBodyWorkers           message body messageBodyWorkers.
      * @param processingProviders          processing providers.
      * @param resourceMethodInvokerBuilder method invoker builder.
+     * @param modelProcessors              all registered model processors.
+     * @param createServiceFunction        function that is able to create and initialize new service.
      */
     public RuntimeModelBuilder(
-            final ServiceLocator locator,
             final JerseyResourceContext resourceContext,
             final Configuration config,
-            final MessageBodyWorkers workers,
+            final MessageBodyWorkers messageBodyWorkers,
+            final Collection<ValueParamProvider> valueSuppliers,
             final ProcessingProviders processingProviders,
-            final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder) {
+            final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder,
+            final Iterable<ModelProcessor> modelProcessors,
+            final Function<Class<?>, ?> createServiceFunction) {
 
         this.resourceMethodInvokerBuilder = resourceMethodInvokerBuilder;
-        this.workers = workers;
+        this.messageBodyWorkers = messageBodyWorkers;
         this.processingProviders = processingProviders;
-
-        this.locatorBuilder = Values.lazy(new Value<RuntimeLocatorModelBuilder>() {
-            @Override
-            public RuntimeLocatorModelBuilder get() {
-                return new RuntimeLocatorModelBuilder(locator, config, resourceContext, RuntimeModelBuilder.this);
-            }
-        });
+        this.locatorBuilder = Values.lazy((Value<RuntimeLocatorModelBuilder>)
+                () -> new RuntimeLocatorModelBuilder(config, messageBodyWorkers, valueSuppliers, resourceContext,
+                        RuntimeModelBuilder.this, modelProcessors, createServiceFunction));
     }
 
     private Router createMethodRouter(final ResourceMethod resourceMethod) {
@@ -136,7 +138,7 @@ final class RuntimeModelBuilder {
         if (lastRoutedBuilder != null) {
             routingRoot = lastRoutedBuilder.build();
         } else {
-            /**
+            /*
              * Create an empty routing root that accepts any request, does not do
              * anything and does not return any inflector. This will cause 404 being
              * returned for every request.
@@ -171,7 +173,7 @@ final class RuntimeModelBuilder {
             // resource methods
             if (!resource.getResourceMethods().isEmpty()) {
                 final List<MethodRouting> methodRoutings = createResourceMethodRouters(resource, subResourceMode);
-                final Router methodSelectingRouter = new MethodSelectingRouter(workers, methodRoutings);
+                final Router methodSelectingRouter = new MethodSelectingRouter(messageBodyWorkers, methodRoutings);
                 if (subResourceMode) {
                     currentRouterBuilder = startNextRoute(currentRouterBuilder, PathPattern.END_OF_PATH_PATTERN)
                             .to(resourcePushingRouter)
@@ -200,7 +202,7 @@ final class RuntimeModelBuilder {
                         srRoutedBuilder = startNextRoute(srRoutedBuilder, childClosedPattern)
                                 .to(uriPushingRouter)
                                 .to(childResourcePushingRouter)
-                                .to(new MethodSelectingRouter(workers, childMethodRoutings));
+                                .to(new MethodSelectingRouter(messageBodyWorkers, childMethodRoutings));
                     }
 
                     // sub resource locator
@@ -309,7 +311,7 @@ final class RuntimeModelBuilder {
                         createMethodRouter(resourceMethod)));
             }
         }
-        return methodRoutings.isEmpty() ? Collections.<MethodRouting>emptyList() : methodRoutings;
+        return methodRoutings.isEmpty() ? Collections.emptyList() : methodRoutings;
     }
 
     private PathToRouterBuilder startNextRoute(final PathMatchingRouterBuilder currentRouterBuilder, PathPattern routingPattern) {

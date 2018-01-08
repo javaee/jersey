@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,12 +57,11 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.DataStructures;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.ResourceMethod;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Server-side implementation of {@link org.glassfish.jersey.message.filtering.spi.ScopeProvider scope provider}. In addition to
@@ -84,11 +83,11 @@ class ServerScopeProvider extends CommonScopeProvider {
 
     /**
      * Create new server scope provider with injected {@link Configuration configuration} and
-     * {@link ServiceLocator HK2 service locator}.
+     * {@link InjectionManager jersey injection manager}.
      */
     @Inject
-    public ServerScopeProvider(final Configuration config, final ServiceLocator serviceLocator) {
-        super(config, serviceLocator);
+    public ServerScopeProvider(final Configuration config, final InjectionManager injectionManager) {
+        super(config, injectionManager);
         this.uriToContexts = DataStructures.createConcurrentMap();
     }
 

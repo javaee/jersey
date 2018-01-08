@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.weld.se;
 
 import java.util.Map;
@@ -44,14 +45,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.ws.rs.core.Context;
 
 import org.glassfish.jersey.ext.cdi1x.internal.JerseyVetoed;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.ExternalRequestContext;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import org.jboss.weld.context.bound.BoundRequestContext;
 
@@ -69,29 +67,29 @@ public class WeldRequestScope implements ExternalRequestScope<Map<String, Object
 
     private final ThreadLocal<Map<String, Object>> actualMap = new ThreadLocal<>();
 
-    public static final ThreadLocal<ServiceLocator> actualServiceLocator = new ThreadLocal<>();
+    public static final ThreadLocal<InjectionManager> actualInjectorManager = new ThreadLocal<>();
 
     @Override
-    public ExternalRequestContext<Map<String, Object>> open(ServiceLocator serviceLocator) {
+    public ExternalRequestContext<Map<String, Object>> open(InjectionManager injectionManager) {
         final Map<String, Object> newMap = new ConcurrentHashMap<>();
         actualMap.set(newMap);
         context.associate(newMap);
         context.activate();
-        actualServiceLocator.set(serviceLocator);
+        actualInjectorManager.set(injectionManager);
         return new ExternalRequestContext<>(newMap);
     }
 
     @Override
-    public void resume(final ExternalRequestContext<Map<String, Object>> ctx, ServiceLocator serviceLocator) {
+    public void resume(final ExternalRequestContext<Map<String, Object>> ctx, InjectionManager injectionManager) {
         final Map<String, Object> newMap = ctx.getContext();
-        actualServiceLocator.set(serviceLocator);
+        actualInjectorManager.set(injectionManager);
         actualMap.set(newMap);
         context.associate(newMap);
         context.activate();
     }
 
     @Override
-    public void suspend(final ExternalRequestContext<Map<String, Object>> ctx, ServiceLocator serviceLocator) {
+    public void suspend(final ExternalRequestContext<Map<String, Object>> ctx, InjectionManager injectionManager) {
         try {
             final Map<String, Object> contextMap = actualMap.get();
             if (contextMap != null) {
@@ -100,7 +98,7 @@ public class WeldRequestScope implements ExternalRequestScope<Map<String, Object
             }
         } finally {
             actualMap.remove();
-            actualServiceLocator.remove();
+            actualInjectorManager.remove();
         }
     }
 
@@ -117,7 +115,7 @@ public class WeldRequestScope implements ExternalRequestScope<Map<String, Object
             }
         } finally {
             actualMap.remove();
-            actualServiceLocator.remove();
+            actualInjectorManager.remove();
         }
     }
 }

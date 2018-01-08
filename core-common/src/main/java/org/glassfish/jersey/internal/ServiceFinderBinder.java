@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal;
 
 import java.util.Map;
@@ -44,14 +45,14 @@ import java.util.Map;
 import javax.ws.rs.RuntimeType;
 
 import org.glassfish.jersey.CommonProperties;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 /**
  * Simple ServiceFinder injection binder.
  *
  * Looks for all implementations of a given contract using {@link ServiceFinder}
- * and registers found instances to {@link org.glassfish.hk2.api.ServiceLocator}.
+ * and registers found instances to {@link InjectionManager}.
  *
  * @param <T> contract type.
  * @author Pavel Bucek (pavel.bucek at oracle.com)

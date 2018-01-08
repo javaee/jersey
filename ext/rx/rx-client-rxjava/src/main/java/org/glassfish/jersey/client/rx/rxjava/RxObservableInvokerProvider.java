@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,23 +42,25 @@ package org.glassfish.jersey.client.rx.rxjava;
 
 import java.util.concurrent.ExecutorService;
 
-import javax.ws.rs.client.Invocation;
-
-import org.glassfish.jersey.client.rx.spi.RxInvokerProvider;
+import javax.ws.rs.client.RxInvokerProvider;
+import javax.ws.rs.client.SyncInvoker;
 
 /**
  * Invoker provider for invokers based on RxJava's {@code Observable}.
  *
  * @author Michal Gajdos
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @since 2.13
  */
-public final class RxObservableInvokerProvider implements RxInvokerProvider {
+public final class RxObservableInvokerProvider implements RxInvokerProvider<RxObservableInvoker> {
 
     @Override
-    public <T> T getInvoker(final Class<T> invokerType, final Invocation.Builder builder, final ExecutorService executor) {
-        if (RxObservableInvoker.class.isAssignableFrom(invokerType)) {
-            return invokerType.cast(new JerseyRxObservableInvoker(builder, executor));
-        }
-        return null;
+    public boolean isProviderFor(Class clazz) {
+        return RxObservableInvoker.class.equals(clazz);
+    }
+
+    @Override
+    public RxObservableInvoker getRxInvoker(SyncInvoker syncInvoker, ExecutorService executorService) {
+        return new JerseyRxObservableInvoker(syncInvoker, executorService);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,10 +40,12 @@
 
 package org.glassfish.jersey.examples.rx.agent;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.WebTarget;
@@ -53,9 +55,8 @@ import javax.ws.rs.core.GenericType;
 
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.client.rx.RxWebTarget;
-import org.glassfish.jersey.client.rx.rxjava.RxObservable;
 import org.glassfish.jersey.client.rx.rxjava.RxObservableInvoker;
+import org.glassfish.jersey.client.rx.rxjava.RxObservableInvokerProvider;
 import org.glassfish.jersey.examples.rx.domain.AgentResponse;
 import org.glassfish.jersey.examples.rx.domain.Calculation;
 import org.glassfish.jersey.examples.rx.domain.Destination;
@@ -64,10 +65,6 @@ import org.glassfish.jersey.examples.rx.domain.Recommendation;
 import org.glassfish.jersey.server.Uri;
 
 import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.functions.Func2;
-import rx.functions.Func3;
 import rx.schedulers.Schedulers;
 
 /**
@@ -75,6 +72,7 @@ import rx.schedulers.Schedulers;
  * RxJava Observable and Jersey Client to obtain the data.
  *
  * @author Michal Gajdos
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 @Singleton
 @Path("agent/observable")
@@ -93,98 +91,94 @@ public class ObservableAgentResource {
     @GET
     public void observable(@Suspended final AsyncResponse async) {
         final long time = System.nanoTime();
+        final Queue<String> errors = new ConcurrentLinkedQueue<>();
 
         Observable.just(new AgentResponse())
-                // Obtain visited destinations.
-                .zipWith(visited(), new Func2<AgentResponse, List<Destination>,  AgentResponse>() {
-                    @Override
-                    public AgentResponse call(final AgentResponse agentResponse, final List<Destination> destinations) {
-                        agentResponse.setVisited(destinations);
-                        return agentResponse;
-                    }
-                })
-                // Obtain recommended destinations. (does not depend on visited ones)
-                .zipWith(recommended(), new Func2<AgentResponse, List<Recommendation>, AgentResponse>() {
-                    @Override
-                    public AgentResponse call(final AgentResponse agentResponse, final List<Recommendation> recommendations) {
-                        agentResponse.setRecommended(recommendations);
-                        return agentResponse;
-                    }
-                })
-                // Observe on another thread than the one processing visited or recommended destinations.
-                .observeOn(Schedulers.io())
-                // Subscribe.
-                .subscribe(new Action1<AgentResponse>() {
-                    @Override
-                    public void call(final AgentResponse agentResponse) {
-                        agentResponse.setProcessingTime((System.nanoTime() - time) / 1000000);
-                        async.resume(agentResponse);
-                    }
-                }, new Action1<Throwable>() {
-                    @Override
-                    public void call(final Throwable throwable) {
-                        async.resume(throwable);
-                    }
-                });
+                  // Obtain visited destinations.
+                  .zipWith(visited(errors), (response, visited) -> {
+                      response.setVisited(visited);
+                      return response;
+                  })
+                  // Obtain recommended destinations. (does not depend on visited ones)
+                  .zipWith(recommended(errors), (response, recommendations) -> {
+                      response.setRecommended(recommendations);
+                      return response;
+                  })
+                  // Observe on another thread than the one processing visited or recommended destinations.
+                  .observeOn(Schedulers.io())
+                  // Subscribe.
+                  .subscribe(response -> {
+                      // Do something with errors.
+
+                      response.setProcessingTime((System.nanoTime() - time) / 1000000);
+                      async.resume(response);
+                  }, async::resume);
     }
 
-    private Observable<List<Destination>> visited() {
-        return RxObservable.from(destination).path("visited").request()
-                // Identify the user.
-                .header("Rx-User", "RxJava")
-                // Reactive invoker.
-                .rx()
-                // Return a list of destinations.
-                .get(new GenericType<List<Destination>>() {});
+    private Observable<List<Destination>> visited(final Queue<String> errors) {
+        destination.register(RxObservableInvokerProvider.class);
+
+        return destination.path("visited").request()
+                          // Identify the user.
+                          .header("Rx-User", "RxJava")
+                          // Reactive invoker.
+                          .rx(RxObservableInvoker.class)
+                          // Return a list of destinations.
+                          .get(new GenericType<List<Destination>>() {
+                          })
+                          // Handle Errors.
+                          .onErrorReturn(throwable -> {
+                              errors.offer("Visited: " + throwable.getMessage());
+                              return Collections.emptyList();
+                          });
     }
 
-    private Observable<List<Recommendation>> recommended() {
+    private Observable<List<Recommendation>> recommended(final Queue<String> errors) {
+        destination.register(RxObservableInvokerProvider.class);
+
         // Recommended places.
-        final Observable<Destination> recommended = RxObservable.from(destination).path("recommended").request()
-                // Identify the user.
-                .header("Rx-User", "RxJava")
-                // Reactive invoker.
-                .rx()
-                // Return a list of destinations.
-                .get(new GenericType<List<Destination>>() {})
-                // Emit destinations one-by-one.
-                .flatMap(new Func1<List<Destination>, Observable<Destination>>() {
-                    @Override
-                    public Observable<Destination> call(final List<Destination> destinations) {
-                        return Observable.from(destinations);
-                    }
-                })
-                // Remember emitted items for dependant requests.
-                .cache();
+        final Observable<Destination> recommended = destination.path("recommended").request()
+                                                               // Identify the user.
+                                                               .header("Rx-User", "RxJava")
+                                                               // Reactive invoker.
+                                                               .rx(RxObservableInvoker.class)
+                                                               // Return a list of destinations.
+                                                               .get(new GenericType<List<Destination>>() {
+                                                               })
+                                                               // Handle Errors.
+                                                               .onErrorReturn(throwable -> {
+                                                                   errors.offer("Recommended: " + throwable
+                                                                           .getMessage());
+                                                                   return Collections.emptyList();
+                                                               })
+                                                               // Emit destinations one-by-one.
+                                                               .flatMap(Observable::from)
+                                                               // Remember emitted items for dependant requests.
+                                                               .cache();
+
+        forecast.register(RxObservableInvokerProvider.class);
 
         // Forecasts. (depend on recommended destinations)
-        final RxWebTarget<RxObservableInvoker> rxForecast = RxObservable.from(forecast);
-        final Observable<Forecast> forecasts = recommended.flatMap(new Func1<Destination, Observable<Forecast>>() {
-            @Override
-            public Observable<Forecast> call(final Destination destination) {
-                return rxForecast.resolveTemplate("destination", destination.getDestination())
-                        .request().rx().get(Forecast.class);
-            }
-        });
+        final Observable<Forecast> forecasts = recommended.flatMap(destination ->
+                forecast
+                        .resolveTemplate("destination", destination.getDestination())
+                        .request().rx(RxObservableInvoker.class).get(Forecast.class)
+                        .onErrorReturn(throwable -> {
+                            errors.offer("Forecast: " + throwable.getMessage());
+                            return new Forecast(destination.getDestination(), "N/A");
+                        }));
+
+        calculation.register(RxObservableInvokerProvider.class);
 
         // Calculations. (depend on recommended destinations)
-        final RxWebTarget<RxObservableInvoker> rxCalculation = RxObservable.from(calculation);
-        final Observable<Calculation> calculations = recommended.flatMap(new Func1<Destination, Observable<Calculation>>() {
-            @Override
-            public Observable<Calculation> call(final Destination destination) {
-                return rxCalculation.resolveTemplate("from", "Moon").resolveTemplate("to", destination.getDestination())
-                        .request().rx().get(Calculation.class);
-            }
-        });
+        final Observable<Calculation> calculations = recommended.flatMap(destination ->
+                calculation.resolveTemplate("from", "Moon").resolveTemplate("to", destination.getDestination())
+                           .request().rx(RxObservableInvoker.class).get(Calculation.class)
+                           .onErrorReturn(throwable -> {
+                               errors.offer("Calculation: " + throwable.getMessage());
+                               return new Calculation("Moon", destination.getDestination(), -1);
+                           }));
 
-        return Observable.zip(recommended, forecasts, calculations,
-                new Func3<Destination, Forecast, Calculation, Recommendation>() {
-                    @Override
-                    public Recommendation call(final Destination destination,
-                                               final Forecast forecast,
-                                               final Calculation calculation) {
-                        return new Recommendation(destination.getDestination(), forecast.getForecast(), calculation.getPrice());
-                    }
-                }).toList();
+        return Observable.zip(recommended, forecasts, calculations, Recommendation::new).toList();
     }
 }

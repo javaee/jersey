@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ package org.glassfish.jersey.server.validation.internal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,6 +68,8 @@ import javax.validation.ValidatorFactory;
 import javax.validation.spi.ValidationProvider;
 
 import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.model.internal.RankedComparator;
@@ -75,11 +78,6 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.spi.ValidationInterceptor;
 import org.glassfish.jersey.server.validation.ValidationConfig;
-
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Bean Validation provider injection binder.
@@ -97,7 +95,7 @@ public final class ValidationBinder extends AbstractBinder {
         bindFactory(DefaultValidatorFactoryProvider.class, Singleton.class).to(ValidatorFactory.class).in(Singleton.class);
         bindFactory(DefaultValidatorProvider.class, Singleton.class).to(Validator.class).in(Singleton.class);
 
-        bindFactory(ConfiguredValidatorProvider.class, Singleton.class).to(ConfiguredValidator.class).in(PerLookup.class);
+        bindFactory(ConfiguredValidatorProvider.class, Singleton.class).to(ConfiguredValidator.class);
 
         // Custom Exception Mapper and Writer - registering in binder to make possible for users register their own providers.
         bind(ValidationExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class);
@@ -107,7 +105,7 @@ public final class ValidationBinder extends AbstractBinder {
     /**
      * Factory providing default {@link javax.validation.Configuration} instance.
      */
-    private static class DefaultConfigurationProvider implements Factory<Configuration> {
+    private static class DefaultConfigurationProvider implements Supplier<Configuration> {
 
         private final boolean inOsgi;
 
@@ -116,7 +114,7 @@ public final class ValidationBinder extends AbstractBinder {
         }
 
         @Override
-        public Configuration provide() {
+        public Configuration get() {
             try {
                 if (!inOsgi) {
                     return Validation.byDefaultProvider().configure();
@@ -144,58 +142,43 @@ public final class ValidationBinder extends AbstractBinder {
                 throw e;
             }
         }
-
-        @Override
-        public void dispose(final Configuration instance) {
-            // NOOP
-        }
     }
 
     /**
      * Factory providing default (un-configured) {@link ValidatorFactory} instance.
      */
-    private static class DefaultValidatorFactoryProvider implements Factory<ValidatorFactory> {
+    private static class DefaultValidatorFactoryProvider implements Supplier<ValidatorFactory> {
 
         @Inject
         private Configuration config;
 
         @Override
-        public ValidatorFactory provide() {
+        public ValidatorFactory get() {
             return config.buildValidatorFactory();
-        }
-
-        @Override
-        public void dispose(final ValidatorFactory instance) {
-            // NOOP
         }
     }
 
     /**
      * Factory providing default (un-configured) {@link Validator} instance.
      */
-    private static class DefaultValidatorProvider implements Factory<Validator> {
+    private static class DefaultValidatorProvider implements Supplier<Validator> {
 
         @Inject
         private ValidatorFactory factory;
 
         @Override
-        public Validator provide() {
+        public Validator get() {
             return factory.getValidator();
-        }
-
-        @Override
-        public void dispose(final Validator instance) {
-            // NOOP
         }
     }
 
     /**
      * Factory providing configured {@link Validator} instance.
      */
-    private static class ConfiguredValidatorProvider implements Factory<ConfiguredValidator> {
+    private static class ConfiguredValidatorProvider implements Supplier<ConfiguredValidator> {
 
         @Inject
-        private ServiceLocator locator;
+        private InjectionManager injectionManager;
 
         @Inject
         private Configuration validationConfig;
@@ -215,7 +198,7 @@ public final class ValidationBinder extends AbstractBinder {
                 new WeakHashMap<>();
 
         @Override
-        public ConfiguredValidator provide() {
+        public ConfiguredValidator get() {
 
             // Custom Configuration.
             final ContextResolver<ValidationConfig> contextResolver =
@@ -265,7 +248,8 @@ public final class ValidationBinder extends AbstractBinder {
 
         private Iterable<ValidationInterceptor> getValidationInterceptors() {
             final Iterable<RankedProvider<ValidationInterceptor>> validationInterceptorIterable =
-                    org.glassfish.jersey.internal.inject.Providers.getAllRankedProviders(locator, ValidationInterceptor.class);
+                    org.glassfish.jersey.internal.inject.Providers
+                            .getAllRankedProviders(injectionManager, ValidationInterceptor.class);
             return org.glassfish.jersey.internal.inject.Providers.sortRankedProviders(
                     new RankedComparator<ValidationInterceptor>(), validationInterceptorIterable);
         }
@@ -329,11 +313,6 @@ public final class ValidationBinder extends AbstractBinder {
         private boolean isValidateOnExecutableOverrideCheckDisabled() {
             return PropertiesHelper.isProperty(
                     jaxRsConfig.getProperty(ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK));
-        }
-
-        @Override
-        public void dispose(final ConfiguredValidator instance) {
-            // NOOP
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -84,13 +84,13 @@ public class CdiInterceptorWrapper {
 
     @AroundInvoke
     public Object validateMethodInvocation(InvocationContext ctx) throws Exception {
-        final boolean isJaxRsMethod = extension.jaxRsResourceCache.compute(ctx.getMethod().getDeclaringClass());
+        final boolean isJaxRsMethod = extension.jaxRsResourceCache.apply(ctx.getMethod().getDeclaringClass());
         return isJaxRsMethod ? ctx.proceed() : interceptor.validateMethodInvocation(ctx);
     }
 
     @AroundConstruct
     public void validateConstructorInvocation(InvocationContext ctx) throws Exception {
-        final boolean isJaxRsConstructor = extension.jaxRsResourceCache.compute(ctx.getConstructor().getDeclaringClass());
+        final boolean isJaxRsConstructor = extension.jaxRsResourceCache.apply(ctx.getConstructor().getDeclaringClass());
         if (!isJaxRsConstructor) {
             interceptor.validateConstructorInvocation(ctx);
         }

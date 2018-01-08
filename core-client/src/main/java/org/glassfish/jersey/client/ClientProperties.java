@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -147,6 +147,32 @@ public final class ClientProperties {
      * </p>
      */
     public static final String ASYNC_THREADPOOL_SIZE = "jersey.config.client.async.threadPoolSize";
+
+    /**
+     * Scheduler thread pool size.
+     * <p>
+     * The value MUST be an instance of {@link java.lang.Integer}.
+     * </p>
+     * <p>
+     * If the property is absent then thread pool used for background task scheduling will
+     * be initialized as default scheduled thread pool executor, which creates new thread
+     * for every new request, see {@link java.util.concurrent.Executors}. When a
+     * value &gt;&nbsp;0 is provided, the created scheduled thread pool executor limited to that
+     * number of threads will be utilized. Zero or negative values will be ignored.
+     * </p>
+     * <p>
+     * Note that the property may be ignored if a custom {@link org.glassfish.jersey.spi.ExecutorServiceProvider}
+     * is configured to execute background tasks scheduling in the client runtime (see
+     * {@link org.glassfish.jersey.client.ClientBackgroundScheduler}).
+     * </p>
+     * <p>
+     * A default value is not set.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     */
+    public static final String BACKGROUND_SCHEDULER_THREADPOOL_SIZE = "jersey.config.client.backgroundScheduler.threadPoolSize";
 
     /**
      * If {@link org.glassfish.jersey.client.filter.EncodingFilter} is

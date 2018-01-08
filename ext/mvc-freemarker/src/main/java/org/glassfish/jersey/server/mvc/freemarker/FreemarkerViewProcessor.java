@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.mvc.freemarker;
 
 import java.io.IOException;
@@ -53,15 +54,11 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
 
-import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
-import org.jvnet.hk2.annotations.Optional;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -82,29 +79,23 @@ final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> 
      * Create an instance of this processor with injected {@link javax.ws.rs.core.Configuration config} and
      * (optional) {@link javax.servlet.ServletContext servlet context}.
      *
-     * @param config config to configure this processor from.
-     * @param serviceLocator service locator to initialize template object factory if needed.
-     * @param servletContext (optional) servlet context to obtain template resources from.
+     * @param config           config to configure this processor from.
+     * @param injectionManager injection manager.
      */
     @Inject
-    public FreemarkerViewProcessor(final javax.ws.rs.core.Configuration config, final ServiceLocator serviceLocator,
-                                   @Optional final ServletContext servletContext) {
-        super(config, servletContext, "freemarker", "ftl");
+    public FreemarkerViewProcessor(javax.ws.rs.core.Configuration config, InjectionManager injectionManager) {
+        super(config, injectionManager.getInstance(ServletContext.class), "freemarker", "ftl");
 
-        this.factory = getTemplateObjectFactory(serviceLocator, FreemarkerConfigurationFactory.class,
-                new Value<FreemarkerConfigurationFactory>() {
-                    @Override
-                    public FreemarkerConfigurationFactory get() {
-                        Configuration configuration = getTemplateObjectFactory(serviceLocator, Configuration.class,
-                                Values.<Configuration>empty());
-                        if (configuration == null) {
-                            return new FreemarkerDefaultConfigurationFactory(servletContext);
-                        } else {
-                            return new FreemarkerSuppliedConfigurationFactory(configuration);
-                        }
+        this.factory = getTemplateObjectFactory(injectionManager::createAndInitialize, FreemarkerConfigurationFactory.class,
+                () -> {
+                    Configuration configuration =
+                            getTemplateObjectFactory(injectionManager::createAndInitialize, Configuration.class, Values.empty());
+                    if (configuration == null) {
+                        return new FreemarkerDefaultConfigurationFactory(injectionManager.getInstance(ServletContext.class));
+                    } else {
+                        return new FreemarkerSuppliedConfigurationFactory(configuration);
                     }
                 });
-
     }
 
     @Override

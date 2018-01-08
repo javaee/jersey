@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,43 +43,22 @@ package org.glassfish.jersey.jaxb.internal;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
 
-import javax.inject.Inject;
-
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
-
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.DynamicConfigurationService;
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * JAXB {@link ForcedAutoDiscoverable} that registers all necessary JAXB features
- * into the service locator directly.
+ * into the injection manager directly.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class JaxbAutoDiscoverable implements ForcedAutoDiscoverable {
 
-    @Inject
-    private ServiceLocator locator;
-
     @Override
     public void configure(final FeatureContext context) {
+        context.register(new JaxbMessagingBinder());
 
-        // bind directly to the service locator to preserve JAX-RS configuration
-
-        final DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
-        final DynamicConfiguration dc = dcs.createDynamicConfiguration();
-
-        final JaxbMessagingBinder jaxbMessagingBinder = new JaxbMessagingBinder();
-        jaxbMessagingBinder.bind(dc);
-
-        final RuntimeType runtime = context.getConfiguration().getRuntimeType();
-
-        if (RuntimeType.SERVER == runtime) {
-            final JaxbParamConverterBinder jaxbParamConverterBinder = new JaxbParamConverterBinder();
-            jaxbParamConverterBinder.bind(dc);
+        if (RuntimeType.SERVER == context.getConfiguration().getRuntimeType()) {
+            context.register(new JaxbParamConverterBinder());
         }
-
-        dc.commit();
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,15 +48,13 @@ import java.util.stream.StreamSupport;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.model.internal.RankedComparator;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Function that can be put to an acceptor chain to properly initialize
@@ -67,7 +65,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 public class RequestProcessingInitializationStage implements Function<ClientRequest, ClientRequest> {
     private final Provider<Ref<ClientRequest>> requestRefProvider;
-    private final Provider<MessageBodyWorkers> workersProvider;
+    private final MessageBodyWorkers workersProvider;
     private final Iterable<WriterInterceptor> writerInterceptors;
     private final Iterable<ReaderInterceptor> readerInterceptors;
 
@@ -77,33 +75,32 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
      *
      * @param requestRefProvider client request context reference injection provider.
      * @param workersProvider message body workers injection provider.
-     * @param locator service locator.
+     * @param injectionManager injection manager.
      */
-    @Inject
     public RequestProcessingInitializationStage(
             Provider<Ref<ClientRequest>> requestRefProvider,
-            Provider<MessageBodyWorkers> workersProvider,
-            ServiceLocator locator) {
+            MessageBodyWorkers workersProvider,
+            InjectionManager injectionManager) {
         this.requestRefProvider = requestRefProvider;
         this.workersProvider = workersProvider;
         writerInterceptors = Collections.unmodifiableList(
                 StreamSupport.stream(
-                        Providers.getAllProviders(locator, WriterInterceptor.class, new RankedComparator<>()).spliterator(),
-                        false
-                ).collect(Collectors.toList())
+                        Providers.getAllProviders(injectionManager, WriterInterceptor.class,
+                                new RankedComparator<>()).spliterator(), false)
+                             .collect(Collectors.toList())
         );
         readerInterceptors = Collections.unmodifiableList(
                 StreamSupport.stream(
-                        Providers.getAllProviders(locator, ReaderInterceptor.class, new RankedComparator<>()).spliterator(),
-                        false
-                ).collect(Collectors.toList())
+                        Providers.getAllProviders(injectionManager, ReaderInterceptor.class,
+                                new RankedComparator<>()).spliterator(), false)
+                             .collect(Collectors.toList())
         );
     }
 
     @Override
     public ClientRequest apply(ClientRequest requestContext) {
         requestRefProvider.get().set(requestContext);
-        requestContext.setWorkers(workersProvider.get());
+        requestContext.setWorkers(workersProvider);
         requestContext.setWriterInterceptors(writerInterceptors);
         requestContext.setReaderInterceptors(readerInterceptors);
 

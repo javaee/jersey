@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,10 +55,8 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.examples.rx.Helper;
 import org.glassfish.jersey.examples.rx.domain.Destination;
+import org.glassfish.jersey.internal.util.collection.Views;
 import org.glassfish.jersey.server.ManagedAsync;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 
 /**
  * Obtain a list of visited / recommended places for a given user.
@@ -77,6 +75,8 @@ public class DestinationResource {
         VISITED.put("Async", Helper.getCountries(5));
         VISITED.put("Guava", Helper.getCountries(5));
         VISITED.put("RxJava", Helper.getCountries(5));
+        VISITED.put("RxJava2", Helper.getCountries(5));
+        VISITED.put("CompletionStage", Helper.getCountries(5));
     }
 
     @GET
@@ -90,12 +90,7 @@ public class DestinationResource {
             VISITED.put(user, Helper.getCountries(5));
         }
 
-        return Lists.transform(VISITED.get(user), new Function<String, Destination>() {
-            @Override
-            public Destination apply(final String input) {
-                return new Destination(input);
-            }
-        });
+        return Views.listView(VISITED.get(user), Destination::new);
     }
 
     @GET
@@ -110,11 +105,6 @@ public class DestinationResource {
             VISITED.put(user, Helper.getCountries(5));
         }
 
-        return Lists.transform(Helper.getCountries(limit, VISITED.get(user)), new Function<String, Destination>() {
-            @Override
-            public Destination apply(final String input) {
-                return new Destination(input);
-            }
-        });
+        return Views.listView(Helper.getCountries(limit, VISITED.get(user)), Destination::new);
     }
 }

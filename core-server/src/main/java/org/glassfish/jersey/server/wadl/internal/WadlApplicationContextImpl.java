@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,6 +56,7 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -63,8 +64,6 @@ import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfig;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfigLoader;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import com.sun.research.ws.wadl.Application;
 import com.sun.research.ws.wadl.Doc;
@@ -93,7 +92,7 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
             new JAXBElement<>(new QName(WADL_JERSEY_NAMESPACE, "extended", "jersey"), String.class, "true");
 
     private final ExtendedResourceContext resourceContext;
-    private final ServiceLocator serviceLocator;
+    private final InjectionManager injectionManager;
     private final WadlGeneratorConfig wadlGeneratorConfig;
     private final JAXBContext jaxbContext;
 
@@ -102,22 +101,22 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
     /**
      * Injection constructor.
      *
-     * @param serviceLocator  HK2 service locator.
-     * @param configuration   runtime application configuration.
-     * @param resourceContext extended resource context.
+     * @param injectionManager injection manager.
+     * @param configuration    runtime application configuration.
+     * @param resourceContext  extended resource context.
      */
     @Inject
     public WadlApplicationContextImpl(
-            final ServiceLocator serviceLocator,
+            final InjectionManager injectionManager,
             final Configuration configuration,
             final ExtendedResourceContext resourceContext) {
-        this.serviceLocator = serviceLocator;
+        this.injectionManager = injectionManager;
         this.wadlGeneratorConfig = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(configuration.getProperties());
         this.resourceContext = resourceContext;
 
         // TODO perhaps this should be done another way for the moment
         // create a temporary generator just to do this one task
-        final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(serviceLocator);
+        final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(injectionManager);
 
         JAXBContext jaxbContextCandidate;
 
@@ -174,7 +173,7 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
 
         final ApplicationDescription description = getApplication(info, detailedWadl);
 
-        final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(serviceLocator);
+        final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(injectionManager);
         final Application application = new WadlBuilder(wadlGenerator, detailedWadl, info).generate(description, resource);
         if (application == null) {
             return null;
@@ -206,7 +205,7 @@ public final class WadlApplicationContextImpl implements WadlApplicationContext 
     }
 
     private WadlBuilder getWadlBuilder(final boolean detailedWadl, final UriInfo uriInfo) {
-        return (this.wadlGenerationEnabled ? new WadlBuilder(wadlGeneratorConfig.createWadlGenerator(serviceLocator),
+        return (this.wadlGenerationEnabled ? new WadlBuilder(wadlGeneratorConfig.createWadlGenerator(injectionManager),
                 detailedWadl, uriInfo) : null);
     }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,12 +48,11 @@ import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.ChainableStage;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Client filtering stage factory.
@@ -67,36 +66,30 @@ class ClientFilteringStages {
     }
 
     /**
-     * Create client request filtering stage using the service locator. May return {@code null}.
+     * Create client request filtering stage using the injection manager. May return {@code null}.
      *
-     * @param locator HK2 service locator to be used.
+     * @param injectionManager injection manager to be used.
      * @return configured request filtering stage, or {@code null} in case there are no
-     *         {@link ClientRequestFilter client request filters} registered in the service
-     *         locator.
+     *         {@link ClientRequestFilter client request filters} registered in the injection manager.
      */
-    static ChainableStage<ClientRequest> createRequestFilteringStage(final ServiceLocator locator) {
-        final RankedComparator<ClientRequestFilter> comparator = new RankedComparator<ClientRequestFilter>(
-                RankedComparator.Order.ASCENDING);
-        final Iterable<ClientRequestFilter> requestFilters = Providers
-                .getAllProviders(locator, ClientRequestFilter.class, comparator);
-
+    static ChainableStage<ClientRequest> createRequestFilteringStage(InjectionManager injectionManager) {
+        RankedComparator<ClientRequestFilter> comparator = new RankedComparator<>(RankedComparator.Order.ASCENDING);
+        Iterable<ClientRequestFilter> requestFilters =
+                Providers.getAllProviders(injectionManager, ClientRequestFilter.class, comparator);
         return requestFilters.iterator().hasNext() ? new RequestFilteringStage(requestFilters) : null;
     }
 
     /**
-     * Create client response filtering stage using the service locator. May return {@code null}.
+     * Create client response filtering stage using the injection manager. May return {@code null}.
      *
-     * @param locator HK2 service locator to be used.
+     * @param injectionManager injection manager to be used.
      * @return configured response filtering stage, or {@code null} in case there are no
-     *         {@link ClientResponseFilter client response filters} registered in the service
-     *         locator.
+     *         {@link ClientResponseFilter client response filters} registered in the injection manager.
      */
-    static ChainableStage<ClientResponse> createResponseFilteringStage(final ServiceLocator locator) {
-        final RankedComparator<ClientResponseFilter> comparator = new RankedComparator<ClientResponseFilter>(
-                RankedComparator.Order.DESCENDING);
-        final Iterable<ClientResponseFilter> responseFilters = Providers
-                .getAllProviders(locator, ClientResponseFilter.class, comparator);
-
+    static ChainableStage<ClientResponse> createResponseFilteringStage(InjectionManager injectionManager) {
+        RankedComparator<ClientResponseFilter> comparator = new RankedComparator<>(RankedComparator.Order.DESCENDING);
+        Iterable<ClientResponseFilter> responseFilters =
+                Providers.getAllProviders(injectionManager, ClientResponseFilter.class, comparator);
         return responseFilters.iterator().hasNext() ? new ResponseFilterStage(responseFilters) : null;
     }
 

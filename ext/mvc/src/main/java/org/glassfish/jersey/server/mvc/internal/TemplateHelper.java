@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -98,8 +98,9 @@ public final class TemplateHelper {
         final List<MediaType> producedTypes = getResourceMethodProducibleTypes(extendedUriInfo);
         final MediaType[] mediaTypes = producedTypes.toArray(new MediaType[producedTypes.size()]);
 
-        final List<Variant> variants = VariantSelector.selectVariants(containerRequest, Variant.mediaTypes(mediaTypes)
-                .build(), varyHeaderValue == null ? Refs.<String>emptyRef() : varyHeaderValue);
+        final List<Variant> variants = VariantSelector.selectVariants(
+                containerRequest, Variant.mediaTypes(mediaTypes).build(),
+                varyHeaderValue == null ? Refs.<String>emptyRef() : varyHeaderValue);
 
         return variants.stream()
                        .map(variant -> MediaTypes.stripQualityParams(variant.getMediaType()))

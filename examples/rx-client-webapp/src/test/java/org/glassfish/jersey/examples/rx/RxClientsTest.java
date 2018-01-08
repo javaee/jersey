@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,9 +47,7 @@ import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.ServletDeploymentContext;
 
-import org.junit.FixMethodOrder;
 import org.junit.Test;
-import org.junit.runners.MethodSorters;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -57,71 +55,112 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * Invoke clients in Agent part of the application.
  *
  * @author Michal Gajdos
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RxClientsTest extends JerseyTest {
 
     @Override
     protected DeploymentContext configureDeployment() {
         return ServletDeploymentContext.builder(RxApplication.class)
-                .contextPath("rx-client-webapp").servletPath("rx").build();
-    }
-
-    @Test
-    public void _testPingDestination() throws Exception {
-        final Response response = target("remote").path("destination/visited").request().get();
-
-        assertThat(response.getStatus(), is(200));
+                .contextPath("rx-client-webapp/rx").build();
     }
 
     @Test
     public void testSyncClient() throws Exception {
-        final AgentResponse response = target("agent").path("sync").request().get(AgentResponse.class);
+        // warmup
+        target("agent").path("sync").request().get();
 
-        assertThat(response.getVisited().size(), is(5));
-        assertThat(response.getRecommended().size(), is(5));
+        final Response response = target("agent").path("sync").request().get();
+        response.bufferEntity();
 
-        assertThat(response.getProcessingTime() > 4500, is(true));
+        final AgentResponse agentResponse = response.readEntity(AgentResponse.class);
 
-        System.out.println("Processing Time: " + response.getProcessingTime());
+        assertThat(agentResponse.getVisited().size(), is(5));
+        assertThat(agentResponse.getRecommended().size(), is(5));
+
+        assertThat(agentResponse.getProcessingTime() > 4500, is(true));
+
+        System.out.println(response.readEntity(String.class));
+        System.out.println("Processing Time: " + agentResponse.getProcessingTime());
     }
 
     @Test
     public void testAsyncClient() throws Exception {
-        final AgentResponse response = target("agent").path("async").request().get(AgentResponse.class);
+        // warmup
+        target("agent").path("async").request().get();
 
-        assertThat(response.getVisited().size(), is(5));
-        assertThat(response.getRecommended().size(), is(5));
+        final Response response = target("agent").path("async").request().get();
+        response.bufferEntity();
 
-        assertThat(response.getProcessingTime() > 850, is(true));
-        assertThat(response.getProcessingTime() < 4500, is(true));
+        final AgentResponse agentResponse = response.readEntity(AgentResponse.class);
 
-        System.out.println("Processing Time: " + response.getProcessingTime());
+        assertThat(agentResponse.getVisited().size(), is(5));
+        assertThat(agentResponse.getRecommended().size(), is(5));
+
+        assertThat(agentResponse.getProcessingTime() > 850, is(true));
+        assertThat(agentResponse.getProcessingTime() < 4500, is(true));
+
+        System.out.println(response.readEntity(String.class));
+        System.out.println("Processing Time: " + agentResponse.getProcessingTime());
     }
 
     @Test
     public void testRxObservableClient() throws Exception {
-        final AgentResponse response = target("agent").path("observable").request().get(AgentResponse.class);
+        // warmup
+        target("agent").path("observable").request().get();
 
-        assertThat(response.getVisited().size(), is(5));
-        assertThat(response.getRecommended().size(), is(5));
+        final Response response = target("agent").path("observable").request().get();
+        response.bufferEntity();
 
-        assertThat(response.getProcessingTime() > 850, is(true));
-        assertThat(response.getProcessingTime() < 4500, is(true));
+        final AgentResponse agentResponse = response.readEntity(AgentResponse.class);
 
-        System.out.println("Processing Time: " + response.getProcessingTime());
+        assertThat(agentResponse.getVisited().size(), is(5));
+        assertThat(agentResponse.getRecommended().size(), is(5));
+
+        assertThat(agentResponse.getProcessingTime() > 850, is(true));
+        assertThat(agentResponse.getProcessingTime() < 4500, is(true));
+
+        System.out.println(response.readEntity(String.class));
+        System.out.println("Processing Time: " + agentResponse.getProcessingTime());
     }
 
     @Test
-    public void testRxListenableClient() throws Exception {
-        final AgentResponse response = target("agent").path("listenable").request().get(AgentResponse.class);
+    public void testRxFlowableClient() throws Exception {
+        // warmup
+        target("agent").path("flowable").request().get();
 
-        assertThat(response.getVisited().size(), is(5));
-        assertThat(response.getRecommended().size(), is(5));
+        final Response response = target("agent").path("flowable").request().get();
+        response.bufferEntity();
 
-        assertThat(response.getProcessingTime() > 850, is(true));
-        assertThat(response.getProcessingTime() < 4500, is(true));
+        final AgentResponse agentResponse = response.readEntity(AgentResponse.class);
 
-        System.out.println("Processing Time: " + response.getProcessingTime());
+        assertThat(agentResponse.getVisited().size(), is(5));
+        assertThat(agentResponse.getRecommended().size(), is(5));
+
+        assertThat(agentResponse.getProcessingTime() > 850, is(true));
+        assertThat(agentResponse.getProcessingTime() < 4500, is(true));
+
+        System.out.println(response.readEntity(String.class));
+        System.out.println("Processing Time: " + agentResponse.getProcessingTime());
+    }
+
+    @Test
+    public void testRxCompletionStageClient() throws Exception {
+        // warmup
+        target("agent").path("completion").request().get();
+
+        final Response response = target("agent").path("completion").request().get();
+        response.bufferEntity();
+
+        final AgentResponse agentResponse = response.readEntity(AgentResponse.class);
+
+        assertThat(agentResponse.getVisited().size(), is(5));
+        assertThat(agentResponse.getRecommended().size(), is(5));
+
+        assertThat(agentResponse.getProcessingTime() > 850, is(true));
+        assertThat(agentResponse.getProcessingTime() < 4500, is(true));
+
+        System.out.println(response.readEntity(String.class));
+        System.out.println("Processing Time: " + agentResponse.getProcessingTime());
     }
 }

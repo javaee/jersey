@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,8 @@ package org.glassfish.jersey.server.spring.aspect4j;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.server.spring.TestComponent1;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,11 +54,19 @@ public class ComponentResource {
 
     @Autowired
     private TestComponent1 testComponent1;
+    @Context
+    private UriInfo uriInfo;
 
     @Path("test2")
     @GET
     public String test2() {
         return testComponent1.result();
+    }
+
+    @Path("JERSEY-3126")
+    @GET
+    public String JERSEY_3126() {
+        return uriInfo == null ? "test failed" : "test ok";
     }
 
 }

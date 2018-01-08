@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,12 +57,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.SecurityContext;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -76,11 +78,6 @@ import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
-import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.simpleframework.common.thread.DaemonFactory;
 import org.simpleframework.http.Address;
@@ -100,10 +97,8 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(SimpleContainer.class.getName()), Level.FINEST);
 
-    private final Type RequestTYPE = (new TypeLiteral<Ref<Request>>() {
-    }).getType();
-    private final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {
-    }).getType();
+    private final Type RequestTYPE = (new GenericType<Ref<Request>>() { }).getType();
+    private final Type ResponseTYPE = (new GenericType<Ref<Response>>() { }).getType();
 
     /**
      * Referencing factory for Simple request.
@@ -138,13 +133,13 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
             bindFactory(SimpleRequestReferencingFactory.class).to(Request.class).proxy(true)
                                                               .proxyForSameScope(false).in(RequestScoped.class);
             bindFactory(ReferencingFactory.<Request>referenceFactory())
-                    .to(new TypeLiteral<Ref<Request>>() {
+                    .to(new GenericType<Ref<Request>>() {
                     }).in(RequestScoped.class);
 
             bindFactory(SimpleResponseReferencingFactory.class).to(Response.class).proxy(true)
                                                                .proxyForSameScope(false).in(RequestScoped.class);
             bindFactory(ReferencingFactory.<Response>referenceFactory())
-                    .to(new TypeLiteral<Ref<Response>>() {
+                    .to(new GenericType<Ref<Response>>() {
                     }).in(RequestScoped.class);
         }
     }
@@ -343,12 +338,9 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
                 requestContext.headers(headerName, request.getValue(headerName));
             }
             requestContext.setWriter(responseWriter);
-            requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
-                @Override
-                public void initialize(final ServiceLocator locator) {
-                    locator.<Ref<Request>>getService(RequestTYPE).set(request);
-                    locator.<Ref<Response>>getService(ResponseTYPE).set(response);
-                }
+            requestContext.setRequestScopedInitializer(injectionManager -> {
+                injectionManager.<Ref<Request>>getInstance(RequestTYPE).set(request);
+                injectionManager.<Ref<Response>>getInstance(ResponseTYPE).set(response);
             });
 
             appHandler.handle(requestContext);
@@ -479,12 +471,11 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     /**
      * Create a new Simple framework HTTP container.
      *
-     * @param application   JAX-RS / Jersey application to be deployed on Simple framework HTTP
-     *                      container.
-     * @param parentLocator parent HK2 service locator.
+     * @param application   JAX-RS / Jersey application to be deployed on Simple framework HTTP container.
+     * @param parentContext DI provider specific context with application's registered bindings.
      */
-    SimpleContainer(final Application application, final ServiceLocator parentLocator) {
-        this.appHandler = new ApplicationHandler(application, new SimpleBinder(), parentLocator);
+    SimpleContainer(final Application application, final Object parentContext) {
+        this.appHandler = new ApplicationHandler(application, new SimpleBinder(), parentContext);
         this.scheduler = new ScheduledThreadPoolExecutor(2, new DaemonFactory(TimeoutDispatcher.class));
     }
 

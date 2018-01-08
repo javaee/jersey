@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,10 +47,11 @@ import javax.ws.rs.core.FeatureContext;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.Beta;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.linking.contributing.NaiveResourceLinkContributionContext;
+import org.glassfish.jersey.linking.contributing.ResourceLinkContributionContext;
 import org.glassfish.jersey.linking.mapping.NaiveResourceMappingContext;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * A feature to enable the declarative linking functionality.
@@ -58,7 +59,6 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-
 @Beta
 public class DeclarativeLinkingFeature implements Feature {
 
@@ -73,6 +73,14 @@ public class DeclarativeLinkingFeature implements Feature {
                 protected void configure() {
                     bindAsContract(NaiveResourceMappingContext.class)
                             .to(ResourceMappingContext.class).in(Singleton.class);
+                }
+            });
+            context.register(new AbstractBinder() {
+
+                @Override
+                protected void configure() {
+                    bindAsContract(NaiveResourceLinkContributionContext.class)
+                            .to(ResourceLinkContributionContext.class).in(Singleton.class);
                 }
             });
 

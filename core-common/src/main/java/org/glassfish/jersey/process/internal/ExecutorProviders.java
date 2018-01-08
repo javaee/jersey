@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,17 +57,15 @@ import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.DisposableSupplier;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.SupplierInstanceBinding;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.spi.ExecutorServiceProvider;
 import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
-
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 
 /**
  * A utility class with a methods for handling executor injection registration and proper disposal.
@@ -84,132 +82,166 @@ public final class ExecutorProviders {
     }
 
     /**
-     * Create qualified {@link java.util.concurrent.ExecutorService} and {@link java.util.concurrent.ScheduledExecutorService}
-     * injection bindings based on the registered providers implementing the
-     * {@link org.glassfish.jersey.spi.ExecutorServiceProvider} and/or
-     * {@link org.glassfish.jersey.spi.ScheduledExecutorServiceProvider} SPI.
+     * Create qualified {@link ExecutorService} and {@link ScheduledExecutorService} injection bindings based on the registered
+     * providers implementing the {@link ExecutorServiceProvider} and/or {@link ScheduledExecutorServiceProvider} SPI.
      * <p>
-     * This method supports creation of qualified injection bindings based on custom
-     * {@link javax.inject.Qualifier qualifier annotations} attached to the registered provider implementation classes
-     * as well as named injection bindings based on the {@link javax.inject.Named} qualifier annotation attached to the
-     * registered provider implementation classes.
-     * </p>
+     * This method supports creation of qualified injection bindings based on custom {@link Qualifier qualifier annotations}
+     * attached to the registered provider implementation classes as well as named injection bindings based on the {@link Named}
+     * qualifier annotation attached to the registered provider implementation classes. {@link ExecutorServiceProvider} and
+     * {@link ScheduledExecutorServiceProvider} will be retrieved from {@link InjectionManager}.
      *
-     * @param locator application's HK2 service locator.
+     * @param injectionManager application's injection manager.
      */
-    public static void createInjectionBindings(final ServiceLocator locator) {
+    public static void registerExecutorBindings(InjectionManager injectionManager) {
+        List<ExecutorServiceProvider> executorProviders =
+                getExecutorProviders(injectionManager, ExecutorServiceProvider.class);
+        List<ScheduledExecutorServiceProvider> scheduledProviders =
+                getExecutorProviders(injectionManager, ScheduledExecutorServiceProvider.class);
 
-        final Map<Class<? extends Annotation>, List<ExecutorServiceProvider>> executorProviderMap =
-                getQualifierToProviderMap(locator, ExecutorServiceProvider.class);
+        registerExecutorBindings(injectionManager, executorProviders, scheduledProviders);
+    }
 
-        // for each bucket, create a new injection binding for the first provider in the list and discard the rest
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
+    private static <T> List<T> getExecutorProviders(InjectionManager injectionManager, Class<T> providerClass) {
+        Set<T> customProviders = Providers.getCustomProviders(injectionManager, providerClass);
+        Set<T> defaultProviders = Providers.getProviders(injectionManager, providerClass);
+        // Get only default providers
+        defaultProviders.removeAll(customProviders);
 
+        List<T> executorProviders = new LinkedList<>(customProviders);
+        executorProviders.addAll(defaultProviders);
+        return executorProviders;
+    }
+
+    /**
+     * Create qualified {@link ExecutorService} and {@link ScheduledExecutorService} injection bindings based on the registered
+     * providers implementing the {@link ExecutorServiceProvider} and/or {@link ScheduledExecutorServiceProvider} SPI.
+     * <p>
+     * This method supports creation of qualified injection bindings based on custom {@link Qualifier qualifier annotations}
+     * attached to the registered provider implementation classes as well as named injection bindings based on the {@link Named}
+     * qualifier annotation attached to the registered provider implementation classes.
+     *
+     * @param injectionManager   injection manager to register newly created executor bindings.
+     * @param executorProviders  all executor providers registered internally in Jersey and in configuration.
+     * @param scheduledProviders all scheduled executor providers registered internally in Jersey and in configuration.
+     */
+    public static void registerExecutorBindings(
+            InjectionManager injectionManager,
+            List<ExecutorServiceProvider> executorProviders,
+            List<ScheduledExecutorServiceProvider> scheduledProviders) {
+
+        Map<Class<? extends Annotation>, List<ExecutorServiceProvider>> executorProviderMap =
+                getQualifierToProviderMap(executorProviders);
+
+        /*
+         * Add ExecutorService into DI framework.
+         */
         for (Map.Entry<Class<? extends Annotation>, List<ExecutorServiceProvider>> qualifierToProviders
                 : executorProviderMap.entrySet()) {
-            final Class<? extends Annotation> qualifierAnnotationClass = qualifierToProviders.getKey();
+            Class<? extends Annotation> qualifierAnnotationClass = qualifierToProviders.getKey();
 
-            final Iterator<ExecutorServiceProvider> bucketProviderIterator = qualifierToProviders.getValue().iterator();
-            final ExecutorServiceProvider executorProvider = bucketProviderIterator.next();
-            if (LOGGER.isLoggable(Level.CONFIG)) {
-                LOGGER.config(LocalizationMessages.USING_EXECUTOR_PROVIDER(
-                        executorProvider.getClass().getName(), qualifierAnnotationClass.getName()));
+            Iterator<ExecutorServiceProvider> bucketProviderIterator = qualifierToProviders.getValue().iterator();
+            ExecutorServiceProvider executorProvider = bucketProviderIterator.next();
+            logExecutorServiceProvider(qualifierAnnotationClass, bucketProviderIterator, executorProvider);
 
-                if (bucketProviderIterator.hasNext()) {
-                    StringBuilder msg = new StringBuilder(bucketProviderIterator.next().getClass().getName());
-                    while (bucketProviderIterator.hasNext()) {
-                        msg.append(", ").append(bucketProviderIterator.next().getClass().getName());
-                    }
-                    LOGGER.config(LocalizationMessages.IGNORED_EXECUTOR_PROVIDERS(
-                            msg.toString(), qualifierAnnotationClass.getName()));
-                }
-            }
+            SupplierInstanceBinding<ExecutorService> descriptor =
+                    Bindings.supplier(new ExecutorServiceSupplier(executorProvider))
+                            .in(Singleton.class)
+                            .to(ExecutorService.class);
 
-            ScopedBindingBuilder<ExecutorService> bindingBuilder = Injections
-                    .newFactoryBinder(new ExecutorServiceFactory(executorProvider))
-                    .to(ExecutorService.class)
-                    .in(Singleton.class);
-
-            final Annotation qualifier = executorProvider.getClass().getAnnotation(qualifierAnnotationClass);
+            Annotation qualifier = executorProvider.getClass().getAnnotation(qualifierAnnotationClass);
             if (qualifier instanceof Named) {
-                Injections.addBinding(bindingBuilder.named(((Named) qualifier).value()), dc);
+                descriptor.named(((Named) qualifier).value());
             } else {
-                Injections.addBinding(bindingBuilder.qualifiedBy(qualifier), dc);
+                descriptor.qualifiedBy(qualifier);
             }
+
+            injectionManager.register(descriptor);
         }
 
-        final Map<Class<? extends Annotation>, List<ScheduledExecutorServiceProvider>> schedulerProviderMap =
-                getQualifierToProviderMap(locator, ScheduledExecutorServiceProvider.class);
+        Map<Class<? extends Annotation>, List<ScheduledExecutorServiceProvider>> schedulerProviderMap =
+                getQualifierToProviderMap(scheduledProviders);
 
+        /*
+         * Add ScheduledExecutorService into DI framework.
+         */
         for (Map.Entry<Class<? extends Annotation>, List<ScheduledExecutorServiceProvider>> qualifierToProviders
                 : schedulerProviderMap.entrySet()) {
-            final Class<? extends Annotation> qualifierAnnotationClass = qualifierToProviders.getKey();
+            Class<? extends Annotation> qualifierAnnotationClass = qualifierToProviders.getKey();
 
-            final Iterator<ScheduledExecutorServiceProvider> bucketProviderIterator = qualifierToProviders.getValue().iterator();
-            final ScheduledExecutorServiceProvider executorProvider = bucketProviderIterator.next();
-            if (LOGGER.isLoggable(Level.CONFIG)) {
-                LOGGER.config(LocalizationMessages.USING_SCHEDULER_PROVIDER(
-                        executorProvider.getClass().getName(), qualifierAnnotationClass.getName()));
+            Iterator<ScheduledExecutorServiceProvider> bucketProviderIterator = qualifierToProviders.getValue().iterator();
+            ScheduledExecutorServiceProvider executorProvider = bucketProviderIterator.next();
+            logScheduledExecutorProvider(qualifierAnnotationClass, bucketProviderIterator, executorProvider);
 
-                if (bucketProviderIterator.hasNext()) {
-                    StringBuilder msg = new StringBuilder(bucketProviderIterator.next().getClass().getName());
-                    while (bucketProviderIterator.hasNext()) {
-                        msg.append(", ").append(bucketProviderIterator.next().getClass().getName());
-                    }
-                    LOGGER.config(LocalizationMessages.IGNORED_SCHEDULER_PROVIDERS(
-                            msg.toString(), qualifierAnnotationClass.getName()));
-                }
-            }
-
-            final ScopedBindingBuilder<ScheduledExecutorService> bindingBuilder =
-                    Injections.newFactoryBinder(new ScheduledExecutorServiceFactory(executorProvider))
+            SupplierInstanceBinding<ScheduledExecutorService> descriptor =
+                    Bindings.supplier(new ScheduledExecutorServiceSupplier(executorProvider))
                             .in(Singleton.class)
                             .to(ScheduledExecutorService.class);
 
             if (!executorProviderMap.containsKey(qualifierAnnotationClass)) {
                 // it is safe to register binding for ExecutorService too...
-                bindingBuilder.to(ExecutorService.class);
+                descriptor.to(ExecutorService.class);
             }
 
-            final Annotation qualifier = executorProvider.getClass().getAnnotation(qualifierAnnotationClass);
+            Annotation qualifier = executorProvider.getClass().getAnnotation(qualifierAnnotationClass);
             if (qualifier instanceof Named) {
-                Injections.addBinding(bindingBuilder.named(((Named) qualifier).value()), dc);
+                descriptor.named(((Named) qualifier).value());
             } else {
-                Injections.addBinding(bindingBuilder.qualifiedBy(qualifier), dc);
+                descriptor.qualifiedBy(qualifier);
+            }
+
+            injectionManager.register(descriptor);
+        }
+    }
+
+    private static void logScheduledExecutorProvider(Class<? extends Annotation> qualifierAnnotationClass,
+                                                     Iterator<ScheduledExecutorServiceProvider> bucketProviderIterator,
+                                                     ScheduledExecutorServiceProvider executorProvider) {
+        if (LOGGER.isLoggable(Level.CONFIG)) {
+            LOGGER.config(LocalizationMessages.USING_SCHEDULER_PROVIDER(
+                    executorProvider.getClass().getName(), qualifierAnnotationClass.getName()));
+
+            if (bucketProviderIterator.hasNext()) {
+                StringBuilder msg = new StringBuilder(bucketProviderIterator.next().getClass().getName());
+                while (bucketProviderIterator.hasNext()) {
+                    msg.append(", ").append(bucketProviderIterator.next().getClass().getName());
+                }
+                LOGGER.config(LocalizationMessages.IGNORED_SCHEDULER_PROVIDERS(
+                        msg.toString(), qualifierAnnotationClass.getName()));
             }
         }
+    }
 
-        dc.commit();
+    private static void logExecutorServiceProvider(Class<? extends Annotation> qualifierAnnotationClass,
+                                                   Iterator<ExecutorServiceProvider> bucketProviderIterator,
+                                                   ExecutorServiceProvider executorProvider) {
+        if (LOGGER.isLoggable(Level.CONFIG)) {
+            LOGGER.config(LocalizationMessages.USING_EXECUTOR_PROVIDER(
+                    executorProvider.getClass().getName(), qualifierAnnotationClass.getName()));
+
+            if (bucketProviderIterator.hasNext()) {
+                StringBuilder msg = new StringBuilder(bucketProviderIterator.next().getClass().getName());
+                while (bucketProviderIterator.hasNext()) {
+                    msg.append(", ").append(bucketProviderIterator.next().getClass().getName());
+                }
+                LOGGER.config(LocalizationMessages.IGNORED_EXECUTOR_PROVIDERS(
+                        msg.toString(), qualifierAnnotationClass.getName()));
+            }
+        }
     }
 
     private static <T extends ExecutorServiceProvider> Map<Class<? extends Annotation>, List<T>> getQualifierToProviderMap(
-            final ServiceLocator locator,
-            final Class<T> providerClass) {
-
-        // get all ExecutorServiceProvider registrations and create iterator with custom providers in the front
-        final Set<T> customExecutorProviders =
-                Providers.getCustomProviders(locator, providerClass);
-        final Set<T> defaultExecutorProviders =
-                Providers.getProviders(locator, providerClass);
-        defaultExecutorProviders.removeAll(customExecutorProviders);
-
-        final List<T> executorProviders = new LinkedList<T>(customExecutorProviders);
-        executorProviders.addAll(defaultExecutorProviders);
-        final Iterator<T> providersIterator = executorProviders.iterator();
+            List<T> executorProviders) {
 
         // iterate over providers and map them by Qualifier annotations (custom ones will be added to the buckets first)
-        final Map<Class<? extends Annotation>, List<T>> executorProviderMap =
-                new HashMap<Class<? extends Annotation>, List<T>>();
+        final Map<Class<? extends Annotation>, List<T>> executorProviderMap = new HashMap<>();
 
-        while (providersIterator.hasNext()) {
-            final T provider = providersIterator.next();
-
+        for (T provider : executorProviders) {
             for (Class<? extends Annotation> qualifier
                     : ReflectionHelper.getAnnotationTypes(provider.getClass(), Qualifier.class)) {
 
                 List<T> providersForQualifier;
                 if (!executorProviderMap.containsKey(qualifier)) {
-                    providersForQualifier = new LinkedList<T>();
+                    providersForQualifier = new LinkedList<>();
                     executorProviderMap.put(qualifier, providersForQualifier);
                 } else {
                     providersForQualifier = executorProviderMap.get(qualifier);
@@ -220,19 +252,18 @@ public final class ExecutorProviders {
         }
 
         return executorProviderMap;
-
     }
 
-    private static class ExecutorServiceFactory implements Factory<ExecutorService> {
+    private static class ExecutorServiceSupplier implements DisposableSupplier<ExecutorService> {
 
         private final ExecutorServiceProvider executorProvider;
 
-        private ExecutorServiceFactory(ExecutorServiceProvider executorServiceProvider) {
+        private ExecutorServiceSupplier(ExecutorServiceProvider executorServiceProvider) {
             executorProvider = executorServiceProvider;
         }
 
         @Override
-        public ExecutorService provide() {
+        public ExecutorService get() {
             return executorProvider.getExecutorService();
         }
 
@@ -242,16 +273,16 @@ public final class ExecutorProviders {
         }
     }
 
-    private static class ScheduledExecutorServiceFactory implements Factory<ScheduledExecutorService> {
+    private static class ScheduledExecutorServiceSupplier implements DisposableSupplier<ScheduledExecutorService> {
 
         private final ScheduledExecutorServiceProvider executorProvider;
 
-        private ScheduledExecutorServiceFactory(ScheduledExecutorServiceProvider executorServiceProvider) {
+        private ScheduledExecutorServiceSupplier(ScheduledExecutorServiceProvider executorServiceProvider) {
             executorProvider = executorServiceProvider;
         }
 
         @Override
-        public ScheduledExecutorService provide() {
+        public ScheduledExecutorService get() {
             return executorProvider.getExecutorService();
         }
 

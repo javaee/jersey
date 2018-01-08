@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,32 +37,36 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.integration.jersey2612;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import org.glassfish.hk2.api.ServiceLocator;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+
 @Singleton
 public class OptionalParamConverterProvider implements ParamConverterProvider {
 
-    private final ServiceLocator locator;
+    private final InjectionManager injectionManager;
 
     @Inject
-    public OptionalParamConverterProvider(final ServiceLocator locator) {
-        this.locator = locator;
+    public OptionalParamConverterProvider(final InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
     }
 
     @Override
@@ -82,7 +86,8 @@ public class OptionalParamConverterProvider implements ParamConverterProvider {
                 }
             };
         }
-        final Set<ParamConverterProvider> converterProviders = Providers.getProviders(locator, ParamConverterProvider.class);
+        final Set<ParamConverterProvider> converterProviders =
+                Providers.getProviders(injectionManager, ParamConverterProvider.class);
         for (ParamConverterProvider provider : converterProviders) {
             @SuppressWarnings("unchecked")
             final ParamConverter<?> converter = provider.getConverter(ctp.rawClass(), ctp.type(), annotations);
@@ -91,12 +96,7 @@ public class OptionalParamConverterProvider implements ParamConverterProvider {
                     @Override
                     public T fromString(final String value) {
                         return rawType.cast(Optional.fromNullable(value)
-                                                    .transform(new Function<String, Object>() {
-                                                        @Override
-                                                        public Object apply(final String s) {
-                                                            return converter.fromString(value);
-                                                        }
-                                                    }));
+                                                    .transform((Function<String, Object>) s -> converter.fromString(value)));
                     }
 
                     @Override

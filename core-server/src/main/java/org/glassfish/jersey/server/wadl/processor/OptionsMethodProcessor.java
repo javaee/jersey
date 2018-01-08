@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,6 +53,7 @@ import javax.ws.rs.core.Response;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ExtendedUriInfo;
@@ -88,11 +89,11 @@ public class OptionsMethodProcessor implements ModelProcessor {
     private static class PlainTextOptionsInflector implements Inflector<ContainerRequestContext, Response> {
 
         @Inject
-        private ExtendedUriInfo extendedUriInfo;
+        private Provider<ExtendedUriInfo> extendedUriInfo;
 
         @Override
         public Response apply(ContainerRequestContext containerRequestContext) {
-            Set<String> allowedMethods = ModelProcessorUtil.getAllowedMethods(extendedUriInfo
+            Set<String> allowedMethods = ModelProcessorUtil.getAllowedMethods(extendedUriInfo.get()
                     .getMatchedRuntimeResources().get(0));
 
             final String allowedList = allowedMethods.toString();
@@ -106,13 +107,12 @@ public class OptionsMethodProcessor implements ModelProcessor {
 
     private static class GenericOptionsInflector implements Inflector<ContainerRequestContext, Response> {
         @Inject
-        private ExtendedUriInfo extendedUriInfo;
-
+        private Provider<ExtendedUriInfo> extendedUriInfo;
 
         @Override
         public Response apply(ContainerRequestContext containerRequestContext) {
             final Set<String> allowedMethods = ModelProcessorUtil.getAllowedMethods(
-                    (extendedUriInfo.getMatchedRuntimeResources().get(0)));
+                    (extendedUriInfo.get().getMatchedRuntimeResources().get(0)));
             return Response.ok()
                     .allow(allowedMethods)
                     .header(HttpHeaders.CONTENT_LENGTH, "0")

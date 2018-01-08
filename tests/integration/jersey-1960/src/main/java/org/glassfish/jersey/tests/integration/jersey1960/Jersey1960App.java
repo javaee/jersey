@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,9 +39,9 @@
  */
 package org.glassfish.jersey.tests.integration.jersey1960;
 
-import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
@@ -56,6 +56,6 @@ public class Jersey1960App extends Application {
     @SuppressWarnings({"unchecked"})
     @Override
     public Set<Class<?>> getClasses() {
-        return Arrays.asList(EchoResource.class, RequestFilter.class).stream().collect(Collectors.toSet());
+        return Stream.of(EchoResource.class, RequestFilter.class).collect(Collectors.toSet());
     }
 }

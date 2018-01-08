@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.model.internal;
 
 import java.lang.annotation.Annotation;
@@ -44,8 +45,11 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -58,11 +62,17 @@ import javax.inject.Scope;
 import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.Binder;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.ClassBinding;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
-
-import org.glassfish.hk2.utilities.Binder;
+import org.glassfish.jersey.spi.ExecutorServiceProvider;
+import org.glassfish.jersey.spi.ScheduledExecutorServiceProvider;
 
 /**
  * An internal Jersey container for custom component classes and instances.
@@ -86,13 +96,14 @@ import org.glassfish.hk2.utilities.Binder;
 public class ComponentBag {
     /**
      * A filtering strategy that excludes all pure meta-provider models (i.e. models that only contain
-     * recognized meta-provider contracts - {@link javax.ws.rs.core.Feature} and/or {@link org.glassfish.hk2.utilities.Binder}).
+     * recognized meta-provider contracts - {@link javax.ws.rs.core.Feature} and/or {@link Binder} and/or external meta-provider
+     * from {@link org.glassfish.jersey.internal.inject.InjectionManager#isRegistrable(Class)}).
      * <p>
      * This filter predicate returns {@code false} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
      * that represent a model containing only recognized meta-provider contracts.
      * </p>
      */
-    public static final Predicate<ContractProvider> EXCLUDE_META_PROVIDERS = model -> {
+    private static final Predicate<ContractProvider> EXCLUDE_META_PROVIDERS = model -> {
         final Set<Class<?>> contracts = model.getContracts();
         if (contracts.isEmpty()) {
             return true;
@@ -108,14 +119,61 @@ public class ComponentBag {
         return contracts.size() > count;
     };
 
+
+    private static final Function<Object, Binder> CAST_TO_BINDER = Binder.class::cast;
+
     /**
-     * A filtering strategy that includes only models that contain HK2 Binder provider contract.
+     * A method creates the {@link Predicate} which is able to filter all Jersey meta-providers along with the components which
+     * is able to register the current used {@link InjectionManager}.
+     *
+     * @param injectionManager current injection manager.
+     * @return {@code Predicate} excluding Jersey meta-providers and the specific ones for a current {@code InjectionManager}.
+     */
+    public static Predicate<ContractProvider> excludeMetaProviders(InjectionManager injectionManager) {
+        return EXCLUDE_META_PROVIDERS.and(model -> !injectionManager.isRegistrable(model.getImplementationClass()));
+    }
+
+    /**
+     * A filtering strategy that includes only models that contain contract registrable by
+     * {@link InjectionManager}.
      * <p>
      * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
-     * that represent a provider registered to provide HK2 {@link org.glassfish.hk2.utilities.Binder} contract.
+     * that represent an object which can be registered using specific {@link InjectionManager}
+     * contract.
+     * </p>
+     */
+    public static final BiPredicate<ContractProvider, InjectionManager> EXTERNAL_ONLY = (model, injectionManager) ->
+            model.getImplementationClass() != null && injectionManager.isRegistrable(model.getImplementationClass());
+
+    /**
+     * A filtering strategy that includes only models that contain {@link Binder} provider contract.
+     * <p>
+     * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
+     * that represent a provider registered to provide {@link Binder} contract.
      * </p>
      */
     public static final Predicate<ContractProvider> BINDERS_ONLY = model -> model.getContracts().contains(Binder.class);
+
+    /**
+     * A filtering strategy that includes only models that contain {@link ExecutorServiceProvider} provider contract.
+     * <p>
+     * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
+     * that represent a provider registered to provide {@link ExecutorServiceProvider} contract.
+     * </p>
+     */
+    public static final Predicate<ContractProvider> EXECUTOR_SERVICE_PROVIDER_ONLY =
+            model -> model.getContracts().contains(ExecutorServiceProvider.class)
+                    && !model.getContracts().contains(ScheduledExecutorServiceProvider.class);
+
+    /**
+     * A filtering strategy that includes only models that contain {@link ScheduledExecutorServiceProvider} provider contract.
+     * <p>
+     * This filter predicate returns {@code true} for all {@link org.glassfish.jersey.model.ContractProvider contract provider models}
+     * that represent a provider registered to provide {@link ScheduledExecutorServiceProvider} contract.
+     * </p>
+     */
+    public static final Predicate<ContractProvider> SCHEDULED_EXECUTOR_SERVICE_PROVIDER_ONLY =
+            model -> model.getContracts().contains(ScheduledExecutorServiceProvider.class);
 
     /**
      * A filtering strategy that excludes models with no recognized contracts.
@@ -172,6 +230,41 @@ public class ComponentBag {
      */
     public static ComponentBag newInstance(Predicate<ContractProvider> registrationStrategy) {
         return new ComponentBag(registrationStrategy);
+    }
+
+    /**
+     * If {@code T} object is registered in {@link ComponentBag} using the {@link Binder}, {@code T} is not visible using the
+     * methods for getting classes and instances {@link ComponentBag#getClasses(Predicate)} and
+     * {@link ComponentBag#getInstances(Predicate)}.
+     * <p>
+     * Method selects all {@link org.glassfish.jersey.internal.inject.Binding bindings} and picks up the instances or creates
+     * the instances from {@link ClassBinding} (injection does not work at this moment).
+     *
+     * @param injectionManager injection manager to create an object from {@code T} class.
+     * @param componentBag     component bag which provides registered binders.
+     * @return all instances/classes registered using binders.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> getFromBinders(InjectionManager injectionManager, ComponentBag componentBag,
+            Function<Object, T> cast, Predicate<Binding> filter) {
+
+        Function<Binding, Object> bindingToObject = binding -> {
+            if (binding instanceof ClassBinding) {
+                ClassBinding classBinding = (ClassBinding) binding;
+                return injectionManager.createAndInitialize(classBinding.getService());
+            } else {
+                InstanceBinding instanceBinding = (InstanceBinding) binding;
+                return instanceBinding.getService();
+            }
+        };
+
+        return componentBag.getInstances(ComponentBag.BINDERS_ONLY).stream()
+                .map(CAST_TO_BINDER)
+                .flatMap(binder -> Bindings.getBindings(injectionManager, binder).stream())
+                .filter(filter)
+                .map(bindingToObject)
+                .map(cast)
+                .collect(Collectors.toList());
     }
 
     private ComponentBag(Predicate<ContractProvider> registrationStrategy) {
@@ -376,7 +469,7 @@ public class ComponentBag {
         return Errors.process(() -> {
             if (models.containsKey(componentClass)) {
                 Errors.error(LocalizationMessages.COMPONENT_TYPE_ALREADY_REGISTERED(componentClass),
-                        Severity.HINT);
+                             Severity.HINT);
                 return false;
             }
 
@@ -435,12 +528,12 @@ public class ComponentBag {
                 boolean failed = false;
                 if (!Providers.isSupportedContract(contract)) {
                     Errors.error(LocalizationMessages.CONTRACT_NOT_SUPPORTED(contract, componentClass),
-                            Severity.WARNING);
+                                 Severity.WARNING);
                     failed = true;
                 }
                 if (!contract.isAssignableFrom(componentClass)) {
                     Errors.error(LocalizationMessages.CONTRACT_NOT_ASSIGNABLE(contract, componentClass),
-                            Severity.WARNING);
+                                 Severity.WARNING);
                     failed = true;
                 }
                 if (failed) {
@@ -448,7 +541,7 @@ public class ComponentBag {
                 }
             }
         }
-        final ContractProvider.Builder builder = ContractProvider.builder()
+        final ContractProvider.Builder builder = ContractProvider.builder(componentClass)
                 .addContracts(contracts)
                 .defaultPriority(defaultPriority);
 
@@ -484,7 +577,7 @@ public class ComponentBag {
 
     /**
      * Get all registered component classes, including {@link javax.ws.rs.core.Feature features}
-     * and {@link org.glassfish.hk2.utilities.Binder binders} mtea-providers.
+     * and {@link Binder binders} meta-providers.
      *
      * @return all registered component classes.
      */
@@ -494,7 +587,7 @@ public class ComponentBag {
 
     /**
      * Get all registered component instances, including {@link javax.ws.rs.core.Feature features}
-     * and {@link org.glassfish.hk2.utilities.Binder binders} meta-providers.
+     * and {@link Binder binders} meta-providers.
      *
      * @return all registered component instances.
      */

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,10 @@ import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -92,6 +95,8 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     private final LinkedBlockingDeque<WeakReference<JerseyClient.ShutdownHook>> shutdownHooks =
                                         new LinkedBlockingDeque<WeakReference<JerseyClient.ShutdownHook>>();
     private final ReferenceQueue<JerseyClient.ShutdownHook> shReferenceQueue = new ReferenceQueue<JerseyClient.ShutdownHook>();
+    private final ExecutorService executorService;
+    private final ScheduledExecutorService scheduledExecutorService;
 
     /**
      * Client instance shutdown hook.
@@ -136,7 +141,7 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
                            final SSLContext sslContext,
                            final HostnameVerifier verifier,
                            final DefaultSslContextProvider defaultSslContextProvider) {
-        this(config, sslContext == null ? null : Values.<SSLContext, IllegalStateException>unsafe(sslContext), verifier,
+        this(config, sslContext == null ? null : Values.unsafe(sslContext), verifier,
              defaultSslContextProvider);
     }
 
@@ -157,6 +162,39 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
      * Create a new Jersey client instance.
      *
      * @param config                    jersey client configuration.
+     * @param sslContext                jersey client SSL context.
+     * @param verifier                  jersey client host name verifier.
+     * @param defaultSslContextProvider default SSL context provider.
+     */
+    protected JerseyClient(final Configuration config,
+                           final SSLContext sslContext,
+                           final HostnameVerifier verifier,
+                           final DefaultSslContextProvider defaultSslContextProvider,
+                           ExecutorService executorService,
+                           ScheduledExecutorService scheduledExecutorService) {
+        this(config, sslContext == null ? null : Values.unsafe(sslContext), verifier,
+             defaultSslContextProvider, executorService, scheduledExecutorService);
+    }
+
+    /**
+     * Create a new Jersey client instance.
+     *
+     * @param config             jersey client configuration.
+     * @param sslContextProvider jersey client SSL context provider.
+     * @param verifier           jersey client host name verifier.
+     */
+    protected JerseyClient(final Configuration config,
+                           final UnsafeValue<SSLContext, IllegalStateException> sslContextProvider,
+                           final HostnameVerifier verifier,
+                           ExecutorService executorService,
+                           ScheduledExecutorService scheduledExecutorService) {
+        this(config, sslContextProvider, verifier, null, executorService, scheduledExecutorService);
+    }
+
+    /**
+     * Create a new Jersey client instance.
+     *
+     * @param config                    jersey client configuration.
      * @param sslContextProvider        jersey client SSL context provider. Non {@code null} provider is expected to
      *                                  return non-default value.
      * @param verifier                  jersey client host name verifier.
@@ -166,6 +204,15 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
                            final UnsafeValue<SSLContext, IllegalStateException> sslContextProvider,
                            final HostnameVerifier verifier,
                            final DefaultSslContextProvider defaultSslContextProvider) {
+        this(config, sslContextProvider, verifier, defaultSslContextProvider, null, null);
+    }
+
+    protected JerseyClient(final Configuration config,
+                           final UnsafeValue<SSLContext, IllegalStateException> sslContextProvider,
+                           final HostnameVerifier verifier,
+                           final DefaultSslContextProvider defaultSslContextProvider,
+                           ExecutorService executorService,
+                           ScheduledExecutorService scheduledExecutorService) {
         this.config = config == null ? new ClientConfig(this) : new ClientConfig(this, config);
 
         if (sslContextProvider == null) {
@@ -193,6 +240,8 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
         }
 
         this.hostnameVerifier = verifier;
+        this.executorService = executorService;
+        this.scheduledExecutorService = scheduledExecutorService;
     }
 
     @Override
@@ -252,6 +301,10 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
                 shutdownHook.onShutdown();
             }
         }
+    }
+
+    private ScheduledExecutorService getDefaultScheduledExecutorService() {
+        return Executors.newScheduledThreadPool(8);
     }
 
     /**
@@ -398,6 +451,14 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     @Override
     public HostnameVerifier getHostnameVerifier() {
         return hostnameVerifier;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
+
+    public ScheduledExecutorService getScheduledExecutorService() {
+        return scheduledExecutorService;
     }
 
     @Override

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,15 +49,13 @@ import javax.xml.XMLConstants;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 
-import org.glassfish.hk2.api.Factory;
-
 /**
  * Thread-scoped injection provider of {@link TransformerFactory transformer factories}.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class TransformerFactoryInjectionProvider extends AbstractXmlFactory implements Factory<TransformerFactory> {
+public class TransformerFactoryInjectionProvider extends AbstractXmlFactory<TransformerFactory> {
 
     private static final Logger LOGGER = Logger.getLogger(TransformerFactoryInjectionProvider.class.getName());
 
@@ -73,7 +71,7 @@ public class TransformerFactoryInjectionProvider extends AbstractXmlFactory impl
     }
 
     @Override
-    public TransformerFactory provide() {
+    public TransformerFactory get() {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
         if (!isXmlSecurityDisabled()) {
@@ -85,10 +83,5 @@ public class TransformerFactoryInjectionProvider extends AbstractXmlFactory impl
         }
 
         return transformerFactory;
-    }
-
-    @Override
-    public void dispose(TransformerFactory instance) {
-        // not used
     }
 }

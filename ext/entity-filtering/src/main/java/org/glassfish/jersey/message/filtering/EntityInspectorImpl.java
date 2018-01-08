@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,12 +48,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.filtering.spi.EntityGraph;
@@ -63,8 +65,6 @@ import org.glassfish.jersey.message.filtering.spi.EntityProcessor;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessorContext;
 import org.glassfish.jersey.message.filtering.spi.FilteringHelper;
 import org.glassfish.jersey.model.internal.RankedComparator;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Class responsible for inspecting entity classes. This class invokes all available {@link EntityProcessor entity processors} in
@@ -81,15 +81,15 @@ final class EntityInspectorImpl implements EntityInspector {
     private EntityGraphProvider graphProvider;
 
     /**
-     * Constructor for HK2 expecting {@link ServiceLocator} to be injected.
+     * Constructor expecting {@link InjectionManager} to be injected.
      *
-     * @param locator service locator to be injected.
+     * @param injectionManager injection manager to be injected.
      */
     @Inject
-    public EntityInspectorImpl(final ServiceLocator locator) {
-        this.entityProcessors = StreamSupport.stream(Providers.getAllProviders(locator, EntityProcessor.class,
-                                                                               new RankedComparator<>()).spliterator(), false)
-                                             .collect(Collectors.toList());
+    public EntityInspectorImpl(final InjectionManager injectionManager) {
+        Spliterator<EntityProcessor> entities =
+                Providers.getAllProviders(injectionManager, EntityProcessor.class, new RankedComparator<>()).spliterator();
+        this.entityProcessors = StreamSupport.stream(entities, false).collect(Collectors.toList());
     }
 
     @Override

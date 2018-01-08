@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.media.sse;
 
 import java.io.ByteArrayInputStream;
@@ -49,36 +50,48 @@ import java.util.Collections;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.MediaType;
 
-import javax.inject.Singleton;
-
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
+import org.glassfish.jersey.model.internal.CommonConfig;
+import org.glassfish.jersey.model.internal.ComponentBag;
 
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class InboundEventReaderTest {
 
-    private static final MultivaluedStringMap headers;
+    private static final MultivaluedStringMap HEADERS;
 
-    private static final ServiceLocator locator;
+    private InjectionManager injectionManager;
 
     static {
-        headers = new MultivaluedStringMap();
-        headers.put("Transfer-Encoding", Collections.singletonList("chunked"));
-        headers.put("Content-Type", Collections.singletonList("text/event-stream"));
+        HEADERS = new MultivaluedStringMap();
+        HEADERS.put("Transfer-Encoding", Collections.singletonList("chunked"));
+        HEADERS.put("Content-Type", Collections.singletonList("text/event-stream"));
+    }
 
-        locator = ServiceLocatorUtilities.bind(new TestBinder());
+    @Before
+    public void setup() {
+        injectionManager = Injections.createInjectionManager();
+        injectionManager.register(new TestBinder());
+
+        MessageBodyFactory messageBodyFactory =
+                new MessageBodyFactory(new CommonConfig(RuntimeType.SERVER, ComponentBag.EXCLUDE_EMPTY));
+
+        injectionManager.register(Bindings.service(messageBodyFactory).to(MessageBodyWorkers.class));
+        injectionManager.completeRegistration();
+
+        messageBodyFactory.initialize(injectionManager);
     }
 
     @Test
@@ -135,9 +148,10 @@ public class InboundEventReaderTest {
         assertDataEquals("message 1", event);
     }
 
-    private static InboundEvent parse(InputStream stream) throws IOException {
-        return locator.getService(InboundEventReader.class).readFrom(InboundEvent.class, InboundEvent.class, new Annotation[0],
-                MediaType.valueOf(SseFeature.SERVER_SENT_EVENTS), headers, stream);
+    private InboundEvent parse(InputStream stream) throws IOException {
+        return injectionManager.getInstance(InboundEventReader.class)
+                .readFrom(InboundEvent.class, InboundEvent.class, new Annotation[0],
+                MediaType.valueOf(SseFeature.SERVER_SENT_EVENTS), HEADERS, stream);
     }
 
     private void assertDataEquals(final String expectedData, final InboundEvent event) {
@@ -150,8 +164,7 @@ public class InboundEventReaderTest {
         @Override
         protected void configure() {
             install(new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER));
-            bindAsContract(MessageBodyFactory.class).to(MessageBodyWorkers.class).in(Singleton.class);
-            bind(InboundEventReader.class).to(InboundEventReader.class);
+            bindAsContract(InboundEventReader.class);
         }
     }
 }

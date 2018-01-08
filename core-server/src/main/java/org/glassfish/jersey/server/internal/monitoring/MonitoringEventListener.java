@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,6 +53,7 @@ import javax.ws.rs.ProcessingException;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
@@ -61,8 +62,6 @@ import org.glassfish.jersey.server.monitoring.DestroyListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.uri.UriTemplate;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * {@link ApplicationEventListener application event listener} that listens to {@link ApplicationEvent application}
@@ -87,7 +86,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
     private static final int EVENT_QUEUE_SIZE = 500_000;
 
     @Inject
-    private ServiceLocator serviceLocator;
+    private InjectionManager injectionManager;
 
     private final Queue<RequestStats> requestQueuedItems = new ArrayBlockingQueue<>(EVENT_QUEUE_SIZE);
     private final Queue<Integer> responseStatuses = new ArrayBlockingQueue<>(EVENT_QUEUE_SIZE);
@@ -209,7 +208,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
                 break;
             case RELOAD_FINISHED:
             case INITIALIZATION_FINISHED:
-                this.monitoringStatisticsProcessor = new MonitoringStatisticsProcessor(serviceLocator, this);
+                this.monitoringStatisticsProcessor = new MonitoringStatisticsProcessor(injectionManager, this);
                 this.monitoringStatisticsProcessor.startMonitoringWorker();
                 break;
             case DESTROY_FINISHED:
@@ -224,7 +223,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
 
                 // onDestroy
                 final List<DestroyListener> listeners =
-                        serviceLocator.getAllServices(DestroyListener.class);
+                        injectionManager.getAllInstances(DestroyListener.class);
 
                 for (final DestroyListener listener : listeners) {
                     try {

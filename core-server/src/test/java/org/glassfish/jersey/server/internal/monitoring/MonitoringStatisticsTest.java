@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -136,8 +139,9 @@ public class MonitoringStatisticsTest {
     }
 
     private MonitoringStatisticsImpl getSimpleStats() {
-        final List<Resource> resources = Arrays.asList(Resource.from(TestResource.class),
-                Resource.from(HelloResource.class));
+        final List<Resource> resources = Stream.of(TestResource.class, HelloResource.class)
+                                               .map(Resource::from)
+                                               .collect(Collectors.toList());
 
         ResourceModel model = new ResourceModel.Builder(resources, false).build();
         MonitoringStatisticsImpl.Builder monBuilder = new MonitoringStatisticsImpl.Builder(model);

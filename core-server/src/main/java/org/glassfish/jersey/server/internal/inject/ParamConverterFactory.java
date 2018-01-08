@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,23 +37,20 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.ParamConverterProvider;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import org.glassfish.jersey.internal.inject.Providers;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * An aggregate {@link ParamConverterProvider param converter provider} that loads all
@@ -74,16 +71,13 @@ public class ParamConverterFactory implements ParamConverterProvider {
 
     private final List<ParamConverterProvider> converterProviders;
 
-    @Inject
-    ParamConverterFactory(ServiceLocator locator) {
+    ParamConverterFactory(Set<ParamConverterProvider> providers, Set<ParamConverterProvider> customProviders) {
+
+        Set<ParamConverterProvider> copyProviders = new HashSet<>(providers);
         converterProviders = new ArrayList<>();
-        final Set<ParamConverterProvider> customProviders = Providers.getCustomProviders(locator, ParamConverterProvider.class);
         converterProviders.addAll(customProviders);
-
-        final Set<ParamConverterProvider> providers = Providers.getProviders(locator, ParamConverterProvider.class);
-        providers.removeAll(customProviders);
-        converterProviders.addAll(providers);
-
+        copyProviders.removeAll(customProviders);
+        converterProviders.addAll(copyProviders);
     }
 
     @Override
@@ -96,6 +90,5 @@ public class ParamConverterFactory implements ParamConverterProvider {
             }
         }
         return null;
-
     }
 }

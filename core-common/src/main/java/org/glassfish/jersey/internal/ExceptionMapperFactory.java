@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,7 +45,6 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.SortedSet;
@@ -56,18 +55,18 @@ import java.util.logging.Logger;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.ServiceHolder;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
-
-import org.glassfish.hk2.api.ServiceHandle;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates
@@ -84,28 +83,42 @@ public class ExceptionMapperFactory implements ExceptionMappers {
     private static final Logger LOGGER = Logger.getLogger(ExceptionMapperFactory.class.getName());
 
     /**
-     * Exception mapper factory injection binder.
+     * Configurator which initializes and register {@link ExceptionMappers} instance into {@link InjectionManager} and
+     * {@link BootstrapBag}.
+     *
+     * @author Petr Bouda
      */
-    public static class Binder extends AbstractBinder {
+    public static class ExceptionMappersConfigurator implements BootstrapConfigurator {
+
+        private ExceptionMapperFactory exceptionMapperFactory;
 
         @Override
-        protected void configure() {
-            bindAsContract(ExceptionMapperFactory.class).to(ExceptionMappers.class).in(Singleton.class);
+        public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            exceptionMapperFactory = new ExceptionMapperFactory(injectionManager);
+            InstanceBinding<ExceptionMapperFactory> binding =
+                    Bindings.service(exceptionMapperFactory)
+                            .to(ExceptionMappers.class);
+            injectionManager.register(binding);
+        }
+
+        @Override
+        public void postInit(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            bootstrapBag.setExceptionMappers(exceptionMapperFactory);
         }
     }
 
     private static class ExceptionMapperType {
 
-        ServiceHandle<ExceptionMapper> mapper;
+        ServiceHolder<ExceptionMapper> mapper;
         Class<? extends Throwable> exceptionType;
 
-        public ExceptionMapperType(final ServiceHandle<ExceptionMapper> mapper, final Class<? extends Throwable> exceptionType) {
+        public ExceptionMapperType(final ServiceHolder<ExceptionMapper> mapper, final Class<? extends Throwable> exceptionType) {
             this.mapper = mapper;
             this.exceptionType = exceptionType;
         }
     }
 
-    private final Set<ExceptionMapperType> exceptionMapperTypes = new LinkedHashSet<ExceptionMapperType>();
+    private final Value<Set<ExceptionMapperType>> exceptionMapperTypes;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -123,10 +136,10 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         ExceptionMapper<T> mapper = null;
         int minDistance = Integer.MAX_VALUE;
 
-        for (final ExceptionMapperType mapperType : exceptionMapperTypes) {
+        for (final ExceptionMapperType mapperType : exceptionMapperTypes.get()) {
             final int d = distance(type, mapperType.exceptionType);
             if (d >= 0 && d <= minDistance) {
-                final ExceptionMapper<T> candidate = mapperType.mapper.getService();
+                final ExceptionMapper<T> candidate = mapperType.mapper.getInstance();
 
                 if (isPreferredCandidate(exceptionInstance, candidate, d == minDistance)) {
                     mapper = candidate;
@@ -165,53 +178,61 @@ public class ExceptionMapperFactory implements ExceptionMappers {
     }
 
     /**
-     * Create new exception mapper factory initialized with {@link ServiceLocator
-     * HK2 service locator} instance that will be used to look up all providers implementing
-     * {@link ExceptionMapper} interface.
+     * Create new exception mapper factory initialized with {@link InjectionManager injection manager}
+     * instance that will be used to look up all providers implementing {@link ExceptionMapper} interface.
      *
-     * @param locator HK2 service locator.
+     * @param injectionManager injection manager.
      */
-    @Inject
-    public ExceptionMapperFactory(final ServiceLocator locator) {
+    public ExceptionMapperFactory(InjectionManager injectionManager) {
+        exceptionMapperTypes = createLazyExceptionMappers(injectionManager);
+    }
 
-        final Collection<ServiceHandle<ExceptionMapper>> mapperHandles =
-                Providers.getAllServiceHandles(locator, ExceptionMapper.class);
+    /**
+     * Returns {@link LazyValue} of exception mappers that delays their creation to the first use. The exception mappers won't be
+     * created during bootstrap but at the time of the first call.
+     *
+     * @param injectionManager injection manager that may not be fully populated at the time of a function call therefore the
+     *                         result is wrapped to lazy value.
+     * @return lazy value of exception mappers.
+     */
+    private LazyValue<Set<ExceptionMapperType>> createLazyExceptionMappers(InjectionManager injectionManager) {
+        return Values.lazy((Value<Set<ExceptionMapperType>>) () -> {
+            Collection<ServiceHolder<ExceptionMapper>> mapperHandles =
+                    Providers.getAllServiceHolders(injectionManager, ExceptionMapper.class);
 
-        for (final ServiceHandle<ExceptionMapper> mapperHandle : mapperHandles) {
-            final ExceptionMapper mapper = mapperHandle.getService();
+            Set<ExceptionMapperType> exceptionMapperTypes = new LinkedHashSet<>();
+            for (ServiceHolder<ExceptionMapper> mapperHandle: mapperHandles) {
+                ExceptionMapper mapper = mapperHandle.getInstance();
 
-            if (Proxy.isProxyClass(mapper.getClass())) {
-                final SortedSet<Class<? extends ExceptionMapper>> mapperTypes
-                        = new TreeSet<Class<? extends ExceptionMapper>>(new Comparator<Class<? extends ExceptionMapper>>() {
+                if (Proxy.isProxyClass(mapper.getClass())) {
+                    SortedSet<Class<? extends ExceptionMapper>> mapperTypes =
+                            new TreeSet<>((o1, o2) -> o1.isAssignableFrom(o2) ? -1 : 1);
 
-                    @Override
-                    public int compare(final Class<? extends ExceptionMapper> o1, final Class<? extends ExceptionMapper> o2) {
-                        return o1.isAssignableFrom(o2) ? -1 : 1;
+                    Set<Type> contracts = mapperHandle.getContractTypes();
+                    for (final Type contract : contracts) {
+                        if (contract instanceof Class
+                                && ExceptionMapper.class.isAssignableFrom((Class<?>) contract)
+                                && contract != ExceptionMapper.class) {
+                            //noinspection unchecked
+                            mapperTypes.add((Class<? extends ExceptionMapper>) contract);
+                        }
                     }
-                });
 
-                final Set<Type> contracts = mapperHandle.getActiveDescriptor().getContractTypes();
-                for (final Type contract : contracts) {
-                    if (contract instanceof Class
-                            && ExceptionMapper.class.isAssignableFrom((Class<?>) contract) && contract != ExceptionMapper.class) {
-                        //noinspection unchecked
-                        mapperTypes.add((Class<? extends ExceptionMapper>) contract);
+                    if (!mapperTypes.isEmpty()) {
+                        final Class<? extends Throwable> c = getExceptionType(mapperTypes.first());
+                        if (c != null) {
+                            exceptionMapperTypes.add(new ExceptionMapperType(mapperHandle, c));
+                        }
                     }
-                }
-
-                if (!mapperTypes.isEmpty()) {
-                    final Class<? extends Throwable> c = getExceptionType(mapperTypes.first());
+                } else {
+                    final Class<? extends Throwable> c = getExceptionType(mapper.getClass());
                     if (c != null) {
                         exceptionMapperTypes.add(new ExceptionMapperType(mapperHandle, c));
                     }
                 }
-            } else {
-                final Class<? extends Throwable> c = getExceptionType(mapper.getClass());
-                if (c != null) {
-                    exceptionMapperTypes.add(new ExceptionMapperType(mapperHandle, c));
-                }
             }
-        }
+            return exceptionMapperTypes;
+        });
     }
 
     private int distance(Class<?> c, final Class<?> emtc) {

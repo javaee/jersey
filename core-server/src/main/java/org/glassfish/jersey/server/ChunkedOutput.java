@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,15 +47,17 @@ import java.util.Collections;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.container.ConnectionCallback;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import org.glassfish.jersey.internal.util.collection.Value;
+import javax.inject.Provider;
+
+import org.glassfish.jersey.process.internal.RequestContext;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.MappableException;
 
 /**
@@ -73,15 +75,20 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
 
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<>();
     private final byte[] chunkDelimiter;
+    private final AtomicBoolean resumed = new AtomicBoolean(false);
+
+    private boolean flushing = false;
 
     private volatile boolean closed = false;
-    private boolean flushing = false;
+
+    private volatile AsyncContext asyncContext;
+
     private volatile RequestScope requestScope;
-    private volatile RequestScope.Instance requestScopeInstance;
+    private volatile RequestContext requestScopeContext;
     private volatile ContainerRequest requestContext;
     private volatile ContainerResponse responseContext;
     private volatile ConnectionCallback connectionCallback;
-    private volatile Value<AsyncContext> asyncContext;
+
 
     /**
      * Create new {@code ChunkedOutput}.
@@ -113,6 +120,23 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
         } else {
             this.chunkDelimiter = ZERO_LENGTH_DELIMITER;
         }
+    }
+
+    /**
+     * Create new {@code ChunkedOutput} with a custom chunk delimiter.
+     *
+     * @param chunkDelimiter custom chunk delimiter bytes. Must not be {code null}.
+     * @since 2.4.1
+     */
+    protected ChunkedOutput(final byte[] chunkDelimiter, Provider<AsyncContext> asyncContextProvider) {
+        if (chunkDelimiter.length > 0) {
+            this.chunkDelimiter = new byte[chunkDelimiter.length];
+            System.arraycopy(chunkDelimiter, 0, this.chunkDelimiter, 0, chunkDelimiter.length);
+        } else {
+            this.chunkDelimiter = ZERO_LENGTH_DELIMITER;
+        }
+
+        this.asyncContext = asyncContextProvider == null ? null : asyncContextProvider.get();
     }
 
     /**
@@ -180,14 +204,18 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
         flushQueue();
     }
 
-    private void flushQueue() throws IOException {
-        if (requestScopeInstance == null || requestContext == null || responseContext == null) {
+    protected void flushQueue() throws IOException {
+        if (resumed.compareAndSet(false, true) && asyncContext != null) {
+            asyncContext.resume(this);
+        }
+
+        if (requestScopeContext == null || requestContext == null || responseContext == null) {
             return;
         }
 
         Exception ex = null;
         try {
-            requestScope.runInScope(requestScopeInstance, new Callable<Void>() {
+            requestScope.runInScope(requestScopeContext, new Callable<Void>() {
                 @Override
                 public Void call() throws IOException {
                     boolean shouldClose;
@@ -244,11 +272,11 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                                 responseContext.setEntityStream(writtenStream);
                             }
                         } catch (final IOException ioe) {
-                            connectionCallback.onDisconnect(asyncContext.get());
+                            connectionCallback.onDisconnect(asyncContext);
                             throw ioe;
                         } catch (final MappableException mpe) {
                             if (mpe.getCause() instanceof IOException) {
-                                connectionCallback.onDisconnect(asyncContext.get());
+                                connectionCallback.onDisconnect(asyncContext);
                             }
                             throw mpe;
                         }
@@ -292,7 +320,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                     ex = ex == null ? e : ex;
                 }
 
-                requestScopeInstance.release();
+                requestScopeContext.release();
 
                 // rethrow remembered exception (if any)
                 if (ex instanceof IOException) {
@@ -350,25 +378,22 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * Set context used for writing chunks.
      *
      * @param requestScope             request scope.
-     * @param requestScopeInstance     current request scope instance.
+     * @param requestScopeContext      current request context instance.
      * @param requestContext           request context.
      * @param responseContext          response context.
      * @param connectionCallbackRunner connection callback.
-     * @param asyncContext             async context value.
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */
     void setContext(final RequestScope requestScope,
-                    final RequestScope.Instance requestScopeInstance,
+                    final RequestContext requestScopeContext,
                     final ContainerRequest requestContext,
                     final ContainerResponse responseContext,
-                    final ConnectionCallback connectionCallbackRunner,
-                    final Value<AsyncContext> asyncContext) throws IOException {
+                    final ConnectionCallback connectionCallbackRunner) throws IOException {
         this.requestScope = requestScope;
-        this.requestScopeInstance = requestScopeInstance;
+        this.requestScopeContext = requestScopeContext;
         this.requestContext = requestContext;
         this.responseContext = responseContext;
         this.connectionCallback = connectionCallbackRunner;
-        this.asyncContext = asyncContext;
         flushQueue();
     }
 }

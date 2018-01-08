@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,7 @@ import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 /**
  * Implementations could provide their own {@link HttpServletRequest} and {@link HttpServletResponse}
  * binding implementation in HK2 locator and also an implementation of {@link RequestScopedInitializer}
- * that is used to set actual request/response references in HK2 service locator within each request.
+ * that is used to set actual request/response references in injection manager within each request.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @since 2.21
@@ -61,7 +61,7 @@ public interface ExtendedServletContainerProvider extends ServletContainerProvid
      *
      * The provider returned will be used at runtime for every and each incoming request
      * so that the actual request/response instances could be made accessible
-     * from Jersey HK2 service locator.
+     * from Jersey injection manager.
      *
      * @return request scoped initializer provider.
      */
@@ -69,7 +69,7 @@ public interface ExtendedServletContainerProvider extends ServletContainerProvid
 
     /**
      * Used by Jersey runtime to tell if the extension covers HTTP Servlet request response
-     * handling with respect to underlying HK2 service locator.
+     * handling with respect to underlying injection manager.
      *
      * Return {@code true}, if your implementation configures HK2 bindings
      * for {@link HttpServletRequest} and {@link HttpServletResponse}

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,29 +45,26 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.container.ResourceContext;
 
-import javax.inject.Inject;
 import javax.inject.Scope;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.ClassBinding;
 import org.glassfish.jersey.internal.inject.CustomAnnotationLiteral;
-import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.model.ResourceModel;
-
-import org.glassfish.hk2.api.ActiveDescriptor;
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.AliasDescriptor;
-import org.glassfish.hk2.utilities.BuilderHelper;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Jersey implementation of JAX-RS {@link ResourceContext resource context}.
@@ -76,7 +73,9 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  */
 public class JerseyResourceContext implements ExtendedResourceContext {
 
-    private final ServiceLocator locator;
+    private final Function<Class<?>, ?> getOrCreateInstance;
+    private final Consumer<Object> injectInstance;
+    private final Consumer<Binding> registerBinding;
 
     private final Set<Class<?>> bindingCache;
     private final Object bindingCacheLock;
@@ -84,22 +83,28 @@ public class JerseyResourceContext implements ExtendedResourceContext {
     private volatile ResourceModel resourceModel;
 
     /**
-     * Create new JerseyResourceContext.
+     * Creates a new JerseyResourceContext.
      *
-     * @param locator HK2 service locator.
+     * @param getOrCreateInstance function to create or get existing instance.
+     * @param injectInstance      consumer to inject instances into an unmanaged instance.
+     * @param registerBinding     consumer to register a new binding into injection manager.
      */
-    @Inject
-    JerseyResourceContext(ServiceLocator locator) {
-        this.locator = locator;
-
+    public JerseyResourceContext(
+            Function<Class<?>, ?> getOrCreateInstance,
+            Consumer<Object> injectInstance,
+            Consumer<Binding> registerBinding) {
+        this.getOrCreateInstance = getOrCreateInstance;
+        this.injectInstance = injectInstance;
+        this.registerBinding = registerBinding;
         this.bindingCache = Collections.newSetFromMap(new IdentityHashMap<>());
         this.bindingCacheLock = new Object();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T getResource(Class<T> resourceClass) {
         try {
-            return Injections.getOrCreate(locator, resourceClass);
+            return (T) getOrCreateInstance.apply(resourceClass);
         } catch (Exception ex) {
             Logger.getLogger(JerseyResourceContext.class.getName()).log(Level.WARNING,
                     LocalizationMessages.RESOURCE_LOOKUP_FAILED(resourceClass), ex);
@@ -109,7 +114,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
 
     @Override
     public <T> T initResource(T resource) {
-        locator.inject(resource);
+        injectInstance.accept(resource);
         return resource;
     }
 
@@ -133,10 +138,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
             if (bindingCache.contains(resourceClass)) {
                 return;
             }
-
-            final DynamicConfiguration dc = Injections.getConfiguration(locator);
-            unsafeBindResource(resourceClass, null, dc);
-            dc.commit();
+            unsafeBindResource(resourceClass, null);
         }
     }
 
@@ -150,6 +152,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
      *                 annotated with {@link javax.inject.Singleton Singleton annotation} it
      *                 will be ignored by this method.
      */
+    @SuppressWarnings("unchecked")
     public <T> void bindResourceIfSingleton(T resource) {
         final Class<?> resourceClass = resource.getClass();
         if (bindingCache.contains(resourceClass)) {
@@ -161,10 +164,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
                 return;
             }
             if (getScope(resourceClass) == Singleton.class) {
-                final DynamicConfiguration dc = Injections.getConfiguration(locator);
-                //noinspection unchecked
-                Injections.addBinding(Injections.newBinder(resource).to((Class<T>) resourceClass), dc);
-                dc.commit();
+                registerBinding.accept(Bindings.service(resource).to((Class<? super T>) resourceClass));
             }
 
             bindingCache.add(resourceClass);
@@ -172,9 +172,9 @@ public class JerseyResourceContext implements ExtendedResourceContext {
     }
 
     /**
-     * Bind a resource instance in a HK2 context.
+     * Bind a resource instance in a InjectionManager.
      *
-     * The bound resource instance is internally cached to make sure any sub-sequent attempts to bind the
+     * The bound resource instance is internally cached to make sure any sub-sequent attempts to service the
      * class are silently ignored.
      * <p>
      * WARNING: This version of method is not synchronized as well as the cache is not checked for existing
@@ -184,29 +184,23 @@ public class JerseyResourceContext implements ExtendedResourceContext {
      * @param resource resource instance to be bound.
      * @param providerModel provider model for the resource class. If not {@code null}, the class
      *                      wil be bound as a contract provider too.
-     * @param dc            dynamic HK2 service locator configuration.
      */
-    public void unsafeBindResource(
-            final Object resource,
-            final org.glassfish.jersey.model.ContractProvider providerModel,
-            final DynamicConfiguration dc) {
-        final Class<?> resourceClass = resource.getClass();
+    public void unsafeBindResource(Object resource, ContractProvider providerModel) {
+        Binding binding;
+        Class<?> resourceClass = resource.getClass();
         if (providerModel != null) {
-            final Class<? extends Annotation> scope = providerModel.getScope();
-            final ActiveDescriptor<?> descriptor =
-                    dc.bind(BuilderHelper.createConstantDescriptor(resource, null, resourceClass));
+            Class<? extends Annotation> scope = providerModel.getScope();
+            binding = Bindings.service(resource).to(resourceClass);
 
             for (Class contract : Providers.getProviderContracts(resourceClass)) {
-                @SuppressWarnings("unchecked")
-                AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
-                aliasDescriptor.setScope(scope.getName());
-                aliasDescriptor.addQualifierAnnotation(CustomAnnotationLiteral.INSTANCE);
-
-                dc.bind(aliasDescriptor);
+                binding.addAlias(contract)
+                        .in(scope.getName())
+                        .qualifiedBy(CustomAnnotationLiteral.INSTANCE);
             }
         } else {
-            Injections.addBinding(Injections.newBinder(resourceClass).to(resourceClass).in(getScope(resourceClass)), dc);
+            binding = Bindings.serviceAsContract(resourceClass);
         }
+        registerBinding.accept(binding);
         bindingCache.add(resourceClass);
     }
 
@@ -231,30 +225,23 @@ public class JerseyResourceContext implements ExtendedResourceContext {
      * @param resourceClass resource class to be bound.
      * @param providerModel provider model for the class. If not {@code null}, the class
      *                      wil be bound as a contract provider too.
-     * @param dc            dynamic HK2 service locator configuration.
      */
-    public <T> void unsafeBindResource(
-            final Class<T> resourceClass,
-            final org.glassfish.jersey.model.ContractProvider providerModel,
-            final DynamicConfiguration dc) {
-
+    public <T> void unsafeBindResource(Class<T> resourceClass, ContractProvider providerModel) {
+        ClassBinding<T> descriptor;
         if (providerModel != null) {
-            final Class<? extends Annotation> scope = providerModel.getScope();
-            final ActiveDescriptor<?> descriptor =
-                    dc.bind(BuilderHelper.activeLink(resourceClass).to(resourceClass).in(scope).build());
+            Class<? extends Annotation> scope = providerModel.getScope();
+            descriptor = Bindings.serviceAsContract(resourceClass).in(scope);
 
             for (Class contract : providerModel.getContracts()) {
-                @SuppressWarnings("unchecked")
-                AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
-                aliasDescriptor.setScope(scope.getName());
-                aliasDescriptor.setRanking(providerModel.getPriority(contract));
-                aliasDescriptor.addQualifierAnnotation(CustomAnnotationLiteral.INSTANCE);
-
-                dc.bind(aliasDescriptor);
+                descriptor.addAlias(contract)
+                        .in(scope.getName())
+                        .ranked(providerModel.getPriority(contract))
+                        .qualifiedBy(CustomAnnotationLiteral.INSTANCE);
             }
         } else {
-            Injections.addBinding(Injections.newBinder(resourceClass).to(resourceClass).in(getScope(resourceClass)), dc);
+            descriptor = Bindings.serviceAsContract(resourceClass).in(getScope(resourceClass));
         }
+        registerBinding.accept(descriptor);
         bindingCache.add(resourceClass);
     }
 
@@ -271,17 +258,4 @@ public class JerseyResourceContext implements ExtendedResourceContext {
     public void setResourceModel(ResourceModel resourceModel) {
         this.resourceModel = resourceModel;
     }
-
-    /**
-     * Injection binder for {@link JerseyResourceContext}.
-     */
-    public static class Binder extends AbstractBinder {
-
-        @Override
-        protected void configure() {
-            bindAsContract(JerseyResourceContext.class).to(ResourceContext.class).to(ExtendedResourceContext.class)
-                    .in(Singleton.class);
-        }
-    }
-
 }

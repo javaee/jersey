@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,9 +44,6 @@ import javax.ws.rs.core.Configuration;
 import javax.inject.Inject;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerThread;
-
 /**
  * Thread-scoped injection provider of {@link SAXParserFactory SAX parser factories}.
  *
@@ -54,7 +51,7 @@ import org.glassfish.hk2.api.PerThread;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula
  */
-public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory implements Factory<SAXParserFactory> {
+public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory<SAXParserFactory> {
 
     /**
      * Create new SAX parser factory provider.
@@ -68,8 +65,7 @@ public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory implem
     }
 
     @Override
-    @PerThread
-    public SAXParserFactory provide() {
+    public SAXParserFactory get() {
         SAXParserFactory factory = SAXParserFactory.newInstance();
 
         factory.setNamespaceAware(true);
@@ -79,10 +75,5 @@ public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory implem
         }
 
         return factory;
-    }
-
-    @Override
-    public void dispose(SAXParserFactory instance) {
-        //not used
     }
 }

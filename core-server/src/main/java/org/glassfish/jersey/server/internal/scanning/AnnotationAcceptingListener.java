@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,13 +56,13 @@ import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import jersey.repackaged.org.objectweb.asm.AnnotationVisitor;
+import jersey.repackaged.org.objectweb.asm.Attribute;
+import jersey.repackaged.org.objectweb.asm.ClassReader;
+import jersey.repackaged.org.objectweb.asm.ClassVisitor;
+import jersey.repackaged.org.objectweb.asm.FieldVisitor;
+import jersey.repackaged.org.objectweb.asm.MethodVisitor;
+import jersey.repackaged.org.objectweb.asm.Opcodes;
 
 /**
  * A scanner listener that processes Java class files (resource names

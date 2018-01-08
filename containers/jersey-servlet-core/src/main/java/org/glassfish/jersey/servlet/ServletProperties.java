@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,8 +40,6 @@
 package org.glassfish.jersey.servlet;
 
 import org.glassfish.jersey.internal.util.PropertiesClass;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Jersey servlet container configuration properties.
@@ -164,7 +162,7 @@ public final class ServletProperties {
     public static final String QUERY_PARAMS_AS_FORM_PARAMS_DISABLED = "jersey.config.servlet.form.queryParams.disabled";
 
     /**
-     * Identifies the object that will be used as a parent {@link ServiceLocator} in the Jersey
+     * Identifies the object that will be used as a parent {@code HK2 ServiceLocator} in the Jersey
      * {@link WebComponent}.
      * <p></p>
      * This property gives a possibility to use HK2 services that are registered and/or created

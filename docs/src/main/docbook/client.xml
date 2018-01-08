@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -481,7 +481,7 @@ System.out.println(response.readEntity(String.class));</programlisting>
 Hi World!</screen>
 
                 As we can see, the request was successfully processed (code 200) and returned an entity (representation) is
-                <literal>"Hi World!"</literal>. Note that since ve have configured a <literal>MyClientResponseFilter</literal>
+                <literal>"Hi World!"</literal>. Note that since we have configured a <literal>MyClientResponseFilter</literal>
                 in the resource target, when <literal>response.readEntity(String.class)</literal> gets called, the response
                 returned from the remote endpoint is passed through the response filter chain (including the
                 <literal>MyClientResponseFilter</literal>) and entity interceptor chain and at last a proper
@@ -558,6 +558,27 @@ String entity = client.target("http://example.com/rest")
             .target("http://example.com").path("resource/rest")
                         .request().get(String.class);</programlisting>
             </para>
+        </section>
+        <section>
+            <title>Setting ExecutorService and ScheduledExecutorService</title>
+            <para>
+                Some client invocations, like asynchronous or reactive, could lead to a need to start a new thread. This is
+                being done on provided ExecutorService or ScheduledExecutorService. &lit.jaxrs.client.ClientBuilder; has two
+                methods, which can be used to define them: <literal>executorService(ExecutorService)</literal> and
+                <literal>scheduledExecutorService(ScheduledExecutorService)</literal>. When specified, all invocations which
+                do require running on another thread, should be executed using provided services.
+            </para>
+            <para>
+                Default values do depend on the environment - in Java EE container, it has to be &jee6.javax.enterprise.concurrent.ManagedExecutorService;
+                and &jee6.javax.enterprise.concurrent.ManagedScheduledExecutorService;, for Java SE it would be
+                <literal>ForkJoinPool.commonPool</literal> for Executor service and something undefined for Scheduled
+                executor service.
+            </para>
+            <example>
+                <title>Setting JAX-RS Client ExecutorService</title>
+                <programlisting language="java" linenumbering="numbered">ExecutorService myExecutorService = Executors.newCachedThreadPool();
+Client client = ClientBuilder.newBuilder().executorService(myExecutorService).build();</programlisting>
+            </example>
         </section>
 
     </section>
@@ -656,6 +677,11 @@ webTarget.request().post(Entity.entity(f, MediaType.TEXT_PLAIN_TYPE));
                             <entry>Netty NIO framework</entry>
                             <entry>&jersey.netty.NettyConnectorProvider;</entry>
                             <entry><literal>org.glassfish.jersey.connectors:jersey-netty-connector</literal></entry>
+                        </row>
+                        <row>
+                            <entry>JDK NIO client</entry>
+                            <entry>&jersey.jdk.JdkConnectorProvider;</entry>
+                            <entry><literal>org.glassfish.jersey.connectors:jersey-jdk-connector</literal></entry>
                         </row>
                     </tbody>
                 </tgroup>

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,7 +69,13 @@ final class ELLinkBuilder {
             ExpressionFactory.newInstance();
 
     /**
-     * TODO javadoc.
+     * Evaluates the condition
+     *
+     * @param condition the condition expression
+     * @param entity    the entity returned from the resource method
+     * @param resource  the resource class instance that returned the entity
+     * @param instance  the instance that contains the entity, e.g. the value of a field within an entity class.
+     * @return the result of the condition
      */
     static boolean evaluateCondition(String condition,
                                      Object entity,
@@ -87,7 +93,15 @@ final class ELLinkBuilder {
     }
 
     /**
-     * TODO javadoc.
+     * Creates the URI using the link descriptor.
+     *
+     * @param link the link descriptor
+     * @param entity the entity returned from the resource method
+     * @param resource the resource class instance that returned the entity
+     * @param instance the instance that contains the entity, e.g. the value of a field within an entity class.
+     * @param uriInfo JAX-RS {@link UriInfo}
+     * @param rmc the {@link ResourceMappingContext}
+     * @return the URI
      */
     static URI buildURI(InjectLinkDescriptor link,
                         Object entity,

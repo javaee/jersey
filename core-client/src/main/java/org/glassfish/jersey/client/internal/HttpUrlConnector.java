@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -356,9 +356,14 @@ public class HttpUrlConnector implements Connector {
                     ClientProperties.REQUEST_ENTITY_PROCESSING, RequestEntityProcessing.class);
 
             if (entityProcessing == null || entityProcessing != RequestEntityProcessing.BUFFERED) {
-                final int length = request.getLength();
+                final long length = request.getLengthLong();
                 if (fixLengthStreaming && length > 0) {
-                    uc.setFixedLengthStreamingMode(length);
+                    // uc.setFixedLengthStreamingMode(long) was introduced in JDK 1.7 and Jersey client supports 1.6+
+                    if ("1.6".equals(Runtime.class.getPackage().getSpecificationVersion())) {
+                        uc.setFixedLengthStreamingMode(request.getLength());
+                    } else {
+                        uc.setFixedLengthStreamingMode(length);
+                    }
                 } else if (entityProcessing == RequestEntityProcessing.CHUNKED) {
                     uc.setChunkedStreamingMode(chunkSize);
                 }

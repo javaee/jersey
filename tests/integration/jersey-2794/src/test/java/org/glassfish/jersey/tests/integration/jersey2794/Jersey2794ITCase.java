@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,11 +44,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Predicate;
 
 import javax.ws.rs.core.Application;
 
@@ -125,12 +122,9 @@ public class Jersey2794ITCase extends JerseyTest {
     }
 
     private int matchingTempFiles(final String tempDir) throws IOException {
-        return (int) Files.walk(Paths.get(tempDir)).filter(new Predicate<Path>() {
-            @Override
-            public boolean test(Path path) {
-                final String name = path.getFileName().toString();
-                return name.startsWith("MIME") && name.endsWith("tmp");
-            }
+        return (int) Files.walk(Paths.get(tempDir)).filter(path -> {
+            final String name = path.getFileName().toString();
+            return name.startsWith("MIME") && name.endsWith("tmp");
         }).count();
     }
 }

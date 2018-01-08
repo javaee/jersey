@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,7 +50,7 @@ import javax.naming.NamingException;
 import org.glassfish.jersey.ext.cdi1x.internal.spi.BeanManagerProvider;
 
 /**
- * Default implementation of {@link org.glassfish.jersey.ext.cdi1x.internal.spi.BeanManagerProvider} that works on most environments.
+ * Default implementation of {@link BeanManagerProvider} that works on most environments.
  * At first the implementation tries to lookup the bean manager in JNDI, then via CDI 1.1 API. If not found {@code null} is
  * returned.
  *

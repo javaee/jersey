@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -95,7 +95,7 @@ class NettyHttpContainer implements Container {
      * @return Executor service associated with this container.
      */
     ExecutorService getExecutorService() {
-        return appHandler.getServiceLocator().getService(ExecutorServiceProvider.class).getExecutorService();
+        return appHandler.getInjectionManager().getInstance(ExecutorServiceProvider.class).getExecutorService();
     }
 
     /**
@@ -104,6 +104,6 @@ class NettyHttpContainer implements Container {
      * @return Scheduled executor service associated with this container.
      */
     ScheduledExecutorService getScheduledExecutorService() {
-        return appHandler.getServiceLocator().getService(ScheduledExecutorServiceProvider.class).getExecutorService();
+        return appHandler.getInjectionManager().getInstance(ScheduledExecutorServiceProvider.class).getExecutorService();
     }
 }

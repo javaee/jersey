@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,10 +41,10 @@
 package org.glassfish.jersey.ext.cdi1x.internal.spi;
 
 /**
- * An extension interface for implementations of {@link Hk2LocatorManager}. HK2 locator
+ * An extension interface for implementations of {@link InjectionManagerStore}. HK2 locator
  * managers implementing this interface are notified when an {@link javax.enterprise.inject.spi.InjectionTarget injection target}
  * is processed by {@link org.glassfish.jersey.ext.cdi1x.internal.CdiComponentProvider}. Locator managers can then set the
- * effective service locator to the processed {@link org.glassfish.jersey.ext.cdi1x.internal.spi.Hk2InjectedTarget target}.
+ * effective injection manager to the processed {@link InjectionManagerInjectedTarget target}.
  *
  * @author Michal Gajdos
  */
@@ -55,5 +55,5 @@ public interface InjectionTargetListener {
      *
      * @param target processed injection target.
      */
-    public void notify(final Hk2InjectedTarget target);
+    public void notify(final InjectionManagerInjectedTarget target);
 }

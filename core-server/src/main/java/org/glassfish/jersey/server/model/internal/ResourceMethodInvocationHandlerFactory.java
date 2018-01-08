@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,24 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * An injectable {@link ResourceMethodInvocationHandlerProvider resource method
@@ -73,26 +73,19 @@ import org.glassfish.hk2.api.ServiceLocator;
 @Singleton
 public final class ResourceMethodInvocationHandlerFactory implements ResourceMethodInvocationHandlerProvider {
 
-    private static final InvocationHandler DEFAULT_HANDLER = new InvocationHandler() {
-
-        @Override
-        public Object invoke(Object target, Method method, Object[] args)
-                throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-            return method.invoke(target, args);
-        }
-    };
+    private static final InvocationHandler DEFAULT_HANDLER = (target, method, args) -> method.invoke(target, args);
     private static final Logger LOGGER = Logger.getLogger(ResourceMethodInvocationHandlerFactory.class.getName());
-    private final Set<ResourceMethodInvocationHandlerProvider> providers;
+    private final LazyValue<Set<ResourceMethodInvocationHandlerProvider>> providers;
 
-    @Inject
-    ResourceMethodInvocationHandlerFactory(ServiceLocator locator) {
-        providers = Providers.getProviders(locator, ResourceMethodInvocationHandlerProvider.class);
+    ResourceMethodInvocationHandlerFactory(InjectionManager injectionManager) {
+        this.providers = Values.lazy((Value<Set<ResourceMethodInvocationHandlerProvider>>)
+                () -> Providers.getProviders(injectionManager, ResourceMethodInvocationHandlerProvider.class));
     }
 
     // ResourceMethodInvocationHandlerProvider
     @Override
     public InvocationHandler create(Invocable resourceMethod) {
-        for (ResourceMethodInvocationHandlerProvider provider : providers) {
+        for (ResourceMethodInvocationHandlerProvider provider : providers.get()) {
             try {
                 InvocationHandler handler = provider.create(resourceMethod);
                 if (handler != null) {

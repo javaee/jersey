@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,9 +52,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.uri.UriComponent;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Injectable class used for processing an OAuth signature (signing or verifying).
@@ -92,12 +91,12 @@ public class OAuth1Signature {
 
     /**
      * Create a new instance of the OAuth signature configured with injected {@code ServiceLocator}.
-     * @param serviceLocator Service locator (injected by HK2)/
+     * @param injectionManager injection manager
      */
     @Inject
-    public OAuth1Signature(final ServiceLocator serviceLocator) {
+    public OAuth1Signature(final InjectionManager injectionManager) {
         methods = new HashMap<String, OAuth1SignatureMethod>();
-        final List<OAuth1SignatureMethod> methodList = serviceLocator.getAllServices(OAuth1SignatureMethod.class);
+        final List<OAuth1SignatureMethod> methodList = injectionManager.getAllInstances(OAuth1SignatureMethod.class);
         for (final OAuth1SignatureMethod oAuth1SignatureMethod : methodList) {
             methods.put(oAuth1SignatureMethod.name(), oAuth1SignatureMethod);
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,15 +37,15 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.ext.cdi1x.servlet.internal;
 
 import javax.enterprise.context.ApplicationScoped;
 
 import org.glassfish.jersey.ext.cdi1x.internal.JerseyVetoed;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.ExternalRequestContext;
 import org.glassfish.jersey.server.spi.ExternalRequestScope;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Weld specific request scope to align CDI request context with Jersey.
@@ -56,26 +56,26 @@ import org.glassfish.hk2.api.ServiceLocator;
 @JerseyVetoed
 public class CdiExternalRequestScope implements ExternalRequestScope<Object> {
 
-    public static final ThreadLocal<ServiceLocator> actualServiceLocator = new ThreadLocal<>();
+    public static final ThreadLocal<InjectionManager> actualInjectionManager = new ThreadLocal<>();
 
     @Override
-    public ExternalRequestContext<Object> open(ServiceLocator serviceLocator) {
-        actualServiceLocator.set(serviceLocator);
+    public ExternalRequestContext<Object> open(InjectionManager injectionManager) {
+        actualInjectionManager.set(injectionManager);
         return new ExternalRequestContext<>(null);
     }
 
     @Override
-    public void resume(final ExternalRequestContext<Object> ctx, ServiceLocator serviceLocator) {
-        actualServiceLocator.set(serviceLocator);
+    public void resume(final ExternalRequestContext<Object> ctx, InjectionManager injectionManager) {
+        actualInjectionManager.set(injectionManager);
     }
 
     @Override
-    public void suspend(final ExternalRequestContext<Object> ctx, ServiceLocator serviceLocator) {
-        actualServiceLocator.remove();
+    public void suspend(final ExternalRequestContext<Object> ctx, InjectionManager injectionManager) {
+        actualInjectionManager.remove();
     }
 
     @Override
     public void close() {
-        actualServiceLocator.remove();
+        actualInjectionManager.remove();
     }
 }

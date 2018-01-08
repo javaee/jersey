@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,16 +54,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Feature;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.model.ContractProvider;
@@ -71,14 +72,9 @@ import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.spi.Contract;
 
-import org.glassfish.hk2.api.ActiveDescriptor;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceHandle;
-import org.glassfish.hk2.api.ServiceLocator;
-
 /**
  * Utility class providing a set of utility methods for easier and more type-safe
- * interaction with HK2 injection layer.
+ * interaction with an injection layer.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Miroslav Fuksa
@@ -92,6 +88,14 @@ public final class Providers {
      */
     private static final Map<Class<?>, ProviderRuntime> JAX_RS_PROVIDER_INTERFACE_WHITELIST =
             getJaxRsProviderInterfaces();
+    /**
+     * Map of all supported external (i.e. non-Jersey) contracts and their run-time affinity.
+     */
+    private static final Map<Class<?>, ProviderRuntime> EXTERNAL_PROVIDER_INTERFACE_WHITELIST =
+            getExternalProviderInterfaces();
+
+    private Providers() {
+    }
 
     private static Map<Class<?>, ProviderRuntime> getJaxRsProviderInterfaces() {
         final Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
@@ -110,15 +114,10 @@ public final class Providers {
 
         interfaces.put(javax.ws.rs.client.ClientResponseFilter.class, ProviderRuntime.CLIENT);
         interfaces.put(javax.ws.rs.client.ClientRequestFilter.class, ProviderRuntime.CLIENT);
+        interfaces.put(javax.ws.rs.client.RxInvokerProvider.class, ProviderRuntime.CLIENT);
 
         return interfaces;
     }
-
-    /**
-     * Map of all supported external (i.e. non-Jersey) contracts and their run-time affinity.
-     */
-    private static final Map<Class<?>, ProviderRuntime> EXTERNAL_PROVIDER_INTERFACE_WHITELIST =
-            getExternalProviderInterfaces();
 
     private static Map<Class<?>, ProviderRuntime> getExternalProviderInterfaces() {
         final Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
@@ -126,10 +125,7 @@ public final class Providers {
         // JAX-RS
         interfaces.putAll(JAX_RS_PROVIDER_INTERFACE_WHITELIST);
         interfaces.put(javax.ws.rs.core.Feature.class, ProviderRuntime.BOTH);
-
-        // HK2
-        interfaces.put(org.glassfish.hk2.utilities.Binder.class, ProviderRuntime.BOTH);
-
+        interfaces.put(Binder.class, ProviderRuntime.BOTH);
         return interfaces;
     }
 
@@ -148,93 +144,74 @@ public final class Providers {
         }
     }
 
-    private Providers() {
-    }
-
-    /**
-     * Wrap an instance into a HK2 service factory.
-     *
-     * @param <T>      Java type if the contract produced by the provider and factory.
-     * @param instance instance to be wrapped into (and provided by) the factory.
-     * @return HK2 service factory wrapping and providing the instance.
-     */
-    public static <T> Factory<T> factoryOf(final T instance) {
-        return new Factory<T>() {
-
-            @Override
-            public T provide() {
-                return instance;
-            }
-
-            @Override
-            public void dispose(final T instance) {
-                //not used
-            }
-        };
-    }
-
     /**
      * Get the set of default providers registered for the given service provider contract
-     * in the underlying {@link ServiceLocator HK2 service locator} container.
+     * in the underlying {@link InjectionManager injection manager} container.
      *
-     * @param <T>      service provider contract Java type.
-     * @param locator  underlying HK2 service locator.
-     * @param contract service provider contract.
+     * @param <T>             service provider contract Java type.
+     * @param injectionManager underlying injection manager.
+     * @param contract        service provider contract.
      * @return set of all available default service provider instances for the contract.
      */
-    public static <T> Set<T> getProviders(final ServiceLocator locator, final Class<T> contract) {
-        final Collection<ServiceHandle<T>> hk2Providers = getServiceHandles(locator, contract);
-        return getClasses(hk2Providers);
+    public static <T> Set<T> getProviders(InjectionManager injectionManager, Class<T> contract) {
+        Collection<ServiceHolder<T>> providers = getServiceHolders(injectionManager, contract);
+        return getProviderClasses(providers);
     }
 
     /**
      * Get the set of all custom providers registered for the given service provider contract
-     * in the underlying {@link ServiceLocator HK2 service locator} container.
+     * in the underlying {@link InjectionManager injection manager} container.
+     * <p>
+     * Returned providers are sorted based on {@link Priority} (lower {@code Priority} value is higher priority,
+     * see {@link Priorities}.
      *
-     * @param <T>      service provider contract Java type.
-     * @param locator  underlying HK2 service locator.
-     * @param contract service provider contract.
+     * @param <T>              service provider contract Java type.
+     * @param injectionManager underlying injection manager.
+     * @param contract         service provider contract.
      * @return set of all available service provider instances for the contract.
      */
-    public static <T> Set<T> getCustomProviders(final ServiceLocator locator, final Class<T> contract) {
-        final Collection<ServiceHandle<T>> hk2Providers = getServiceHandles(locator, contract, CustomAnnotationLiteral.INSTANCE);
-        return getClasses(hk2Providers);
+    public static <T> Set<T> getCustomProviders(InjectionManager injectionManager, Class<T> contract) {
+
+        List<ServiceHolder<T>> providers = getServiceHolders(injectionManager,
+                                                             contract,
+                                                             Comparator.comparingInt(Providers::getPriority),
+                                                             CustomAnnotationLiteral.INSTANCE);
+
+        return getProviderClasses(providers);
     }
 
     /**
      * Get the iterable of all providers (custom and default) registered for the given service provider contract
-     * in the underlying {@link ServiceLocator HK2 service locator} container.
+     * in the underlying {@link InjectionManager injection manager} container.
      *
-     * @param <T>      service provider contract Java type.
-     * @param locator  underlying HK2 service locator.
-     * @param contract service provider contract.
+     * @param <T>             service provider contract Java type.
+     * @param injectionManager underlying injection manager.
+     * @param contract        service provider contract.
      * @return iterable of all available service provider instances for the contract. Return value is never null.
      */
-    public static <T> Iterable<T> getAllProviders(final ServiceLocator locator, final Class<T> contract) {
-        return getAllProviders(locator, contract, (Comparator<T>) null);
+    public static <T> Iterable<T> getAllProviders(InjectionManager injectionManager, Class<T> contract) {
+        return getAllProviders(injectionManager, contract, (Comparator<T>) null);
     }
 
     /**
      * Get the iterable of all {@link RankedProvider providers} (custom and default) registered for the given service provider
-     * contract in the underlying {@link ServiceLocator HK2 service locator} container.
+     * contract in the underlying {@link InjectionManager injection manager} container.
      *
-     * @param <T>      service provider contract Java type.
-     * @param locator  underlying HK2 service locator.
-     * @param contract service provider contract.
-     * @return iterable of all available ranked service providers for the contract. Return value is never null.
+     * @param <T>             service provider contract Java type.
+     * @param injectionManager underlying injection manager.
+     * @param contract        service provider contract.
+     * @return iterable of all available ranked service providers for the contract. Return value is never {@code null}.
      */
-    public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(final ServiceLocator locator, final Class<T> contract) {
-        final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract, CustomAnnotationLiteral.INSTANCE);
-        providers.addAll(getServiceHandles(locator, contract));
+    public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(InjectionManager injectionManager, Class<T> contract) {
+        List<ServiceHolder<T>> providers = getServiceHolders(injectionManager, contract, CustomAnnotationLiteral.INSTANCE);
+        providers.addAll(getServiceHolders(injectionManager, contract));
 
-        final LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>> providerMap =
-                new LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>>();
+        LinkedHashMap<ServiceHolder<T>, RankedProvider<T>> providerMap = new LinkedHashMap<>();
 
-        for (final ServiceHandle<T> provider : providers) {
-            final ActiveDescriptor<T> key = provider.getActiveDescriptor();
-            if (!providerMap.containsKey(key)) {
-                final Set<Type> contractTypes = key.getContractTypes();
-                final Class<?> implementationClass = key.getImplementationClass();
+        for (ServiceHolder<T> provider : providers) {
+            if (!providerMap.containsKey(provider)) {
+                Set<Type> contractTypes = provider.getContractTypes();
+                Class<?> implementationClass = provider.getImplementationClass();
                 boolean proxyGenerated = true;
                 for (Type ct : contractTypes) {
                     if (((Class<?>) ct).isAssignableFrom(implementationClass)) {
@@ -242,8 +219,8 @@ public final class Providers {
                         break;
                     }
                 }
-                providerMap.put(key,
-                        new RankedProvider<T>(provider.getService(), key.getRanking(), proxyGenerated ? contractTypes : null));
+                Set<Type> contracts = proxyGenerated ? contractTypes : null;
+                providerMap.put(provider, new RankedProvider<>(provider.getInstance(), provider.getRank(), contracts));
             }
         }
 
@@ -257,16 +234,32 @@ public final class Providers {
      * @param providers  providers to be sorted.
      * @param <T>        service provider contract Java type.
      * @return sorted {@link Iterable iterable} instance containing given providers.
-     *         The returned value is never {@code null}.
+     * The returned value is never {@code null}.
      */
     @SuppressWarnings("TypeMayBeWeakened")
     public static <T> Iterable<T> sortRankedProviders(final RankedComparator<T> comparator,
                                                       final Iterable<RankedProvider<T>> providers) {
 
         return StreamSupport.stream(providers.spliterator(), false)
-                            .sorted(comparator)
-                            .map(RankedProvider::getProvider)
-                            .collect(Collectors.toList());
+                .sorted(comparator)
+                .map(RankedProvider::getProvider)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get the iterable of all providers (custom and default) registered for the given service provider contract in the underlying
+     * {@link InjectionManager injection manager} container and automatically sorted using
+     * {@link RankedComparator ranked comparator}.
+     *
+     * @param <T>             service provider contract Java type.
+     * @param injectionManager underlying injection manager.
+     * @param contract        service provider contract.
+     * @return iterable of all available service providers for the contract. Return value is never {@code null}.
+     */
+    @SuppressWarnings("TypeMayBeWeakened")
+    public static <T> Iterable<T> getAllRankedSortedProviders(InjectionManager injectionManager, Class<T> contract) {
+        Iterable<RankedProvider<T>> allRankedProviders = Providers.getAllRankedProviders(injectionManager, contract);
+        return Providers.sortRankedProviders(new RankedComparator<>(), allRankedProviders);
     }
 
     /**
@@ -276,131 +269,129 @@ public final class Providers {
      * @param providerIterables providers to be sorted.
      * @param <T>               service provider contract Java type.
      * @return merged and sorted {@link Iterable iterable} instance containing given providers.
-     *         The returned value is never {@code null}.
+     * The returned value is never {@code null}.
      */
     @SuppressWarnings("TypeMayBeWeakened")
     public static <T> Iterable<T> mergeAndSortRankedProviders(final RankedComparator<T> comparator,
                                                               final Iterable<Iterable<RankedProvider<T>>> providerIterables) {
 
         return StreamSupport.stream(providerIterables.spliterator(), false)
-                            .flatMap(rankedProviders -> StreamSupport.stream(rankedProviders.spliterator(), false))
-                            .sorted(comparator)
-                            .map(RankedProvider::getProvider)
-                            .collect(Collectors.toList());
+                .flatMap(rankedProviders -> StreamSupport.stream(rankedProviders.spliterator(), false))
+                .sorted(comparator)
+                .map(RankedProvider::getProvider)
+                .collect(Collectors.toList());
     }
 
     /**
      * Get the sorted iterable of all {@link RankedProvider providers} (custom and default) registered for the given service
-     * provider contract in the underlying {@link ServiceLocator HK2 service locator} container.
+     * provider contract in the underlying {@link InjectionManager injection manager} container.
      *
-     * @param <T>        service provider contract Java type.
-     * @param locator    underlying HK2 service locator.
-     * @param contract   service provider contract.
-     * @param comparator comparator to sort the providers with.
+     * @param <T>             service provider contract Java type.
+     * @param injectionManager underlying injection manager.
+     * @param contract        service provider contract.
+     * @param comparator      comparator to sort the providers with.
      * @return set of all available ranked service providers for the contract. Return value is never null.
      */
-    public static <T> Iterable<T> getAllProviders(final ServiceLocator locator,
-                                                  final Class<T> contract,
-                                                  final RankedComparator<T> comparator) {
+    public static <T> Iterable<T> getAllProviders(
+            InjectionManager injectionManager, Class<T> contract, RankedComparator<T> comparator) {
         //noinspection unchecked
-        return sortRankedProviders(comparator, getAllRankedProviders(locator, contract));
+        return sortRankedProviders(comparator, getAllRankedProviders(injectionManager, contract));
     }
 
     /**
-     * Get collection of all {@link ServiceHandle}s bound for providers (custom and default) registered for the given service
-     * provider contract in the underlying {@link ServiceLocator HK2 service locator} container.
+     * Get collection of all {@link ServiceHolder}s bound for providers (custom and default) registered for the given service
+     * provider contract in the underlying {@link InjectionManager injection manager} container.
      *
-     * @param <T>        service provider contract Java type.
-     * @param locator    underlying HK2 service locator.
-     * @param contract   service provider contract.
+     * @param <T>             service provider contract Java type.
+     * @param injectionManager underlying injection manager.
+     * @param contract        service provider contract.
      * @return set of all available service provider instances for the contract
      */
-    public static <T> Collection<ServiceHandle<T>> getAllServiceHandles(final ServiceLocator locator, final Class<T> contract) {
-        final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract, CustomAnnotationLiteral.INSTANCE);
-        providers.addAll(getServiceHandles(locator, contract));
+    public static <T> Collection<ServiceHolder<T>> getAllServiceHolders(InjectionManager injectionManager, Class<T> contract) {
+        List<ServiceHolder<T>> providers = getServiceHolders(injectionManager,
+                                                             contract,
+                                                             Comparator.comparingInt(Providers::getPriority),
+                                                             CustomAnnotationLiteral.INSTANCE);
+        providers.addAll(getServiceHolders(injectionManager, contract));
 
-        final LinkedHashMap<ActiveDescriptor, ServiceHandle<T>> providerMap =
-                new LinkedHashMap<ActiveDescriptor, ServiceHandle<T>>();
-
-        for (final ServiceHandle<T> provider : providers) {
-            final ActiveDescriptor key = provider.getActiveDescriptor();
-            if (!providerMap.containsKey(key)) {
-                providerMap.put(key, provider);
+        LinkedHashSet<ServiceHolder<T>> providersSet = new LinkedHashSet<>();
+        for (ServiceHolder<T> provider : providers) {
+            if (!providersSet.contains(provider)) {
+                providersSet.add(provider);
             }
         }
 
-        return providerMap.values();
+        return providersSet;
     }
 
-    private static <T> List<ServiceHandle<T>> getServiceHandles(final ServiceLocator locator, final Class<T> contract,
-                                                                final Annotation... qualifiers) {
+    private static <T> List<ServiceHolder<T>> getServiceHolders(
+            InjectionManager bm, Class<T> contract, Annotation... qualifiers) {
+        return bm.getAllServiceHolders(contract, qualifiers);
+    }
 
-        final List<ServiceHandle<T>> allServiceHandles = qualifiers == null
-                ? locator.getAllServiceHandles(contract)
-                : locator.getAllServiceHandles(contract, qualifiers);
+    private static <T> List<ServiceHolder<T>> getServiceHolders(InjectionManager injectionManager,
+                                                                Class<T> contract,
+                                                                Comparator<Class<?>> objectComparator,
+                                                                Annotation... qualifiers) {
 
-        final ArrayList<ServiceHandle<T>> serviceHandles = new ArrayList<ServiceHandle<T>>();
-        for (final ServiceHandle handle : allServiceHandles) {
-            //noinspection unchecked
-            serviceHandles.add((ServiceHandle<T>) handle);
+        List<ServiceHolder<T>> serviceHolders = injectionManager.getAllServiceHolders(contract, qualifiers);
+        serviceHolders.sort((o1, o2) -> objectComparator.compare(o1.getImplementationClass(), o2.getImplementationClass()));
+        return serviceHolders;
+    }
+
+    /**
+     * Returns {@code true} if given component class is a JAX-RS provider.
+     *
+     * @param clazz class to check.
+     * @return {@code true} if the class is a JAX-RS provider, {@code false} otherwise.
+     */
+    public static boolean isJaxRsProvider(final Class<?> clazz) {
+        for (final Class<?> providerType : JAX_RS_PROVIDER_INTERFACE_WHITELIST.keySet()) {
+            if (providerType.isAssignableFrom(clazz)) {
+                return true;
+            }
         }
-        return serviceHandles;
+        return false;
     }
 
     /**
      * Get the iterable of all providers (custom and default) registered for the given service provider contract
-     * in the underlying {@link ServiceLocator HK2 service locator} container ordered based on the given {@code comparator}.
+     * in the underlying {@link InjectionManager injection manager} container ordered based on the given {@code comparator}.
      *
-     * @param <T>        service provider contract Java type.
-     * @param locator    underlying HK2 service locator.
-     * @param contract   service provider contract.
-     * @param comparator comparator to be used for sorting the returned providers.
+     * @param <T>              service provider contract Java type.
+     * @param injectionManager underlying injection manager.
+     * @param contract         service provider contract.
+     * @param comparator       comparator to be used for sorting the returned providers.
      * @return set of all available service provider instances for the contract ordered using the given
      * {@link Comparator comparator}.
      */
-    public static <T> Iterable<T> getAllProviders(final ServiceLocator locator,
-                                                  final Class<T> contract,
-                                                  final Comparator<T> comparator) {
-
-        final List<T> providerList = new ArrayList<T>(getClasses(getAllServiceHandles(locator, contract)));
-
+    public static <T> Iterable<T> getAllProviders(
+            InjectionManager injectionManager, Class<T> contract, Comparator<T> comparator) {
+        List<T> providerList = new ArrayList<>(getProviderClasses(getAllServiceHolders(injectionManager, contract)));
         if (comparator != null) {
-            Collections.sort(providerList, comparator);
+            providerList.sort(comparator);
         }
-
         return providerList;
     }
 
-    private static <T> Set<T> getClasses(final Collection<ServiceHandle<T>> hk2Providers) {
-        if (hk2Providers.isEmpty()) {
-            return new LinkedHashSet<T>();
-        } else {
-            return hk2Providers.stream().map(new ProviderToService<T>())
-                               .collect(Collectors.toCollection(LinkedHashSet::new));
-        }
+    private static <T> Set<T> getProviderClasses(final Collection<ServiceHolder<T>> providers) {
+        return providers.stream()
+                        .map(Providers::holder2service)
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    /**
-     * Get the set of all providers registered for the given service provider contract
-     * in the underlying {@link ServiceLocator HK2 locator} container.
-     *
-     * @param <T>        service provider contract Java type.
-     * @param locator    underlying HK2 service locator.
-     * @param contract   service provider contract.
-     * @param comparator contract comparator used for ordering contracts in the
-     *                   set.
-     * @return set of all available service provider instances for the contract.
-     */
-    public static <T> SortedSet<T> getProviders(final ServiceLocator locator,
-                                                final Class<T> contract,
-                                                final Comparator<T> comparator) {
-        final Collection<ServiceHandle<T>> hk2Providers = getServiceHandles(locator, contract);
-        if (hk2Providers.isEmpty()) {
-            return new TreeSet<T>(comparator);
-        } else {
-            return hk2Providers.stream().map(new ProviderToService<T>())
-                               .collect(Collectors.toCollection(() -> new TreeSet<T>(comparator)));
+    private static <T> T holder2service(ServiceHolder<T> holder) {
+        return (holder != null) ? holder.getInstance() : null;
+    }
+
+    private static int getPriority(Class<?> serviceClass) {
+        Priority annotation = serviceClass.getAnnotation(Priority.class);
+        if (annotation != null) {
+            return annotation.value();
         }
+
+        // default priority
+        return Priorities.USER;
     }
 
     /**
@@ -429,7 +420,7 @@ public final class Providers {
     /**
      * Check the {@code component} whether it is appropriate correctly configured for client or server
      * {@link RuntimeType runtime}.
-     *
+     * <p>
      * If a problem occurs a warning is logged and if the component is not usable at all in the current runtime
      * {@code false} is returned. For classes found during component scanning (scanned=true) certain warnings are
      * completely ignored (e.g. components {@link ConstrainedTo constrained to} the client runtime and found by
@@ -457,7 +448,7 @@ public final class Providers {
 
         final StringBuilder warnings = new StringBuilder();
         try {
-            /**
+            /*
              * Indicates that the provider implements at least one contract compatible
              * with it's implementation class constraint.
              */
@@ -527,8 +518,8 @@ public final class Providers {
 
     private static void logProviderSkipped(final StringBuilder sb, final Class<?> provider, final boolean alsoResourceClass) {
         sb.append(alsoResourceClass
-                ? LocalizationMessages.ERROR_PROVIDER_AND_RESOURCE_CONSTRAINED_TO_IGNORED(provider.getName())
-                : LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_IGNORED(provider.getName())).append(" ");
+                          ? LocalizationMessages.ERROR_PROVIDER_AND_RESOURCE_CONSTRAINED_TO_IGNORED(provider.getName())
+                          : LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_IGNORED(provider.getName())).append(" ");
     }
 
     /**
@@ -558,7 +549,7 @@ public final class Providers {
     }
 
     private static Iterable<Class<?>> getImplementedContracts(final Class<?> clazz) {
-        final Collection<Class<?>> list = new LinkedList<Class<?>>();
+        final Collection<Class<?>> list = new LinkedList<>();
 
         Collections.addAll(list, clazz.getInterfaces());
 
@@ -579,21 +570,6 @@ public final class Providers {
      */
     public static boolean isProvider(final Class<?> clazz) {
         return findFirstProviderContract(clazz);
-    }
-
-    /**
-     * Returns {@code true} if given component class is a JAX-RS provider.
-     *
-     * @param clazz class to check.
-     * @return {@code true} if the class is a JAX-RS provider, {@code false} otherwise.
-     */
-    public static boolean isJaxRsProvider(final Class<?> clazz) {
-        for (final Class<?> providerType : JAX_RS_PROVIDER_INTERFACE_WHITELIST.keySet()) {
-            if (providerType.isAssignableFrom(clazz)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -623,20 +599,6 @@ public final class Providers {
             throw new IllegalArgumentException(LocalizationMessages.INVALID_SPI_CLASSES(
                     contract.getName(),
                     invalidClassNames.toString()));
-        }
-
-    }
-
-    /**
-     * Inject {@code providerInstances}. The method iterates through {@code providerInstances}
-     * and initializes injectable fields of each instance using {@code serviceLocator}.
-     *
-     * @param providerInstances Iterable of provider instances to be injected.
-     * @param serviceLocator    Service locator.
-     */
-    public static <T> void injectProviders(final Iterable<T> providerInstances, final ServiceLocator serviceLocator) {
-        for (final T providerInstance : providerInstances) {
-            serviceLocator.inject(providerInstance);
         }
 
     }

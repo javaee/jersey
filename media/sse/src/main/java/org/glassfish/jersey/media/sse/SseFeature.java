@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,10 @@ import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.util.Property;
+import org.glassfish.jersey.media.sse.internal.SseBinder;
+import org.glassfish.jersey.media.sse.internal.SseEventSinkValueParamProvider;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
+
 
 /**
  * A JAX-RS {@link Feature feature} that enables Server-Sent Events support.
@@ -52,6 +56,7 @@ import org.glassfish.jersey.internal.util.Property;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class SseFeature implements Feature {
+
     /**
      * {@link String} representation of Server sent events media type. ("{@value}").
      */
@@ -138,6 +143,8 @@ public class SseFeature implements Feature {
                 break;
             case SERVER:
                 context.register(OutboundEventWriter.class);
+                context.register(new SseBinder());
+                context.register(SseEventSinkValueParamProvider.class, ValueParamProvider.class);
                 break;
         }
         return true;

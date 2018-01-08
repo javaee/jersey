@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,11 +45,13 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.core.GenericType;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ServerProperties;
@@ -58,10 +60,6 @@ import org.glassfish.jersey.server.internal.monitoring.jmx.MBeanExposer;
 import org.glassfish.jersey.server.monitoring.ApplicationInfo;
 import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
-
-import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Feature that enables calculating of {@link MonitoringStatistics monitoring statistics} and
@@ -133,13 +131,12 @@ public final class MonitoringFeature implements Feature {
             context.register(new AbstractBinder() {
                 @Override
                 protected void configure() {
-                    bindFactory(ReferencingFactory.<ApplicationInfo>referenceFactory()).to(
-                            new TypeLiteral<Ref<ApplicationInfo>>() {
-                            }
-                    ).in(Singleton.class);
+                    bindFactory(ReferencingFactory.<ApplicationInfo>referenceFactory())
+                            .to(new GenericType<Ref<ApplicationInfo>>() { })
+                            .in(Singleton.class);
 
-                    bindFactory(ApplicationInfoInjectionFactory.class).to(
-                            ApplicationInfo.class).in(PerLookup.class);
+                    bindFactory(ApplicationInfoInjectionFactory.class)
+                            .to(ApplicationInfo.class);
                 }
             });
         }
@@ -149,11 +146,11 @@ public final class MonitoringFeature implements Feature {
             context.register(new AbstractBinder() {
                 @Override
                 protected void configure() {
-                    bindFactory(ReferencingFactory.<MonitoringStatistics>referenceFactory()).to(
-                            new TypeLiteral<Ref<MonitoringStatistics>>() {
-                            }).in(Singleton.class);
+                    bindFactory(ReferencingFactory.<MonitoringStatistics>referenceFactory())
+                            .to(new GenericType<Ref<MonitoringStatistics>>() { })
+                            .in(Singleton.class);
 
-                    bindFactory(StatisticsInjectionFactory.class).to(MonitoringStatistics.class).in(PerLookup.class);
+                    bindFactory(StatisticsInjectionFactory.class).to(MonitoringStatistics.class);
 
                     bind(StatisticsListener.class).to(MonitoringStatisticsListener.class).in(Singleton.class);
                 }
@@ -207,14 +204,9 @@ public final class MonitoringFeature implements Feature {
         }
 
         @Override
-        public MonitoringStatistics provide() {
-            return super.provide();
+        public MonitoringStatistics get() {
+            return super.get();
         }
-
-        @Override
-        public void dispose(MonitoringStatistics monitoringStatistics) {
-        }
-
     }
 
     private static class StatisticsListener implements MonitoringStatisticsListener {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,12 +42,14 @@ package org.glassfish.jersey.server.internal.process;
 
 import java.util.function.Function;
 
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.server.AsyncContext;
 import org.glassfish.jersey.server.CloseableService;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
@@ -56,8 +58,6 @@ import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Request processing context.
@@ -69,7 +69,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 // TODO replace also ContainerResponse in stages with this guy.
 public final class RequestProcessingContext implements RespondingContext {
 
-    private final ServiceLocator serviceLocator;
+    private final InjectionManager injectionManager;
 
     private final ContainerRequest request;
     private final UriRoutingContext routingContext;
@@ -84,19 +84,19 @@ public final class RequestProcessingContext implements RespondingContext {
     /**
      * Create new request processing context.
      *
-     * @param serviceLocator          service locator / injector.
+     * @param injectionManager        injection manager / injector.
      * @param request                 container request.
      * @param routingContext          routing context.
      * @param monitoringEventBuilder  request monitoring event builder.
      * @param monitoringEventListener registered request monitoring event listener.
      */
     public RequestProcessingContext(
-            final ServiceLocator serviceLocator,
+            final InjectionManager injectionManager,
             final ContainerRequest request,
             final UriRoutingContext routingContext,
             final RequestEventBuilder monitoringEventBuilder,
             final RequestEventListener monitoringEventListener) {
-        this.serviceLocator = serviceLocator;
+        this.injectionManager = injectionManager;
 
         this.request = request;
         this.routingContext = routingContext;
@@ -131,7 +131,7 @@ public final class RequestProcessingContext implements RespondingContext {
      * Get the underlying {@link UriRoutingContext} instance for the processed
      * container request.
      * <p>
-     * This instance is used  by {@link ServerProcessingBinder} to satisfy injection of multiple types, namely:
+     * This instance is used  by {@link RequestProcessingConfigurator} to satisfy injection of multiple types, namely:
      * <ul>
      * <li>{@link javax.ws.rs.core.UriInfo}<li>
      * </li>{@link org.glassfish.jersey.server.ExtendedUriInfo}<li>
@@ -156,7 +156,7 @@ public final class RequestProcessingContext implements RespondingContext {
 
 
     /**
-     * Lazily initialize {@link org.glassfish.jersey.server.internal.process.AsyncContext} for this
+     * Lazily initialize {@link AsyncContext} for this
      * request processing context.
      * <p>
      * The {@code lazyContextValue} will be only invoked once during the first call to {@link #asyncContext()}.
@@ -197,14 +197,14 @@ public final class RequestProcessingContext implements RespondingContext {
     }
 
     /**
-     * Get service locator.
+     * Get injection manager.
      *
      * The returned instance is application-scoped.
      *
-     * @return application-scoped service locator.
+     * @return application-scoped injection manager.
      */
-    public ServiceLocator serviceLocator() {
-        return serviceLocator;
+    public InjectionManager injectionManager() {
+        return injectionManager;
     }
 
     /**

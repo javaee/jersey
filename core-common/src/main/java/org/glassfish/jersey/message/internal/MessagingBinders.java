@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,9 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.message.internal;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -48,9 +51,8 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.ServiceFinderBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Binding definitions for the default set of message related providers (readers,
@@ -113,9 +115,9 @@ public final class MessagingBinders {
             // Message body writers
             bind(StreamingOutputProvider.class).to(MessageBodyWriter.class).in(Singleton.class);
             bind(SourceProvider.SourceWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
-            install(new ServiceFinderBinder<HeaderDelegateProvider>(HeaderDelegateProvider.class, applicationProperties,
-                    runtimeType));
 
+            // Header Delegate Providers registered in META-INF.services
+            install(new ServiceFinderBinder<>(HeaderDelegateProvider.class, applicationProperties, runtimeType));
         }
 
         private <T extends MessageBodyReader & MessageBodyWriter> void bindSingletonWorker(final Class<T> worker) {
@@ -128,18 +130,35 @@ public final class MessagingBinders {
      */
     public static class HeaderDelegateProviders extends AbstractBinder {
 
+        private final Set<HeaderDelegateProvider> providers;
+
+        public HeaderDelegateProviders() {
+            Set<HeaderDelegateProvider> providers = new HashSet<>();
+            providers.add(new CacheControlProvider());
+            providers.add(new CookieProvider());
+            providers.add(new DateProvider());
+            providers.add(new EntityTagProvider());
+            providers.add(new LinkProvider());
+            providers.add(new LocaleProvider());
+            providers.add(new MediaTypeProvider());
+            providers.add(new NewCookieProvider());
+            providers.add(new StringHeaderProvider());
+            providers.add(new UriProvider());
+            this.providers = providers;
+        }
+
         @Override
         protected void configure() {
-            bind(CacheControlProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
-            bind(CookieProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
-            bind(DateProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
-            bind(EntityTagProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
-            bind(LinkProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
-            bind(LocaleProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
-            bind(MediaTypeProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
-            bind(NewCookieProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
-            bind(StringHeaderProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
-            bind(UriProvider.class).to(HeaderDelegateProvider.class).in(Singleton.class);
+            providers.forEach(provider -> bind(provider).to(HeaderDelegateProvider.class));
+        }
+
+        /**
+         * Returns all {@link HeaderDelegateProvider} register internally by Jersey.
+         *
+         * @return all internally registered {@link HeaderDelegateProvider}.
+         */
+        public Set<HeaderDelegateProvider> getHeaderDelegateProviders() {
+            return providers;
         }
     }
 }

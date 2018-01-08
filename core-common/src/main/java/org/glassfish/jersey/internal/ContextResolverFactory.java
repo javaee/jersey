@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal;
 
 import java.lang.reflect.Type;
@@ -50,19 +51,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfacePair;
 import org.glassfish.jersey.internal.util.collection.KeyComparatorHashMap;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.spi.ContextResolvers;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * A factory implementation for managing {@link ContextResolver} instances.
@@ -73,47 +70,56 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 public class ContextResolverFactory implements ContextResolvers {
 
     /**
-     * Injection binder defining {@link ContextResolverFactory} and
-     * {@link ContextResolvers} bindings.
+     * Configurator which initializes and register {@link ContextResolvers} instance into {@link InjectionManager} and
+     * {@link BootstrapBag}.
+     *
+     * @author Petr Bouda
      */
-    public static class Binder extends AbstractBinder {
+    public static class ContextResolversConfigurator implements BootstrapConfigurator {
+
+        private ContextResolverFactory contextResolverFactory;
 
         @Override
-        protected void configure() {
-            bindAsContract(ContextResolverFactory.class).to(ContextResolvers.class).in(Singleton.class);
+        public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            contextResolverFactory = new ContextResolverFactory();
+            InstanceBinding<ContextResolverFactory> binding =
+                    Bindings.service(contextResolverFactory)
+                            .to(ContextResolvers.class);
+            injectionManager.register(binding);
+        }
+
+        @Override
+        public void postInit(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            contextResolverFactory.initialize(injectionManager.getAllInstances(ContextResolver.class));
+            bootstrapBag.setContextResolvers(contextResolverFactory);
         }
     }
 
-    private final Map<Type, Map<MediaType, ContextResolver>> resolver =
-            new HashMap<Type, Map<MediaType, ContextResolver>>(3);
-    private final Map<Type, ConcurrentHashMap<MediaType, ContextResolver>> cache =
-            new HashMap<Type, ConcurrentHashMap<MediaType, ContextResolver>>(3);
+    private final Map<Type, Map<MediaType, ContextResolver>> resolver = new HashMap<>(3);
+    private final Map<Type, ConcurrentHashMap<MediaType, ContextResolver>> cache = new HashMap<>(3);
 
     /**
-     * Create new context resolver factory backed by the supplied {@link ServiceLocator HK2 service locator}.
-     *
-     * @param locator HK2 service locator.
+     * Private constructor to allow to create {@link ContextResolverFactory} only in {@link ContextResolversConfigurator}.
      */
-    @Inject
-    public ContextResolverFactory(final ServiceLocator locator) {
-        final Map<Type, Map<MediaType, List<ContextResolver>>> rs =
-                new HashMap<Type, Map<MediaType, List<ContextResolver>>>();
+    private ContextResolverFactory(){
+    }
 
-        final Iterable<ContextResolver> providers = Providers.getAllProviders(locator, ContextResolver.class);
-        for (final ContextResolver provider : providers) {
-            final List<MediaType> ms = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
+    private void initialize(List<ContextResolver> contextResolvers) {
+        Map<Type, Map<MediaType, List<ContextResolver>>> rs = new HashMap<>();
 
-            final Type type = getParameterizedType(provider.getClass());
+        for (ContextResolver provider : contextResolvers) {
+            List<MediaType> ms = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
+            Type type = getParameterizedType(provider.getClass());
 
             Map<MediaType, List<ContextResolver>> mr = rs.get(type);
             if (mr == null) {
-                mr = new HashMap<MediaType, List<ContextResolver>>();
+                mr = new HashMap<>();
                 rs.put(type, mr);
             }
-            for (final MediaType m : ms) {
+            for (MediaType m : ms) {
                 List<ContextResolver> crl = mr.get(m);
                 if (crl == null) {
-                    crl = new ArrayList<ContextResolver>();
+                    crl = new ArrayList<>();
                     mr.put(m, crl);
                 }
                 crl.add(provider);
@@ -123,14 +129,12 @@ public class ContextResolverFactory implements ContextResolvers {
         // Reduce set of two or more context resolvers for same type and
         // media type
 
-        for (final Map.Entry<Type, Map<MediaType, List<ContextResolver>>> e : rs.entrySet()) {
-            final Map<MediaType, ContextResolver> mr = new KeyComparatorHashMap<MediaType, ContextResolver>(
-                    4, MessageBodyFactory.MEDIA_TYPE_KEY_COMPARATOR);
+        for (Map.Entry<Type, Map<MediaType, List<ContextResolver>>> e : rs.entrySet()) {
+            Map<MediaType, ContextResolver> mr = new KeyComparatorHashMap<>(4, MessageBodyFactory.MEDIA_TYPE_KEY_COMPARATOR);
             resolver.put(e.getKey(), mr);
+            cache.put(e.getKey(), new ConcurrentHashMap<>(4));
 
-            cache.put(e.getKey(), new ConcurrentHashMap<MediaType, ContextResolver>(4));
-
-            for (final Map.Entry<MediaType, List<ContextResolver>> f : e.getValue().entrySet()) {
+            for (Map.Entry<MediaType, List<ContextResolver>> f : e.getValue().entrySet()) {
                 mr.put(f.getKey(), reduce(f.getValue()));
             }
         }
@@ -191,7 +195,7 @@ public class ContextResolverFactory implements ContextResolvers {
         }
 
         private static List<ContextResolver> removeNull(final ContextResolver... cra) {
-            final List<ContextResolver> crl = new ArrayList<ContextResolver>(cra.length);
+            final List<ContextResolver> crl = new ArrayList<>(cra.length);
             for (final ContextResolver cr : cra) {
                 if (cr != null) {
                     crl.add(cr);

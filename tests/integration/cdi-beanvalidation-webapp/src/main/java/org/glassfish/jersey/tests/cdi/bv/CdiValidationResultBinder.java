@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.cdi.bv;
 
 import java.util.Set;
@@ -46,13 +47,11 @@ import javax.enterprise.inject.spi.Extension;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.ext.cdi1x.internal.CdiUtil;
-import org.glassfish.jersey.ext.cdi1x.internal.GenericCdiBeanHk2Factory;
-import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.ext.cdi1x.internal.GenericCdiBeanSupplier;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 
 /**
  * Utility that binds HK2 factory to provide CDI managed validation result bean.
@@ -64,11 +63,11 @@ public class CdiValidationResultBinder implements Extension, ComponentProvider {
     @Inject
     BeanManager beanManager;
 
-    ServiceLocator locator;
+    InjectionManager injectionManager;
 
     @Override
-    public void initialize(ServiceLocator locator) {
-        this.locator = locator;
+    public void initialize(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
         this.beanManager = CdiUtil.getBeanManager();
     }
 
@@ -78,19 +77,16 @@ public class CdiValidationResultBinder implements Extension, ComponentProvider {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void done() {
         if (beanManager != null) { // in CDI environment
-            final DynamicConfiguration dc = Injections.getConfiguration(locator);
+            Binding binding = Bindings
+                    .supplier(new GenericCdiBeanSupplier(
+                            CdiValidationResult.class, injectionManager, beanManager, true))
+                    .to(CdiValidationResult.class)
+                    .to(ValidationResult.class);
 
-            final ServiceBindingBuilder bindingBuilder = Injections.newFactoryBinder(
-                            new GenericCdiBeanHk2Factory(CdiValidationResult.class, locator, beanManager, true));
-
-            bindingBuilder.to(CdiValidationResult.class);
-            bindingBuilder.to(ValidationResult.class);
-
-            Injections.addBinding(bindingBuilder, dc);
-
-            dc.commit();
+            injectionManager.register(binding);
         }
     }
 }

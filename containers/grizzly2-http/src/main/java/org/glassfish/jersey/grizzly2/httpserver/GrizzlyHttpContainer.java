@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.grizzly2.httpserver;
 
 import java.io.IOException;
@@ -53,12 +54,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.SecurityContext;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.grizzly2.httpserver.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -72,11 +75,6 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
@@ -95,10 +93,9 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(GrizzlyHttpContainer.class.getName()), Level.FINEST);
 
-    private final Type RequestTYPE = (new TypeLiteral<Ref<Request>>() {
-    }).getType();
-    private final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {
-    }).getType();
+    private final Type RequestTYPE = (new GenericType<Ref<Request>>() { }).getType();
+    private final Type ResponseTYPE = (new GenericType<Ref<Response>>() { }).getType();
+
     /**
      * Cached value of configuration property
      * {@link org.glassfish.jersey.server.ServerProperties#RESPONSE_SET_STATUS_OVER_SEND_ERROR}.
@@ -151,12 +148,12 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         protected void configure() {
             bindFactory(GrizzlyRequestReferencingFactory.class).to(Request.class)
                     .proxy(false).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {})
+            bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new GenericType<Ref<Request>>() {})
                     .in(RequestScoped.class);
 
             bindFactory(GrizzlyResponseReferencingFactory.class).to(Response.class)
                     .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<Response>referenceFactory()).to(new TypeLiteral<Ref<Response>>() {})
+            bindFactory(ReferencingFactory.<Response>referenceFactory()).to(new GenericType<Ref<Response>>() {})
                     .in(RequestScoped.class);
         }
     }
@@ -343,10 +340,10 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      * Create a new Grizzly HTTP container.
      *
      * @param application   JAX-RS / Jersey application to be deployed on Grizzly HTTP container.
-     * @param parentLocator parent HK2 service locator.
+     * @param parentContext DI provider specific context with application's registered bindings.
      */
-    /* package */ GrizzlyHttpContainer(final Application application, final ServiceLocator parentLocator) {
-        this.appHandler = new ApplicationHandler(application, new GrizzlyBinder(), parentLocator);
+    /* package */ GrizzlyHttpContainer(final Application application, final Object parentContext) {
+        this.appHandler = new ApplicationHandler(application, new GrizzlyBinder(), parentContext);
         cacheConfigSetStatusOverSendError();
         cacheConfigEnableLeadingContextPathSlashes();
     }
@@ -373,13 +370,9 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
             }
             requestContext.setWriter(responseWriter);
 
-            requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
-
-                @Override
-                public void initialize(final ServiceLocator locator) {
-                    locator.<Ref<Request>>getService(RequestTYPE).set(request);
-                    locator.<Ref<Response>>getService(ResponseTYPE).set(response);
-                }
+            requestContext.setRequestScopedInitializer(injectionManager -> {
+                injectionManager.<Ref<Request>>getInstance(RequestTYPE).set(request);
+                injectionManager.<Ref<Response>>getInstance(ResponseTYPE).set(response);
             });
             appHandler.handle(requestContext);
         } finally {

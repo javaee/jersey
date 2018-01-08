@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,8 +52,8 @@ import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
 
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -107,11 +107,11 @@ public class ClientProviderInstanceInjectionTest {
     public static class MyFilterFeature implements Feature {
 
         @Inject
-        private ServiceLocator locator;
+        private InjectionManager injectionManager;
 
         @Override
         public boolean configure(final FeatureContext context) {
-            context.register(new MyFilter(locator));
+            context.register(new MyFilter(injectionManager));
             return true;
         }
     }

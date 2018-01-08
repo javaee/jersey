@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.integration.servlet_request_wrapper_binding2;
 
 import java.io.BufferedReader;
@@ -52,10 +53,12 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
+
+import javax.ws.rs.core.GenericType;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
@@ -73,6 +76,10 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
+import org.glassfish.jersey.inject.hk2.DelayedHk2InjectionManager;
+import org.glassfish.jersey.inject.hk2.ImmediateHk2InjectionManager;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.internal.RequestScoped;
@@ -85,14 +92,12 @@ import org.glassfish.jersey.servlet.internal.spi.RequestScopedInitializerProvide
 
 import org.glassfish.hk2.api.DescriptorType;
 import org.glassfish.hk2.api.DescriptorVisibility;
-import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.jvnet.hk2.internal.ServiceHandleImpl;
 
@@ -113,7 +118,8 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
     public static class DescriptorProvider implements ComponentProvider {
 
         @Override
-        public void initialize(ServiceLocator locator) {
+        public void initialize(InjectionManager injectionManager) {
+            ServiceLocator locator = getServiceLocator(injectionManager);
             ServiceLocatorUtilities.addOneDescriptor(locator, new HttpServletRequestDescriptor(locator));
         }
 
@@ -162,9 +168,9 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
             @Override
             public RequestScopedInitializer get(final RequestContextProvider context) {
                 return new RequestScopedInitializer() {
-
                     @Override
-                    public void initialize(ServiceLocator locator) {
+                    public void initialize(InjectionManager injectionManager) {
+                        ServiceLocator locator = getServiceLocator(injectionManager);
                         locator.<Ref<HttpServletRequest>>getService(REQUEST_TYPE)
                                 .set(finalWrap(context.getHttpServletRequest()));
                         locator.<Ref<HttpServletResponse>>getService(RESPONSE_TYPE)
@@ -184,17 +190,18 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
                     .to(HttpServletRequestWrapper.class).in(RequestScoped.class);
 
             bindFactory(ReferencingFactory.<HttpServletRequestWrapper>referenceFactory())
-                    .to(new TypeLiteral<Ref<HttpServletRequestWrapper>>() {
+                    .to(new GenericType<Ref<HttpServletRequestWrapper>>() {
                     }).in(RequestScoped.class);
+
+            bindFactory(HttpServletResponseFactory.class).to(HttpServletResponse.class);
 
             bindFactory(HttpServletResponseReferencingFactory.class)
                     .to(HttpServletResponseWrapper.class).in(RequestScoped.class);
 
             bindFactory(ReferencingFactory.<HttpServletResponseWrapper>referenceFactory())
-                    .to(new TypeLiteral<Ref<HttpServletResponseWrapper>>() {
+                    .to(new GenericType<Ref<HttpServletResponseWrapper>>() {
                     }).in(RequestScoped.class);
 
-            bindFactory(HttpServletResponseFactory.class).to(HttpServletResponse.class);
         }
     }
 
@@ -221,6 +228,11 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
         @Override
         public Class<?> getImplementationClass() {
             return HttpServletRequest.class;
+        }
+
+        @Override
+        public Type getImplementationType() {
+            return getImplementationClass();
         }
 
         @Override
@@ -264,7 +276,7 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
         }
     }
 
-    private static class HttpServletResponseFactory implements Factory<HttpServletResponse> {
+    private static class HttpServletResponseFactory implements Supplier<HttpServletResponse> {
         private final javax.inject.Provider<Ref<HttpServletResponseWrapper>> response;
 
         @Inject
@@ -274,7 +286,7 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
 
         @Override
         @PerLookup
-        public HttpServletResponse provide() {
+        public HttpServletResponse get() {
             return new HttpServletResponseWrapper(new HttpServletResponse() {
 
                 private HttpServletResponse getHttpServletResponse() {
@@ -466,9 +478,6 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
             };
         }
 
-        @Override
-        public void dispose(HttpServletResponse response) {
-        }
     }
 
     @SuppressWarnings("JavaDoc")
@@ -839,6 +848,16 @@ public class RequestResponseWrapperProvider extends NoOpServletContainerProvider
         @Override
         public void login(String u, String p) throws ServletException {
             getHttpServletRequest().login(u, p);
+        }
+    }
+
+    private static ServiceLocator getServiceLocator(InjectionManager injectionManager) {
+        if (injectionManager instanceof ImmediateHk2InjectionManager) {
+            return  ((ImmediateHk2InjectionManager) injectionManager).getServiceLocator();
+        } else if (injectionManager instanceof DelayedHk2InjectionManager) {
+            return  ((DelayedHk2InjectionManager) injectionManager).getServiceLocator();
+        } else {
+            throw new RuntimeException("Invalid InjectionManager");
         }
     }
 }

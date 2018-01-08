@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -79,7 +79,7 @@ import org.glassfish.jersey.internal.guava.Preconditions;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Miroslav Fuksa
  */
-final class CommittingOutputStream extends OutputStream {
+public final class CommittingOutputStream extends OutputStream {
 
     private static final Logger LOGGER = Logger.getLogger(CommittingOutputStream.class.getName());
     /**
@@ -90,7 +90,7 @@ final class CommittingOutputStream extends OutputStream {
     /**
      * Default size of the buffer which will be used if no user defined size is specified.
      */
-    static final int DEFAULT_BUFFER_SIZE = 8192;
+    public static final int DEFAULT_BUFFER_SIZE = 8192;
     /**
      * Adapted output stream.
      */
@@ -128,7 +128,7 @@ final class CommittingOutputStream extends OutputStream {
      * Creates new committing output stream. The returned stream instance still needs to be initialized before
      * writing first bytes.
      */
-    CommittingOutputStream() {
+    public CommittingOutputStream() {
     }
 
     /**
@@ -156,7 +156,7 @@ final class CommittingOutputStream extends OutputStream {
      *                   will be passed to the
      *                   {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#getOutputStream(int) callback}.
      */
-    void enableBuffering(int bufferSize) {
+    public void enableBuffering(int bufferSize) {
         Preconditions.checkState(!isCommitted && (this.buffer == null || this.buffer.size() == 0),
                                  COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE);
         this.bufferSize = bufferSize;
@@ -252,7 +252,7 @@ final class CommittingOutputStream extends OutputStream {
      *
      * @throws IOException when underlying stream returned from the callback method throws the io exception.
      */
-    void commit() throws IOException {
+    public void commit() throws IOException {
         flushBuffer(true);
         commitStream();
     }

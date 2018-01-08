@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,19 +50,9 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
-
-import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Injectable encapsulating class containing processing providers like filters, interceptors,
@@ -145,15 +135,10 @@ public class ProcessingProviders {
         this.globalReaderInterceptors = globalReaderInterceptors;
         this.globalWriterInterceptors = globalWriterInterceptors;
         this.dynamicFeatures = dynamicFeatures;
-        this.sortedGlobalReaderInterceptors = Providers.sortRankedProviders(new RankedComparator<ReaderInterceptor>(),
-                globalReaderInterceptors);
-        this.sortedGlobalWriterInterceptors = Providers.sortRankedProviders(new RankedComparator<WriterInterceptor>(),
-                globalWriterInterceptors);
-
-        this.sortedGlobalRequestFilters = Providers.sortRankedProviders(new RankedComparator<ContainerRequestFilter>(),
-                globalRequestFilters);
-        this.sortedGlobalResponseFilters = Providers.sortRankedProviders(new RankedComparator<ContainerResponseFilter>(),
-                globalResponseFilters);
+        this.sortedGlobalReaderInterceptors = Providers.sortRankedProviders(new RankedComparator<>(), globalReaderInterceptors);
+        this.sortedGlobalWriterInterceptors = Providers.sortRankedProviders(new RankedComparator<>(), globalWriterInterceptors);
+        this.sortedGlobalRequestFilters = Providers.sortRankedProviders(new RankedComparator<>(), globalRequestFilters);
+        this.sortedGlobalResponseFilters = Providers.sortRankedProviders(new RankedComparator<>(), globalResponseFilters);
     }
 
     /**
@@ -327,29 +312,5 @@ public class ProcessingProviders {
      */
     public List<RankedProvider<ContainerRequestFilter>> getPreMatchFilters() {
         return preMatchFilters;
-    }
-
-    /**
-     * Processing provider binder.
-     */
-    public static class Binder extends AbstractBinder {
-
-        @Override
-        protected void configure() {
-
-            bindFactory(ProcessingProvidersReferencingFactory.class).to(ProcessingProviders.class).in(PerLookup.class);
-            bindFactory(ReferencingFactory.<ProcessingProviders>referenceFactory())
-                    .to(new TypeLiteral<Ref<ProcessingProviders>>() {
-                    }).in(Singleton.class);
-        }
-
-        private static class ProcessingProvidersReferencingFactory extends ReferencingFactory<ProcessingProviders> {
-
-            @Inject
-            public ProcessingProvidersReferencingFactory(Provider<Ref<ProcessingProviders>> referenceFactory) {
-                super(referenceFactory);
-            }
-        }
-
     }
 }

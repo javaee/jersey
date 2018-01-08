@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,19 +40,19 @@
 
 package org.glassfish.jersey.message.filtering;
 
+import javax.ws.rs.core.GenericType;
+
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.message.filtering.spi.EntityGraphProvider;
 import org.glassfish.jersey.message.filtering.spi.EntityInspector;
 import org.glassfish.jersey.message.filtering.spi.ObjectGraph;
 import org.glassfish.jersey.message.filtering.spi.ObjectGraphTransformer;
 import org.glassfish.jersey.message.filtering.spi.ObjectProvider;
 
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-
 /**
- * HK2 binder for Entity Data Filtering feature.
+ * Binder for Entity Data Filtering feature.
  *
  * @author Michal Gajdos
  */
@@ -74,12 +74,12 @@ final class EntityFilteringBinder extends AbstractBinder {
         bindAsContract(ObjectGraphProvider.class)
                 // FilteringObjectProvider.
                 .to(ObjectProvider.class)
-                .to(new TypeLiteral<ObjectProvider<Object>>() {})
-                .to(new TypeLiteral<ObjectProvider<ObjectGraph>>() {})
+                .to(new GenericType<ObjectProvider<Object>>() {})
+                .to(new GenericType<ObjectProvider<ObjectGraph>>() {})
                 // FilteringGraphTransformer.
                 .to(ObjectGraphTransformer.class)
-                .to(new TypeLiteral<ObjectGraphTransformer<Object>>() {})
-                .to(new TypeLiteral<ObjectGraphTransformer<ObjectGraph>>() {})
+                .to(new GenericType<ObjectGraphTransformer<Object>>() {})
+                .to(new GenericType<ObjectGraphTransformer<ObjectGraph>>() {})
                 // Scope.
                 .in(Singleton.class);
     }

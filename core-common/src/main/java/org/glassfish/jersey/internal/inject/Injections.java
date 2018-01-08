@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,257 +37,110 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.inject;
 
-import java.lang.annotation.Annotation;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.DynamicConfigurationService;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.HK2Loader;
-import org.glassfish.hk2.api.MultiException;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.ServiceLocatorFactory;
-import org.glassfish.hk2.utilities.Binder;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
-import org.glassfish.hk2.utilities.binding.BindingBuilder;
-import org.glassfish.hk2.utilities.binding.BindingBuilderFactory;
-import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
-import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
+import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.model.internal.RankedComparator;
+import org.glassfish.jersey.model.internal.RankedProvider;
 
 /**
- * HK2 injection binding utility methods.
+ * Injection binding utility methods.
  *
  * @author Tom Beerbower
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class Injections {
 
-    private static final ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
-
     /**
-     * Get service locator {@link DynamicConfiguration dynamic configuration}.
+     * Creates a {@link InjectionManager} without parent and initial binder.
      *
-     * @param locator HK2 service locator.
-     * @return dynamic configuration for a given service locator.
+     * @return a injection manager with all the bindings.
      */
-    public static DynamicConfiguration getConfiguration(final ServiceLocator locator) {
-        final DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
-        return dcs.createDynamicConfiguration();
+    public static InjectionManager createInjectionManager() {
+        return lookupInjectionManagerFactory().create();
     }
 
     /**
-     * Create a {@link ServiceLocator}. In case the {@code name} is not specified, the locator
-     * will be unnamed.
+     * Creates a {@link InjectionManager} with initial binder that is immediately registered.
      *
-     * @param name    The name of this service locator. Passing a {@code null}
-     *                name will result in a newly created service locator with a
-     *                generated name.
-     * @param parent  The parent of this ServiceLocator. Services can be found in
-     *                the parent (and all grand-parents). May be {@code null}.
-     *                if the returned ServiceLocator should not be parented.
-     * @param binders custom the HK2 {@link Binder binders}.
-     * @return a service locator with all the bindings.
+     * @param binder custom the {@link Binder binder}.
+     * @return a injection manager with all the bindings.
      */
-    public static ServiceLocator createLocator(final String name, final ServiceLocator parent, final Binder... binders) {
-        return _createLocator(name, parent, binders);
+    public static InjectionManager createInjectionManager(Binder binder) {
+        InjectionManagerFactory injectionManagerFactory = lookupInjectionManagerFactory();
+        InjectionManager injectionManager = injectionManagerFactory.create();
+        injectionManager.register(binder);
+        return injectionManager;
     }
 
     /**
-     * Create a {@link ServiceLocator}. In case the {@code name} is not specified, the locator
-     * will be unnamed.
+     * Creates an unnamed, parented {@link InjectionManager}. In case the {@code parent} injection manager is not specified, the
+     * locator will not be parented.
      *
-     * @param name    The name of this service locator. Passing a {@code null}
-     *                name will result in a newly created service locator with a
-     *                generated name.
-     * @param binders custom the HK2 {@link Binder binders}.
-     * @return a service locator with all the bindings.
+     * @param parent The parent of this injection manager. Services can be found in the parent (and all grand-parents). May be
+     *               {@code null}. An underlying DI provider checks whether the parent is in a proper type.
+     * @return an injection manager with all the bindings.
      */
-    public static ServiceLocator createLocator(final String name, final Binder... binders) {
-        return _createLocator(name, null, binders);
+    public static InjectionManager createInjectionManager(Object parent) {
+        return lookupInjectionManagerFactory().create(parent);
+    }
+
+    private static InjectionManagerFactory lookupInjectionManagerFactory() {
+        return lookupService(InjectionManagerFactory.class)
+                .orElseThrow(() -> new IllegalStateException(LocalizationMessages.INJECTION_MANAGER_FACTORY_NOT_FOUND()));
     }
 
     /**
-     * Create an unnamed, parented {@link ServiceLocator}. In case the {@code parent} service locator
-     * is not specified, the locator will not be parented.
+     * Look for a service of given type. If more then one service is found the method sorts them are returns the one with highest
+     * priority.
      *
-     * @param parent  The parent of this ServiceLocator. Services can be found in
-     *                the parent (and all grand-parents). May be {@code null}.
-     *                if the returned ServiceLocator should not be parented.
-     * @param binders custom the HK2 {@link Binder binders}.
-     * @return a service locator with all the bindings.
+     * @param clazz type of service to look for.
+     * @param <T>   type of service to look for.
+     * @return instance of service with highest priority or {@code null} if service of given type cannot be found.
+     * @see javax.annotation.Priority
      */
-    public static ServiceLocator createLocator(final ServiceLocator parent, final Binder... binders) {
-        return _createLocator(null, parent, binders);
-    }
-
-    /**
-     * Create an unnamed {@link ServiceLocator}.
-     *
-     * @param binders custom the HK2 {@link Binder binders}.
-     * @return a service locator with all the bindings.
-     */
-    public static ServiceLocator createLocator(final Binder... binders) {
-        return _createLocator(null, null, binders);
-    }
-
-    private static ServiceLocator _createLocator(final String name, final ServiceLocator parent, final Binder... binders) {
-        // Passing null as service locator generator would force HK2 to find appropriate one.
-        final ServiceLocator result = factory.create(name, parent, null, ServiceLocatorFactory.CreatePolicy.DESTROY);
-
-        result.setNeutralContextClassLoader(false);
-        ServiceLocatorUtilities.enablePerThreadScope(result);
-
-        // HK2 Immediate Scope is commented out due to JERSEY-2979 and other issues
-        // ServiceLocatorUtilities.enableImmediateScope(result);
-
-        for (final Binder binder : binders) {
-            bind(result, binder);
+    private static <T> Optional<T> lookupService(final Class<T> clazz) {
+        List<RankedProvider<T>> providers = new LinkedList<>();
+        for (T provider : ServiceFinder.find(clazz)) {
+            providers.add(new RankedProvider<>(provider));
         }
-        return result;
-    }
-
-    private static void bind(final ServiceLocator locator, final Binder binder) {
-        final DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
-        final DynamicConfiguration dc = dcs.createDynamicConfiguration();
-
-        locator.inject(binder);
-        binder.bind(dc);
-
-        dc.commit();
+        providers.sort(new RankedComparator<>(RankedComparator.Order.DESCENDING));
+        return providers.isEmpty() ? Optional.empty() : Optional.ofNullable(providers.get(0).getProvider());
     }
 
     /**
      * Get the class by contract or create and inject a new instance.
      *
-     * @param <T>            instance type.
-     * @param serviceLocator HK2 service locator.
-     * @param clazz          class of the instance to be provider.
+     * @param <T>              instance type.
+     * @param injectionManager DI injection manager.
+     * @param clazz            class of the instance to be provider.
      * @return instance of the class either provided as a service or created and injected  by HK2.
      */
-    public static <T> T getOrCreate(final ServiceLocator serviceLocator, final Class<T> clazz) {
+    public static <T> T getOrCreate(InjectionManager injectionManager, final Class<T> clazz) {
         try {
-            final T component = serviceLocator.getService(clazz);
-            return component == null ? serviceLocator.createAndInitialize(clazz) : component;
-        } catch (final MultiException e) {
-
+            final T component = injectionManager.getInstance(clazz);
+            return component == null ? injectionManager.createAndInitialize(clazz) : component;
+        } catch (final RuntimeException e) {
             // Look for WebApplicationException and return it if found. MultiException is thrown when *Param field is
             // annotated and value cannot be provided (for example fromString(String) method can throw unchecked
             // exception.
             //
             // see InvalidParamTest
             // see JERSEY-1117
-            for (final Throwable t : e.getErrors()) {
-                if (WebApplicationException.class.isAssignableFrom(t.getClass())) {
-                    throw (WebApplicationException) t;
-                }
+            Throwable throwable = e.getCause();
+            if (throwable != null && WebApplicationException.class.isAssignableFrom(throwable.getClass())) {
+                throw (WebApplicationException) throwable;
             }
 
             throw e;
-        }
-    }
-
-    /**
-     * Add a binding represented by the binding builder to the HK2 dynamic configuration.
-     *
-     * @param builder       binding builder.
-     * @param configuration HK2 dynamic configuration.
-     */
-    public static void addBinding(final BindingBuilder<?> builder, final DynamicConfiguration configuration) {
-        BindingBuilderFactory.addBinding(builder, configuration);
-    }
-
-    /**
-     * Add a binding represented by the binding builder to the HK2 dynamic configuration.
-     *
-     * @param builder       binding builder.
-     * @param configuration HK2 dynamic configuration.
-     * @param defaultLoader default HK2 service loader that should be used to load the service class
-     *                      in case a custom loader has not been set.
-     */
-    public static void addBinding(final BindingBuilder<?> builder,
-                                  final DynamicConfiguration configuration,
-                                  final HK2Loader defaultLoader) {
-        BindingBuilderFactory.addBinding(builder, configuration, defaultLoader);
-    }
-
-    /**
-     * Get a new factory class-based service binding builder.
-     *
-     * @param <T>          service type.
-     * @param factoryType  service factory class.
-     * @param factoryScope factory scope.
-     * @return initialized binding builder.
-     */
-    public static <T> ServiceBindingBuilder<T> newFactoryBinder(
-            final Class<? extends Factory<T>> factoryType, final Class<? extends Annotation> factoryScope) {
-        return BindingBuilderFactory.newFactoryBinder(factoryType, factoryScope);
-    }
-
-    /**
-     * Get a new factory class-based service binding builder.
-     *
-     * The factory itself is bound in a {@link org.glassfish.hk2.api.PerLookup per-lookup} scope.
-     *
-     * @param <T>         service type.
-     * @param factoryType service factory class.
-     * @return initialized binding builder.
-     */
-    public static <T> ServiceBindingBuilder<T> newFactoryBinder(final Class<? extends Factory<T>> factoryType) {
-        return BindingBuilderFactory.newFactoryBinder(factoryType);
-    }
-
-    /**
-     * Get a new factory instance-based service binding builder.
-     *
-     * @param <T>     service type.
-     * @param factory service instance.
-     * @return initialized binding builder.
-     */
-    public static <T> ServiceBindingBuilder<T> newFactoryBinder(final Factory<T> factory) {
-        return BindingBuilderFactory.newFactoryBinder(factory);
-    }
-
-    /**
-     * Get a new class-based service binding builder.
-     *
-     * Does NOT bind the service type itself as a contract type.
-     *
-     * @param <T>         service type.
-     * @param serviceType service class.
-     * @return initialized binding builder.
-     */
-    public static <T> ServiceBindingBuilder<T> newBinder(final Class<T> serviceType) {
-        return BindingBuilderFactory.newBinder(serviceType);
-    }
-
-    /**
-     * Get a new instance-based service binding builder. The binding is naturally
-     * considered to be a {@link javax.inject.Singleton singleton-scoped}.
-     *
-     * Does NOT bind the service type itself as a contract type.
-     *
-     * @param <T>     service type.
-     * @param service service instance.
-     * @return initialized binding builder.
-     */
-    public static <T> ScopedBindingBuilder<T> newBinder(final T service) {
-        return BindingBuilderFactory.newBinder(service);
-    }
-
-    /**
-     * Shutdown {@link org.glassfish.hk2.api.ServiceLocator} - either via service locator factory (if possible) or directly by
-     * calling shutdown method.
-     *
-     * @param locator locator to be shut down.
-     */
-    public static void shutdownLocator(final ServiceLocator locator) {
-        if (factory.find(locator.getName()) != null) {
-            factory.destroy(locator.getName());
-        } else {
-            locator.shutdown();
         }
     }
 }

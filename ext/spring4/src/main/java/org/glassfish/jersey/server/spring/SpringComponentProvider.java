@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,27 +37,27 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.spring;
 
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 
-import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.inject.hk2.ImmediateHk2InjectionManager;
+import org.glassfish.jersey.internal.inject.Binding;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
-import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 
 import org.jvnet.hk2.spring.bridge.api.SpringBridge;
 import org.jvnet.hk2.spring.bridge.api.SpringIntoHK2Bridge;
 
+import org.springframework.aop.framework.Advised;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -78,18 +78,18 @@ public class SpringComponentProvider implements ComponentProvider {
     private static final String PARAM_CONTEXT_CONFIG_LOCATION = "contextConfigLocation";
     private static final String PARAM_SPRING_CONTEXT = "contextConfig";
 
-    private volatile ServiceLocator locator;
+    private volatile InjectionManager injectionManager;
     private volatile ApplicationContext ctx;
 
     @Override
-    public void initialize(ServiceLocator locator) {
-        this.locator = locator;
+    public void initialize(InjectionManager injectionManager) {
+        this.injectionManager = injectionManager;
 
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine(LocalizationMessages.CTX_LOOKUP_STARTED());
         }
 
-        ServletContext sc = locator.getService(ServletContext.class);
+        ServletContext sc = injectionManager.getInstance(ServletContext.class);
 
         if (sc != null) {
             // servlet container
@@ -105,13 +105,14 @@ public class SpringComponentProvider implements ComponentProvider {
         LOGGER.config(LocalizationMessages.CTX_LOOKUP_SUCESSFUL());
 
         // initialize HK2 spring-bridge
-        SpringBridge.getSpringBridge().initializeSpringBridge(locator);
-        SpringIntoHK2Bridge springBridge = locator.getService(SpringIntoHK2Bridge.class);
+
+        ImmediateHk2InjectionManager hk2InjectionManager = (ImmediateHk2InjectionManager) injectionManager;
+        SpringBridge.getSpringBridge().initializeSpringBridge(hk2InjectionManager.getServiceLocator());
+        SpringIntoHK2Bridge springBridge = injectionManager.getInstance(SpringIntoHK2Bridge.class);
         springBridge.bridgeSpringBeanFactory(ctx);
 
-        // register Spring @Autowired annotation handler with HK2 ServiceLocator
-        ServiceLocatorUtilities.addOneConstant(locator, new AutowiredInjectResolver(ctx));
-        ServiceLocatorUtilities.addOneConstant(locator, ctx, "SpringContext", ApplicationContext.class);
+        injectionManager.register(Bindings.injectionResolver(new AutowiredInjectResolver(ctx)));
+        injectionManager.register(Bindings.service(ctx).to(ApplicationContext.class).named("SpringContext"));
         LOGGER.config(LocalizationMessages.SPRING_COMPONENT_PROVIDER_INITIALIZED());
     }
 
@@ -125,7 +126,6 @@ public class SpringComponentProvider implements ComponentProvider {
         }
 
         if (AnnotationUtils.findAnnotation(component, Component.class) != null) {
-            DynamicConfiguration c = Injections.getConfiguration(locator);
             String[] beanNames = ctx.getBeanNamesForType(component);
             if (beanNames == null || beanNames.length != 1) {
                 LOGGER.severe(LocalizationMessages.NONE_OR_MULTIPLE_BEANS_AVAILABLE(component));
@@ -133,18 +133,12 @@ public class SpringComponentProvider implements ComponentProvider {
             }
             String beanName = beanNames[0];
 
-            ServiceBindingBuilder bb = Injections
-                    .newFactoryBinder(new SpringComponentProvider.SpringManagedBeanFactory(ctx, locator, beanName));
-            bb.to(component);
-            if (providerContracts != null) {
-                for (Class<?> providerContract : providerContracts) {
-                    bb.to(providerContract);
-                }
-            }
-            Injections.addBinding(bb, c);
-            c.commit();
+            Binding binding = Bindings.supplier(new SpringManagedBeanFactory(ctx, injectionManager, beanName))
+                    .to(component)
+                    .to(providerContracts);
+            injectionManager.register(binding);
 
-            LOGGER.config(LocalizationMessages.BEAN_REGISTERED(beanName));
+            LOGGER.config(LocalizationMessages.BEAN_REGISTERED(beanNames[0]));
             return true;
         }
         return false;
@@ -155,7 +149,7 @@ public class SpringComponentProvider implements ComponentProvider {
     }
 
     private ApplicationContext createSpringContext() {
-        ApplicationHandler applicationHandler = locator.getService(ApplicationHandler.class);
+        ApplicationHandler applicationHandler = injectionManager.getInstance(ApplicationHandler.class);
         ApplicationContext springContext = (ApplicationContext) applicationHandler.getConfiguration()
                 .getProperty(PARAM_SPRING_CONTEXT);
         if (springContext == null) {
@@ -173,27 +167,34 @@ public class SpringComponentProvider implements ComponentProvider {
         return ctx = new ClassPathXmlApplicationContext(contextConfigLocation, "jersey-spring-applicationContext.xml");
     }
 
-    private static class SpringManagedBeanFactory implements Factory {
+    private static class SpringManagedBeanFactory implements Supplier {
 
         private final ApplicationContext ctx;
-        private final ServiceLocator locator;
+        private final InjectionManager injectionManager;
         private final String beanName;
 
-        private SpringManagedBeanFactory(ApplicationContext ctx, ServiceLocator locator, String beanName) {
+        private SpringManagedBeanFactory(ApplicationContext ctx, InjectionManager injectionManager, String beanName) {
             this.ctx = ctx;
-            this.locator = locator;
+            this.injectionManager = injectionManager;
             this.beanName = beanName;
         }
 
         @Override
-        public Object provide() {
+        public Object get() {
             Object bean = ctx.getBean(beanName);
-            locator.inject(bean);
+            if (bean instanceof Advised) {
+                try {
+                    // Unwrap the bean and inject the values inside of it
+                    Object localBean = ((Advised) bean).getTargetSource().getTarget();
+                    injectionManager.inject(localBean);
+                } catch (Exception e) {
+                    // Ignore and let the injection happen as it normally would.
+                    injectionManager.inject(bean);
+                }
+            } else {
+                injectionManager.inject(bean);
+            }
             return bean;
-        }
-
-        @Override
-        public void dispose(Object instance) {
         }
     }
 }

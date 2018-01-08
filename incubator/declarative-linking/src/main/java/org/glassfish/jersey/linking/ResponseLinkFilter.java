@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,27 +46,17 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
 
+import org.glassfish.jersey.linking.contributing.ResourceLinkContributionContext;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
 /**
  * Filter that processes {@link Link} annotated fields in returned response
  * entities.
- * <p/>
- * When an application is deployed as a Servlet or Filter this filter can be
- * registered using the following initialization parameters:
- * <blockquote><pre>
- *     &lt;init-param&gt
- *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
- *         &lt;param-value&gt;com.sun.jersey.server.linking.ResponseLinkFilter&lt;/param-value&gt;
- *     &lt;/init-param&gt;
- * </pre></blockquote>
- * <p/>
  *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  * @see Link
  */
-
 class ResponseLinkFilter implements ContainerResponseFilter {
 
     @Context
@@ -74,6 +64,9 @@ class ResponseLinkFilter implements ContainerResponseFilter {
 
     @Context
     private ResourceMappingContext rmc;
+
+    @Context
+    private ResourceLinkContributionContext rlcc;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -85,7 +78,7 @@ class ResponseLinkFilter implements ContainerResponseFilter {
             HeaderProcessor lhp = new HeaderProcessor(entityClass);
             lhp.processLinkHeaders(entity, uriInfo, rmc, response.getHeaders());
             FieldProcessor lp = new FieldProcessor(entityClass);
-            lp.processLinks(entity, uriInfo, rmc);
+            lp.processLinks(entity, uriInfo, rmc, rlcc);
         }
 
     }

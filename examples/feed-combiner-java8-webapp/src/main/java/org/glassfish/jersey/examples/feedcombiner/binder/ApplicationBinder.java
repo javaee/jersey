@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,8 @@ import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import javax.ws.rs.core.GenericType;
+
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.examples.feedcombiner.ApplicationProperties;
@@ -59,15 +61,13 @@ import org.glassfish.jersey.examples.feedcombiner.service.CrudService;
 import org.glassfish.jersey.examples.feedcombiner.store.DataStoreObserver;
 import org.glassfish.jersey.examples.feedcombiner.store.InMemoryDataStore;
 import org.glassfish.jersey.examples.feedcombiner.store.ObservableDataStore;
-
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class ApplicationBinder extends AbstractBinder {
 
@@ -160,7 +160,7 @@ public class ApplicationBinder extends AbstractBinder {
                     .to(InMemoryDataStore.class);
 
             bind(CombinedFeedService.class)
-                    .to(new TypeLiteral<CrudService<CombinedFeed>>() {})
+                    .to(new GenericType<CrudService<CombinedFeed>>() {})
                     .in(Singleton.class);
 
             bind(SequenceIdGenerator.class)

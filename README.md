@@ -16,23 +16,21 @@ Goals of Jersey project can be summarized in the following points:
     Java Virtual Machine.
 
 ### Licensing and Governance
-Jersey is licensed under a dual license - [CDDL 1.1 and GPL 2.0 with Class-path Exception][cddl].
+Jersey is licensed under a dual license - [CDDL 1.1 and GPL 2.0 with Class-path Exception](LICENSE.txt).
 That means you can choose which one of the two suits your needs better and use it under those terms.
 
-We use [GlassFish Governance Policy][governance], which means we can only accept contributions under
+We use [GlassFish Governance Policy](GovernancePolicy.md), which means we can only accept contributions under
  the terms of [OCA][oca].
 
 ### More Info on Jersey
 Follow [Jersey on Twitter][jersey-twitter] to get JAX-RS and Jersey related updates.
 See the [Jersey website][jersey-web] to access Jersey documentation. If you run into any issues or have questions,
-ask at [users@jersey.java.net][jersey-users], [StackOverflow][jersey-so] or file an issue in [Jersey JIRA][jersey-jira].
+ask at [jersey@javaee.groups.io][jersey-users], [StackOverflow][jersey-so] or file an issue on [Jersey GitHub Project][jersey-issues].
 
-[cddl]: http://glassfish.java.net/public/CDDL+GPL_1_1.html
-[governance]: http://glassfish.java.net/public/GovernancePolicy.html
 [oca]: http://oracle.com/technetwork/goto/oca
-[jersey-api]: https://jersey.java.net/apidocs/latest/jersey/index.html
-[jersey-jira]: http://java.net/jira/browse/JERSEY
+[jersey-api]: https://jersey.github.io/apidocs/latest/jersey/index.html
+[jersey-issues]: https://github.com/jersey/jersey/issues
 [jersey-so]: http://stackoverflow.com/questions/tagged/jersey
 [jersey-twitter]: http://twitter.com/gf_jersey
-[jersey-users]: mailto:users@jersey.java.net
-[jersey-web]: http://jersey.java.net
+[jersey-users]: mailto:jersey@javaee.groups.io
+[jersey-web]: http://jersey.github.io

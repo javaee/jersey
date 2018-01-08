@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,46 +39,43 @@
  */
 package org.glassfish.jersey.server.spi.internal;
 
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 
-import org.glassfish.hk2.api.Factory;
-
 /**
- * Extends {@link Factory} interface with
+ * Extends {@link Supplier} interface with
  * {@link org.glassfish.jersey.server.model.Parameter.Source} information.
  *
  * @param <T> This must be the type of entity for which this is a factory.
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
-public final class ParamValueFactoryWithSource<T> implements Factory<T> {
+public final class ParamValueFactoryWithSource<T> implements Function<ContainerRequest, T> {
 
-    private final Factory<T> factory;
+    private final Function<ContainerRequest, T> parameterFunction;
     private final Parameter.Source parameterSource;
 
     /**
-     * Wrap provided param factory.
+     * Wrap provided param supplier.
      *
-     * @param factory         param factory to be wrapped.
+     * @param paramFunction   param supplier to be wrapped.
      * @param parameterSource param source.
      */
-    public ParamValueFactoryWithSource(Factory<T> factory, Parameter.Source parameterSource) {
-        this.factory = factory;
+    public ParamValueFactoryWithSource(Function<ContainerRequest, T> paramFunction, Parameter.Source parameterSource) {
+        this.parameterFunction = paramFunction;
         this.parameterSource = parameterSource;
     }
 
     @Override
-    public T provide() {
-        return factory.provide();
-    }
-
-    @Override
-    public void dispose(T t) {
-        factory.dispose(t);
+    public T apply(ContainerRequest request) {
+        return parameterFunction.apply(request);
     }
 
     /**
      * Returns {@link org.glassfish.jersey.server.model.Parameter.Source}
-     * which closely determines a function of the given factory.
+     * which closely determines a function of the current supplier.
      *
      * @return Source which a given parameter belongs to.
      **/

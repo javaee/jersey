@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,22 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model.internal;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.ServerLocatorFactory;
+import org.glassfish.jersey.server.TestInjectionManagerFactory;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModelComponent;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -68,10 +70,14 @@ public class ResourceMethodDispatcherFactoryTest {
 
     @Before
     public void setupApplication() {
-        ServiceLocator locator = ServerLocatorFactory.createLocator();
+        TestInjectionManagerFactory.BootstrapResult result = TestInjectionManagerFactory.createInjectionManager();
 
-        rmdf = locator.getService(ResourceMethodDispatcherFactory.class);
-        rmihf = locator.getService(ResourceMethodInvocationHandlerFactory.class);
+        List<ResourceMethodDispatcher.Provider> providers = Arrays.asList(
+                new VoidVoidDispatcherProvider(result.bootstrapBag.getResourceContext()),
+                new JavaResourceMethodDispatcherProvider(result.bootstrapBag.getValueParamProviders()));
+
+        rmdf = new ResourceMethodDispatcherFactory(providers);
+        rmihf = new ResourceMethodInvocationHandlerFactory(result.injectionManager);
     }
 
     @Test

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.inject.hk2.DelayedHk2InjectionManager;
+import org.glassfish.jersey.inject.hk2.ImmediateHk2InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.jetty.JettyHttpContainer;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -117,8 +120,17 @@ public class JettyContainerTest extends JerseyTest {
         final Server server = JettyHttpContainerFactory.createServer(URI.create("http://localhost:9876"),
                 new ResourceConfig(Resource.class), false, locator);
         JettyHttpContainer container = (JettyHttpContainer) server.getHandler();
-        ServiceLocator appLocator = container.getApplicationHandler().getServiceLocator();
-        assertTrue("Application service locator was expected to have defined parent locator",
-                appLocator.getParent() == locator);
+        InjectionManager injectionManager = container.getApplicationHandler().getInjectionManager();
+
+        ServiceLocator serviceLocator;
+        if (injectionManager instanceof ImmediateHk2InjectionManager) {
+            serviceLocator = ((ImmediateHk2InjectionManager) injectionManager).getServiceLocator();
+        } else if (injectionManager instanceof DelayedHk2InjectionManager) {
+            serviceLocator = ((DelayedHk2InjectionManager) injectionManager).getServiceLocator();
+        } else {
+            throw new RuntimeException("Invalid Hk2 InjectionManager");
+        }
+        assertTrue("Application injection manager was expected to have defined parent locator",
+                   serviceLocator.getParent() == locator);
     }
 }

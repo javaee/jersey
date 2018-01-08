@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,9 @@ package org.glassfish.jersey.server.model;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
@@ -65,22 +67,30 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.sse.SseEventSink;
 
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.Severity;
+import org.glassfish.jersey.internal.BootstrapConfigurator;
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.PerLookup;
 import org.glassfish.jersey.internal.util.Producer;
+import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerLocatorFactory;
+import org.glassfish.jersey.server.ServerBootstrapBag;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.TestConfigConfigurator;
+import org.glassfish.jersey.server.internal.inject.ParamExtractorConfigurator;
+import org.glassfish.jersey.server.internal.inject.ValueParamProviderConfigurator;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
-
-import org.glassfish.hk2.api.PerLookup;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -95,8 +105,8 @@ import static org.junit.Assert.assertTrue;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class ValidatorTest {
-    private static final Logger LOGGER = Logger.getLogger(ValidatorTest.class.getName());
 
+    private static final Logger LOGGER = Logger.getLogger(ValidatorTest.class.getName());
 
     @Path("rootNonAmbigCtors")
     public static class TestRootResourceNonAmbigCtors {
@@ -122,7 +132,9 @@ public class ValidatorTest {
         LOGGER.info("No issue should be reported if more public ctors exists with the same number of params, "
                 + "but another just one is presented with more params at a root resource:");
         Resource resource = Resource.builder(TestRootResourceNonAmbigCtors.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.getIssueList().isEmpty());
     }
@@ -213,6 +225,22 @@ public class ValidatorTest {
         }
     }
 
+    @Singleton
+    @Path("sseEventSinkWithReturnType")
+    public static class TestSseEventSinkValidations {
+        @Path("notVoid")
+        @GET
+        public SseEventSink nonVoidReturnType(@Context SseEventSink eventSink) {
+            return eventSink;
+        }
+
+        @Path("multiple")
+        @GET
+        public void multipleInjection(@Context SseEventSink firstSink, @Context SseEventSink secondSink) {
+            // do nothing
+        }
+    }
+
     @Path("rootRelaxedParser")
     @Produces(" a/b, c/d ")
     @Consumes({"e/f,g/h", " i/j"})
@@ -239,6 +267,14 @@ public class ValidatorTest {
         List<ResourceModelIssue> issues = testResourceValidation(TestCantInjectFieldsForSingleton.class);
         assertTrue(!issues.isEmpty());
         assertEquals(6, issues.size());
+    }
+
+    @Test
+    public void testCantReturnFromEventSinkInjectedMethod() {
+        LOGGER.info("An issue should be reported if method with injected SseEventSink parameter does not return void.");
+        final List<ResourceModelIssue> issues = testResourceValidation(TestSseEventSinkValidations.class);
+        assertTrue(!issues.isEmpty());
+        assertEquals(2, issues.size());
     }
 
 
@@ -323,7 +359,9 @@ public class ValidatorTest {
                 }
 
                 ResourceModel model = new ResourceModel.Builder(resources, false).build();
-                ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+                ServerBootstrapBag serverBag = initializeApplication();
+                ComponentModelValidator validator = new ComponentModelValidator(
+                        serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
                 validator.validate(model);
                 return ModelErrors.getErrorsAsResourceModelIssues();
             }
@@ -445,7 +483,9 @@ public class ValidatorTest {
     public void testSRLReturningVoid() throws Exception {
         LOGGER.info("An issue should be reported if a sub-resource locator returns void:");
         Resource resource = Resource.builder(TestSRLReturningVoid.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -521,7 +561,9 @@ public class ValidatorTest {
         LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a resource "
                 + "method:");
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsRM.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -542,7 +584,9 @@ public class ValidatorTest {
         LOGGER.info("An issue should be reported if more than one HTTP method designator exist on a sub-resource "
                 + "method:");
         Resource resource = Resource.builder(TestMultipleHttpMethodDesignatorsSRM.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -560,7 +604,9 @@ public class ValidatorTest {
     public void testEntityParamOnSRL() throws Exception {
         LOGGER.info("An issue should be reported if an entity parameter exists on a sub-resource locator:");
         Resource resource = Resource.builder(TestEntityParamOnSRL.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
         assertTrue(validator.fatalIssuesFound());
     }
@@ -639,7 +685,9 @@ public class ValidatorTest {
             @Override
             public void run() {
                 Resource resource = Resource.builder(TestAmbiguousParams.class).build();
-                ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+                ServerBootstrapBag serverBag = initializeApplication();
+                ComponentModelValidator validator = new ComponentModelValidator(
+                        serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
                 validator.validate(resource);
 
                 assertTrue(!validator.fatalIssuesFound());
@@ -663,7 +711,9 @@ public class ValidatorTest {
     public void testEmptyPathSegment() throws Exception {
         LOGGER.info("A warning should be reported if @Path with \"/\" or empty string value is seen");
         Resource resource = Resource.builder(TestEmptyPathSegment.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -706,7 +756,9 @@ public class ValidatorTest {
             @Override
             public void run() {
                 Resource resource = Resource.builder(TypeVariableResource.class).build();
-                ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+                ServerBootstrapBag serverBag = initializeApplication();
+                ComponentModelValidator validator = new ComponentModelValidator(
+                        serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
                 validator.validate(resource);
 
                 assertTrue(!validator.fatalIssuesFound());
@@ -751,7 +803,9 @@ public class ValidatorTest {
     public void testParameterizedTypeResource() throws Exception {
         LOGGER.info("");
         Resource resource = Resource.builder(ConcreteParameterizedTypeResource.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -788,7 +842,9 @@ public class ValidatorTest {
     public void testGenericArrayResource() throws Exception {
         LOGGER.info("");
         Resource resource = Resource.builder(ConcreteGenericArrayResource.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         assertTrue(!validator.fatalIssuesFound());
@@ -853,7 +909,9 @@ public class ValidatorTest {
     @Test
     public void testNotAnnotatedParameters() throws Exception {
         Resource resource = Resource.builder(AmbiguousParameterResource.class).build();
-        ComponentModelValidator validator = new ComponentModelValidator(ServerLocatorFactory.createLocator());
+        ServerBootstrapBag serverBag = initializeApplication();
+        ComponentModelValidator validator = new ComponentModelValidator(
+                serverBag.getValueParamProviders(), serverBag.getMessageBodyWorkers());
         validator.validate(resource);
 
         final List<ResourceModelIssue> errorMessages = validator.getIssueList();
@@ -1159,5 +1217,20 @@ public class ValidatorTest {
 
         assertEquals(200, response.getStatus());
         assertEquals("PASSED", response.getEntity());
+    }
+
+    private ServerBootstrapBag initializeApplication() {
+        List<BootstrapConfigurator> bootstrapConfigurators = Collections.unmodifiableList(Arrays.asList(
+                new TestConfigConfigurator(),
+                new ParamExtractorConfigurator(),
+                new ValueParamProviderConfigurator(),
+                new MessageBodyFactory.MessageBodyWorkersConfigurator()));
+
+        InjectionManager injectionManager = Injections.createInjectionManager();
+        ServerBootstrapBag bootstrapBag = new ServerBootstrapBag();
+        bootstrapConfigurators.forEach(configurer -> configurer.init(injectionManager, bootstrapBag));
+        injectionManager.completeRegistration();
+        bootstrapConfigurators.forEach(configurer -> configurer.postInit(injectionManager, bootstrapBag));
+        return bootstrapBag;
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,6 +65,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
+import org.glassfish.jersey.linking.contributing.ResourceLinkContributionContext;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Resource;
@@ -246,6 +247,13 @@ public class FieldProcessorTest {
         }
     };
 
+    protected final ResourceLinkContributionContext mockRlcc = new ResourceLinkContributionContext() {
+        @Override
+        public List<ProvideLinkDescriptor> getContributorsFor(Class<?> entityClass) {
+            return Collections.emptyList();
+        }
+    };
+
     private static final String TEMPLATE_A = "foo";
 
     public static class TestClassD {
@@ -263,7 +271,7 @@ public class FieldProcessorTest {
 
         FieldProcessor<TestClassD> instance = new FieldProcessor(TestClassD.class);
         TestClassD testClass = new TestClassD();
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals(TEMPLATE_A, testClass.res1);
         assertEquals(TEMPLATE_A, testClass.res2.toString());
     }
@@ -291,7 +299,7 @@ public class FieldProcessorTest {
         LOG.info("Links from field values");
         FieldProcessor<TestClassE> instance = new FieldProcessor(TestClassE.class);
         TestClassE testClass = new TestClassE("10");
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("widgets/10", testClass.link);
     }
 
@@ -319,7 +327,7 @@ public class FieldProcessorTest {
         FieldProcessor<TestClassF> instance = new FieldProcessor(TestClassF.class);
         TestClassE nested = new TestClassE("10");
         TestClassF testClass = new TestClassF("20", nested);
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("widgets/20", testClass.thelink);
         assertEquals("widgets/10", testClass.nested.link);
     }
@@ -331,7 +339,7 @@ public class FieldProcessorTest {
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
         TestClassE array[] = {item1, item2};
-        instance.processLinks(array, mockUriInfo, mockRmc);
+        instance.processLinks(array, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("widgets/10", array[0].link);
         assertEquals("widgets/20", array[1].link);
     }
@@ -343,7 +351,7 @@ public class FieldProcessorTest {
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
         List<TestClassE> list = Arrays.asList(item1, item2);
-        instance.processLinks(list, mockUriInfo, mockRmc);
+        instance.processLinks(list, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("widgets/10", list.get(0).link);
         assertEquals("widgets/20", list.get(1).link);
     }
@@ -358,7 +366,7 @@ public class FieldProcessorTest {
         for (TestClassE item : Arrays.asList(item1, item2)) {
             map.put(item.getId(), item);
         }
-        instance.processLinks(map, mockUriInfo, mockRmc);
+        instance.processLinks(map, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("widgets/10", map.get("10").link);
         assertEquals("widgets/20", map.get("20").link);
     }
@@ -393,7 +401,7 @@ public class FieldProcessorTest {
         LOG.info("Link styles");
         FieldProcessor<TestClassG> instance = new FieldProcessor(TestClassG.class);
         TestClassG testClass = new TestClassG("10");
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("widgets/10", testClass.relativePath);
         assertEquals("/application/resources/widgets/10", testClass.absolutePath);
         assertEquals("/application/resources/widgets/10", testClass.defaultStyle);
@@ -415,7 +423,7 @@ public class FieldProcessorTest {
         LOG.info("Computed property");
         FieldProcessor<TestClassH> instance = new FieldProcessor(TestClassH.class);
         TestClassH testClass = new TestClassH();
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/widgets/10", testClass.link);
     }
 
@@ -434,7 +442,7 @@ public class FieldProcessorTest {
         LOG.info("El link");
         FieldProcessor<TestClassI> instance = new FieldProcessor(TestClassI.class);
         TestClassI testClass = new TestClassI();
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/widgets/10", testClass.link);
     }
 
@@ -453,7 +461,7 @@ public class FieldProcessorTest {
         LOG.info("Mixed EL and template vars link");
         FieldProcessor<TestClassJ> instance = new FieldProcessor(TestClassJ.class);
         TestClassJ testClass = new TestClassJ();
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/widgets/10/widget/10", testClass.link);
     }
 
@@ -483,7 +491,7 @@ public class FieldProcessorTest {
         LOG.info("EL scopes");
         FieldProcessor<OuterBean> instance = new FieldProcessor(OuterBean.class);
         OuterBean testClass = new OuterBean();
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/inner", testClass.inner.innerUri);
         assertEquals("/application/resources/outer", testClass.inner.outerUri);
     }
@@ -503,7 +511,7 @@ public class FieldProcessorTest {
         LOG.info("EL binding");
         FieldProcessor<BoundLinkBean> instance = new FieldProcessor(BoundLinkBean.class);
         BoundLinkBean testClass = new BoundLinkBean();
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/name", testClass.uri);
     }
 
@@ -524,7 +532,7 @@ public class FieldProcessorTest {
         LOG.info("EL binding");
         FieldProcessor<BoundLinkOnLinkBean> instance = new FieldProcessor(BoundLinkOnLinkBean.class);
         BoundLinkOnLinkBean testClass = new BoundLinkOnLinkBean();
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/name", testClass.link.getUri().toString());
         assertEquals("self", testClass.link.getRel());
     }
@@ -563,7 +571,7 @@ public class FieldProcessorTest {
         LOG.info("EL binding");
         FieldProcessor<BoundLinkOnLinksBean> instance = new FieldProcessor(BoundLinkOnLinksBean.class);
         BoundLinkOnLinksBean testClass = new BoundLinkOnLinksBean();
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/name", testClass.links.get(0).getUri().toString());
         assertEquals("self", testClass.links.get(0).getRel());
         assertEquals("other", testClass.links.get(1).getRel());
@@ -600,7 +608,7 @@ public class FieldProcessorTest {
         LOG.info("Condition");
         FieldProcessor<ConditionalLinkBean> instance = new FieldProcessor(ConditionalLinkBean.class);
         ConditionalLinkBean testClass = new ConditionalLinkBean();
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/name", testClass.uri1);
         assertEquals(null, testClass.uri2);
     }
@@ -626,7 +634,7 @@ public class FieldProcessorTest {
         LOG.info("Subresource");
         FieldProcessor<SubResourceBean> instance = new FieldProcessor(SubResourceBean.class);
         SubResourceBean testClass = new SubResourceBean();
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/a/b", testClass.uri);
     }
 
@@ -679,7 +687,7 @@ public class FieldProcessorTest {
         LOG.info("QueryResource");
         FieldProcessor<QueryResourceBean> instance = new FieldProcessor(QueryResourceBean.class);
         QueryResourceBean testClass = new QueryResourceBean("queryExample", null);
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/a/b?query=queryExample&query2=", testClass.uri);
     }
 
@@ -688,7 +696,7 @@ public class FieldProcessorTest {
         LOG.info("QueryResource");
         FieldProcessor<QueryResourceBean> instance = new FieldProcessor(QueryResourceBean.class);
         QueryResourceBean testClass = new QueryResourceBean("queryExample", "queryExample2");
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/a/b?query=queryExample&query2=queryExample2", testClass.uri);
     }
 
@@ -700,7 +708,7 @@ public class FieldProcessorTest {
         mockUriInfo.getQueryParameters().putSingle("query", "queryExample");
         mockUriInfo.getQueryParameters().putSingle("query2", "queryExample2");
         assertEquals("queryExample", mockUriInfo.getQueryParameters().getFirst("query"));
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/a/b?query=queryExample&query2=queryExample2", testClass.uri);
         //clean mock
         mockUriInfo.getQueryParameters().clear();
@@ -755,7 +763,7 @@ public class FieldProcessorTest {
         LOG.info("BeanParamResource");
         FieldProcessor<BeanParamResourceBean> instance = new FieldProcessor(BeanParamResourceBean.class);
         BeanParamResourceBean testClass = new BeanParamResourceBean("queryExample");
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("/application/resources/a/b?qparam=foo&query=queryExample", testClass.uri);
     }
 
@@ -796,13 +804,13 @@ public class FieldProcessorTest {
 
         FieldProcessor<TestClassK> instanceK = new FieldProcessor(TestClassK.class);
         TestClassK testClassK = new TestClassK();
-        instanceK.processLinks(testClassK, mockUriInfo, mockRmc);
+        instanceK.processLinks(testClassK, mockUriInfo, mockRmc, mockRlcc);
 
         assertTrue(lf.getCount() == 0);
 
         FieldProcessor<TestClassL> instanceL = new FieldProcessor(TestClassL.class);
         TestClassL testClassL = new TestClassL();
-        instanceL.processLinks(testClassL, mockUriInfo, mockRmc);
+        instanceL.processLinks(testClassL, mockUriInfo, mockRmc, mockRlcc);
 
         assertTrue(lf.getCount() == 0);
 
@@ -841,7 +849,7 @@ public class FieldProcessorTest {
         TestClassE nested = new TestClassE("10");
         TestClassE transientNested = new TestClassE("30");
         TestClassM testClass = new TestClassM("20", nested, transientNested);
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals("widgets/20", testClass.thelink);
         assertEquals(null, testClass.nested.link);
         assertEquals(null, testClass.transientNested.link);
@@ -863,7 +871,7 @@ public class FieldProcessorTest {
     public void testIgnoreTransient() {
         TestClassN testClass = new TestClassN();
         FieldProcessor<TestClassN> instance = new FieldProcessor(TestClassN.class);
-        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        instance.processLinks(testClass, mockUriInfo, mockRmc, mockRlcc);
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -122,10 +122,10 @@ class GrizzlyConnector implements Connector {
             builder = builder.setExecutorService(executorService);
 
             builder.setConnectTimeout(ClientProperties.getValue(config.getProperties(),
-                                                                ClientProperties.CONNECT_TIMEOUT, 0));
+                                                                ClientProperties.CONNECT_TIMEOUT, 10000));
 
             builder.setRequestTimeout(ClientProperties.getValue(config.getProperties(),
-                                                                ClientProperties.READ_TIMEOUT, 0));
+                                                                ClientProperties.READ_TIMEOUT, 10000));
 
             Object proxyUri;
             proxyUri = config.getProperty(ClientProperties.PROXY_URI);
@@ -224,7 +224,7 @@ class GrizzlyConnector implements Connector {
                     }
 
                     HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, request.getHeaders(),
-                            GrizzlyConnector.this.getClass().getName());
+                                                   GrizzlyConnector.this.getClass().getName());
 
                     responseFuture.complete(translate(request, this.status, headers, entityStream));
                     return STATE.CONTINUE;

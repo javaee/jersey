@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -103,7 +103,7 @@ class UriParser {
         StringBuilder sb = new StringBuilder();
 
         boolean endOfInput = false;
-        Character c = ci.current();
+        char c = ci.current();
         while (!endOfInput) {
             if (c == '{') {
                 curlyBracketsCount++;
@@ -119,8 +119,8 @@ class UriParser {
                 sb.append(c);
 
                 // test IPv6 or regular expressions in the template params
-            } else if ((delimiters != null && delimiters.indexOf(c) >= 0)
-                    && (!isIp || squareBracketsCount == 0) && (curlyBracketsCount == 0)) {
+            } else if ((!isIp || squareBracketsCount == 0) && (curlyBracketsCount == 0)
+                       && (delimiters != null && delimiters.indexOf(c) >= 0)) {
                 return sb.length() == 0 ? null : sb.toString();
             } else {
                 sb.append(c);

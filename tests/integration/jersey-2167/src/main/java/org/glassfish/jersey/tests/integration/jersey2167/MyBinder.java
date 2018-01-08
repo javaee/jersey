@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,12 +40,10 @@
 
 package org.glassfish.jersey.tests.integration.jersey2167;
 
-import org.glassfish.hk2.api.InjectionResolver;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
-
 import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.server.spi.internal.ValueParamProvider;
 
 /**
  * Custom annotation binder for JERSEY-2167 reproducer.
@@ -56,8 +54,6 @@ public class MyBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        bind(MyValueFactoryProvider.class).to(ValueFactoryProvider.class).in(Singleton.class);
-        bind(MyValueFactoryProvider.InjectionResolver.class)
-                .to(new TypeLiteral<InjectionResolver<MyAnnotation>>() {}).in(Singleton.class);
+        bind(MyValueParamProvider.class).to(ValueParamProvider.class).in(Singleton.class);
     }
 }

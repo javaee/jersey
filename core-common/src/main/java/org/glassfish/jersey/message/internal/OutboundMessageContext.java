@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -112,7 +112,6 @@ public class OutboundMessageContext {
          * which will cause ignoring the written entity (in that case the entity will
          * still be written by {@link javax.ws.rs.ext.MessageBodyWriter message body writers}
          * but the output will be ignored).
-         *
          * @throws java.io.IOException in case of an IO error.
          */
         public OutputStream getOutputStream(int contentLength) throws IOException;
@@ -168,7 +167,7 @@ public class OutboundMessageContext {
 
     /**
      * Get a message header as a single string value.
-     *
+     * <p>
      * Each single header value is converted to String using a
      * {@link javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate} if one is available
      * via {@link javax.ws.rs.ext.RuntimeDelegate#createHeaderDelegate(java.lang.Class)}
@@ -205,7 +204,8 @@ public class OutboundMessageContext {
             return convertNull ? converter.apply(null) : null;
         }
         if (values.size() > 1) {
-            throw new HeaderValueException(LocalizationMessages.TOO_MANY_HEADER_VALUES(name, values.toString()),
+            throw new HeaderValueException(
+                    LocalizationMessages.TOO_MANY_HEADER_VALUES(name, values.toString()),
                     HeaderValueException.Context.OUTBOUND);
         }
 
@@ -404,14 +404,48 @@ public class OutboundMessageContext {
 
     /**
      * Get Content-Length value.
+     * <p>
+     * <B>Note</B>: {@link #getLengthLong() getLengthLong()}
+     * should be preferred over this method, since it returns a {@code long}
+     * instead and is therefore more portable.</P>
      *
-     * @return Content-Length as integer if present and valid number. In other
-     * cases returns -1.
+     * @return Content-Length as a postive integer if present and valid number, {@code -1} if negative number.
+     * @throws ProcessingException when {@link Integer#parseInt(String)} (String)} throws {@link NumberFormatException}.
      */
     public int getLength() {
+
         return singleHeader(HttpHeaders.CONTENT_LENGTH, Integer.class, input -> {
             try {
-                return (input != null && !input.isEmpty()) ? Integer.parseInt(input) : -1;
+                if (input != null && !input.isEmpty()) {
+                    int i = Integer.parseInt(input);
+                    if (i >= 0) {
+                        return i;
+                    }
+                }
+                return -1;
+
+            } catch (NumberFormatException ex) {
+                throw new ProcessingException(ex);
+            }
+        }, true);
+    }
+
+    /**
+     * Get Content-Length value.
+     *
+     * @return Content-Length as a positive long if present and valid number, {@code -1} if negative number.
+     * @throws ProcessingException when {@link Long#parseLong(String)} throws {@link NumberFormatException}.
+     */
+    public long getLengthLong() {
+        return singleHeader(HttpHeaders.CONTENT_LENGTH, Long.class, input -> {
+            try {
+                if (input != null && !input.isEmpty()) {
+                    long l = Long.parseLong(input);
+                    if (l >= 0) {
+                        return l;
+                    }
+                }
+                return -1L;
             } catch (NumberFormatException ex) {
                 throw new ProcessingException(ex);
             }
@@ -586,7 +620,7 @@ public class OutboundMessageContext {
 
     /**
      * Check if there is an entity available in the message.
-     *
+     * <p>
      * The method returns {@code true} if the entity is present, returns
      * {@code false} otherwise.
      *
@@ -599,7 +633,7 @@ public class OutboundMessageContext {
 
     /**
      * Get the message entity Java instance.
-     *
+     * <p>
      * Returns {@code null} if the message does not contain an entity.
      *
      * @return the message entity or {@code null} if message does not contain an
@@ -703,7 +737,7 @@ public class OutboundMessageContext {
 
     /**
      * Set the message entity type information.
-     *
+     * <p>
      * This method overrides any computed or previously set entity type information.
      *
      * @param type overriding message entity type.

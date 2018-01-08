@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -249,10 +249,10 @@ class NettyConnector implements Connector {
             nettyRequest.headers().add(HttpHeaderNames.HOST, jerseyRequest.getUri().getHost());
 
             if (jerseyRequest.hasEntity()) {
-                if (jerseyRequest.getLength() == -1) {
+                if (jerseyRequest.getLengthLong() == -1) {
                     HttpUtil.setTransferEncodingChunked(nettyRequest, true);
                 } else {
-                    nettyRequest.headers().add(HttpHeaderNames.CONTENT_LENGTH, jerseyRequest.getLength());
+                    nettyRequest.headers().add(HttpHeaderNames.CONTENT_LENGTH, jerseyRequest.getLengthLong());
                 }
             }
 

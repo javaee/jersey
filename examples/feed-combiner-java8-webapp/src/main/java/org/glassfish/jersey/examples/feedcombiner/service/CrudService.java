@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,7 +49,7 @@ import org.glassfish.jersey.examples.feedcombiner.store.InMemoryDataStore;
  * Instances of this interface have CRUD operation for saving generic entities
  * into the {@link InMemoryDataStore}.
  *
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  * @see InMemoryDataStore
  */
 public interface CrudService<T extends Serializable> {

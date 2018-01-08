@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -91,8 +91,7 @@ class TemplateModelProcessor implements ModelProcessor {
     private static final String IMPLICIT_VIEW_PATH_PARAMETER = "implicit-view-path-parameter";
     private static final String IMPLICIT_VIEW_PATH_PARAMETER_TEMPLATE = "{" + IMPLICIT_VIEW_PATH_PARAMETER + "}";
 
-    private final ResourceContext resourceContext;
-
+    private final Provider<ResourceContext> resourceContextProvider;
     private final Provider<ExtendedUriInfo> extendedUriInfoProvider;
     private final Provider<ConfiguredValidator> validatorProvider;
 
@@ -166,7 +165,7 @@ class TemplateModelProcessor implements ModelProcessor {
             } else if (matchedResources.size() > 1) {
                 return setModelClass(matchedResources.get(1));
             } else {
-                return setModelClass(resourceContext.getResource(resourceClass));
+                return setModelClass(resourceContextProvider.get().getResource(resourceClass));
             }
         }
 
@@ -228,15 +227,15 @@ class TemplateModelProcessor implements ModelProcessor {
     /**
      * Create a {@code TemplateModelProcessor} instance.
      *
-     * @param resourceContext         (injected) resource context.
+     * @param resourceContextProvider (injected) resource context provider.
      * @param validatorProvider       Jersey extension of BeanValidation Validator.
      * @param extendedUriInfoProvider (injected) extended uri info provider.
      */
     @Inject
-    TemplateModelProcessor(final ResourceContext resourceContext,
+    TemplateModelProcessor(final Provider<ResourceContext> resourceContextProvider,
                            final Provider<ConfiguredValidator> validatorProvider,
                            final Provider<ExtendedUriInfo> extendedUriInfoProvider) {
-        this.resourceContext = resourceContext;
+        this.resourceContextProvider = resourceContextProvider;
         this.validatorProvider = validatorProvider;
         this.extendedUriInfoProvider = extendedUriInfoProvider;
     }

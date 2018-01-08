@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -104,6 +104,9 @@ public class ClientCloseTest extends JerseyTest {
         // that the client is gone.
         assertEquals("OK", target("sse/send").request().get().readEntity(String.class));
         assertEquals("OK", target("sse/send").request().get().readEntity(String.class));
+        for (int i = 0; i < 10; i++) {
+            System.out.println(i + ": " + target("sse/send").request().get().readEntity(String.class));
+        }
         // Now the grizzly should notice that the SSE connection is finally dead and sending events from the server will fail.
         assertEquals("NOK", target("sse/send").request().get().readEntity(String.class));
     }

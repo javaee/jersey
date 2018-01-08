@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,10 +40,15 @@
 
 package org.glassfish.jersey.client;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Configurable;
@@ -55,20 +60,26 @@ import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
+import org.glassfish.jersey.internal.AutoDiscoverableConfigurator;
+import org.glassfish.jersey.internal.BootstrapBag;
+import org.glassfish.jersey.internal.BootstrapConfigurator;
+import org.glassfish.jersey.internal.ContextResolverFactory;
+import org.glassfish.jersey.internal.ExceptionMapperFactory;
+import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
+import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
-import org.glassfish.jersey.process.internal.ExecutorProviders;
-
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.model.internal.ManagedObjectsFinalizer;
+import org.glassfish.jersey.process.internal.RequestScope;
 
 /**
  * Jersey externalized implementation of client-side JAX-RS {@link javax.ws.rs.core.Configurable
@@ -84,6 +95,21 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
      */
     private State state;
 
+    private static class RuntimeConfigConfigurator implements BootstrapConfigurator {
+
+        private final State runtimeConfig;
+
+        private RuntimeConfigConfigurator(State runtimeConfig) {
+            this.runtimeConfig = runtimeConfig;
+        }
+
+        @Override
+        public void init(InjectionManager injectionManager, BootstrapBag bootstrapBag) {
+            bootstrapBag.setConfiguration(runtimeConfig);
+            injectionManager.register(Bindings.service(runtimeConfig).to(Configuration.class));
+        }
+    }
+
     /**
      * Default encapsulation of the internal configuration state.
      */
@@ -92,41 +118,25 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
         /**
          * Strategy that returns the same state instance.
          */
-        private static final StateChangeStrategy IDENTITY = new StateChangeStrategy() {
-
-            @Override
-            public State onChange(final State state) {
-                return state;
-            }
-        };
+        private static final StateChangeStrategy IDENTITY = state -> state;
         /**
          * Strategy that returns a copy of the state instance.
          */
-        private static final StateChangeStrategy COPY_ON_CHANGE = new StateChangeStrategy() {
-
-            @Override
-            public State onChange(final State state) {
-                return state.copy();
-            }
-        };
+        private static final StateChangeStrategy COPY_ON_CHANGE = State::copy;
 
         private volatile StateChangeStrategy strategy;
         private final CommonConfig commonConfig;
         private final JerseyClient client;
         private volatile ConnectorProvider connectorProvider;
+        private volatile ExecutorService executorService;
+        private volatile ScheduledExecutorService scheduledExecutorService;
 
-
-        private final LazyValue<ClientRuntime> runtime = Values.lazy(new Value<ClientRuntime>() {
-            @Override
-            public ClientRuntime get() {
-                return initRuntime();
-            }
-        });
+        private final LazyValue<ClientRuntime> runtime = Values.lazy((Value<ClientRuntime>) this::initRuntime);
 
         /**
          * Configuration state change strategy.
          */
-        private static interface StateChangeStrategy {
+        private interface StateChangeStrategy {
 
             /**
              * Invoked whenever a mutator method is called in the given configuration
@@ -136,7 +146,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
              * @return state instance that will be mutated and returned from the
              * invoked configuration state mutator method.
              */
-            public State onChange(final State state);
+            State onChange(final State state);
         }
 
         /**
@@ -169,6 +179,8 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             this.client = client;
             this.commonConfig = new CommonConfig(original.commonConfig);
             this.connectorProvider = original.connectorProvider;
+            this.executorService = original.executorService;
+            this.scheduledExecutorService = original.scheduledExecutorService;
         }
 
         /**
@@ -282,6 +294,24 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             return state;
         }
 
+        State executorService(final ExecutorService executorService) {
+            if (executorService == null) {
+                throw new NullPointerException(LocalizationMessages.NULL_EXECUTOR_SERVICE());
+            }
+            final State state = strategy.onChange(this);
+            state.executorService = executorService;
+            return state;
+        }
+
+        State scheduledExecutorService(final ScheduledExecutorService scheduledExecutorService) {
+            if (scheduledExecutorService == null) {
+                throw new NullPointerException(LocalizationMessages.NULL_SCHEDULED_EXECUTOR_SERVICE());
+            }
+            final State state = strategy.onChange(this);
+            state.scheduledExecutorService = scheduledExecutorService;
+            return state;
+        }
+
         Connector getConnector() {
             // Get the connector only if the runtime has been initialized.
             return (runtime.isInitialized()) ? runtime.get().getConnector() : null;
@@ -289,6 +319,14 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
 
         ConnectorProvider getConnectorProvider() {
             return connectorProvider;
+        }
+
+        ExecutorService getExecutorService() {
+            return executorService;
+        }
+
+        ScheduledExecutorService getScheduledExecutorService() {
+            return scheduledExecutorService;
         }
 
         JerseyClient getClient() {
@@ -360,16 +398,17 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             return commonConfig.getConfiguration().getInstances();
         }
 
-        public void configureAutoDiscoverableProviders(final ServiceLocator locator) {
-            commonConfig.configureAutoDiscoverableProviders(locator, false);
+        public void configureAutoDiscoverableProviders(InjectionManager injectionManager,
+                                                       List<AutoDiscoverable> autoDiscoverables) {
+            commonConfig.configureAutoDiscoverableProviders(injectionManager, autoDiscoverables, false);
         }
 
-        public void configureForcedAutoDiscoverableProviders(final ServiceLocator locator) {
-            commonConfig.configureAutoDiscoverableProviders(locator, true);
+        public void configureForcedAutoDiscoverableProviders(InjectionManager injectionManager) {
+            commonConfig.configureAutoDiscoverableProviders(injectionManager, Collections.emptyList(), true);
         }
 
-        public void configureMetaProviders(final ServiceLocator locator) {
-            commonConfig.configureMetaProviders(locator);
+        public void configureMetaProviders(InjectionManager injectionManager, ManagedObjectsFinalizer finalizer) {
+            commonConfig.configureMetaProviders(injectionManager, finalizer);
         }
 
         public ComponentBag getComponentBag() {
@@ -381,7 +420,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
          */
         @SuppressWarnings("MethodOnlyUsedFromInnerClass")
         private ClientRuntime initRuntime() {
-            /**
+            /*
              * Ensure that any attempt to add a new provider, feature, binder or modify the connector
              * will cause a copy of the current state.
              */
@@ -390,43 +429,51 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             final State runtimeCfgState = this.copy();
             runtimeCfgState.markAsShared();
 
-            final ServiceLocator locator = Injections.createLocator(new ClientBinder(runtimeCfgState.getProperties()));
-            locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
+            InjectionManager injectionManager = Injections.createInjectionManager();
+            injectionManager.register(new ClientBinder(runtimeCfgState.getProperties()));
+
+            BootstrapBag bootstrapBag = new BootstrapBag();
+            bootstrapBag.setManagedObjectsFinalizer(new ManagedObjectsFinalizer(injectionManager));
+            List<BootstrapConfigurator> bootstrapConfigurators = Arrays.asList(
+                    new RequestScope.RequestScopeConfigurator(),
+                    new RuntimeConfigConfigurator(runtimeCfgState),
+                    new ContextResolverFactory.ContextResolversConfigurator(),
+                    new MessageBodyFactory.MessageBodyWorkersConfigurator(),
+                    new ExceptionMapperFactory.ExceptionMappersConfigurator(),
+                    new JaxrsProviders.ProvidersConfigurator(),
+                    new AutoDiscoverableConfigurator(RuntimeType.CLIENT));
+            bootstrapConfigurators.forEach(configurator -> configurator.init(injectionManager, bootstrapBag));
 
             // AutoDiscoverable.
             if (!CommonProperties.getValue(runtimeCfgState.getProperties(), RuntimeType.CLIENT,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
-                runtimeCfgState.configureAutoDiscoverableProviders(locator);
+                runtimeCfgState.configureAutoDiscoverableProviders(injectionManager, bootstrapBag.getAutoDiscoverables());
             } else {
-                runtimeCfgState.configureForcedAutoDiscoverableProviders(locator);
+                runtimeCfgState.configureForcedAutoDiscoverableProviders(injectionManager);
             }
 
             // Configure binders and features.
-            runtimeCfgState.configureMetaProviders(locator);
-
-            // Bind configuration.
-            final AbstractBinder configBinder = new AbstractBinder() {
-                @Override
-                protected void configure() {
-                    bind(runtimeCfgState).to(Configuration.class);
-                }
-            };
-            final DynamicConfiguration dc = Injections.getConfiguration(locator);
-            configBinder.bind(dc);
-            dc.commit();
+            runtimeCfgState.configureMetaProviders(injectionManager, bootstrapBag.getManagedObjectsFinalizer());
 
             // Bind providers.
-            ProviderBinder.bindProviders(runtimeCfgState.getComponentBag(), RuntimeType.CLIENT, null, locator);
+            ProviderBinder.bindProviders(runtimeCfgState.getComponentBag(), RuntimeType.CLIENT, null, injectionManager);
 
-            // Bind executors.
-            ExecutorProviders.createInjectionBindings(locator);
+            ClientExecutorProvidersConfigurator executorProvidersConfigurator =
+                    new ClientExecutorProvidersConfigurator(runtimeCfgState.getComponentBag(),
+                            runtimeCfgState.client,
+                            this.executorService,
+                            this.scheduledExecutorService);
+            executorProvidersConfigurator.init(injectionManager, bootstrapBag);
+
+            injectionManager.completeRegistration();
+
+            bootstrapConfigurators.forEach(configurator -> configurator.postInit(injectionManager, bootstrapBag));
 
             final ClientConfig configuration = new ClientConfig(runtimeCfgState);
             final Connector connector = connectorProvider.getConnector(client, configuration);
-            final ClientRuntime crt = new ClientRuntime(configuration, connector, locator);
+            final ClientRuntime crt = new ClientRuntime(configuration, connector, injectionManager, bootstrapBag);
 
             client.registerShutdownHook(crt);
-
             return crt;
         }
 
@@ -544,7 +591,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
 
     /**
      * Load the internal configuration state from an externally provided configuration state.
-     *
+     * <p>
      * Calling this method effectively replaces existing configuration state of the instance
      * with the state represented by the externally provided configuration.
      *
@@ -700,8 +747,30 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
     }
 
     /**
-     * Get the client transport connector.
+     * Register custom Jersey client async executor.
      *
+     * @param executorService custom executor service instance
+     * @return this client config instance
+     */
+    public ClientConfig executorService(final ExecutorService executorService) {
+        state = state.executorService(executorService);
+        return this;
+    }
+
+    /**
+     * Register custom Jersey client scheduler.
+     *
+     * @param scheduledExecutorService custom scheduled executor service instance
+     * @return this client config instance
+     */
+    public ClientConfig scheduledExecutorService(final ScheduledExecutorService scheduledExecutorService) {
+        state = state.scheduledExecutorService(scheduledExecutorService);
+        return this;
+    }
+
+    /**
+     * Get the client transport connector.
+     * <p>
      * May return {@code null} if no connector has been set.
      *
      * @return client transport connector or {code null} if not set.
@@ -712,7 +781,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
 
     /**
      * Get the client transport connector provider.
-     *
+     * <p>
      * If no custom connector provider has been set,
      * {@link org.glassfish.jersey.client.HttpUrlConnectorProvider default connector provider}
      * instance is returned.
@@ -725,6 +794,30 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
     }
 
     /**
+     * Get custom client executor service.
+     * <p>
+     * May return null if no custom executor service has been set.
+     *
+     * @return custom executor service instance or {@code null} if not set.
+     * @since 2.26
+     */
+    public ExecutorService getExecutorService() {
+        return state.getExecutorService();
+    }
+
+    /**
+     * Get custom client scheduled executor service.
+     * <p>
+     * May return null if no custom scheduled executor service has been set.
+     *
+     * @return custom executor service instance or {@code null} if not set.
+     * @since 2.26
+     */
+    public ScheduledExecutorService getScheduledExecutorService() {
+        return state.getScheduledExecutorService();
+    }
+
+    /**
      * Get the configured runtime.
      *
      * @return configured runtime.
@@ -733,9 +826,13 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
         return state.runtime.get();
     }
 
+    public ClientExecutor getClientExecutor() {
+        return state.runtime.get();
+    }
+
     /**
      * Get the parent Jersey client this configuration is bound to.
-     *
+     * <p>
      * May return {@code null} if no parent client has been bound.
      *
      * @return bound parent Jersey client or {@code null} if not bound.

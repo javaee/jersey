@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -87,7 +87,8 @@ public class EncodingFilterTest {
     @Test
     public void testNoInterceptor() {
         ResourceConfig rc = new ResourceConfig(EncodingFilter.class);
-        ContainerResponseFilter filter = new ApplicationHandler(rc).getServiceLocator().getService(ContainerResponseFilter.class);
+        ContainerResponseFilter filter = new ApplicationHandler(rc).getInjectionManager()
+                .getInstance(ContainerResponseFilter.class);
         assertNotNull(filter);
         assertTrue(filter instanceof EncodingFilter);
         assertEquals(1, ((EncodingFilter) filter).getSupportedEncodings().size());
@@ -160,7 +161,7 @@ public class EncodingFilterTest {
     private EncodingFilter initializeAndGetFilter() {
         ResourceConfig rc = new ResourceConfig();
         EncodingFilter.enableFor(rc, FooEncoding.class, GZipEncoder.class);
-        return (EncodingFilter) new ApplicationHandler(rc).getServiceLocator().getService(ContainerResponseFilter.class);
+        return (EncodingFilter) new ApplicationHandler(rc).getInjectionManager().getInstance(ContainerResponseFilter.class);
     }
 
     private void testEncoding(String expected, String... accepted) throws IOException {

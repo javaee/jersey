@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,19 +43,14 @@ package org.glassfish.jersey.client.rx.rxjava;
 import java.util.concurrent.ExecutorService;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.InvocationCallback;
+import javax.ws.rs.client.SyncInvoker;
 import javax.ws.rs.core.GenericType;
 
-import org.glassfish.jersey.client.JerseyInvocation;
-import org.glassfish.jersey.client.rx.spi.AbstractRxInvoker;
+import org.glassfish.jersey.client.AbstractRxInvoker;
 
 import rx.Observable;
 import rx.Scheduler;
-import rx.Subscriber;
 import rx.schedulers.Schedulers;
-import rx.subscriptions.CompositeSubscription;
-import rx.subscriptions.Subscriptions;
 
 /**
  * Implementation of Reactive Invoker for {@code Observable}. If no executor service is provided the JAX-RS Async client is used
@@ -67,73 +62,45 @@ import rx.subscriptions.Subscriptions;
  */
 final class JerseyRxObservableInvoker extends AbstractRxInvoker<Observable> implements RxObservableInvoker {
 
-    JerseyRxObservableInvoker(final Invocation.Builder builder, final ExecutorService executor) {
-        super(builder, executor);
+    JerseyRxObservableInvoker(final SyncInvoker syncInvoker, final ExecutorService executor) {
+        super(syncInvoker, executor);
     }
 
     @Override
     public <T> Observable<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
-        return method(name, entity, new GenericType<T>(responseType) {});
+        return method(name, entity, new GenericType<T>(responseType) { });
     }
 
     @Override
     public <T> Observable<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
-        if (getExecutorService() == null) {
-            // Invoke as async JAX-RS client request.
-            return Observable.create(new Observable.OnSubscribe<T>() {
-                @Override
-                public void call(final Subscriber<? super T> subscriber) {
-                    final CompositeSubscription parent = new CompositeSubscription();
-                    subscriber.add(parent);
+        final Scheduler scheduler;
 
-                    final JerseyInvocation invocation = (JerseyInvocation) getBuilder().build(name, entity);
-
-                    // return a Subscription that wraps the Future to make sure it can be cancelled
-                    parent.add(Subscriptions.from(invocation.submit(responseType, new InvocationCallback<T>() {
-                        @Override
-                        public void completed(final T entity) {
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onNext(entity);
-                            }
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onCompleted();
-                            }
-                        }
-
-                        @Override
-                        public void failed(final Throwable throwable) {
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onError(throwable);
-                            }
-                        }
-                    })));
-                }
-            });
+        if (getExecutorService() != null) {
+            scheduler = Schedulers.from(getExecutorService());
         } else {
-            // Invoke as sync JAX-RS client request and subscribe/observe on a scheduler initialized with executor service.
-            final Scheduler scheduler = Schedulers.from(getExecutorService());
+            // TODO: use JAX-RS client scheduler
+            // TODO: https://java.net/jira/browse/JAX_RS_SPEC-523
+            scheduler = Schedulers.io();
+        }
 
-            return Observable.create(new Observable.OnSubscribe<T>() {
-                @Override
-                public void call(final Subscriber<? super T> subscriber) {
+        // Invoke as sync JAX-RS client request and subscribe/observe on a scheduler initialized with executor service.
+        return Observable.create((Observable.OnSubscribe<T>) subscriber -> {
+            if (!subscriber.isUnsubscribed()) {
+                try {
+                    final T response = getSyncInvoker().method(name, entity, responseType);
+
                     if (!subscriber.isUnsubscribed()) {
-                        try {
-                            final T response = getBuilder().method(name, entity, responseType);
-
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onNext(response);
-                            }
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onCompleted();
-                            }
-                        } catch (final Throwable throwable) {
-                            if (!subscriber.isUnsubscribed()) {
-                                subscriber.onError(throwable);
-                            }
-                        }
+                        subscriber.onNext(response);
+                    }
+                    if (!subscriber.isUnsubscribed()) {
+                        subscriber.onCompleted();
+                    }
+                } catch (final Throwable throwable) {
+                    if (!subscriber.isUnsubscribed()) {
+                        subscriber.onError(throwable);
                     }
                 }
-            }).subscribeOn(scheduler).observeOn(scheduler);
-        }
+            }
+        }).subscribeOn(scheduler).observeOn(scheduler);
     }
 }

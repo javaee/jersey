@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,13 +48,11 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.server.ServerLocatorFactory;
+import org.glassfish.jersey.server.TestInjectionManagerFactory;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -87,8 +85,8 @@ public class WadlGeneratorConfigTest {
                 .generator(generator2)
                 .build();
 
-        final ServiceLocator locator = ServerLocatorFactory.createLocator();
-        WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
+        TestInjectionManagerFactory.BootstrapResult result = TestInjectionManagerFactory.createInjectionManager();
+        WadlGenerator wadlGenerator = config.createWadlGenerator(result.injectionManager);
 
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
         Assert.assertEquals(MyWadlGenerator.class, ((MyWadlGenerator2) wadlGenerator).getDelegate().getClass());
@@ -96,12 +94,12 @@ public class WadlGeneratorConfigTest {
 
     @Test
     public void testBuildWadlGeneratorFromDescriptions() {
-        final ServiceLocator locator = ServerLocatorFactory.createLocator();
+        TestInjectionManagerFactory.BootstrapResult result = TestInjectionManagerFactory.createInjectionManager();
         final String propValue = "bar";
         WadlGeneratorConfig config = WadlGeneratorConfig.generator(MyWadlGenerator.class)
                 .prop("foo", propValue)
                 .build();
-        WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
+        WadlGenerator wadlGenerator = config.createWadlGenerator(result.injectionManager);
         Assert.assertEquals(MyWadlGenerator.class, wadlGenerator.getClass());
         Assert.assertEquals(((MyWadlGenerator) wadlGenerator).getFoo(), propValue);
 
@@ -110,7 +108,7 @@ public class WadlGeneratorConfigTest {
                 .prop("foo", propValue).generator(MyWadlGenerator2.class)
                 .prop("bar", propValue2)
                 .build();
-        wadlGenerator = config.createWadlGenerator(locator);
+        wadlGenerator = config.createWadlGenerator(result.injectionManager);
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
         final MyWadlGenerator2 wadlGenerator2 = (MyWadlGenerator2) wadlGenerator;
         Assert.assertEquals(wadlGenerator2.getBar(), propValue2);
@@ -135,10 +133,10 @@ public class WadlGeneratorConfigTest {
             }
         }
 
-        final ServiceLocator locator = ServerLocatorFactory.createLocator();
+        TestInjectionManagerFactory.BootstrapResult result = TestInjectionManagerFactory.createInjectionManager();
 
         WadlGeneratorConfig config = new MyWadlGeneratorConfig();
-        WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
+        WadlGenerator wadlGenerator = config.createWadlGenerator(result.injectionManager);
 
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
         final MyWadlGenerator2 wadlGenerator2 = (MyWadlGenerator2) wadlGenerator;
@@ -294,8 +292,8 @@ public class WadlGeneratorConfigTest {
                 .generator(MyWadlGenerator3.class)
                 .prop("foo", "string")
                 .prop("bar", new Bar()).build();
-        final ServiceLocator locator = ServerLocatorFactory.createLocator();
-        WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
+        TestInjectionManagerFactory.BootstrapResult result = TestInjectionManagerFactory.createInjectionManager();
+        WadlGenerator wadlGenerator = config.createWadlGenerator(result.injectionManager);
 
         Assert.assertEquals(MyWadlGenerator3.class, wadlGenerator.getClass());
 

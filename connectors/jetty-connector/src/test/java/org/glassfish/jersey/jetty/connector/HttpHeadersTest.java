@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2016 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,12 +40,16 @@
 
 package org.glassfish.jersey.jetty.connector;
 
+import java.util.List;
 import java.util.logging.Logger;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -54,6 +58,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -78,6 +83,15 @@ public class HttpHeadersTest extends JerseyTest {
             assertEquals("client", xClient);
             return "POST";
         }
+
+        @GET
+        public String testUserAgent(@Context HttpHeaders httpHeaders) {
+            final List<String> requestHeader = httpHeaders.getRequestHeader(HttpHeaders.USER_AGENT);
+            if (requestHeader.size() != 1) {
+                return "FAIL";
+            }
+            return requestHeader.get(0);
+        }
     }
 
     @Override
@@ -98,5 +112,14 @@ public class HttpHeadersTest extends JerseyTest {
 
         assertEquals(200, response.getStatus());
         assertTrue(response.hasEntity());
+    }
+
+    /**
+     * Test, that {@code User-agent} header is as set by Jersey, not by underlying Jetty client.
+     */
+    @Test
+    public void testUserAgent() {
+        String response = target().path("test").request().get(String.class);
+        assertTrue("User-agent header should start with 'Jersey', but was " + response, response.startsWith("Jersey"));
     }
 }

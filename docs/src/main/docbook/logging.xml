@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2016 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2016-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -193,10 +193,10 @@
                 <para>
                     An example of initializing server-side logging with the highest verbosity.
                     <example>
-                        <title>Logging on client-side</title>
+                        <title>Logging on the client side</title>
                         <programlisting language="java" linenumbering="numbered"><![CDATA[    ClientConfig clientConfig = new ClientConfig();
     clientConfig.property(LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT, LoggingFeature.Verbosity.PAYLOAD_ANY);
-    Client client = ClientBuilder.newBuilder(clientConfig);]]>
+    Client client = ClientBuilder.newClient(clientConfig);]]>
                         </programlisting>
                     </example>
                 </para>

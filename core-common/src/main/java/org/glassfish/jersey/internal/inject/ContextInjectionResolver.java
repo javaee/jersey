@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,188 +37,17 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.inject;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Context;
 
-import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.internal.util.collection.LazyValue;
-import org.glassfish.jersey.internal.util.collection.Value;
-import org.glassfish.jersey.internal.util.collection.Values;
-import org.glassfish.jersey.process.internal.RequestScoped;
-
-import org.glassfish.hk2.api.ActiveDescriptor;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.Injectee;
-import org.glassfish.hk2.api.InjectionResolver;
-import org.glassfish.hk2.api.ServiceHandle;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
-import org.glassfish.hk2.utilities.BuilderHelper;
-import org.glassfish.hk2.utilities.InjecteeImpl;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.hk2.utilities.cache.Cache;
-import org.glassfish.hk2.utilities.cache.Computable;
-
 /**
- * Injection resolver for {@link Context @Context} injection annotation.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * A marker interface to {@code InjectionResolver&lt;Context&gt;}. This interface must be implemented by every Dependency
+ * Injection Provider to properly handle the injection of {@link Context} annotation.
+ * <p>
+ * Jersey cannot simply add the default implementation of this interface because the proper implementation requires a lot of
+ * caching and optimization which can be done only with very close dependency to DI provider.
  */
-@Singleton
-public class ContextInjectionResolver implements InjectionResolver<Context> {
-
-    /**
-     * Context injection resolver HK2 binder.
-     */
-    public static final class Binder extends AbstractBinder {
-
-        @Override
-        protected void configure() {
-            // @Context
-            bind(ContextInjectionResolver.class).to(new TypeLiteral<InjectionResolver<Context>>() {
-            }).in(Singleton.class);
-        }
-    }
-
-    @Inject
-    private ServiceLocator serviceLocator;
-
-    private final Cache<Injectee, ActiveDescriptor<?>> descriptorCache
-            = new Cache<Injectee, ActiveDescriptor<?>>(new Computable<Injectee, ActiveDescriptor<?>>() {
-
-                @Override
-                public ActiveDescriptor<?> compute(Injectee key) {
-                    return serviceLocator.getInjecteeDescriptor(key);
-                }
-            });
-
-    @Override
-    public Object resolve(Injectee injectee, ServiceHandle<?> root) {
-        Type requiredType = injectee.getRequiredType();
-        boolean isHk2Factory = ReflectionHelper.isSubClassOf(requiredType, Factory.class);
-        Injectee newInjectee;
-
-        if (isHk2Factory) {
-            newInjectee = getFactoryInjectee(injectee, ReflectionHelper.getTypeArgument(requiredType, 0));
-        } else {
-            newInjectee = foreignRequestScopedInjecteeCache.compute(injectee);
-        }
-
-        ActiveDescriptor<?> ad = descriptorCache.compute(newInjectee);
-
-        if (ad != null) {
-            final ServiceHandle handle = serviceLocator.getServiceHandle(ad, newInjectee);
-
-            if (isHk2Factory) {
-                return asFactory(handle);
-            } else {
-                return handle.getService();
-            }
-        }
-        return null;
-    }
-
-    private Factory asFactory(final ServiceHandle handle) {
-        return new Factory() {
-            @Override
-            public Object provide() {
-                return handle.getService();
-            }
-
-            @Override
-            public void dispose(Object instance) {
-                //not used
-            }
-        };
-    }
-
-    private Injectee getFactoryInjectee(final Injectee injectee, final Type requiredType) {
-        return new RequiredTypeOverridingInjectee(injectee, requiredType);
-    }
-
-    private static class RequiredTypeOverridingInjectee extends InjecteeImpl {
-
-        private static final long serialVersionUID = -3740895548611880187L;
-
-        private RequiredTypeOverridingInjectee(final Injectee injectee, final Type requiredType) {
-            super(injectee);
-            setRequiredType(requiredType);
-        }
-    }
-
-    private static class DescriptorOverridingInjectee extends InjecteeImpl {
-
-        private static final long serialVersionUID = -3740895548611880189L;
-
-        private DescriptorOverridingInjectee(final Injectee injectee, final ActiveDescriptor descriptor) {
-            super(injectee);
-            setInjecteeDescriptor(descriptor);
-        }
-    }
-
-    @Override
-    public boolean isConstructorParameterIndicator() {
-        return true;
-    }
-
-    @Override
-    public boolean isMethodParameterIndicator() {
-        return false;
-    }
-
-
-    private final Cache<Injectee, Injectee> foreignRequestScopedInjecteeCache =
-            new Cache<Injectee, Injectee>(new Computable<Injectee, Injectee>() {
-        @Override
-        public Injectee compute(Injectee injectee) {
-            if (injectee.getParent() != null) {
-                if (Field.class.isAssignableFrom(injectee.getParent().getClass())) {
-                    Field f = (Field) injectee.getParent();
-                    if (foreignRequestScopedComponents.get().contains(f.getDeclaringClass())) {
-                        final Class<?> clazz = f.getType();
-                        if (serviceLocator.getServiceHandle(clazz).getActiveDescriptor().getScopeAnnotation()
-                                                                                            == RequestScoped.class) {
-                            final AbstractActiveDescriptor<Object> descriptor =
-                                    BuilderHelper.activeLink(clazz)
-                                            .to(clazz)
-                                            .in(RequestScoped.class)
-                                            .build();
-                            return new DescriptorOverridingInjectee(injectee, descriptor);
-                        }
-                    }
-                }
-            }
-            return injectee;
-        }
-    });
-
-    LazyValue<Set<Class<?>>> foreignRequestScopedComponents = Values.lazy(new Value<Set<Class<?>>>() {
-        @Override
-        public Set<Class<?>> get() {
-            return getForeignRequestScopedComponents();
-        }
-    });
-
-    private Set<Class<?>> getForeignRequestScopedComponents() {
-        final List<ForeignRequestScopeBridge> scopeBridges = serviceLocator.getAllServices(ForeignRequestScopeBridge.class);
-        final Set<Class<?>> result = new HashSet<Class<?>>();
-        for (ForeignRequestScopeBridge bridge : scopeBridges) {
-            final Set<Class<?>> requestScopedComponents = bridge.getRequestScopedComponents();
-            if (requestScopedComponents != null) {
-                result.addAll(requestScopedComponents);
-            }
-        }
-        return result;
-    }
+public interface ContextInjectionResolver extends InjectionResolver<Context> {
 }

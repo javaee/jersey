@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,11 +44,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -59,15 +56,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.examples.feedcombiner.ApplicationProperties;
 import org.glassfish.jersey.examples.feedcombiner.MyApplication;
-import org.glassfish.jersey.examples.feedcombiner.binder.ApplicationBinder.PropertiesBinder;
-import org.glassfish.jersey.examples.feedcombiner.binder.ApplicationBinder.ResourcePartBinder;
 import org.glassfish.jersey.examples.feedcombiner.model.CombinedFeed;
 import org.glassfish.jersey.examples.feedcombiner.model.FeedEntry;
-import org.glassfish.jersey.examples.feedcombiner.store.InMemoryDataStore;
 import org.glassfish.jersey.examples.feedcombiner.store.ReadWriteLockDataStore;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
@@ -82,7 +74,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_ATOM_XML_TYPE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 /**
- * @author Petr Bouda (petr.bouda at oracle.com)
+ * @author Petr Bouda
  */
 public class CombinedFeedResourceTest extends JerseyTest {
 

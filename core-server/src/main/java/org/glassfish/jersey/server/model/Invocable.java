@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.model;
 
 import java.lang.reflect.Method;
@@ -52,10 +53,6 @@ import javax.ws.rs.core.Request;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
-
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * A common interface for invocable resource components. This includes resource
@@ -306,18 +303,6 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
     public boolean isInflector() {
         // Method.equals(...) does not perform the identity check (in Java SE 6)
         return APPLY_INFLECTOR_METHOD == definitionMethod || APPLY_INFLECTOR_METHOD.equals(definitionMethod);
-    }
-
-    /**
-     * Returns list of {@link org.glassfish.jersey.server.spi.internal.ValueFactoryProvider value providers} which provides
-     * values for parameters of this Invocable returned by {@link #getParameters()}. Value providers are ordered in the same
-     * order as parameters.
-     *
-     * @param locator HK2 service locator.
-     * @return Set of value providers for this Invocable.
-     */
-    public List<? extends Factory<?>> getValueProviders(ServiceLocator locator) {
-        return ParameterValueHelper.createValueProviders(locator, this);
     }
 
     @Override

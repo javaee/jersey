@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.jetty;
 
 import java.io.IOException;
@@ -53,6 +54,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.SecurityContext;
 
 import javax.inject.Inject;
@@ -62,6 +64,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -76,11 +79,6 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationListener;
@@ -102,8 +100,8 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     private static final ExtendedLogger LOGGER =
             new ExtendedLogger(Logger.getLogger(JettyHttpContainer.class.getName()), Level.FINEST);
 
-    private static final Type REQUEST_TYPE = (new TypeLiteral<Ref<Request>>() {}).getType();
-    private static final Type RESPONSE_TYPE = (new TypeLiteral<Ref<Response>>() {}).getType();
+    private static final Type REQUEST_TYPE = (new GenericType<Ref<Request>>() {}).getType();
+    private static final Type RESPONSE_TYPE = (new GenericType<Ref<Response>>() {}).getType();
 
     private static final int INTERNAL_SERVER_ERROR = javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
 
@@ -147,12 +145,12 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         protected void configure() {
             bindFactory(JettyRequestReferencingFactory.class).to(Request.class)
                     .proxy(false).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {})
+            bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new GenericType<Ref<Request>>() {})
                     .in(RequestScoped.class);
 
             bindFactory(JettyResponseReferencingFactory.class).to(Response.class)
                     .proxy(false).in(RequestScoped.class);
-            bindFactory(ReferencingFactory.<Response>referenceFactory()).to(new TypeLiteral<Ref<Response>>() {})
+            bindFactory(ReferencingFactory.<Response>referenceFactory()).to(new GenericType<Ref<Response>>() {})
                     .in(RequestScoped.class);
         }
     }
@@ -163,7 +161,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     public void handle(final String target, final Request request, final HttpServletRequest httpServletRequest,
                        final HttpServletResponse httpServletResponse) throws IOException, ServletException {
 
-        final Response response = Response.getResponse(httpServletResponse);
+        final Response response = request.getResponse();
         final ResponseWriter responseWriter = new ResponseWriter(request, response, configSetStatusOverSendError);
         final URI baseUri = getBaseUri(request);
         final URI requestUri = getRequestUri(request, baseUri);
@@ -182,12 +180,9 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
                 requestContext.headers(headerName, headerValue == null ? "" : headerValue);
             }
             requestContext.setWriter(responseWriter);
-            requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
-                @Override
-                public void initialize(final ServiceLocator locator) {
-                    locator.<Ref<Request>>getService(REQUEST_TYPE).set(request);
-                    locator.<Ref<Response>>getService(RESPONSE_TYPE).set(response);
-                }
+            requestContext.setRequestScopedInitializer(injectionManager -> {
+                injectionManager.<Ref<Request>>getInstance(REQUEST_TYPE).set(request);
+                injectionManager.<Ref<Response>>getInstance(RESPONSE_TYPE).set(response);
             });
 
             // Mark the request as handled before generating the body of the response
@@ -458,11 +453,11 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     /**
      * Create a new Jetty HTTP container.
      *
-     * @param application JAX-RS / Jersey application to be deployed on Jetty HTTP container.
-     * @param parentLocator parent HK2 service locator.
+     * @param application   JAX-RS / Jersey application to be deployed on Jetty HTTP container.
+     * @param parentContext DI provider specific context with application's registered bindings.
      */
-    JettyHttpContainer(final Application application, final ServiceLocator parentLocator) {
-        this.appHandler = new ApplicationHandler(application, new JettyBinder(), parentLocator);
+    JettyHttpContainer(final Application application, final Object parentContext) {
+        this.appHandler = new ApplicationHandler(application, new JettyBinder(), parentContext);
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,11 @@ grant codebase "file:${basedir}/../media/jaxb/-" {
   permission java.security.AllPermission;
 };
 
+// in case jersey-hk2 jar is referenced directly from reactor
+grant codebase "file:${basedir}/../inject/hk2/-" {
+  permission java.security.AllPermission;
+};
+
 // in case jersey-core jar is referenced directly from reactor
 grant codebase "file:${basedir}/../core-common/-" {
   permission java.security.AllPermission;
@@ -74,6 +79,8 @@ grant codebase "file:${project.build.directory}/test-classes/-" {
   permission java.util.PropertyPermission "java.protocol.handler.pkgs", "read,write";
   permission java.lang.RuntimePermission "modifyThread";
   permission org.jboss.vfs.VirtualFilePermission "<<ALL FILES>>", "read";
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc";
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc.*";
 };
 
 grant codebase "file:${project.build.directory}/classes/-" {
@@ -86,4 +93,6 @@ grant codebase "file:${project.build.directory}/classes/-" {
   permission org.jboss.vfs.VirtualFilePermission "<<ALL FILES>>", "read";
   permission java.net.NetPermission "specifyStreamHandler";
   permission java.net.SocketPermission "home", "connect,resolve";
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc";
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc.*";
 };
