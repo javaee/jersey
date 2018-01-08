@@ -2,19 +2,19 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
     and Distribution License("CDDL") (collectively, the "License").  You
     may not use this file except in compliance with the License.  You can
     obtain a copy of the License at
-    http://glassfish.java.net/public/CDDL+GPL_1_1.html
-    or packager/legal/LICENSE.txt.  See the License for the specific
+    https://oss.oracle.com/licenses/CDDL+GPL-1.1
+    or LICENSE.txt.  See the License for the specific
     language governing permissions and limitations under the License.
 
     When distributing the software, include this License Header Notice in each
-    file and include the License file at packager/legal/LICENSE.txt.
+    file and include the License file at LICENSE.txt.
 
     GPL Classpath Exception:
     Oracle designates this particular file as subject to the "Classpath"
@@ -34,7 +34,6 @@
     recipient has the option to distribute your version of this file under
     either the CDDL, the GPL Version 2 or to extend the choice of license to
     its licensees as provided above.  However, if you add GPL Version 2 code
-    and therefore, elected the GPL Version 2 license, then the option applies
     and therefore, elected the GPL Version 2 license, then the option applies
     only if the new code is made subject to such option by the copyright
     holder.
@@ -69,7 +68,7 @@ Running the Example
 -------------------
 
 Bookmark example runs on Glassfish 3.x application servers
-([http://glassfish.java.net](http://glassfish.java.net/)) and needs a
+([https://javaee.github.io/glassfish/](https://javaee.github.io/glassfish/)) and needs a
 running JavaDB
 (<http://www.oracle.com/technetwork/java/javadb/overview/index.html>)
 instance for underlying data (it comes along with GlassFish).
