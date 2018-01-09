@@ -138,6 +138,16 @@ public class WebResourceFactoryTest extends JerseyTest {
     }
 
     @Test
+    public void testCookieParamAsCookie() {
+        assertEquals("cocobey", resource.getByNameCookie(new Cookie("cookie-name", "cocobey")));
+    }
+
+    @Test
+    public void testCookieParamAsCookieWithWrongName() {
+        assertEquals("cocobey", resource.getByNameCookie(new Cookie("wrong-name", "cocobey")));
+    }
+
+    @Test
     public void testHeaderParam() {
         assertEquals("jiri", resource.getByNameHeader("jiri"));
     }

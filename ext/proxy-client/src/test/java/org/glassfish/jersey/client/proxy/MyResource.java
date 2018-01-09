@@ -41,6 +41,7 @@
 package org.glassfish.jersey.client.proxy;
 
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
@@ -80,6 +81,11 @@ public class MyResource implements MyResourceIfc {
     @Override
     public String getByNameCookie(String name) {
         return name;
+    }
+
+    @Override
+    public String getByNameCookie(Cookie cookie) {
+        return cookie.getValue();
     }
 
     @Override
