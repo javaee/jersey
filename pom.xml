@@ -267,7 +267,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.1</version>
+                    <version>3.7.0</version>
                     <inherited>true</inherited>
                     <configuration>
                         <source>${java.version}</source>
@@ -1911,7 +1911,6 @@
         <mimepull.version>1.9.6</mimepull.version>
         <mockito.version>1.10.19</mockito.version>
         <moxy.version>2.6.4</moxy.version>
-        <mockito.version>1.10.19</mockito.version>
         <mustache.version>0.8.17</mustache.version>
         <netty.version>4.1.5.Final</netty.version>
         <nexus-staging.mvn.plugin.version>1.6.7</nexus-staging.mvn.plugin.version>
