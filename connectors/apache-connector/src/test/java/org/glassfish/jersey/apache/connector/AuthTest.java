@@ -53,6 +53,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import javax.inject.Singleton;
 
@@ -140,6 +141,8 @@ public class AuthTest extends JerseyTest {
     public static class AuthResource {
 
         int requestCount = 0;
+        int queryParamsBasicRequestCount = 0;
+        int queryParamsDigestRequestCount = 0;
 
         @GET
         public String get(@Context HttpHeaders h) {
@@ -228,6 +231,30 @@ public class AuthTest extends JerseyTest {
             }
 
             return e;
+        }
+
+        @GET
+        @Path("queryParamsBasic")
+        public String getQueryParamsBasic(@Context HttpHeaders h, @Context UriInfo uriDetails) {
+            queryParamsBasicRequestCount++;
+            String value = h.getRequestHeaders().getFirst("Authorization");
+            if (value == null) {
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"").build());
+            }
+            return "GET " + queryParamsBasicRequestCount;
+        }
+
+        @GET
+        @Path("queryParamsDigest")
+        public String getQueryParamsDigest(@Context HttpHeaders h, @Context UriInfo uriDetails) {
+            queryParamsDigestRequestCount++;
+            String value = h.getRequestHeaders().getFirst("Authorization");
+            if (value == null) {
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Digest realm=\"WallyWorld\"").build());
+            }
+            return "GET " + queryParamsDigestRequestCount;
         }
     }
 
@@ -371,5 +398,35 @@ public class AuthTest extends JerseyTest {
         WebTarget r = client.target(getBaseUri()).path("test");
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
+    }
+
+    @Test
+    public void testAuthGetQueryParamsBasic() {
+        ClientConfig cc = new ClientConfig();
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
+        client.register(HttpAuthenticationFeature.universal("name", "password"));
+
+        WebTarget r = client.target(getBaseUri()).path("test/queryParamsBasic");
+        assertEquals("GET 2", r.request().get(String.class));
+
+        r = client.target(getBaseUri()).path("test/queryParamsBasic").queryParam("param1", "value1").queryParam("param2", "value2");
+        assertEquals("GET 3", r.request().get(String.class));
+
+    }
+
+    @Test
+    public void testAuthGetQueryParamsDigest() {
+        ClientConfig cc = new ClientConfig();
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
+        client.register(HttpAuthenticationFeature.universal("name", "password"));
+
+        WebTarget r = client.target(getBaseUri()).path("test/queryParamsDigest");
+        assertEquals("GET 2", r.request().get(String.class));
+
+        r = client.target(getBaseUri()).path("test/queryParamsDigest").queryParam("param1", "value1").queryParam("param2", "value2");
+        assertEquals("GET 3", r.request().get(String.class));
+
     }
 }
