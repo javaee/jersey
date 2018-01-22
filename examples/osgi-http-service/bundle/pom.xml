@@ -41,7 +41,8 @@
 
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -57,6 +58,10 @@
     <packaging>jar</packaging>
 
     <description>OSGi HttpService example bundle</description>
+
+    <properties>
+        <spring4.version>4.3.5.RELEASE_1</spring4.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -77,6 +82,42 @@
             <artifactId>org.apache.felix.eventadmin</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-beans</artifactId>
+            <version>${spring4.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-core</artifactId>
+            <version>${spring4.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-web</artifactId>
+            <version>${spring4.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-aop</artifactId>
+            <version>${spring4.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-context</artifactId>
+            <version>${spring4.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-expression</artifactId>
+            <version>${spring4.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -87,8 +128,22 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>org.glassfish.jersey.examples.osgihttpservice</Export-Package>
-                        <Import-Package>javax.servlet.*;version="[2.4,5.0)",*</Import-Package>
+                        <Export-Package>
+                            org.glassfish.jersey.examples.osgihttpservice,
+                            org.glassfish.jersey.examples.osgihttpservice.spring
+                        </Export-Package>
+                        <Import-Package>
+                            javax.servlet.*;version="[2.4,5.0)",
+                            org.springframework.expression,
+                            org.springframework.beans.factory,
+                            org.springframework.beans.factory.xml,
+                            org.springframework.cglib.core,
+                            org.springframework.cglib.proxy,
+                            org.springframework.beans,
+                            org.springframework.context,
+                            org.springframework.context.config,
+                            *
+                        </Import-Package>
                         <Bundle-Activator>org.glassfish.jersey.examples.osgihttpservice.Activator</Bundle-Activator>
                         <Implementation-Title>jersey-osgi-http-service-bundle</Implementation-Title>
                         <Implementation-Version>${project.version}</Implementation-Version>

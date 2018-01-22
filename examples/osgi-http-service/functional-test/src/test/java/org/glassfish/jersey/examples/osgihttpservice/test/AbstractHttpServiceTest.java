@@ -40,6 +40,21 @@
 
 package org.glassfish.jersey.examples.osgihttpservice.test;
 
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
+
+import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.security.AccessController;
 import java.util.ArrayList;
@@ -53,23 +68,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.UriBuilder;
-
-import javax.inject.Inject;
-
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-
-import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.Option;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -84,10 +82,14 @@ public abstract class AbstractHttpServiceTest {
     @Inject
     BundleContext bundleContext;
 
-    /** maximum waiting time for runtime initialization and Jersey deployment */
-    public static final long MAX_WAITING_SECONDS = 10L;
+    /**
+     * maximum waiting time for runtime initialization and Jersey deployment
+     */
+    public static final long MAX_WAITING_SECONDS = 60L;
 
-    /** Latch for blocking the testing thread until the runtime is ready and Jersey deployed */
+    /**
+     * Latch for blocking the testing thread until the runtime is ready and Jersey deployed
+     */
     final CountDownLatch countDownLatch = new CountDownLatch(1);
 
     private static final int port = getProperty("jersey.config.test.container.port", 8080);
@@ -102,8 +104,7 @@ public abstract class AbstractHttpServiceTest {
     public abstract List<Option> osgiRuntimeOptions();
 
     public List<Option> genericOsgiOptions() {
-        @SuppressWarnings("RedundantStringToString")
-        final String bundleLocation = mavenBundle()
+        @SuppressWarnings("RedundantStringToString") final String bundleLocation = mavenBundle()
                 .groupId("org.glassfish.jersey.examples.osgi-http-service")
                 .artifactId("bundle")
                 .versionAsInProject().getURL().toString();
@@ -136,6 +137,23 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("aopalliance-repackaged").versionAsInProject(),
                 mavenBundle().groupId("org.javassist").artifactId("javassist").versionAsInProject(),
 
+                // Spring
+                mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.spring-core")
+                        .versionAsInProject(),
+                mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.spring-beans")
+                        .versionAsInProject(),
+                mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.spring-aop")
+                        .versionAsInProject(),
+                mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.spring-context")
+                        .versionAsInProject(),
+                mavenBundle().groupId("org.apache.servicemix.bundles").artifactId("org.apache.servicemix.bundles.spring-web")
+                        .versionAsInProject(),
+                mavenBundle().groupId("org.apache.servicemix.bundles")
+                        .artifactId("org.apache.servicemix.bundles.spring-expression")
+                        .versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.jersey.ext").artifactId("jersey-spring4").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.hk2").artifactId("spring-bridge").versionAsInProject(),
+
                 // JAX-RS API
                 mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").versionAsInProject(),
 
@@ -147,9 +165,9 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core")
-                .versionAsInProject(),
+                        .versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.inject").artifactId("jersey-hk2").versionAsInProject()
-                ));
+        ));
 
         final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
         if (localRepository != null) {
@@ -243,7 +261,7 @@ public abstract class AbstractHttpServiceTest {
         Client c = ClientBuilder.newClient();
         final WebTarget target = c.target(baseUri);
 
-        String result = target.path("/status").request().build("GET").invoke().readEntity(String.class);
+        String result = target.path("/status2").request().build("GET").invoke().readEntity(String.class);
 
         LOGGER.info("JERSEY RESULT = " + result);
         assertEquals("active", result);
