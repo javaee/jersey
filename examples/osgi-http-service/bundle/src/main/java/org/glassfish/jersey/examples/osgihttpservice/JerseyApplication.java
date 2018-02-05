@@ -46,9 +46,10 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class JerseyApplication extends ResourceConfig {
 
     public JerseyApplication() {
-        property("contextConfig", new ClassPathXmlApplicationContext("spring-context.xml"));
+        property("contextConfig", new ClassPathXmlApplicationContext(
+                "org/glassfish/jersey/examples/osgihttpservice/spring/spring-context.xml"));
 
-        packages("org.glassfish.jersey.examples.osgihttpservice.spring");
+        packages(false, "org.glassfish.jersey.examples.osgihttpservice.spring");
         register(StatusResource.class);
     }
 }

@@ -116,7 +116,7 @@ public abstract class AbstractHttpServiceTest {
                 systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
 
                 // do not remove the following line
-                // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
+                systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
 
                 // uncomment for logging (do not remove the following two lines)
                 // mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
@@ -135,6 +135,16 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-utils").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("javax.inject").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("aopalliance-repackaged").versionAsInProject(),
+
+                // ASM
+                mavenBundle().groupId("org.ow2.asm").artifactId("asm").versionAsInProject(),
+                mavenBundle().groupId("org.ow2.asm").artifactId("asm-commons").versionAsInProject(),
+                mavenBundle().groupId("org.ow2.asm").artifactId("asm-tree").versionAsInProject(),
+
+                // xbean
+                mavenBundle().groupId("org.apache.xbean").artifactId("xbean-finder").versionAsInProject(),
+                mavenBundle().groupId("org.apache.xbean").artifactId("xbean-bundleutils").versionAsInProject(),
+
                 mavenBundle().groupId("org.javassist").artifactId("javassist").versionAsInProject(),
 
                 // Spring
@@ -180,14 +190,17 @@ public abstract class AbstractHttpServiceTest {
 
     public List<Option> grizzlyOptions() {
         return Arrays.asList(options(
-                mavenBundle().groupId("com.sun.grizzly.osgi").artifactId("grizzly-httpservice-bundle").versionAsInProject()
+                mavenBundle().groupId("com.sun.grizzly.osgi").artifactId("grizzly-httpservice-bundle").versionAsInProject(),
+                mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").versionAsInProject()
         ));
     }
 
     public List<Option> jettyOptions() {
         return Arrays.asList(options(
                 mavenBundle().groupId("org.ops4j.pax.web").artifactId("pax-web-jetty-bundle").versionAsInProject(),
-                mavenBundle().groupId("org.ops4j.pax.web").artifactId("pax-web-extender-war").versionAsInProject()));
+                mavenBundle().groupId("org.ops4j.pax.web").artifactId("pax-web-spi").versionAsInProject(),
+                mavenBundle().groupId("org.ops4j.pax.web").artifactId("pax-web-api").versionAsInProject()
+        ));
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -264,7 +277,7 @@ public abstract class AbstractHttpServiceTest {
         String result = target.path("/status2").request().build("GET").invoke().readEntity(String.class);
 
         LOGGER.info("JERSEY RESULT = " + result);
-        assertEquals("active", result);
+        assertEquals("status from generator", result);
     }
 
     public static int getProperty(final String varName, int defaultValue) {

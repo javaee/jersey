@@ -133,7 +133,7 @@
                             org.glassfish.jersey.examples.osgihttpservice.spring
                         </Export-Package>
                         <Import-Package>
-                            javax.servlet.*;version="[2.4,5.0)",
+                            javax.servlet.*;version="[3.0,5.0)",
                             org.springframework.expression,
                             org.springframework.beans.factory,
                             org.springframework.beans.factory.xml,

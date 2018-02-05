@@ -3,5 +3,6 @@
        xsi:schemaLocation="
        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean class="org.glassfish.jersey.examples.osgihttpservice.spring.SpringResource"/>
+    <bean id="statusGenerator"
+          class="org.glassfish.jersey.examples.osgihttpservice.spring.impl.DefaultStatusGenerator"/>
 </beans>
