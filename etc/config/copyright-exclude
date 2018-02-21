@@ -76,3 +76,5 @@ build.readme
 /core-server/src/main/java/jersey/repackaged
 /media/json-jackson/src/main/java/org/glassfish/jersey/jackson/internal/jackson
 /examples/bean-validation-webapp/src/main/webapp/fonts
+/META-INF/NOTICE.txt
+NOTICE.txt

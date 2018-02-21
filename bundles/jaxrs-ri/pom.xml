@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2018 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -279,6 +279,7 @@
                             <includeGroupIds>javax.ws.rs,org.glassfish.jersey.core,org.glassfish.jersey.containers,org.glassfish.jersey.jaxb,org.glassfish.jersey.inject</includeGroupIds>
                             <includeClassifiers>sources</includeClassifiers>
                             <outputDirectory>${generated.src.dir}</outputDirectory>
+                            <excludes>**/NOTICE.txt</excludes>
                         </configuration>
                     </execution>
                 </executions>
@@ -321,6 +322,32 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact> <!-- jersey artifacts -->
+                                    <excludes>
+                                        <exclude>META-INF/NOTICE.txt</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>*:*</artifact> <!-- 3rd party artifacts -->
+                                    <excludes>
+                                        <exclude>META-INF/DEPENDENCIES.txt</exclude>
+                                        <exclude>META-INF/LICENSE.txt</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <!-- producing zipped archives -->
             <plugin>
@@ -351,6 +378,29 @@
                                 <descriptor>${project.basedir}/src/main/assembly/assembly-src.xml</descriptor>
                             </descriptors>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>install</phase>
+                        <configuration>
+                            <tasks>
+                                <jar destfile="${project.build.directory}/${artifactId}.jar" update="true">
+                                    <zipfileset dir="../.." includes="NOTICE.txt" prefix="META-INF"/>
+                                </jar>
+                                <jar destfile="${project.build.directory}/${artifactId}-sources.jar" update="true">
+                                    <zipfileset dir="../.." includes="NOTICE.txt" prefix="META-INF"/>
+                                </jar>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
