@@ -103,6 +103,9 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     private static final Type REQUEST_TYPE = (new GenericType<Ref<Request>>() {}).getType();
     private static final Type RESPONSE_TYPE = (new GenericType<Ref<Response>>() {}).getType();
 
+    private static final Type HTTP_SERVLET_REQUEST_TYPE = (new GenericType<Ref<HttpServletRequest>>() {}).getType();
+    private static final Type HTTP_SERVLET_RESPONSE_TYPE = (new GenericType<Ref<HttpServletResponse>>() {}).getType();
+
     private static final int INTERNAL_SERVER_ERROR = javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
 
     /**
@@ -123,11 +126,31 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     }
 
     /**
+     * Referencing factory for HttpServletRequest.
+     */
+    private static class HttpServletRequestReferencingFactory extends ReferencingFactory<HttpServletRequest> {
+        @Inject
+        public HttpServletRequestReferencingFactory(final Provider<Ref<HttpServletRequest>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    /**
      * Referencing factory for Jetty response.
      */
     private static class JettyResponseReferencingFactory extends ReferencingFactory<Response> {
         @Inject
         public JettyResponseReferencingFactory(final Provider<Ref<Response>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    /**
+     * Referencing factory for HttpServletResponse.
+     */
+    private static class HttpServletResponseReferencingFactory extends ReferencingFactory<HttpServletResponse> {
+        @Inject
+        public HttpServletResponseReferencingFactory(final Provider<Ref<HttpServletResponse>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -148,10 +171,20 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
             bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new GenericType<Ref<Request>>() {})
                     .in(RequestScoped.class);
 
+            bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class)
+                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+            bindFactory(ReferencingFactory.<HttpServletRequest>referenceFactory())
+                    .to(new GenericType<Ref<HttpServletRequest>>() {}).in(RequestScoped.class);
+
             bindFactory(JettyResponseReferencingFactory.class).to(Response.class)
                     .proxy(false).in(RequestScoped.class);
             bindFactory(ReferencingFactory.<Response>referenceFactory()).to(new GenericType<Ref<Response>>() {})
                     .in(RequestScoped.class);
+
+            bindFactory(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class)
+                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+            bindFactory(ReferencingFactory.<HttpServletResponse>referenceFactory())
+                    .to(new GenericType<Ref<HttpServletResponse>>() {}).in(RequestScoped.class);
         }
     }
 
