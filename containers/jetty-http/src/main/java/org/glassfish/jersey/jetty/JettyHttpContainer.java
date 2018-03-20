@@ -197,7 +197,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     private URI getRequestUri(final Request request, final URI baseUri) {
         try {
             final String serverAddress = getServerAddress(baseUri);
-            String uri = request.getRequestURI();
+            String uri = request.getPathInfo();
 
             final String queryString = request.getQueryString();
             if (queryString != null) {
