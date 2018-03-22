@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2018 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,10 +41,14 @@
 package org.glassfish.jersey.tests.integration.jersey2846;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
-import java.util.function.Predicate;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
@@ -143,10 +147,27 @@ public class Jersey2846ITCase extends JerseyTest {
     }
 
     private int matchingTempFiles(final String tempDir) throws IOException {
-        return (int) Files.walk(Paths.get(tempDir)).filter(path -> {
-            final String name = path.getFileName().toString();
-            return (name.startsWith("rep") || name.startsWith("MIME"))
-                   && name.endsWith("tmp");
-        }).count();
+        AtomicInteger count = new AtomicInteger(0);
+        Files.walkFileTree(Paths.get(tempDir), new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Path name = file.getFileName();
+                if ((name.startsWith("rep") || name.startsWith("MIME")) && name.endsWith("tmp")) {
+                    count.incrementAndGet();
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        return count.get();
     }
 }
