@@ -200,8 +200,27 @@ class NettyResponseWriter implements ContainerResponseWriter {
 
     @Override
     public void failure(Throwable error) {
-        ctx.writeAndFlush(new DefaultFullHttpResponse(req.protocolVersion(), HttpResponseStatus.INTERNAL_SERVER_ERROR))
-           .addListener(ChannelFutureListener.CLOSE);
+        try {
+            ctx.writeAndFlush(new DefaultFullHttpResponse(req.protocolVersion(), HttpResponseStatus.INTERNAL_SERVER_ERROR))
+               .addListener(ChannelFutureListener.CLOSE);
+        } catch (Throwable t) {
+            error.addSuppressed(t);
+        } finally {
+            rethrow(error);
+        }
+    }
+
+    /**
+     * Rethrow the original exception as required by JAX-RS, 3.3.4
+     *
+     * @param error throwable to be re-thrown
+     */
+    private void rethrow(Throwable error) {
+        if (error instanceof RuntimeException) {
+            throw (RuntimeException) error;
+        } else {
+            throw new ContainerException(error);
+        }
     }
 
     @Override
