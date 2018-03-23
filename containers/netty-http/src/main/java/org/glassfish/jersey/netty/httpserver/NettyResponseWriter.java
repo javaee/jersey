@@ -142,12 +142,7 @@ class NettyResponseWriter implements ContainerResponseWriter {
         if (req.method() != HttpMethod.HEAD && (contentLength > 0 || contentLength == -1)) {
 
             JerseyChunkedInput jerseyChunkedInput = new JerseyChunkedInput(ctx.channel());
-
-            if (HttpUtil.isTransferEncodingChunked(response)) {
-                ctx.write(new HttpChunkedInput(jerseyChunkedInput)).addListener(FLUSH_FUTURE);
-            } else {
-                ctx.write(new HttpChunkedInput(jerseyChunkedInput)).addListener(FLUSH_FUTURE);
-            }
+            ctx.writeAndFlush(new HttpChunkedInput(jerseyChunkedInput));
             return jerseyChunkedInput;
 
         } else {
