@@ -58,8 +58,10 @@ public interface Opcodes {
     int V1_6 = 0 << 16 | 50;
     int V1_7 = 0 << 16 | 51;
     int V1_8 = 0 << 16 | 52;
-    // added "support" for java 9 compiled classes
+    // added "support" for java 9, 10, 11 compiled classes
     int V9 = 0 << 16 | 53;
+    int V10 = 0 << 16 | 54;
+    int V11 = 0 << 16 | 55;
 
     // access flags
 
