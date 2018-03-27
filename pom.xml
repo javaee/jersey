@@ -163,11 +163,35 @@
             <name>CDDL 1.1</name>
             <url>https://oss.oracle.com/licenses/CDDL+GPL-1.1</url>
             <distribution>repo</distribution>
+            <comments>Except for Guava, JSR-166 files, Dropwizard Monitoring inspired classes, ASM and Jackson JAX-RS Providers.
+                See also https://github.com/jersey/jersey/blob/master/NOTICE.txt</comments>
         </license>
         <license>
             <name>GPL2 w/ CPE</name>
             <url>https://oss.oracle.com/licenses/CDDL+GPL-1.1</url>
             <distribution>repo</distribution>
+            <comments>Except for Guava, JSR-166 files, Dropwizard Monitoring inspired classes, ASM and Jackson JAX-RS Providers.
+                See also https://github.com/jersey/jersey/blob/master/NOTICE.txt</comments>
+        </license>
+        <license>
+            <name>Apache License, 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+            <comments>Google Guava @ org.glassfish.jersey.internal.guava,
+                      Dropwizard Monitoring inspired classes @ org.glassfish.jersey.server.internal.monitoring.core and
+                      Jackson JAX-RS Providers @ org.glassfish.jersey.jackson.internal.jackson.jaxrs</comments>
+        </license>
+        <license>
+            <name>Public Domain</name>
+            <url>https://creativecommons.org/publicdomain/zero/1.0/</url>
+            <distribution>repo</distribution>
+            <comments>JSR-166 Extension to JEP 266 @ org.glassfish.jersey.internal.jsr166</comments>
+        </license>
+        <license>
+            <name>Modified BSD</name>
+            <url>http://asm.objectweb.org/license.html</url>
+            <distribution>repo</distribution>
+            <comments>ASM @ jersey.repackaged.org.objectweb.asm</comments>
         </license>
     </licenses>
 

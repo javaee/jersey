@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2018 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,29 @@
     <description>
         Jersey JSON Jackson (2.x) entity providers support module.
     </description>
+
+    <licenses>
+        <license>
+            <name>Common Development and Distribution License (CDDL), Version 1.1</name>
+            <url>https://oss.oracle.com/licenses/CDDL-1.1</url>
+            <distribution>repo</distribution>
+            <comments>Except for Jackson JAX-RS Providers.
+                See also https://github.com/jersey/jersey/blob/master/NOTICE.txt</comments>
+        </license>
+        <license>
+            <name>The GNU General Public License (GPL), Version 2, With Classpath Exception</name>
+            <url>https://github.com/jersey/jersey/blob/master/LICENSE.html</url> <!-- Updated CPE wording -->
+            <distribution>repo</distribution>
+            <comments>Except for Jackson JAX-RS Providers.
+                See also https://github.com/jersey/jersey/blob/master/NOTICE.txt</comments>
+        </license>
+        <license>
+            <name>Apache License, 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+            <comments>Jackson JAX-RS Providers @ org.glassfish.jersey.jackson.internal.jackson.jaxrs</comments>
+        </license>
+    </licenses>
 
     <build>
         <plugins>
