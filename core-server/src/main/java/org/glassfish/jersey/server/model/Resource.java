@@ -771,7 +771,7 @@ public final class Resource implements Routed, ResourceModelComponent {
      * class does not represent a resource.
      */
     public static Builder builder(Class<?> resourceClass, boolean disableValidation) {
-        final Builder builder = new IntrospectionModeller(resourceClass, disableValidation).createResourceBuilder();
+        final Builder builder = new IntrospectionModeller(resourceClass, null, disableValidation).createResourceBuilder();
         return builder.isEmpty() ? null : builder;
     }
 
@@ -797,7 +797,22 @@ public final class Resource implements Routed, ResourceModelComponent {
      * class does not represent a resource.
      */
     public static Resource from(Class<?> resourceClass, boolean disableValidation) {
-        final Builder builder = new IntrospectionModeller(resourceClass, disableValidation).createResourceBuilder();
+        return from(resourceClass, null, disableValidation);
+    }
+
+    /**
+     * Create a resource model initialized by introspecting an annotated
+     * JAX-RS resource class.
+     *
+     * @param resourceClass     resource class to be modelled.
+     * @param resourceInstance  resource instance to be modelled.
+     * @param disableValidation if set to {@code true}, then any model validation checks will be disabled.
+     * @return resource model initialized by the class or {@code null} if the
+     * class does not represent a resource.
+     */
+    public static Resource from(Class<?> resourceClass, Object resourceInstance, boolean disableValidation) {
+        final Builder builder = new IntrospectionModeller(resourceClass, resourceInstance,
+                disableValidation).createResourceBuilder();
         return builder.isEmpty() ? null : builder.build();
     }
 
