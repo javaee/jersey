@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -197,6 +198,14 @@ abstract class LoggingInterceptor implements WriterInterceptor {
         }
     }
 
+    void printPrefixedHeaders(final StringBuilder b,
+                              final long id,
+                              final String prefix,
+                              final Supplier<MultivaluedMap<String, String>> lazyHeaders) {
+        MultivaluedMap<String, String> headers = lazyHeaders.get();
+        printPrefixedHeaders(b, id, prefix, headers);
+    }
+
     Set<Map.Entry<String, List<String>>> getSortedHeaders(final Set<Map.Entry<String, List<String>>> headers) {
         final TreeSet<Map.Entry<String, List<String>>> sortedHeaders = new TreeSet<Map.Entry<String, List<String>>>(COMPARATOR);
         sortedHeaders.addAll(headers);
@@ -266,7 +275,7 @@ abstract class LoggingInterceptor implements WriterInterceptor {
      */
     class LoggingStream extends FilterOutputStream {
 
-        private final StringBuilder b;
+        private final Supplier<StringBuilder> sbs;
         private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         /**
@@ -276,15 +285,26 @@ abstract class LoggingInterceptor implements WriterInterceptor {
          * @param inner the underlying output stream.
          */
         LoggingStream(final StringBuilder b, final OutputStream inner) {
+            this(() -> b, inner);
+        }
+
+        /**
+         * Creates {@code LoggingStream} with the entity supplier and the underlying output stream as parameters.
+         *
+         * @param sbs   contains the entity supplier to log.
+         * @param inner the underlying output stream.
+         */
+        LoggingStream(final Supplier<StringBuilder> sbs, final OutputStream inner) {
             super(inner);
 
-            this.b = b;
+            this.sbs = sbs;
         }
 
         StringBuilder getStringBuilder(final Charset charset) {
             // write entity to the builder
             final byte[] entity = baos.toByteArray();
 
+            StringBuilder b = sbs.get();
             b.append(new String(entity, 0, Math.min(entity.length, maxEntitySize), charset));
             if (entity.length > maxEntitySize) {
                 b.append("...more...");

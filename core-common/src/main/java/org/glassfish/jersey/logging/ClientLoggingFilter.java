@@ -42,6 +42,7 @@ package org.glassfish.jersey.logging;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -99,18 +100,22 @@ final class ClientLoggingFilter extends LoggingInterceptor implements ClientRequ
         final long id = _id.incrementAndGet();
         context.setProperty(LOGGING_ID_PROPERTY, id);
 
-        final StringBuilder b = new StringBuilder();
+        Supplier<StringBuilder> sbs = () -> {
+            final StringBuilder b = new StringBuilder();
 
-        printRequestLine(b, "Sending client request", id, context.getMethod(), context.getUri());
-        printPrefixedHeaders(b, id, REQUEST_PREFIX, context.getStringHeaders());
+            printRequestLine(b, "Sending client request", id, context.getMethod(), context.getUri());
+            printPrefixedHeaders(b, id, REQUEST_PREFIX, context::getStringHeaders);
+
+            return b;
+        };
 
         if (context.hasEntity() && printEntity(verbosity, context.getMediaType())) {
-            final OutputStream stream = new LoggingStream(b, context.getEntityStream());
+            final OutputStream stream = new LoggingStream(sbs, context.getEntityStream());
             context.setEntityStream(stream);
             context.setProperty(ENTITY_LOGGER_PROPERTY, stream);
             // not calling log(b) here - it will be called by the interceptor
         } else {
-            log(b);
+            log(sbs.get());
         }
     }
 
