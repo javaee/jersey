@@ -49,8 +49,10 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
@@ -1068,6 +1070,10 @@ public class JerseyUriBuilderTest {
         public Object locator() {
             return null;
         }
+
+        @PUT
+        @Path("complex/{id3: \\p{XDigit}{8}(?:-\\p{XDigit}{4}){3}-\\p{XDigit}{12}}")
+        public void put() {}
     }
 
     @Test
@@ -1082,6 +1088,11 @@ public class JerseyUriBuilderTest {
         final Method locator = ResourceWithTemplateRegex.class.getMethod("locator");
         ub = UriBuilder.fromUri("http://localhost:8080/base").path(get).path(locator).build("foo", "bar");
         Assert.assertEquals(URI.create("http://localhost:8080/base/method/foo/locator/bar"), ub);
+
+        final Method put = ResourceWithTemplateRegex.class.getMethod("put");
+        final UUID uuid = UUID.randomUUID();
+        ub = UriBuilder.fromUri("http://localhost:8080/base").path(put).build(uuid);
+        Assert.assertEquals(URI.create("http://localhost:8080/base/complex/" + uuid), ub);
     }
 
     interface GenericInterface<T, U> {
