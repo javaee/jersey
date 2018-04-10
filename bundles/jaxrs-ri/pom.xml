@@ -386,8 +386,8 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy</id>
-                        <phase>install</phase>
+                        <id>xcopy</id>
+                        <phase>package</phase>
                         <configuration>
                             <tasks>
                                 <jar destfile="${project.build.directory}/${artifactId}.jar" update="true">

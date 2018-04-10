@@ -110,6 +110,7 @@
                 <version>1.6</version>
                 <executions>
                     <execution>
+                        <id>1</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>addSources</goal>
@@ -120,7 +121,52 @@
                             <goal>compileTests</goal>
                             <goal>removeStubs</goal>
                             <goal>removeTestStubs</goal>
+                            <goal>groovydoc</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>2</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <target>
+                                <jar destfile="${project.build.directory}/${project.artifactId}-javadoc.jar">
+                                    <zipfileset dir="${project.build.directory}/gapidocs"/>
+                                </jar>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>3</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.build.directory}/${project.artifactId}-javadoc.jar</file>
+                                    <type>jar</type>
+                                    <classifier>javadoc</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
