@@ -46,7 +46,7 @@
     <parent>
         <groupId>org.glassfish.jersey.bundles</groupId>
         <artifactId>project</artifactId>
-        <version>2.27-SNAPSHOT</version>
+        <version>2.27</version>
     </parent>
 
     <artifactId>jaxrs-ri</artifactId>
@@ -391,10 +391,10 @@
                         <configuration>
                             <tasks>
                                 <jar destfile="${project.build.directory}/${artifactId}.jar" update="true">
-                                    <zipfileset dir="../.." includes="NOTICE.txt" prefix="META-INF"/>
+                                    <zipfileset dir="../.." includes="NOTICE.txt" prefix="META-INF" />
                                 </jar>
                                 <jar destfile="${project.build.directory}/${artifactId}-sources.jar" update="true">
-                                    <zipfileset dir="../.." includes="NOTICE.txt" prefix="META-INF"/>
+                                    <zipfileset dir="../.." includes="NOTICE.txt" prefix="META-INF" />
                                 </jar>
                             </tasks>
                         </configuration>
