@@ -58,6 +58,7 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -70,6 +71,7 @@ import javax.inject.Provider;
 
 import org.glassfish.jersey.client.oauth2.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
@@ -294,6 +296,12 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
                 refreshTokenProperties);
     }
 
+    private String getBasicAuthorizationHeader() {
+        String authorizationCredentials = clientIdentifier.getClientId() + ":" + clientIdentifier.getClientSecret();
+
+        return "Basic " + Base64.encodeAsString(authorizationCredentials.getBytes());
+    }
+
     private final String accessTokenUri;
     private final String authorizationUri;
     private final String refreshTokenUri;
@@ -330,6 +338,7 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
 
         final Response response = client.target(accessTokenUri)
                 .request(MediaType.APPLICATION_JSON_TYPE)
+                .header(HttpHeaders.AUTHORIZATION, getBasicAuthorizationHeader())
                 .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
 
         if (response.getStatus() != 200) {
