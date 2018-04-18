@@ -72,7 +72,7 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
 
         private final HttpServer server;
 
-        private GrizzlyTestContainer(final URI baseUri, final DeploymentContext context) {
+        private GrizzlyTestContainer(final URI baseUri, final DeploymentContext context, GrizzlyServerConfigurator configurator) {
             this.baseUri = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
 
             if (LOGGER.isLoggable(Level.INFO)) {
@@ -81,6 +81,10 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
             }
 
             this.server = GrizzlyHttpServerFactory.createHttpServer(this.baseUri, context.getResourceConfig(), false);
+
+            if (configurator != null) {
+               configurator.configureServer(server);
+            }
         }
 
         @Override
@@ -128,6 +132,32 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
 
     @Override
     public TestContainer create(final URI baseUri, final DeploymentContext context) {
-        return new GrizzlyTestContainer(baseUri, context);
+        return new GrizzlyTestContainer(baseUri, context, configurator);
+    }
+
+    private final GrizzlyServerConfigurator configurator;
+    public GrizzlyTestContainerFactory() {
+        this(null);
+    }
+
+    /**
+     * Create a custom GrizzlyTestContainerFactory which supports configuration of the
+     * Grizzly HttpServer instance
+     */
+    public GrizzlyTestContainerFactory(GrizzlyServerConfigurator configurator) {
+        this.configurator = configurator;
+    }
+
+    /**
+     * Allows custom configuration of a Grizzly HttpServer
+     */
+    public static interface GrizzlyServerConfigurator {
+        /**
+         * This is called right after the HttpServer has been created, and allows the test case to
+         * make custom configurations such as add-ons or adjusting the ServerConfiguration.
+         *
+         * @param grizzlyServer
+         */
+        void configureServer(HttpServer grizzlyServer);
     }
 }
