@@ -1472,6 +1472,12 @@
             </dependency>
 
             <dependency>
+                <groupId>io.undertow</groupId>
+                <artifactId>undertow-core</artifactId>
+                <version>${undertow.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.codehaus.jettison</groupId>
                 <artifactId>jettison</artifactId>
                 <version>${jettison.version}</version>
@@ -1958,6 +1964,7 @@
         <simple.version>6.0.1</simple.version>
         <slf4j.version>1.7.12</slf4j.version>
         <spring4.version>4.3.4.RELEASE</spring4.version>
+        <undertow.version>1.4.21.Final</undertow.version>
         <validation.impl.version>5.1.3.Final</validation.impl.version> <!-- 5.3.3.Final doesn't work - osgi bv tests -->
         <weld.version>2.2.14.Final</weld.version> <!-- 2.4.1 doesn't work - bv tests -->
         <weld3.version>3.0.0.Final</weld3.version>
