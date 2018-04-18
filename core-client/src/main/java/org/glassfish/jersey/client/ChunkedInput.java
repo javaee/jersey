@@ -131,6 +131,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
 
             int data;
             int dPos;
+            boolean foundChunk = false;
             do {
                 dPos = 0;
                 while ((data = in.read()) != -1) {
@@ -141,6 +142,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                     if (delimiter != null && b == delimiter[dPos]) {
                         delimiterBuffer[dPos++] = b;
                         if (dPos == delimiter.length) {
+                            foundChunk = true;
                             // found chunk delimiter
                             break;
                         }
@@ -156,6 +158,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                             dPos = 0;
                         } else if (matched == delimiter.length) {
                             // found chunk delimiter
+                            foundChunk = true;
                             break;
                         } else {
                             // one or more elements of a previous buffered delimiter
@@ -173,6 +176,10 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
             if (dPos > 0 && dPos != getDelimiter(dPos - 1, delimiterBuffer).length) {
                 // flush the delimiter buffer, if not empty - parsing finished in the middle of a potential delimiter sequence
                 buffer.write(delimiterBuffer, 0, dPos);
+            }
+            if (!foundChunk){
+                //non valid chunk found as no delimiter found
+                return null;
             }
 
             return (buffer.size() > 0) ? buffer.toByteArray() : null;
