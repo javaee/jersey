@@ -351,7 +351,9 @@ public class HttpUrlConnector implements Connector {
         secureConnection(request.getClient(), uc);
 
         final Object entity = request.getEntity();
-        if (entity != null) {
+        String contentLength = getContentLength(headers);
+        
+        if (entity != null || "0".equals(contentLength) ) {
             RequestEntityProcessing entityProcessing = request.resolveProperty(
                     ClientProperties.REQUEST_ENTITY_PROCESSING, RequestEntityProcessing.class);
 
@@ -410,6 +412,14 @@ public class HttpUrlConnector implements Connector {
         responseContext.setEntityStream(getInputStream(uc));
 
         return responseContext;
+    }
+
+    private String getContentLength(MultivalueMap<String, String> headers) {
+        List<String> contentLength = headers.get("Content-Length");
+        if (contentLength != null && contentLength.size() > 0) {
+            return contentLength.get(0);
+        }
+        return null;
     }
 
     private void setOutboundHeaders(MultivaluedMap<String, String> headers, HttpURLConnection uc) {
