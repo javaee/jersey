@@ -443,6 +443,15 @@ public class EventProcessor implements Runnable, EventListener {
             this.disableKeepAlive = true;
             return this;
         }
+        /**
+         * setting initial event id
+         * @param lastEventId
+         * @return
+         */
+        public Builder lastEventId(String lastEventId){
+            this.lastEventId = lastEventId;
+            return this;
+        }
 
         /**
          * Build the {@link EventProcessor}.

@@ -283,6 +283,20 @@ public class EventSource implements EventListener {
      * @throws IllegalStateException in case the event source has already been opened earlier.
      */
     public void open() {
+        open(null);
+    }
+
+    /**
+     * Open the connection to the supplied SSE underlying {@link WebTarget web
+     * target} and start processing incoming {@link InboundEvent events}
+     * beginning with the one last seen.
+     * 
+     * @param lastEventId
+     *            the id of the last event, the caller has seen before
+     * @throws IllegalStateException
+     *             in case the event source has already been opened earlier.
+     */
+    public void open(String lastEventId) {
         if (!state.compareAndSet(EventProcessor.State.READY, EventProcessor.State.OPEN)) {
             switch (state.get()) {
                 case OPEN:
@@ -297,6 +311,10 @@ public class EventSource implements EventListener {
                               .boundListeners(boundListeners)
                               .unboundListeners(unboundListeners)
                               .reconnectDelay(reconnectDelay, TimeUnit.MILLISECONDS);
+
+        if (lastEventId != null) {
+            builder.lastEventId(lastEventId);
+        }
 
         if (disableKeepAlive) {
             builder.disableKeepAlive();
