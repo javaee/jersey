@@ -50,6 +50,8 @@ import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -88,6 +90,20 @@ public class RankedComparatorTest {
             assertTrue(val <= max);
             max = val;
         }
+    }
+
+    @Test
+    public void testEqualPrioritiesComparator() {
+        List<RankedProvider<Object>> list = new LinkedList<>();
+        list.add(new RankedProvider<Object>(new F200()));
+        list.add(new RankedProvider<Object>(new FF200()));
+        List<RankedProvider<Object>> copy = new LinkedList<>(list);
+
+        Collections.sort(list, new RankedComparator<Object>(RankedComparator.Order.ASCENDING));
+        assertEquals(copy, list);
+
+        Collections.sort(list, new RankedComparator<Object>(RankedComparator.Order.DESCENDING));
+        assertEquals(copy, list);
     }
 
     @Priority(0)
