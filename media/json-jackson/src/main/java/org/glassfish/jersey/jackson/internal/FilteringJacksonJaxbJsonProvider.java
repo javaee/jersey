@@ -80,10 +80,10 @@ import com.fasterxml.jackson.databind.ser.PropertyFilter;
  * @author Michal Gajdos
  */
 @Singleton
-public final class FilteringJacksonJaxbJsonProvider extends JacksonJaxbJsonProvider {
+public class FilteringJacksonJaxbJsonProvider extends JacksonJaxbJsonProvider {
 
     @Inject
-    private Provider<ObjectProvider<FilterProvider>> provider;
+    protected Provider<ObjectProvider<FilterProvider>> provider;
 
     @Override
     protected JsonEndpointConfig _configForWriting(final ObjectMapper mapper, final Annotation[] annotations,
