@@ -92,15 +92,13 @@ final class BasicAuthenticator {
      * Adds authentication information to the request.
      *
      * @param request Request context.
-     * @throws RequestAuthenticationException in case that basic credentials missing or are in invalid format
      */
-    public void filterRequest(ClientRequestContext request) throws RequestAuthenticationException {
+    public void filterRequest(ClientRequestContext request) {
         HttpAuthenticationFilter.Credentials credentials = HttpAuthenticationFilter.getCredentials(request,
                 defaultCredentials, HttpAuthenticationFilter.Type.BASIC);
-        if (credentials == null) {
-            throw new RequestAuthenticationException(LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_BASIC());
+        if (credentials != null) {
+            request.getHeaders().add(HttpHeaders.AUTHORIZATION, calculateAuthentication(credentials));
         }
-        request.getHeaders().add(HttpHeaders.AUTHORIZATION, calculateAuthentication(credentials));
     }
 
     /**
