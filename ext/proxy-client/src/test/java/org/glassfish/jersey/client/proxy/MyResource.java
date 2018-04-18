@@ -187,4 +187,9 @@ public class MyResource implements MyResourceIfc {
     public String putIt(MyBean dummyBean) {
         return headers.getHeaderString(HttpHeaders.CONTENT_TYPE);
     }
+
+    @Override
+    public String postItSpecial(MyMessage request) {
+        return request.getValue();
+    }
 }

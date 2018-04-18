@@ -41,6 +41,7 @@
 package org.glassfish.jersey.client.proxy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -48,6 +49,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.HttpHeaders;
@@ -61,6 +63,8 @@ import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import static org.glassfish.jersey.client.proxy.SpecialFormatter.SPECIAL_FORMATTER_PROPERTY_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -82,8 +86,10 @@ public class WebResourceFactoryTest extends JerseyTest {
         // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory
         // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory
         enable(TestProperties.LOG_TRAFFIC);
-        //        enable(TestProperties.DUMP_ENTITY);
-        return new ResourceConfig(MyResource.class);
+        ResourceConfig resourceConfig = new ResourceConfig(MyResource.class);
+        // Any better way to do this??
+        resourceConfig.register(new MyMessageBodyReader());
+        return resourceConfig;
     }
 
     @Override
@@ -95,7 +101,8 @@ public class WebResourceFactoryTest extends JerseyTest {
         final MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>(1);
         headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML);
         resourceWithXML = WebResourceFactory
-                .newResource(MyResourceIfc.class, target(), false, headers, Collections.<Cookie>emptyList(), new Form());
+                .newResource(MyResourceIfc.class, target(), false, headers, Collections.<Cookie>emptyList(), new Form(),
+                        null);
     }
 
     @Test
@@ -348,6 +355,20 @@ public class WebResourceFactoryTest extends JerseyTest {
         assertEquals(expected, actual);
     }
 
+    @Test public void testPutItSecret() {
+        WebTarget myTarget = target();
+        myTarget.register(new MyMessageBodyWriter());
+        myTarget.register(new SpecialWriterInterceptor());
+
+        resource = WebResourceFactory.newResource(MyResourceIfc.class, myTarget, false,
+                new MultivaluedHashMap<>(), Collections.emptyList(), new Form(),
+                (builder, proxy, method, args) ->
+                        builder.property(SPECIAL_FORMATTER_PROPERTY_KEY,
+                                Arrays.asList(method.getDeclaredAnnotations())));
+
+        assertEquals("a-response-secret-message", resource.postItSpecial(new MyMessage("a-response")));
+    }
+  
     @Test
     public void testHashCode() throws Exception {
         int h1 = resource.hashCode();
