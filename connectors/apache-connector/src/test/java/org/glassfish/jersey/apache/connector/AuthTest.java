@@ -58,17 +58,20 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.client.authentication.ResponseAuthenticationException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Paul Sandoz
@@ -229,6 +232,40 @@ public class AuthTest extends JerseyTest {
 
             return e;
         }
+
+        @GET
+        @Path("content")
+        public String getWithContent(@Context HttpHeaders h) {
+            requestCount++;
+            String value = h.getRequestHeaders().getFirst("Authorization");
+            if (value == null) {
+                assertEquals(1, requestCount);
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Basic realm=\"WallyWorld\"")
+                            .entity("Forbidden").build());
+            } else {
+                assertTrue(requestCount > 1);
+            }
+
+            return "GET";
+        }
+
+        @GET
+        @Path("contentDigestAuth")
+        public String getWithContentDigestAuth(@Context HttpHeaders h) {
+            requestCount++;
+            String value = h.getRequestHeaders().getFirst("Authorization");
+            if (value == null) {
+                assertEquals(1, requestCount);
+                throw new WebApplicationException(
+                        Response.status(401).header("WWW-Authenticate", "Digest nonce=\"1234\"")
+                            .entity("Forbidden").build());
+            } else {
+                assertTrue(requestCount > 1);
+            }
+
+            return "GET";
+        }
     }
 
     @Test
@@ -371,5 +408,51 @@ public class AuthTest extends JerseyTest {
         WebTarget r = client.target(getBaseUri()).path("test");
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
+    }
+
+    @Test
+    public void testAuthGetWithBasicFilter() {
+        ClientConfig cc = new ClientConfig();
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+        cc.connectorProvider(new ApacheConnectorProvider());
+        cc.property(ApacheClientProperties.CONNECTION_MANAGER, cm);
+        Client client = ClientBuilder.newClient(cc);
+        client.register(HttpAuthenticationFeature.universalBuilder().build());
+        WebTarget r = client.target(getBaseUri()).path("test/content");
+
+        try {
+            assertEquals("GET", r.request().get(String.class));
+            fail();
+        } catch (ResponseAuthenticationException ex) {
+            // expected
+        }
+
+        // Verify the connection that was used for the request is available for reuse
+        // and no connections are leased
+        assertEquals(cm.getTotalStats().getAvailable(), 1);
+        assertEquals(cm.getTotalStats().getLeased(), 0);
+    }
+
+    @Test
+    public void testAuthGetWithDigestFilter() {
+        ClientConfig cc = new ClientConfig();
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+        cc.connectorProvider(new ApacheConnectorProvider());
+        cc.property(ApacheClientProperties.CONNECTION_MANAGER, cm);
+        Client client = ClientBuilder.newClient(cc);
+        client.register(HttpAuthenticationFeature.universalBuilder().build());
+        WebTarget r = client.target(getBaseUri()).path("test/contentDigestAuth");
+
+        try {
+            assertEquals("GET", r.request().get(String.class));
+            fail();
+        } catch (ResponseAuthenticationException ex) {
+            // expected
+        }
+
+        // Verify the connection that was used for the request is available for reuse
+        // and no connections are leased
+        assertEquals(cm.getTotalStats().getAvailable(), 1);
+        assertEquals(cm.getTotalStats().getLeased(), 0);
     }
 }

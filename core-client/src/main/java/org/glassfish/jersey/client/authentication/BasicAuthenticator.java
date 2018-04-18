@@ -40,6 +40,9 @@
 
 package org.glassfish.jersey.client.authentication;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.core.HttpHeaders;
@@ -120,6 +123,9 @@ final class BasicAuthenticator {
                     .getCredentials(request, defaultCredentials, HttpAuthenticationFilter.Type.BASIC);
 
             if (credentials == null) {
+                if (response.hasEntity()) {
+                    discardInputAndClose(response.getEntityStream());
+                }
                 throw new ResponseAuthenticationException(null, LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_BASIC());
             }
 
@@ -127,4 +133,23 @@ final class BasicAuthenticator {
         }
         return false;
     }
+
+    private static void discardInputAndClose(InputStream is) {
+      byte[] buf = new byte[4096];
+      try {
+          while (true) {
+              if (is.read(buf) <= 0) {
+                  break;
+              }
+          }
+      } catch (IOException ex) {
+          // ignore
+      } finally {
+          try {
+              is.close();
+          } catch (IOException ex) {
+              // ignore
+          }
+      }
+   }
 }
