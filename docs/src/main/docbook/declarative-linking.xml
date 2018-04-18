@@ -293,7 +293,8 @@ URI offers;</programlisting>
         </para>
 
         <para>
-            Resource links via <literal>@ProvideLink</literal> are currently not supported for link headers.
+            Resource links via <literal>@ProvideLink</literal> are supported and require the existence of
+            <literal>@InjectLinks</literal> on the entity or its ancestors. Both sources will be combined.
         </para>
     </section>
 

@@ -79,6 +79,7 @@ class EntityDescriptor {
     private Map<String, FieldDescriptor> nonLinkFields;
     private Map<String, FieldDescriptor> linkFields;
     private List<LinkHeaderDescriptor> linkHeaders;
+    private boolean injectLinkHeaders = false;
 
     /**
      * Construct an new descriptor by inspecting the supplied class.
@@ -109,6 +110,10 @@ class EntityDescriptor {
 
     List<LinkHeaderDescriptor> getLinkHeaders() {
         return linkHeaders;
+    }
+
+    boolean isInjectLinkHeaders() {
+        return injectLinkHeaders;
     }
 
     /**
@@ -170,6 +175,7 @@ class EntityDescriptor {
         }
         InjectLinks linkHeadersAnnotation = entityClass.getAnnotation(InjectLinks.class);
         if (linkHeadersAnnotation != null) {
+            injectLinkHeaders = true;
             for (InjectLink linkHeader : linkHeadersAnnotation.value()) {
                 linkHeaders.add(new LinkHeaderDescriptor(linkHeader));
             }

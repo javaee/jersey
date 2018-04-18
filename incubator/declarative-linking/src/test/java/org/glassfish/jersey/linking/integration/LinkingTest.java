@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.linking.integration;
 
+import java.util.List;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -49,8 +50,11 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.linking.integration.app.LinkingApplication;
 import org.glassfish.jersey.linking.integration.representations.OrderRequest;
 import org.glassfish.jersey.test.JerseyTest;
+import org.junit.Assert;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
 
 public class LinkingTest extends JerseyTest {
 
@@ -162,5 +166,14 @@ public class LinkingTest extends JerseyTest {
                     + "{uri:'/payments/p-1',params:{rel:'self'},uriBuilder:{absolute:false},rel:'self',rels:['self']},"
                     + "{uri:'/orders/1',params:{rel:'order'},uriBuilder:{absolute:false},rel:'order',rels:['order']}]}",
                 order, true);
+    }
+
+
+    @Test
+    public void linkHeadersAreCollectedFromBothAnnotations() throws Exception {
+        Response response = target().path("/info").request().get();
+        List<Object> links = response.getHeaders().get("Link");
+        Assert.assertThat(links.size(), is(2));
+        Assert.assertThat(links, hasItems("</orders>; rel=\"create-order\"", "</info>; rel=\"self\""));
     }
 }

@@ -45,9 +45,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
+import org.glassfish.jersey.linking.contributing.ResourceLinkContributionContext;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
 /**
@@ -74,14 +76,16 @@ class HeaderProcessor<T> {
     void processLinkHeaders(T entity,
                             UriInfo uriInfo,
                             ResourceMappingContext rmc,
+                            ResourceLinkContributionContext rlcc,
                             MultivaluedMap<String, Object> headers) {
-        List<String> headerValues = getLinkHeaderValues(entity, uriInfo, rmc);
+        List<String> headerValues = getLinkHeaderValues(entity, uriInfo, rmc, rlcc);
         for (String headerValue : headerValues) {
             headers.add("Link", headerValue);
         }
     }
 
-    List<String> getLinkHeaderValues(Object entity, UriInfo uriInfo, ResourceMappingContext rmc) {
+    List<String> getLinkHeaderValues(Object entity, UriInfo uriInfo, ResourceMappingContext rmc,
+            ResourceLinkContributionContext rlcc) {
         final List<Object> matchedResources = uriInfo.getMatchedResources();
 
         if (!matchedResources.isEmpty()) {
@@ -92,6 +96,17 @@ class HeaderProcessor<T> {
                 if (ELLinkBuilder.evaluateCondition(desc.getCondition(), entity, resource, entity)) {
                     String headerValue = getLinkHeaderValue(desc, entity, resource, uriInfo, rmc);
                     headerValues.add(headerValue);
+                }
+            }
+            if (instanceDescriptor.isInjectLinkHeaders()) {
+                List<ProvideLinkDescriptor> contributions = rlcc.getContributorsFor(entity.getClass());
+                for (ProvideLinkDescriptor contribution : contributions) {
+                    if (ELLinkBuilder.evaluateCondition(contribution.getCondition(),
+                            entity, contribution.getResource(), entity)) {
+                        URI uri = ELLinkBuilder.buildURI(contribution, entity, resource, entity, uriInfo, rmc);
+                        Link link = contribution.getLink(uri);
+                        headerValues.add(link.toString());
+                    }
                 }
             }
             return headerValues;

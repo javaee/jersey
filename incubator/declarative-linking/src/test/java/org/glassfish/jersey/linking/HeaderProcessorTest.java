@@ -44,20 +44,19 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.MatchResult;
-
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.linking.InjectLink.Extension;
+import org.glassfish.jersey.linking.contributing.ResourceLinkContributionContext;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.uri.UriTemplate;
-
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -225,6 +224,13 @@ public class HeaderProcessorTest {
         }
     };
 
+    protected final ResourceLinkContributionContext mockRlcc = new ResourceLinkContributionContext() {
+        @Override
+        public List<ProvideLinkDescriptor> getContributorsFor(Class<?> entityClass) {
+            return Collections.emptyList();
+        }
+    };
+
     @InjectLink(value = "A")
     public static class EntityA {
     }
@@ -234,7 +240,7 @@ public class HeaderProcessorTest {
         System.out.println("Literal");
         HeaderProcessor<EntityA> instance = new HeaderProcessor(EntityA.class);
         EntityA testClass = new EntityA();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals(1, headerValues.size());
         String headerValue = headerValues.get(0);
         assertEquals("</application/resources/A>", headerValue);
@@ -253,7 +259,7 @@ public class HeaderProcessorTest {
         System.out.println("EL");
         HeaderProcessor<EntityB> instance = new HeaderProcessor(EntityB.class);
         EntityB testClass = new EntityB();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals(1, headerValues.size());
         String headerValue = headerValues.get(0);
         assertEquals("</application/resources/B>", headerValue);
@@ -272,7 +278,7 @@ public class HeaderProcessorTest {
         System.out.println("Template Literal");
         HeaderProcessor<EntityC> instance = new HeaderProcessor(EntityC.class);
         EntityC testClass = new EntityC();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals(1, headerValues.size());
         String headerValue = headerValues.get(0);
         assertEquals("</application/resources/C>", headerValue);
@@ -290,7 +296,7 @@ public class HeaderProcessorTest {
         System.out.println("Multiple Literal");
         HeaderProcessor<EntityD> instance = new HeaderProcessor(EntityD.class);
         EntityD testClass = new EntityD();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals(2, headerValues.size());
         // not sure if annotation order is supposed to be preserved but it seems
         // to work as expected
@@ -321,7 +327,7 @@ public class HeaderProcessorTest {
         System.out.println("Parameters");
         HeaderProcessor<EntityE> instance = new HeaderProcessor(EntityE.class);
         EntityE testClass = new EntityE();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals(1, headerValues.size());
         String headerValue = headerValues.get(0);
         assertTrue(headerValue.contains("</application/resources/E>"));
@@ -364,7 +370,7 @@ public class HeaderProcessorTest {
         System.out.println("EL");
         HeaderProcessor<EntityF> instance = new HeaderProcessor(EntityF.class);
         EntityF testClass = new EntityF();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc, mockRlcc);
         assertEquals(1, headerValues.size());
         String headerValue = headerValues.get(0);
         assertEquals("</application/resources/1>", headerValue);

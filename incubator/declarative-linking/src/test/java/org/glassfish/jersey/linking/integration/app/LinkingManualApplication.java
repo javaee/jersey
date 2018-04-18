@@ -48,7 +48,8 @@ import javax.ws.rs.core.Application;
 
 public class LinkingManualApplication extends Application {
 
-    private static final Set<Class<?>> classes = new HashSet<>(Arrays.asList(OrdersResource.class, PaymentResource.class));
+    private static final Set<Class<?>> classes = new HashSet<>(Arrays.asList(OrdersResource.class,
+            PaymentResource.class, InfoResource.class));
 
     @Override
     public Set<Class<?>> getClasses() {

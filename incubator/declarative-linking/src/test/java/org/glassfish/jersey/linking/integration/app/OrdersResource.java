@@ -62,6 +62,7 @@ import javax.ws.rs.core.UriInfo;
 import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.ProvideLink;
 import org.glassfish.jersey.linking.integration.representations.ExtendedOrder;
+import org.glassfish.jersey.linking.integration.representations.Info;
 import org.glassfish.jersey.linking.integration.representations.Order;
 import org.glassfish.jersey.linking.integration.representations.OrderPage;
 import org.glassfish.jersey.linking.integration.representations.OrderRequest;
@@ -77,6 +78,7 @@ public class OrdersResource {
 
 
     @ProvideLink(value = OrderPage.class, rel = "create")
+    @ProvideLink(value = Info.class, rel = "create-order")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @POST
