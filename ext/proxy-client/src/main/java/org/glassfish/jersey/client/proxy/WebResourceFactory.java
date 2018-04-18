@@ -262,14 +262,15 @@ public final class WebResourceFactory implements InvocationHandler {
                             }
                         } else {
                             if (!(value instanceof Cookie)) {
-                                cookies.add(new Cookie(name, value.toString()));
+                                c = new Cookie(name, value.toString());
                             } else {
                                 c = (Cookie) value;
                                 if (!name.equals(((Cookie) value).getName())) {
                                     // is this the right thing to do? or should I fail? or ignore the difference?
-                                    cookies.add(new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion()));
+                                    c = new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion());
                                 }
                             }
+                            cookies.add(c);
                         }
                     } else if ((ann = anns.get((MatrixParam.class))) != null) {
                         if (value instanceof Collection) {
