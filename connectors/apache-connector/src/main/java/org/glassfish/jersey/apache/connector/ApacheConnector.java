@@ -184,7 +184,7 @@ import org.apache.http.util.VersionInfo;
  * @see ApacheClientProperties#CONNECTION_MANAGER
  */
 @SuppressWarnings("deprecation")
-class ApacheConnector implements Connector {
+public class ApacheConnector implements Connector {
 
     private static final Logger LOGGER = Logger.getLogger(ApacheConnector.class.getName());
 
@@ -201,6 +201,15 @@ class ApacheConnector implements Connector {
     private final boolean preemptiveBasicAuth;
     private final RequestConfig requestConfig;
 
+    public interface ClientBuilderModifier {
+
+        /** This external interface wants to modify the default builder */
+        HttpClientBuilder custom(final HttpClientBuilder builder);
+
+        /** This external interface also has its own build function (rather than the builder.build()) */
+        CloseableHttpClient build();
+    }
+
     /**
      * Create the new Apache HTTP Client connector.
      *
@@ -208,6 +217,17 @@ class ApacheConnector implements Connector {
      * @param config client configuration.
      */
     ApacheConnector(final Client client, final Configuration config) {
+        this(client, config, null);
+    }
+
+    /**
+     * Create the new Apache HTTP Client connector.
+     *
+     * @param client JAX-RS client instance for which the connector is being created.
+     * @param config client configuration.
+     * @param builderModifier modifier for the default client builder
+     */
+    public ApacheConnector(final Client client, final Configuration config, final ClientBuilderModifier builderModifier) {
         final Object connectionManager = config.getProperties().get(ApacheClientProperties.CONNECTION_MANAGER);
         if (connectionManager != null) {
             if (!(connectionManager instanceof HttpClientConnectionManager)) {
@@ -304,7 +324,14 @@ class ApacheConnector implements Connector {
             this.cookieStore = null;
         }
         clientBuilder.setDefaultRequestConfig(requestConfig);
-        this.client = clientBuilder.build();
+
+        //Support external modifier
+        if (null != builderModifier) {
+            builderModifier.custom(clientBuilder);
+            this.client = builderModifier.build();
+        } else {
+            this.client = clientBuilder.build();
+        }
     }
 
     private HttpClientConnectionManager getConnectionManager(final Client client,
