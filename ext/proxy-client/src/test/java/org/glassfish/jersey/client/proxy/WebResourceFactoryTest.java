@@ -341,6 +341,16 @@ public class WebResourceFactoryTest extends JerseyTest {
     }
 
     @Test
+    public void testPostEntityWithContextParam(){
+        MyBean entity = new MyBean();
+        entity.name = "vbo";
+
+        MyBean response = resource.postEntityWithContextParam(entity, null);
+
+        assertEquals("vbo", response.name);
+    }
+
+    @Test
     public void testToString() throws Exception {
         final String actual = resource.toString();
         final String expected = target().path("myresource").toString();

@@ -70,6 +70,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericEntity;
@@ -221,8 +222,10 @@ public final class WebResourceFactory implements InvocationHandler {
             Annotation ann;
             Object value = args[i];
             if (!hasAnyParamAnnotation(anns)) {
-                entityType = method.getGenericParameterTypes()[i];
-                entity = value;
+                if (!anns.containsKey(Context.class)){
+                    entityType = method.getGenericParameterTypes()[i];
+                    entity = value;
+                }
             } else {
                 if (value == null && (ann = anns.get(DefaultValue.class)) != null) {
                     value = ((DefaultValue) ann).value();
