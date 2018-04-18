@@ -76,6 +76,6 @@ public class GZipEncoder extends ContentEncoder {
     @Override
     public OutputStream encode(String contentEncoding, OutputStream entityStream)
             throws IOException {
-        return new GZIPOutputStream(entityStream);
+        return new GZIPOutputStream(entityStream, true);
     }
 }
