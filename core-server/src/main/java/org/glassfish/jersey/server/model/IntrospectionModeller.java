@@ -85,6 +85,8 @@ final class IntrospectionModeller {
 
     // introspected annotated JAX-RS resource class
     private final Class<?> handlerClass;
+    // introspected annotated JAX-RS resource instance
+    private final Object handlerInstance;
     // validation flag
     private final boolean disableValidation;
 
@@ -92,10 +94,12 @@ final class IntrospectionModeller {
      * Create a new introspection modeller for a given JAX-RS resource class.
      *
      * @param handlerClass      JAX-RS resource (handler) class.
+     * @param handlerInstance   JAX-RS resource (handler) instance.
      * @param disableValidation if set to {@code true}, then any model validation checks will be disabled.
      */
-    public IntrospectionModeller(Class<?> handlerClass, boolean disableValidation) {
+    public IntrospectionModeller(Class<?> handlerClass, Object handlerInstance, boolean disableValidation) {
         this.handlerClass = handlerClass;
+        this.handlerInstance = handlerInstance;
         this.disableValidation = disableValidation;
     }
 
@@ -341,7 +345,7 @@ final class IntrospectionModeller {
                             .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                             .nameBindings(defaultNameBindings)
                             .nameBindings(am.getAnnotations())
-                            .handledBy(handlerClass, am.getMethod())
+                            .handledBy(handlerClass, handlerInstance, am.getMethod())
                             .handlingMethod(am.getDeclaredMethod())
                             .handlerParameters(resourceClassParameters)
                             .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
@@ -371,7 +375,7 @@ final class IntrospectionModeller {
                             .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                             .nameBindings(defaultNameBindings)
                             .nameBindings(am.getAnnotations())
-                            .handledBy(handlerClass, am.getMethod())
+                            .handledBy(handlerClass, handlerInstance, am.getMethod())
                             .handlingMethod(am.getDeclaredMethod())
                             .handlerParameters(resourceClassParameters)
                             .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
@@ -396,7 +400,7 @@ final class IntrospectionModeller {
 
             builder.addMethod()
                     .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
-                    .handledBy(handlerClass, am.getMethod())
+                    .handledBy(handlerClass, handlerInstance, am.getMethod())
                     .handlingMethod(am.getDeclaredMethod())
                     .handlerParameters(resourceClassParameters)
                     .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
