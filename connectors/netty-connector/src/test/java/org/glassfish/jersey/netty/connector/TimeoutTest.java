@@ -40,6 +40,10 @@
 
 package org.glassfish.jersey.netty.connector;
 
+import io.netty.handler.timeout.ReadTimeoutException;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 import javax.ws.rs.GET;
@@ -53,6 +57,7 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -107,6 +112,18 @@ public class TimeoutTest extends JerseyTest {
         } catch (ProcessingException e) {
             assertThat("Unexpected processing exception cause",
                        e.getCause(), instanceOf(TimeoutException.class));
+        }
+    }
+
+    @Test
+    public void testAsyncSlow() {
+        try {
+            Future<Response> future = target("test/timeout").request().async().get();
+            future.get();
+            fail("Timeout expected.");
+        } catch (ProcessingException | InterruptedException | ExecutionException e) {
+            assertThat("Unexpected processing exception cause",
+                e.getCause().getCause(), instanceOf(ReadTimeoutException.class));
         }
     }
 }

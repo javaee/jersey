@@ -82,6 +82,7 @@ import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.JdkSslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.concurrent.GenericFutureListener;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
@@ -202,6 +203,11 @@ class NettyConnector implements Connector {
                      p.addLast(new ChunkedWriteHandler());
                      p.addLast(new HttpContentDecompressor());
                      p.addLast(new JerseyClientHandler(NettyConnector.this, jerseyRequest, jerseyCallback, settableFuture));
+                     Integer readTimeout = ClientProperties.getValue(jerseyRequest.getConfiguration().getProperties(),
+                                                        ClientProperties.READ_TIMEOUT, 0);
+                     if (readTimeout > 0) {
+                          p.addFirst(new ReadTimeoutHandler(readTimeout, TimeUnit.MILLISECONDS));
+                     }
                  }
              });
 
