@@ -54,6 +54,21 @@
             <artifactId>jersey-media-json-binding</artifactId>
         </dependency>
         -->
+        <!-- Prevents "java.lang.IllegalStateException: InjectionManagerFactory not found" when deploying 
+           - WAR file to Jetty 9.4.6.
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+        </dependency>
+         -->
+        <!-- Prevents Eclipse Neon.3 warning about missing servlet API for index.jsp.
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        -->
     </dependencies>
     <properties>
         <jersey.version>${project.version}</jersey.version>
