@@ -285,7 +285,7 @@ public class UriComponent {
 
     private static String _encode(final String s, final Type t, final boolean template, final boolean contextualEncode) {
         final boolean[] table = ENCODING_TABLES[t.ordinal()];
-        boolean insideTemplateParam = false;
+        int templateParamDepth = 0;
 
         StringBuilder sb = null;
         for (int offset = 0, codePoint; offset < s.length(); offset += Character.charCount(codePoint)) {
@@ -299,12 +299,12 @@ public class UriComponent {
                 if (template) {
                     boolean leavingTemplateParam = false;
                     if (codePoint == '{') {
-                        insideTemplateParam = true;
+                        ++templateParamDepth;
                     } else if (codePoint == '}') {
-                        insideTemplateParam = false;
+                        --templateParamDepth;
                         leavingTemplateParam = true;
                     }
-                    if (insideTemplateParam || leavingTemplateParam) {
+                    if (templateParamDepth > 0 || leavingTemplateParam) {
                         if (sb != null) {
                             sb.append(Character.toChars(codePoint));
                         }
