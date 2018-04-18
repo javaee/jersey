@@ -47,12 +47,16 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.eclipse.jetty.server.Server;
 import org.junit.After;
+
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
 
 /**
  * Abstract Jetty Server unit tester.
@@ -101,12 +105,28 @@ public abstract class AbstractJettyServerTester {
         return UriBuilder.fromUri("http://localhost").port(getPort()).path(CONTEXT);
     }
 
-    public void startServer(Class... resources) {
+    public void startServer(String contextPath, Class... resources) {
         ResourceConfig config = new ResourceConfig(resources);
         config.register(new LoggingFeature(LOGGER, LoggingFeature.Verbosity.PAYLOAD_ANY));
         final URI baseUri = getBaseUri();
-        server = JettyHttpContainerFactory.createServer(baseUri, config);
+        if (contextPath == null) {
+            server = JettyHttpContainerFactory.createServer(baseUri, config);
+        } else {
+            server = JettyHttpContainerFactory.createServer(baseUri, config, false);
+            ContextHandler contextHandler = new ContextHandler(contextPath);
+            contextHandler.setHandler(server.getHandler());
+            server.setHandler(contextHandler);
+            try {
+                server.start();
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
         LOGGER.log(Level.INFO, "Jetty-http server started on base uri: " + baseUri);
+    }
+
+    public void startServer(Class... resources) {
+        startServer(null, resources);
     }
 
     public void startServer(ResourceConfig config) {
