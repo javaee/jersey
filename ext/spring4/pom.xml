@@ -51,10 +51,10 @@
         <version>2.28-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jersey-spring4</artifactId>
-    <name>jersey-spring4</name>
+	<artifactId>jersey-spring4</artifactId>
+	<name>jersey-spring4</name>
 
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <description>
         Jersey extension module providing support for Spring 4 integration.
@@ -116,32 +116,26 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-beans</artifactId>
             <version>${spring4.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-            <version>${spring4.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-core</artifactId>
             <version>${spring4.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-aop</artifactId>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-web</artifactId>
+            <version>${spring4.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.spring-aop</artifactId>
             <version>${spring4.version}</version>
         </dependency>
 
@@ -175,7 +169,7 @@
     </dependencies>
 
     <properties>
-        <spring4.version>4.3.4.RELEASE</spring4.version>
+        <spring4.version>4.3.5.RELEASE_1</spring4.version>
     </properties>
 
     <build>
@@ -189,6 +183,31 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <inherited>true</inherited>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-Name>${project.name}</Bundle-Name>
+                        <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+                        <Import-Package>
+                            *
+                        </Import-Package>
+                    </instructions>
+                    <unpackBundle>true</unpackBundle>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>manifestAfterCompile</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

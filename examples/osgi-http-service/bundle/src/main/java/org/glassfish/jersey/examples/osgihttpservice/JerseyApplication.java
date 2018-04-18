@@ -40,17 +40,16 @@
 
 package org.glassfish.jersey.examples.osgihttpservice;
 
-import java.util.HashSet;
-import java.util.Set;
-import javax.ws.rs.core.Application;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class JerseyApplication extends Application {
+public class JerseyApplication extends ResourceConfig {
 
-    @Override
-    public Set<Class<?>> getClasses() {
-        Set<Class<?>> result = new HashSet<Class<?>>();
-        result.add(StatusResource.class);
-        return result;
+    public JerseyApplication() {
+        property("contextConfig", new ClassPathXmlApplicationContext(
+                "org/glassfish/jersey/examples/osgihttpservice/spring/spring-context.xml"));
+
+        packages(false, "org.glassfish.jersey.examples.osgihttpservice.spring");
+        register(StatusResource.class);
     }
-
 }

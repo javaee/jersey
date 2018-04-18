@@ -40,29 +40,26 @@
 
 package org.glassfish.jersey.server.spring;
 
-import java.util.Set;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.servlet.ServletContext;
-
 import org.glassfish.jersey.inject.hk2.ImmediateHk2InjectionManager;
 import org.glassfish.jersey.internal.inject.Binding;
 import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ComponentProvider;
-
 import org.jvnet.hk2.spring.bridge.api.SpringBridge;
 import org.jvnet.hk2.spring.bridge.api.SpringIntoHK2Bridge;
-
 import org.springframework.aop.framework.Advised;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import javax.servlet.ServletContext;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Custom ComponentProvider class.
@@ -94,11 +91,15 @@ public class SpringComponentProvider implements ComponentProvider {
         if (sc != null) {
             // servlet container
             ctx = WebApplicationContextUtils.getWebApplicationContext(sc);
-        } else {
-            // non-servlet container
+        }
+
+        if (ctx == null) {
+            // still null, try to create one
             ctx = createSpringContext();
         }
+
         if (ctx == null) {
+            // still null, bail
             LOGGER.severe(LocalizationMessages.CTX_LOOKUP_FAILED());
             return;
         }
@@ -149,6 +150,7 @@ public class SpringComponentProvider implements ComponentProvider {
     }
 
     private ApplicationContext createSpringContext() {
+        LOGGER.info("create spring context");
         ApplicationHandler applicationHandler = injectionManager.getInstance(ApplicationHandler.class);
         ApplicationContext springContext = (ApplicationContext) applicationHandler.getConfiguration()
                 .getProperty(PARAM_SPRING_CONTEXT);

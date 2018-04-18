@@ -40,15 +40,7 @@
 
 package org.glassfish.jersey.examples.osgihttpservice;
 
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.logging.Logger;
-
-import javax.servlet.ServletException;
-
 import org.glassfish.jersey.servlet.ServletContainer;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -57,6 +49,10 @@ import org.osgi.service.event.EventAdmin;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
 import org.osgi.util.tracker.ServiceTracker;
+
+import javax.servlet.ServletException;
+import java.util.HashMap;
+import java.util.logging.Logger;
 
 public class Activator implements BundleActivator {
 
@@ -119,7 +115,8 @@ public class Activator implements BundleActivator {
         ClassLoader originalContextClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(myClassLoader);
-            httpService.registerServlet("/jersey-http-service", new ServletContainer(), getJerseyServletParams(), null);
+            ServletContainer servletToRegister = new ServletContainer(new JerseyApplication());
+            httpService.registerServlet("/jersey-http-service", servletToRegister, null, null);
         } finally {
             Thread.currentThread().setContextClassLoader(originalContextClassLoader);
         }
@@ -149,12 +146,5 @@ public class Activator implements BundleActivator {
             httpService.unregister("/jersey-http-service");
             logger.info("JERSEY BUNDLE: SERVLETS UNREGISTERED");
         }
-    }
-
-    @SuppressWarnings("UseOfObsoleteCollectionType")
-    private Dictionary<String, String> getJerseyServletParams() {
-        Dictionary<String, String> jerseyServletParams = new Hashtable<>();
-        jerseyServletParams.put("javax.ws.rs.Application", JerseyApplication.class.getName());
-        return jerseyServletParams;
     }
 }
