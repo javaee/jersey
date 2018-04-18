@@ -42,6 +42,10 @@ package org.glassfish.jersey.linking;
 
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
+import javax.ws.rs.core.MultivaluedMap;
+
+import java.util.Set;
+
 /**
  * Utility for working with @Ref annotations
  *
@@ -75,4 +79,25 @@ interface InjectLinkDescriptor {
      * @return the condition
      */
     String getCondition();
+
+    /**
+     * Get the list of query parameters injected by @LinkQueryParam.
+     * @return the list of query parameters.
+     */
+    MultivaluedMap<String, String> getQueryParams();
+
+    /**
+     * The request query parameters should be included in response Links.
+     * @return true if we need request query parameters.
+     */
+    boolean copyFromRequestParams();
+
+    /**
+     * A list of request parameters keys to exclude from response links.
+     * It's used if copyFromRequestParams() is enabled.
+     *
+     * @return the list of parameters keys names to exclude.
+     */
+    Set<String> excludeFromRequestParams();
+
 }

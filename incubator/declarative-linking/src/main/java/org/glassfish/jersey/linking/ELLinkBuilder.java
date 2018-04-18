@@ -44,7 +44,10 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
@@ -123,6 +126,33 @@ final class ELLinkBuilder {
         UriTemplateParser parser = new UriTemplateParser(template);
         List<String> parameterNames = parser.getNames();
         Map<String, Object> valueMap = getParameterValues(parameterNames, link, context, uriInfo);
+
+        // adds query parameters.
+        MultivaluedMap<String, String> query = link.getQueryParams();
+        for (Entry<String, List<String>> entry : query.entrySet()) {
+          //process each value from query parameter and get expression's result.
+          for (String val: entry.getValue()) {
+            ValueExpression valExpr =
+                expressionFactory.createValueExpression(context, val, String.class);
+            ub.queryParam(entry.getKey(), valExpr.getValue(context).toString());
+          }
+        }
+
+        /* If user needs injection of request query parameters */
+        if (link.copyFromRequestParams()) {
+          Set<String> excludes = link.excludeFromRequestParams();
+          for (Entry<String, List<String>> reqParam: uriInfo.getQueryParameters().entrySet()) {
+            if (excludes != null && !excludes.isEmpty()) {
+              /* Excludes the copy of this parameters */
+              if (excludes.contains(reqParam.getKey())) {
+                continue;
+              }
+              /* Rebuilds request params for link*/
+              ub.queryParam(reqParam.getKey(), reqParam.getValue().toArray());
+            }
+          }
+        }
+
         return ub.buildFromMap(valueMap);
     }
 
