@@ -42,6 +42,7 @@ package org.glassfish.jersey.client.authentication;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -114,7 +115,7 @@ final class DigestAuthenticator {
      * @throws IOException When error with encryption occurs.
      */
     boolean filterRequest(final ClientRequestContext request) throws IOException {
-        final DigestScheme digestScheme = digestCache.get(request.getUri());
+        final DigestScheme digestScheme = digestCache.get(getCacheKey(request));
         if (digestScheme != null) {
             final HttpAuthenticationFilter.Credentials cred = HttpAuthenticationFilter.getCredentials(request,
                     this.credentials, HttpAuthenticationFilter.Type.DIGEST);
@@ -155,10 +156,11 @@ final class DigestAuthenticator {
 
             final boolean success = HttpAuthenticationFilter.repeatRequest(request, response, createNextAuthToken(digestScheme,
                     request, cred));
+            URI cacheKey = getCacheKey(request);
             if (success) {
-                digestCache.put(request.getUri(), digestScheme);
+                digestCache.put(cacheKey, digestScheme);
             } else {
-                digestCache.remove(request.getUri());
+                digestCache.remove(cacheKey);
             }
             return success;
         }
@@ -371,6 +373,24 @@ final class DigestAuthenticator {
         final byte[] bytes = new byte[nbBytes];
         randomGenerator.nextBytes(bytes);
         return bytesToHex(bytes);
+    }
+
+    private URI getCacheKey(ClientRequestContext request) {
+        URI requestUri = request.getUri();
+        if (requestUri.getRawQuery() != null) {
+            // Return a URI without the query part of the request URI
+            try {
+                return new URI(
+                        requestUri.getScheme(),
+                        requestUri.getAuthority(),
+                        requestUri.getPath(),
+                        null,
+                        requestUri.getFragment());
+            } catch (URISyntaxException e) {
+                // Ignore and fall through
+            }
+        }
+        return requestUri;
     }
 
     private enum QOP {

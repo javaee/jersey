@@ -43,15 +43,16 @@ package org.glassfish.jersey.client.authentication;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseContext;
@@ -65,8 +66,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
-import javax.annotation.Priority;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
@@ -271,7 +270,22 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
     }
 
     private String getCacheKey(ClientRequestContext request) {
-        return request.getUri().toString() + ":" + request.getMethod();
+        URI requestUri = request.getUri();
+        if (requestUri.getRawQuery() != null) {
+            // Build a URI without the query part of the request URI
+            try {
+                URI requestUriWithoutQuery = new URI(
+                        requestUri.getScheme(),
+                        requestUri.getAuthority(),
+                        requestUri.getPath(),
+                        null,
+                        requestUri.getFragment());
+                return requestUriWithoutQuery.toString() + ":" + request.getMethod();
+            } catch (URISyntaxException e) {
+                // Ignore and fall through
+            }
+        }
+        return requestUri.toString() + ":" + request.getMethod();
     }
 
     private void updateCache(ClientRequestContext request, boolean success, Type operation) {
