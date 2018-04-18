@@ -141,6 +141,16 @@ public class ResponseWriter implements ContainerResponseWriter {
             throws ContainerException {
         this.responseContext.complete(responseContext);
 
+        //Test if the response is sent before trying to write the response
+        if (response.isCommitted()){
+            LOGGER.log(Level.WARNING, "Unable to write on commited http response. Verify response usage. "
+                    + "Your Response container will be sent.");
+            try {
+                return response.getOutputStream();
+            } catch (final IOException e) {
+                throw new ContainerException(e);
+            }
+        }
         // first set the content length, so that if headers have an explicit value, it takes precedence over this one
         if (responseContext.hasEntity() && contentLength != -1 && contentLength < Integer.MAX_VALUE) {
             response.setContentLength((int) contentLength);

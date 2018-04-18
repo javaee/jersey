@@ -71,6 +71,7 @@
             <groupId>org.glassfish.hk2.external</groupId>
             <artifactId>javax.inject</artifactId>
         </dependency>
+
     </dependencies>
 
     <build>
