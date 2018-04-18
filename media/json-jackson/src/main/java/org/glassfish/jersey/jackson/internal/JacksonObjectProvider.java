@@ -179,7 +179,7 @@ final class JacksonObjectProvider extends AbstractObjectProvider<FilterProvider>
                     }
                 }
             }
-            return SimpleBeanPropertyFilter.filterOutAllExcept();
+            return SimpleBeanPropertyFilter.serializeAllExcept(new String[0]);
         }
     }
 
