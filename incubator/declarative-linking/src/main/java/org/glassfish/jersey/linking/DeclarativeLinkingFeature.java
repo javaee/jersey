@@ -62,10 +62,36 @@ import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 @Beta
 public class DeclarativeLinkingFeature implements Feature {
 
+    /**
+     * Sets the default link Style for this feature, see {@link InjectLink.Style} for the possible values.
+     */
+    public static final String DEFAULT_LINK_STYLE = "org.glassfish.jersey.linking.default.link.style";
+
+    private final InjectLink.Style defaultLinkStyle;
+
+    public DeclarativeLinkingFeature(InjectLink.Style defaultLinkStyle) {
+
+        this.defaultLinkStyle = defaultLinkStyle;
+    }
+
+    public DeclarativeLinkingFeature(){
+        this(null);
+    }
+
     @Override
     public boolean configure(FeatureContext context) {
 
         Configuration config = context.getConfiguration();
+
+        Object linkStyle = (defaultLinkStyle == null) ? config.getProperty(DEFAULT_LINK_STYLE) : defaultLinkStyle;
+        if (linkStyle instanceof String) {
+            context.property(DEFAULT_LINK_STYLE, InjectLink.Style.valueOf(((String) linkStyle).toUpperCase()));
+        } else if (linkStyle instanceof InjectLink.Style){
+            context.property(DEFAULT_LINK_STYLE, linkStyle);
+        } else if (linkStyle == null) {
+            context.property(DEFAULT_LINK_STYLE, InjectLink.Style.DEFAULT);
+        }
+
         if (!config.isRegistered(ResponseLinkFilter.class)) {
             context.register(new AbstractBinder() {
 

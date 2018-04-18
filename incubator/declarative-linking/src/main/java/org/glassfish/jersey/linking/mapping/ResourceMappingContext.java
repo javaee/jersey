@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.linking.mapping;
 
+import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.uri.UriTemplate;
 
 /**
@@ -51,10 +52,12 @@ import org.glassfish.jersey.uri.UriTemplate;
 
 public interface ResourceMappingContext {
 
-    public interface Mapping {
+    interface Mapping {
 
-        public UriTemplate getTemplate();
+        UriTemplate getTemplate();
     }
 
-    public Mapping getMapping(Class<?> resource);
+    Mapping getMapping(Class<?> resource);
+
+    InjectLink.Style getLinkStyle();
 }

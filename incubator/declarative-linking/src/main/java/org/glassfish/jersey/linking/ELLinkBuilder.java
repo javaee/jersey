@@ -119,19 +119,24 @@ final class ELLinkBuilder {
         template = expr.getValue(context).toString();
 
         // now process any embedded URI template parameters
-        UriBuilder ub = applyLinkStyle(template, link.getLinkStyle(), uriInfo);
+        UriBuilder ub = applyLinkStyle(template, link.getLinkStyle(), rmc.getLinkStyle(), uriInfo);
         UriTemplateParser parser = new UriTemplateParser(template);
         List<String> parameterNames = parser.getNames();
         Map<String, Object> valueMap = getParameterValues(parameterNames, link, context, uriInfo);
         return ub.buildFromMap(valueMap);
     }
 
-    private static UriBuilder applyLinkStyle(String template, InjectLink.Style style, UriInfo uriInfo) {
+    private static UriBuilder applyLinkStyle(String template,
+            InjectLink.Style linkStyle,
+            InjectLink.Style contextStyle,
+            UriInfo uriInfo) {
         UriBuilder ub = null;
+        InjectLink.Style style = (linkStyle == InjectLink.Style.DEFAULT) ? contextStyle : linkStyle;
         switch (style) {
             case ABSOLUTE:
                 ub = uriInfo.getBaseUriBuilder().path(template);
                 break;
+            case DEFAULT:
             case ABSOLUTE_PATH:
                 String basePath = uriInfo.getBaseUri().getPath();
                 ub = UriBuilder.fromPath(basePath).path(template);

@@ -75,6 +75,11 @@ public class EntityDescriptorTest {
         public ResourceMappingContext.Mapping getMapping(Class<?> resource) {
             return null;
         }
+
+        @Override
+        public InjectLink.Style getLinkStyle() {
+            return InjectLink.Style.DEFAULT;
+        }
     };
 
     /**

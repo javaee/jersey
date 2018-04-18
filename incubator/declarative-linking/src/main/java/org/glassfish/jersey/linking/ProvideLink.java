@@ -79,7 +79,7 @@ public @interface ProvideLink {
     /**
      * The style of URI to inject
      */
-    InjectLink.Style style() default InjectLink.Style.ABSOLUTE_PATH;
+    InjectLink.Style style() default InjectLink.Style.DEFAULT;
 
     /**
      * Provide links for representation classes listed here.
