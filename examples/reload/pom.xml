@@ -91,6 +91,7 @@
                     <outputFile>${project.build.directory}/classpath.properties</outputFile>
                     <outputFilterFile>true</outputFilterFile>
                     <includeScope>compile</includeScope>
+                    <fileSeparator>/</fileSeparator>
                 </configuration>
             </plugin>
             <plugin>
