@@ -77,6 +77,7 @@
         <module>rx</module>
         <module>servlet-portability</module>
         <module>spring4</module>
+        <module>spring5</module>
         <module>wadl-doclet</module>
     </modules>
 
