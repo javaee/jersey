@@ -40,6 +40,28 @@
 
 package org.glassfish.jersey.client.internal;
 
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
+import org.glassfish.jersey.client.JerseyClient;
+import org.glassfish.jersey.client.RequestEntityProcessing;
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.collection.LazyValue;
+import org.glassfish.jersey.internal.util.collection.UnsafeValue;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
+import org.glassfish.jersey.message.internal.Statuses;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,36 +83,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSocketFactory;
-
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.ClientRequest;
-import org.glassfish.jersey.client.ClientResponse;
-import org.glassfish.jersey.client.HttpUrlConnectorProvider;
-import org.glassfish.jersey.client.JerseyClient;
-import org.glassfish.jersey.client.RequestEntityProcessing;
-import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
-import org.glassfish.jersey.client.spi.Connector;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.internal.util.collection.LazyValue;
-import org.glassfish.jersey.internal.util.collection.UnsafeValue;
-import org.glassfish.jersey.internal.util.collection.Value;
-import org.glassfish.jersey.internal.util.collection.Values;
-import org.glassfish.jersey.message.internal.Statuses;
-
 /**
  * Default client transport connector using {@link HttpURLConnection}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class HttpUrlConnector implements Connector {
+
+    static {
+        // Initialize the default SSL socket factory to prevent a race condition in #secureConnection
+        // See https://github.com/jersey/jersey/issues/3293
+        HttpsURLConnection.getDefaultSSLSocketFactory();
+    }
 
     private static final Logger LOGGER = Logger.getLogger(HttpUrlConnector.class.getName());
     private static final String ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY = "sun.net.http.allowRestrictedHeaders";
