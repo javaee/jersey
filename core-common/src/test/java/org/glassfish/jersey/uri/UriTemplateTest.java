@@ -40,6 +40,12 @@
 
 package org.glassfish.jersey.uri;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,13 +57,7 @@ import java.util.Map;
 import java.util.regex.MatchResult;
 
 import org.glassfish.jersey.uri.internal.UriTemplateParser;
-
 import org.junit.Test;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.uri.UriTemplateTest
@@ -345,6 +345,18 @@ public class UriTemplateTest {
                 l.get(2).getTemplate());
         assertEquals(UriTemplate.EMPTY.getTemplate(),
                 l.get(3).getTemplate());
+    }
+    
+    @Test
+    public void testSpecificCharacterPosition() {
+        _testSpecificCharacterPosition("/test/coverage/100%"); 
+        _testSpecificCharacterPosition("/test/coverrage/100%/done");
+        _testSpecificCharacterPosition("/test/coverrage/100%26done");
+        _testSpecificCharacterPosition("/test/coverrage/100%;today");
+    }
+
+    private void _testSpecificCharacterPosition(String uri) {
+        assertEquals(uri, new UriTemplate(uri).getPattern().getRegex());
     }
 
     @Test
