@@ -43,7 +43,7 @@ package org.glassfish.jersey.server.internal.inject;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -73,7 +73,7 @@ public class ParamConverterFactory implements ParamConverterProvider {
 
     ParamConverterFactory(Set<ParamConverterProvider> providers, Set<ParamConverterProvider> customProviders) {
 
-        Set<ParamConverterProvider> copyProviders = new HashSet<>(providers);
+        Set<ParamConverterProvider> copyProviders = new LinkedHashSet<>(providers);
         converterProviders = new ArrayList<>();
         converterProviders.addAll(customProviders);
         copyProviders.removeAll(customProviders);
