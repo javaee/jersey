@@ -228,7 +228,7 @@ public static class SseResource {
             <para>
                 The code above defines the resource deployed on URI "/events". This resource has a single
                 <literal>@GET</literal>
-                resource method which <emphasis>returns void</emphasis>. This is an imported difference
+                resource method which <emphasis>returns void</emphasis>. This is an important difference
                 against the original API. It is Jersey's responsibility to bind the injected <literal>SseEventSink</literal> to
                 the output chain.
             </para>

@@ -102,7 +102,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     private final Map<String, Object> immutablePropertiesView;
     private final Collection<String> immutablePropertyNames;
     /**
-     * Configured providers, does not include features and binders.
+     * Configured providers and binders, does not include features.
      */
     private final ComponentBag componentBag;
     /**
@@ -642,7 +642,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         Set<Binder> allConfigured = Collections.newSetFromMap(new IdentityHashMap<>());
         allConfigured.addAll(configured);
 
-        Collection<Binder> binders = getBinder(configured);
+        Collection<Binder> binders = getBinders(configured);
         if (!binders.isEmpty()) {
             injectionManager.register(CompositeBinder.wrap(binders));
             allConfigured.addAll(binders);
@@ -651,7 +651,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         return allConfigured;
     }
 
-    private Collection<Binder> getBinder(Set<Binder> configured) {
+    private Collection<Binder> getBinders(Set<Binder> configured) {
         return componentBag.getInstances(ComponentBag.BINDERS_ONLY)
                 .stream()
                 .map(CAST_TO_BINDER)
