@@ -204,9 +204,9 @@ public class LoggingFeature implements Feature {
      * Creates the feature with custom logger and maximum number of bytes of entity to log.
      *
      * @param logger        the logger to log requests and responses.
-     * @param maxEntitySize maximum number of entity bytes to be logged (and buffered) - if the entity is larger,
-     *                      logging filter will print (and buffer in memory) only the specified number of bytes
-     *                      and print "...more..." string at the end. Negative values are interpreted as zero.
+     * @param maxEntitySize maximum number of entity bytes to be logged (and buffered) - if the entity is larger, logging filter will print
+     *                      (and buffer in memory) only the specified number of bytes and print "...more..." string at the end. Negative
+     *                      values are interpreted as zero.
      */
     public LoggingFeature(Logger logger, Integer maxEntitySize) {
         this(logger, null, DEFAULT_VERBOSITY, maxEntitySize);
@@ -218,15 +218,15 @@ public class LoggingFeature implements Feature {
      * @param logger        the logger to log requests and responses.
      * @param level         level on which the messages will be logged.
      * @param verbosity     verbosity of logged messages. See {@link Verbosity}.
-     * @param maxEntitySize maximum number of entity bytes to be logged (and buffered) - if the entity is larger,
-     *                      logging filter will print (and buffer in memory) only the specified number of bytes
-     *                      and print "...more..." string at the end. Negative values are interpreted as zero.
+     * @param maxEntitySize maximum number of entity bytes to be logged (and buffered) - if the entity is larger, logging filter will print
+     *                      (and buffer in memory) only the specified number of bytes and print "...more..." string at the end. Negative
+     *                      values are interpreted as zero.
      */
     public LoggingFeature(Logger logger, Level level, Verbosity verbosity, Integer maxEntitySize) {
         this.filterLogger = logger;
         this.level = level;
         this.verbosity = verbosity;
-        this.maxEntitySize = maxEntitySize;
+        this.maxEntitySize = Math.min(Integer.MAX_VALUE - 1, maxEntitySize);
     }
 
     @Override
