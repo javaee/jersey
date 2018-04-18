@@ -154,6 +154,11 @@ public @interface InjectLink {
      */
     String condition() default "";
 
+    /**
+     * Define if the link is canonical (no query parameters will be added)
+     */
+    boolean isCanonical() default false;
+
     // Link properties
     //
 
