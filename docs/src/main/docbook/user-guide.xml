@@ -55,17 +55,17 @@
     <preface xml:id="preface">
         <title>Preface</title>
         <para>
-            This is user guide for Jersey &version;. We are trying to keep it up to date as we add new features.
-            When reading the user guide, please consult also our
+            This is the user guide for Jersey &version;. We are trying to keep it up to date as we add new features.
+            When reading the user guide, please also consult our
             <link xlink:href="&jersey.javadoc.root.uri;/index.html">Jersey API documentation</link> as an additional source
             of information about Jersey features and API.
         </para>
         <para>
-            If you would like to contribute to the guide or have questions on things not covered in our docs, please
+            If you would like to contribute to the guide, or have questions on things not covered in our docs, please
             contact us at<link xlink:href="mailto:users@jersey.java.net">users@jersey.java.net</link>. Similarly,
             in case you spot any errors in the Jersey documentation, please report them by filing a new issue in our
             <link xlink:href="http://java.net/jira/browse/JERSEY">Jersey JIRA Issue Tracker</link>
-            under
+            under the
             <literal>docs</literal>
             component. Please make sure to specify the version of the Jersey User Guide where the error has been spotted
             by selecting the proper value for the
@@ -75,8 +75,8 @@
         <simplesect>
             <title>Text formatting conventions</title>
             <para>
-                First mention of any Jersey and JAX-RS API component in a section links to the API documentation of the
-                referenced component. Any sub-sequent mentions of the component in the same chapter are rendered using a
+                The first mention of any Jersey and JAX-RS API component in a section links to the API documentation of the
+                referenced component. Any subsequent mentions of the component in the same chapter are rendered using a
                 <literal>monospaced</literal>
                 font.
             </para>
@@ -87,11 +87,11 @@
             </para>
             <para>
                 In some of the code listings, certain lines are too long to be displayed on one line for the available
-                page width. In such case, the lines that exceed the available page width are broken up into multiple lines
+                page width. In such cases, the lines that exceed the available page width are broken up into multiple lines
                 using a
                 <literal>'\'</literal>
                 at the end of each line to indicate that a break has been introduced to
-                fit the line in the page. For example:
+                fit the line on the page. For example:
 
                 <programlisting linenumbering="unnumbered">
 This is an overly long line that \

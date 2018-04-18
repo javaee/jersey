@@ -63,10 +63,10 @@
         <title>Creating a New Project from Maven Archetype</title>
 
         <para>
-            Jersey project is built using &maven.link; software project build and management tool. All modules produced as
-            part of Jersey project build are pushed to the &maven.central.repo.link;. Therefore it is very convenient to work
-            with Jersey for any Maven-based project as all the released (non-SNAPSHOT) Jersey dependencies are readily
-            available without a need to configure a special maven repository to consume the Jersey modules.
+            A Jersey project is built using the &maven.link; software project build and management tool. All modules produced as
+            part of the Jersey project build are pushed to the &maven.central.repo.link;. Therefore it is very convenient to work
+            with Jersey for any Maven-based project, as all the released (non-SNAPSHOT) Jersey dependencies are readily
+            available without the need to configure a special maven repository to consume the Jersey modules.
 
             <note>
                 <para>
@@ -83,8 +83,8 @@
             </note>
         </para>
         <para>
-            Since starting from a Maven project is the most convenient way for working with Jersey, let's now have a look
-            at this approach. We will now create a new Jersey project that runs on top of a &grizzly.link; container. We will
+            Since starting from a Maven project is the most convenient way to work with Jersey, let's now consider 
+            this approach. We'll create a new Jersey project that runs in a &grizzly.link; container. We'll
             use a Jersey-provided maven archetype. To create the project, execute the following Maven command in the directory
             where the new project should reside:
 
@@ -94,14 +94,14 @@
 -DarchetypeVersion=&version;</programlisting>
 
             Feel free to adjust the <literal>groupId</literal>, <literal>package</literal> and/or <literal>artifactId</literal>
-            of your new project. Alternatively, you can change it by updating the new project pom.xml once it gets generated.
+            elements of your new project. Alternatively, you can change it by updating the new project pom.xml once it gets generated.
         </para>
     </section>
     <section xml:id="new-project-structure">
         <title>Exploring the Newly Created Project</title>
 
         <para>
-            Once the project generation from a Jersey maven archetype is successfully finished, you should see the new
+            Once project generation from a Jersey maven archetype has successfully completed, you should see the new
             <literal>simple-service</literal> project directory created in your current location. The directory contains
             a standard Maven project structure:
 
@@ -114,10 +114,10 @@
                 <member>Project test sources are located under <literal>src/test/java</literal>.</member>
             </simplelist>
 
-            There are 2 classes in the project source directory in the <literal>com.example</literal> package.
-            The <literal>Main</literal> class is responsible for bootstrapping the Grizzly container as well as configuring
+            There are 2 classes in the project source directory within the <literal>com.example</literal> package.
+            The <literal>Main</literal> class is responsible for bootstrapping the Grizzly container, as well as configuring
             and deploying the project's JAX-RS application to the container. Another class in the same package
-            is <literal>MyResource</literal> class, that contains implementation of a simple JAX-RS resource.
+            is the <literal>MyResource</literal> class, that contains an implementation of a simple JAX-RS resource.
             It looks like this:
 
             <programlisting language="java" linenumbering="numbered">package com.example;
@@ -147,18 +147,18 @@ public class MyResource {
 }</programlisting>
 
             A JAX-RS resource is an annotated POJO that provides so-called <emphasis>resource methods</emphasis> that
-            are able to handle HTTP requests for URI paths that the resource is bound to. See
+            are able to handle HTTP requests for the URI paths the resource is bound to. See
             <xref linkend="jaxrs-resources" /> for a complete guide to JAX-RS resources. In our case, the resource
-            exposes a single resource method that is able to handle HTTP &lit.http.GET; requests, is bound to
-            <literal>/myresource</literal> URI path and can produce responses with response message content represented
-            in <literal>"text/plain"</literal> media type. In this version, the resource returns the same
+            exposes a single resource method that handles HTTP &lit.http.GET; requests, is bound to the
+            <literal>/myresource</literal> URI path, and can produce responses with response message content represented
+            in the <literal>"text/plain"</literal> media type. In this version, the resource returns the same
             <literal>"Got it!"</literal> response to all client requests.
         </para>
         <para>
             The last piece of code that has been generated in this skeleton project is a <literal>MyResourceTest</literal>
             unit test class that is located in the same <literal>com.example</literal> package as the
-            <literal>MyResource</literal> class, however, this unit test class is placed into the maven project test source
-            directory <literal>src/test/java</literal> (certain code comments and JUnit imports have been excluded for brevity):
+            <literal>MyResource</literal> class. However, this unit test class is located in the maven project test source
+            directory, <literal>src/test/java</literal> (certain code comments and JUnit imports have been excluded for brevity):
 
             <programlisting language="java" linenumbering="numbered">package com.example;
 
@@ -198,20 +198,20 @@ public class MyResourceTest {
     }
 }</programlisting>
 
-            In this unit test, a Grizzly container is first started and server application is deployed in the
+            In this unit test, a Grizzly container is started and the server application is deployed in the
             test <literal>setUp()</literal> method by a static call to <literal>Main.startServer()</literal>.
-            Next, a JAX-RS client components are created in the same test set-up method. First a new JAX-RS client
-            instance <literal>c</literal> is built and then a JAX-RS web target component pointing to the context root of our
-            application deployed at <literal>http://localhost:8080/myapp/</literal> (a value of
-            <literal>Main.BASE_URI</literal> constant) is stored into a <literal>target</literal> field of the unit test class.
+            Next, JAX-RS client components are created in the same test set-up method. First, a new JAX-RS client
+            instance, <literal>c</literal>, is built and then a JAX-RS web target component pointing to the context root of our
+            application, deployed at <literal>http://localhost:8080/myapp/</literal> (a value of
+            <literal>Main.BASE_URI</literal> constant), is stored into a <literal>target</literal> field of the unit test class.
             This field is then used in the actual unit test method (<literal>testGetIt()</literal>).
         </para>
         <para>
-            In the <literal>testGetIt()</literal> method a fluent JAX-RS Client API is used to connect to and send
-            a HTTP &lit.http.GET; request to the <literal>MyResource</literal> JAX-RS resource class listening on
+            In the <literal>testGetIt()</literal> method, a fluent JAX-RS Client API is used to connect to and send
+            an HTTP &lit.http.GET; request to the <literal>MyResource</literal> JAX-RS resource class listening on the
             <literal>/myresource</literal> URI. As part of the same fluent JAX-RS API method invocation chain, a response is
-            read as a Java <literal>String</literal> type. On the second line in the test method, the response content string
-            returned from the server is compared with the expected phrase in the test assertion. To learn more about using
+            read as a Java <literal>String</literal>. On the second line in the test method, the response content string
+            returned from the server is compared with the expected phrase in the test assertion. To learn more about using the
             JAX-RS Client API, please see the <xref linkend="client" /> chapter.
         </para>
     </section>
@@ -219,12 +219,12 @@ public class MyResourceTest {
     <section xml:id="running-project">
         <title>Running the Project</title>
         <para>
-            Now that we have seen the content of the project, let's try to test-run it. To do this, we need to invoke following
+            Now that we have seen the content of the project, let's try to test-run it. To do this, we need to invoke the following
             command on the command line:
 
             <programlisting language="bash" linenumbering="unnumbered">mvn clean test</programlisting>
 
-            This will compile the project and run the project unit tests. We should see a similar output that informs about a
+            This will compile the project and run the project unit tests. We should see a similar output informing us of a
             successful build once the build is finished:
 
             <screen linenumbering="unnumbered">Results :
@@ -244,7 +244,7 @@ Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
 
             <programlisting language="bash" linenumbering="unnumbered">mvn exec:java</programlisting>
 
-            The application starts and you should soon see the following notification in your console:
+            The application starts and soon afterward you should see this notification on your console:
 
             <screen linenumbering="unnumbered">May 26, 2013 8:08:45 PM org.glassfish.grizzly.http.server.NetworkListener start
 INFO: Started listener bound to [localhost:8080]
@@ -253,23 +253,23 @@ INFO: [HttpServer] Started.
 Jersey app started with WADL available at http://localhost:8080/myapp/application.wadl
 Hit enter to stop it...</screen>
 
-            This informs you that the application has been started and it's WADL descriptor is available at
-            <literal>http://localhost:8080/myapp/application.wadl</literal> URL. You can retrieve the WADL content by
-            executing a <literal>curl http://localhost:8080/myapp/application.wadl</literal> command in your console
-            or by typing the WADL URL into your favorite browser. You should get back an XML document in describing
-            your deployed RESTful application in a WADL format. To learn more about working with WADL, check the
+            This informs you that the application has been started and its WADL descriptor is available at
+            <literal>http://localhost:8080/myapp/application.wadl</literal>. You can retrieve the WADL content by
+            executing <literal>curl http://localhost:8080/myapp/application.wadl</literal> at your console prompt,
+            or by typing the WADL URL into your favorite browser. You should get back an XML document describing
+            your deployed RESTful application in a WADL format. To learn more about working with WADL, check out the
             <xref linkend="wadl" /> chapter.
         </para>
         <para>
             The last thing we should try before concluding this section is to see if we can communicate with our
-            resource deployed at <literal>/myresource</literal> path. We can again either type the resource URL
+            resource deployed at <literal>/myresource</literal>. Once again, we can either type the resource URL
             in the browser or we can use <literal>curl</literal>:
 
             <screen language="bash" linenumbering="unnumbered">$ curl http://localhost:8080/myapp/myresource
 Got it!</screen>
 
-            As we can see, the <literal>curl</literal> command returned with the <literal>Got it!</literal> message that
-            was sent by our resource. We can also ask <literal>curl</literal> to provide more information about the response,
+            As you can see, the <literal>curl</literal> command returned the <literal>Got it!</literal> message
+            sent by our resource. We can also ask <literal>curl</literal> to provide more information about the response,
             for example we can let it display all response headers by using the <literal>-i</literal> switch:
 
             <screen language="bash" linenumbering="unnumbered">curl -i http://localhost:8080/myapp/myresource
@@ -280,15 +280,15 @@ Content-Length: 7
 
 Got it!</screen>
 
-            Here we see the whole content of the response message that our Jersey/JAX-RS application returned, including all
+            Here we see the entire content of the response message that our Jersey/JAX-RS application returned, including all
             the HTTP headers. Notice the <literal>Content-Type: text/plain</literal> header that was derived from the
             value of &jaxrs.Produces; annotation attached to the <literal>MyResource</literal> class.
         </para>
         <para>
-            In case you want to see even more details about the communication between our <literal>curl</literal> client
-            and our resource running on Jersey in a Grizzly I/O container, feel free to try other various options and switches
-            that <literal>curl</literal> provides. For example, this last command will make <literal>curl</literal> output
-            a lot of additional information about the whole communication:
+            If you'd like to see even more details about the communication between our <literal>curl</literal> client
+            and our resource running on Jersey, in a Grizzly I/O container, feel free to try other <literal>curl</literal> 
+            options and switches. For example, this command will make <literal>curl</literal> display
+            a lot of additional information about the entire communication session:
 
             <screen language="bash" linenumbering="unnumbered"><![CDATA[$ curl -v http://localhost:8080/myapp/myresource
 * About to connect() to localhost port 8080 (#0)
@@ -315,10 +315,10 @@ Got it!* Closing connection #0]]></screen>
     <section xml:id="new-webapp">
         <title>Creating a JavaEE Web Application</title>
         <para>
-            To create a Web Application that can be packaged as WAR and deployed in a Servlet container follow a similar process
-            to the one described in <xref linkend="new-from-archetype" />.
-            In addition to the Grizzly-based archetype, Jersey provides also a Maven archetype for creating web application
-            skeletons. To create the new web application skeleton project, execute the following Maven command in the directory
+            To create a Web Application that can be packaged as a .war file and deployed in a Servlet container, follow a process
+            similar to the one described in <xref linkend="new-from-archetype" />.
+            In addition to the Grizzly-based archetype, Jersey also provides a Maven archetype for creating web application
+            skeletons. To create a new web application skeleton project, execute the following Maven command in the directory
             where the new project should reside:
 
             <programlisting language="bash" linenumbering="unnumbered">mvn archetype:generate -DarchetypeArtifactId=jersey-quickstart-webapp \
@@ -327,14 +327,14 @@ Got it!* Closing connection #0]]></screen>
                 -DarchetypeVersion=&version;</programlisting>
 
             As with the Grizzly based project, feel free to adjust the <literal>groupId</literal>, <literal>package</literal>
-            and/or <literal>artifactId</literal> of your new web application project. Alternatively, you can change it by updating
-            the new project &lit.pom.xml; once it gets generated.
+            and/or <literal>artifactId</literal> elements of your new web application project. Alternatively, you can change it by updating
+            the new project's &lit.pom.xml; once it's generated.
         </para>
         <para>
-            Once the project generation from a Jersey maven archetype is successfully finished, you should see the new
-            <literal>simple-service-webapp</literal> project directory created in your current location. The directory contains
-            a standard Maven project structure, similar to the <literal>simple-service</literal> project content we have seen
-            earlier, except it is extended with an additional web application specific content:
+            When the Jersey maven archetype project has been successfully generated, you should see the new
+            <literal>simple-service-webapp</literal> project created within the current directory. The directory contains
+            a standard Maven project structure, similar to the <literal>simple-service</literal> project content we saw 
+            earlier, except that it's extended with additional web application specific content:
 
             <simplelist>
                 <member>
@@ -346,19 +346,19 @@ Got it!* Closing connection #0]]></screen>
                 <member>Project web application files are located under <literal>src/main/webapp</literal>.</member>
             </simplelist>
 
-            The project contains the same <literal>MyResouce</literal> JAX-RS resource class. It does not contain any unit tests
-            as well as it does not contain a <literal>Main</literal> class that was used to setup Grizzly container in the
+            The project contains the same <literal>MyResouce</literal> JAX-RS resource class. However, it doesn't contain any unit tests
+            and it doesn't contain the <literal>Main</literal> class used to setup the Grizzly container in the
             previous project. Instead, it contains the standard Java EE web application <literal>web.xml</literal> deployment
             descriptor under <literal>src/main/webapp/WEB-INF</literal>.
             The last component in the project is an <literal>index.jsp</literal> page that serves as a client for the
-            <literal>MyResource</literal> resource class that is packaged and deployed with the application.
+            <literal>MyResource</literal> resource class packaged and deployed with the application.
         </para>
         <para>
-            To compile and package the application into a WAR, invoke the following maven command in your console:
+            To compile and package the application into a .war file, invoke the following maven command at your console:
 
             <programlisting language="bash" linenumbering="unnumbered">mvn clean package</programlisting>
 
-            A successful build output will produce an output similar to the one below:
+            A successful build will produce output similar to the following:
 
             <screen linenumbering="unnumbered">Results :
 
@@ -381,12 +381,12 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Final Memory: 17M/490M
 [INFO] ------------------------------------------------------------------------</screen>
 
-            Now you are ready to take the packaged WAR (located under <literal>./target/simple-service-webapp.war</literal>)
-            and deploy it to a Servlet container of your choice.
+            Now you are ready to deploy the packaged .war file (located under <literal>./target/simple-service-webapp.war</literal>)
+            to a Servlet container of your choice.
             <important>
                 <para>
                     To deploy a Jersey application, you will need a Servlet container that supports Servlet 2.5 or later.
-                    For full set of advanced features (such as JAX-RS 2.0 Async Support) you will need a Servlet 3.0 or later
+                    For the full set of advanced features (such as JAX-RS 2.0 Async Support) you will need a Servlet 3.0 (or later)
                     compliant container.
                 </para>
             </important>
@@ -396,8 +396,8 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
      <section xml:id="heroku-webapp">
         <title>Creating a Web Application that can be deployed on Heroku</title>
         <para>
-            To create a Web Application that can be either packaged as WAR and deployed in a Servlet container or that can be
-            pushed and deployed on &heroku.link; the process is very similar to the one described in <xref linkend="new-webapp" />.
+            To create a Web Application that can be either packaged as a .war file, and deployed to a Servlet container, or that can be
+            pushed to the Internet and deployed on &heroku.link; the process is very similar to the one described in <xref linkend="new-webapp" />.
             To create the new web application skeleton project, execute the following Maven command in the directory
             where the new project should reside:
 
@@ -406,13 +406,13 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
                 -DgroupId=com.example -DartifactId=simple-heroku-webapp -Dpackage=com.example \
                 -DarchetypeVersion=&version;</programlisting>
 
-            Adjust the <literal>groupId</literal>, <literal>package</literal> and/or <literal>artifactId</literal> of your new web
-            application project to your needs or, alternatively, you can change it by updating the new project &lit.pom.xml; once it
-            gets generated.
+            Adjust the <literal>groupId</literal>, <literal>package</literal> and/or <literal>artifactId</literal> elements of your new web
+            application project to your needs or, alternatively, you can change it by updating the new project &lit.pom.xml; once it's been
+            generated.
         </para>
         <para>
-            Once the project generation from a Jersey maven archetype is successfully finished, you should see the new
-            <literal>simple-heroku-webapp</literal> project directory created in your current location. The directory contains
+            Once project generation from a Jersey maven archetype has successfully completed, you should see the new
+            <literal>simple-heroku-webapp</literal> project directory created within your current directory. The directory contains
             a standard Maven project structure:
 
             <simplelist>
@@ -425,22 +425,22 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
                 <member>Project web application files are located under <literal>src/main/webapp</literal>.</member>
                 <member>Project test-sources (based on &jersey.test.JerseyTest;) are located under <literal>src/test/java</literal>.</member>
                 <member>Heroku system properties (OpenJDK version) are defined in <literal>system.properties</literal>.</member>
-                <member>Lists of the process types in an application for Heroku is in <literal>Procfile</literal>.</member>
+                <member>Lists of the process types in an application for Heroku are in <literal>Procfile</literal>.</member>
             </simplelist>
 
             The project contains one JAX-RS resource class, <literal>MyResouce</literal>, and one resource method which returns
-            simple text message. To make sure the resource is properly tested there is also a end-to-end test-case
+            a simple text message. To make sure the resource is properly tested, there is also an end-to-end test-case
             in <literal>MyResourceTest</literal> (the test is based on &jersey.test.JerseyTest; from our <xref linkend="test-framework" />).
-            Similarly to <literal>simple-service-webapp</literal>, the project contains the standard Java EE web application
-            <literal>web.xml</literal> deployment descriptor under <literal>src/main/webapp/WEB-INF</literal> since the goal is to
+            Similar to the <literal>simple-service-webapp</literal> project, this project contains the standard Java EE web application
+            <literal>web.xml</literal> deployment descriptor under <literal>src/main/webapp/WEB-INF</literal>, since the goal is to
             deploy the application in a Servlet container (the application will run in Jetty on Heroku).
         </para>
         <para>
-            To compile and package the application into a WAR, invoke the following maven command in your console:
+            To compile and package the application into a .war file, invoke the following maven command at your console:
 
             <programlisting language="bash" linenumbering="unnumbered">mvn clean package</programlisting>
 
-            A successful build output will produce an output similar to the one below:
+            A successful build will produce output similar to the following:
 
             <screen linenumbering="unnumbered">    Results :
 
@@ -490,14 +490,14 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
     [INFO] Final Memory: 20M/246M
     [INFO] ------------------------------------------------------------------------</screen>
 
-            Now that you know everything went as expected you are ready to:
+            Now that you know everything went as expected, you are ready to:
 
             <itemizedlist>
                 <listitem><simpara>
                     make some changes in your project,
                 </simpara></listitem>
                 <listitem><simpara>
-                    take the packaged WAR (located under <literal>./target/simple-service-webapp.war</literal>) and deploy it to a
+                    deploy the .war file (located under <literal>./target/simple-service-webapp.war</literal>) to a
                     Servlet container of your choice, or
                 </simpara></listitem>
                 <listitem><simpara>
@@ -507,8 +507,8 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
 
             <tip>
                 <para>
-                    If you want to make some changes to your application you can run the application locally by simply running
-                    <code>mvn clean package jetty:run</code> (which starts the embedded Jetty server) or by
+                    If you want to make some changes to your application you can run it locally by simply executing
+                    <code>mvn clean package jetty:run</code> (which starts the embedded Jetty server), or by executing
                     <code>java -cp target/classes:target/dependency/* com.example.heroku.Main</code> (this is how Jetty is
                     started on Heroku).
                 </para>
@@ -517,14 +517,14 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
         <section xml:id="deploy-it-on-heroku">
             <title>Deploy it on Heroku</title>
             <para>
-                We won't go into details how to create an account on &heroku.link; and setup the <literal>Heroku</literal> tools
-                on your machine. You can find a lot of information in this article: <link xlink:href='https://devcenter.heroku.com/articles/getting-started-with-java'>Getting Started with Java on Heroku</link>.
+                We won't go into details about how to create an account on &heroku.link; and setup the <literal>Heroku</literal> tools
+                on your development machine. You can find a lot of information in this article: <link xlink:href='https://devcenter.heroku.com/articles/getting-started-with-java'>Getting Started with Java on Heroku</link>.
                 Instead, we'll take a look at the steps needed after your environment is ready.
             </para>
             <para>
                 The first step is to create a Git repository from your project:
                 <screen linenumbering="unnumbered">    $ git init
-    Initialized empty Git repository in /.../simple-heroku-webapp/.git/</screen>
+    Initialized an empty Git repository in /.../simple-heroku-webapp/.git/</screen>
             </para>
             <para>
                 Then, create a &heroku.link; instance and add a remote reference to your Git repository:
@@ -535,7 +535,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
 
                 <note>
                     <para>
-                        The name of the instance is changed in the output to <literal>simple-heroku-webapp</literal>. Your will be
+                        The name of the instance is changed in the output to <literal>simple-heroku-webapp</literal>. Yours will be
                         named more like <literal>tranquil-basin-4744</literal>.
                     </para>
                 </note>
@@ -555,7 +555,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
      create mode 100644 system.properties</screen>
             </para>
             <para>
-                Push changes to Heroku:
+                Push the changes to Heroku:
                 <screen linenumbering="unnumbered">    $ git push heroku master
     Counting objects: 21, done.
     Delta compression using up to 8 threads.
@@ -650,7 +650,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
      * [new branch]      master -> master</screen>
             </para>
             <para>
-                Now you can access your application at, for example: <link xlink:href='http://simple-heroku-webapp.herokuapp.com/myresource'>http://simple-heroku-webapp.herokuapp.com/myresource</link>
+                Now you can access your application at (for example): <link xlink:href='http://simple-heroku-webapp.herokuapp.com/myresource'>http://simple-heroku-webapp.herokuapp.com/myresource</link>
             </para>
         </section>
     </section>
@@ -658,15 +658,15 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
     <section xml:id="exploring-jersey-examples">
         <title>Exploring Other Jersey Examples</title>
         <para>
-            In the sections above, we have covered an approach how to get dirty with Jersey quickly. Please consult the other
+            In the sections above, we covered an approach for getting dirty with Jersey quickly. Please consult the other
             sections of the Jersey User Guide to learn more about Jersey and JAX-RS.
-            Even though we try our best to cover as much as possible in the User Guide, there is always a chance that you would
-            not be able to get a full answer to the problem you are solving. In that case, consider diving in our examples that
-            provide additional tips and hints to the features you may want to use in your projects.
+            Even though we try our best to cover as much as possible in the User Guide, there is always a chance you'll
+            not be able to find a complete answer to your specific problem. In that case, consider diving in our examples, which
+            provide additional tips and hints about features you may wish to use in your projects.
         </para>
         <para>
-            Jersey codebase contains a number of useful examples on how to use various JAX-RS and Jersey features.
-            Feel free to browse through the code of individual
+            The Jersey codebase contains a number of useful examples on how to use various JAX-RS and Jersey features.
+            Feel free to browse through the code of the individual
             <link xlink:href="&jersey.github.examples.uri;">Jersey Examples</link> in the Jersey source repository.
             For off-line browsing, you can also download a bundle with all the examples from
             <link xlink:href="https://maven.java.net/content/repositories/&repository;/org/glassfish/jersey/bundles/jersey-examples/&version;/">here</link>.
