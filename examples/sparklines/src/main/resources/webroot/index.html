@@ -2,19 +2,19 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2014-2017 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
     and Distribution License("CDDL") (collectively, the "License").  You
     may not use this file except in compliance with the License.  You can
     obtain a copy of the License at
-    http://glassfish.java.net/public/CDDL+GPL_1_1.html
-    or packager/legal/LICENSE.txt.  See the License for the specific
+    https://oss.oracle.com/licenses/CDDL+GPL-1.1
+    or LICENSE.txt.  See the License for the specific
     language governing permissions and limitations under the License.
 
     When distributing the software, include this License Header Notice in each
-    file and include the License file at packager/legal/LICENSE.txt.
+    file and include the License file at LICENSE.txt.
 
     GPL Classpath Exception:
     Oracle designates this particular file as subject to the "Classpath"
@@ -45,15 +45,15 @@
 <head>
     <title></title>
     <!-- get bootstrap css from CDN -->
-    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet"
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"
           media="screen">
 
 </head>
 <body style="padding-top: 80px;">
 <!-- get jquery from CDN -->
-<script src="http://code.jquery.com/jquery-latest.js"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
 <!-- get bootstrap.js from CDN -->
-<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
+<script src="lib/bootstrap.js"></script>
 <script>
     $(document).ready(function () {
         $(".sparkline").hide();
@@ -70,49 +70,52 @@
     });
 </script>
 
-<div class="navbar navbar-inverse navbar-fixed-top">
-    <div class="navbar-inner">
-        <div class="container">
-            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </a>
-            <a class="brand" href="http://jersey.java.net">
-                <img src="http://jersey.java.net/images/jersey_logo.png" style="width:22px; margin-right:10px;"
-                     title="Jersey Website"/>
-            </a>
+<nav class="navbar navbar-default navbar-default navbar-inverse navbar-fixed-top" role="navigation">
+    <a class="navbar-brand" href="https://jersey.github.io">
+        <img src="https://jersey.github.io/images/jersey_logo.png" style="width:22px; margin-right:10px;"
+             title="Jersey Website"/>
+    </a>
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
 
-            <div class="nav-collapse collapse">
-                <ul class="nav">
-                    <li><a href="http://jersey.java.net/documentation/latest/index.html">Jersey Doc</a></li>
-                    <li><a href="http://jersey.java.net/apidocs/latest/jersey/index.html">Jersey API</a></li>
-                    <li><a href="http://jersey.java.net/download.html">Download Jersey!</a></li>
-                </ul>
-            </div>
-            <!--/.nav-collapse -->
+        <div class="collapse navbar-collapse nav-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="https://jersey.github.io/documentation/latest/index.html">Jersey Doc</a></li>
+                <li><a href="https://jersey.github.io/apidocs/latest/jersey/index.html">Jersey API</a></li>
+                <li><a href="https://jersey.github.io/download.html">Download Jersey!</a></li>
+            </ul>
         </div>
+        <!--/.nav-collapse -->
     </div>
-</div>
+</nav>
 
 <div class="container">
     <h1>Jersey Sparklines Example</h1>
 
     <form id="form" class="well" action="#">
-        <label for="sParams">Sparkline values: </label>
-        <input type="text"
-               name="d"
-               id="sParams"
-               class="span3"
-               value="88,84,82,92,82,86,66,82,44,64,66,88,96,80,24,26,14,0,0,26,8,6,6,24,52,66,36,6,10,14,30"
-        />
-        <span class="help-inline">Comma separated list of numbers...</span><br/><br/>
+        <label for="sParams">Sparkline values: </label><br/>
+        <div class="col-xs-5" style="padding-left:0px">
+            <input type="text"
+                   name="d"
+                   id="sParams"
+                   class="form-control"
+                   value="88,84,82,92,82,86,66,82,44,64,66,88,96,80,24,26,14,0,0,26,8,6,6,24,52,66,36,6,10,14,30"
+            />
+        </div>
+        <span class="help-block" style="display:inline"><div style="padding-top:8px">Comma separated list of numbers...</div></span><br/><br/>
         <label>Sparkline type: </label>
-        <input type="radio" name="sparklineType" value="discrete" checked="checked" class="radio">discrete</input><br/>
-        <input type="radio" name="sparklineType" value="smooth" class="radio">smooth</input>
+        <div class="radio" style="padding-left:25px">
+            <input type="radio" name="sparklineType" value="discrete" checked="checked"/>discrete<br/>
+        </div>
+        <div class="radio" style="padding-left:25px">
+            <input type="radio" name="sparklineType" value="smooth"/>smooth
+        </div>
         <br/><br/>
         <button type="submit" class="btn">Create sparkline</button>
-
     </form>
     <div id="sContainer" class="well">
         <span id="sLabel">Your&nbsp;sparkline: </span>

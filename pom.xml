@@ -3,19 +3,19 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2017 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2018 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
     and Distribution License("CDDL") (collectively, the "License").  You
     may not use this file except in compliance with the License.  You can
     obtain a copy of the License at
-    http://glassfish.java.net/public/CDDL+GPL_1_1.html
-    or packager/legal/LICENSE.txt.  See the License for the specific
+    https://oss.oracle.com/licenses/CDDL+GPL-1.1
+    or LICENSE.txt.  See the License for the specific
     language governing permissions and limitations under the License.
 
     When distributing the software, include this License Header Notice in each
-    file and include the License file at packager/legal/LICENSE.txt.
+    file and include the License file at LICENSE.txt.
 
     GPL Classpath Exception:
     Oracle designates this particular file as subject to the "Classpath"
@@ -40,6 +40,7 @@
     holder.
 
 -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -52,10 +53,10 @@
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <version>2.26-SNAPSHOT</version>
+    <version>2.28-SNAPSHOT</version>
     <name>jersey</name>
     <description>
-        Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339)
+        Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.1 (JSR 370)
         production quality Reference Implementation for building RESTful Web services.
     </description>
 
@@ -86,10 +87,29 @@
 
     <developers>
         <developer>
-            <name>Pavel Bucek</name>
+            <name>Roman Grigoriadi</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com/</organizationUrl>
-            <url>https://blogs.oracle.com/PavelBucek</url>
+        </developer>
+        <developer>
+            <name>Lukas Jungmann</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Dmitry Kornilov</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Tomas Kraus</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Tomas Langer</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
         <developer>
             <name>Santiago Pericas-Geertsen</name>
@@ -97,50 +117,81 @@
             <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
         <developer>
-            <name>Marek Potociar</name>
+            <name>Jan Supol</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com/</organizationUrl>
-        </developer>
-        <developer>
-            <name>Libor Kramolis</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
-        </developer>
-        <developer>
-            <name>Adam Lindenthal</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
-        </developer>
-        <developer>
-            <name>Stepan Vavra</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com</organizationUrl>
         </developer>
     </developers>
 
     <contributors>
         <contributor>
-            <name>Jakub Podlesak</name>
+            <name>Petr Bouda</name>
+        </contributor>
+        <contributor>
+            <name>Pavel Bucek</name>
             <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com/</organizationUrl>
+            <url>https://blogs.oracle.com/PavelBucek</url>
         </contributor>
         <contributor>
             <name>Michal Gajdos</name>
             <url>http://blog.dejavu.sk</url>
         </contributor>
         <contributor>
-            <name>Petr Bouda</name>
+            <name>Petr Janouch</name>
         </contributor>
         <contributor>
-            <name>Petr Janouch</name>
+            <name>Libor Kramolis</name>
+        </contributor>
+        <contributor>
+            <name>Adam Lindenthal</name>
+        </contributor>
+        <contributor>
+            <name>Jakub Podlesak</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com/</organizationUrl>
+        </contributor>
+        <contributor>
+            <name>Marek Potociar</name>
+        </contributor>
+        <contributor>
+            <name>Stepan Vavra</name>
         </contributor>
     </contributors>
 
     <licenses>
         <license>
-            <name>CDDL+GPL License</name>
-            <url>http://glassfish.java.net/public/CDDL+GPL_1_1.html</url>
+            <name>CDDL 1.1</name>
+            <url>https://oss.oracle.com/licenses/CDDL+GPL-1.1</url>
             <distribution>repo</distribution>
+            <comments>Except for Guava, JSR-166 files, Dropwizard Monitoring inspired classes, ASM and Jackson JAX-RS Providers.
+                See also https://github.com/jersey/jersey/blob/master/NOTICE.txt</comments>
+        </license>
+        <license>
+            <name>GPL2 w/ CPE</name>
+            <url>https://oss.oracle.com/licenses/CDDL+GPL-1.1</url>
+            <distribution>repo</distribution>
+            <comments>Except for Guava, JSR-166 files, Dropwizard Monitoring inspired classes, ASM and Jackson JAX-RS Providers.
+                See also https://github.com/jersey/jersey/blob/master/NOTICE.txt</comments>
+        </license>
+        <license>
+            <name>Apache License, 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+            <comments>Google Guava @ org.glassfish.jersey.internal.guava,
+                      Dropwizard Monitoring inspired classes @ org.glassfish.jersey.server.internal.monitoring.core and
+                      Jackson JAX-RS Providers @ org.glassfish.jersey.jackson.internal.jackson.jaxrs</comments>
+        </license>
+        <license>
+            <name>Public Domain</name>
+            <url>https://creativecommons.org/publicdomain/zero/1.0/</url>
+            <distribution>repo</distribution>
+            <comments>JSR-166 Extension to JEP 266 @ org.glassfish.jersey.internal.jsr166</comments>
+        </license>
+        <license>
+            <name>Modified BSD</name>
+            <url>http://asm.objectweb.org/license.html</url>
+            <distribution>repo</distribution>
+            <comments>ASM @ jersey.repackaged.org.objectweb.asm</comments>
         </license>
     </licenses>
 
@@ -167,7 +218,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>1.3.1</version>
+                    <version>1.4.1</version>
                     <executions>
                         <execution>
                             <id>enforce-versions</id>
@@ -309,7 +360,7 @@
                                 All Rights Reserved. Use is subject to license terms.]]>
                         </bottom>
                         <links>
-                            <link>http://jersey.java.net/apidocs-javax.jax-rs/2.0.1</link>
+                            <link>https://jax-rs.github.io/apidocs/2.1/</link>
                             <link>http://hk2.java.net/nonav/hk2-api/apidocs</link>
                         </links>
                         <excludePackageNames>
@@ -640,6 +691,11 @@
                         <!-- Do not create reduced pom - jaxrs-ri cannot be built when set to true -->
                         <createDependencyReducedPom>false</createDependencyReducedPom>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.8</version>
                 </plugin>
                 <plugin>
                     <groupId>org.fortasoft</groupId>
@@ -1168,8 +1224,8 @@
                         com.sun.ws.rs.ext:*.examples.*:*.internal.*:*.tests.*
                     </excludePackageNames>
                     <links>
-                        <link>http://jersey.github.io/apidocs-javax.jax-rs/2.0.1</link>
-                        <link>http://hk2.java.net/${hk2.version}/apidocs</link>
+                        <link>https://jax-rs.github.io/apidocs/2.1</link>
+                        <link>https://javaee.github.io/hk2/apidocs/</link>
                     </links>
                     <additionalparam>-Xdoclint:none</additionalparam>
                     <sourceFileExcludes>
@@ -1625,7 +1681,7 @@
             <dependency>
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
-                <version>1.1</version>
+                <version>1.2</version>
             </dependency>
 
             <!-- Weld -->
@@ -1782,24 +1838,20 @@
                 <version>${yasson.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>io.opentracing</groupId>
+                <artifactId>opentracing-api</artifactId>
+                <version>${opentracing.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.opentracing</groupId>
+                <artifactId>opentracing-util</artifactId>
+                <version>${opentracing.version}</version>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
-
-    <!-- TODO: This repository declaration only speeds up turnaround when adopting new JAX-RS milestone builds. -->
-    <!-- TODO: Should be removed before 2.26 final release. -->
-    <repositories>
-        <repository>
-            <id>java.net-releases</id>
-            <url>https://maven.java.net/content/repositories/releases</url>
-        </repository>
-        <repository>
-            <id>yasson-releases</id>
-            <name>Yasson Releases repository</name>
-            <url>https://repo.eclipse.org/content/repositories/yasson-releases</url>
-        </repository>
-
-    </repositories>
 
     <properties>
         <archetype.mvn.plugin.version>2.4</archetype.mvn.plugin.version>
@@ -1844,19 +1896,19 @@
         <fasterxml.classmate.version>1.3.3</fasterxml.classmate.version>
         <findbugs.glassfish.version>1.3</findbugs.glassfish.version>
         <findbugs.version>3.0.2</findbugs.version>
-        <freemarker.version>2.3.23</freemarker.version>
-        <gae.version>1.8.4</gae.version>
+        <freemarker.version>2.3.27-incubating</freemarker.version>
+        <gae.version>1.9.59</gae.version>
         <gpg.mvn.plugin.version>1.6</gpg.mvn.plugin.version>
-        <grizzly.client.version>1.11</grizzly.client.version>
-        <grizzly2.version>2.4.0-beta8</grizzly2.version>
+        <grizzly.client.version>1.13</grizzly.client.version>
+        <grizzly2.version>2.4.0</grizzly2.version>
         <guava.version>18.0</guava.version>
         <hamcrest.version>1.3</hamcrest.version>
         <xmlunit.version>1.6</xmlunit.version>
-        <hk2.version>2.5.0-b36</hk2.version>
+        <hk2.version>2.5.0-b42</hk2.version>
         <httpclient.version>4.5</httpclient.version> <!-- TODO: 4.5.2 doesn't work; apache client connector tests -->
-        <jackson.version>2.8.4</jackson.version>
+        <jackson.version>2.8.10</jackson.version>
         <jackson1.version>1.9.13</jackson1.version>
-        <javassist.version>3.20.0-GA</javassist.version>
+        <javassist.version>3.22.0-CR2</javassist.version>
         <javax.annotation.version>1.2</javax.annotation.version>
         <javax.annotation.bundle.version>1.2</javax.annotation.bundle.version>
         <javax.el.version>2.2.4</javax.el.version>
@@ -1868,13 +1920,13 @@
         <jaxb.ri.version>2.2.7</jaxb.ri.version>
         <jsonb.api.version>1.0</jsonb.api.version>
         <jaxrs.api.spec.version>2.1</jaxrs.api.spec.version>
-        <jaxrs.api.impl.version>2.1-m09</jaxrs.api.impl.version>
+        <jaxrs.api.impl.version>2.1</jaxrs.api.impl.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jersey1.version>1.19.3</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>
         <jettison.version>1.3.7</jettison.version> <!-- TODO: 1.3.8 doesn't work; AbstractJsonTest complexBeanWithAttributes -->
         <jetty.plugin.version>6.1.26</jetty.plugin.version>
-        <jetty.version>9.4.3.v20170317</jetty.version>
+        <jetty.version>9.4.7.v20170914</jetty.version>
         <jetty.servlet.api.25.version>6.1.14</jetty.servlet.api.25.version>
         <jmh.version>1.10.2</jmh.version>
         <jmockit.version>1.18</jmockit.version>
@@ -1883,14 +1935,16 @@
         <jsp.version>2.0</jsp.version>
         <jstl.version>1.2</jstl.version>
         <jta.api.version>1.2</jta.api.version>
-        <kryo.version>3.0.2</kryo.version>
-        <logback.version>1.1.3</logback.version>
+        <kryo.version>4.0.1</kryo.version>
+        <logback.version>1.2.3</logback.version>
         <mimepull.version>1.9.6</mimepull.version>
         <mockito.version>1.10.19</mockito.version>
         <moxy.version>2.6.4</moxy.version>
+        <mockito.version>1.10.19</mockito.version>
         <mustache.version>0.8.17</mustache.version>
         <netty.version>4.1.5.Final</netty.version>
         <nexus-staging.mvn.plugin.version>1.6.7</nexus-staging.mvn.plugin.version>
+        <opentracing.version>0.30.0</opentracing.version>
         <osgi.version>4.2.0</osgi.version>
         <pax.exam.version>4.9.1</pax.exam.version>
         <pax.web.version>0.7.4</pax.web.version><!-- TODO: UPGRADE! -->
@@ -1900,6 +1954,7 @@
         <rome.version>1.0</rome.version>
         <servlet2.version>2.4</servlet2.version>
         <servlet3.version>3.0.1</servlet3.version>
+        <servlet4.version>4.0.0</servlet4.version>
         <simple.version>6.0.1</simple.version>
         <slf4j.version>1.7.12</slf4j.version>
         <spring4.version>4.3.4.RELEASE</spring4.version>

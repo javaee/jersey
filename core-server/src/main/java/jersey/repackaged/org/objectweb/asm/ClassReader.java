@@ -166,8 +166,8 @@ public class ClassReader {
     public ClassReader(final byte[] b, final int off, final int len) {
         this.b = b;
         // checks the class version
-        // added "support" for java 9 compiled classes
-        if (readShort(off + 6) > Opcodes.V9) {
+        // added "support" for java 11 compiled classes
+        if (readShort(off + 6) > Opcodes.V11) {
             throw new IllegalArgumentException();
         }
         // parses the constant pool

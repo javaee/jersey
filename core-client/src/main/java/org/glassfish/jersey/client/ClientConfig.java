@@ -8,12 +8,12 @@
  * and Distribution License("CDDL") (collectively, the "License").  You
  * may not use this file except in compliance with the License.  You can
  * obtain a copy of the License at
- * http://glassfish.java.net/public/CDDL+GPL_1_1.html
- * or packager/legal/LICENSE.txt.  See the License for the specific
+ * https://oss.oracle.com/licenses/CDDL+GPL-1.1
+ * or LICENSE.txt.  See the License for the specific
  * language governing permissions and limitations under the License.
  *
  * When distributing the software, include this License Header Notice in each
- * file and include the License file at packager/legal/LICENSE.txt.
+ * file and include the License file at LICENSE.txt.
  *
  * GPL Classpath Exception:
  * Oracle designates this particular file as subject to the "Classpath"
@@ -47,6 +47,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Configurable;
@@ -126,6 +128,8 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
         private final CommonConfig commonConfig;
         private final JerseyClient client;
         private volatile ConnectorProvider connectorProvider;
+        private volatile ExecutorService executorService;
+        private volatile ScheduledExecutorService scheduledExecutorService;
 
         private final LazyValue<ClientRuntime> runtime = Values.lazy((Value<ClientRuntime>) this::initRuntime);
 
@@ -175,6 +179,8 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             this.client = client;
             this.commonConfig = new CommonConfig(original.commonConfig);
             this.connectorProvider = original.connectorProvider;
+            this.executorService = original.executorService;
+            this.scheduledExecutorService = original.scheduledExecutorService;
         }
 
         /**
@@ -288,6 +294,24 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             return state;
         }
 
+        State executorService(final ExecutorService executorService) {
+            if (executorService == null) {
+                throw new NullPointerException(LocalizationMessages.NULL_EXECUTOR_SERVICE());
+            }
+            final State state = strategy.onChange(this);
+            state.executorService = executorService;
+            return state;
+        }
+
+        State scheduledExecutorService(final ScheduledExecutorService scheduledExecutorService) {
+            if (scheduledExecutorService == null) {
+                throw new NullPointerException(LocalizationMessages.NULL_SCHEDULED_EXECUTOR_SERVICE());
+            }
+            final State state = strategy.onChange(this);
+            state.scheduledExecutorService = scheduledExecutorService;
+            return state;
+        }
+
         Connector getConnector() {
             // Get the connector only if the runtime has been initialized.
             return (runtime.isInitialized()) ? runtime.get().getConnector() : null;
@@ -295,6 +319,14 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
 
         ConnectorProvider getConnectorProvider() {
             return connectorProvider;
+        }
+
+        ExecutorService getExecutorService() {
+            return executorService;
+        }
+
+        ScheduledExecutorService getScheduledExecutorService() {
+            return scheduledExecutorService;
         }
 
         JerseyClient getClient() {
@@ -367,7 +399,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
         }
 
         public void configureAutoDiscoverableProviders(InjectionManager injectionManager,
-                List<AutoDiscoverable> autoDiscoverables) {
+                                                       List<AutoDiscoverable> autoDiscoverables) {
             commonConfig.configureAutoDiscoverableProviders(injectionManager, autoDiscoverables, false);
         }
 
@@ -427,7 +459,10 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             ProviderBinder.bindProviders(runtimeCfgState.getComponentBag(), RuntimeType.CLIENT, null, injectionManager);
 
             ClientExecutorProvidersConfigurator executorProvidersConfigurator =
-                    new ClientExecutorProvidersConfigurator(runtimeCfgState.getComponentBag(), runtimeCfgState.client);
+                    new ClientExecutorProvidersConfigurator(runtimeCfgState.getComponentBag(),
+                            runtimeCfgState.client,
+                            this.executorService,
+                            this.scheduledExecutorService);
             executorProvidersConfigurator.init(injectionManager, bootstrapBag);
 
             injectionManager.completeRegistration();
@@ -556,7 +591,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
 
     /**
      * Load the internal configuration state from an externally provided configuration state.
-     *
+     * <p>
      * Calling this method effectively replaces existing configuration state of the instance
      * with the state represented by the externally provided configuration.
      *
@@ -712,8 +747,30 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
     }
 
     /**
-     * Get the client transport connector.
+     * Register custom Jersey client async executor.
      *
+     * @param executorService custom executor service instance
+     * @return this client config instance
+     */
+    public ClientConfig executorService(final ExecutorService executorService) {
+        state = state.executorService(executorService);
+        return this;
+    }
+
+    /**
+     * Register custom Jersey client scheduler.
+     *
+     * @param scheduledExecutorService custom scheduled executor service instance
+     * @return this client config instance
+     */
+    public ClientConfig scheduledExecutorService(final ScheduledExecutorService scheduledExecutorService) {
+        state = state.scheduledExecutorService(scheduledExecutorService);
+        return this;
+    }
+
+    /**
+     * Get the client transport connector.
+     * <p>
      * May return {@code null} if no connector has been set.
      *
      * @return client transport connector or {code null} if not set.
@@ -724,7 +781,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
 
     /**
      * Get the client transport connector provider.
-     *
+     * <p>
      * If no custom connector provider has been set,
      * {@link org.glassfish.jersey.client.HttpUrlConnectorProvider default connector provider}
      * instance is returned.
@@ -734,6 +791,30 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
      */
     public ConnectorProvider getConnectorProvider() {
         return state.getConnectorProvider();
+    }
+
+    /**
+     * Get custom client executor service.
+     * <p>
+     * May return null if no custom executor service has been set.
+     *
+     * @return custom executor service instance or {@code null} if not set.
+     * @since 2.26
+     */
+    public ExecutorService getExecutorService() {
+        return state.getExecutorService();
+    }
+
+    /**
+     * Get custom client scheduled executor service.
+     * <p>
+     * May return null if no custom scheduled executor service has been set.
+     *
+     * @return custom executor service instance or {@code null} if not set.
+     * @since 2.26
+     */
+    public ScheduledExecutorService getScheduledExecutorService() {
+        return state.getScheduledExecutorService();
     }
 
     /**
@@ -751,7 +832,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
 
     /**
      * Get the parent Jersey client this configuration is bound to.
-     *
+     * <p>
      * May return {@code null} if no parent client has been bound.
      *
      * @return bound parent Jersey client or {@code null} if not bound.

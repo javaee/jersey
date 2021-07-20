@@ -8,12 +8,12 @@
  * and Distribution License("CDDL") (collectively, the "License").  You
  * may not use this file except in compliance with the License.  You can
  * obtain a copy of the License at
- * http://glassfish.java.net/public/CDDL+GPL_1_1.html
- * or packager/legal/LICENSE.txt.  See the License for the specific
+ * https://oss.oracle.com/licenses/CDDL+GPL-1.1
+ * or LICENSE.txt.  See the License for the specific
  * language governing permissions and limitations under the License.
  *
  * When distributing the software, include this License Header Notice in each
- * file and include the License file at packager/legal/LICENSE.txt.
+ * file and include the License file at LICENSE.txt.
  *
  * GPL Classpath Exception:
  * Oracle designates this particular file as subject to the "Classpath"
@@ -74,10 +74,16 @@ class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfi
 
     private final ComponentBag componentBag;
     private final JerseyClient client;
+    private final ExecutorService customExecutorService;
+    private final ScheduledExecutorService customScheduledExecutorService;
 
-    ClientExecutorProvidersConfigurator(ComponentBag componentBag, JerseyClient client) {
+    ClientExecutorProvidersConfigurator(ComponentBag componentBag, JerseyClient client,
+                                        ExecutorService customExecutorService,
+                                        ScheduledExecutorService customScheduledExecutorService) {
         this.componentBag = componentBag;
         this.client = client;
+        this.customExecutorService = customExecutorService;
+        this.customScheduledExecutorService = customScheduledExecutorService;
     }
 
     @Override
@@ -85,19 +91,22 @@ class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfi
         Map<String, Object> runtimeProperties = bootstrapBag.getConfiguration().getProperties();
         ManagedObjectsFinalizer finalizer = bootstrapBag.getManagedObjectsFinalizer();
 
-        ExecutorServiceProvider defaultAsyncExecutorProvider = null;
-        ScheduledExecutorServiceProvider defaultScheduledExecutorProvider = null;
+        ExecutorServiceProvider defaultAsyncExecutorProvider;
+        ScheduledExecutorServiceProvider defaultScheduledExecutorProvider;
 
-        final ExecutorService clientExecutorService = client.getExecutorService();
+        final ExecutorService clientExecutorService = client.getExecutorService() == null
+                // custom executor service can be also set via managed client config class, in that case, it ends up in the
+                // customExecutorService field (similar for scheduled version)
+                ? customExecutorService
+                : client.getExecutorService();
 
         // if there is a users provided executor service, use it
         if (clientExecutorService != null) {
             defaultAsyncExecutorProvider = new ClientExecutorServiceProvider(clientExecutorService);
-        // otherwise, check for ClientProperties.ASYNC_THREADPOOL_SIZE - if that is set, Jersey will create the
-        // ExecutorService to be used. If not and running on Java EE container, ManagedExecutorService will be used.
-        // Final fallback is DefaultClientAsyncExecutorProvider with defined default.
+            // otherwise, check for ClientProperties.ASYNC_THREADPOOL_SIZE - if that is set, Jersey will create the
+            // ExecutorService to be used. If not and running on Java EE container, ManagedExecutorService will be used.
+            // Final fallback is DefaultClientAsyncExecutorProvider with defined default.
         } else {
-
             // Default async request executors support
             Integer asyncThreadPoolSize = ClientProperties
                     .getValue(runtimeProperties, ClientProperties.ASYNC_THREADPOOL_SIZE, Integer.class);
@@ -127,7 +136,11 @@ class ClientExecutorProvidersConfigurator extends AbstractExecutorProvidersConfi
         injectionManager.register(executorBinding);
         finalizer.registerForPreDestroyCall(defaultAsyncExecutorProvider);
 
-        final ScheduledExecutorService clientScheduledExecutorService = client.getScheduledExecutorService();
+        final ScheduledExecutorService clientScheduledExecutorService = client.getScheduledExecutorService() == null
+                // scheduled executor service set from {@link ClientConfig}.
+                ? customScheduledExecutorService
+                : client.getScheduledExecutorService();
+
         if (clientScheduledExecutorService != null) {
             defaultScheduledExecutorProvider =
                     new ClientScheduledExecutorServiceProvider(Values.of(clientScheduledExecutorService));

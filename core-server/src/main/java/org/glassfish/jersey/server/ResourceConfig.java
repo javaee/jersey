@@ -8,12 +8,12 @@
  * and Distribution License("CDDL") (collectively, the "License").  You
  * may not use this file except in compliance with the License.  You can
  * obtain a copy of the License at
- * http://glassfish.java.net/public/CDDL+GPL_1_1.html
- * or packager/legal/LICENSE.txt.  See the License for the specific
+ * https://oss.oracle.com/licenses/CDDL+GPL-1.1
+ * or LICENSE.txt.  See the License for the specific
  * language governing permissions and limitations under the License.
  *
  * When distributing the software, include this License Header Notice in each
- * file and include the License file at packager/legal/LICENSE.txt.
+ * file and include the License file at LICENSE.txt.
  *
  * GPL Classpath Exception:
  * Oracle designates this particular file as subject to the "Classpath"
@@ -386,8 +386,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
     /**
      * Add properties to {@code ResourceConfig}.
      * <p/>
-     * If any of the added properties exists already, he values of the existing
-     * properties will be replaced with new values.
+     * If any of the added properties exists already, old values of existing
+     * properties will be replaced by new values.
      *
      * @param properties properties to add.
      * @return updated resource configuration instance.

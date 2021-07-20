@@ -1,19 +1,19 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2017 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
  * and Distribution License("CDDL") (collectively, the "License").  You
  * may not use this file except in compliance with the License.  You can
  * obtain a copy of the License at
- * http://glassfish.java.net/public/CDDL+GPL_1_1.html
- * or packager/legal/LICENSE.txt.  See the License for the specific
+ * https://oss.oracle.com/licenses/CDDL+GPL-1.1
+ * or LICENSE.txt.  See the License for the specific
  * language governing permissions and limitations under the License.
  *
  * When distributing the software, include this License Header Notice in each
- * file and include the License file at packager/legal/LICENSE.txt.
+ * file and include the License file at LICENSE.txt.
  *
  * GPL Classpath Exception:
  * Oracle designates this particular file as subject to the "Classpath"
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.util;
 
 import java.lang.reflect.Method;
@@ -45,6 +46,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 import org.junit.Test;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -185,5 +187,48 @@ public class ReflectionHelperTest {
         final PrivilegedAction<Method> methodPA = ReflectionHelper.getFromStringStringMethodPA(InvalidFromStringClass.class);
 
         assertThat("Invalid valueOf method found.", methodPA.run(), nullValue());
+    }
+
+    public static class IsGetterTester {
+
+        public int get() {
+            return 0;
+        }
+
+        public boolean is() {
+            return true;
+        }
+
+        public int getSomething() {
+            return 0;
+        }
+
+        public boolean isSomething() {
+            return true;
+        }
+    }
+
+    @Test
+    public void testIsGetterWithGetOnlyNegative() throws Exception {
+        assertThat("isGetter should have returned false for method named 'get'",
+                ReflectionHelper.isGetter(IsGetterTester.class.getMethod("get")), is(false));
+    }
+
+    @Test
+    public void testIsGetterWithIsOnlyNegative() throws Exception {
+        assertThat("isGetter should have returned false for method named 'is'",
+                ReflectionHelper.isGetter(IsGetterTester.class.getMethod("is")), is(false));
+    }
+
+    @Test
+    public void testIsGetterWithRealGetterPositive() throws Exception {
+        assertThat("isGetter should have returned true for method named 'getSomething'",
+                ReflectionHelper.isGetter(IsGetterTester.class.getMethod("getSomething")), is(true));
+    }
+
+    @Test
+    public void testIsGetterWithRealIsPositive() throws Exception {
+        assertThat("isGetter should have returned true for method named 'isSomething'",
+                ReflectionHelper.isGetter(IsGetterTester.class.getMethod("isSomething")), is(true));
     }
 }

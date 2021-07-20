@@ -8,12 +8,12 @@
  * and Distribution License("CDDL") (collectively, the "License").  You
  * may not use this file except in compliance with the License.  You can
  * obtain a copy of the License at
- * http://glassfish.java.net/public/CDDL+GPL_1_1.html
- * or packager/legal/LICENSE.txt.  See the License for the specific
+ * https://oss.oracle.com/licenses/CDDL+GPL-1.1
+ * or LICENSE.txt.  See the License for the specific
  * language governing permissions and limitations under the License.
  *
  * When distributing the software, include this License Header Notice in each
- * file and include the License file at packager/legal/LICENSE.txt.
+ * file and include the License file at LICENSE.txt.
  *
  * GPL Classpath Exception:
  * Oracle designates this particular file as subject to the "Classpath"
@@ -130,10 +130,14 @@ class ClientRuntime implements JerseyClient.ShutdownHook, ClientExecutor {
         this.config = config;
         this.connector = connector;
         this.requestScope = bootstrapBag.getRequestScope();
-        this.asyncRequestExecutor = Values.lazy((Value<ExecutorService>)
-                () -> injectionManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE));
-        this.backgroundScheduler = Values.lazy((Value<ScheduledExecutorService>) ()
-                -> injectionManager.getInstance(ScheduledExecutorService.class, ClientBackgroundSchedulerLiteral.INSTANCE));
+        this.asyncRequestExecutor = Values.lazy((Value<ExecutorService>) () ->
+                config.getExecutorService() == null
+                        ? injectionManager.getInstance(ExecutorService.class, ClientAsyncExecutorLiteral.INSTANCE)
+                        : config.getExecutorService());
+        this.backgroundScheduler = Values.lazy((Value<ScheduledExecutorService>) () ->
+                config.getScheduledExecutorService() == null
+                        ? injectionManager.getInstance(ScheduledExecutorService.class, ClientBackgroundSchedulerLiteral.INSTANCE)
+                        : config.getScheduledExecutorService());
 
         this.injectionManager = injectionManager;
         this.lifecycleListeners = Providers.getAllProviders(injectionManager, ClientLifecycleListener.class);

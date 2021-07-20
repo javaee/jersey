@@ -1,19 +1,19 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015-2017 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015-2018 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
  * and Distribution License("CDDL") (collectively, the "License").  You
  * may not use this file except in compliance with the License.  You can
  * obtain a copy of the License at
- * http://glassfish.java.net/public/CDDL+GPL_1_1.html
- * or packager/legal/LICENSE.txt.  See the License for the specific
+ * https://oss.oracle.com/licenses/CDDL+GPL-1.1
+ * or LICENSE.txt.  See the License for the specific
  * language governing permissions and limitations under the License.
  *
  * When distributing the software, include this License Header Notice in each
- * file and include the License file at packager/legal/LICENSE.txt.
+ * file and include the License file at LICENSE.txt.
  *
  * GPL Classpath Exception:
  * Oracle designates this particular file as subject to the "Classpath"
@@ -44,8 +44,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.core.Application;
 
@@ -122,9 +127,26 @@ public class Jersey2794ITCase extends JerseyTest {
     }
 
     private int matchingTempFiles(final String tempDir) throws IOException {
-        return (int) Files.walk(Paths.get(tempDir)).filter(path -> {
-            final String name = path.getFileName().toString();
-            return name.startsWith("MIME") && name.endsWith("tmp");
-        }).count();
+        AtomicInteger count = new AtomicInteger(0);
+        Files.walkFileTree(Paths.get(tempDir), new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (file.getFileName().startsWith("MIME") && file.getFileName().endsWith("tmp")) {
+                    count.incrementAndGet();
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        return count.get();
     }
 }
